@@ -8,9 +8,13 @@ using UnityEngine.EventSystems;
 public class GroundNode
 {
     public static float size = 1;
+    public static int neighbourCount = 6;
     public int x, y;
     //Building building;
-    //Flag flag;
+    public Flag flag;
+    //Connection connection;
+    //Connection startingHere[neighbourCount];
+    public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public Vector3 Position()
     {
@@ -25,6 +29,7 @@ public class Ground : MonoBehaviour
     int width = 10, height = 10;
     GroundNode[] layout;
     int layoutVersion = 1;
+    int currentRow, currentColumn;
 
     int meshVersion = 0;
     Mesh mesh;
@@ -54,6 +59,18 @@ public class Ground : MonoBehaviour
                 node.y = y;
             }
         }
+        for (int x = 0; x <= width; x++)
+        {
+            for (int y = 0; y <= height; y++)
+            {
+                GetNode(x, y).neighbours[0] = GetNode(x + 0, y - 1);
+                GetNode(x, y).neighbours[1] = GetNode(x + 1, y - 1);
+                GetNode(x, y).neighbours[2] = GetNode(x - 1, y + 0);
+                GetNode(x, y).neighbours[3] = GetNode(x + 1, y + 0);
+                GetNode(x, y).neighbours[4] = GetNode(x - 1, y + 1);
+                GetNode(x, y).neighbours[5] = GetNode(x + 0, y + 1);
+            }
+        }
     }
 
     // Update is called once per frame
@@ -65,12 +82,22 @@ public class Ground : MonoBehaviour
             meshVersion = layoutVersion;
         }
         CheckMouse();
+        CheckUserInput();
         if (Input.GetMouseButtonDown(0))
         {
             UnityEngine.Debug.Log("Down!");
             layout[60].height = GroundNode.size * 10;
             layoutVersion++;
         }
+    }
+
+    GroundNode GetNode( int x, int y )
+    {
+        if (x < 0) x += width;
+        if (y < 0) y += height;
+        if (x >= width) x -= width;
+        if (y >= height) y -= height;
+        return layout[y * (width + 1) + x];
     }
 
     void CheckMouse()
@@ -81,12 +108,20 @@ public class Ground : MonoBehaviour
         if (collider.Raycast(ray, out hit, size * (width + height)))
         {
             Vector3 localPosition = transform.InverseTransformPoint(hit.point);
-            int row = (int)((localPosition.z - (size / 2)) / size);
-            int column = (int)((localPosition.x - row * size / 2 - (size / 2)) / size);
-            UnityEngine.Debug.Log( "mouse: " + row + " - " + column );
+            currentRow = (int)((localPosition.z - (size / 2)) / size);
+            currentColumn = (int)((localPosition.x - currentRow * size / 2 - (size / 2)) / size);
+            //UnityEngine.Debug.Log( "mouse: " + row + " - " + column );
         }
-        else
-            UnityEngine.Debug.Log("nohit");
+        //else
+            //UnityEngine.Debug.Log("nohit");
+    }
+
+    void CheckUserInput()
+    {
+        if ( Input.GetKeyDown(KeyCode.F))
+        {
+            Flag.CreateNew(this, GetNode(currentColumn, currentRow));
+        }
     }
 
     void UpdateMesh()
@@ -133,5 +168,13 @@ public class Ground : MonoBehaviour
             mesh.vertices = vertices;
             collider.sharedMesh = mesh;
         }
+    }
+    void OnDrawGizmos()
+    {
+        var n = GetNode(currentColumn, currentRow);
+        var localPosition = n.Position();
+        var worldPosition = transform.TransformPoint(localPosition);
+
+        Gizmos.DrawSphere(GetNode(currentColumn, currentRow).Position(), 1);
     }
 }
