@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class Flag : MonoBehaviour
 {
@@ -26,8 +27,8 @@ public class Flag : MonoBehaviour
         flagObject.transform.SetParent(ground.transform);
         flagObject.transform.localPosition = node.Position();
         flagObject.transform.localScale *= 0.3f;
-        UnityEngine.Debug.Log("Height: " + node.Position().y);
         node.flag = (Flag)flagObject.AddComponent(typeof(Flag));
+        node.flag.node = node;
         return true;
     }
 
@@ -42,4 +43,13 @@ public class Flag : MonoBehaviour
     {
         
     }
+
+    public void Validate()
+    {
+        Assert.AreEqual( this, node.flag );
+        for ( int i = 0; i < 6; i++ )
+            Assert.IsNull( node.neighbours[i].flag );
+    }
+
+    GroundNode node;
 }

@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -12,8 +14,8 @@ public class GroundNode
     public int x, y;
     //Building building;
     public Flag flag;
-    //Connection connection;
-    //Connection startingHere[neighbourCount];
+    public Road road;
+    public Road[] startingHere = new Road[neighbourCount];
     public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public Vector3 Position()
@@ -21,12 +23,31 @@ public class GroundNode
         Vector3 position = new Vector3( x*size+y*size/2, height, y*size );
         return position;
     }
+    public int IsAdjacentTo( GroundNode another )
+    {
+        int direction = -1;
+        for ( int i = 0; i < 6; i++ )
+            if ( neighbours[i] == another )
+                direction = i;
+        return direction;
+    }
+    public void Validate()
+    {
+        Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
+        for ( int i = 0; i < 6; i++ )
+            Assert.AreEqual( this, neighbours[i].neighbours[( i + 3 ) % 6] );
+        for ( int j = 0; j < 6; j++ )
+            if ( startingHere[j] )
+                startingHere[j].Validate();
+        if ( flag )
+            flag.Validate();
+    }
 }
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class Ground : MonoBehaviour
 {
-    int width = 10, height = 10;
+    public int width = 10, height = 10;
     GroundNode[] layout;
     int layoutVersion = 1;
     int currentRow, currentColumn;
@@ -40,7 +61,6 @@ public class Ground : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        UnityEngine.Debug.Log( "Helllo world!");
         MeshFilter meshFilter = (MeshFilter)gameObject.GetComponent(typeof(MeshFilter));
         transform = (Transform)gameObject.GetComponent(typeof(Transform));
         Assert.IsNotNull(transform);
@@ -62,16 +82,19 @@ public class Ground : MonoBehaviour
                 node.y = y;
             }
         }
-        for (int x = 0; x <= width; x++)
+        for ( int x = 0; x <= width; x++ )
         {
             for (int y = 0; y <= height; y++)
             {
-                GetNode(x, y).neighbours[0] = GetNode(x + 0, y - 1);
-                GetNode(x, y).neighbours[1] = GetNode(x + 1, y - 1);
-                GetNode(x, y).neighbours[2] = GetNode(x - 1, y + 0);
-                GetNode(x, y).neighbours[3] = GetNode(x + 1, y + 0);
-                GetNode(x, y).neighbours[4] = GetNode(x - 1, y + 1);
-                GetNode(x, y).neighbours[5] = GetNode(x + 0, y + 1);
+                var node = GetNode( x, y );
+                node.neighbours[0] = GetNode( x + 0, y - 1 );
+                node.neighbours[1] = GetNode( x + 1, y - 1 );
+                node.neighbours[2] = GetNode( x + 1, y + 0 );
+                node.neighbours[3] = GetNode( x + 0, y + 1 );
+                node.neighbours[4] = GetNode( x - 1, y + 1 );
+                node.neighbours[5] = GetNode( x - 1, y + 0 );
+                //for ( int i = 0; i < 6; i++ )
+                  //  Assert.IsNotNull( node.neighbours[i] );
             }
         }
     }
@@ -96,10 +119,15 @@ public class Ground : MonoBehaviour
 
     GroundNode GetNode( int x, int y )
     {
-        if (x < 0) x += width;
-        if (y < 0) y += height;
-        if (x >= width) x -= width;
-        if (y >= height) y -= height;
+        if ( x < 0 )
+            x += width+1;
+        if ( y < 0 )
+            y += height+1;
+        if ( x > width )
+            x -= width + 1;
+        if ( y > height )
+            y -= height + 1;
+        Assert.IsNotNull( layout[y * ( width + 1 ) + x] );
         return layout[y * (width + 1) + x];
     }
 
@@ -122,9 +150,15 @@ public class Ground : MonoBehaviour
 
     void CheckUserInput()
     {
-        if ( Input.GetKeyDown(KeyCode.F))
+        var currentNode = GetNode(currentColumn, currentRow);
+        if (Input.GetKeyDown(KeyCode.F))
+            Flag.CreateNew(this, currentNode);
+        if ( Input.GetKeyDown( KeyCode.R ) )
+            Road.AddNodeToNew( this, currentNode );
+        if ( Input.GetKeyDown( KeyCode.V ) )
         {
-            Flag.CreateNew(this, GetNode(currentColumn, currentRow));
+            Validate();
+            UnityEngine.Debug.Log( "Validated" );
         }
     }
 
@@ -173,12 +207,11 @@ public class Ground : MonoBehaviour
             collider.sharedMesh = mesh;
         }
     }
-    void OnDrawGizmos()
+    public void Validate()
     {
-        var n = GetNode(currentColumn, currentRow);
-        var localPosition = n.Position();
-        var worldPosition = transform.TransformPoint(localPosition);
-
-        Gizmos.DrawSphere(GetNode(currentColumn, currentRow).Position(), 1);
+        Assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
+        Assert.AreEqual( ( width + 1 ) * ( height + 1 ), layout.Length, "Map layout size is incorrect" );
+        foreach ( var node in layout )
+            node.Validate();
     }
 }
