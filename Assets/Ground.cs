@@ -30,6 +30,7 @@ public class Ground : MonoBehaviour
     GroundNode[] layout;
     int layoutVersion = 1;
     int currentRow, currentColumn;
+    GameObject currentNode;
 
     int meshVersion = 0;
     Mesh mesh;
@@ -45,6 +46,8 @@ public class Ground : MonoBehaviour
         Assert.IsNotNull(transform);
         collider = (MeshCollider)gameObject.GetComponent(typeof(MeshCollider));
         Assert.IsNotNull(collider);
+        currentNode = GameObject.Find("CurrentNode");
+        Assert.IsNotNull(currentNode);
 
         mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
@@ -108,8 +111,9 @@ public class Ground : MonoBehaviour
         if (collider.Raycast(ray, out hit, size * (width + height)))
         {
             Vector3 localPosition = transform.InverseTransformPoint(hit.point);
-            currentRow = (int)((localPosition.z - (size / 2)) / size);
-            currentColumn = (int)((localPosition.x - currentRow * size / 2 - (size / 2)) / size);
+            currentRow = (int)((localPosition.z + (size / 2)) / size);
+            currentColumn = (int)((localPosition.x - currentRow * size / 2 + (size / 2)) / size);
+            currentNode.transform.localPosition = GetNode(currentColumn, currentRow).Position();
             //UnityEngine.Debug.Log( "mouse: " + row + " - " + column );
         }
         //else
