@@ -6,43 +6,6 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 
-public class GroundNode
-{
-    public static float size = 1;
-    public static int neighbourCount = 6;
-    public int x, y;
-    //Building building;
-    public Flag flag;
-    public Road road;
-    public Road[] startingHere = new Road[neighbourCount];
-    public GroundNode[] neighbours = new GroundNode[neighbourCount];
-    public float height = 0;
-    public Vector3 Position()
-    {
-        Vector3 position = new Vector3( x*size+y*size/2, height, y*size );
-        return position;
-    }
-    public int IsAdjacentTo( GroundNode another )
-    {
-        int direction = -1;
-        for ( int i = 0; i < 6; i++ )
-            if ( neighbours[i] == another )
-                direction = i;
-        return direction;
-    }
-    public void Validate()
-    {
-        Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
-        for ( int i = 0; i < 6; i++ )
-            Assert.AreEqual( this, neighbours[i].neighbours[( i + 3 ) % 6] );
-        for ( int j = 0; j < 6; j++ )
-            if ( startingHere[j] )
-                startingHere[j].Validate();
-        if ( flag )
-            flag.Validate();
-    }
-}
-
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class Ground : MonoBehaviour
 {
@@ -75,27 +38,11 @@ public class Ground : MonoBehaviour
 
         layout = new GroundNode[(width+1)*(height+1)];
         for ( int x = 0; x <= width; x++ )
-        {
             for ( int y = 0; y <= height; y++ )
-            {
-                var node = layout[y*(width+1)+x] = new GroundNode();
-                node.x = x;
-                node.y = y;
-            }
-        }
+                layout[y*(width+1)+x] = new GroundNode();
         for ( int x = 0; x <= width; x++ )
-        {
             for (int y = 0; y <= height; y++)
-            {
-                var node = GetNode( x, y );
-                node.neighbours[0] = GetNode( x + 0, y - 1 );
-                node.neighbours[1] = GetNode( x + 1, y - 1 );
-                node.neighbours[2] = GetNode( x + 1, y + 0 );
-                node.neighbours[3] = GetNode( x + 0, y + 1 );
-                node.neighbours[4] = GetNode( x - 1, y + 1 );
-                node.neighbours[5] = GetNode( x - 1, y + 0 );
-            }
-        }
+                GetNode( x, y ).Initialize( this, x, y );
     }
 
     // Update is called once per frame
@@ -110,7 +57,7 @@ public class Ground : MonoBehaviour
         CheckUserInput();
     }
 
-    GroundNode GetNode( int x, int y )
+    public GroundNode GetNode( int x, int y )
     {
         if ( x < 0 )
             x += width + 1;

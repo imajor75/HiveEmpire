@@ -21,7 +21,6 @@ public class Flag : MonoBehaviour
             Debug.Log("Another flag is too close");
             return false;
         }
-        Debug.Log("New flag at " + node.x + ", " + node.y);
         GameObject flagObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         flagObject.name = "Flag "+node.x+", "+node.y;
         flagObject.transform.SetParent(ground.transform);

@@ -32,12 +32,6 @@ public class Road : MonoBehaviour
             }
         }
 
-        if ( node.road )
-        {
-            Debug.Log( "Roads cannot cross" );
-            return false;
-        }
-
         GroundNode last = newRoad.nodes[newRoad.Length() - 1];
         // Special case, last node is the same as the current, remove one
         if ( last == node )
@@ -48,8 +42,16 @@ public class Road : MonoBehaviour
                 return true;
             }
             newRoad.nodes.RemoveAt( newRoad.Length() - 1 );
+            node.road = null;
             newRoad.RebuildMesh();
             return true;
+        }
+
+        // Check if the current node is already on a road
+        if ( node.road )
+        {
+            Debug.Log( "Roads cannot cross" );
+            return false;
         }
 
         // Check if the current node is adjacent to the previous one
@@ -62,6 +64,8 @@ public class Road : MonoBehaviour
 
         newRoad.nodes.Add( node );
         newRoad.RebuildMesh();
+        if ( newRoad.Length() == 2 )
+            newRoad.name = "Road " + node.x + ", " + node.y;
 
         // Finishing a road
         if ( node.flag )
