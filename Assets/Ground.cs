@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -68,6 +67,8 @@ public class Ground : MonoBehaviour
         Assert.IsNotNull(collider);
         currentNode = GameObject.Find("CurrentNode");
         Assert.IsNotNull(currentNode);
+        Road.material = Resources.Load<Material>( "Road" );
+        Assert.IsNotNull( Road.material );
 
         mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
@@ -93,8 +94,6 @@ public class Ground : MonoBehaviour
                 node.neighbours[3] = GetNode( x + 0, y + 1 );
                 node.neighbours[4] = GetNode( x - 1, y + 1 );
                 node.neighbours[5] = GetNode( x - 1, y + 0 );
-                //for ( int i = 0; i < 6; i++ )
-                  //  Assert.IsNotNull( node.neighbours[i] );
             }
         }
     }
@@ -109,25 +108,18 @@ public class Ground : MonoBehaviour
         }
         CheckMouse();
         CheckUserInput();
-        if (Input.GetMouseButtonDown(0))
-        {
-            UnityEngine.Debug.Log("Down!");
-            layout[60].height = GroundNode.size * 10;
-            layoutVersion++;
-        }
     }
 
     GroundNode GetNode( int x, int y )
     {
         if ( x < 0 )
-            x += width+1;
+            x += width + 1;
         if ( y < 0 )
-            y += height+1;
+            y += height + 1;
         if ( x > width )
             x -= width + 1;
         if ( y > height )
             y -= height + 1;
-        Assert.IsNotNull( layout[y * ( width + 1 ) + x] );
         return layout[y * (width + 1) + x];
     }
 
@@ -142,10 +134,7 @@ public class Ground : MonoBehaviour
             currentRow = (int)((localPosition.z + (size / 2)) / size);
             currentColumn = (int)((localPosition.x - currentRow * size / 2 + (size / 2)) / size);
             currentNode.transform.localPosition = GetNode(currentColumn, currentRow).Position();
-            //UnityEngine.Debug.Log( "mouse: " + row + " - " + column );
         }
-        //else
-            //UnityEngine.Debug.Log("nohit");
     }
 
     void CheckUserInput()
@@ -158,20 +147,17 @@ public class Ground : MonoBehaviour
         if ( Input.GetKeyDown( KeyCode.V ) )
         {
             Validate();
-            UnityEngine.Debug.Log( "Validated" );
+            Debug.Log( "Validated" );
         }
     }
 
     void UpdateMesh()
     {
-        UnityEngine.Debug.Log("UpdateMesh");
         if ( mesh == null )
             return;
 
         if ( mesh.vertices == null || mesh.vertices.Length == 0 )
         {
-            UnityEngine.Debug.Log("Generating mesh");
-
             var vertices = new Vector3[(width+1)*(height+1)];
             for ( int i = 0; i < (width+1)*(height+1); i++ )
             {

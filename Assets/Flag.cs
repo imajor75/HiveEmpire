@@ -9,7 +9,7 @@ public class Flag : MonoBehaviour
     {
         if (node.flag)
         {
-            UnityEngine.Debug.Log("There is a flag there already");
+            Debug.Log("There is a flag there already");
             return false;
         }
         bool hasAdjacentFlag = false;
@@ -18,10 +18,10 @@ public class Flag : MonoBehaviour
                 hasAdjacentFlag = true;
         if (hasAdjacentFlag)
         {
-            UnityEngine.Debug.Log("Another flag is too close");
+            Debug.Log("Another flag is too close");
             return false;
         }
-        UnityEngine.Debug.Log("New flag at " + node.x + ", " + node.y);
+        Debug.Log("New flag at " + node.x + ", " + node.y);
         GameObject flagObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         flagObject.name = "Flag "+node.x+", "+node.y;
         flagObject.transform.SetParent(ground.transform);

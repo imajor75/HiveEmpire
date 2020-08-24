@@ -17,7 +17,7 @@ public class Road : MonoBehaviour
                 if ( newRoad == null )
                 {
                     var roadObject = new GameObject();
-                    roadObject.transform.SetParent( ground.transform );
+                    roadObject.transform.SetParent( ground.transform, false );
                     roadObject.name = "Road";
                     newRoad = (Road)roadObject.AddComponent(typeof(Road));
                 }
@@ -27,9 +27,15 @@ public class Road : MonoBehaviour
             }
             else
             {
-                UnityEngine.Debug.Log( "Road must start at a flag" );
+                Debug.Log( "Road must start at a flag" );
                 return false;
             }
+        }
+
+        if ( node.road )
+        {
+            Debug.Log( "Roads cannot cross" );
+            return false;
         }
 
         GroundNode last = newRoad.nodes[newRoad.Length() - 1];
@@ -42,6 +48,7 @@ public class Road : MonoBehaviour
                 return true;
             }
             newRoad.nodes.RemoveAt( newRoad.Length() - 1 );
+            newRoad.RebuildMesh();
             return true;
         }
 
@@ -49,11 +56,12 @@ public class Road : MonoBehaviour
         int direction = last.IsAdjacentTo( node );
         if ( direction < 0 )
         {
-            UnityEngine.Debug.Log( "Node must be adjacent to previous one" );
+            Debug.Log( "Node must be adjacent to previous one" );
             return false;
         }
 
         newRoad.nodes.Add( node );
+        newRoad.RebuildMesh();
 
         // Finishing a road
         if ( node.flag )
@@ -62,7 +70,6 @@ public class Road : MonoBehaviour
             node.startingHere[node.IsAdjacentTo( last )] = newRoad;
             newRoad.ready = true;
             newRoad = null;
-            UnityEngine.Debug.Log( "Road finished" );
             return true;
         };
 
@@ -83,13 +90,61 @@ public class Road : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        var renderer = gameObject.AddComponent<MeshRenderer>();
+        renderer.material = material;
+        var filter = gameObject.AddComponent<MeshFilter>();
+        mesh = filter.mesh = new Mesh();
     }
 
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    void RebuildMesh()
+    {
+        mesh.Clear();
+        var l = Length()-1;
+        var vertices = new Vector3[l*6];
+        for ( int j = 0; j < l * 6; j++ )
+            vertices[j] = new Vector3();
+        for ( int i = 0; i < l; i++ )
+        {
+            var a = nodes[i].Position();
+            var b = nodes[i+1].Position();
+            var ab = b-a;
+            Vector3 o = new Vector3( ab.z/10, 0, -ab.x/10 );
+            Vector3 h = new Vector3( 0, GroundNode.size / 10, 0 );
+            vertices[i * 6 + 0] = a + o;
+            vertices[i * 6 + 1] = a + h;
+            vertices[i * 6 + 2] = a - o;
+            vertices[i * 6 + 3] = b + o;
+            vertices[i * 6 + 4] = b + h;
+            vertices[i * 6 + 5] = b - o;
+        }
+        mesh.vertices = vertices;
+
+        var triangles = new int[l*4*3];
+        for ( int j = 0; j < l; j++ )
+        {
+            triangles[j * 4 * 3 + 00] = j * 6 + 0;
+            triangles[j * 4 * 3 + 01] = j * 6 + 1;
+            triangles[j * 4 * 3 + 02] = j * 6 + 3;
+
+            triangles[j * 4 * 3 + 03] = j * 6 + 1;
+            triangles[j * 4 * 3 + 04] = j * 6 + 4;
+            triangles[j * 4 * 3 + 05] = j * 6 + 3;
+
+            triangles[j * 4 * 3 + 06] = j * 6 + 1;
+            triangles[j * 4 * 3 + 07] = j * 6 + 2;
+            triangles[j * 4 * 3 + 08] = j * 6 + 4;
+
+            triangles[j * 4 * 3 + 09] = j * 6 + 2;
+            triangles[j * 4 * 3 + 10] = j * 6 + 5;
+            triangles[j * 4 * 3 + 11] = j * 6 + 4;
+        }
+        mesh.triangles = triangles;
     }
 
     public int Length()
@@ -114,4 +169,6 @@ public class Road : MonoBehaviour
     bool ready = false;
     Ground ground;
     List<GroundNode> nodes = new List<GroundNode>();
+    Mesh mesh;
+    public static Material material;
 }
