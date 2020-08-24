@@ -24,12 +24,12 @@ public class Ground : MonoBehaviour
     void Start()
     {
         MeshFilter meshFilter = (MeshFilter)gameObject.GetComponent(typeof(MeshFilter));
-        transform = (Transform)gameObject.GetComponent(typeof(Transform));
-        Assert.IsNotNull(transform);
-        collider = (MeshCollider)gameObject.GetComponent(typeof(MeshCollider));
-        Assert.IsNotNull(collider);
-        currentNode = GameObject.Find("CurrentNode");
-        Assert.IsNotNull(currentNode);
+        transform = (Transform)gameObject.GetComponent( typeof( Transform ) );
+        Assert.IsNotNull( transform );
+        collider = (MeshCollider)gameObject.GetComponent( typeof( MeshCollider ) );
+        Assert.IsNotNull( collider );
+        currentNode = GameObject.Find( "CurrentNode" );
+        Assert.IsNotNull( currentNode );
         Road.material = Resources.Load<Material>( "Road" );
         Assert.IsNotNull( Road.material );
         Building.material = Resources.Load<Material>( "Building" );
@@ -38,17 +38,19 @@ public class Ground : MonoBehaviour
         mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
 
-        layout = new GroundNode[(width+1)*(height+1)];
+        layout = new GroundNode[( width + 1 ) * ( height + 1 )];
         for ( int x = 0; x <= width; x++ )
             for ( int y = 0; y <= height; y++ )
-                layout[y*(width+1)+x] = new GroundNode();
+                layout[y * ( width + 1 ) + x] = new GroundNode();
         for ( int x = 0; x <= width; x++ )
-            for (int y = 0; y <= height; y++)
+            for ( int y = 0; y <= height; y++ )
                 GetNode( x, y ).Initialize( this, x, y );
+
+        Building.SetupMain( this, GetNode( width / 2, height / 2 ) );
     }
 
     // Update is called once per frame
-    void Update()
+        void Update()
     {
         if (layoutVersion != meshVersion)
         {

@@ -8,6 +8,8 @@ public class Building : MonoBehaviour
     public Flag flag;
     public Ground ground;
     public GroundNode node;
+    public int[] inventory = new int[(int)Item.Type.total];
+    public bool main = false;
     static public Material material;
 
     public static bool CreateNew( Ground ground, GroundNode node )
@@ -35,6 +37,16 @@ public class Building : MonoBehaviour
         newBuilding.flag = flag;
         newBuilding.node = node;
         node.building = newBuilding;
+        return true;
+    }
+    public static bool SetupMain( Ground ground, GroundNode node )
+    {
+        if ( !CreateNew( ground, node ) )
+            return false;
+
+        var mainBuilding = node.building;
+        mainBuilding.main = true;
+        mainBuilding.inventory[(int)Item.Type.wood] = 10;
         return true;
     }
 
