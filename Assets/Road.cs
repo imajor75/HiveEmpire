@@ -170,7 +170,7 @@ public class Road : MonoBehaviour
             Assert.AreEqual( this, nodes[i].road );
     }
 
-    bool ready = false;
+    public bool ready = false;
     Ground ground;
     List<GroundNode> nodes = new List<GroundNode>();
     Mesh mesh;
