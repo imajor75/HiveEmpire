@@ -32,6 +32,8 @@ public class Ground : MonoBehaviour
         Assert.IsNotNull(currentNode);
         Road.material = Resources.Load<Material>( "Road" );
         Assert.IsNotNull( Road.material );
+        Building.material = Resources.Load<Material>( "Building" );
+        Assert.IsNotNull( Building.material );
 
         mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
@@ -87,8 +89,8 @@ public class Ground : MonoBehaviour
     void CheckUserInput()
     {
         var currentNode = GetNode(currentColumn, currentRow);
-        if (Input.GetKeyDown(KeyCode.F))
-            Flag.CreateNew(this, currentNode);
+        if ( Input.GetKeyDown( KeyCode.F ) )
+            Flag.CreateNew( this, currentNode );
         if ( Input.GetKeyDown( KeyCode.R ) )
             Road.AddNodeToNew( this, currentNode );
         if ( Input.GetKeyDown( KeyCode.V ) )
@@ -96,6 +98,8 @@ public class Ground : MonoBehaviour
             Validate();
             Debug.Log( "Validated" );
         }
+        if ( Input.GetKeyDown( KeyCode.B ) )
+            Building.CreateNew( this, currentNode );
     }
 
     void UpdateMesh()

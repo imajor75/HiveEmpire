@@ -7,9 +7,14 @@ public class Flag : MonoBehaviour
 {
     public static bool CreateNew(Ground ground, GroundNode node)
     {
-        if (node.flag)
+        if ( node.flag )
         {
-            Debug.Log("There is a flag there already");
+            Debug.Log( "There is a flag there already" );
+            return false;
+        }
+        if ( node.building )
+        {
+            Debug.Log( "Cannot create a flag at a building" );
             return false;
         }
         bool hasAdjacentFlag = false;

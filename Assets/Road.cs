@@ -54,6 +54,13 @@ public class Road : MonoBehaviour
             return false;
         }
 
+        // Check if the current node has a building
+        if ( node.building )
+        {
+            Debug.Log( "Cannot build a road on a building" );
+            return false;
+        }
+
         // Check if the current node is adjacent to the previous one
         int direction = last.IsAdjacentTo( node );
         if ( direction < 0 )

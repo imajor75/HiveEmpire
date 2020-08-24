@@ -8,7 +8,7 @@ public class GroundNode
     public static float size = 1;
     public static int neighbourCount = 6;
     public int x, y;
-    //Building building;
+    public Building building;
     public Flag flag;
     public Road road;
     public Road[] startingHere = new Road[neighbourCount];
@@ -31,6 +31,8 @@ public class GroundNode
     public void Validate()
     {
         Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
+        Assert.IsTrue( flag == null || building == null );
+        Assert.IsTrue( building == null || road == null );
         for ( int i = 0; i < 6; i++ )
             Assert.AreEqual( this, neighbours[i].neighbours[( i + 3 ) % 6] );
         for ( int j = 0; j < 6; j++ )
@@ -38,6 +40,8 @@ public class GroundNode
                 startingHere[j].Validate();
         if ( flag )
             flag.Validate();
+        if ( building )
+            building.Validate();
     }
 
     public void Initialize( Ground ground, int x, int y )
