@@ -10,7 +10,7 @@ public class Building : MonoBehaviour
     public GroundNode node;
     public int[] inventory = new int[(int)Item.Type.total];
     public bool main = false;
-    static public Material material;
+    static public GameObject prefab;
 
     public static bool CreateNew( Ground ground, GroundNode node )
     {
@@ -27,11 +27,13 @@ public class Building : MonoBehaviour
         }
         var flag = flagNode.flag;
 
-        var buildingObject = GameObject.CreatePrimitive( PrimitiveType.Capsule );
+        var buildingObject = (GameObject)GameObject.Instantiate( prefab );
         buildingObject.name = "Building " + node.x + ", " + node.y;
         buildingObject.transform.SetParent( ground.transform );
         buildingObject.transform.localPosition = node.Position();
-        buildingObject.transform.localScale *= 0.3f;
+        Vector3 scale = new Vector3(); scale.Set( 40, 40, 40 );
+        buildingObject.transform.localScale = scale;
+        buildingObject.transform.Rotate( Vector3.back * 90 );
         var newBuilding = buildingObject.AddComponent<Building>();
         newBuilding.ground = ground;
         newBuilding.flag = flag;
@@ -53,8 +55,6 @@ public class Building : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var renderer = gameObject.GetComponent<MeshRenderer>();
-        renderer.material = material;
     }
 
     // Update is called once per frame
