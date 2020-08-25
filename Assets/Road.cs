@@ -62,36 +62,56 @@ public class Road : MonoBehaviour
         }
 
         // Check if the current node is adjacent to the previous one
-        int direction = last.IsAdjacentTo( node );
+        int direction = last.DirectionTo( node );
         if ( direction < 0 )
         {
+            if ( node.flag )
+            {
+                // Find a path to the flag, and finish the road based on it
+                var p = new PathFinder();
+                if ( p.FindPathBetween( last, node ) )
+                {
+                    for ( int i = 1; i < p.path.Count; i++ )
+                        newRoad.AddNode( p.path[i] );
+                    newRoad.RebuildMesh();
+                    newRoad = null;
+                    return true;
+                }
+            }
             Debug.Log( "Node must be adjacent to previous one" );
             return false;
         }
-
-        newRoad.nodes.Add( node );
+        bool finished = newRoad.AddNode( node );
         newRoad.RebuildMesh();
+        if ( finished )
+            newRoad = null;
+        return true;
+    }
+
+    bool AddNode( GroundNode node )
+    {
+        nodes.Add( node );
         if ( newRoad.Length() == 2 )
             newRoad.name = "Road " + node.x + ", " + node.y;
 
         // Finishing a road
         if ( node.flag )
         {
-            newRoad.nodes[0].startingHere[newRoad.nodes[0].IsAdjacentTo( newRoad.nodes[1] )] = newRoad;
-            node.startingHere[node.IsAdjacentTo( last )] = newRoad;
-            newRoad.ready = true;
-            newRoad = null;
+            nodes[0].startingHere[nodes[0].DirectionTo( nodes[1] )] = this;
+            node.startingHere[node.DirectionTo( nodes[nodes.Count - 2] )] = this;
+            ready = true;
             return true;
-        };
+        }
 
-        node.road = newRoad;
-        return true;
+        node.road = this;
+        return false;
     }
 
     public static void CancelNew()
     {
         if ( newRoad )
         {
+            newRoad.name = "Deleted";
             Destroy( newRoad );
             newRoad = null;
         }
@@ -125,7 +145,9 @@ public class Road : MonoBehaviour
             var a = nodes[i].Position();
             var b = nodes[i+1].Position();
             var ab = b-a;
-            Vector3 o = new Vector3( ab.z/10, 0, -ab.x/10 );
+            Vector3 o = new Vector3( ab.z, 0, -ab.x );
+            o.Normalize();
+            o *= GroundNode.size / 10;
             Vector3 h = new Vector3( 0, GroundNode.size / 10, 0 );
             vertices[i * 6 + 0] = a + o;
             vertices[i * 6 + 1] = a + h;
@@ -171,15 +193,17 @@ public class Road : MonoBehaviour
         var last = nodes[length-1];
         Assert.IsNotNull( first.flag );
         Assert.IsNotNull( last.flag );
-        Assert.AreEqual( this, first.startingHere[first.IsAdjacentTo( nodes[1] ) ] );
-        Assert.AreEqual( this, last.startingHere[last.IsAdjacentTo( nodes[length - 2] ) ] );
+        Assert.AreEqual( this, first.startingHere[first.DirectionTo( nodes[1] ) ] );
+        Assert.AreEqual( this, last.startingHere[last.DirectionTo( nodes[length - 2] ) ] );
         for ( int i = 1; i < length - 1; i++ )
             Assert.AreEqual( this, nodes[i].road );
+        for ( int i = 0; i < length - 1; i++ )
+            Assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
     }
 
     public bool ready = false;
-    Ground ground;
-    List<GroundNode> nodes = new List<GroundNode>();
+    public Ground ground;
+    public List<GroundNode> nodes = new List<GroundNode>();
     Mesh mesh;
     public static Material material;
 }

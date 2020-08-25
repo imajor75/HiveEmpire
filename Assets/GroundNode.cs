@@ -14,13 +14,14 @@ public class GroundNode
     public Road[] startingHere = new Road[neighbourCount];
     public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
+    public int pathFindingIndex = -1;
     Ground ground;
     public Vector3 Position()
     {
         Vector3 position = new Vector3( x*size+y*size/2, height, y*size );
         return position;
     }
-    public int IsAdjacentTo( GroundNode another )
+    public int DirectionTo( GroundNode another )
     {
         int direction = -1;
         for ( int i = 0; i < 6; i++ )
