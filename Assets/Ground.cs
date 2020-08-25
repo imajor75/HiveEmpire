@@ -32,8 +32,8 @@ public class Ground : MonoBehaviour
         Assert.IsNotNull( currentNode );
         Road.material = Resources.Load<Material>( "Road" );
         Assert.IsNotNull( Road.material );
-        Building.material = Resources.Load<Material>( "Building" );
-        Assert.IsNotNull( Building.material );
+        Building.prefab = (GameObject)Resources.Load( "house" );
+        Assert.IsNotNull( Building.prefab );
 
         mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
