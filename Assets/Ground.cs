@@ -2,14 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class Ground : MonoBehaviour
 {
-    public int width = 10, height = 10;
+    public int width = 50, height = 50;
     GroundNode[] layout;
     int layoutVersion = 1;
     int currentRow, currentColumn;
@@ -23,6 +24,8 @@ public class Ground : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+		width = 50;
+		height = 30;
         MeshFilter meshFilter = (MeshFilter)gameObject.GetComponent(typeof(MeshFilter));
         transform = (Transform)gameObject.GetComponent( typeof( Transform ) );
         Assert.IsNotNull( transform );
@@ -46,7 +49,14 @@ public class Ground : MonoBehaviour
             for ( int y = 0; y <= height; y++ )
                 GetNode( x, y ).Initialize( this, x, y );
 
-        Building.SetupMain( this, GetNode( width / 2, height / 2 ) );
+		var t = Resources.Load<Texture2D>( "heightMap" );
+		foreach ( var n in layout )
+		{
+			Vector3 p = n.Position();
+			n.height = t.GetPixel( (int)(p.x/GroundNode.size/width*400+200), (int)(p.z/GroundNode.size/height*400+200) ).g*GroundNode.size*2;
+		}
+
+		Building.SetupMain( this, GetNode( width / 2, height / 2 ) );
     }
 
     // Update is called once per frame
@@ -82,9 +92,10 @@ public class Ground : MonoBehaviour
         if (collider.Raycast(ray, out hit, size * (width + height)))
         {
             Vector3 localPosition = transform.InverseTransformPoint(hit.point);
-            currentRow = (int)((localPosition.z + (size / 2)) / size);
-            currentColumn = (int)((localPosition.x - currentRow * size / 2 + (size / 2)) / size);
-            currentNode.transform.localPosition = GetNode(currentColumn, currentRow).Position();
+            var node = GroundNode.FromPosition( localPosition, this );
+            currentColumn = node.x;
+            currentRow = node.y;
+            currentNode.transform.localPosition = node.Position();
         }
     }
 

@@ -19,9 +19,19 @@ public class GroundNode
     Ground ground;
     public Vector3 Position()
     {
-        Vector3 position = new Vector3( x*size+y*size/2, height, y*size );
+        int rx = x-ground.width/2;
+        int ry = y-ground.height/2;
+        Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
         return position;
     }
+    public static GroundNode FromPosition( Vector3 position, Ground ground )
+    {
+        int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
+        int x = Mathf.FloorToInt( ( position.x - y * size / 2 + ( size / 2 ) ) / size );
+		Debug.Log( position.z + ", " + y + ", " + y + ground.height / 2 );
+		return ground.GetNode( x+ground.width/2, y+ground.height/2 );
+    }
+
     public int DirectionTo( GroundNode another )
     {
         int direction = -1;
