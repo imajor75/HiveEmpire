@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 
 public class GroundNode
 {
@@ -57,6 +58,33 @@ public class GroundNode
         neighbours[3] = ground.GetNode( x + 0, y + 1 );
         neighbours[4] = ground.GetNode( x - 1, y + 1 );
         neighbours[5] = ground.GetNode( x - 1, y + 0 );
+    }
+    public int DistanceFrom( GroundNode o )
+    {
+        int e = ground.height, w = ground.width;
+
+        int h0 = Mathf.Abs(x-o.x);
+        int h1 = Mathf.Abs(x-o.x-w);
+        int h2 = Mathf.Abs(x-o.x+w);
+        int h = Mathf.Min(Mathf.Min(h0,h1),h2);
+
+        int v0 = Mathf.Abs(y-o.y);
+        int v1 = Mathf.Abs(y-o.y-e);
+        int v2 = Mathf.Abs(y-o.y+e);
+        int v = Mathf.Min(Mathf.Min(v0,v1),v2);
+
+        int d0 = Mathf.Abs(x-y-o.x+o.y+w*-1+h*-1);
+        int d1 = Mathf.Abs(x-y-o.x+o.y+w*00+h*-1);
+        int d2 = Mathf.Abs(x-y-o.x+o.y+w*01+h*-1);
+        int d3 = Mathf.Abs(x-y-o.x+o.y+w*-1+h*00);
+        int d4 = Mathf.Abs(x-y-o.x+o.y+w*00+h*00);
+        int d5 = Mathf.Abs(x-y-o.x+o.y+w*01+h*00);
+        int d6 = Mathf.Abs(x-y-o.x+o.y+w*-1+h*01);
+        int d7 = Mathf.Abs(x-y-o.x+o.y+w*00+h*01);
+        int d8 = Mathf.Abs(x-y-o.x+o.y+w*01+h*01);
+        int d = Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(d0,d1),d2),d3),d4),d5),d6),d7),d8);
+
+        return Mathf.Max( Mathf.Max( h, v ), d );
     }
 }
 

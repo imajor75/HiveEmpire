@@ -9,7 +9,9 @@ public class PathFinder
     public class Reached
     {
         public GroundNode node;
-        public float cost;
+        public float costG;
+        public float costH;
+        public float costF;
         public Reached from;
         public bool processed = false;
     }
@@ -42,9 +44,9 @@ public class PathFinder
         var i = node.pathFindingIndex;
         if ( i >= 0 && i < visited.Count && visited[i].node == node )
         {
-            if ( cost < visited[i].cost )
+            if ( cost < visited[i].costG )
             {
-                visited[i].cost = cost;
+                visited[i].costG = cost;
                 visited[i].from = from;
             }
             return;
@@ -56,7 +58,9 @@ public class PathFinder
     {
         var n = new Reached();
         n.node = node;
-        n.cost = cost;
+        n.costG = cost;
+        n.costH = node.DistanceFrom( target );
+        n.costF = n.costG + n.costH;
         n.from = from;
         node.pathFindingIndex = visited.Count;
         visited.Add( n );
@@ -70,7 +74,7 @@ public class PathFinder
         Reached best = null;
         foreach ( var r in visited )
         {
-            if ( r.processed || ( best != null && r.cost >= best.cost ) )
+            if ( r.processed || ( best != null && r.costF >= best.costF ) )
                 continue;
 
             best = r;
@@ -84,7 +88,7 @@ public class PathFinder
         openNodes--;
         foreach ( var node in r.node.neighbours )
         {
-            VisitNode( node, r.cost + 1, r );
+            VisitNode( node, r.costG + 1, r );
         }
     }
 
