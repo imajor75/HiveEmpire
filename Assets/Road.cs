@@ -74,7 +74,8 @@ public class Road : MonoBehaviour
                     for ( int i = 1; i < p.path.Count; i++ )
                         newRoad.AddNode( p.path[i] );
                     newRoad.RebuildMesh();
-                    newRoad = null;
+					newRoad.worker = Worker.Create( ground, newRoad );
+					newRoad = null;
                     return true;
                 }
             }
@@ -83,9 +84,12 @@ public class Road : MonoBehaviour
         }
         bool finished = newRoad.AddNode( node );
         newRoad.RebuildMesh();
-        if ( finished )
-            newRoad = null;
-        return true;
+		if ( finished )
+		{
+			newRoad = null;
+			newRoad.worker = Worker.Create( ground, newRoad );
+		}
+		return true;
     }
 
     bool AddNode( GroundNode node )
@@ -104,8 +108,16 @@ public class Road : MonoBehaviour
         }
 
         node.road = this;
+		node.roadIndex = nodes.Count - 1;
         return false;
     }
+
+	public Flag GetEnd( int side )
+	{
+		if ( side == 0 )
+			return nodes[0].flag;
+		return nodes[nodes.Count - 1].flag;
+	}
 
     public static void CancelNew()
     {
@@ -199,8 +211,26 @@ public class Road : MonoBehaviour
             Assert.AreEqual( this, nodes[i].road );
         for ( int i = 0; i < length - 1; i++ )
             Assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
+		if ( worker )
+			worker.Validate();
     }
+	public int NodeIndex( GroundNode node )
+	{
+		if ( node.flag )
+		{
+			if ( nodes[0] == node )
+				return 0;
+			if ( nodes[nodes.Count - 1] == node )
+				return nodes.Count - 1;
+			return -1;
+		}
+		if ( node.road != this )
+			return -1;
+		Assert.AreEqual( nodes[node.roadIndex], node );
+		return node.roadIndex;
+	}
 
+	public Worker worker;
     public bool ready = false;
     public Ground ground;
     public List<GroundNode> nodes = new List<GroundNode>();

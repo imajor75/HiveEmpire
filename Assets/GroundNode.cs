@@ -12,11 +12,12 @@ public class GroundNode
     public Building building;
     public Flag flag;
     public Road road;
+	public int roadIndex;
     public Road[] startingHere = new Road[neighbourCount];
     public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public int pathFindingIndex = -1;
-    Ground ground;
+    public Ground ground;
     public Vector3 Position()
     {
         int rx = x-ground.width/2;
@@ -28,7 +29,6 @@ public class GroundNode
     {
         int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
         int x = Mathf.FloorToInt( ( position.x - y * size / 2 + ( size / 2 ) ) / size );
-		Debug.Log( position.z + ", " + y + ", " + y + ground.height / 2 );
 		return ground.GetNode( x+ground.width/2, y+ground.height/2 );
     }
 
@@ -54,6 +54,8 @@ public class GroundNode
             flag.Validate();
         if ( building )
             building.Validate();
+		if ( road )
+			Assert.AreEqual( this, road.nodes[roadIndex] );
     }
 
     public void Initialize( Ground ground, int x, int y )

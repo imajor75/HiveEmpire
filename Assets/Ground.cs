@@ -60,7 +60,7 @@ public class Ground : MonoBehaviour
     }
 
     // Update is called once per frame
-        void Update()
+    void Update()
     {
         if (layoutVersion != meshVersion)
         {
@@ -102,9 +102,11 @@ public class Ground : MonoBehaviour
     void CheckUserInput()
     {
         var currentNode = GetNode(currentColumn, currentRow);
-        if ( Input.GetKeyDown( KeyCode.F ) )
-            Flag.CreateNew( this, currentNode );
-        if ( Input.GetKeyDown( KeyCode.R ) )
+		if ( Input.GetKeyDown( KeyCode.F ) )
+			Flag.CreateNew( this, currentNode );
+		if ( Input.GetKeyDown( KeyCode.I ) && currentNode.flag )
+			Item.CreateNew( Item.Type.wood, this, currentNode.flag );
+		if ( Input.GetKeyDown( KeyCode.R ) )
             Road.AddNodeToNew( this, currentNode );
         if ( Input.GetKeyDown( KeyCode.V ) )
         {

@@ -48,12 +48,46 @@ public class Flag : MonoBehaviour
         
     }
 
+	public bool ReleaseItem( Item item )
+	{
+		for ( int i = 0; i < items.Length; i++ )
+		{
+			if ( items[i] = item )
+			{
+				items[i] = null;
+				item.flag = null;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void StoreItem( Item item )
+	{
+		// TODO Do something about a flag not having enough space
+		for ( int i = 0; i < items.Length; i++ )
+		{
+			if ( items[i] == null )
+			{
+				items[i] = item;
+				item.flag = this;
+				return;
+			}
+		}
+		Assert.IsTrue( false );
+	}
+
     public void Validate()
     {
         Assert.AreEqual( this, node.flag );
         for ( int i = 0; i < 6; i++ )
             Assert.IsNull( node.neighbours[i].flag );
+		foreach ( var i in items )
+			if ( i )
+				i.Validate();
     }
 
-    GroundNode node;
+	public static int maxItems = 8;
+	public GroundNode node;
+	public Item[] items = new Item[maxItems];
 }
