@@ -11,43 +11,102 @@ public class Item : MonoBehaviour
 	public Ground ground;
 	public PathFinder path;
 	public int pathProgress;
+	public Building destination;
+
+	static Sprite[] sprites = new Sprite[(int)Type.total];
 
     public enum Type
     {
         wood,
         stone,
         plank,
-        total
+        total,
+		unknown = -1
     }
 
-	static public Item CreateNew( Type type, Ground ground, Flag flag )
+	public static void Initialize()
 	{
-		GameObject itemBody = GameObject.CreatePrimitive( PrimitiveType.Capsule );
+		string[] filenames = { "log", "log", "plank", "log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log", };
+		for ( int i = 0; i < (int)Type.total; i++ )
+		{
+			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
+			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
+			Assert.IsNotNull( sprites[i] );
+		}
+	}
+
+	static public Item CreateNew( Type type, Ground ground, Flag flag, Building destination )
+	{
+		GameObject itemBody = new GameObject(); 
 		itemBody.name = "Item";
 		itemBody.transform.SetParent( ground.transform );
-		itemBody.transform.localScale *= 0.2f;
+		itemBody.transform.localScale *= 0.04f;
+
+		var sr = itemBody.AddComponent<SpriteRenderer>();
+		sr.sprite = sprites[(int)type];
+
 		var item = itemBody.AddComponent<Item>();
 		item.ground = ground;
 		item.type = type;
-		if ( flag )
-			flag.StoreItem( item );
+		if ( flag && !flag.StoreItem( item ) )
+		{
+			Destroy( itemBody );
+			return null;
+		}
+		if ( destination )
+		{
+			if ( !item.SetTarget( destination ) )
+			{
+				if ( flag )
+					flag.ReleaseItem( item );
+				Destroy( itemBody );
+				return null;
+			}
+			destination.ItemOnTheWay( item );
+		}
 		item.UpdateLook();
 		return item;
 	}
 
-	public void SetTarget( Flag flag )
+	static void CancelNew()
+	{
+	}
+
+	void Update()
+	{
+		transform.LookAt( Camera.main.transform.position, -Vector3.up );
+	}
+
+	public bool SetTarget( Building building )
 	{
 		path = new PathFinder();
 		pathProgress = 0;
-		path.FindPathBetween( this.flag.node, flag.node, PathFinder.Mode.onRoad );
+		if ( path.FindPathBetween( this.flag.node, building.flag.node, PathFinder.Mode.onRoad ) )
+		{
+			destination = building;
+			return true;
+		}
+		else
+		{
+			path = null;
+			return false;
+		}
 	}
 
-	public void UpdateLook()
+	public void UpdateLook()	
 	{
 		if ( flag )
 		{
-			// TODO Arrand the items around the flag
-			transform.localPosition = flag.node.Position() + Vector3.up * GroundNode.size;
+			for ( int i = 0; i < Flag.maxItems; i++ )
+			{
+				if ( flag.items[i] == this )
+				{
+					// TODO Arrange the items around the flag
+					transform.localPosition = flag.node.Position() + Vector3.up * GroundNode.size + Vector3.right * i * GroundNode.size / 6;
+					return;
+				}
+			}
+			Assert.IsTrue( false );
 		}
 		if ( worker )
 		{
@@ -69,5 +128,7 @@ public class Item : MonoBehaviour
 		}
 		if ( worker )
 			Assert.AreEqual( this, worker.item );
+		if ( path != null )
+			Assert.IsTrue( pathProgress < path.roadPath.Count );
 	}
 }

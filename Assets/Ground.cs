@@ -38,6 +38,7 @@ public class Ground : MonoBehaviour
         Assert.IsNotNull( Road.material );
         Building.prefab = (GameObject)Resources.Load( "house" );
         Assert.IsNotNull( Building.prefab );
+		Item.Initialize();
 
         mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
@@ -57,7 +58,7 @@ public class Ground : MonoBehaviour
 			n.height = t.GetPixel( (int)(p.x/GroundNode.size/width*400+200), (int)(p.z/GroundNode.size/height*400+200) ).g*GroundNode.size*2;
 		}
 
-		Building.SetupMain( this, GetNode( width / 2, height / 2 ) );
+		Stock.SetupMain( this, GetNode( width / 2, height / 2 ) );
     }
 
     // Update is called once per frame
@@ -71,6 +72,11 @@ public class Ground : MonoBehaviour
         CheckMouse();
         CheckUserInput();
     }
+
+	void LateUpdate()
+	{
+		Validate();
+	}
 
     public GroundNode GetNode( int x, int y )
     {
@@ -105,15 +111,20 @@ public class Ground : MonoBehaviour
 		var currentNode = GetNode(currentColumn, currentRow);
 		if ( Input.GetKeyDown( KeyCode.F ) )
 			Flag.CreateNew( this, currentNode );
-		if ( Input.GetKeyDown( KeyCode.I ) && currentNode.flag )
+		if ( Input.GetKeyDown( KeyCode.I ) )
 		{
 			if ( item )
 			{
-				item.SetTarget( currentNode.flag );
-				item = null;
+				if ( currentNode.building )
+				{
+					currentNode.building.ItemOnTheWay( item );
+					item.SetTarget( currentNode.building );
+					item = null;
+				};
 			}
 			else
-				item = Item.CreateNew( Item.Type.wood, this, currentNode.flag );
+				if ( currentNode.flag )
+					item = Item.CreateNew( Item.Type.wood, this, currentNode.flag, null );
 		}
 		if ( Input.GetKeyDown( KeyCode.R ) )
             Road.AddNodeToNew( this, currentNode );
@@ -122,11 +133,25 @@ public class Ground : MonoBehaviour
             Validate();
             Debug.Log( "Validated" );
         }
-        if ( Input.GetKeyDown( KeyCode.B ) )
-            Building.CreateNew( this, currentNode );
-    }
+		if ( Input.GetKeyDown( KeyCode.B ) )
+		{
+			if ( Building.CreateNew( this, currentNode, Building.Type.workshop ) )
+			{
+				var w = (Workshop)currentNode.building;
+				w.SetType( Workshop.Type.woodcutter );
+			}
+		}
+		if ( Input.GetKeyDown( KeyCode.N ) )
+		{
+			if ( Building.CreateNew( this, currentNode, Building.Type.workshop ) )
+			{
+				var w = (Workshop)currentNode.building;
+				w.SetType( Workshop.Type.sawmill );
+			}
+		}
+	}
 
-    void UpdateMesh()
+	void UpdateMesh()
     {
         if ( mesh == null )
             return;

@@ -82,8 +82,9 @@ public class Worker : MonoBehaviour
 				item.pathProgress++;
 				if ( item.pathProgress == item.path.roadPath.Count )
 				{
-					// TODO Item should be delivered to a building
-					item.GetComponent<MeshRenderer>().enabled = false;
+					Assert.AreEqual( item.destination.flag, flag );
+					item.destination.ItemArrived( item );
+					item.GetComponent<SpriteRenderer>().enabled = false;
 					Destroy( item.gameObject );
 				}
 				else
@@ -124,7 +125,6 @@ public class Worker : MonoBehaviour
 		if ( item == null || item.worker )
 			return;
 
-		// TODO Check the result of the path finding, to see if the item should be carried this way
 		if ( item.path == null || item.path.roadPath[item.pathProgress] != road )
 			return;
 		CarryItem( item );

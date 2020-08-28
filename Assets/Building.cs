@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class Building : MonoBehaviour
+abstract public class Building : MonoBehaviour
 {
+	public enum Type
+	{
+		stock,
+		workshop
+	}
     public Flag flag;
     public Ground ground;
     public GroundNode node;
-    public int[] inventory = new int[(int)Item.Type.total];
-    public bool main = false;
     static public GameObject prefab;
 
-    public static bool CreateNew( Ground ground, GroundNode node )
+    public static bool CreateNew( Ground ground, GroundNode node, Type type )
     {
         if ( node.flag || node.building || node.road )
         {
@@ -34,36 +37,35 @@ public class Building : MonoBehaviour
         Vector3 scale = new Vector3(); scale.Set( 40, 40, 40 );
         buildingObject.transform.localScale = scale;
         buildingObject.transform.Rotate( Vector3.back * 90 );
-        var newBuilding = buildingObject.AddComponent<Building>();
-        newBuilding.ground = ground;
+		Building newBuilding = null;
+		if ( type == Type.stock )
+			newBuilding = buildingObject.AddComponent<Stock>();
+		if ( type == Type.workshop )
+			newBuilding = buildingObject.AddComponent<Workshop>();
+		newBuilding.ground = ground;
         newBuilding.flag = flag;
         newBuilding.node = node;
         node.building = newBuilding;
         return true;
     }
-    public static bool SetupMain( Ground ground, GroundNode node )
-    {
-        if ( !CreateNew( ground, node ) )
-            return false;
 
-        var mainBuilding = node.building;
-        mainBuilding.main = true;
-        mainBuilding.inventory[(int)Item.Type.wood] = 10;
-        return true;
-    }
+	public virtual bool SendItem( Item.Type itemType, Building destination )
+	{
+		Assert.IsTrue( false );
+		return false;
+	}
 
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
+	public virtual void ItemOnTheWay( Item item )
+	{
+		Assert.IsTrue( false );
+	}
 
-    // Update is called once per frame
-    void Update()
-    {
+	public virtual void ItemArrived( Item item )
+	{
+		Assert.IsTrue( false );
+	}
 
-    }
-
-    public void Validate()
+    virtual public void Validate()
     {
         Assert.AreEqual( this, node.building );
         Assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
