@@ -13,7 +13,7 @@ public class GroundNode
     public Flag flag;
     public Road road;
 	public int roadIndex;
-    public Road[] startingHere = new Road[neighbourCount];
+    public Road[] roadsStartingHere = new Road[neighbourCount];
     public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public int pathFindingIndex = -1;
@@ -48,8 +48,8 @@ public class GroundNode
         for ( int i = 0; i < 6; i++ )
             Assert.AreEqual( this, neighbours[i].neighbours[( i + 3 ) % 6] );
         for ( int j = 0; j < 6; j++ )
-            if ( startingHere[j] )
-                startingHere[j].Validate();
+            if ( roadsStartingHere[j] )
+				roadsStartingHere[j].Validate();
         if ( flag )
             flag.Validate();
         if ( building )

@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking.Types;
+using UnityEngine.Assertions;
 
 public class PathFinder
 {
@@ -14,18 +14,29 @@ public class PathFinder
         public float costF;
         public Reached from;
         public bool processed = false;
+		public Road road;
     }
 
     public GroundNode target;
     public List<Reached> visited = new List<Reached>();
     public List<GroundNode> path = new List<GroundNode>();
+	public List<Road> roadPath = new List<Road>();
     public bool ready = false;
     public int openNodes;
+	public Mode mode;
 
-    public bool FindPathBetween( GroundNode start, GroundNode end )
+	public enum Mode
+	{
+		avoidRoads,
+		onRoad,
+		total
+	}
+
+    public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode )
     {
         ready = false;
         target = end;
+		this.mode = mode;
         visited.Clear();
         openNodes = 0;
         AddNode( start, 0, null );
@@ -34,11 +45,14 @@ public class PathFinder
         return ready;
     }
 
-    void VisitNode( GroundNode node, float cost, Reached from )
+    void VisitNode( GroundNode node, float cost, Reached from, Road road = null )
     {
-        // If we cannot pass through the node, skip it
-        if ( node.road || node.building )
-            return;
+		// If we cannot pass through the node, skip it
+		if ( mode == Mode.avoidRoads )
+		{
+			if ( node.road || node.building )
+				return;
+		}
 
         // Check if the node was already visited
         var i = node.pathFindingIndex;
@@ -48,13 +62,14 @@ public class PathFinder
             {
                 visited[i].costG = cost;
                 visited[i].from = from;
+				visited[i].road = road;
             }
             return;
         }
-        AddNode( node, cost, from );
+        AddNode( node, cost, from, road );
     }
 
-    void AddNode( GroundNode node, float cost, Reached from )
+    void AddNode( GroundNode node, float cost, Reached from, Road road = null )
     {
         var n = new Reached();
         n.node = node;
@@ -62,11 +77,10 @@ public class PathFinder
         n.costH = node.DistanceFrom( target );
         n.costF = n.costG + n.costH;
         n.from = from;
+		n.road = road;
         node.pathFindingIndex = visited.Count;
         visited.Add( n );
         openNodes++;
-        if ( node == target )
-            FoundPath( n );
     }
 
     void ProcessBestNode()
@@ -84,22 +98,52 @@ public class PathFinder
     }
     void Process( Reached r )
     {
-        r.processed = true;
+		if ( r.node == target )
+		{
+			FoundPath( r );
+			return;
+		}
+
+		r.processed = true;
         openNodes--;
-        foreach ( var node in r.node.neighbours )
-        {
-            VisitNode( node, r.costG + 1, r );
-        }
+		if ( mode == Mode.onRoad )
+		{
+			foreach ( var road in r.node.roadsStartingHere )
+			{
+				if ( road == null )
+					continue;
+				int index = road.NodeIndex( r.node );
+				if ( index == 0 )
+					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.nodes.Count - 1, r, road );
+				else
+				{
+					Assert.AreEqual( index, road.nodes.Count - 1 );
+					VisitNode( road.nodes[0], r.costG + road.nodes.Count - 1, r, road );
+				}
+			}
+		}
+		else
+		{
+			foreach ( var node in r.node.neighbours )
+				VisitNode( node, r.costG + 1, r ); // TODO cost should depend on steepness of the road
+		}
     }
 
     void FoundPath( Reached goal )
     {
         path.Clear();
+		roadPath.Clear();
         var r = goal;
         do
         {
-            path.Insert( 0, r.node );
-            r = r.from;
+			if ( mode == Mode.onRoad )
+			{
+				if ( r.road != null )
+					roadPath.Insert( 0, r.road );
+			}
+			else
+				path.Insert( 0, r.node );
+			r = r.from;
         }
         while ( r != null );
         visited.Clear();

@@ -4,13 +4,15 @@ using System.ComponentModel;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.VR;
+using UnityEngine.XR;
 
 public class Road : MonoBehaviour
 {
     public static bool AddNodeToNew(Ground ground, GroundNode node)
     {
         // Starting a new road
-        if ( newRoad == null || newRoad.Length() == 0 )
+        if ( newRoad == null || newRoad.nodes.Count == 0 )
         {
             if ( node.flag )
             {
@@ -32,16 +34,16 @@ public class Road : MonoBehaviour
             }
         }
 
-        GroundNode last = newRoad.nodes[newRoad.Length() - 1];
+        GroundNode last = newRoad.nodes[newRoad.nodes.Count - 1];
         // Special case, last node is the same as the current, remove one
         if ( last == node )
         {
-            if ( newRoad.Length() == 1 )
+            if ( newRoad.nodes.Count == 1 )
             {
                 CancelNew();
                 return true;
             }
-            newRoad.nodes.RemoveAt( newRoad.Length() - 1 );
+            newRoad.nodes.RemoveAt( newRoad.nodes.Count - 1 );
             node.road = null;
             newRoad.RebuildMesh();
             return true;
@@ -69,7 +71,7 @@ public class Road : MonoBehaviour
             {
                 // Find a path to the flag, and finish the road based on it
                 var p = new PathFinder();
-                if ( p.FindPathBetween( last, node ) )
+                if ( p.FindPathBetween( last, node, PathFinder.Mode.avoidRoads ) )
                 {
                     for ( int i = 1; i < p.path.Count; i++ )
                         newRoad.AddNode( p.path[i] );
@@ -95,14 +97,14 @@ public class Road : MonoBehaviour
     bool AddNode( GroundNode node )
     {
         nodes.Add( node );
-        if ( newRoad.Length() == 2 )
+        if ( newRoad.nodes.Count == 2 )
             newRoad.name = "Road " + node.x + ", " + node.y;
 
         // Finishing a road
         if ( node.flag )
         {
-            nodes[0].startingHere[nodes[0].DirectionTo( nodes[1] )] = this;
-            node.startingHere[node.DirectionTo( nodes[nodes.Count - 2] )] = this;
+            nodes[0].roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
+            node.roadsStartingHere[node.DirectionTo( nodes[nodes.Count - 2] )] = this;
             ready = true;
             return true;
         }
@@ -148,7 +150,7 @@ public class Road : MonoBehaviour
     void RebuildMesh()
     {
         mesh.Clear();
-        var l = Length()-1;
+        var l = nodes.Count-1;
         var vertices = new Vector3[l*6];
         for ( int j = 0; j < l * 6; j++ )
             vertices[j] = new Vector3();
@@ -192,21 +194,16 @@ public class Road : MonoBehaviour
         mesh.triangles = triangles;
     }
 
-    public int Length()
-    {
-        return nodes.Count;
-    }
-
     public void Validate()
     {
-        int length = Length();
+        int length = nodes.Count;
         Assert.IsTrue( length > 1 );
         var first = nodes[0];
         var last = nodes[length-1];
         Assert.IsNotNull( first.flag );
         Assert.IsNotNull( last.flag );
-        Assert.AreEqual( this, first.startingHere[first.DirectionTo( nodes[1] ) ] );
-        Assert.AreEqual( this, last.startingHere[last.DirectionTo( nodes[length - 2] ) ] );
+        Assert.AreEqual( this, first.roadsStartingHere[first.DirectionTo( nodes[1] ) ] );
+        Assert.AreEqual( this, last.roadsStartingHere[last.DirectionTo( nodes[length - 2] ) ] );
         for ( int i = 1; i < length - 1; i++ )
             Assert.AreEqual( this, nodes[i].road );
         for ( int i = 0; i < length - 1; i++ )
@@ -228,6 +225,24 @@ public class Road : MonoBehaviour
 			return -1;
 		Assert.AreEqual( nodes[node.roadIndex], node );
 		return node.roadIndex;
+	}
+
+	static public Road Between( GroundNode first, GroundNode second )
+	{
+		Assert.IsNotNull( first.flag );
+		Assert.IsNotNull( second.flag );
+		foreach ( var road in first.roadsStartingHere )
+		{
+			if ( road == null )
+				continue;
+			var a = road.nodes[0];
+			var b = road.nodes[road.nodes.Count-1];
+			if ( a == first && b == second )
+				return road;
+			if ( a == second && b == first )
+				return road;
+		}
+		return null;
 	}
 
 	public Worker worker;

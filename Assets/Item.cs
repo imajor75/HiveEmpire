@@ -9,6 +9,8 @@ public class Item : MonoBehaviour
 	public Worker worker;
 	public Type type;
 	public Ground ground;
+	public PathFinder path;
+	public int pathProgress;
 
     public enum Type
     {
@@ -33,17 +35,12 @@ public class Item : MonoBehaviour
 		return item;
 	}
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	public void SetTarget( Flag flag )
+	{
+		path = new PathFinder();
+		pathProgress = 0;
+		path.FindPathBetween( this.flag.node, flag.node, PathFinder.Mode.onRoad );
+	}
 
 	public void UpdateLook()
 	{

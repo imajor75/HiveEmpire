@@ -20,7 +20,7 @@ public class Worker : MonoBehaviour
 		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
 		worker.road = road;
-		worker.currentPoint = road.Length() / 2;
+		worker.currentPoint = road.nodes.Count / 2;
 		worker.transform.SetParent( ground.transform );
 		worker.transform.localScale *= 0.3f;
 		worker.UpdateBody();
@@ -39,11 +39,11 @@ public class Worker : MonoBehaviour
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
-			walkProgress += 0.015f;
+			walkProgress += 0.015f;	// TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
 				walkProgress -= 1;
-				currentPoint = road.NodeIndex( walkTo );
+				currentPoint = road.NodeIndex( walkTo ); // TODO If flag is not free, worker should wait
 				walkTo = walkFrom = null;
 				if ( !NextStep() )
 					FindGoal();
@@ -70,7 +70,7 @@ public class Worker : MonoBehaviour
 		return true;
 	}
 
-	public void FindGoal()
+	public bool FindGoal()
 	{
 		if ( item != null )
 		{
@@ -78,12 +78,21 @@ public class Worker : MonoBehaviour
 			{
 				Flag flag = road.GetEnd( currentPoint );
 				Assert.IsNotNull( flag );
-				flag.StoreItem( item );
-				item.UpdateLook();
 				item.worker = null;
+				item.pathProgress++;
+				if ( item.pathProgress == item.path.roadPath.Count )
+				{
+					// TODO Item should be delivered to a building
+					item.GetComponent<MeshRenderer>().enabled = false;
+					Destroy( item.gameObject );
+				}
+				else
+					flag.StoreItem( item );
+				item.UpdateLook();
 				item = null;
 				handsFull = false;
-				FindGoal();
+				if ( !FindGoal() )
+					WalkToRoadPoint( road.nodes.Count / 2 );
 			}
 			else
 			{
@@ -92,11 +101,11 @@ public class Worker : MonoBehaviour
 				item.flag.ReleaseItem( item );
 				handsFull = true;
 				if ( currentPoint == 0 )
-					WalkToRoadPoint( road.Length() - 1 );
+					WalkToRoadPoint( road.nodes.Count - 1 );
 				else
 					WalkToRoadPoint( 0 );
 			}
-			return;
+			return true;
 		}
 
 		// TODO Pick the most important item rather than the first available
@@ -105,6 +114,7 @@ public class Worker : MonoBehaviour
 			CheckItem( item );
 		foreach ( var item in road.GetEnd( 1 ).items )
 			CheckItem( item );
+		return item != null;
 	}
 
 	public void CheckItem( Item item )
@@ -115,6 +125,8 @@ public class Worker : MonoBehaviour
 			return;
 
 		// TODO Check the result of the path finding, to see if the item should be carried this way
+		if ( item.path == null || item.path.roadPath[item.pathProgress] != road )
+			return;
 		CarryItem( item );
 	}
 
@@ -129,7 +141,7 @@ public class Worker : MonoBehaviour
 
 	public void WalkToRoadPoint( int index )
 	{
-		Assert.IsTrue( index >= 0 && index <= road.Length() );
+		Assert.IsTrue( index >= 0 && index <= road.nodes.Count );
 		roadPointGoal = index;
 		walkProgress = 0;
 		NextStep();
@@ -148,8 +160,8 @@ public class Worker : MonoBehaviour
 			item.Validate();
 		}
 		Assert.AreEqual( road.worker, this );
-		Assert.IsTrue( currentPoint >= 0 && currentPoint < road.Length() );
-		Assert.IsTrue( roadPointGoal >= 0 && roadPointGoal < road.Length() );
+		Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
+		Assert.IsTrue( roadPointGoal >= 0 && roadPointGoal < road.nodes.Count );
 	}
 
 	public void UpdateBody()

@@ -20,6 +20,7 @@ public class Ground : MonoBehaviour
     Mesh mesh;
     new Transform transform;
     new MeshCollider collider;
+	public Item item;
 
     // Start is called before the first frame update
     void Start()
@@ -99,13 +100,21 @@ public class Ground : MonoBehaviour
         }
     }
 
-    void CheckUserInput()
-    {
-        var currentNode = GetNode(currentColumn, currentRow);
+	void CheckUserInput()
+	{
+		var currentNode = GetNode(currentColumn, currentRow);
 		if ( Input.GetKeyDown( KeyCode.F ) )
 			Flag.CreateNew( this, currentNode );
 		if ( Input.GetKeyDown( KeyCode.I ) && currentNode.flag )
-			Item.CreateNew( Item.Type.wood, this, currentNode.flag );
+		{
+			if ( item )
+			{
+				item.SetTarget( currentNode.flag );
+				item = null;
+			}
+			else
+				item = Item.CreateNew( Item.Type.wood, this, currentNode.flag );
+		}
 		if ( Input.GetKeyDown( KeyCode.R ) )
             Road.AddNodeToNew( this, currentNode );
         if ( Input.GetKeyDown( KeyCode.V ) )
