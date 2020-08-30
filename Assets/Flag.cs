@@ -78,7 +78,12 @@ public class Flag : MonoBehaviour
 		return false;
 	}
 
-    public void Validate()
+	public void OnClicked()
+	{
+		FlagPanel.Open( this );
+	}
+
+	public void Validate()
     {
         Assert.AreEqual( this, node.flag );
         for ( int i = 0; i < 6; i++ )

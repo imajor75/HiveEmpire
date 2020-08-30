@@ -65,6 +65,11 @@ abstract public class Building : MonoBehaviour
 		Assert.IsTrue( false );
 	}
 
+	virtual public void OnClicked()
+	{
+		Assert.IsTrue( false );
+	}
+
     virtual public void Validate()
     {
         Assert.AreEqual( this, node.building );

@@ -15,14 +15,14 @@ public class Workshop : Building
 		public Item.Type itemType;
 	}
 
-	int output;
-	Item.Type outputType = Item.Type.unknown;
-	int outputMax = 8;
+	public int output;
+	public Item.Type outputType = Item.Type.unknown;
+	public int outputMax = 8;
 	public float progress;
 	public bool working;
 	public Type type = Type.unknown;
 
-	List<Buffer> buffers = new List<Buffer>();
+	public List<Buffer> buffers = new List<Buffer>();
 
 	public new enum Type
 	{
@@ -121,7 +121,7 @@ public class Workshop : Building
 				}
 				if ( working )
 				{
-					progress += 0.02f;  // TODO Speed needs to be defined somehow
+					progress += 0.002f;  // TODO Speed needs to be defined somehow
 					if ( progress > 1 )
 					{
 						output++;
@@ -140,7 +140,7 @@ public class Workshop : Building
 				}
 				if ( working )
 				{
-					progress += 0.015f;
+					progress += 0.0015f;
 					if ( progress > 1 )
 					{
 						output++;
@@ -150,6 +150,11 @@ public class Workshop : Building
 				break;
 			}
 		}
+	}
+
+	public override void OnClicked()
+	{
+		WorkshopPanel.Open( this );
 	}
 
 	public override void Validate()

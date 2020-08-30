@@ -13,7 +13,7 @@ public class Item : MonoBehaviour
 	public int pathProgress;
 	public Building destination;
 
-	static Sprite[] sprites = new Sprite[(int)Type.total];
+	static public Sprite[] sprites = new Sprite[(int)Type.total];
 
     public enum Type
     {
@@ -40,7 +40,7 @@ public class Item : MonoBehaviour
 		GameObject itemBody = new GameObject(); 
 		itemBody.name = "Item";
 		itemBody.transform.SetParent( ground.transform );
-		itemBody.transform.localScale *= 0.04f;
+		itemBody.transform.localScale *= 0.1f;
 
 		var sr = itemBody.AddComponent<SpriteRenderer>();
 		sr.sprite = sprites[(int)type];

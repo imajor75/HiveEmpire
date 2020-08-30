@@ -39,6 +39,7 @@ public class Ground : MonoBehaviour
         Building.prefab = (GameObject)Resources.Load( "house" );
         Assert.IsNotNull( Building.prefab );
 		Item.Initialize();
+		Panel.Initialize();
 
         mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
@@ -148,6 +149,13 @@ public class Ground : MonoBehaviour
 				var w = (Workshop)currentNode.building;
 				w.SetType( Workshop.Type.sawmill );
 			}
+		}
+		if ( Input.GetMouseButtonDown( 0 ) )
+		{
+			if ( currentNode.building )
+				currentNode.building.OnClicked();
+			if ( currentNode.flag )
+				currentNode.flag.OnClicked();
 		}
 	}
 
