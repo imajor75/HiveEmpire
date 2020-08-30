@@ -12,7 +12,6 @@ public class Item : MonoBehaviour
 	public PathFinder path;
 	public int pathProgress;
 	public Building destination;
-
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 
     public enum Type

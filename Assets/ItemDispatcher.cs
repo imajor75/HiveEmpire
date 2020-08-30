@@ -56,7 +56,6 @@ public class ItemDispatcher : MonoBehaviour
 			offers[(int)itemType].Insert( 0, o );
 	}
 
-	// Start is called before the first frame update
 	void Start()
     {
 		for ( int i = 0; i < requests.Length; i++ )
@@ -67,7 +66,6 @@ public class ItemDispatcher : MonoBehaviour
 		instance = this;
 	}
 
-	// Update is called once per frame
 	void LateUpdate()
     {
 		// TODO Take into account the distance between buildings

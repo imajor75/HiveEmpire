@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class Eye : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+	new Camera camera;
+
+	void Start()
     {
         camera = GetComponent<Camera>();
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
         if ( Input.GetKey( KeyCode.A ) )
@@ -22,5 +22,4 @@ public class Eye : MonoBehaviour
         if ( Input.GetKey( KeyCode.S ) )
             camera.transform.position += Vector3.back * 0.1f;
     }
-    new Camera camera;
 }

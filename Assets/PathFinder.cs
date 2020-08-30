@@ -6,7 +6,15 @@ using UnityEngine.Assertions;
 
 public class PathFinder
 {
-    public class Reached
+	public GroundNode target;
+	public List<Reached> visited = new List<Reached>();
+	public List<GroundNode> path = new List<GroundNode>();
+	public List<Road> roadPath = new List<Road>();
+	public bool ready = false;
+	public int openNodes;
+	public Mode mode;
+
+	public class Reached
     {
         public GroundNode node;
         public float costG;
@@ -16,14 +24,6 @@ public class PathFinder
         public bool processed = false;
 		public Road road;
     }
-
-    public GroundNode target;
-    public List<Reached> visited = new List<Reached>();
-    public List<GroundNode> path = new List<GroundNode>();
-	public List<Road> roadPath = new List<Road>();
-    public bool ready = false;
-    public int openNodes;
-	public Mode mode;
 
 	public enum Mode
 	{

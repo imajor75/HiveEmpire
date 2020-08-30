@@ -5,7 +5,11 @@ using UnityEngine.Assertions;
 
 public class Flag : MonoBehaviour
 {
-    public static bool CreateNew(Ground ground, GroundNode node)
+	public static int maxItems = 8;
+	public GroundNode node;
+	public Item[] items = new Item[maxItems];
+
+	public static bool CreateNew(Ground ground, GroundNode node)
     {
         if ( node.flag )
         {
@@ -34,18 +38,6 @@ public class Flag : MonoBehaviour
         node.flag = (Flag)flagObject.AddComponent(typeof(Flag));
         node.flag.node = node;
         return true;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
 	public bool ReleaseItem( Item item )
@@ -97,8 +89,4 @@ public class Flag : MonoBehaviour
 			}
 		}
     }
-
-	public static int maxItems = 8;
-	public GroundNode node;
-	public Item[] items = new Item[maxItems];
 }

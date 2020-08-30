@@ -7,11 +7,6 @@ public class Stock : Building
 {
 	public bool main = false;
 	public int[] content = new int[(int)Item.Type.total];
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
 	public static bool SetupMain( Ground ground, GroundNode node )
 	{
@@ -23,7 +18,6 @@ public class Stock : Building
 		return true;
 	}
 
-	// Update is called once per frame
 	void Update()
     {
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )

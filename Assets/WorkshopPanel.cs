@@ -52,14 +52,14 @@ public class WorkshopPanel : Panel
 			buffers.Add( bui );
 		}
 
-		row += iconSize / 2;
+		row -= iconSize / 2;
 		col = 0;
 		outputs = new Image[workshop.outputMax];
 		for ( int i = 0; i < workshop.outputMax; i++ )
 		{
 			Image image = CreateElement<Image>( this, col, row, iconSize, iconSize, workshop.outputType.ToString() );
 			image.sprite = Item.sprites[(int)workshop.outputType];
-			col -= iconSize;
+			col += iconSize;
 			outputs[i] = image;
 		}
 

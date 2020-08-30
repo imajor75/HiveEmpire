@@ -18,6 +18,7 @@ public class GroundNode
     public float height = 0;
     public int pathFindingIndex = -1;
     public Ground ground;
+
     public Vector3 Position()
     {
         int rx = x-ground.width/2;

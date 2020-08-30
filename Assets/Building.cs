@@ -5,15 +5,16 @@ using UnityEngine.Assertions;
 
 abstract public class Building : MonoBehaviour
 {
+	public Flag flag;
+	public Ground ground;
+	public GroundNode node;
+	static public GameObject prefab;
+
 	public enum Type
 	{
 		stock,
 		workshop
 	}
-    public Flag flag;
-    public Ground ground;
-    public GroundNode node;
-    static public GameObject prefab;
 
     public static bool CreateNew( Ground ground, GroundNode node, Type type )
     {

@@ -11,18 +11,16 @@ using UnityEngine.UI;
 public class Ground : MonoBehaviour
 {
     public int width = 50, height = 50;
-    GroundNode[] layout;
-    int layoutVersion = 1;
-    int currentRow, currentColumn;
-    GameObject currentNode;
-
-    int meshVersion = 0;
-    Mesh mesh;
-    new Transform transform;
-    new MeshCollider collider;
+    public GroundNode[] layout;
+    public int layoutVersion = 1;
+    public int currentRow, currentColumn;
+    public GameObject currentNode;
+    public int meshVersion = 0;
+    public Mesh mesh;
+    public new Transform transform;
+    public new MeshCollider collider;
 	public Item item;
 
-    // Start is called before the first frame update
     void Start()
     {
 		width = 50;
@@ -62,7 +60,6 @@ public class Ground : MonoBehaviour
 		Stock.SetupMain( this, GetNode( width / 2, height / 2 ) );
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (layoutVersion != meshVersion)

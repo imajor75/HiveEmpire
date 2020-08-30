@@ -6,6 +6,14 @@ using UnityEngine.Assertions;
 
 public class Workshop : Building
 {
+	public int output;
+	public Item.Type outputType = Item.Type.unknown;
+	public int outputMax = 8;
+	public float progress;
+	public bool working;
+	public Type type = Type.unknown;
+	public List<Buffer> buffers = new List<Buffer>();
+
 	public class Buffer
 	{
 		public int size = 8;
@@ -14,15 +22,6 @@ public class Workshop : Building
 		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
 		public Item.Type itemType;
 	}
-
-	public int output;
-	public Item.Type outputType = Item.Type.unknown;
-	public int outputMax = 8;
-	public float progress;
-	public bool working;
-	public Type type = Type.unknown;
-
-	public List<Buffer> buffers = new List<Buffer>();
 
 	public new enum Type
 	{
@@ -121,7 +120,7 @@ public class Workshop : Building
 				}
 				if ( working )
 				{
-					progress += 0.002f;  // TODO Speed needs to be defined somehow
+					progress += 0.02f;  // TODO Speed needs to be defined somehow
 					if ( progress > 1 )
 					{
 						output++;

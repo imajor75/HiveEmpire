@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -13,14 +15,22 @@ public class Worker : MonoBehaviour
 	public float walkProgress;
 	public Item item;
 	public bool handsFull = false;
+	public int wishedPoint = -1;
 
 	static public Worker Create( Ground ground, Road road )
 	{
+		int i = road.nodes.Count / 2;
+		while ( i < road.nodes.Count - 1 && road.workersAtNodes[i] != null )
+			i++;
+		if ( road.workersAtNodes[i] != null )
+			return null;
+
 		GameObject workerBody = GameObject.CreatePrimitive( PrimitiveType.Cylinder );
 		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
 		worker.road = road;
-		worker.currentPoint = road.nodes.Count / 2;
+		worker.currentPoint = i;
+		road.workersAtNodes[i] = worker;
 		worker.transform.SetParent( ground.transform );
 		worker.transform.localScale *= 0.3f;
 		worker.UpdateBody();
@@ -39,23 +49,25 @@ public class Worker : MonoBehaviour
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
-			walkProgress += 0.015f;	// TODO Speed should depend on the steepness of the road
+			walkProgress += 0.015f; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
-				walkProgress -= 1;
 				currentPoint = road.NodeIndex( walkTo ); // TODO If flag is not free, worker should wait
 				walkTo = walkFrom = null;
-				if ( !NextStep() )
-					FindGoal();
+				walkProgress -= 1;
 			}
 			UpdateBody();
 			return;
 		}
-		FindGoal();
+		if ( currentPoint == roadPointGoal )
+			FindGoal();
+		else
+			NextStep();	// TODO This should cause unevent movement at nodes
 	}
 
 	public bool NextStep()
 	{
+		Assert.AreEqual( road.workersAtNodes[currentPoint], this );
 		if ( currentPoint == roadPointGoal )
 			return false;
 
@@ -64,9 +76,29 @@ public class Worker : MonoBehaviour
 			nextPoint = currentPoint + 1;
 		else
 			nextPoint = currentPoint - 1;
+		road.workersAtNodes[currentPoint] = null;
+		if ( road.workersAtNodes[nextPoint] != null )
+		{
+			var otherWorker = road.workersAtNodes[nextPoint];
+			if ( otherWorker.wishedPoint == currentPoint )
+			{
+				// TODO Workers should avoid each other
+				road.workersAtNodes[currentPoint] = null;
+				bool coming = otherWorker.NextStep();
+				Assert.IsTrue( coming );
+			}
+			else
+			{
+				road.workersAtNodes[currentPoint] = this;
+				wishedPoint = nextPoint;
+				return false;
+			}
+		}
 
+		wishedPoint = -1;
 		walkFrom = road.nodes[currentPoint];
 		walkTo = road.nodes[nextPoint];
+		road.workersAtNodes[nextPoint] = this;
 		return true;
 	}
 
@@ -159,9 +191,14 @@ public class Worker : MonoBehaviour
 				Assert.IsNotNull( item.flag );
 			item.Validate();
 		}
-		Assert.AreEqual( road.worker, this );
+		Assert.IsTrue( road.workers.Contains( this ) );
 		Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
 		Assert.IsTrue( roadPointGoal >= 0 && roadPointGoal < road.nodes.Count );
+		if ( wishedPoint >= 0 )
+		{
+			Assert.IsTrue( wishedPoint <= road.nodes.Count );
+			Assert.AreEqual( Math.Abs( wishedPoint - currentPoint ), 1 );
+		}
 	}
 
 	public void UpdateBody()
