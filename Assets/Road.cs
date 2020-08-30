@@ -245,6 +245,30 @@ public class Road : MonoBehaviour
 		return null;
 	}
 
+	public int Jam()
+	{
+		int itemCount = 0;
+		for ( int e = 0; e < 2; e++ )
+		{
+			Flag flag = GetEnd( e );
+			for ( int i = 0; i < Flag.maxItems; i++ )
+			{
+				Item t = flag.items[i];
+				if ( t == null || t.path == null || t.pathProgress >= t.path.roadPath.Count )
+					continue;
+				Road r = t.path.roadPath[t.pathProgress];
+				if ( r == this )
+					itemCount++;
+			};
+		}
+		return itemCount;
+	}
+
+	public void OnClicked()
+	{
+		RoadPanel.Open( this );
+	}
+
 	public Worker worker;
     public bool ready = false;
     public Ground ground;

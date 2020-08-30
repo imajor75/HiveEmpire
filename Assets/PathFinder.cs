@@ -114,11 +114,12 @@ public class PathFinder
 					continue;
 				int index = road.NodeIndex( r.node );
 				if ( index == 0 )
-					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.nodes.Count - 1, r, road );
+					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.nodes.Count - 1 + road.Jam(), r, road );
 				else
 				{
 					Assert.AreEqual( index, road.nodes.Count - 1 );
-					VisitNode( road.nodes[0], r.costG + road.nodes.Count - 1, r, road );
+					// TODO Calculate the additional cost better based on traffic jam
+					VisitNode( road.nodes[0], r.costG + road.nodes.Count - 1 + road.Jam(), r, road );
 				}
 			}
 		}

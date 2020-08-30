@@ -156,6 +156,8 @@ public class Ground : MonoBehaviour
 				currentNode.building.OnClicked();
 			if ( currentNode.flag )
 				currentNode.flag.OnClicked();
+			if ( currentNode.road )
+				currentNode.road.OnClicked();
 		}
 	}
 
