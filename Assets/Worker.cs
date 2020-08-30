@@ -60,9 +60,28 @@ public class Worker : MonoBehaviour
 			return;
 		}
 		if ( currentPoint == roadPointGoal )
-			FindGoal();
+		{
+			if ( !FindGoal() && road.workers.Count > 1 )
+				Remove();
+		}
 		else
 			NextStep();	// TODO This should cause unevent movement at nodes
+	}
+
+	void Remove()
+	{
+		GroundNode point = road.nodes[currentPoint];
+		Assert.AreEqual( road.workersAtNodes[currentPoint], this );
+		road.workersAtNodes[currentPoint] = null;
+		Flag flag = road.nodes[currentPoint].flag;
+		if ( flag )
+		{
+			Assert.AreEqual( flag.user, this );
+			flag.user = null;
+		}
+		road.workers.Remove( this );
+		GetComponent<MeshRenderer>().enabled = false;
+		Destroy( this );
 	}
 
 	public bool NextStep()
