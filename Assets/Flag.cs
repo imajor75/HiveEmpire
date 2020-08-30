@@ -8,6 +8,7 @@ public class Flag : MonoBehaviour
 	public static int maxItems = 8;
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
+	public Worker user;
 
 	public static bool CreateNew(Ground ground, GroundNode node)
     {

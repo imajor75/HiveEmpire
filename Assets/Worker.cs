@@ -29,7 +29,7 @@ public class Worker : MonoBehaviour
 		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
 		worker.road = road;
-		worker.currentPoint = i;
+		worker.currentPoint = worker.roadPointGoal = i;
 		road.workersAtNodes[i] = worker;
 		worker.transform.SetParent( ground.transform );
 		worker.transform.localScale *= 0.3f;
@@ -52,7 +52,7 @@ public class Worker : MonoBehaviour
 			walkProgress += 0.015f; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
-				currentPoint = road.NodeIndex( walkTo ); // TODO If flag is not free, worker should wait
+				currentPoint = road.NodeIndex( walkTo );
 				walkTo = walkFrom = null;
 				walkProgress -= 1;
 			}
@@ -76,6 +76,14 @@ public class Worker : MonoBehaviour
 			nextPoint = currentPoint + 1;
 		else
 			nextPoint = currentPoint - 1;
+
+		Flag flag = road.nodes[nextPoint].flag;
+		if ( flag )
+		{
+			if ( flag.user && flag.user.wishedPoint != currentPoint )
+				return false;
+			flag.user = this;
+		}
 		road.workersAtNodes[currentPoint] = null;
 		if ( road.workersAtNodes[nextPoint] != null )
 		{
@@ -98,6 +106,8 @@ public class Worker : MonoBehaviour
 		wishedPoint = -1;
 		walkFrom = road.nodes[currentPoint];
 		walkTo = road.nodes[nextPoint];
+		if ( walkFrom.flag && walkFrom.flag.user == this )
+			walkFrom.flag.user = null;
 		road.workersAtNodes[nextPoint] = this;
 		return true;
 	}
