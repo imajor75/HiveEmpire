@@ -294,7 +294,7 @@ public class Road : MonoBehaviour
 		Assert.AreEqual( this, first.roadsStartingHere[first.DirectionTo( nodes[1] )] );
 		Assert.AreEqual( this, last.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
 		for ( int i = 1; i < length - 1; i++ )
-			Assert.AreEqual( this, nodes[i].road );
+			Assert.AreEqual( this, nodes[i].road );	// TODO This assert fired once
 		for ( int i = 0; i < length - 1; i++ )
 			Assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
 		foreach ( var worker in workers )

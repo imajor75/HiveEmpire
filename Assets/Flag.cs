@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using System;
+using System.IO;
 
 public class Flag : MonoBehaviour
 {
@@ -22,6 +24,12 @@ public class Flag : MonoBehaviour
             Debug.Log( "Cannot create a flag at a building" );
             return false;
         }
+		if ( node.road )
+		{
+			// TODO Make it possible to create a flag at a road
+			Debug.Log( "Cannot create a flag at a road" );
+			return false;
+		}
         bool hasAdjacentFlag = false;
         foreach (var adjacentNode in node.neighbours)
             if (adjacentNode.flag)
@@ -91,3 +99,4 @@ public class Flag : MonoBehaviour
 		}
     }
 }
+ 
