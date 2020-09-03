@@ -1,25 +1,29 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using UnityEditor;
+﻿using Newtonsoft.Json;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.UI;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class Ground : MonoBehaviour
 {
     public int width = 50, height = 50;
-    public GroundNode[] layout;
+	[JsonIgnore]
+	public GroundNode[] layout;
     public int layoutVersion = 1;
-    public int currentRow, currentColumn;
-    public GameObject currentNode;
+	[JsonIgnore]
+	public int currentRow, currentColumn;
+	[JsonIgnore]
+	public GameObject currentNode;
     public int meshVersion = 0;
-    public Mesh mesh;
-    public new Transform transform;
-    public new MeshCollider collider;
-	public Item item;
+	[JsonIgnore]
+	public Mesh mesh;
+	[JsonIgnore]
+	public new Transform transform;
+	[JsonIgnore]
+	public new MeshCollider collider;
+	[JsonIgnore]
+	public Item lastItem;
+	public Building mainBuilding;
 
     void Start()
     {
@@ -57,7 +61,7 @@ public class Ground : MonoBehaviour
 			n.height = t.GetPixel( (int)(p.x/GroundNode.size/width*400+200), (int)(p.z/GroundNode.size/height*400+200) ).g*GroundNode.size*2;
 		}
 
-		Stock.SetupMain( this, GetNode( width / 2, height / 2 ) );
+		mainBuilding = Stock.SetupMain( this, GetNode( width / 2, height / 2 ) );
     }
 
     void Update()
@@ -111,26 +115,26 @@ public class Ground : MonoBehaviour
 			Flag.CreateNew( this, currentNode );
 		if ( Input.GetKeyDown( KeyCode.I ) )
 		{
-			if ( item )
+			if ( lastItem )
 			{
 				if ( currentNode.building )
 				{
-					currentNode.building.ItemOnTheWay( item );
-					item.SetTarget( currentNode.building );
-					item = null;
+					currentNode.building.ItemOnTheWay( lastItem );
+					lastItem.SetTarget( currentNode.building );
+					lastItem = null;
 				};
 			}
 			else
 				if ( currentNode.flag )
-					item = Item.CreateNew( Item.Type.wood, this, currentNode.flag, null );
+				lastItem = Item.CreateNew( Item.Type.wood, this, currentNode.flag, null );
 		}
 		if ( Input.GetKeyDown( KeyCode.R ) )
-            Road.AddNodeToNew( this, currentNode );
-        if ( Input.GetKeyDown( KeyCode.V ) )
-        {
-            Validate();
-            Debug.Log( "Validated" );
-        }
+			Road.AddNodeToNew( this, currentNode );
+		if ( Input.GetKeyDown( KeyCode.V ) )
+		{
+			Validate();
+			Debug.Log( "Validated" );
+		}
 		if ( Input.GetKeyDown( KeyCode.B ) )
 		{
 			if ( Building.CreateNew( this, currentNode, Building.Type.workshop ) )
@@ -155,6 +159,31 @@ public class Ground : MonoBehaviour
 				currentNode.flag.OnClicked();
 			if ( currentNode.road )
 				currentNode.road.OnClicked();
+		}
+		if ( Input.GetKeyDown( KeyCode.P ) )
+		{
+			JsonSerializerSettings jsonSettings = new JsonSerializerSettings();
+			jsonSettings.TypeNameHandling = TypeNameHandling.Auto;
+			jsonSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+			jsonSettings.ContractResolver = Serializer.SkipUnityContractResolver.Instance;
+			var serializer = JsonSerializer.Create( jsonSettings );
+
+			using ( var sw = new StreamWriter( "test.json" ) )
+			using ( JsonTextWriter writer = new JsonTextWriter( sw ) )
+			{
+				writer.Formatting = Formatting.Indented;
+				serializer.Serialize( writer, mainBuilding );
+			}
+		}
+		if ( Input.GetKeyDown( KeyCode.L ) )
+		{
+			var serializer = new Serializer();
+
+			using ( var sw = new StreamReader( "test.json" ) )
+			using ( var reader = new JsonTextReader( sw ) )
+			{
+				serializer.Deserialize<Stock>( reader );
+			}
 		}
 	}
 

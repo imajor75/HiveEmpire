@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -14,7 +15,8 @@ public class GroundNode
     public Road road;
 	public int roadIndex;
     public Road[] roadsStartingHere = new Road[neighbourCount];
-    public GroundNode[] neighbours = new GroundNode[neighbourCount];
+	[JsonIgnore]
+	public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public int pathFindingIndex = -1;
     public Ground ground;

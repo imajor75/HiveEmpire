@@ -1,11 +1,15 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using UnityEngine;
 using UnityEngine.Assertions;
 
-class Serializer : JsonSerializer
+public class Serializer : JsonSerializer
 {
 	public List<object> objects;
 	object instance;
@@ -13,6 +17,33 @@ class Serializer : JsonSerializer
 	Type staticType;
 	Serializer boss;
 	int index;
+
+	public class SkipUnityContractResolver : DefaultContractResolver
+	{
+		public static readonly SkipUnityContractResolver Instance = new SkipUnityContractResolver();
+		public static readonly Type[] gameClasses = {
+			typeof( Flag ),
+			typeof( Worker ),
+			typeof( Road ),
+			typeof( Building ),
+			typeof( Stock ),
+			typeof( Workshop ),
+			typeof( PathFinder ),
+			typeof( Ground ),
+			typeof( GroundNode ),
+			typeof( Item )
+		};
+
+		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
+		{
+			JsonProperty property = base.CreateProperty(member, memberSerialization);
+
+			if ( !gameClasses.Contains( member.DeclaringType ) )
+				property.ShouldSerialize = instance => false;
+
+			return property;
+		}
+	}
 
 	public Serializer( Serializer boss = null )
 	{

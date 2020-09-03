@@ -8,14 +8,14 @@ public class Stock : Building
 	public bool main = false;
 	public int[] content = new int[(int)Item.Type.total];
 
-	public static bool SetupMain( Ground ground, GroundNode node )
+	public static Building SetupMain( Ground ground, GroundNode node )
 	{
 		if ( !CreateNew( ground, node, Type.stock ) )
-			return false;
+			return null;
 
 		var mainBuilding = (Stock)node.building;
 		mainBuilding.main = true;
-		return true;
+		return mainBuilding;
 	}
 
 	void Update()
