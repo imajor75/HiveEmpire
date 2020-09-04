@@ -17,31 +17,39 @@ public class Worker : MonoBehaviour
 	public bool handsFull = false;
 	public int wishedPoint = -1;
 
-	static public Worker Create( Ground ground, Road road )
+	static public Worker Create( Ground ground = null, Road road = null )
 	{
-		int i = road.nodes.Count / 2;
-		while ( i < road.nodes.Count - 1 && road.workersAtNodes[i] != null )
-			i++;
-		if ( road.workersAtNodes[i] != null )
-			return null;
+		int i = -1;
+		if ( road != null )
+		{
+			i = road.nodes.Count / 2;
+			while ( i < road.nodes.Count - 1 && road.workersAtNodes[i] != null )
+				i++;
+			if ( road.workersAtNodes[i] != null )
+				return null;
+		}
 
 		GameObject workerBody = GameObject.CreatePrimitive( PrimitiveType.Cylinder );
 		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
-		worker.road = road;
-		worker.currentPoint = worker.roadPointGoal = i;
-		road.workersAtNodes[i] = worker;
-		worker.transform.SetParent( ground.transform );
 		worker.transform.localScale *= 0.3f;
-		worker.UpdateBody();
+
+		if ( road != null )
+		{
+			worker.road = road;
+			worker.currentPoint = worker.roadPointGoal = i;
+			road.workersAtNodes[i] = worker;
+			worker.UpdateBody();
+		}
 		return worker;
 	}
 
     // Start is called before the first frame update
     void Start()
     {
-        
-    }
+		transform.SetParent( road.ground.transform );
+		UpdateBody();
+	}
 
 	// Update is called once per frame
 	void FixedUpdate()

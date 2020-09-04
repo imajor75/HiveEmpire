@@ -14,7 +14,7 @@ public class Workshop : Building
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
 
-	public class Buffer
+	public class Buffer : ScriptableObject
 	{
 		public int size = 8;
 		public int stored;
@@ -31,16 +31,22 @@ public class Workshop : Building
 		unknown = -1
 	}
 
+	public static Workshop Create()
+	{
+		var buildingObject = (GameObject)GameObject.Instantiate( prefab );
+		return buildingObject.AddComponent<Workshop>();
+	}
+
 	void Update()
 	{
 		foreach ( Buffer b in buffers )
 		{
 			int missing = b.size-b.stored-b.onTheWay;
 			if ( missing > 0 )
-				ItemDispatcher.instance.RegisterRequest( this, b.itemType, missing, b.priority );
+				ItemDispatcher.lastInstance.RegisterRequest( this, b.itemType, missing, b.priority );
 		}
 		if ( output > 0 )
-			ItemDispatcher.instance.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
+			ItemDispatcher.lastInstance.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
 	}
 
 	public override bool SendItem( Item.Type itemType, Building destination )
@@ -97,7 +103,7 @@ public class Workshop : Building
 			}
 			case Type.sawmill:
 			{
-				Buffer b = new Buffer();
+				Buffer b = ScriptableObject.CreateInstance<Buffer>();
 				b.itemType = Item.Type.wood;
 				buffers.Add( b );
 				outputType = Item.Type.plank;

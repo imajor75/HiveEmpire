@@ -21,6 +21,18 @@ public class Road : MonoBehaviour
 	public static int msecBetweenWorkersAdded = 10*1000;
 	public static Road newRoad;
 
+	public static Road Create()
+	{
+		var roadObject = new GameObject();
+		roadObject.name = "Road";
+		return (Road)roadObject.AddComponent( typeof( Road ) );
+	}
+
+	public static void Initialize()
+	{
+		material = Resources.Load<Material>( "Road" );
+	}
+
 	public static bool AddNodeToNew( Ground ground, GroundNode node )
 	{
 		// Starting a new road
@@ -29,12 +41,7 @@ public class Road : MonoBehaviour
 			if ( node.flag )
 			{
 				if ( newRoad == null )
-				{
-					var roadObject = new GameObject();
-					roadObject.transform.SetParent( ground.transform, false );
-					roadObject.name = "Road";
-					newRoad = (Road)roadObject.AddComponent( typeof( Road ) );
-				}
+					newRoad = Create();
 				newRoad.ground = ground;
 				newRoad.nodes.Add( node );
 				return true;
@@ -146,10 +153,12 @@ public class Road : MonoBehaviour
 
 	void Start()
 	{
+		transform.SetParent( ground.transform, false );
 		var renderer = gameObject.AddComponent<MeshRenderer>();
 		renderer.material = material;
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
+		RebuildMesh();
 	}
 
 	void Update()

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 
-public class GroundNode
+public class GroundNode : ScriptableObject
 {
     public static float size = 1;
     public static int neighbourCount = 6;
@@ -74,6 +74,7 @@ public class GroundNode
         neighbours[4] = ground.GetNode( x - 1, y + 1 );
         neighbours[5] = ground.GetNode( x - 1, y + 0 );
     }
+
     public int DistanceFrom( GroundNode o )
     {
         int e = ground.height, w = ground.width;
@@ -102,4 +103,3 @@ public class GroundNode
         return Mathf.Max( Mathf.Max( h, v ), d );
     }
 }
-

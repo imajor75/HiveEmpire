@@ -23,6 +23,14 @@ public class Item : MonoBehaviour
 		unknown = -1
     }
 
+	public static Item Create()
+	{
+		GameObject itemBody = new GameObject();
+		itemBody.name = "Item";
+		itemBody.AddComponent<SpriteRenderer>();
+		return itemBody.AddComponent<Item>();
+	}
+
 	public static void Initialize()
 	{
 		string[] filenames = { "log", "log", "plank", "log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log", };
@@ -36,20 +44,12 @@ public class Item : MonoBehaviour
 
 	static public Item CreateNew( Type type, Ground ground, Flag flag, Building destination )
 	{
-		GameObject itemBody = new GameObject(); 
-		itemBody.name = "Item";
-		itemBody.transform.SetParent( ground.transform );
-		itemBody.transform.localScale *= 0.1f;
-
-		var sr = itemBody.AddComponent<SpriteRenderer>();
-		sr.sprite = sprites[(int)type];
-
-		var item = itemBody.AddComponent<Item>();
+		var item = Create();
 		item.ground = ground;
 		item.type = type;
 		if ( flag && !flag.StoreItem( item ) )
 		{
-			Destroy( itemBody );
+			Destroy( item.gameObject );
 			return null;
 		}
 		if ( destination )
@@ -58,7 +58,7 @@ public class Item : MonoBehaviour
 			{
 				if ( flag )
 					flag.ReleaseItem( item );
-				Destroy( itemBody );
+				Destroy( item.gameObject );
 				return null;
 			}
 			destination.ItemOnTheWay( item );
@@ -69,6 +69,14 @@ public class Item : MonoBehaviour
 
 	static void CancelNew()
 	{
+	}
+
+	void Start()
+	{
+		transform.SetParent( ground.transform );
+		transform.localScale *= 0.1f;
+		gameObject.GetComponent<SpriteRenderer>().sprite = sprites[(int)type];
+		UpdateLook();
 	}
 
 	void Update()

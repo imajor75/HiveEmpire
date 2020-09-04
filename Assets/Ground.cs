@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.IO;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -7,66 +6,82 @@ using UnityEngine.Assertions;
 public class Ground : MonoBehaviour
 {
     public int width = 50, height = 50;
-	[JsonIgnore]
 	public GroundNode[] layout;
     public int layoutVersion = 1;
 	[JsonIgnore]
 	public int currentRow, currentColumn;
 	[JsonIgnore]
 	public GameObject currentNode;
+	[JsonIgnore]
+	public GroundNode selectedNode;
     public int meshVersion = 0;
 	[JsonIgnore]
 	public Mesh mesh;
-	[JsonIgnore]
-	public new Transform transform;
 	[JsonIgnore]
 	public new MeshCollider collider;
 	[JsonIgnore]
 	public Item lastItem;
 	public Building mainBuilding;
 
-    void Start()
+	public static Ground Create()
+	{
+		var groundObject = new GameObject();
+		return groundObject.AddComponent<Ground>();
+	}
+
+	void Start()
     {
+		gameObject.name = "Ground";
 		width = 50;
 		height = 30;
-        MeshFilter meshFilter = (MeshFilter)gameObject.GetComponent(typeof(MeshFilter));
-        transform = (Transform)gameObject.GetComponent( typeof( Transform ) );
-        Assert.IsNotNull( transform );
-        collider = (MeshCollider)gameObject.GetComponent( typeof( MeshCollider ) );
-        Assert.IsNotNull( collider );
-        currentNode = GameObject.Find( "CurrentNode" );
-        Assert.IsNotNull( currentNode );
-        Road.material = Resources.Load<Material>( "Road" );
-        Assert.IsNotNull( Road.material );
-        Building.prefab = (GameObject)Resources.Load( "house" );
-        Assert.IsNotNull( Building.prefab );
-		Item.Initialize();
-		Panel.Initialize();
+        MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
+        collider = gameObject.GetComponent<MeshCollider>();
 
-        mesh = /*collider.sharedMesh = */meshFilter.mesh = new Mesh();
+		currentNode = GameObject.CreatePrimitive( PrimitiveType.Cube );
+		currentNode.name = "Cursor";
+		currentNode.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
+		currentNode.transform.localScale *= 0.25f;
+		currentNode.transform.SetParent( transform );
+
+
+		GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
+
+		mesh = meshFilter.mesh = new Mesh();
         mesh.name = "GroundMesh";
 
-        layout = new GroundNode[( width + 1 ) * ( height + 1 )];
-        for ( int x = 0; x <= width; x++ )
-            for ( int y = 0; y <= height; y++ )
-                layout[y * ( width + 1 ) + x] = new GroundNode();
-        for ( int x = 0; x <= width; x++ )
-            for ( int y = 0; y <= height; y++ )
-                GetNode( x, y ).Initialize( this, x, y );
+		if ( layout == null )
+			layout = new GroundNode[( width + 1 ) * ( height + 1 )];
+		FinishLayout();
+
+		if ( mainBuilding == null )
+			mainBuilding = Stock.SetupMain( this, GetNode( width / 2, height / 2 ) );
+    }
+
+	public void FinishLayout()
+	{
+		for ( int x = 0; x <= width; x++ )
+		{
+			for ( int y = 0; y <= height; y++ )
+			{
+				if ( layout[y * ( width + 1 ) + x] == null )
+					layout[y * ( width + 1 ) + x] = ScriptableObject.CreateInstance<GroundNode>();
+			}
+		}
+		for ( int x = 0; x <= width; x++ )
+			for ( int y = 0; y <= height; y++ )
+				GetNode( x, y ).Initialize( this, x, y );
 
 		var t = Resources.Load<Texture2D>( "heightMap" );
 		foreach ( var n in layout )
 		{
 			Vector3 p = n.Position();
-			n.height = t.GetPixel( (int)(p.x/GroundNode.size/width*400+200), (int)(p.z/GroundNode.size/height*400+200) ).g*GroundNode.size*2;
+			n.height = t.GetPixel( (int)( p.x / GroundNode.size / width * 400 + 200 ), (int)( p.z / GroundNode.size / height * 400 + 200 ) ).g * GroundNode.size * 2;
 		}
+	}
 
-		mainBuilding = Stock.SetupMain( this, GetNode( width / 2, height / 2 ) );
-    }
-
-    void Update()
+	void Update()
     {
-        if (layoutVersion != meshVersion)
+        if ( layoutVersion != meshVersion || mesh.vertexCount == 0 )
         {
             UpdateMesh();
             meshVersion = layoutVersion;
@@ -93,7 +108,14 @@ public class Ground : MonoBehaviour
         return layout[y * (width + 1) + x];
     }
 
-    void CheckMouse()
+	public void SetNode( int x, int y, GroundNode node )
+	{
+		if ( layout == null )
+			layout = new GroundNode[( width + 1 ) * ( height + 1 )];
+
+		layout[y * ( width + 1 ) + x] = node;
+	}
+	void CheckMouse()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -112,7 +134,7 @@ public class Ground : MonoBehaviour
 	{
 		var currentNode = GetNode(currentColumn, currentRow);
 		if ( Input.GetKeyDown( KeyCode.F ) )
-			Flag.CreateNew( this, currentNode );
+			Flag.Create( this, currentNode );
 		if ( Input.GetKeyDown( KeyCode.I ) )
 		{
 			if ( lastItem )
@@ -130,11 +152,6 @@ public class Ground : MonoBehaviour
 		}
 		if ( Input.GetKeyDown( KeyCode.R ) )
 			Road.AddNodeToNew( this, currentNode );
-		if ( Input.GetKeyDown( KeyCode.V ) )
-		{
-			Validate();
-			Debug.Log( "Validated" );
-		}
 		if ( Input.GetKeyDown( KeyCode.B ) )
 		{
 			if ( Building.CreateNew( this, currentNode, Building.Type.workshop ) )
@@ -143,7 +160,7 @@ public class Ground : MonoBehaviour
 				w.SetType( Workshop.Type.woodcutter );
 			}
 		}
-		if ( Input.GetKeyDown( KeyCode.N ) )
+		if ( Input.GetKeyDown( KeyCode.V ) )
 		{
 			if ( Building.CreateNew( this, currentNode, Building.Type.workshop ) )
 			{
@@ -160,31 +177,8 @@ public class Ground : MonoBehaviour
 			if ( currentNode.road )
 				currentNode.road.OnClicked();
 		}
-		if ( Input.GetKeyDown( KeyCode.P ) )
-		{
-			JsonSerializerSettings jsonSettings = new JsonSerializerSettings();
-			jsonSettings.TypeNameHandling = TypeNameHandling.Auto;
-			jsonSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
-			jsonSettings.ContractResolver = Serializer.SkipUnityContractResolver.Instance;
-			var serializer = JsonSerializer.Create( jsonSettings );
-
-			using ( var sw = new StreamWriter( "test.json" ) )
-			using ( JsonTextWriter writer = new JsonTextWriter( sw ) )
-			{
-				writer.Formatting = Formatting.Indented;
-				serializer.Serialize( writer, mainBuilding );
-			}
-		}
-		if ( Input.GetKeyDown( KeyCode.L ) )
-		{
-			var serializer = new Serializer();
-
-			using ( var sw = new StreamReader( "test.json" ) )
-			using ( var reader = new JsonTextReader( sw ) )
-			{
-				serializer.Deserialize<Stock>( reader );
-			}
-		}
+		if ( Input.GetKeyDown( KeyCode.O ) )
+			selectedNode = currentNode;
 	}
 
 	void UpdateMesh()

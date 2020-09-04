@@ -8,6 +8,12 @@ public class Stock : Building
 	public bool main = false;
 	public int[] content = new int[(int)Item.Type.total];
 
+	public static Stock Create()
+	{
+		var buildingObject = (GameObject)GameObject.Instantiate( prefab );
+		return buildingObject.AddComponent<Stock>();
+	}
+
 	public static Building SetupMain( Ground ground, GroundNode node )
 	{
 		if ( !CreateNew( ground, node, Type.stock ) )
@@ -18,13 +24,19 @@ public class Stock : Building
 		return mainBuilding;
 	}
 
-	void Update()
+	new void Start()
+	{
+		base.Start();
+		gameObject.name = "Stock " + node.x + ", " + node.y;
+	}
+
+	public void Update()
     {
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
 			if ( content[itemType] > 0 )
-				ItemDispatcher.instance.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.low );
-			ItemDispatcher.instance.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
+				ItemDispatcher.lastInstance.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.low );
+			ItemDispatcher.lastInstance.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
 		}
     }
 

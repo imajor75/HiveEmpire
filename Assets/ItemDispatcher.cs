@@ -28,7 +28,7 @@ public class ItemDispatcher : MonoBehaviour
 	public List<Request>[] requests = new List<Request>[(int)Item.Type.total];
 	public List<Offer>[] offers = new List<Offer>[(int)Item.Type.total];
 
-	public static ItemDispatcher instance;
+	public static ItemDispatcher lastInstance;
 
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority )
 	{
@@ -58,12 +58,12 @@ public class ItemDispatcher : MonoBehaviour
 
 	void Start()
     {
+		name = "Item Dispatcher";
 		for ( int i = 0; i < requests.Length; i++ )
 			requests[i] = new List<Request>();
 		for ( int i = 0; i < requests.Length; i++ )
 			offers[i] = new List<Offer>();
-		Assert.IsNull( instance );
-		instance = this;
+		lastInstance = this;
 	}
 
 	void LateUpdate()

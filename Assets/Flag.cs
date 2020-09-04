@@ -12,7 +12,14 @@ public class Flag : MonoBehaviour
 	public Item[] items = new Item[maxItems];
 	public Worker user;
 
-	public static bool CreateNew(Ground ground, GroundNode node)
+	public static Flag Create()
+	{
+		GameObject flagObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		flagObject.transform.localScale *= 0.3f;
+		return flagObject.AddComponent<Flag>();
+	}
+
+	public static bool Create( Ground ground, GroundNode node )
     {
         if ( node.flag )
         {
@@ -39,15 +46,17 @@ public class Flag : MonoBehaviour
             Debug.Log("Another flag is too close");
             return false;
         }
-        GameObject flagObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        flagObject.name = "Flag "+node.x+", "+node.y;
-        flagObject.transform.SetParent(ground.transform);
-        flagObject.transform.localPosition = node.Position();
-        flagObject.transform.localScale *= 0.3f;
-        node.flag = (Flag)flagObject.AddComponent(typeof(Flag));
+        node.flag = Create();
         node.flag.node = node;
         return true;
     }
+
+	void Start()
+	{
+		gameObject.name = "Flag " + node.x + ", " + node.y;
+		transform.SetParent( node.ground.transform );
+		transform.localPosition = node.Position();
+	}
 
 	public bool ReleaseItem( Item item )
 	{

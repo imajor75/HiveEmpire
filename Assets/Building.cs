@@ -16,7 +16,12 @@ abstract public class Building : MonoBehaviour
 		workshop
 	}
 
-    public static bool CreateNew( Ground ground, GroundNode node, Type type )
+	public static void Initialize()
+	{
+		prefab = (GameObject)Resources.Load( "house" );
+	}
+
+	public static bool CreateNew( Ground ground, GroundNode node, Type type )
     {
         if ( node.flag || node.building || node.road )
         {
@@ -24,7 +29,7 @@ abstract public class Building : MonoBehaviour
             return false;
         }
         var flagNode = ground.GetNode( node.x + 1, node.y - 1 );
-        if ( !Flag.CreateNew( ground, flagNode ) )
+        if ( !Flag.Create( ground, flagNode ) )
         {
             Debug.Log( "Flag couldn't be created" );
             return false;
@@ -35,9 +40,7 @@ abstract public class Building : MonoBehaviour
         buildingObject.name = "Building " + node.x + ", " + node.y;
         buildingObject.transform.SetParent( ground.transform );
         buildingObject.transform.localPosition = node.Position();
-        Vector3 scale = new Vector3(); scale.Set( 40, 40, 40 );
-        buildingObject.transform.localScale = scale;
-        buildingObject.transform.Rotate( Vector3.back * 90 );
+        buildingObject.transform.localScale = new Vector3( 40, 40, 40 );
 		Building newBuilding = null;
 		if ( type == Type.stock )
 			newBuilding = buildingObject.AddComponent<Stock>();
@@ -49,6 +52,14 @@ abstract public class Building : MonoBehaviour
         node.building = newBuilding;
         return true;
     }
+
+	public void Start()
+	{
+		transform.SetParent( ground.transform );
+		transform.localPosition = node.Position();
+		transform.localScale = new Vector3( 40, 40, 40 );
+		transform.Rotate( Vector3.back * 90 );
+	}
 
 	public virtual bool SendItem( Item.Type itemType, Building destination )
 	{

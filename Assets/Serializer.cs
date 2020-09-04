@@ -31,7 +31,8 @@ public class Serializer : JsonSerializer
 			typeof( PathFinder ),
 			typeof( Ground ),
 			typeof( GroundNode ),
-			typeof( Item )
+			typeof( Item ),
+			typeof( Workshop.Buffer )
 		};
 
 		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
@@ -59,13 +60,32 @@ public class Serializer : JsonSerializer
 	{
 		if ( instance == null )
 		{
-			instance = Activator.CreateInstance( type );
-			if ( index > 0 )
-			{
-				while ( boss.objects.Count <= index )
-					boss.objects.Add( instance );
-				boss.objects[index] = instance;
-			}
+			if ( type == typeof( Flag ) )
+				instance = Flag.Create();
+			else if ( type == typeof( Stock ) )
+				instance = Stock.Create();
+			else if ( type == typeof( Workshop ) )
+				instance = Workshop.Create();
+			else if ( type == typeof( Workshop.Buffer ) )
+				instance = ScriptableObject.CreateInstance<Workshop.Buffer>();
+			else if ( type == typeof( GroundNode ) )
+				instance = ScriptableObject.CreateInstance<GroundNode>();
+			else if ( type == typeof( Ground ) )
+				instance = Ground.Create();
+			else if ( type == typeof( Worker ) )
+				instance = Worker.Create();
+			else if ( type == typeof( Road ) )
+				instance = Road.Create();
+			else if ( type == typeof( Item ) )
+				instance = Item.Create();
+			else
+				instance = Activator.CreateInstance( type );
+		}
+		if ( index > 0 )
+		{
+			while ( boss.objects.Count <= index )
+				boss.objects.Add( instance );
+			boss.objects[index] = instance;
 		}
 		return instance;
 	}
@@ -114,7 +134,10 @@ public class Serializer : JsonSerializer
 			case JsonToken.Integer:
 			case JsonToken.Float:
 			case JsonToken.String:
+			case JsonToken.Boolean:
 			{
+				if ( type.IsEnum )
+					return Enum.ToObject( type, r.Value );
 				return Convert.ChangeType( r.Value, type );
 			}
 			case JsonToken.StartObject:
@@ -176,7 +199,8 @@ public class Serializer : JsonSerializer
 	new public T Deserialize<T>( JsonReader r )
 	{
 		r.Read();
-		return (T)Deserialize( typeof( T ), r );
+		T root = (T)Deserialize( typeof( T ), r );
+		return root;
 	}
 }
 

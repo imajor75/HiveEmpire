@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent( typeof( Camera ))]
 public class Eye : MonoBehaviour
 {
 	new Camera camera;
 
 	void Start()
     {
+		tag = "MainCamera";
+		name = "Eye";
         camera = GetComponent<Camera>();
+		transform.position = new Vector3( 0, 4, -7 );
+		transform.Rotate( Vector3.right * 40 );
     }
 
     void FixedUpdate()
