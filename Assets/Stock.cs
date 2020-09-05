@@ -21,6 +21,8 @@ public class Stock : Building
 
 		var mainBuilding = (Stock)node.building;
 		mainBuilding.main = true;
+		mainBuilding.construction.done = true;
+		mainBuilding.content[(int)Item.Type.plank] = 10;
 		return mainBuilding;
 	}
 
@@ -30,8 +32,13 @@ public class Stock : Building
 		gameObject.name = "Stock " + node.x + ", " + node.y;
 	}
 
-	public void Update()
+	new public void Update()
     {
+		base.Update();
+
+		if ( !construction.done )
+			return;
+
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
 			if ( content[itemType] > 0 )
@@ -48,16 +55,24 @@ public class Stock : Building
 	public override bool SendItem( Item.Type itemType, Building destination )
 	{
 		Assert.IsTrue( content[(int)itemType] > 0 );
+		Item item = Item.CreateNew( itemType, ground, flag, destination );
+		if ( item == null )
+			return false;
+
 		content[(int)itemType]--;
-		return ( Item.CreateNew( itemType, ground, flag, destination ) != null );
+		return true;
 	}
 
 	public override void ItemOnTheWay( Item item )
 	{
+		construction.ItemOnTheWay( item );
 	}
 
 	public override void ItemArrived( Item item )
 	{
+		if ( construction.ItemArrived( item ) )
+			return;
+
 		content[(int)item.type]++;
 	}
 

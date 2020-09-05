@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 
-public class GroundNode : ScriptableObject
+[System.Serializable]
+public class GroundNode
 {
     public static float size = 1;
     public static int neighbourCount = 6;

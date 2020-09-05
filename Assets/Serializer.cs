@@ -26,6 +26,7 @@ public class Serializer : JsonSerializer
 			typeof( Worker ),
 			typeof( Road ),
 			typeof( Building ),
+			typeof( Building.Construction ),
 			typeof( Stock ),
 			typeof( Workshop ),
 			typeof( PathFinder ),
@@ -66,10 +67,6 @@ public class Serializer : JsonSerializer
 				instance = Stock.Create();
 			else if ( type == typeof( Workshop ) )
 				instance = Workshop.Create();
-			else if ( type == typeof( Workshop.Buffer ) )
-				instance = ScriptableObject.CreateInstance<Workshop.Buffer>();
-			else if ( type == typeof( GroundNode ) )
-				instance = ScriptableObject.CreateInstance<GroundNode>();
 			else if ( type == typeof( Ground ) )
 				instance = Ground.Create();
 			else if ( type == typeof( Worker ) )

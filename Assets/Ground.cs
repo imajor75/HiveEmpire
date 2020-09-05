@@ -64,7 +64,7 @@ public class Ground : MonoBehaviour
 			for ( int y = 0; y <= height; y++ )
 			{
 				if ( layout[y * ( width + 1 ) + x] == null )
-					layout[y * ( width + 1 ) + x] = ScriptableObject.CreateInstance<GroundNode>();
+					layout[y * ( width + 1 ) + x] = new GroundNode();
 			}
 		}
 		for ( int x = 0; x <= width; x++ )

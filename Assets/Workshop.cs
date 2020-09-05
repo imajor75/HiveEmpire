@@ -14,7 +14,8 @@ public class Workshop : Building
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
 
-	public class Buffer : ScriptableObject
+	[System.Serializable]
+	public class Buffer
 	{
 		public int size = 8;
 		public int stored;
@@ -37,8 +38,13 @@ public class Workshop : Building
 		return buildingObject.AddComponent<Workshop>();
 	}
 
-	void Update()
+	new void Update()
 	{
+		base.Update();
+
+		if ( !construction.done )
+			return;
+
 		foreach ( Buffer b in buffers )
 		{
 			int missing = b.size-b.stored-b.onTheWay;
@@ -61,6 +67,9 @@ public class Workshop : Building
 
 	public override void ItemOnTheWay( Item item )
 	{
+		if ( construction.ItemOnTheWay( item ) )
+			return;
+
 		foreach ( var b in buffers )
 		{
 			if ( b.itemType == item.type )
@@ -75,6 +84,9 @@ public class Workshop : Building
 
 	public override void ItemArrived( Item item )
 	{
+		if ( construction.ItemArrived( item ) )
+			return;
+
 		foreach ( var b in buffers )
 		{
 			if ( b.itemType == item.type )
@@ -99,22 +111,30 @@ public class Workshop : Building
 			{
 				outputType = Item.Type.wood;
 				working = true;
+				construction.plankNeeded = 2;
 				break;
 			}
 			case Type.sawmill:
 			{
-				Buffer b = ScriptableObject.CreateInstance<Buffer>();
+				Buffer b = new Buffer();
 				b.itemType = Item.Type.wood;
 				buffers.Add( b );
 				outputType = Item.Type.plank;
 				working = false;
+				construction.plankNeeded = 2;
 				break;
 			}
 		}
 	}
 
-	void FixedUpdate()
+	new void FixedUpdate()
 	{
+		if ( !construction.done )
+		{
+			base.FixedUpdate();
+			return;
+		}
+
 		switch ( type )
 		{
 			case Type.woodcutter:

@@ -32,6 +32,9 @@ public class ItemDispatcher : MonoBehaviour
 
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority )
 	{
+		if ( quantity == 0 )
+			return;
+
 		Assert.IsTrue( quantity > 0 );
 		var r = new Request();
 		r.building = building;
@@ -45,6 +48,9 @@ public class ItemDispatcher : MonoBehaviour
 
 	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority )
 	{
+		if ( quantity == 0 )
+			return;
+
 		Assert.IsTrue( quantity > 0 );
 		var o = new Offer();
 		o.building = building;
