@@ -17,6 +17,7 @@ public class GroundNode
 	public int roadIndex;
     public Road[] roadsStartingHere = new Road[neighbourCount];
 	[JsonIgnore]
+	[HideInInspector]
 	public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public int pathFindingIndex = -1;

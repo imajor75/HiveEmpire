@@ -27,7 +27,7 @@ abstract public class Building : MonoBehaviour
 		public int stoneNeeded;
 		public int stoneOnTheWay;
 		public int stoneArrived;
-		public void FixedUpdate( Building building )
+		public void Update( Building building )
 		{
 			if ( done )
 				return;
@@ -36,6 +36,12 @@ abstract public class Building : MonoBehaviour
 			ItemDispatcher.lastInstance.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high );
 			int stoneMissing = stoneNeeded - stoneOnTheWay - stoneArrived;
 			ItemDispatcher.lastInstance.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high );
+		}
+
+		public void FixedUpdate()
+		{
+			if ( done )
+				return;
 
 			progress += 0.001f;
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
@@ -53,7 +59,7 @@ abstract public class Building : MonoBehaviour
 			if ( item.type == Item.Type.plank )
 			{
 				plankOnTheWay++;
-				Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
+				Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );	// TODO Triggered multiple times
 				return true;
 			}
 			if ( item.type == Item.Type.stone )
@@ -169,11 +175,12 @@ abstract public class Building : MonoBehaviour
 
 	public void FixedUpdate()
 	{
-		construction.FixedUpdate( this );
+		construction.FixedUpdate();
 	}
 
 	public void Update()
 	{
+		construction.Update( this );
 		UpdateLook();
 	}
 

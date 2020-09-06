@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -16,6 +17,19 @@ public class Worker : MonoBehaviour
 	public Item item;
 	public bool handsFull = false;
 	public int wishedPoint = -1;
+	public static GameObject template;
+	public Animator animator;
+	static RuntimeAnimatorController idleController, walkingController;
+
+	public static void Initialize()
+	{
+		template = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" );
+		Assert.IsNotNull( template );
+		idleController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Idle" );
+		Assert.IsNotNull( idleController );
+		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
+		Assert.IsNotNull( walkingController );
+	}
 
 	static public Worker Create( Ground ground = null, Road road = null )
 	{
@@ -29,17 +43,17 @@ public class Worker : MonoBehaviour
 				return null;
 		}
 
-		GameObject workerBody = GameObject.CreatePrimitive( PrimitiveType.Cylinder );
+		GameObject workerBody = (GameObject)GameObject.Instantiate( template );
 		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
-		worker.transform.localScale *= 0.3f;
+		worker.transform.localScale *= 0.35f;
 
 		if ( road != null )
 		{
 			worker.road = road;
 			worker.currentPoint = worker.roadPointGoal = i;
 			road.workersAtNodes[i] = worker;
-			worker.UpdateBody();
+			worker.UpdateBody();	//??
 		}
 		return worker;
 	}
@@ -48,6 +62,8 @@ public class Worker : MonoBehaviour
     void Start()
     {
 		transform.SetParent( road.ground.transform );
+		animator = GetComponent<Animator>();
+		animator.runtimeAnimatorController = idleController;
 		UpdateBody();
 	}
 
@@ -64,16 +80,18 @@ public class Worker : MonoBehaviour
 				walkTo = walkFrom = null;
 				walkProgress -= 1;
 			}
-			UpdateBody();
-			return;
 		}
-		if ( currentPoint == roadPointGoal )
+		if ( walkTo == null )
 		{
-			if ( !FindGoal() && road.workers.Count > 1 )
-				Remove();
+			if ( currentPoint == roadPointGoal )
+			{
+				if ( !FindGoal() && road.workers.Count > 1 )
+					Remove();
+			}
+			else
+				NextStep();
 		}
-		else
-			NextStep();	// TODO This should cause unevent movement at nodes
+		UpdateBody();
 	}
 
 	void Remove()
@@ -238,17 +256,28 @@ public class Worker : MonoBehaviour
 		}
 	}
 
+	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
 	public void UpdateBody()
 	{
 		if ( walkTo == null )
 		{
+			if ( animator != null && animator.runtimeAnimatorController == walkingController )
+				animator.runtimeAnimatorController = idleController;
+
 			transform.localPosition = road.nodes[currentPoint].Position();
 			return;
 		}
+		else
+			if ( animator != null && animator.runtimeAnimatorController == idleController )
+				animator.runtimeAnimatorController = walkingController;
+
 		if ( item && handsFull )
 			item.UpdateLook();
 
 		transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress );
+		int direction = walkFrom.DirectionTo( walkTo );
+		Assert.IsTrue( direction >= 0 );
+		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
 	}
 }
 

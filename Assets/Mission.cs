@@ -76,6 +76,7 @@ public class Mission : MonoBehaviour
 		Panel.Initialize();
 		Building.Initialize();
 		Road.Initialize();
+		Worker.Initialize();
 	}
 
 	public void Load( string fileName )
@@ -97,6 +98,7 @@ public class Mission : MonoBehaviour
 		Panel.Initialize();
 		Building.Initialize();
 		Road.Initialize();
+		Worker.Initialize();
 	}
 
 	public void Save( string fileName )

@@ -109,7 +109,7 @@ public class Item : MonoBehaviour
 				if ( flag.items[i] == this )
 				{
 					// TODO Arrange the items around the flag
-					transform.localPosition = flag.node.Position() + Vector3.up * GroundNode.size + Vector3.right * i * GroundNode.size / 6;
+					transform.localPosition = flag.node.Position() + Vector3.up * GroundNode.size / 2 + Vector3.right * i * GroundNode.size / 6;
 					return;
 				}
 			}
@@ -118,7 +118,7 @@ public class Item : MonoBehaviour
 		if ( worker )
 		{
 			// TODO Put the item in the hand of the worker
-			transform.localPosition = worker.transform.localPosition + Vector3.up * GroundNode.size;
+			transform.localPosition = worker.transform.localPosition + Vector3.up * GroundNode.size / 1.5f;			;
 		}
 	}
 
