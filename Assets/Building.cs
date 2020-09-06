@@ -10,9 +10,10 @@ abstract public class Building : MonoBehaviour
 	public Ground ground;
 	public GroundNode node;
 	static public GameObject prefab;
+	static public GameObject prefab2;
 	static public Shader shader;
 	[JsonIgnore]
-	new public MeshRenderer renderer;
+	public List<MeshRenderer> renderers;
 	int sliceLevelID;
 
 	[System.Serializable]
@@ -36,7 +37,7 @@ abstract public class Building : MonoBehaviour
 			int stoneMissing = stoneNeeded - stoneOnTheWay - stoneArrived;
 			ItemDispatcher.lastInstance.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high );
 
-			progress += 0.01f;
+			progress += 0.001f;
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
 				progress = maxProgress;
@@ -104,6 +105,9 @@ abstract public class Building : MonoBehaviour
 	{
 		prefab = (GameObject)Resources.Load( "constructedHouse" );
 		Assert.IsNotNull( prefab );
+		object valami = Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
+		prefab2 = (GameObject)valami;
+		Assert.IsNotNull( prefab2 );
 		shader = (Shader)Resources.Load( "Construction" );
 		Assert.IsNotNull( shader );
 	}
@@ -123,7 +127,7 @@ abstract public class Building : MonoBehaviour
 		}
 		var flag = flagNode.flag;
 
-		var buildingObject = (GameObject)GameObject.Instantiate( prefab );
+		var buildingObject = (GameObject)GameObject.Instantiate( prefab2 );
 		buildingObject.name = "Building " + node.x + ", " + node.y;
 		buildingObject.transform.SetParent( ground.transform );
 		buildingObject.transform.localPosition = node.Position();
@@ -144,12 +148,23 @@ abstract public class Building : MonoBehaviour
 	{
 		transform.SetParent( ground.transform );
 		transform.localPosition = node.Position();
-		transform.localScale = new Vector3( 40, 40, 40 );
-		transform.Rotate( Vector3.back * 90 );
-		renderer = GetComponent<MeshRenderer>();
+		transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
+		transform.Rotate( Vector3.up * -90 );
+		renderers = new List<MeshRenderer>();
+		ScanChildObject( transform );
 		sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
-		foreach ( var m in renderer.materials )
-			m.shader = shader;
+		foreach( var renderer in renderers )
+			foreach ( var m in renderer.materials )
+				m.shader = shader;
+	}
+
+	void ScanChildObject( Transform transform )
+	{
+		var renderer = transform.GetComponent<MeshRenderer>();
+		if ( renderer != null )
+			renderers.Add( renderer );
+		for ( int i = 0; i < transform.childCount; i++ )
+			ScanChildObject( transform.GetChild( i ) );
 	}
 
 	public void FixedUpdate()
@@ -192,12 +207,13 @@ abstract public class Building : MonoBehaviour
 	public void UpdateLook()
 	{
 		float lowerLimit = transform.position.y;
-		float upperLimit = lowerLimit+1;
+		float upperLimit = lowerLimit + 1.5f;
 		float level = upperLimit;
 		if ( !construction.done )
 			level = lowerLimit+(upperLimit-lowerLimit)*construction.progress;
 
-		foreach ( var m in renderer.materials )
-			m.SetFloat( sliceLevelID, level );
+		foreach ( var r in renderers )
+			foreach ( var m in r.materials )
+				m.SetFloat( sliceLevelID, level );
 	}
 }
