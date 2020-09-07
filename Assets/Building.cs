@@ -9,6 +9,8 @@ abstract public class Building : MonoBehaviour
 	public Flag flag;
 	public Ground ground;
 	public GroundNode node;
+	[JsonIgnore]
+	public Road exit;
 	static public GameObject prefab;
 	static public GameObject prefab2;
 	static public Shader shader;
@@ -59,7 +61,7 @@ abstract public class Building : MonoBehaviour
 			if ( item.type == Item.Type.plank )
 			{
 				plankOnTheWay++;
-				Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );	// TODO Triggered multiple times
+				Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
 				return true;
 			}
 			if ( item.type == Item.Type.stone )
@@ -162,6 +164,10 @@ abstract public class Building : MonoBehaviour
 		foreach( var renderer in renderers )
 			foreach ( var m in renderer.materials )
 				m.shader = shader;
+
+		Assert.IsNull( exit );
+		exit = Road.Create();
+		exit.SetupAsBuildingExit( this );
 	}
 
 	void ScanChildObject( Transform transform )

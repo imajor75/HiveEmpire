@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.VR;
 using UnityEngine.XR;
+using System.Data;
 
 public class Road : MonoBehaviour
 {
@@ -20,12 +21,22 @@ public class Road : MonoBehaviour
 	public Stopwatch lastTimeWorkerAdded = new Stopwatch();
 	public static int msecBetweenWorkersAdded = 10*1000;
 	public static Road newRoad;
+	public bool decorationOnly;
 
 	public static Road Create()
 	{
 		var roadObject = new GameObject();
 		roadObject.name = "Road";
 		return (Road)roadObject.AddComponent( typeof( Road ) );
+	}
+
+	public void SetupAsBuildingExit( Building building )
+	{
+		Assert.AreEqual( nodes.Count, 0 );
+		decorationOnly = true;
+		nodes.Add( building.node );
+		nodes.Add( building.flag.node );
+		ground = building.ground;
 	}
 
 	public static void Initialize()
@@ -168,7 +179,6 @@ public class Road : MonoBehaviour
 		if ( workers.Count > nodes.Count / 2 )
 			return;
 
-		// TODO Reduce the number of workers in not needed
 		// TODO Refine when a new worker should be added
 		if ( Jam() > 4 )
 			CreateNewWorker();
@@ -296,6 +306,13 @@ public class Road : MonoBehaviour
 	{
 		int length = nodes.Count;
 		Assert.IsTrue( length > 1 );
+		if ( decorationOnly )
+		{
+			Assert.AreEqual( nodes.Count, 2 );
+			Assert.IsNotNull( nodes[0].building );
+			Assert.AreEqual( nodes[1].flag, nodes[0].building.flag );
+			return;
+		}
 		var first = nodes[0];
 		var last = nodes[length-1];
 		Assert.IsNotNull( first.flag );
