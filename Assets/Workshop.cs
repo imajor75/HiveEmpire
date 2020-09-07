@@ -34,7 +34,9 @@ public class Workshop : Building
 
 	public static Workshop Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( template );
+		var buildingObject = (GameObject)GameObject.Instantiate( templateB );
+		buildingObject.transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
+		buildingObject.transform.Rotate( Vector3.up * -55 );
 		return buildingObject.AddComponent<Workshop>();
 	}
 

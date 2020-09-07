@@ -12,7 +12,8 @@ abstract public class Building : MonoBehaviour
 	public GroundNode node;
 	[JsonIgnore]
 	public Road exit;
-	static public GameObject template;
+	static public GameObject templateA;
+	static public GameObject templateB;
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
@@ -113,8 +114,10 @@ abstract public class Building : MonoBehaviour
 
 	public static void Initialize()
 	{
-		template = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
-		Assert.IsNotNull( template );
+		templateA = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
+		Assert.IsNotNull( templateA );
+		templateB = (GameObject)Resources.Load( "Medieval house/Medieval_house" );
+		Assert.IsNotNull( templateB );
 		Construction.Initialize();
 	}
 
@@ -151,8 +154,6 @@ abstract public class Building : MonoBehaviour
 		name = "Building " + node.x + ", " + node.y;
 		transform.SetParent( ground.transform );
 		transform.localPosition = node.Position();
-		transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
-		transform.Rotate( Vector3.up * -55 );
 		renderers = new List<MeshRenderer>();
 		ScanChildObject( transform );
 		foreach( var renderer in renderers )
