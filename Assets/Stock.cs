@@ -10,7 +10,7 @@ public class Stock : Building
 
 	public static Stock Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( prefab );
+		var buildingObject = (GameObject)GameObject.Instantiate( prefab2 );
 		return buildingObject.AddComponent<Stock>();
 	}
 

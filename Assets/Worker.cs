@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using UnityEditor.PackageManager;
 using UnityEngine;
@@ -20,6 +21,7 @@ public class Worker : MonoBehaviour
 	public static GameObject template;
 	public Animator animator;
 	static RuntimeAnimatorController idleController, walkingController;
+	public Building inBuilding;
 
 	public static void Initialize()
 	{
@@ -76,7 +78,8 @@ public class Worker : MonoBehaviour
 			walkProgress += 0.015f; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
-				currentPoint = road.NodeIndex( walkTo );
+				if ( !inBuilding )
+					currentPoint = road.NodeIndex( walkTo );
 				walkTo = walkFrom = null;
 				walkProgress -= 1;
 			}
@@ -85,8 +88,16 @@ public class Worker : MonoBehaviour
 		{
 			if ( currentPoint == roadPointGoal )
 			{
-				if ( !FindGoal() && road.workers.Count > 1 )
-					Remove();
+				if ( !inBuilding && item != null && handsFull && item.pathProgress == item.path.roadPath.Count - 1 )
+				{
+					StepTo( item.destination.node );
+					inBuilding = item.destination;
+				}
+				else
+				{
+					if ( !FindGoal() && road.workers.Count > 1 )
+						Remove();
+				}
 			}
 			else
 				NextStep();
@@ -113,6 +124,12 @@ public class Worker : MonoBehaviour
 	public bool NextStep()
 	{
 		Assert.AreEqual( road.workersAtNodes[currentPoint], this );
+		if ( inBuilding )
+		{
+			StepTo( road.nodes[currentPoint] );
+			inBuilding = null;
+			return true;
+		}
 		if ( currentPoint == roadPointGoal )
 			return false;
 
@@ -157,6 +174,16 @@ public class Worker : MonoBehaviour
 		return true;
 	}
 
+	void StepTo( GroundNode target )
+	{
+		GroundNode current = road.nodes[currentPoint];
+		if ( inBuilding )
+			current = inBuilding.node;
+		Assert.IsTrue( current.DirectionTo( target ) >= 0 );
+		walkTo = target;
+		walkFrom = current;
+	}
+
 	public bool FindGoal()
 	{
 		if ( item != null )
@@ -165,18 +192,7 @@ public class Worker : MonoBehaviour
 			{
 				Flag flag = road.GetEnd( currentPoint );
 				Assert.IsNotNull( flag );
-				item.worker = null;
-				item.pathProgress++;
-				if ( item.pathProgress == item.path.roadPath.Count )
-				{
-					Assert.AreEqual( item.destination.flag, flag );
-					item.destination.ItemArrived( item );
-					item.GetComponent<SpriteRenderer>().enabled = false;
-					Destroy( item.gameObject );
-				}
-				else
-					flag.StoreItem( item );
-				item.UpdateLook();
+				item.ArrivedAt( flag );
 				item = null;
 				handsFull = false;
 				if ( !FindGoal() )

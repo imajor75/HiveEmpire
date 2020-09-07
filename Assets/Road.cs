@@ -329,7 +329,7 @@ public class Road : MonoBehaviour
 			foreach ( var w in workersAtNodes )
 				if ( w == worker )
 					i++;
-			Assert.IsTrue( i == 1 );
+			Assert.AreEqual( i, 1 );
 			worker.Validate();
 		}
 	}

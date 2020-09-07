@@ -34,7 +34,7 @@ public class Workshop : Building
 
 	public static Workshop Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( prefab );
+		var buildingObject = (GameObject)GameObject.Instantiate( prefab2 );
 		return buildingObject.AddComponent<Workshop>();
 	}
 

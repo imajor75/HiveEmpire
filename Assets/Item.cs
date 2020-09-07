@@ -100,6 +100,21 @@ public class Item : MonoBehaviour
 		}
 	}
 
+	public void ArrivedAt( Flag flag )
+	{
+		worker = null;
+		pathProgress++;
+		if ( pathProgress == path.roadPath.Count )
+		{
+			Assert.AreEqual( destination.flag, flag );
+			destination.ItemArrived( this );
+			GetComponent<SpriteRenderer>().enabled = false;
+			Destroy( this );
+		}
+		else
+			flag.StoreItem( this );
+	}
+
 	public void UpdateLook()	
 	{
 		if ( flag )

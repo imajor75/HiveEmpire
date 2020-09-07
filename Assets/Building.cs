@@ -17,6 +17,7 @@ abstract public class Building : MonoBehaviour
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	int sliceLevelID;
+	public Construction construction = new Construction();
 
 	[System.Serializable]
 	public class Construction
@@ -29,6 +30,7 @@ abstract public class Building : MonoBehaviour
 		public int stoneNeeded;
 		public int stoneOnTheWay;
 		public int stoneArrived;
+
 		public void Update( Building building )
 		{
 			if ( done )
@@ -101,7 +103,6 @@ abstract public class Building : MonoBehaviour
 			return false;
 		}
 	}
-	public Construction construction = new Construction();
 
 	public enum Type
 	{
@@ -113,8 +114,7 @@ abstract public class Building : MonoBehaviour
 	{
 		prefab = (GameObject)Resources.Load( "constructedHouse" );
 		Assert.IsNotNull( prefab );
-		object valami = Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
-		prefab2 = (GameObject)valami;
+		prefab2 = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
 		Assert.IsNotNull( prefab2 );
 		shader = (Shader)Resources.Load( "Construction" );
 		Assert.IsNotNull( shader );
@@ -133,20 +133,15 @@ abstract public class Building : MonoBehaviour
 			Debug.Log( "Flag couldn't be created" );
 			return false;
 		}
-		var flag = flagNode.flag;
 
 		var buildingObject = (GameObject)GameObject.Instantiate( prefab2 );
-		buildingObject.name = "Building " + node.x + ", " + node.y;
-		buildingObject.transform.SetParent( ground.transform );
-		buildingObject.transform.localPosition = node.Position();
-		buildingObject.transform.localScale = new Vector3( 40, 40, 40 );
 		Building newBuilding = null;
 		if ( type == Type.stock )
 			newBuilding = buildingObject.AddComponent<Stock>();
 		if ( type == Type.workshop )
 			newBuilding = buildingObject.AddComponent<Workshop>();
 		newBuilding.ground = ground;
-		newBuilding.flag = flag;
+		newBuilding.flag = flagNode.flag;
 		newBuilding.node = node;
 		node.building = newBuilding;
 		return true;
@@ -154,6 +149,7 @@ abstract public class Building : MonoBehaviour
 
 	public void Start()
 	{
+		name = "Building " + node.x + ", " + node.y;
 		transform.SetParent( ground.transform );
 		transform.localPosition = node.Position();
 		transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
