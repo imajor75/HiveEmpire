@@ -11,6 +11,7 @@ public class Item : MonoBehaviour
 	public Ground ground;
 	public PathFinder path;
 	public int pathProgress;
+	public Building origin;
 	public Building destination;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 
@@ -42,22 +43,16 @@ public class Item : MonoBehaviour
 		}
 	}
 
-	static public Item CreateNew( Type type, Ground ground, Flag flag, Building destination )
+	static public Item CreateNew( Type type, Building origin, Building destination )
 	{
 		var item = Create();
-		item.ground = ground;
+		item.ground = destination.ground;
 		item.type = type;
-		if ( flag && !flag.StoreItem( item ) )
-		{
-			Destroy( item.gameObject );
-			return null;
-		}
+		item.origin = origin;
 		if ( destination )
 		{
 			if ( !item.SetTarget( destination ) )
 			{
-				if ( flag )
-					flag.ReleaseItem( item );
 				Destroy( item.gameObject );
 				return null;
 			}
@@ -87,8 +82,14 @@ public class Item : MonoBehaviour
 	public bool SetTarget( Building building )
 	{
 		path = new PathFinder();
-		pathProgress = 0;
-		if ( path.FindPathBetween( this.flag.node, building.flag.node, PathFinder.Mode.onRoad ) )
+		pathProgress = -1;
+		GroundNode current = origin.flag.node;
+		if ( flag )
+		{
+			current = flag.node;
+			pathProgress++;
+		}
+		if ( path.FindPathBetween( current, building.flag.node, PathFinder.Mode.onRoad ) )
 		{
 			destination = building;
 			return true;

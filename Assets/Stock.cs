@@ -52,15 +52,14 @@ public class Stock : Building
 		StockPanel.Open( this );
 	}
 
-	public override bool SendItem( Item.Type itemType, Building destination )
+	public override Item SendItem( Item.Type itemType, Building destination )
 	{
 		Assert.IsTrue( content[(int)itemType] > 0 );
-		Item item = Item.CreateNew( itemType, ground, flag, destination );
-		if ( item == null )
-			return false;
+		Item item = base.SendItem( itemType, destination );
+		if ( item != null )
+			content[(int)itemType]--;
 
-		content[(int)itemType]--;
-		return true;
+		return item;
 	}
 
 	public override void ItemOnTheWay( Item item )

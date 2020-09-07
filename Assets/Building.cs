@@ -6,6 +6,7 @@ using UnityEngine.Assertions;
 
 abstract public class Building : MonoBehaviour
 {
+	public Worker worker;
 	public Flag flag;
 	public Ground ground;
 	public GroundNode node;
@@ -144,6 +145,8 @@ abstract public class Building : MonoBehaviour
 		newBuilding.flag = flagNode.flag;
 		newBuilding.node = node;
 		node.building = newBuilding;
+		newBuilding.worker = WorkerWoman.Create();
+		newBuilding.worker.SetupForBuilding( newBuilding );
 		return true;
 	}
 
@@ -186,10 +189,15 @@ abstract public class Building : MonoBehaviour
 		UpdateLook();
 	}
 
-	public virtual bool SendItem( Item.Type itemType, Building destination )
+	public virtual Item SendItem( Item.Type itemType, Building destination )
 	{
-		Assert.IsTrue( false );
-		return false;
+		if ( worker == null || !worker.inside )
+			return null;
+
+		Item item = Item.CreateNew( itemType, this, destination );
+		if ( item != null )
+			worker.CarryItem( item, flag.node );
+		return item;
 	}
 
 	public virtual void ItemOnTheWay( Item item )

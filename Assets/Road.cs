@@ -286,7 +286,13 @@ public class Road : MonoBehaviour
 
 	public void CreateNewWorker()
 	{
-		workers.Add( Worker.Create( ground, this ) );
+		var worker = Worker.Create();
+		if ( !worker.SetupForRoad( this ) )
+		{
+			Destroy( worker );
+			return;
+		}
+		workers.Add( worker );
 		lastTimeWorkerAdded.Restart();
 	}
 

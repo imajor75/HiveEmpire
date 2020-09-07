@@ -10,6 +10,8 @@ using UnityEngine.Assertions;
 public class Worker : MonoBehaviour
 {
 	public Road road;
+	public Building building;
+	public bool inside;
 	public int roadPointGoal;
 	public int currentPoint;
 	public GroundNode walkFrom;
@@ -18,52 +20,69 @@ public class Worker : MonoBehaviour
 	public Item item;
 	public bool handsFull = false;
 	public int wishedPoint = -1;
-	public static GameObject template;
+	public static GameObject templateWoman;
+	public static GameObject templateMan;
+	public static GameObject templateBoy;
 	public Animator animator;
 	static RuntimeAnimatorController idleController, walkingController;
-	public Building inBuilding;
+	public Building offroadToBuilding;
 
 	public static void Initialize()
 	{
-		template = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" );
-		Assert.IsNotNull( template );
+		templateWoman = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" );
+		Assert.IsNotNull( templateWoman );
+		templateMan = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a" );
+		Assert.IsNotNull( templateMan );
+		templateBoy = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a" );
+		Assert.IsNotNull( templateBoy );
+		templateWoman = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" );
+		Assert.IsNotNull( templateWoman );
 		idleController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Idle" );
 		Assert.IsNotNull( idleController );
 		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
 		Assert.IsNotNull( walkingController );
 	}
 
-	static public Worker Create( Ground ground = null, Road road = null )
+	static public Worker Create()
 	{
-		int i = -1;
-		if ( road != null )
-		{
-			i = road.nodes.Count / 2;
-			while ( i < road.nodes.Count - 1 && road.workersAtNodes[i] != null )
-				i++;
-			if ( road.workersAtNodes[i] != null )
-				return null;
-		}
-
-		GameObject workerBody = (GameObject)GameObject.Instantiate( template );
+		GameObject workerBody = (GameObject)GameObject.Instantiate( templateMan );
 		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
 		worker.transform.localScale *= 0.35f;
-
-		if ( road != null )
-		{
-			worker.road = road;
-			worker.currentPoint = worker.roadPointGoal = i;
-			road.workersAtNodes[i] = worker;
-			worker.UpdateBody();	//??
-		}
 		return worker;
+	}
+
+	public bool SetupForRoad( Road road = null )
+	{
+		int i = -1;
+		i = road.nodes.Count / 2;
+		while ( i < road.nodes.Count - 1 && road.workersAtNodes[i] != null )
+			i++;
+		if ( road.workersAtNodes[i] != null )
+			return false;
+		
+		this.road = road;
+		currentPoint = roadPointGoal = i;
+		road.workersAtNodes[i] = this;
+		UpdateBody();	//??
+		return true;
+	}
+
+	public bool SetupForBuilding( Building building )
+	{
+		this.building = building;
+		inside = true;
+		return true;
 	}
 
     // Start is called before the first frame update
     void Start()
     {
-		transform.SetParent( road.ground.transform );
+		if ( road != null )
+			transform.SetParent( road.ground.transform );
+		if ( building != null )
+			transform.SetParent( building.ground.transform );
+
 		animator = GetComponent<Animator>();
 		animator.runtimeAnimatorController = idleController;
 		UpdateBody();
@@ -78,24 +97,30 @@ public class Worker : MonoBehaviour
 			walkProgress += 0.015f; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
-				if ( !inBuilding )
+				if ( road && offroadToBuilding == null )
 					currentPoint = road.NodeIndex( walkTo );
+				if ( building && walkTo == building.node )
+					inside = true;
 				walkTo = walkFrom = null;
 				walkProgress -= 1;
 			}
 		}
 		if ( walkTo == null )
 		{
+			if ( building && !inside )
+			{
+				StepTo( building.node );
+			}
 			if ( currentPoint == roadPointGoal )
 			{
-				if ( !inBuilding && item != null && handsFull && item.pathProgress == item.path.roadPath.Count - 1 )
+				if ( !offroadToBuilding && item != null && handsFull && item.pathProgress == item.path.roadPath.Count - 1 )
 				{
 					StepTo( item.destination.node );
-					inBuilding = item.destination;
+					offroadToBuilding = item.destination;
 				}
 				else
 				{
-					if ( !FindGoal() && road.workers.Count > 1 )
+					if ( !FindGoal() && road != null && road.workers.Count > 1 )
 						Remove();
 				}
 			}
@@ -124,10 +149,10 @@ public class Worker : MonoBehaviour
 	public bool NextStep()
 	{
 		Assert.AreEqual( road.workersAtNodes[currentPoint], this );
-		if ( inBuilding )
+		if ( offroadToBuilding )
 		{
 			StepTo( road.nodes[currentPoint] );
-			inBuilding = null;
+			offroadToBuilding = null;
 			return true;
 		}
 		if ( currentPoint == roadPointGoal )
@@ -176,9 +201,22 @@ public class Worker : MonoBehaviour
 
 	void StepTo( GroundNode target )
 	{
-		GroundNode current = road.nodes[currentPoint];
-		if ( inBuilding )
-			current = inBuilding.node;
+		GroundNode current;
+		if ( building != null )
+		{
+			if ( inside )
+				current = building.node;
+			else
+				current = building.flag.node;
+		}
+		else
+		{
+			if ( offroadToBuilding )
+				current = offroadToBuilding.node;
+			else
+				current = road.nodes[currentPoint];
+		}
+
 		Assert.IsTrue( current.DirectionTo( target ) >= 0 );
 		walkTo = target;
 		walkFrom = current;
@@ -190,12 +228,16 @@ public class Worker : MonoBehaviour
 		{
 			if ( handsFull )
 			{
-				Flag flag = road.GetEnd( currentPoint );
+				Flag flag;
+				if ( building )
+					flag = building.flag;
+				else
+					flag = road.GetEnd( currentPoint );
 				Assert.IsNotNull( flag );
 				item.ArrivedAt( flag );
 				item = null;
 				handsFull = false;
-				if ( !FindGoal() )
+				if ( !FindGoal() && road != null )
 					WalkToRoadPoint( road.nodes.Count / 2 );
 			}
 			else
@@ -214,11 +256,20 @@ public class Worker : MonoBehaviour
 
 		// TODO Pick the most important item rather than the first available
 
-		foreach ( var item in road.GetEnd( 0 ).items )
-			CheckItem( item );
-		foreach ( var item in road.GetEnd( 1 ).items )
-			CheckItem( item );
-		return item != null;
+		if ( road != null )
+		{
+			foreach ( var item in road.GetEnd( 0 ).items )
+				CheckItem( item );
+			foreach ( var item in road.GetEnd( 1 ).items )
+				CheckItem( item );
+			return item != null;
+		}
+		if ( building != null && !inside )
+		{
+			StepTo( building.node );
+			return true;
+		}
+		return false;
 	}
 
 	public void CheckItem( Item item )
@@ -233,13 +284,24 @@ public class Worker : MonoBehaviour
 		CarryItem( item );
 	}
 
-	public void CarryItem( Item item )
+	public void CarryItem( Item item, GroundNode destination = null )
 	{
 		Assert.IsFalse( handsFull );
-		Assert.IsNotNull( item.flag );
+		Assert.IsTrue( item.flag != null || building != null );
 		item.worker = this;
 		this.item = item;
-		WalkToRoadPoint( road.NodeIndex( item.flag.node ) );
+		if ( destination == null )
+		{
+			Assert.IsNotNull( item.flag );
+			WalkToRoadPoint( road.NodeIndex( item.flag.node ) );
+		}
+		else
+		{
+			Assert.IsNull( item.flag );
+			StepTo( destination );
+			handsFull = true;
+		}
+		inside = false;
 	}
 
 	public void WalkToRoadPoint( int index )
@@ -252,6 +314,8 @@ public class Worker : MonoBehaviour
 
 	public void Validate()
 	{
+		Assert.IsTrue( road || building );
+		Assert.IsTrue( road == null || building == null );
 		Assert.IsTrue( !handsFull || item );
 		if ( item )
 		{
@@ -280,7 +344,8 @@ public class Worker : MonoBehaviour
 			if ( animator != null && animator.runtimeAnimatorController == walkingController )
 				animator.runtimeAnimatorController = idleController;
 
-			transform.localPosition = road.nodes[currentPoint].Position();
+			if ( road != null )
+				transform.localPosition = road.nodes[currentPoint].Position();
 			return;
 		}
 		else
@@ -294,6 +359,42 @@ public class Worker : MonoBehaviour
 		int direction = walkFrom.DirectionTo( walkTo );
 		Assert.IsTrue( direction >= 0 );
 		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+	}
+}
+
+public class WorkerMan : Worker
+{
+	new static public Worker Create()
+	{
+		GameObject workerBody = (GameObject)GameObject.Instantiate( templateMan );
+		workerBody.name = "Worker";
+		Worker worker = workerBody.AddComponent<Worker>();
+		worker.transform.localScale *= 0.35f;
+		return worker;
+	}
+}
+
+public class WorkerWoman : Worker
+{
+	new static public Worker Create()
+	{
+		GameObject workerBody = (GameObject)GameObject.Instantiate( templateWoman );
+		workerBody.name = "Worker";
+		Worker worker = workerBody.AddComponent<Worker>();
+		worker.transform.localScale *= 0.35f;
+		return worker;
+	}
+}
+
+public class WorkerBoy : Worker
+{
+	new static public Worker Create()
+	{
+		GameObject workerBody = (GameObject)GameObject.Instantiate( templateBoy );
+		workerBody.name = "Worker";
+		Worker worker = workerBody.AddComponent<Worker>();
+		worker.transform.localScale *= 0.35f;
+		return worker;
 	}
 }
 

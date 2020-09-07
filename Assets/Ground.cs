@@ -20,7 +20,6 @@ public class Ground : MonoBehaviour
 	[JsonIgnore]
 	public new MeshCollider collider;
 	[JsonIgnore]
-	public Item lastItem;
 	public Building mainBuilding;
 
 	public static Ground Create()
@@ -135,21 +134,6 @@ public class Ground : MonoBehaviour
 		var currentNode = GetNode(currentColumn, currentRow);
 		if ( Input.GetKeyDown( KeyCode.F ) )
 			Flag.Create( this, currentNode );
-		if ( Input.GetKeyDown( KeyCode.I ) )
-		{
-			if ( lastItem )
-			{
-				if ( currentNode.building )
-				{
-					currentNode.building.ItemOnTheWay( lastItem );
-					lastItem.SetTarget( currentNode.building );
-					lastItem = null;
-				};
-			}
-			else
-				if ( currentNode.flag )
-				lastItem = Item.CreateNew( Item.Type.wood, this, currentNode.flag, null );
-		}
 		if ( Input.GetKeyDown( KeyCode.R ) )
 			Road.AddNodeToNew( this, currentNode );
 		if ( Input.GetKeyDown( KeyCode.B ) )

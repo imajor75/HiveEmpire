@@ -71,6 +71,12 @@ public class Serializer : JsonSerializer
 				instance = Ground.Create();
 			else if ( type == typeof( Worker ) )
 				instance = Worker.Create();
+			else if ( type == typeof( WorkerMan ) )
+				instance = WorkerMan.Create();
+			else if ( type == typeof( WorkerWoman ) )
+				instance = WorkerWoman.Create();
+			else if ( type == typeof( WorkerBoy ) )
+				instance = WorkerBoy.Create();
 			else if ( type == typeof( Road ) )
 				instance = Road.Create();
 			else if ( type == typeof( Item ) )

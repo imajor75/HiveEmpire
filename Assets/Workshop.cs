@@ -55,14 +55,14 @@ public class Workshop : Building
 			ItemDispatcher.lastInstance.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
 	}
 
-	public override bool SendItem( Item.Type itemType, Building destination )
+	public override Item SendItem( Item.Type itemType, Building destination )
 	{
 		Assert.AreEqual( outputType, itemType );
 		Assert.IsTrue( output > 0 );
-		if ( Item.CreateNew( itemType, ground, flag, destination ) == null )
-			return false;
-		output--;
-		return true;
+		Item item = base.SendItem( itemType, destination );
+		if ( item != null )
+			output--;
+		return item;
 	}
 
 	public override void ItemOnTheWay( Item item )
