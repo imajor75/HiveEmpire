@@ -24,14 +24,6 @@ public class Item : MonoBehaviour
 		unknown = -1
     }
 
-	public static Item Create()
-	{
-		GameObject itemBody = new GameObject();
-		itemBody.name = "Item";
-		itemBody.AddComponent<SpriteRenderer>();
-		return itemBody.AddComponent<Item>();
-	}
-
 	public static void Initialize()
 	{
 		string[] filenames = { "log", "log", "plank", "log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log", };
@@ -43,23 +35,30 @@ public class Item : MonoBehaviour
 		}
 	}
 
-	static public Item CreateNew( Type type, Building origin, Building destination )
+	public static Item Create()
 	{
-		var item = Create();
-		item.ground = destination.ground;
-		item.type = type;
-		item.origin = origin;
+		GameObject itemBody = new GameObject();
+		itemBody.name = "Item";
+		itemBody.AddComponent<SpriteRenderer>();
+		return itemBody.AddComponent<Item>();
+	}
+
+	public Item Setup( Type type, Building origin, Building destination )
+	{
+		ground = destination.ground;
+		this.type = type;
+		this.origin = origin;
 		if ( destination )
 		{
-			if ( !item.SetTarget( destination ) )
+			if ( !SetTarget( destination ) )
 			{
-				Destroy( item.gameObject );
+				Destroy( gameObject );
 				return null;
 			}
-			destination.ItemOnTheWay( item );
+			destination.ItemOnTheWay( this );
 		}
-		item.UpdateLook();
-		return item;
+		UpdateLook();
+		return this;
 	}
 
 	static void CancelNew()
@@ -110,7 +109,7 @@ public class Item : MonoBehaviour
 			Assert.AreEqual( destination.flag, flag );
 			destination.ItemArrived( this );
 			GetComponent<SpriteRenderer>().enabled = false;
-			Destroy( this );
+			Destroy( gameObject );
 		}
 		else
 			flag.StoreItem( this );

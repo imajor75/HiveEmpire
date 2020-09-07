@@ -11,7 +11,7 @@ public class Worker : MonoBehaviour
 {
 	public Road road;
 	public Building building;
-	public bool inside;
+	public bool inside;	// Used only for building workers
 	public int roadPointGoal;
 	public int currentPoint;
 	public GroundNode walkFrom;
@@ -52,27 +52,30 @@ public class Worker : MonoBehaviour
 		return worker;
 	}
 
-	public bool SetupForRoad( Road road = null )
+	public Worker SetupForRoad( Road road = null )
 	{
 		int i = -1;
 		i = road.nodes.Count / 2;
 		while ( i < road.nodes.Count - 1 && road.workersAtNodes[i] != null )
 			i++;
 		if ( road.workersAtNodes[i] != null )
-			return false;
+		{
+			Destroy( gameObject );
+			return null;
+		}
 		
 		this.road = road;
 		currentPoint = roadPointGoal = i;
 		road.workersAtNodes[i] = this;
 		UpdateBody();	//??
-		return true;
+		return this;
 	}
 
-	public bool SetupForBuilding( Building building )
+	public Worker SetupForBuilding( Building building )
 	{
 		this.building = building;
 		inside = true;
-		return true;
+		return this;
 	}
 
     // Start is called before the first frame update
@@ -143,7 +146,7 @@ public class Worker : MonoBehaviour
 		}
 		road.workers.Remove( this );
 		GetComponent<MeshRenderer>().enabled = false;
-		Destroy( this );
+		Destroy( gameObject );
 	}
 
 	public bool NextStep()

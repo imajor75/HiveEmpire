@@ -24,7 +24,7 @@ public class Workshop : Building
 		public Item.Type itemType;
 	}
 
-	public new enum Type
+	public enum Type
 	{
 		woodcutter,
 		sawmill,
@@ -34,7 +34,7 @@ public class Workshop : Building
 
 	public static Workshop Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( prefab2 );
+		var buildingObject = (GameObject)GameObject.Instantiate( template );
 		return buildingObject.AddComponent<Workshop>();
 	}
 

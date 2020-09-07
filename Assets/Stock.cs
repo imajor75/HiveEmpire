@@ -10,20 +10,19 @@ public class Stock : Building
 
 	public static Stock Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( prefab2 );
+		var buildingObject = (GameObject)GameObject.Instantiate( template );
 		return buildingObject.AddComponent<Stock>();
 	}
 
-	public static Building SetupMain( Ground ground, GroundNode node )
+	public bool SetupMain( Ground ground, GroundNode node )
 	{
-		if ( !CreateNew( ground, node, Type.stock ) )
-			return null;
+		if ( !Setup( ground, node ) )
+			return false;
 
-		var mainBuilding = (Stock)node.building;
-		mainBuilding.main = true;
-		mainBuilding.construction.done = true;
-		mainBuilding.content[(int)Item.Type.plank] = 10;
-		return mainBuilding;
+		main = true;
+		construction.done = true;
+		content[(int)Item.Type.plank] = 10;
+		return true;
 	}
 
 	new void Start()

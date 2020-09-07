@@ -12,12 +12,9 @@ abstract public class Building : MonoBehaviour
 	public GroundNode node;
 	[JsonIgnore]
 	public Road exit;
-	static public GameObject prefab;
-	static public GameObject prefab2;
-	static public Shader shader;
+	static public GameObject template;
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
-	int sliceLevelID;
 	public Construction construction = new Construction();
 
 	[System.Serializable]
@@ -31,6 +28,15 @@ abstract public class Building : MonoBehaviour
 		public int stoneNeeded;
 		public int stoneOnTheWay;
 		public int stoneArrived;
+		public static Shader shader;
+		public static int sliceLevelID;
+
+		static public void Initialize()
+		{
+			shader = (Shader)Resources.Load( "Construction" );
+			Assert.IsNotNull( shader );
+			sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
+		}
 
 		public void Update( Building building )
 		{
@@ -105,49 +111,39 @@ abstract public class Building : MonoBehaviour
 		}
 	}
 
-	public enum Type
-	{
-		stock,
-		workshop
-	}
-
 	public static void Initialize()
 	{
-		prefab = (GameObject)Resources.Load( "constructedHouse" );
-		Assert.IsNotNull( prefab );
-		prefab2 = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
-		Assert.IsNotNull( prefab2 );
-		shader = (Shader)Resources.Load( "Construction" );
-		Assert.IsNotNull( shader );
+		template = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
+		Assert.IsNotNull( template );
+		Construction.Initialize();
 	}
 
-	public static bool CreateNew( Ground ground, GroundNode node, Type type )
+	public Building Setup( Ground ground, GroundNode node )
 	{
 		if ( node.flag || node.building || node.road )
 		{
 			Debug.Log( "Node is already occupied" );
-			return false;
+			Destroy( gameObject );
+			return null;
 		}
 		var flagNode = ground.GetNode( node.x + 1, node.y - 1 );
-		if ( !Flag.Create( ground, flagNode ) )
+		Flag flag = Flag.Create().Setup( ground, flagNode );
+		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
-			return false;
+			Destroy( gameObject );
+			return null;
 		}
 
-		var buildingObject = (GameObject)GameObject.Instantiate( prefab2 );
-		Building newBuilding = null;
-		if ( type == Type.stock )
-			newBuilding = buildingObject.AddComponent<Stock>();
-		if ( type == Type.workshop )
-			newBuilding = buildingObject.AddComponent<Workshop>();
-		newBuilding.ground = ground;
-		newBuilding.flag = flagNode.flag;
-		newBuilding.node = node;
-		node.building = newBuilding;
-		newBuilding.worker = WorkerWoman.Create();
-		newBuilding.worker.SetupForBuilding( newBuilding );
-		return true;
+		this.ground = ground;
+		this.flag = flagNode.flag;
+		this.node = node;
+		node.building = this;
+
+		worker = WorkerWoman.Create();
+		worker.SetupForBuilding( this );
+
+		return this;
 	}
 
 	public void Start()
@@ -156,13 +152,12 @@ abstract public class Building : MonoBehaviour
 		transform.SetParent( ground.transform );
 		transform.localPosition = node.Position();
 		transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
-		transform.Rotate( Vector3.up * -90 );
+		transform.Rotate( Vector3.up * -55 );
 		renderers = new List<MeshRenderer>();
 		ScanChildObject( transform );
-		sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
 		foreach( var renderer in renderers )
 			foreach ( var m in renderer.materials )
-				m.shader = shader;
+				m.shader = Construction.shader;
 
 		Assert.IsNull( exit );
 		exit = Road.Create();
@@ -194,7 +189,8 @@ abstract public class Building : MonoBehaviour
 		if ( worker == null || !worker.inside )
 			return null;
 
-		Item item = Item.CreateNew( itemType, this, destination );
+		// TODO Don't create the item, if there is no path between this and destination
+		Item item = Item.Create().Setup( itemType, this, destination );
 		if ( item != null )
 			worker.CarryItem( item, flag.node );
 		return item;
@@ -231,6 +227,6 @@ abstract public class Building : MonoBehaviour
 
 		foreach ( var r in renderers )
 			foreach ( var m in r.materials )
-				m.SetFloat( sliceLevelID, level );
+				m.SetFloat( Construction.sliceLevelID, level );
 	}
 }

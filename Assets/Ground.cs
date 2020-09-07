@@ -20,7 +20,7 @@ public class Ground : MonoBehaviour
 	[JsonIgnore]
 	public new MeshCollider collider;
 	[JsonIgnore]
-	public Building mainBuilding;
+	public Stock mainBuilding;
 
 	public static Ground Create()
 	{
@@ -53,7 +53,10 @@ public class Ground : MonoBehaviour
 		FinishLayout();
 
 		if ( mainBuilding == null )
-			mainBuilding = Stock.SetupMain( this, GetNode( width / 2, height / 2 ) );
+		{
+			mainBuilding = Stock.Create();
+			mainBuilding.SetupMain( this, GetNode( width / 2, height / 2 ) );
+		}
     }
 
 	public void FinishLayout()
@@ -133,24 +136,28 @@ public class Ground : MonoBehaviour
 	{
 		var currentNode = GetNode(currentColumn, currentRow);
 		if ( Input.GetKeyDown( KeyCode.F ) )
-			Flag.Create( this, currentNode );
+		{
+			Flag flag = Flag.Create();
+			if ( !flag.Setup( this, currentNode ) )
+				Destroy( flag );
+		};
 		if ( Input.GetKeyDown( KeyCode.R ) )
 			Road.AddNodeToNew( this, currentNode );
 		if ( Input.GetKeyDown( KeyCode.B ) )
 		{
-			if ( Building.CreateNew( this, currentNode, Building.Type.workshop ) )
-			{
-				var w = (Workshop)currentNode.building;
+			var w = Workshop.Create();
+			if ( w.Setup( this, currentNode ) )
 				w.SetType( Workshop.Type.woodcutter );
-			}
+			else
+				Destroy( w );
 		}
 		if ( Input.GetKeyDown( KeyCode.V ) )
 		{
-			if ( Building.CreateNew( this, currentNode, Building.Type.workshop ) )
-			{
-				var w = (Workshop)currentNode.building;
+			var w = Workshop.Create();
+			if ( w.Setup( this, currentNode ) )
 				w.SetType( Workshop.Type.sawmill );
-			}
+			else
+				Destroy( w );
 		}
 		if ( Input.GetMouseButtonDown( 0 ) )
 		{

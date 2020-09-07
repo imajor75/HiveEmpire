@@ -19,23 +19,26 @@ public class Flag : MonoBehaviour
 		return flagObject.AddComponent<Flag>();
 	}
 
-	public static bool Create( Ground ground, GroundNode node )
+	public Flag Setup( Ground ground, GroundNode node )
     {
         if ( node.flag )
         {
             Debug.Log( "There is a flag there already" );
-            return false;
+			Destroy( gameObject );
+			return null;
         }
         if ( node.building )
         {
             Debug.Log( "Cannot create a flag at a building" );
-            return false;
+			Destroy( gameObject );
+			return null;
         }
 		if ( node.road )
 		{
 			// TODO Make it possible to create a flag at a road
 			Debug.Log( "Cannot create a flag at a road" );
-			return false;
+			Destroy( gameObject );
+			return null;
 		}
         bool hasAdjacentFlag = false;
         foreach (var adjacentNode in node.neighbours)
@@ -44,11 +47,12 @@ public class Flag : MonoBehaviour
         if (hasAdjacentFlag)
         {
             Debug.Log("Another flag is too close");
-            return false;
+			Destroy( gameObject );
+			return null;
         }
-        node.flag = Create();
-        node.flag.node = node;
-        return true;
+        node.flag = this;
+        this.node = node;
+        return this;
     }
 
 	void Start()

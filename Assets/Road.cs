@@ -23,25 +23,25 @@ public class Road : MonoBehaviour
 	public static Road newRoad;
 	public bool decorationOnly;
 
+	public static void Initialize()
+	{
+		material = Resources.Load<Material>( "Road" );
+	}
+
 	public static Road Create()
 	{
 		var roadObject = new GameObject();
 		roadObject.name = "Road";
 		return (Road)roadObject.AddComponent( typeof( Road ) );
 	}
-
-	public void SetupAsBuildingExit( Building building )
+	public Road SetupAsBuildingExit( Building building )
 	{
 		Assert.AreEqual( nodes.Count, 0 );
 		decorationOnly = true;
 		nodes.Add( building.node );
 		nodes.Add( building.flag.node );
 		ground = building.ground;
-	}
-
-	public static void Initialize()
-	{
-		material = Resources.Load<Material>( "Road" );
+		return this;
 	}
 
 	public static bool AddNodeToNew( Ground ground, GroundNode node )
