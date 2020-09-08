@@ -105,6 +105,14 @@ public class Item : MonoBehaviour
 		destination?.ItemOnTheWay( this, true );
 	}
 
+	public bool AtFinalFlag()
+	{
+		if ( destination == null )
+			return false;
+
+		return pathProgress == path.roadPath.Count - 1;
+	}
+
 	public void ArrivedAt( Flag flag )
 	{
 		worker = null;
@@ -123,6 +131,14 @@ public class Item : MonoBehaviour
 
 		flag.StoreItem( this );
 		UpdateLook();
+	}
+
+	public Road NextRoad()
+	{
+		if ( destination == null || path == null )
+			return null;
+
+		return path.roadPath[pathProgress];
 	}
 
 	public void UpdateLook()	

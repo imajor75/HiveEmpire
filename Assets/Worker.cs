@@ -7,10 +7,11 @@ public class Worker : MonoBehaviour
 	public Road road;
 	public Building building;
 	public bool inside;	// Used only for building workers
-	public int roadPointGoal;
+	public int roadPointTarget;
 	public int currentPoint;
 	public GroundNode walkFrom;
 	public GroundNode walkTo;
+	public GroundNode targetNode;
 	public float walkProgress;
 	public Item item;
 	public bool handsFull = false;
@@ -21,6 +22,17 @@ public class Worker : MonoBehaviour
 	public Animator animator;
 	static RuntimeAnimatorController idleController, walkingController;
 	public Building offroadToBuilding;
+	public TaskType task;
+
+	public enum TaskType
+	{
+		nothing,
+		doOneStep,
+		reachRoadPoint,
+		pickUpItem,
+		dropItem,
+		reachNode
+	}
 
 	public static void Initialize()
 	{
@@ -60,7 +72,7 @@ public class Worker : MonoBehaviour
 		}
 		
 		this.road = road;
-		currentPoint = roadPointGoal = i;
+		currentPoint = roadPointTarget = i;
 		road.workerAtNodes[i] = this;
 		UpdateBody();	//??
 		return this;
@@ -103,43 +115,48 @@ public class Worker : MonoBehaviour
 		}
 		if ( walkTo == null )
 		{
-			if ( building && !inside )
+			if ( task == TaskType.nothing )
+				FindTask();
+		}
+		if ( walkTo == null )
+			ExecuteCurrentTask();
+		UpdateBody();
+	}
+
+	public void ExecuteCurrentTask()
+	{
+		if ( task == TaskType.nothing )
+			return;
+
+		if ( task == TaskType.reachRoadPoint )
+		{
+			if ( currentPoint == roadPointTarget )
 			{
-				StepTo( building.node );
-			}
-			if ( currentPoint == roadPointGoal )
-			{
-				if ( !offroadToBuilding && item != null && handsFull && item.pathProgress == item.path.roadPath.Count - 1 && item.destination != null )
-				{
-					StepTo( item.destination.node );
-					offroadToBuilding = item.destination;
-				}
-				else
-				{
-					if ( !FindTask() && road != null && road.workers.Count > 1 )
-						Remove();
-				}
+				task = TaskType.nothing;
+				FindTask();
 			}
 			else
 				NextStep();
+			return;
 		}
-		UpdateBody();
+		if ( task == TaskType.doOneStep )
+		{
+			task = TaskType.nothing;
+			return;
+		}
+
+		Assert.IsTrue( false );
 	}
 
 	public bool NextStep()
 	{
 		Assert.AreEqual( road.workerAtNodes[currentPoint], this );
-		if ( offroadToBuilding )
-		{
-			StepTo( road.nodes[currentPoint] );
-			offroadToBuilding = null;
-			return true;
-		}
-		if ( currentPoint == roadPointGoal )
+		Assert.IsNull( walkTo );
+		if ( currentPoint == roadPointTarget )
 			return false;
 
 		int nextPoint;
-		if ( currentPoint < roadPointGoal )
+		if ( currentPoint < roadPointTarget )
 			nextPoint = currentPoint + 1;
 		else
 			nextPoint = currentPoint - 1;
@@ -220,38 +237,53 @@ public class Worker : MonoBehaviour
 		Assert.IsTrue( current.DirectionTo( target ) >= 0 );
 		walkTo = target;
 		walkFrom = current;
+		task = TaskType.doOneStep;
 	}
 
-	public bool FindTask()
+	public void FindTask()
 	{
+		Assert.AreEqual( task, TaskType.nothing );
+		if ( handsFull )
+		{
+			if ( road != null && offroadToBuilding == null && item.AtFinalFlag() )
+			{
+				StepTo( item.destination.node );
+				offroadToBuilding = item.destination;
+				return;
+			}
+			Flag flag;
+			if ( building )
+				flag = building.flag;
+			else
+				flag = road.GetEnd( currentPoint );
+			Assert.IsNotNull( flag );
+			item.ArrivedAt( flag );
+			item = null;
+			handsFull = false;
+		}
+		if ( offroadToBuilding )
+		{
+			Assert.IsNotNull( road );
+			StepTo( road.nodes[currentPoint] );
+			offroadToBuilding = null;
+			return;
+		}
+		if ( building && !inside )
+		{
+			StepTo( building.node );
+			return;
+		}
 		if ( item != null )
 		{
-			if ( handsFull )
-			{
-				Flag flag;
-				if ( building )
-					flag = building.flag;
-				else
-					flag = road.GetEnd( currentPoint );
-				Assert.IsNotNull( flag );
-				item.ArrivedAt( flag );
-				item = null;
-				handsFull = false;
-				if ( !FindTask() && road != null )
-					WalkToRoadPoint( road.nodes.Count / 2 );
-			}
+			// Picking up item
+			Assert.AreEqual( road.GetEnd( currentPoint ), item.flag );
+			item.flag.ReleaseItem( item );
+			handsFull = true;
+			if ( currentPoint == 0 )
+				WalkToRoadPoint( road.nodes.Count - 1 );
 			else
-			{
-				// Picking up item
-				Assert.AreEqual( road.GetEnd( currentPoint ), item.flag );
-				item.flag.ReleaseItem( item );
-				handsFull = true;
-				if ( currentPoint == 0 )
-					WalkToRoadPoint( road.nodes.Count - 1 );
-				else
-					WalkToRoadPoint( 0 );
-			}
-			return true;
+				WalkToRoadPoint( 0 );
+			return;
 		}
 
 		// TODO Pick the most important item rather than the first available
@@ -262,14 +294,17 @@ public class Worker : MonoBehaviour
 				CheckItem( item );
 			foreach ( var item in road.GetEnd( 1 ).items )
 				CheckItem( item );
-			return item != null;
+			if ( item != null )
+				return;
 		}
-		if ( building != null && !inside )
+
+		if ( road != null && currentPoint != road.nodes.Count / 2 && road.workers.Count == 1 )
 		{
-			StepTo( building.node );
-			return true;
+			WalkToRoadPoint( road.nodes.Count / 2 );
+			return;
 		}
-		return false;
+
+		return;
 	}
 
 	public void CheckItem( Item item )
@@ -279,7 +314,7 @@ public class Worker : MonoBehaviour
 		if ( item == null || item.worker || item.destination == null )
 			return;
 
-		if ( item.path == null || item.path.roadPath[item.pathProgress] != road )
+		if ( item.path == null || item.NextRoad() != road )
 			return;
 		CarryItem( item );
 	}
@@ -306,45 +341,20 @@ public class Worker : MonoBehaviour
 
 	public void WalkToRoadPoint( int index )
 	{
+		Assert.AreEqual( task, TaskType.nothing );
 		Assert.IsTrue( index >= 0 && index <= road.nodes.Count );
-		roadPointGoal = index;
+		roadPointTarget = index;
 		walkProgress = 0;
+		task = TaskType.reachRoadPoint;
 		NextStep();
 	}
 
-	public void Validate()
+	public void WalkToNode( GroundNode node )
 	{
-		Assert.IsTrue( road || building );
-		Assert.IsTrue( road == null || building == null );
-		Assert.IsTrue( !handsFull || item );
-		if ( item )
-		{
-			Assert.AreEqual( item.worker, this );
-			if ( handsFull )
-				Assert.IsNull( item.flag );
-			else
-				Assert.IsNotNull( item.flag );
-			item.Validate();
-		}
-		Assert.IsTrue( road.workers.Contains( this ) );
-		Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
-		int t = 0;
-		for ( int i = 0; i < road.workerAtNodes.Length; i++ )
-		{
-			if ( road.workerAtNodes[i] == this )
-			{
-				t++;
-				Assert.AreEqual( i, currentPoint );
-			}
-		}
-		Assert.AreEqual( t, 1 );
-
-		Assert.IsTrue( roadPointGoal >= 0 && roadPointGoal < road.nodes.Count );
-		if ( wishedPoint >= 0 )
-		{
-			Assert.IsTrue( wishedPoint <= road.nodes.Count );
-			Assert.AreEqual( Math.Abs( wishedPoint - currentPoint ), 1 );
-		}
+		Assert.AreEqual( task, TaskType.nothing );
+		task = TaskType.reachNode;
+		targetNode = node;
+		NextStep();
 	}
 
 	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
@@ -361,7 +371,7 @@ public class Worker : MonoBehaviour
 		}
 		else
 			if ( animator != null && animator.runtimeAnimatorController == idleController )
-				animator.runtimeAnimatorController = walkingController;
+			animator.runtimeAnimatorController = walkingController;
 
 		if ( item && handsFull )
 			item.UpdateLook();
@@ -370,6 +380,44 @@ public class Worker : MonoBehaviour
 		int direction = walkFrom.DirectionTo( walkTo );
 		Assert.IsTrue( direction >= 0 );
 		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+	}
+
+	public void Validate()
+	{
+		Assert.IsTrue( road || building );
+		Assert.IsTrue( road == null || building == null );
+		Assert.IsTrue( !handsFull || item );
+		if ( item )
+		{
+			Assert.AreEqual( item.worker, this );
+			if ( handsFull )
+				Assert.IsNull( item.flag );
+			else
+				Assert.IsNotNull( item.flag );
+			item.Validate();
+		}
+		if ( road )
+		{
+			Assert.IsTrue( road.workers.Contains( this ) );
+			Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
+			int t = 0;
+			for ( int i = 0; i < road.workerAtNodes.Length; i++ )
+			{
+				if ( road.workerAtNodes[i] == this )
+				{
+					t++;
+					Assert.AreEqual( i, currentPoint );
+				}
+			}
+			Assert.AreEqual( t, 1 );
+
+			Assert.IsTrue( roadPointTarget >= 0 && roadPointTarget < road.nodes.Count );
+			if ( wishedPoint >= 0 )
+			{
+				Assert.IsTrue( wishedPoint <= road.nodes.Count );
+				Assert.AreEqual( Math.Abs( wishedPoint - currentPoint ), 1 );
+			}
+		}
 	}
 }
 

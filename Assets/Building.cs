@@ -250,5 +250,7 @@ abstract public class Building : MonoBehaviour
 	{
 		Assert.AreEqual( this, node.building );
 		Assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
+		worker?.Validate();
+		exit?.Validate();
 	}
 }
