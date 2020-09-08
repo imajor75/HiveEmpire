@@ -183,6 +183,7 @@ public class Road : MonoBehaviour
 		mesh.Clear();
 		var l = nodes.Count-1;
 		var vertices = new Vector3[l*6];
+		var uvs = new Vector2[l*6];
 		for ( int j = 0; j < l * 6; j++ )
 			vertices[j] = new Vector3();
 		for ( int i = 0; i < l; i++ )
@@ -192,16 +193,25 @@ public class Road : MonoBehaviour
 			var ab = b-a;
 			Vector3 o = new Vector3( ab.z, 0, -ab.x );
 			o.Normalize();
-			o *= GroundNode.size / 10;
+			o *= GroundNode.size / 5;
 			Vector3 h = new Vector3( 0, GroundNode.size / 10, 0 );
+
 			vertices[i * 6 + 0] = a + o;
 			vertices[i * 6 + 1] = a + h;
 			vertices[i * 6 + 2] = a - o;
 			vertices[i * 6 + 3] = b + o;
 			vertices[i * 6 + 4] = b + h;
 			vertices[i * 6 + 5] = b - o;
+
+			uvs[i * 6 + 0] = new Vector2( 0.0f, 0.0f );
+			uvs[i * 6 + 1] = new Vector2( 0.5f, 0.0f );
+			uvs[i * 6 + 2] = new Vector2( 1.0f, 0.0f );
+			uvs[i * 6 + 3] = new Vector2( 0.0f, 1.0f );
+			uvs[i * 6 + 4] = new Vector2( 0.5f, 1.0f );
+			uvs[i * 6 + 5] = new Vector2( 1.0f, 1.0f );
 		}
 		mesh.vertices = vertices;
+		mesh.uv = uvs;
 
 		var triangles = new int[l*4*3];
 		for ( int j = 0; j < l; j++ )
@@ -223,6 +233,7 @@ public class Road : MonoBehaviour
 			triangles[j * 4 * 3 + 11] = j * 6 + 4;
 		}
 		mesh.triangles = triangles;
+		mesh.RecalculateNormals();
 	}
 
 	public int NodeIndex( GroundNode node )
