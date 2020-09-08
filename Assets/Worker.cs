@@ -109,14 +109,14 @@ public class Worker : MonoBehaviour
 			}
 			if ( currentPoint == roadPointGoal )
 			{
-				if ( !offroadToBuilding && item != null && handsFull && item.pathProgress == item.path.roadPath.Count - 1 )
+				if ( !offroadToBuilding && item != null && handsFull && item.pathProgress == item.path.roadPath.Count - 1 && item.destination != null )
 				{
 					StepTo( item.destination.node );
 					offroadToBuilding = item.destination;
 				}
 				else
 				{
-					if ( !FindGoal() && road != null && road.workers.Count > 1 )
+					if ( !FindTask() && road != null && road.workers.Count > 1 )
 						Remove();
 				}
 			}
@@ -181,18 +181,21 @@ public class Worker : MonoBehaviour
 
 	public void Remove()
 	{
-		GroundNode point = road.nodes[currentPoint];
-		Assert.AreEqual( road.workerAtNodes[currentPoint], this );
 		if ( handsFull )
 			item.Remove();
-		road.workerAtNodes[currentPoint] = null;
-		Flag flag = road.nodes[currentPoint].flag;
-		if ( flag )
+		if ( road != null )
 		{
-			Assert.AreEqual( flag.user, this );
-			flag.user = null;
+			GroundNode point = road.nodes[currentPoint];
+			Assert.AreEqual( road.workerAtNodes[currentPoint], this );
+			road.workerAtNodes[currentPoint] = null;
+			Flag flag = road.nodes[currentPoint].flag;
+			if ( flag )
+			{
+				Assert.AreEqual( flag.user, this );
+				flag.user = null;
+			}
+			road.workers.Remove( this );
 		}
-		road.workers.Remove( this );
 		Destroy( gameObject );
 	}
 
@@ -219,7 +222,7 @@ public class Worker : MonoBehaviour
 		walkFrom = current;
 	}
 
-	public bool FindGoal()
+	public bool FindTask()
 	{
 		if ( item != null )
 		{
@@ -234,7 +237,7 @@ public class Worker : MonoBehaviour
 				item.ArrivedAt( flag );
 				item = null;
 				handsFull = false;
-				if ( !FindGoal() && road != null )
+				if ( !FindTask() && road != null )
 					WalkToRoadPoint( road.nodes.Count / 2 );
 			}
 			else
@@ -273,7 +276,7 @@ public class Worker : MonoBehaviour
 	{
 		if ( this.item )
 			return;
-		if ( item == null || item.worker )
+		if ( item == null || item.worker || item.destination == null )
 			return;
 
 		if ( item.path == null || item.path.roadPath[item.pathProgress] != road )

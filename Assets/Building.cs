@@ -226,12 +226,6 @@ abstract public class Building : MonoBehaviour
 		Assert.IsTrue( false );
 	}
 
-    virtual public void Validate()
-    {
-        Assert.AreEqual( this, node.building );
-        Assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
-    }
-
 	public void UpdateLook()
 	{
 		float lowerLimit = transform.position.y;
@@ -243,5 +237,18 @@ abstract public class Building : MonoBehaviour
 		foreach ( var r in renderers )
 			foreach ( var m in r.materials )
 				m.SetFloat( Construction.sliceLevelID, level );
+	}
+
+	public virtual void Remove()
+	{
+		exit.Remove();
+		worker.Remove();
+		Destroy( gameObject );
+	}
+
+	virtual public void Validate()
+	{
+		Assert.AreEqual( this, node.building );
+		Assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
 	}
 }

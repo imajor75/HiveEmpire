@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Item : MonoBehaviour
@@ -98,11 +99,17 @@ public class Item : MonoBehaviour
 		}
 	}
 
+	public void CancelTrip()
+	{
+		path = null;
+		destination?.ItemOnTheWay( this, true );
+	}
+
 	public void ArrivedAt( Flag flag )
 	{
 		worker = null;
 		pathProgress++;
-		if ( pathProgress == path.roadPath.Count )
+		if ( pathProgress == path.roadPath.Count && destination != null )
 		{
 			Assert.AreEqual( destination.flag, flag );
 			destination.ItemArrived( this );
@@ -110,6 +117,9 @@ public class Item : MonoBehaviour
 			Destroy( gameObject );
 			return;
 		}
+
+		if ( destination == null )
+			CancelTrip();
 
 		flag.StoreItem( this );
 		UpdateLook();
@@ -139,8 +149,7 @@ public class Item : MonoBehaviour
 
 	public void Remove()
 	{
-		if ( destination )
-			destination.ItemOnTheWay( this, true );
+		CancelTrip();
 		Destroy( gameObject );
 	}
 
