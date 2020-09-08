@@ -96,6 +96,17 @@ public class Flag : MonoBehaviour
 		FlagPanel.Open( this );
 	}
 
+	public void Remove()
+	{
+		foreach ( var road in roadsStartingHere )
+			road?.Remove();
+		foreach ( var item in items )
+			item?.Remove();
+		node.Neighbour( 4 ).building?.Remove();
+
+		Destroy( gameObject );
+	}
+
 	public void Validate()
     {
         Assert.AreEqual( this, node.flag );

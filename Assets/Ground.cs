@@ -176,6 +176,8 @@ public class Ground : MonoBehaviour
 				currentNode.road.Remove();
 			if ( currentNode.building )
 				currentNode.building.Remove();
+			if ( currentNode.flag )
+				currentNode.flag.Remove();
 		}
 
 	}

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine.Assertions;
 
+[System.Serializable]
 public class PathFinder
 {
 	// TODO Detech when circumstances change, and invalidate the path
