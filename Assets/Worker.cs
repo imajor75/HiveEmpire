@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Runtime.InteropServices;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -56,9 +51,9 @@ public class Worker : MonoBehaviour
 	{
 		int i = -1;
 		i = road.nodes.Count / 2;
-		while ( i < road.nodes.Count - 1 && road.workersAtNodes[i] != null )
+		while ( i < road.nodes.Count - 1 && road.workerAtNodes[i] != null )
 			i++;
-		if ( road.workersAtNodes[i] != null )
+		if ( road.workerAtNodes[i] != null )
 		{
 			Destroy( gameObject );
 			return null;
@@ -66,7 +61,7 @@ public class Worker : MonoBehaviour
 		
 		this.road = road;
 		currentPoint = roadPointGoal = i;
-		road.workersAtNodes[i] = this;
+		road.workerAtNodes[i] = this;
 		UpdateBody();	//??
 		return this;
 	}
@@ -100,8 +95,6 @@ public class Worker : MonoBehaviour
 			walkProgress += 0.015f; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
-				if ( road && offroadToBuilding == null )
-					currentPoint = road.NodeIndex( walkTo );
 				if ( building && walkTo == building.node )
 					inside = true;
 				walkTo = walkFrom = null;
@@ -133,25 +126,9 @@ public class Worker : MonoBehaviour
 		UpdateBody();
 	}
 
-	void Remove()
-	{
-		GroundNode point = road.nodes[currentPoint];
-		Assert.AreEqual( road.workersAtNodes[currentPoint], this );
-		road.workersAtNodes[currentPoint] = null;
-		Flag flag = road.nodes[currentPoint].flag;
-		if ( flag )
-		{
-			Assert.AreEqual( flag.user, this );
-			flag.user = null;
-		}
-		road.workers.Remove( this );
-		GetComponent<MeshRenderer>().enabled = false;
-		Destroy( gameObject );
-	}
-
 	public bool NextStep()
 	{
-		Assert.AreEqual( road.workersAtNodes[currentPoint], this );
+		Assert.AreEqual( road.workerAtNodes[currentPoint], this );
 		if ( offroadToBuilding )
 		{
 			StepTo( road.nodes[currentPoint] );
@@ -174,20 +151,19 @@ public class Worker : MonoBehaviour
 				return false;
 			flag.user = this;
 		}
-		road.workersAtNodes[currentPoint] = null;
-		if ( road.workersAtNodes[nextPoint] != null )
+		road.workerAtNodes[currentPoint] = null;
+		if ( road.workerAtNodes[nextPoint] != null )
 		{
-			var otherWorker = road.workersAtNodes[nextPoint];
+			var otherWorker = road.workerAtNodes[nextPoint];
 			if ( otherWorker.wishedPoint == currentPoint )
 			{
 				// TODO Workers should avoid each other
-				road.workersAtNodes[currentPoint] = null;
 				bool coming = otherWorker.NextStep();
 				Assert.IsTrue( coming );
 			}
 			else
 			{
-				road.workersAtNodes[currentPoint] = this;
+				road.workerAtNodes[currentPoint] = this;
 				wishedPoint = nextPoint;
 				return false;
 			}
@@ -198,8 +174,26 @@ public class Worker : MonoBehaviour
 		walkTo = road.nodes[nextPoint];
 		if ( walkFrom.flag && walkFrom.flag.user == this )
 			walkFrom.flag.user = null;
-		road.workersAtNodes[nextPoint] = this;
+		currentPoint = nextPoint;
+		road.workerAtNodes[currentPoint] = this;
 		return true;
+	}
+
+	public void Remove()
+	{
+		GroundNode point = road.nodes[currentPoint];
+		Assert.AreEqual( road.workerAtNodes[currentPoint], this );
+		if ( handsFull )
+			item.Remove();
+		road.workerAtNodes[currentPoint] = null;
+		Flag flag = road.nodes[currentPoint].flag;
+		if ( flag )
+		{
+			Assert.AreEqual( flag.user, this );
+			flag.user = null;
+		}
+		road.workers.Remove( this );
+		Destroy( gameObject );
 	}
 
 	void StepTo( GroundNode target )
@@ -331,6 +325,17 @@ public class Worker : MonoBehaviour
 		}
 		Assert.IsTrue( road.workers.Contains( this ) );
 		Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
+		int t = 0;
+		for ( int i = 0; i < road.workerAtNodes.Length; i++ )
+		{
+			if ( road.workerAtNodes[i] == this )
+			{
+				t++;
+				Assert.AreEqual( i, currentPoint );
+			}
+		}
+		Assert.AreEqual( t, 1 );
+
 		Assert.IsTrue( roadPointGoal >= 0 && roadPointGoal < road.nodes.Count );
 		if ( wishedPoint >= 0 )
 		{

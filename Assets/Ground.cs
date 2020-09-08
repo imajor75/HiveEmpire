@@ -170,6 +170,12 @@ public class Ground : MonoBehaviour
 		}
 		if ( Input.GetKeyDown( KeyCode.O ) )
 			selectedNode = currentNode;
+		if ( Input.GetKeyDown( KeyCode.K ) )
+		{
+			if ( currentNode.road )
+				currentNode.road.Remove();
+		}
+
 	}
 
 	void UpdateMesh()

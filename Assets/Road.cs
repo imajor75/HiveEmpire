@@ -1,13 +1,7 @@
 ﻿using System.Diagnostics;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.VR;
-using UnityEngine.XR;
-using System.Data;
 
 public class Road : MonoBehaviour
 {
@@ -15,7 +9,7 @@ public class Road : MonoBehaviour
 	public bool ready = false;
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
-	public Worker[] workersAtNodes;
+	public Worker[] workerAtNodes;
 	public Mesh mesh;
 	public static Material material;
 	public Stopwatch lastTimeWorkerAdded = new Stopwatch();
@@ -134,8 +128,8 @@ public class Road : MonoBehaviour
 		// Finishing a road
 		if ( node.flag )
 		{
-			nodes[0].roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
-			node.roadsStartingHere[node.DirectionTo( nodes[nodes.Count - 2] )] = this;
+			nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
+			node.flag.roadsStartingHere[node.DirectionTo( nodes[nodes.Count - 2] )] = this;
 			ready = true;
 			return true;
 		}
@@ -251,7 +245,9 @@ public class Road : MonoBehaviour
 	{
 		Assert.IsNotNull( first.flag );
 		Assert.IsNotNull( second.flag );
-		foreach ( var road in first.roadsStartingHere )
+		if ( first.flag == null || second.flag == null )
+			return null;
+		foreach ( var road in first.flag.roadsStartingHere )
 		{
 			if ( road == null )
 				continue;
@@ -298,7 +294,7 @@ public class Road : MonoBehaviour
 
 	public void OnCreated()
 	{
-		workersAtNodes = new Worker[nodes.Count];
+		workerAtNodes = new Worker[nodes.Count];
 		CreateNewWorker();
 		RebuildMesh();
 	}
@@ -306,6 +302,28 @@ public class Road : MonoBehaviour
 	public void OnClicked()
 	{
 		RoadPanel.Open( this );
+	}
+
+	public void Remove()
+	{
+		while ( workers.Count > 0 )
+			workers[0].Remove();
+		for ( int i = 0; i < 2; i++ )
+		{
+			Flag flag = GetEnd( i );
+			if ( flag == null )
+				continue;
+
+			for ( int j = 0; j < 6; j++ )
+				if ( flag.roadsStartingHere[j] == this )
+					flag.roadsStartingHere[j] = null;
+		}
+		foreach ( var node in nodes )
+		{
+			if ( node.road == this )
+				node.road = null;
+		}
+		Destroy( gameObject );
 	}
 
 	public void Validate()
@@ -323,8 +341,8 @@ public class Road : MonoBehaviour
 		var last = nodes[length-1];
 		Assert.IsNotNull( first.flag );
 		Assert.IsNotNull( last.flag );
-		Assert.AreEqual( this, first.roadsStartingHere[first.DirectionTo( nodes[1] )] );
-		Assert.AreEqual( this, last.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
+		Assert.AreEqual( this, first.flag.roadsStartingHere[first.DirectionTo( nodes[1] )] );
+		Assert.AreEqual( this, last.flag.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
 		for ( int i = 1; i < length - 1; i++ )
 			Assert.AreEqual( this, nodes[i].road );	// TODO This assert fired once
 		for ( int i = 0; i < length - 1; i++ )
@@ -332,7 +350,7 @@ public class Road : MonoBehaviour
 		foreach ( var worker in workers )
 		{
 			int i = 0;
-			foreach ( var w in workersAtNodes )
+			foreach ( var w in workerAtNodes )
 				if ( w == worker )
 					i++;
 			Assert.AreEqual( i, 1 );

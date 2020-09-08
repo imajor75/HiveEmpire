@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Stock : Building
@@ -63,9 +61,9 @@ public class Stock : Building
 		return item;
 	}
 
-	public override void ItemOnTheWay( Item item )
+	public override void ItemOnTheWay( Item item, bool cancel = false )
 	{
-		construction.ItemOnTheWay( item );
+		construction.ItemOnTheWay( item, cancel );
 	}
 
 	public override void ItemArrived( Item item )

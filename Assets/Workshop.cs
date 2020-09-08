@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Collections.LowLevel.Unsafe;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -67,17 +65,25 @@ public class Workshop : Building
 		return item;
 	}
 
-	public override void ItemOnTheWay( Item item )
+	public override void ItemOnTheWay( Item item, bool cancel = false )
 	{
-		if ( construction.ItemOnTheWay( item ) )
+		if ( construction.ItemOnTheWay( item, cancel ) )
 			return;
 
 		foreach ( var b in buffers )
 		{
 			if ( b.itemType == item.type )
 			{
-				Assert.IsTrue( b.stored + b.onTheWay < b.size );
-				b.onTheWay++;
+				if ( cancel )
+				{
+					Assert.IsTrue( b.onTheWay > 0 );
+					b.onTheWay--;
+				}
+				else
+				{
+					Assert.IsTrue( b.stored + b.onTheWay < b.size );
+					b.onTheWay++;
+				}
 				return;
 			}
 		}

@@ -1,9 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.EventSystems;
 
 [System.Serializable]
 public class GroundNode
@@ -15,10 +12,9 @@ public class GroundNode
     public Flag flag;
     public Road road;
 	public int roadIndex;
-    public Road[] roadsStartingHere = new Road[neighbourCount];
-	[JsonIgnore]
-	[HideInInspector]
-	public GroundNode[] neighbours = new GroundNode[neighbourCount];
+//	[JsonIgnore]
+//	[HideInInspector]
+//	public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public int pathFindingIndex = -1;
     public Ground ground;
@@ -41,27 +37,31 @@ public class GroundNode
     {
         int direction = -1;
         for ( int i = 0; i < 6; i++ )
-            if ( neighbours[i] == another )
+            if ( Neighbour( i ) == another )
                 direction = i;
         return direction;
     }
-    public void Validate()
-    {
-        Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
-        Assert.IsTrue( flag == null || building == null );
-        Assert.IsTrue( building == null || road == null );
-        for ( int i = 0; i < 6; i++ )
-            Assert.AreEqual( this, neighbours[i].neighbours[( i + 3 ) % 6] );
-        for ( int j = 0; j < 6; j++ )
-            if ( roadsStartingHere[j] )
-				roadsStartingHere[j].Validate();
-        if ( flag )
-            flag.Validate();
-        if ( building )
-            building.Validate();
-		if ( road )
-			Assert.AreEqual( this, road.nodes[roadIndex] );
-    }
+
+	public GroundNode Neighbour( int i )
+	{
+		Assert.IsTrue( i >= 0 && i < 6 );
+		switch ( i )
+		{
+			case 0:
+				return ground.GetNode( x + 0, y - 1 );
+			case 1:
+				return ground.GetNode( x + 1, y - 1 );
+			case 2:
+				return ground.GetNode( x + 1, y + 0 );
+			case 3:
+				return ground.GetNode( x + 0, y + 1 );
+			case 4:
+				return ground.GetNode( x - 1, y + 1 );
+			case 5:
+				return ground.GetNode( x - 1, y + 0 );
+		}
+		return null;
+	}
 
     public void Initialize( Ground ground, int x, int y )
     {
@@ -69,12 +69,12 @@ public class GroundNode
         this.x = x;
         this.y = y;
 
-        neighbours[0] = ground.GetNode( x + 0, y - 1 );
-        neighbours[1] = ground.GetNode( x + 1, y - 1 );
-        neighbours[2] = ground.GetNode( x + 1, y + 0 );
-        neighbours[3] = ground.GetNode( x + 0, y + 1 );
-        neighbours[4] = ground.GetNode( x - 1, y + 1 );
-        neighbours[5] = ground.GetNode( x - 1, y + 0 );
+        //neighbours[0] = ground.GetNode( x + 0, y - 1 );
+        //neighbours[1] = ground.GetNode( x + 1, y - 1 );
+        //neighbours[2] = ground.GetNode( x + 1, y + 0 );
+        //neighbours[3] = ground.GetNode( x + 0, y + 1 );
+        //neighbours[4] = ground.GetNode( x - 1, y + 1 );
+        //neighbours[5] = ground.GetNode( x - 1, y + 0 );
     }
 
     public int DistanceFrom( GroundNode o )
@@ -104,4 +104,19 @@ public class GroundNode
 
         return Mathf.Max( Mathf.Max( h, v ), d );
     }
+
+	public void Validate()
+	{
+		Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
+		Assert.IsTrue( flag == null || building == null );
+		Assert.IsTrue( building == null || road == null );
+		for ( int i = 0; i < 6; i++ )
+			Assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
+		if ( flag )
+			flag.Validate();
+		if ( building )
+			building.Validate();
+		if ( road )
+			Assert.AreEqual( this, road.nodes[roadIndex] );
+	}
 }

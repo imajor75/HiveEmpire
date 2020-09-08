@@ -2,7 +2,6 @@
 using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.UI;
 
 public class Mission : MonoBehaviour

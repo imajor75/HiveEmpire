@@ -1,9 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Assertions;
-using System;
-using System.IO;
 
 public class Flag : MonoBehaviour
 {
@@ -11,6 +7,7 @@ public class Flag : MonoBehaviour
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
 	public Worker user;
+	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
 
 	public static Flag Create()
 	{
@@ -41,9 +38,11 @@ public class Flag : MonoBehaviour
 			return null;
 		}
         bool hasAdjacentFlag = false;
-        foreach (var adjacentNode in node.neighbours)
-            if (adjacentNode.flag)
-                hasAdjacentFlag = true;
+		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+		{
+			if ( node.Neighbour( i ).flag )
+				hasAdjacentFlag = true;
+		}
         if (hasAdjacentFlag)
         {
             Debug.Log("Another flag is too close");
@@ -101,7 +100,7 @@ public class Flag : MonoBehaviour
     {
         Assert.AreEqual( this, node.flag );
         for ( int i = 0; i < 6; i++ )
-            Assert.IsNull( node.neighbours[i].flag );
+            Assert.IsNull( node.Neighbour( i ).flag );
 		foreach ( var i in items )
 		{
 			if ( i )
@@ -110,6 +109,9 @@ public class Flag : MonoBehaviour
 				i.Validate();
 			}
 		}
-    }
+		for ( int j = 0; j < 6; j++ )
+			if ( roadsStartingHere[j] )
+				roadsStartingHere[j].Validate();
+	}
 }
  

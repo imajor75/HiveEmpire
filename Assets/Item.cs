@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Item : MonoBehaviour
@@ -110,9 +108,11 @@ public class Item : MonoBehaviour
 			destination.ItemArrived( this );
 			GetComponent<SpriteRenderer>().enabled = false;
 			Destroy( gameObject );
+			return;
 		}
-		else
-			flag.StoreItem( this );
+
+		flag.StoreItem( this );
+		UpdateLook();
 	}
 
 	public void UpdateLook()	
@@ -135,6 +135,13 @@ public class Item : MonoBehaviour
 			// TODO Put the item in the hand of the worker
 			transform.localPosition = worker.transform.localPosition + Vector3.up * GroundNode.size / 1.5f;			;
 		}
+	}
+
+	public void Remove()
+	{
+		if ( destination )
+			destination.ItemOnTheWay( this, true );
+		Destroy( gameObject );
 	}
 
 	public void Validate()

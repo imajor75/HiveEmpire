@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -63,23 +62,38 @@ abstract public class Building : MonoBehaviour
 			if ( progress >= 1 )
 				done = true;
 		}
-		public bool ItemOnTheWay( Item item )
+		public bool ItemOnTheWay( Item item, bool cancel = false )
 		{
 			if ( done )
 				return false;
 
 			if ( item.type == Item.Type.plank )
 			{
-				plankOnTheWay++;
-				Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
+				if ( cancel )
+				{
+					plankOnTheWay--;
+					Assert.IsTrue( plankOnTheWay >= 0 );
+				}
+				else
+				{
+					plankOnTheWay++;
+					Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
+				}
 				return true;
 			}
 			if ( item.type == Item.Type.stone )
 			{
-				stoneOnTheWay++;
-				Assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
-				return true;
-			}
+				if ( cancel )
+				{
+					stoneOnTheWay--;
+					Assert.IsTrue( stoneOnTheWay >= 0 );
+				}
+				else
+				{
+					stoneOnTheWay++;
+					Assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
+				}
+				return true;			}
 
 			Assert.IsTrue( false );
 			return false;
@@ -197,7 +211,7 @@ abstract public class Building : MonoBehaviour
 		return item;
 	}
 
-	public virtual void ItemOnTheWay( Item item )
+	public virtual void ItemOnTheWay( Item item, bool cancel = false )
 	{
 		Assert.IsTrue( false );
 	}

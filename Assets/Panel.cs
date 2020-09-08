@@ -1,9 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using System;
 using UnityEngine.Assertions;
 
 public class Panel : Image, IPointerClickHandler
@@ -45,8 +42,10 @@ public class Panel : Image, IPointerClickHandler
     // Update is called once per frame
     public virtual void Update()
     {
-		Vector3 screenPosition = Camera.main.WorldToScreenPoint( location.transform.position + Vector3.up * 2 * GroundNode.size );
+		if ( location == null )
+			return;
 
+		Vector3 screenPosition = Camera.main.WorldToScreenPoint( location.transform.position + Vector3.up * 2 * GroundNode.size );
 		rectTransform.anchoredPosition = new Vector3( screenPosition.x, screenPosition.y, 0 );
 	}
 

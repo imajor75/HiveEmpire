@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
 using UnityEngine.Assertions;
 
 public class PathFinder
 {
+	// TODO Detech when circumstances change, and invalidate the path
 	public GroundNode target;
 	public List<Reached> visited = new List<Reached>();
 	public List<GroundNode> path = new List<GroundNode>();
@@ -108,7 +106,7 @@ public class PathFinder
         openNodes--;
 		if ( mode == Mode.onRoad )
 		{
-			foreach ( var road in r.node.roadsStartingHere )
+			foreach ( var road in r.node.flag.roadsStartingHere )
 			{
 				if ( road == null )
 					continue;
@@ -125,8 +123,8 @@ public class PathFinder
 		}
 		else
 		{
-			foreach ( var node in r.node.neighbours )
-				VisitNode( node, r.costG + 1, r ); // TODO cost should depend on steepness of the road
+			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+				VisitNode( r.node.Neighbour( i ), r.costG + 1, r ); // TODO cost should depend on steepness of the road
 		}
     }
 
