@@ -12,9 +12,6 @@ public class GroundNode
     public Flag flag;
     public Road road;
 	public int roadIndex;
-//	[JsonIgnore]
-//	[HideInInspector]
-//	public GroundNode[] neighbours = new GroundNode[neighbourCount];
     public float height = 0;
     public int pathFindingIndex = -1;
     public Ground ground;
@@ -110,12 +107,22 @@ public class GroundNode
 		Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
 		Assert.IsTrue( flag == null || building == null );
 		Assert.IsTrue( building == null || road == null );
+		if ( building )
+			Assert.AreEqual( this, building.node );
+		if ( flag )
+			Assert.AreEqual( this, flag.node );
 		for ( int i = 0; i < 6; i++ )
 			Assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
 		if ( flag )
+		{
+			Assert.AreEqual( this, flag.node );
 			flag.Validate();
+		}
 		if ( building )
+		{
+			Assert.AreEqual( this, building.node );
 			building.Validate();
+		}
 		if ( road )
 			Assert.AreEqual( this, road.nodes[roadIndex] );
 	}

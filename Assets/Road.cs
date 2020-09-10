@@ -300,6 +300,7 @@ public class Road : MonoBehaviour
 			return;
 		}
 		workers.Add( worker );
+
 		lastTimeWorkerAdded.Restart();
 	}
 
@@ -360,6 +361,8 @@ public class Road : MonoBehaviour
 			Assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
 		foreach ( var worker in workers )
 		{
+			if ( !worker.atRoad )
+				continue;
 			int i = 0;
 			foreach ( var w in workerAtNodes )
 				if ( w == worker )

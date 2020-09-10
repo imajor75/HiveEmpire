@@ -15,11 +15,12 @@ abstract public class Building : MonoBehaviour
 	static public GameObject templateB;
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
-	public Construction construction = new Construction();
+	public Construction construction;
 
 	[System.Serializable]
 	public class Construction
 	{
+		public Building boss;
 		public bool done;
 		public float progress;
 		public int plankNeeded;
@@ -28,6 +29,7 @@ abstract public class Building : MonoBehaviour
 		public int stoneNeeded;
 		public int stoneOnTheWay;
 		public int stoneArrived;
+		public Worker worker;
 		public static Shader shader;
 		public static int sliceLevelID;
 
@@ -53,14 +55,24 @@ abstract public class Building : MonoBehaviour
 		{
 			if ( done )
 				return;
-
-			progress += 0.001f;
+			if ( worker == null )
+			{
+				Building main = boss.ground.mainBuilding;
+				worker = WorkerBoy.Create();
+				worker.SetupForConstruction( boss );
+			}
+			if ( worker == null || !worker.inside )
+				return;
+			progress += 0.001f*boss.ground.speedModifier;	// TODO This should be different for each building type
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
 				progress = maxProgress;
 
-			if ( progress >= 1 )
-				done = true;
+			if ( progress < 1 )
+				return;
+
+			done = true;
+			worker.Remove();
 		}
 		public bool ItemOnTheWay( Item item, bool cancel = false )
 		{
@@ -153,12 +165,16 @@ abstract public class Building : MonoBehaviour
 		}
 
 		this.ground = ground;
-		this.flag = flagNode.flag;
-		this.node = node;
-		node.building = this;
+		this.flag = flag;
+		flag.building = this;
 
-		worker = WorkerWoman.Create();
-		worker.SetupForBuilding( this );
+		this.node = node;
+		if ( construction == null )
+		{
+			construction = new Construction();
+			construction.boss = this;
+		}
+		node.building = this;
 
 		return this;
 	}
@@ -174,7 +190,7 @@ abstract public class Building : MonoBehaviour
 			foreach ( var m in renderer.materials )
 				m.shader = Construction.shader;
 
-		Assert.IsNull( exit );
+		Assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this );
 	}
@@ -196,6 +212,12 @@ abstract public class Building : MonoBehaviour
 	public void Update()
 	{
 		construction.Update( this );
+		if ( worker == null && construction.done )
+		{
+			worker = WorkerWoman.Create();
+			worker.SetupForBuilding( this );
+		}
+
 		UpdateLook();
 	}
 
@@ -242,12 +264,15 @@ abstract public class Building : MonoBehaviour
 	public virtual void Remove()
 	{
 		exit.Remove();
-		worker.Remove();
+		worker?.Remove();
+		node.building = null;
+		flag.building = null;
 		Destroy( gameObject );
 	}
 
 	virtual public void Validate()
 	{
+		Assert.AreEqual( this, flag.building );
 		Assert.AreEqual( this, node.building );
 		Assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
 		worker?.Validate();

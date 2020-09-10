@@ -4,7 +4,7 @@ using UnityEngine.Assertions;
 [System.Serializable]
 public class PathFinder
 {
-	// TODO Detech when circumstances change, and invalidate the path
+	// TODO Detect when circumstances change, and invalidate the path
 	public GroundNode target;
 	public List<Reached> visited = new List<Reached>();
 	public List<GroundNode> path = new List<GroundNode>();

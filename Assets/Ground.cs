@@ -5,6 +5,8 @@ using UnityEngine.Assertions;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class Ground : MonoBehaviour
 {
+	[JsonIgnore]
+	public float speedModifier = 1;
     public int width = 50, height = 50;
 	public GroundNode[] layout;
     public int layoutVersion = 1;
@@ -19,7 +21,6 @@ public class Ground : MonoBehaviour
 	public Mesh mesh;
 	[JsonIgnore]
 	public new MeshCollider collider;
-	[JsonIgnore]
 	public Stock mainBuilding;
 
 	public static Ground Create()
@@ -135,7 +136,11 @@ public class Ground : MonoBehaviour
 	void CheckUserInput()
 	{
 		var currentNode = GetNode(currentColumn, currentRow);
-		if ( Input.GetKeyDown( KeyCode.F ) )
+		if ( Input.GetKey( KeyCode.Z ) )
+			speedModifier = 5;
+		else
+			speedModifier = 1;
+			if ( Input.GetKeyDown( KeyCode.F ) )
 		{
 			Flag flag = Flag.Create();
 			if ( !flag.Setup( this, currentNode ) )

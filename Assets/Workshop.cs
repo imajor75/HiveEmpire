@@ -152,9 +152,9 @@ public class Workshop : Building
 					working = true;
 					progress = 0;
 				}
-				if ( working )
+				if ( working && worker && worker.inside )
 				{
-					progress += 0.02f;  // TODO Speed needs to be defined somehow
+					progress += 0.002f * ground.speedModifier;  // TODO Speed needs to be defined somehow
 					if ( progress > 1 )
 					{
 						output++;
@@ -167,13 +167,13 @@ public class Workshop : Building
 			{
 				if ( !working && output < outputMax && buffers[0].stored > 0 )
 				{
-					working = true;
+					working = true;				
 					progress = 0;
 					buffers[0].stored--;
 				}
-				if ( working )
+				if ( working && worker && worker.inside )
 				{
-					progress += 0.0015f;
+					progress += 0.0015f * ground.speedModifier;
 					if ( progress > 1 )
 					{
 						output++;

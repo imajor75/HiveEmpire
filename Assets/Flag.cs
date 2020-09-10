@@ -8,6 +8,7 @@ public class Flag : MonoBehaviour
 	public Item[] items = new Item[maxItems];
 	public Worker user;
 	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
+	public Building building;
 
 	public static Flag Create()
 	{
@@ -109,6 +110,8 @@ public class Flag : MonoBehaviour
 
 	public void Validate()
     {
+		if ( building )
+			Assert.AreEqual( building.flag, this );
         Assert.AreEqual( this, node.flag );
         for ( int i = 0; i < 6; i++ )
             Assert.IsNull( node.Neighbour( i ).flag );

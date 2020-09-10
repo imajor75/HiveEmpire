@@ -20,8 +20,12 @@ public class Stock : Building
 			return false;
 
 		main = true;
+		construction = new Construction();
+		construction.boss = this;
 		construction.done = true;
 		content[(int)Item.Type.plank] = 10;
+		worker = WorkerWoman.Create();
+		worker.SetupForBuilding( this );
 		return true;
 	}
 
