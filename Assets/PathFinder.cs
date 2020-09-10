@@ -13,6 +13,14 @@ public class PathFinder
 	public int openNodes;
 	public Mode mode;
 
+	public static PathFinder Between( GroundNode start, GroundNode end, Mode mode )
+	{
+		var p = new PathFinder();
+		if ( p.FindPathBetween( start, end, mode ) )
+			return p;
+		return null;
+	}
+
 	public class Reached
     {
         public GroundNode node;
@@ -28,6 +36,7 @@ public class PathFinder
 	{
 		avoidRoads,
 		onRoad,
+		avoidObjects,
 		total
 	}
 
@@ -35,6 +44,11 @@ public class PathFinder
     {
         ready = false;
         target = end;
+		if ( mode == PathFinder.Mode.onRoad )
+		{
+			Assert.IsNotNull( start.flag );
+			Assert.IsNotNull( end.flag );
+		}
 		this.mode = mode;
         visited.Clear();
         openNodes = 0;
@@ -50,6 +64,11 @@ public class PathFinder
 		if ( mode == Mode.avoidRoads )
 		{
 			if ( node.road || node.building )
+				return;
+		}
+		if ( mode == Mode.avoidObjects )
+		{
+			if ( node.building )
 				return;
 		}
 

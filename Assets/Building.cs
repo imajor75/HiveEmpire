@@ -55,7 +55,9 @@ abstract public class Building : MonoBehaviour
 		{
 			if ( done )
 				return;
-			if ( worker == null )
+
+			// TODO Try to find a path only if the road network has been changed
+			if ( worker == null && PathFinder.Between( boss.ground.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad ) != null )
 			{
 				Building main = boss.ground.mainBuilding;
 				worker = WorkerBoy.Create();

@@ -154,7 +154,7 @@ public class Workshop : Building
 				}
 				if ( working && worker && worker.inside )
 				{
-					progress += 0.002f * ground.speedModifier;  // TODO Speed needs to be defined somehow
+					progress += 0.02f * ground.speedModifier;  // TODO Speed needs to be defined somehow
 					if ( progress > 1 )
 					{
 						output++;

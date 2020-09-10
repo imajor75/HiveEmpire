@@ -12,8 +12,8 @@ public class Road : MonoBehaviour
 	public Worker[] workerAtNodes;
 	public Mesh mesh;
 	public static Material material;
-	public Stopwatch lastTimeWorkerAdded = new Stopwatch();
-	public static int msecBetweenWorkersAdded = 10*1000;
+	public int timeSinceWorkerAdded;
+	public static int secBetweenWorkersAdded = 10;
 	public static Road newRoad;
 	public bool decorationOnly;
 
@@ -168,7 +168,9 @@ public class Road : MonoBehaviour
 
 	void Update()
 	{
-		if ( lastTimeWorkerAdded.ElapsedMilliseconds < msecBetweenWorkersAdded )
+		if ( decorationOnly )
+			return;
+		if ( timeSinceWorkerAdded < secBetweenWorkersAdded * 50 )
 			return;
 		if ( workers.Count > nodes.Count / 2 )
 			return;
@@ -176,6 +178,11 @@ public class Road : MonoBehaviour
 		// TODO Refine when a new worker should be added
 		if ( Jam() > 4 )
 			CreateNewWorker();
+	}
+
+	void FixedUpdate()
+	{
+		timeSinceWorkerAdded++;
 	}
 
 	void RebuildMesh()
@@ -301,7 +308,7 @@ public class Road : MonoBehaviour
 		}
 		workers.Add( worker );
 
-		lastTimeWorkerAdded.Restart();
+		timeSinceWorkerAdded = 0;
 	}
 
 	public void OnCreated()

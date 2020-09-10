@@ -4,6 +4,7 @@ using UnityEngine.Assertions;
 
 public class Worker : MonoBehaviour
 {
+	public bool debug;
 	public TaskType task;
 	public Ground ground;
 	public Road currentRoad;
@@ -13,6 +14,7 @@ public class Worker : MonoBehaviour
 	public GroundNode walkTo;
 	public float walkProgress;
 	public Flag targetFlag;
+	public GroundNode targetNode;
 	public GroundNode currentNode;
 	public PathFinder path;
 	public int pathProgress;
@@ -46,7 +48,8 @@ public class Worker : MonoBehaviour
 		reachRoadPoint,
 		pickUpItem,
 		dropItem,
-		reachFlag
+		reachFlag,
+		reachNode
 	}
 
 	public enum Type
@@ -196,6 +199,8 @@ public class Worker : MonoBehaviour
 				if ( !path.FindPathBetween( currentNode, targetFlag.node, PathFinder.Mode.onRoad ) )
 				{
 					path = null;
+					task = TaskType.nothing;
+					WalkToNode( targetFlag.node );
 					return;
 				}
 				pathProgress = 0;
@@ -221,6 +226,30 @@ public class Worker : MonoBehaviour
 				currentRoad = next;
 			}
 			NextStep( false );
+			return;
+		}
+		if ( task == TaskType.reachNode )
+		{
+			if ( currentNode == targetNode )
+			{
+				task = TaskType.nothing;
+				targetNode = null;
+				path = null;
+				FindTask();
+				return;
+			}
+			if ( path == null )
+			{
+				path = new PathFinder();
+				if ( !path.FindPathBetween( currentNode, targetNode, PathFinder.Mode.avoidObjects ) )
+				{
+					path = null;
+					return;
+				}
+				pathProgress = 1;
+			}
+			StepTo( path.path[pathProgress++] );
+			task = TaskType.reachNode;	// HACK Need task queue
 			return;
 		}
 		if ( task == TaskType.doOneStep )
@@ -289,7 +318,19 @@ public class Worker : MonoBehaviour
 	public void Remove()
 	{
 		if ( handsFull )
+		{
 			item.Remove();
+			handsFull = false;
+		}
+		else
+		{
+			if ( item )
+			{
+				Assert.AreEqual( this, item.worker );
+				item.worker = null;
+				item = null;
+			}
+		}
 		if ( road != null && atRoad )
 		{
 			GroundNode point = road.nodes[currentPoint];
@@ -302,11 +343,13 @@ public class Worker : MonoBehaviour
 				flag.user = null;
 			}
 			road.workers.Remove( this );
+			targetNode = road.nodes[0];
 		}
-		road = null;
+		currentRoad = road = null;
 		building = null;
 		construction = null;
 		type = Type.idle;
+		task = TaskType.nothing;
 	}
 
 	public void StepTo( GroundNode target )
@@ -320,12 +363,26 @@ public class Worker : MonoBehaviour
 
 	public void FindTask()
 	{
-		Assert.AreEqual( task, TaskType.nothing );
-		if ( targetFlag )
+		if ( debug )
 		{
-			Assert.IsNotNull( currentNode.flag, "There is a target flag, but currently not standing on a flag" );
-			WalkToFlag( targetFlag, currentNode.flag );
-			NextStep();
+			int h = 9;
+		}
+
+		Assert.AreEqual( task, TaskType.nothing );
+		if ( targetNode != null )
+		{
+			WalkToNode( targetNode );
+			return;
+		}
+		if ( targetFlag != null )
+		{
+			if ( currentNode.flag == null )
+			{
+				WalkToNode( targetFlag.node );
+				targetFlag = null;
+			}
+			else
+				WalkToFlag( targetFlag, currentNode.flag );
 			return;
 		}
 		if ( road && !atRoad )
@@ -430,7 +487,6 @@ public class Worker : MonoBehaviour
 						return;
 					}
 				}
-				Assert.IsTrue( false, "There is a target flag, but there is no flag at the neighbourhood" );
 			}
 		}
 
@@ -486,6 +542,13 @@ public class Worker : MonoBehaviour
 		task = TaskType.reachFlag;
 		targetFlag = flag;
 		currentNode = from.node;
+	}
+
+	public void WalkToNode( GroundNode node )
+	{
+		Assert.AreEqual( task, TaskType.nothing );
+		task = TaskType.reachNode;
+		targetNode = node;
 	}
 
 	public void SetPosition( GroundNode position, Flag target )
@@ -567,7 +630,7 @@ public class WorkerMan : Worker
 	{
 		GameObject workerBody = (GameObject)GameObject.Instantiate( templateMan );
 		workerBody.name = "Worker";
-		Worker worker = workerBody.AddComponent<Worker>();
+		Worker worker = workerBody.AddComponent<WorkerMan>();
 		worker.transform.localScale *= 0.35f;
 		return worker;
 	}
@@ -579,7 +642,7 @@ public class WorkerWoman : Worker
 	{
 		GameObject workerBody = (GameObject)GameObject.Instantiate( templateWoman );
 		workerBody.name = "Worker";
-		Worker worker = workerBody.AddComponent<Worker>();
+		Worker worker = workerBody.AddComponent<WorkerWoman>();
 		worker.transform.localScale *= 0.35f;
 		return worker;
 	}
@@ -591,7 +654,7 @@ public class WorkerBoy : Worker
 	{
 		GameObject workerBody = (GameObject)GameObject.Instantiate( templateBoy );
 		workerBody.name = "Worker";
-		Worker worker = workerBody.AddComponent<Worker>();
+		Worker worker = workerBody.AddComponent<WorkerBoy>();
 		worker.transform.localScale *= 0.35f;
 		return worker;
 	}
