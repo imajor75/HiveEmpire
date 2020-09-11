@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Serializer : JsonSerializer
@@ -31,7 +32,15 @@ public class Serializer : JsonSerializer
 			typeof( Ground ),
 			typeof( GroundNode ),
 			typeof( Item ),
-			typeof( Workshop.Buffer )
+			typeof( Workshop.Buffer ),
+			typeof( Worker.WalkToFlag ),
+			typeof( Worker.WalkToNeighbour ),
+			typeof( Worker.WalkToNode ),
+			typeof( Worker.WalkToRoadPoint ),
+			typeof( Worker.Task ),
+			typeof( Worker.StartWorkingOnRoad ),
+			typeof( Worker.PickupItem ),
+			typeof( Worker.DeliverItem )
 		};
 
 		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
@@ -69,6 +78,20 @@ public class Serializer : JsonSerializer
 				instance = Ground.Create();
 			else if ( type == typeof( Worker ) )
 				instance = Worker.Create();
+			else if ( type == typeof( Worker.DeliverItem ) )
+				instance = ScriptableObject.CreateInstance<Worker.DeliverItem>();
+			else if ( type == typeof( Worker.PickupItem ) )
+				instance = ScriptableObject.CreateInstance<Worker.PickupItem>();
+			else if ( type == typeof( Worker.StartWorkingOnRoad ) )
+				instance = ScriptableObject.CreateInstance<Worker.StartWorkingOnRoad>();
+			else if ( type == typeof( Worker.WalkToFlag ) )
+				instance = ScriptableObject.CreateInstance<Worker.WalkToFlag>();
+			else if ( type == typeof( Worker.WalkToNeighbour ) )
+				instance = ScriptableObject.CreateInstance<Worker.WalkToNeighbour>();
+			else if ( type == typeof( Worker.WalkToNode ) )
+				instance = ScriptableObject.CreateInstance<Worker.WalkToNode>();
+			else if ( type == typeof( Worker.WalkToRoadPoint ) )
+				instance = ScriptableObject.CreateInstance<Worker.WalkToRoadPoint>();
 			else if ( type == typeof( WorkerMan ) )
 				instance = WorkerMan.Create();
 			else if ( type == typeof( WorkerWoman ) )
