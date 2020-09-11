@@ -152,7 +152,7 @@ public class Workshop : Building
 					working = true;
 					progress = 0;
 				}
-				if ( working && worker && worker.inside )
+				if ( working && worker && worker.IsIdleInBuilding() )
 				{
 					progress += 0.02f * ground.speedModifier;  // TODO Speed needs to be defined somehow
 					if ( progress > 1 )
@@ -171,7 +171,7 @@ public class Workshop : Building
 					progress = 0;
 					buffers[0].stored--;
 				}
-				if ( working && worker && worker.inside )
+				if ( working && worker && worker.IsIdleInBuilding() )
 				{
 					progress += 0.0015f * ground.speedModifier;
 					if ( progress > 1 )

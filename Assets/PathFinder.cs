@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine.Assertions;
 
 [System.Serializable]
@@ -12,14 +14,6 @@ public class PathFinder
 	public bool ready = false;
 	public int openNodes;
 	public Mode mode;
-
-	public static PathFinder Between( GroundNode start, GroundNode end, Mode mode )
-	{
-		var p = new PathFinder();
-		if ( p.FindPathBetween( start, end, mode ) )
-			return p;
-		return null;
-	}
 
 	public class Reached
     {
@@ -169,4 +163,89 @@ public class PathFinder
         ready = true;
         return;
     }
+	virtual public void Validate()
+	{
+		if ( ready )
+		{
+			if ( mode == Mode.onRoad )
+			{
+				Assert.IsTrue( path.Count == 0 && roadPath.Count > 0 );
+				Road last = roadPath[roadPath.Count - 1];
+				Assert.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
+			}
+			else
+			{
+				Assert.IsTrue( path.Count > 0 && roadPath.Count == 0 );
+				Assert.AreEqual( path[path.Count - 1], target );
+			}
+		}
+		else
+		{
+			Assert.AreEqual( path.Count, 0 );
+			Assert.AreEqual( roadPath.Count, 0 );
+		}
+	}
+}
+
+public class Path : PathFinder
+{
+	public int progress;
+
+	public static Path Between( GroundNode start, GroundNode end, Mode mode )
+	{
+		var p = new Path();
+		if ( p.FindPathBetween( start, end, mode ) )
+		{
+			if ( mode != Mode.onRoad )
+				p.progress = 1;
+			return p;
+		}
+		return null;
+	}
+
+	public Road Road()
+	{
+		return roadPath[progress];
+	}
+
+	public Road NextRoad()
+	{
+		return roadPath[progress++];
+	}
+
+	public GroundNode Node()
+	{
+		return path[progress];
+	}
+
+	public GroundNode NextNode()
+	{
+		return path[progress++];
+	}
+
+	public bool IsFinished()
+	{
+		if ( mode == Mode.onRoad )
+			return progress >= roadPath.Count;
+
+		return progress >= path.Count;
+	}
+
+	public int StepsLeft()
+	{
+		if ( mode == Mode.onRoad )
+			return roadPath.Count - progress;
+
+		return path.Count - progress;
+	}
+
+	public override void Validate()
+	{
+		base.Validate();
+		Assert.IsTrue( progress >= 0 );
+		if ( mode == Mode.onRoad )
+			Assert.IsTrue( progress <= roadPath.Count );
+		else
+			Assert.IsTrue( progress <= path.Count );
+	}
 }

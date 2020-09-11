@@ -79,7 +79,7 @@ public class Flag : MonoBehaviour
 
 	public bool StoreItem( Item item )
 	{
-		Assert.IsNull( item.flag );
+		Assert.IsNull( item.flag, "Item already has a flag" );
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == null )

@@ -8,8 +8,7 @@ public class Item : MonoBehaviour
 	public Worker worker;
 	public Type type;
 	public Ground ground;
-	public PathFinder path;
-	public int pathProgress;
+	public Path path;
 	public Building origin;
 	public Building destination;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
@@ -79,24 +78,17 @@ public class Item : MonoBehaviour
 
 	public bool SetTarget( Building building )
 	{
-		path = new PathFinder();
-		pathProgress = -1;
 		GroundNode current = origin.flag.node;
 		if ( flag )
-		{
 			current = flag.node;
-			pathProgress++;
-		}
-		if ( path.FindPathBetween( current, building.flag.node, PathFinder.Mode.onRoad ) )
+
+		path = Path.Between( current, building.flag.node, PathFinder.Mode.onRoad );
+		if ( path != null )
 		{
 			destination = building;
 			return true;
 		}
-		else
-		{
-			path = null;
-			return false;
-		}
+		return false;
 	}
 
 	public void CancelTrip()
@@ -105,19 +97,12 @@ public class Item : MonoBehaviour
 		destination?.ItemOnTheWay( this, true );
 	}
 
-	public bool AtFinalFlag()
-	{
-		if ( destination == null )
-			return false;
-
-		return pathProgress == path.roadPath.Count - 1;
-	}
-
 	public void ArrivedAt( Flag flag )
 	{
+		Assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
+
 		worker = null;
-		pathProgress++;
-		if ( pathProgress == path.roadPath.Count && destination != null )
+		if ( path.IsFinished() && destination != null )
 		{
 			Assert.AreEqual( destination.flag, flag );
 			destination.ItemArrived( this );
@@ -133,12 +118,10 @@ public class Item : MonoBehaviour
 		UpdateLook();
 	}
 
-	public Road NextRoad()
+	public void Arrived()
 	{
-		if ( destination == null || path == null )
-			return null;
-
-		return path.roadPath[pathProgress];
+		destination.ItemArrived( this );
+		Destroy( gameObject );
 	}
 
 	public void UpdateLook()	
@@ -180,9 +163,9 @@ public class Item : MonoBehaviour
 					s++;
 			Assert.AreEqual( s, 1 );
 		}
-		if ( worker )
-			Assert.AreEqual( this, worker.item );
+		if ( worker && worker.itemInHands != null )
+			Assert.AreEqual( this, worker.itemInHands );
 		if ( path != null )
-			Assert.IsTrue( pathProgress < path.roadPath.Count );
+			path.Validate();
 	}
 }

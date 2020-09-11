@@ -57,13 +57,13 @@ abstract public class Building : MonoBehaviour
 				return;
 
 			// TODO Try to find a path only if the road network has been changed
-			if ( worker == null && PathFinder.Between( boss.ground.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad ) != null )
+			if ( worker == null && Path.Between( boss.ground.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad ) != null )
 			{
 				Building main = boss.ground.mainBuilding;
 				worker = WorkerBoy.Create();
 				worker.SetupForConstruction( boss );
 			}
-			if ( worker == null || !worker.inside )
+			if ( worker == null || !worker.IsIdleInBuilding() )
 				return;
 			progress += 0.001f*boss.ground.speedModifier;	// TODO This should be different for each building type
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
@@ -75,6 +75,7 @@ abstract public class Building : MonoBehaviour
 
 			done = true;
 			worker.Remove();
+			worker.ScheduleWalkToNeighbour( boss.flag.node );
 		}
 		public bool ItemOnTheWay( Item item, bool cancel = false )
 		{
@@ -137,6 +138,11 @@ abstract public class Building : MonoBehaviour
 
 			Assert.IsTrue( false );
 			return false;
+		}
+
+		public void Validate()
+		{
+			worker?.Validate();
 		}
 	}
 
@@ -225,13 +231,18 @@ abstract public class Building : MonoBehaviour
 
 	public virtual Item SendItem( Item.Type itemType, Building destination )
 	{
-		if ( worker == null || !worker.inside )
+		if ( worker == null || !worker.IsIdleInBuilding() )
 			return null;
 
 		// TODO Don't create the item, if there is no path between this and destination
 		Item item = Item.Create().Setup( itemType, this, destination );
 		if ( item != null )
-			worker.CarryItem( item, flag.node );
+		{
+			worker.SchedulePickupItem( item );
+			worker.ScheduleWalkToNeighbour( flag.node );
+			worker.ScheduleDeliverItem( item );
+			worker.ScheduleWalkToNeighbour( node );
+		}
 		return item;
 	}
 
@@ -279,5 +290,6 @@ abstract public class Building : MonoBehaviour
 		Assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
 		worker?.Validate();
 		exit?.Validate();
+		construction?.Validate();
 	}
 }

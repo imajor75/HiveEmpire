@@ -46,17 +46,9 @@ public class Assert
 		Failed( message );
 	}
 
-	public static void AreEqual( object a, object b, string message = "" )
+	public static void AreEqual<T>( T a, T b, string message = "" )
 	{
-		if ( a == b )
-			return;
-
-		Failed( message );
-	}
-
-	public static void AreEqual<T>( T a, T b, string message = "" ) where T : System.Enum
-	{
-		if ( a.CompareTo( b ) == 0 )
+		if ( a.Equals( b ) )
 			return;
 
 		Failed( message );

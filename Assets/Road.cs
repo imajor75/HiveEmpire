@@ -288,10 +288,7 @@ public class Road : MonoBehaviour
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
 				Item t = flag.items[i];
-				if ( t == null || t.path == null || t.pathProgress >= t.path.roadPath.Count )
-					continue;
-				Road r = t.path.roadPath[t.pathProgress];
-				if ( r == this )
+				if ( t != null && t.path.Road() == this )
 					itemCount++;
 			};
 		}
@@ -300,15 +297,12 @@ public class Road : MonoBehaviour
 
 	public void CreateNewWorker()
 	{
-		var worker = Worker.Create();
-		if ( !worker.SetupForRoad( this ) )
+		var worker = Worker.Create().SetupForRoad( this );
+		if ( worker != null )
 		{
-			Destroy( worker );
-			return;
+			workers.Add( worker );
+			timeSinceWorkerAdded = 0;
 		}
-		workers.Add( worker );
-
-		timeSinceWorkerAdded = 0;
 	}
 
 	public void OnCreated()
@@ -343,6 +337,11 @@ public class Road : MonoBehaviour
 				node.road = null;
 		}
 		Destroy( gameObject );
+	}
+
+	public GroundNode CenterNode()
+	{
+		return nodes[nodes.Count / 2];
 	}
 
 	public void Validate()

@@ -182,10 +182,7 @@ public class Ground : MonoBehaviour
 			if ( currentNode.building )
 				currentNode.building.Remove();
 			if ( currentNode.flag )
-			{
-				currentNode.flag.building.worker.debug = true;
 				currentNode.flag.Remove();
-			}
 		}
 
 	}

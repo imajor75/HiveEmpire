@@ -1,55 +1,339 @@
 ﻿using System;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Worker : MonoBehaviour
 {
-	public bool debug;
-	public TaskType task;
-	public Ground ground;
-	public Road currentRoad;
-	[HideInInspector]
-	public GroundNode walkFrom;
-	[HideInInspector]
-	public GroundNode walkTo;
-	public float walkProgress;
-	public Flag targetFlag;
-	public GroundNode targetNode;
-	public GroundNode currentNode;
-	public PathFinder path;
-	public int pathProgress;
 	public Type type;
-
-	public Item item;
-	public bool handsFull = false;
+	public Ground ground;
+	public GroundNode walkFrom = zero;
+	public GroundNode walkTo = zero;
+	public float walkProgress;
+	public GroundNode node;
+	public Item itemInHands;
 
 	public Building construction;
 
 	public Road road;
-	public int roadPointTarget;
-	public int currentPoint;
-	public int wishedPoint = -1;
-	public Building offroadToBuilding;
 	public bool atRoad;
 
 	public Building building;
-	public bool inside; // Used only for building workers
 
 	public Animator animator;
 	public static GameObject templateWoman;
 	public static GameObject templateMan;
 	public static GameObject templateBoy;
 	public static RuntimeAnimatorController idleController, walkingController;
+	public static GroundNode zero = new GroundNode();	// HACK This is a big fat hack, to stop Unity editor from crashing
 
-	public enum TaskType
+	public List<Task> taskQueue = new List<Task>();
+
+	public class Task : ScriptableObject
 	{
-		nothing,
-		doOneStep,
-		reachRoadPoint,
-		pickUpItem,
-		dropItem,
-		reachFlag,
-		reachNode
+		public Worker boss;
+
+		public void Setup( Worker boss )
+		{
+			this.boss = boss;
+		}
+		public virtual bool ExecuteFrame() { return false; }
+		public virtual void Cancel() { }
+		public void ReplaceThisWith( Task another )
+		{
+			Assert.AreEqual( this, boss.taskQueue[0] );
+			boss.taskQueue.RemoveAt( 0 );
+			boss.taskQueue.Insert( 0, another );
+		}
+		public void AddTask( Task newTask, bool asFirst )
+		{
+			if ( asFirst )
+				boss.taskQueue.Insert( 0, newTask );
+			else
+				boss.taskQueue.Add( newTask );
+		}
+
+		public virtual void Validate()
+		{
+			Assert.IsTrue( boss.taskQueue.Contains( this ) );
+		}
+	}
+
+	public class WalkToFlag : Task
+	{
+		public Flag target;
+		public Path path;
+
+		public void Setup( Worker boss, Flag target )
+		{
+			base.Setup( boss );
+			this.target = target;
+		}
+		public override bool ExecuteFrame()
+		{
+			if ( boss.node.flag == target )
+				return true;
+
+			if ( path == null )
+			{
+				path = Path.Between( boss.node, target.node, PathFinder.Mode.onRoad );
+				if ( path == null )
+				{
+					var instance = ScriptableObject.CreateInstance<WalkToNode>();
+					instance.Setup( boss, target.node );
+					ReplaceThisWith( instance );
+					return false;
+				}
+			}
+			int point = 0;
+			if ( boss.node.flag == path.Road().GetEnd( 0 ) )
+				point = path.Road().nodes.Count - 1;
+			boss.ScheduleWalkToRoadPoint( path.Road(), point, true, false );
+			return false;
+		}
+
+		public override void Validate()
+		{
+			base.Validate();
+		}
+	}
+
+	public class WalkToNode : Task
+	{
+		public GroundNode target;
+		public Path path;
+
+		public void Setup( Worker boss, GroundNode target )
+		{
+			base.Setup( boss );
+			this.target = target;
+		}
+		public override bool ExecuteFrame()
+		{
+			if ( boss.node == target )
+				return true;
+
+			if ( path == null )
+			{
+				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects );
+				if ( path == null )
+					return false;
+			}
+			boss.Walk( path.NextNode() );
+			return false;
+		}
+	}
+
+	public class WalkToRoadPoint : Task
+	{
+		// TODO Select the end closer to the starting point
+		public Road road;
+		public int currentPoint = -1;
+		public int targetPoint;
+		public int wishedPoint = -1;
+		public bool exclusive;
+
+		public void Setup( Worker boss, Road road, int point, bool exclusive )
+		{
+			base.Setup( boss );
+			this.road = road;
+			this.exclusive = exclusive;
+			targetPoint = point;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			if ( currentPoint == -1 )
+				currentPoint = road.NodeIndex( boss.node );
+			Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
+			if ( currentPoint == targetPoint )
+				return true;
+			else
+				NextStep();
+			return false;
+		}
+
+		public bool NextStep()
+		{
+			if ( exclusive )
+				Assert.AreEqual( road.workerAtNodes[currentPoint], boss );
+			Assert.AreEqual( boss.walkTo, zero );
+
+			if ( currentPoint == targetPoint )
+				return false;
+
+			int nextPoint;
+			if ( currentPoint < targetPoint )
+				nextPoint = currentPoint + 1;
+			else
+				nextPoint = currentPoint - 1;
+
+			if ( exclusive )
+			{
+				Flag flag = road.nodes[nextPoint].flag;
+				if ( flag )
+				{
+					if ( flag.user )
+					{
+						var otherTask = flag.user.taskQueue[0] as WalkToRoadPoint;
+						if ( otherTask != null && otherTask.wishedPoint != currentPoint )
+							return false;
+					}
+					flag.user = boss;
+				}
+				road.workerAtNodes[currentPoint] = null;
+				if ( road.workerAtNodes[nextPoint] != null )
+				{
+					var otherWorker = road.workerAtNodes[nextPoint];
+					var otherTask = otherWorker.taskQueue[0] as WalkToRoadPoint;
+					if ( otherTask && otherTask.wishedPoint == currentPoint )
+					{
+						// TODO Workers should avoid each other
+						bool coming = otherTask.NextStep();
+						Assert.IsTrue( coming );
+					}
+					else
+					{
+						road.workerAtNodes[currentPoint] = boss;
+						wishedPoint = nextPoint;
+						return false;
+					}
+				}
+			}
+
+			wishedPoint = -1;
+			Assert.AreEqual( boss.node, road.nodes[currentPoint] );
+			boss.Walk( road.nodes[nextPoint] );
+			currentPoint = nextPoint;
+			if ( exclusive )
+				road.workerAtNodes[currentPoint] = boss;
+			return true;
+		}
+
+		public override void Validate()
+		{
+			base.Validate();
+			if ( this != boss.taskQueue[0] )
+				return;
+				
+			Assert.IsTrue( currentPoint >= -1 && currentPoint < road.nodes.Count );
+			if ( exclusive )
+			{
+				int t = 0;
+				for ( int i = 0; i < road.workerAtNodes.Length; i++ )
+				{
+					if ( road.workerAtNodes[i] == boss )
+					{
+						t++;
+						Assert.AreEqual( i, currentPoint );
+					}
+				}
+				Assert.AreEqual( t, 1 );
+			}
+
+
+			Assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
+			if ( wishedPoint >= 0 )
+			{
+				Assert.IsTrue( wishedPoint <= road.nodes.Count );
+				Assert.AreEqual( Math.Abs( wishedPoint - currentPoint ), 1 );
+			}
+		}
+	}
+
+	public class WalkToNeighbour : Task
+	{
+		public GroundNode target;
+		public void Setup( Worker boss, GroundNode target )
+		{
+			base.Setup( boss );
+			this.target = target;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			boss.Walk( target );
+			return true;
+		}
+	}
+
+	public class PickupItem : Task
+	{
+		public Item item;
+
+		public void Setup( Worker boss, Item item )
+		{
+			base.Setup( boss );
+			this.item = item;
+		}
+		public override void Cancel()
+		{
+			Assert.AreEqual( boss, item.worker );
+			item.worker = null;
+			base.Cancel();
+		}
+		public override bool ExecuteFrame()
+		{
+			if ( item.flag != null )
+				item.flag.ReleaseItem( item );
+			boss.itemInHands = item;
+			Assert.IsTrue( item.worker == boss || item.worker == null );
+			item.worker = boss;
+			if ( item.worker.type == Type.haluer )
+				item.path.NextRoad();
+			return true;
+		}
+	}
+
+	public class DeliverItem : Task 
+	{
+		public Item item;
+
+		public void Setup( Worker boss, Item item )
+		{
+			base.Setup( boss );
+			this.item = item;
+		}
+		public override bool ExecuteFrame()
+		{
+			Assert.AreEqual( item, boss.itemInHands );
+			if ( item.destination.node == boss.node )
+				item.Arrived();
+			else
+			{
+				Flag flag = boss.node.flag;
+				Assert.IsNotNull( flag, "Trying to deliver an item at a location where there is no flag" );
+				item.ArrivedAt( flag );
+			}
+			boss.itemInHands = null;
+
+			return true;
+		}
+	}
+
+	public class StartWorkingOnRoad : Task
+	{
+		public Road road;
+
+		public void Setup( Worker boss, Road road )
+		{
+			base.Setup( boss );
+			this.road = road;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			int i = road.NodeIndex( boss.node );
+			Assert.IsTrue( i >= 0 );
+			if ( road.workerAtNodes[i] == null )
+			{
+				road.workerAtNodes[i] = boss;
+				boss.road = road;
+				return true;
+			}
+			return false;
+		}
 	}
 
 	public enum Type
@@ -57,7 +341,7 @@ public class Worker : MonoBehaviour
 		haluer,
 		tinkerer,
 		constructor,
-		idle
+		unemployed
 	}
 
 	public static void Initialize()
@@ -88,46 +372,42 @@ public class Worker : MonoBehaviour
 	public Worker SetupForRoad( Road road )
 	{
 		type = Type.haluer;
-		this.road = road;
-		// TODO Select the end closer to the starting point
-		Building main = road.ground.mainBuilding;
-		SetPosition( main.node, road.GetEnd( 0 ) );
-		StepTo( main.flag.node );
-		currentPoint = 0;
 		ground = road.ground;
+		Building main = road.ground.mainBuilding;
+		node = main.node;
+		ScheduleWalkToNeighbour( main.flag.node );
+		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
+		ScheduleStartWorkingOnRoad( road );
 		return this;
 	}
 
 	public Worker SetupForBuilding( Building building )
 	{
 		type = Type.tinkerer;
-		this.building = building;
-		currentNode = building.node;
-		inside = false;
-		Building main = building.ground.mainBuilding;
-		if ( building != main )
-		{
-			SetPosition( main.node, building.flag );
-			StepTo( main.flag.node );
-		}
-		else
-			inside = true;
-		ground = building.ground;
-		return this;
+		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupForConstruction( Building building )
 	{
 		type = Type.constructor;
-		construction = building;
-		Building main = building.ground.mainBuilding;
-		SetPosition( main.node, building.flag );
-		StepTo( main.flag.node );
+		return SetupForBuildingSite( building );
+	}
+
+	Worker SetupForBuildingSite( Building building )
+	{
 		ground = building.ground;
+		this.building = building;
+		Building main = ground.mainBuilding;
+		node = main.node;
+		if ( building != main )
+		{
+			ScheduleWalkToNeighbour( main.flag.node );
+			ScheduleWalkToFlag( building.flag );
+			ScheduleWalkToNeighbour( building.node );
+		}
 		return this;
 	}
 
-	// Start is called before the first frame update
 	void Start()
 	{
 		if ( road != null )
@@ -140,310 +420,74 @@ public class Worker : MonoBehaviour
 		UpdateBody();
 	}
 
+	public void Walk( GroundNode target )
+	{
+		Assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
+		walkFrom = node;
+		node = walkTo = target;
+
+		if ( walkFrom.flag && walkFrom.flag.user == this )
+			walkFrom.flag.user = null;
+	}
+
 	// Update is called once per frame
 	void FixedUpdate()
 	{
 		// If worker is between two nodes, simply advancing it
-		if ( walkTo != null )
+		if ( walkTo != zero )
 		{
 			walkProgress += 0.015f*ground.speedModifier; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
-				if ( building && walkTo == building.node )
-					inside = true;
-				if ( construction && walkTo == construction.node )
-					inside = true;
-				walkTo = walkFrom = null;
+				walkTo = walkFrom = zero;
 				walkProgress -= 1;
 			}
 		}
-		if ( walkTo == null )
+		if ( walkTo == zero )
 		{
-			if ( task == TaskType.nothing )
+			if ( taskQueue.Count > 0 && taskQueue[0].ExecuteFrame() )
+				taskQueue.RemoveAt( 0 );
+			if ( taskQueue.Count == 0 )
 				FindTask();
 		}
-		if ( walkTo == null )
-			ExecuteCurrentTask();
 		UpdateBody();
-	}
-
-	public void ExecuteCurrentTask()
-	{
-		if ( task == TaskType.nothing )
-			return;
-
-		if ( task == TaskType.reachRoadPoint )
-		{
-			if ( currentPoint == roadPointTarget )
-			{
-				task = TaskType.nothing;
-				FindTask();
-			}
-			else
-				NextStep();
-			return;
-		}
-		if ( task == TaskType.reachFlag )
-		{
-			if ( currentNode.flag == targetFlag )
-			{
-				task = TaskType.nothing;
-				path = null;
-				targetFlag = null;
-				FindTask();
-				return;
-			}
-			if ( path == null )
-			{
-				path = new PathFinder();
-				if ( !path.FindPathBetween( currentNode, targetFlag.node, PathFinder.Mode.onRoad ) )
-				{
-					path = null;
-					task = TaskType.nothing;
-					WalkToNode( targetFlag.node );
-					return;
-				}
-				pathProgress = 0;
-				currentPoint = roadPointTarget = 0;
-			}
-			if ( currentPoint == roadPointTarget )
-			{
-				Road next = path.roadPath[pathProgress++];
-				Flag start = next.GetEnd( 0 ), end = next.GetEnd( 1 );
-				if ( start == currentNode.flag )
-				{
-					currentPoint = 0;
-					roadPointTarget = next.nodes.Count - 1;
-					currentNode = end.node;
-				}
-				else
-				{
-					Assert.AreEqual( end, currentNode.flag );
-					currentPoint = next.nodes.Count - 1;
-					roadPointTarget = 0;
-					currentNode = start.node;
-				}
-				currentRoad = next;
-			}
-			NextStep( false );
-			return;
-		}
-		if ( task == TaskType.reachNode )
-		{
-			if ( currentNode == targetNode )
-			{
-				task = TaskType.nothing;
-				targetNode = null;
-				path = null;
-				FindTask();
-				return;
-			}
-			if ( path == null )
-			{
-				path = new PathFinder();
-				if ( !path.FindPathBetween( currentNode, targetNode, PathFinder.Mode.avoidObjects ) )
-				{
-					path = null;
-					return;
-				}
-				pathProgress = 1;
-			}
-			StepTo( path.path[pathProgress++] );
-			task = TaskType.reachNode;	// HACK Need task queue
-			return;
-		}
-		if ( task == TaskType.doOneStep )
-		{
-			task = TaskType.nothing;
-			return;
-		}
-
-		Assert.IsTrue( false );
-	}
-
-	public bool NextStep( bool exclusive = true )
-	{
-		if ( road && atRoad )
-			Assert.AreEqual( road.workerAtNodes[currentPoint], this );
-		Assert.IsNull( walkTo );
-
-		if ( currentPoint == roadPointTarget )
-			return false;
-
-		int nextPoint;
-		if ( currentPoint < roadPointTarget )
-			nextPoint = currentPoint + 1;
-		else
-			nextPoint = currentPoint - 1;
-
-		if ( exclusive )
-		{
-			Flag flag = currentRoad.nodes[nextPoint].flag;
-			if ( flag )
-			{
-				if ( flag.user && flag.user.wishedPoint != currentPoint )
-					return false;
-				flag.user = this;
-			}
-			currentRoad.workerAtNodes[currentPoint] = null;
-			if ( currentRoad.workerAtNodes[nextPoint] != null )
-			{
-				var otherWorker = currentRoad.workerAtNodes[nextPoint];
-				if ( otherWorker.wishedPoint == currentPoint )
-				{
-					// TODO Workers should avoid each other
-					bool coming = otherWorker.NextStep();
-					Assert.IsTrue( coming );
-				}
-				else
-				{
-					road.workerAtNodes[currentPoint] = this;
-					wishedPoint = nextPoint;
-					return false;
-				}
-			}
-		}
-
-		wishedPoint = -1;
-		walkFrom = currentRoad.nodes[currentPoint];
-		currentNode = walkTo = currentRoad.nodes[nextPoint];
-		if ( walkFrom.flag && walkFrom.flag.user == this )
-			walkFrom.flag.user = null;
-		currentPoint = nextPoint;
-		if ( exclusive )
-			road.workerAtNodes[currentPoint] = this;
-		return true;
 	}
 
 	public void Remove()
 	{
-		if ( handsFull )
+		foreach ( var task in taskQueue )
+			task.Cancel();
+		taskQueue.Clear();
+
+		if ( itemInHands )
 		{
-			item.Remove();
-			handsFull = false;
-		}
-		else
-		{
-			if ( item )
-			{
-				Assert.AreEqual( this, item.worker );
-				item.worker = null;
-				item = null;
-			}
+			itemInHands.Remove();
+			itemInHands = null;
 		}
 		if ( road != null && atRoad )
 		{
-			GroundNode point = road.nodes[currentPoint];
+			int currentPoint = road.NodeIndex( node );
 			Assert.AreEqual( road.workerAtNodes[currentPoint], this );
 			road.workerAtNodes[currentPoint] = null;
-			Flag flag = road.nodes[currentPoint].flag;
+			Flag flag = node.flag;
 			if ( flag )
 			{
 				Assert.AreEqual( flag.user, this );
 				flag.user = null;
 			}
 			road.workers.Remove( this );
-			targetNode = road.nodes[0];
+			// TODO Pick the closer end
+			ScheduleWalkToRoadPoint( road, 0 );
 		}
-		currentRoad = road = null;
+		road = null;
 		building = null;
 		construction = null;
-		type = Type.idle;
-		task = TaskType.nothing;
-	}
-
-	public void StepTo( GroundNode target )
-	{
-		Assert.IsTrue( currentNode.DirectionTo( target ) >= 0, "Target node " + target.x + ", " + target.y + " is not adjacent" );
-		walkTo = target;
-		walkFrom = currentNode;
-		currentNode = target;
-		task = TaskType.doOneStep;
+		type = Type.unemployed;
 	}
 
 	public void FindTask()
 	{
-		if ( debug )
-		{
-			int h = 9;
-		}
-
-		Assert.AreEqual( task, TaskType.nothing );
-		if ( targetNode != null )
-		{
-			WalkToNode( targetNode );
-			return;
-		}
-		if ( targetFlag != null )
-		{
-			if ( currentNode.flag == null )
-			{
-				WalkToNode( targetFlag.node );
-				targetFlag = null;
-			}
-			else
-				WalkToFlag( targetFlag, currentNode.flag );
-			return;
-		}
-		if ( road && !atRoad )
-		{
-			int i = road.NodeIndex( currentNode );
-			Assert.IsTrue( i >= 0 );
-			if ( road.workerAtNodes[i] == null )
-			{
-				road.workerAtNodes[i] = this;
-				atRoad = true;
-			}
-			return;
-		}
-		if ( handsFull )
-		{
-			if ( road != null && offroadToBuilding == null && item.AtFinalFlag() )
-			{
-				StepTo( item.destination.node );
-				offroadToBuilding = item.destination;
-				return;
-			}
-			Flag flag;
-			if ( building )
-				flag = building.flag;
-			else
-				flag = road.GetEnd( currentPoint );
-			Assert.IsNotNull( flag );
-			item.ArrivedAt( flag );
-			item = null;
-			handsFull = false;
-		}
-		if ( offroadToBuilding )
-		{
-			Assert.IsNotNull( road );
-			StepTo( road.nodes[currentPoint] );
-			offroadToBuilding = null;
-			return;
-		}
-		if ( building && !inside )
-		{
-			StepTo( building.node );
-			return;
-		}
-		if ( construction && !inside )
-		{
-			StepTo( construction.node );
-			return;
-		}
-		if ( item != null )
-		{
-			// Picking up item
-			Assert.AreEqual( road.GetEnd( currentPoint ), item.flag );
-			item.flag.ReleaseItem( item );
-			handsFull = true;
-			if ( currentPoint == 0 )
-				WalkToRoadPoint( road.nodes.Count - 1 );
-			else
-				WalkToRoadPoint( 0 );
-			return;
-		}
-
+		Assert.AreEqual( taskQueue.Count, 0 );
 		// TODO Pick the most important item rather than the first available
 
 		if ( road != null )
@@ -452,129 +496,165 @@ public class Worker : MonoBehaviour
 				CheckItem( item );
 			foreach ( var item in road.GetEnd( 1 ).items )
 				CheckItem( item );
-			if ( item != null )
+			if ( taskQueue.Count != 0 )
 				return;
 		}
 
-		if ( road != null && currentPoint != road.nodes.Count / 2 && road.workers.Count == 1 )
+		if ( road != null && node != road.CenterNode() && road.workers.Count == 1 )
 		{
-			WalkToRoadPoint( road.nodes.Count / 2 );
+			ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
 			return;
 		}
 
-		if ( type == Type.idle )
+		if ( type == Type.unemployed )
 		{
-			if ( currentNode == ground.mainBuilding.node )
+			if ( node == ground.mainBuilding.node )
 			{
 				Destroy( this );
 				return;
 			}
-			if ( currentNode == ground.mainBuilding.flag.node )
+			if ( node == ground.mainBuilding.flag.node )
 			{
-				StepTo( ground.mainBuilding.node );
+				ScheduleWalkToNeighbour( ground.mainBuilding.node );
 				return;
 			}
-			targetFlag = ground.mainBuilding.flag;
-			if ( inside )
-			{
-				for ( int i = 0; i < GroundNode.neighbourCount; i++ )
-				{
-					Flag flag = currentNode.Neighbour( i ).flag;
-					if ( flag != null )
-					{
-						StepTo( flag.node );
-						inside = false;
-						return;
-					}
-				}
-			}
+			ScheduleWalkToFlag( ground.mainBuilding.flag );
 		}
-
-		return;
 	}
 
 	public void CheckItem( Item item )
 	{
-		if ( this.item )
+		if ( taskQueue.Count != 0 )
 			return;
 		if ( item == null || item.worker || item.destination == null )
 			return;
 
-		if ( item.path == null || item.NextRoad() != road )
+		if ( item.path == null || item.path.Road() != road )
 			return;
 		CarryItem( item );
 	}
 
-	public void CarryItem( Item item, GroundNode destination = null )
+	public void ScheduleWalkToNeighbour( GroundNode target, bool first = false )
 	{
-		Assert.IsFalse( handsFull );
-		Assert.IsTrue( item.flag != null || building != null );
-		item.worker = this;
-		this.item = item;
-		if ( destination == null )
+		var instance = ScriptableObject.CreateInstance<WalkToNeighbour>();
+		instance.Setup( this, target );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void ScheduleWalkToNode( GroundNode target, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<WalkToNode>();
+		instance.Setup( this, target );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void ScheduleWalkToFlag( Flag target, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<WalkToFlag>();
+		instance.Setup( this, target );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void ScheduleWalkToRoadPoint( Road road, int target, bool first = false, bool exclusive = true )
+	{
+		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
+		instance.Setup( this, road, target, exclusive );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void ScheduleWalkToRoadNode( Road road, GroundNode target, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
+		instance.Setup( this, road, road.NodeIndex( target ), true );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void SchedulePickupItem( Item item, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<PickupItem>();
+		instance.Setup( this, item );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void ScheduleDeliverItem( Item item, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<DeliverItem>();
+		instance.Setup( this, item );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void ScheduleStartWorkingOnRoad( Road road, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<StartWorkingOnRoad>();
+		instance.Setup( this, road );
+		if ( first )
+			taskQueue.Insert( 0, instance );
+		else
+			taskQueue.Add( instance );
+	}
+
+	public void CarryItem( Item item )
+	{
+		Assert.IsNotNull( road );
+		Assert.AreEqual( road, item.path.Road() );
+		int itemPoint = road.NodeIndex( item.flag.node );
+		ScheduleWalkToRoadPoint( road, itemPoint );
+		SchedulePickupItem( item );
+		if ( itemPoint > 0 )
+			ScheduleWalkToRoadPoint( road, 0 );
+		else
+			ScheduleWalkToRoadPoint( road, road.nodes.Count - 1 );
+
+		if ( item.path.StepsLeft() == 1 )
 		{
-			//Assert.IsNotNull( item.flag );
-			WalkToRoadPoint( road.NodeIndex( item.flag.node ) );
+			var destination = item.destination;
+			ScheduleWalkToNeighbour( destination.node );
+			ScheduleDeliverItem( item );
+			ScheduleWalkToNeighbour( destination.flag.node );
 		}
 		else
-		{
-			Assert.IsNull( item.flag );
-			StepTo( destination );
-			handsFull = true;
-		}
-		inside = false;
-	}
-
-	public void WalkToRoadPoint( int index )
-	{
-		Assert.AreEqual( task, TaskType.nothing );
-		Assert.IsTrue( index >= 0 && index <= road.nodes.Count );
-		roadPointTarget = index;
-		walkProgress = 0;
-		task = TaskType.reachRoadPoint;
-		currentRoad = road;
-		NextStep();
-	}
-
-	public void WalkToFlag( Flag flag, Flag from )
-	{
-		Assert.AreEqual( task, TaskType.nothing );
-		task = TaskType.reachFlag;
-		targetFlag = flag;
-		currentNode = from.node;
-	}
-
-	public void WalkToNode( GroundNode node )
-	{
-		Assert.AreEqual( task, TaskType.nothing );
-		task = TaskType.reachNode;
-		targetNode = node;
-	}
-
-	public void SetPosition( GroundNode position, Flag target )
-	{
-		currentNode = position;
-		targetFlag = target;
+			ScheduleDeliverItem( item );
+		item.worker = this;
 	}
 
 	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
 	public void UpdateBody()
 	{
-		if ( walkTo == null )
+		if ( walkTo == zero )
 		{
 			if ( animator != null && animator.runtimeAnimatorController == walkingController )
 				animator.runtimeAnimatorController = idleController;
 
-			if ( currentNode != null )
-				transform.localPosition = currentNode.Position();
+			transform.localPosition = node.Position();
 			return;
 		}
 		else
 			if ( animator != null && animator.runtimeAnimatorController == idleController )
 			animator.runtimeAnimatorController = walkingController;
 
-		if ( item && handsFull )
-			item.UpdateLook();
+		if ( itemInHands )
+			itemInHands.UpdateLook();
 
 		transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress );
 		int direction = walkFrom.DirectionTo( walkTo );
@@ -582,45 +662,25 @@ public class Worker : MonoBehaviour
 		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
 	}
 
+	public bool IsIdleInBuilding()
+	{
+		Assert.IsNotNull( building );
+		return node == building.node && walkTo == zero;
+	}
+
 	public void Validate()
 	{
-		Assert.IsTrue( road || building );
 		Assert.IsTrue( road == null || building == null );
-		Assert.IsTrue( !handsFull || item );
-		if ( item )
-		{
-			Assert.AreEqual( item.worker, this );
-			if ( handsFull )
-				Assert.IsNull( item.flag );
-			else
-				Assert.IsNotNull( item.flag );
-			item.Validate();
-		}
 		if ( road )
-		{
 			Assert.IsTrue( road.workers.Contains( this ) );
-			if ( atRoad )
-			{
-				Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
-				int t = 0;
-				for ( int i = 0; i < road.workerAtNodes.Length; i++ )
-				{
-					if ( road.workerAtNodes[i] == this )
-					{
-						t++;
-						Assert.AreEqual( i, currentPoint );
-					}
-				}
-				Assert.AreEqual( t, 1 );
-
-				Assert.IsTrue( roadPointTarget >= 0 && roadPointTarget < road.nodes.Count );
-				if ( wishedPoint >= 0 )
-				{
-					Assert.IsTrue( wishedPoint <= road.nodes.Count );
-					Assert.AreEqual( Math.Abs( wishedPoint - currentPoint ), 1 );
-				}
-			}
+		if ( itemInHands )
+		{
+			Assert.AreEqual( itemInHands.worker, this );
+			Assert.IsNull( itemInHands.flag );
+			itemInHands.Validate();
 		}
+		foreach ( Task task in taskQueue )
+			task.Validate();
 	}
 }
 
