@@ -185,11 +185,36 @@ public class Road : MonoBehaviour
 		timeSinceWorkerAdded++;
 	}
 
+	static int blocksInSection = 8;
 	void RebuildMesh()
 	{
+		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
+		Vector3 h = new Vector3(0, GroundNode.size / 10, 0);
 		mesh.Clear();
+		int v = 0;
+		var vertices = new Vector3[vertexRows * 3];
+		for ( int j = 0; j < vertices.Length; j++ )
+			vertices[j] = new Vector3();
+		var uvs = new Vector2[vertexRows * 3];
+		for (int i = 0; i < nodes.Count; i++)
+		{
+			for ( int b = 0; b < blocksInSection; b++ )
+            {
+				if (i == nodes.Count - 1 && b > 0)
+					continue;
+
+				var pos = PositionAt(i, 1.0f / blocksInSection * b);
+				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
+				var side = new Vector3();
+				side.x = dir.z;
+				side.z = -dir.x;
+				vertices[v++] = pos + h - side;
+				vertices[v++] = pos + h;
+				vertices[v++] = pos + h + side;
+			}
+		}
+		Assert.AreEqual(v, vertexRows * 3);
 		var l = nodes.Count-1;
-		var vertices = new Vector3[l*6];
 		var uvs = new Vector2[l*6];
 		for ( int j = 0; j < l * 6; j++ )
 			vertices[j] = new Vector3();
