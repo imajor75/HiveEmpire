@@ -191,7 +191,7 @@ public class Worker : MonoBehaviour
 					{
 						// TODO Workers should avoid each other
 						bool coming = otherTask.NextStep();
-						Assert.IsTrue( coming );
+						Assert.IsTrue( coming, "Other worker is not coming" );
 					}
 					else
 					{
@@ -510,7 +510,8 @@ public class Worker : MonoBehaviour
 		{
 			if ( node == ground.mainBuilding.node )
 			{
-				Destroy( this );
+				if ( walkTo == zero )
+					Destroy( gameObject );
 				return;
 			}
 			if ( node == ground.mainBuilding.flag.node )

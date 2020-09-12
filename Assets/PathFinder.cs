@@ -40,7 +40,7 @@ public class PathFinder
         target = end;
 		if ( mode == PathFinder.Mode.onRoad )
 		{
-			Assert.IsNotNull( start.flag );
+			Assert.IsNotNull( start.flag, "Trying to find a road path not starting at a flag" );
 			Assert.IsNotNull( end.flag );
 		}
 		this.mode = mode;
