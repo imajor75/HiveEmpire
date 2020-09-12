@@ -185,59 +185,60 @@ public class Road : MonoBehaviour
 		timeSinceWorkerAdded++;
 	}
 
+	static int blocksInSection = 8;
 	void RebuildMesh()
 	{
+		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
+		Vector3 h = new Vector3(0, GroundNode.size / 10, 0);
 		mesh.Clear();
-		var l = nodes.Count-1;
-		var vertices = new Vector3[l*6];
-		var uvs = new Vector2[l*6];
-		for ( int j = 0; j < l * 6; j++ )
+		int v = 0;
+		var vertices = new Vector3[vertexRows * 3];
+		for ( int j = 0; j < vertices.Length; j++ )
 			vertices[j] = new Vector3();
-		for ( int i = 0; i < l; i++ )
+		var uvs = new Vector2[vertexRows * 3];
+		for (int i = 0; i < nodes.Count; i++)
 		{
-			var a = nodes[i].Position();
-			var b = nodes[i+1].Position();
-			var ab = b-a;
-			Vector3 o = new Vector3( ab.z, 0, -ab.x );
-			o.Normalize();
-			o *= GroundNode.size / 5;
-			Vector3 h = new Vector3( 0, GroundNode.size / 10, 0 );
+			for ( int b = 0; b < blocksInSection; b++ )
+            {
+				if (i == nodes.Count - 1 && b > 0)
+					continue;
 
-			vertices[i * 6 + 0] = a + o;
-			vertices[i * 6 + 1] = a + h;
-			vertices[i * 6 + 2] = a - o;
-			vertices[i * 6 + 3] = b + o;
-			vertices[i * 6 + 4] = b + h;
-			vertices[i * 6 + 5] = b - o;
-
-			uvs[i * 6 + 0] = new Vector2( 0.0f, 0.0f );
-			uvs[i * 6 + 1] = new Vector2( 0.5f, 0.0f );
-			uvs[i * 6 + 2] = new Vector2( 1.0f, 0.0f );
-			uvs[i * 6 + 3] = new Vector2( 0.0f, 1.0f );
-			uvs[i * 6 + 4] = new Vector2( 0.5f, 1.0f );
-			uvs[i * 6 + 5] = new Vector2( 1.0f, 1.0f );
+				var pos = PositionAt(i, 1.0f / blocksInSection * b);
+				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
+				var side = new Vector3();
+				side.x = dir.z;
+				side.z = -dir.x;
+				uvs[v] = new Vector2(0.0f, 1.0f / blocksInSection * b);
+				vertices[v++] = pos + h - side;
+				uvs[v] = new Vector2(0.5f, 1.0f / blocksInSection * b);
+				vertices[v++] = pos + h;
+				uvs[v] = new Vector2(1.0f, 1.0f / blocksInSection * b);
+				vertices[v++] = pos + h + side;
+			}
 		}
+		Assert.AreEqual(v, vertexRows * 3);
 		mesh.vertices = vertices;
 		mesh.uv = uvs;
 
-		var triangles = new int[l*4*3];
-		for ( int j = 0; j < l; j++ )
+		int blockCount = (nodes.Count - 1) * blocksInSection;
+		var triangles = new int[blockCount * 4 * 3];
+		for ( int j = 0; j < blockCount	; j++ )
 		{
-			triangles[j * 4 * 3 + 00] = j * 6 + 0;
+			triangles[j * 4 * 3 + 00] = j * 3 + 0;
+			triangles[j * 4 * 3 + 01] = j * 6 + 1;
+			triangles[j * 4 * 3 + 02] = j * 6 + 3;
+			
+			triangles[j * 4 * 3 + 03] = j * 6 + 1;
+			triangles[j * 4 * 3 + 04] = j * 6 + 4;
+			triangles[j * 4 * 3 + 05] = j * 6 + 3;
+			
+			triangles[j * 4 * 3 + 00] = j * 3 + 0;
 			triangles[j * 4 * 3 + 01] = j * 6 + 1;
 			triangles[j * 4 * 3 + 02] = j * 6 + 3;
 
 			triangles[j * 4 * 3 + 03] = j * 6 + 1;
 			triangles[j * 4 * 3 + 04] = j * 6 + 4;
 			triangles[j * 4 * 3 + 05] = j * 6 + 3;
-
-			triangles[j * 4 * 3 + 06] = j * 6 + 1;
-			triangles[j * 4 * 3 + 07] = j * 6 + 2;
-			triangles[j * 4 * 3 + 08] = j * 6 + 4;
-
-			triangles[j * 4 * 3 + 09] = j * 6 + 2;
-			triangles[j * 4 * 3 + 10] = j * 6 + 5;
-			triangles[j * 4 * 3 + 11] = j * 6 + 4;
 		}
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals();
