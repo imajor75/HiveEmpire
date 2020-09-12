@@ -180,20 +180,19 @@ public class Worker : MonoBehaviour
 						if ( otherTask != null && otherTask.wishedPoint != currentPoint )
 							return false;
 					}
-					flag.user = boss;
 				}
 				road.workerAtNodes[currentPoint] = null;
 				if ( road.workerAtNodes[nextPoint] != null )
 				{
+					bool coming = false;
 					var otherWorker = road.workerAtNodes[nextPoint];
 					var otherTask = otherWorker.taskQueue[0] as WalkToRoadPoint;
 					if ( otherTask && otherTask.wishedPoint == currentPoint )
 					{
 						// TODO Workers should avoid each other
-						bool coming = otherTask.NextStep();
-						Assert.IsTrue( coming, "Other worker is not coming" );
+						coming = otherTask.NextStep();
 					}
-					else
+					if ( !coming )
 					{
 						road.workerAtNodes[currentPoint] = boss;
 						wishedPoint = nextPoint;
@@ -203,11 +202,16 @@ public class Worker : MonoBehaviour
 			}
 
 			wishedPoint = -1;
+
 			Assert.AreEqual( boss.node, road.nodes[currentPoint] );
 			boss.Walk( road.nodes[nextPoint] );
 			currentPoint = nextPoint;
 			if ( exclusive )
+			{
 				road.workerAtNodes[currentPoint] = boss;
+				if ( boss.walkTo.flag )
+					boss.walkTo.flag.user = boss;
+			}
 			return true;
 		}
 
