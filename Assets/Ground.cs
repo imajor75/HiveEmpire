@@ -22,6 +22,7 @@ public class Ground : MonoBehaviour
 	[JsonIgnore]
 	public new MeshCollider collider;
 	public Stock mainBuilding;
+	public GroundNode zero;
 
 	public static Ground Create()
 	{
@@ -31,6 +32,10 @@ public class Ground : MonoBehaviour
 
 	void Start()
     {
+		if ( zero == null )
+			zero = Worker.zero;
+		else
+			Worker.zero = zero;
 		gameObject.name = "Ground";
 		width = 50;
 		height = 30;
