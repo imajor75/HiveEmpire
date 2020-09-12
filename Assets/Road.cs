@@ -9,7 +9,6 @@ public class Road : MonoBehaviour
 	public bool ready = false;
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
-	List<Curve>[] curves = { new List<Curve>(), new List<Curve>(), new List<Curve>() };
 	public Worker[] workerAtNodes;
 	public Mesh mesh;
 	public static Material material;
@@ -96,8 +95,8 @@ public class Road : MonoBehaviour
 			if ( node.flag )
 			{
 				// Find a path to the flag, and finish the road based on it
-				var p = new PathFinder();
-				if ( p.FindPathBetween( last, node, PathFinder.Mode.avoidRoads ) )
+				var p = Path.Between( last, node, PathFinder.Mode.avoidRoads );
+				if ( p )
 				{
 					for ( int i = 1; i < p.path.Count; i++ )
 						newRoad.AddNode( p.path[i] );
