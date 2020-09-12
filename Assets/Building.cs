@@ -32,6 +32,7 @@ abstract public class Building : MonoBehaviour
 		public Worker worker;
 		public static Shader shader;
 		public static int sliceLevelID;
+		public int timeSinceCreated;
 
 		static public void Initialize()
 		{
@@ -59,9 +60,14 @@ abstract public class Building : MonoBehaviour
 			// TODO Try to find a path only if the road network has been changed
 			if ( worker == null && Path.Between( boss.ground.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad ) != null )
 			{
-				Building main = boss.ground.mainBuilding;
-				worker = WorkerBoy.Create();
-				worker.SetupForConstruction( boss );
+				if ( timeSinceCreated > 50 )
+				{
+					Building main = boss.ground.mainBuilding;
+					worker = WorkerBoy.Create();
+					worker.SetupForConstruction( boss );
+				}
+				else
+					timeSinceCreated++;
 			}
 			if ( worker == null || !worker.IsIdleInBuilding() )
 				return;

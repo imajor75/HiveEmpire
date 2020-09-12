@@ -83,7 +83,7 @@ public class Ground : MonoBehaviour
 		foreach ( var n in layout )
 		{
 			Vector3 p = n.Position();
-			n.height = t.GetPixel( (int)( p.x / GroundNode.size / width * 400 + 200 ), (int)( p.z / GroundNode.size / height * 400 + 200 ) ).g * GroundNode.size * 2;
+			n.height = t.GetPixel( (int)( p.x / GroundNode.size / width * 3000 + 1400 ), (int)( p.z / GroundNode.size / height * 3000 + 1500 ) ).g * GroundNode.size * 2;
 		}
 	}
 
@@ -200,12 +200,16 @@ public class Ground : MonoBehaviour
         if ( mesh.vertices == null || mesh.vertices.Length == 0 )
         {
             var vertices = new Vector3[(width+1)*(height+1)];
-            for ( int i = 0; i < (width+1)*(height+1); i++ )
+			var uvs = new Vector2[(width+1)*(height+1)];
+
+			for ( int i = 0; i < (width+1)*(height+1); i++ )
             {
-                vertices[i] = new Vector3();
-                vertices[i] = layout[i].Position();
+				var p = layout[i].Position();
+				vertices[i] = p;
+				uvs[i] = new Vector2( p.x, p.z );
             }
             mesh.vertices = vertices;
+			mesh.uv = uvs;
 
             var triangles = new int[width*height*2*3];
             for ( int x = 0; x < width; x++ )
