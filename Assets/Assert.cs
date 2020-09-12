@@ -54,6 +54,13 @@ public class Assert
 
 		Failed( message );
 	}
+	public static void AreApproximatelyEqual( float a, float b, string message = "", float tolerance = 0.00001f )
+	{
+		if ( Math.Abs( a - b ) < tolerance )
+			return;
+
+		Failed( message );
+	}
 
 	public static void IsNotSelected( Component instance )
 	{

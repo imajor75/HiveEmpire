@@ -9,6 +9,7 @@ public class Road : MonoBehaviour
 	public bool ready = false;
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
+	List<Curve>[] curves = { new List<Curve>(), new List<Curve>(), new List<Curve>() };
 	public Worker[] workerAtNodes;
 	public Mesh mesh;
 	public static Material material;
@@ -16,6 +17,7 @@ public class Road : MonoBehaviour
 	public static int secBetweenWorkersAdded = 10;
 	public static Road newRoad;
 	public bool decorationOnly;
+	public static float height = 1.0f/20;
 
 	public static void Initialize()
 	{
@@ -161,6 +163,7 @@ public class Road : MonoBehaviour
 		transform.SetParent( ground.transform, false );
 		var renderer = gameObject.AddComponent<MeshRenderer>();
 		renderer.material = material;
+		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
 		RebuildMesh();
@@ -189,8 +192,11 @@ public class Road : MonoBehaviour
 	void RebuildMesh()
 	{
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
-		Vector3 h = new Vector3(0, GroundNode.size / 10, 0);
+		Vector3 h = Vector3.up*GroundNode.size*height;
 		mesh.Clear();
+		if ( nodes.Count == 1 )
+			return;
+
 		int v = 0;
 		var vertices = new Vector3[vertexRows * 3];
 		for ( int j = 0; j < vertices.Length; j++ )
@@ -203,16 +209,19 @@ public class Road : MonoBehaviour
 				if (i == nodes.Count - 1 && b > 0)
 					continue;
 
+				float tv = 1.0f / blocksInSection * b * 2;
+				if ( tv > 1 )
+					tv = 2 - tv;
 				var pos = PositionAt(i, 1.0f / blocksInSection * b);
 				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
 				var side = new Vector3();
-				side.x = dir.z;
-				side.z = -dir.x;
-				uvs[v] = new Vector2(0.0f, 1.0f / blocksInSection * b);
+				side.x = dir.z/2;
+				side.z = -dir.x/2;
+				uvs[v] = new Vector2(0.0f, tv );
 				vertices[v++] = pos + h - side;
-				uvs[v] = new Vector2(0.5f, 1.0f / blocksInSection * b);
+				uvs[v] = new Vector2(0.5f, tv );
 				vertices[v++] = pos + h;
-				uvs[v] = new Vector2(1.0f, 1.0f / blocksInSection * b);
+				uvs[v] = new Vector2(1.0f, tv );
 				vertices[v++] = pos + h + side;
 			}
 		}
@@ -224,24 +233,55 @@ public class Road : MonoBehaviour
 		var triangles = new int[blockCount * 4 * 3];
 		for ( int j = 0; j < blockCount	; j++ )
 		{
-			triangles[j * 4 * 3 + 00] = j * 3 + 0;
-			triangles[j * 4 * 3 + 01] = j * 6 + 1;
-			triangles[j * 4 * 3 + 02] = j * 6 + 3;
+			triangles[j * 4 * 3 + 00] = j * 3 + 3;
+			triangles[j * 4 * 3 + 01] = j * 3 + 1;
+			triangles[j * 4 * 3 + 02] = j * 3 + 0;
 			
-			triangles[j * 4 * 3 + 03] = j * 6 + 1;
-			triangles[j * 4 * 3 + 04] = j * 6 + 4;
-			triangles[j * 4 * 3 + 05] = j * 6 + 3;
+			triangles[j * 4 * 3 + 03] = j * 3 + 3;
+			triangles[j * 4 * 3 + 04] = j * 3 + 4;
+			triangles[j * 4 * 3 + 05] = j * 3 + 1;
 			
-			triangles[j * 4 * 3 + 00] = j * 3 + 0;
-			triangles[j * 4 * 3 + 01] = j * 6 + 1;
-			triangles[j * 4 * 3 + 02] = j * 6 + 3;
+			triangles[j * 4 * 3 + 06] = j * 3 + 4;
+			triangles[j * 4 * 3 + 07] = j * 3 + 2;
+			triangles[j * 4 * 3 + 08] = j * 3 + 1;
 
-			triangles[j * 4 * 3 + 03] = j * 6 + 1;
-			triangles[j * 4 * 3 + 04] = j * 6 + 4;
-			triangles[j * 4 * 3 + 05] = j * 6 + 3;
+			triangles[j * 4 * 3 + 09] = j * 3 + 4;
+			triangles[j * 4 * 3 + 10] = j * 3 + 5;
+			triangles[j * 4 * 3 + 11] = j * 3 + 2;
 		}
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals();
+	}
+
+	public Vector3 PositionAt( int block, float fraction )
+	{
+		if ( block == nodes.Count - 1 )
+		{
+			Assert.AreEqual( fraction, 0 );
+			block--;
+			fraction = 1;
+		}
+		return Vector3.Lerp( nodes[block].Position(), nodes[block + 1].Position(), fraction );
+	}
+
+	public Vector3 DirectionAt( int block, float fraction )
+	{
+		if ( block == nodes.Count - 1 )
+		{
+			Assert.AreEqual( fraction, 0 );
+			block--;
+			fraction = 1;
+		}
+		Vector3 startDirection, endDirection;
+		if ( block > 0 )
+			startDirection = nodes[block + 1].Position() - nodes[block - 1].Position();
+		else
+			startDirection = nodes[block + 1].Position() - nodes[block].Position();
+		if ( block < nodes.Count-2 )
+			endDirection = nodes[block + 2].Position() - nodes[block].Position();
+		else
+			endDirection = nodes[block + 1].Position() - nodes[block].Position();
+		return Vector3.Lerp( startDirection, endDirection, fraction ).normalized;
 	}
 
 	public int NodeIndex( GroundNode node )
