@@ -68,6 +68,7 @@ public class Item : MonoBehaviour
 		transform.SetParent( ground.transform );
 		transform.localScale *= 0.1f;
 		gameObject.GetComponent<SpriteRenderer>().sprite = sprites[(int)type];
+		name = type.ToString();
 		UpdateLook();
 	}
 

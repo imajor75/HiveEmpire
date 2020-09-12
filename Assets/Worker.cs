@@ -144,10 +144,6 @@ public class Worker : MonoBehaviour
 
 		public override bool ExecuteFrame()
 		{
-			if ( boss.type == Type.constructor )
-			{
-				int h = 9;
-			}
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
 			Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
@@ -455,9 +451,9 @@ public class Worker : MonoBehaviour
 		{
 			if ( taskQueue.Count > 0 && taskQueue[0].ExecuteFrame() )
 				taskQueue.RemoveAt( 0 );
-			if ( taskQueue.Count == 0 )
-				FindTask();
 		}
+		if ( walkTo == zero && taskQueue.Count == 0 )
+			FindTask();
 		UpdateBody();
 	}
 
@@ -496,16 +492,28 @@ public class Worker : MonoBehaviour
 	public void FindTask()
 	{
 		Assert.AreEqual( taskQueue.Count, 0 );
-		// TODO Pick the most important item rather than the first available
-
 		if ( road != null )
 		{
-			foreach ( var item in road.GetEnd( 0 ).items )
-				CheckItem( item );
-			foreach ( var item in road.GetEnd( 1 ).items )
-				CheckItem( item );
-			if ( taskQueue.Count != 0 )
+			Assert.IsNotSelected( this );
+			Item bestItem = null;
+			float bestScore = 0;
+			for ( int c = 0; c < 2; c++ )
+			{
+				foreach ( var item in road.GetEnd( c ).items )
+				{
+					float score = CheckItem( item );
+					if ( score > bestScore )
+					{
+						bestScore = score;
+						bestItem = item;
+					}
+				}
+			}
+			if ( bestItem != null )
+			{
+				CarryItem( bestItem );
 				return;
+			}
 		}
 
 		if ( road != null && node != road.CenterNode() && road.workers.Count == 1 )
@@ -531,16 +539,19 @@ public class Worker : MonoBehaviour
 		}
 	}
 
-	public void CheckItem( Item item )
+	public float CheckItem( Item item )
 	{
-		if ( taskQueue.Count != 0 )
-			return;
 		if ( item == null || item.worker || item.destination == null )
-			return;
+			return 0;
 
 		if ( item.path == null || item.path.Road() != road )
-			return;
-		CarryItem( item );
+			return 0;
+
+		// TODO Better prioritization of items
+		if ( item.flag.node == node )
+			return 2;
+
+		return 1;
 	}
 
 	public void ScheduleWalkToNeighbour( GroundNode target, bool first = false )

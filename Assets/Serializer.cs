@@ -40,7 +40,9 @@ public class Serializer : JsonSerializer
 			typeof( Worker.Task ),
 			typeof( Worker.StartWorkingOnRoad ),
 			typeof( Worker.PickupItem ),
-			typeof( Worker.DeliverItem )
+			typeof( Worker.DeliverItem ),
+			typeof( PathFinder ),
+			typeof( Path )
 		};
 
 		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
@@ -102,6 +104,10 @@ public class Serializer : JsonSerializer
 				instance = Road.Create();
 			else if ( type == typeof( Item ) )
 				instance = Item.Create();
+			else if ( type == typeof( Path ) )
+				instance = ScriptableObject.CreateInstance<Path>();
+			else if ( type == typeof( PathFinder ) )
+				instance = ScriptableObject.CreateInstance<PathFinder>();
 			else
 				instance = Activator.CreateInstance( type );
 		}

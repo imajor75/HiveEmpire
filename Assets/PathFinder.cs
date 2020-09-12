@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine;
 using UnityEngine.Assertions;
 
-[System.Serializable]
-public class PathFinder
+public class PathFinder : ScriptableObject
 {
 	// TODO Detect when circumstances change, and invalidate the path
 	public GroundNode target;
@@ -193,7 +193,7 @@ public class Path : PathFinder
 
 	public static Path Between( GroundNode start, GroundNode end, Mode mode )
 	{
-		var p = new Path();
+		var p = ScriptableObject.CreateInstance<Path>();
 		if ( p.FindPathBetween( start, end, mode ) )
 		{
 			if ( mode != Mode.onRoad )

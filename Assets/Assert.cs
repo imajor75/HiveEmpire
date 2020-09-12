@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using UnityEditor;
 using UnityEngine;
 
 public class Assert
@@ -54,6 +55,12 @@ public class Assert
 		Failed( message );
 	}
 
+	public static void IsNotSelected( Component instance )
+	{
+		if ( Selection.Contains( instance.gameObject ) )
+			UnityEngine.Debug.Log( "Code on selected" );
+	}
+
 	static void Failed( string message )
 	{
 		var stackTrace = new StackTrace();
@@ -65,4 +72,5 @@ public class Assert
 
 		throw new System.Exception( "The condition was false" );
 	}
+
 }
