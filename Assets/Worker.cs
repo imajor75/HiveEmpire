@@ -676,7 +676,7 @@ public class Worker : MonoBehaviour
 		if ( itemInHands )
 			itemInHands.UpdateLook();
 
-		transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress );
+		transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress ) + Vector3.up * GroundNode.size * Road.height;
 		int direction = walkFrom.DirectionTo( walkTo );
 		Assert.IsTrue( direction >= 0 );
 		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
