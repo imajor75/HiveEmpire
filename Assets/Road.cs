@@ -9,6 +9,7 @@ public class Road : MonoBehaviour
 	public bool ready = false;
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
+	List<Curve>[] curves = { new List<Curve>(), new List<Curve>(), new List<Curve>() };
 	public Worker[] workerAtNodes;
 	public Mesh mesh;
 	public static Material material;
@@ -16,6 +17,7 @@ public class Road : MonoBehaviour
 	public static int secBetweenWorkersAdded = 10;
 	public static Road newRoad;
 	public bool decorationOnly;
+	public static float height = 1.0f/20;
 
 	public static void Initialize()
 	{
@@ -161,6 +163,7 @@ public class Road : MonoBehaviour
 		transform.SetParent( ground.transform, false );
 		var renderer = gameObject.AddComponent<MeshRenderer>();
 		renderer.material = material;
+		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
 		RebuildMesh();
@@ -185,62 +188,100 @@ public class Road : MonoBehaviour
 		timeSinceWorkerAdded++;
 	}
 
+	static int blocksInSection = 8;
 	void RebuildMesh()
 	{
+		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
+		Vector3 h = Vector3.up*GroundNode.size*height;
 		mesh.Clear();
-		var l = nodes.Count-1;
-		var vertices = new Vector3[l*6];
-		var uvs = new Vector2[l*6];
-		for ( int j = 0; j < l * 6; j++ )
+		if ( nodes.Count == 1 )
+			return;
+
+		int v = 0;
+		var vertices = new Vector3[vertexRows * 3];
+		for ( int j = 0; j < vertices.Length; j++ )
 			vertices[j] = new Vector3();
-		for ( int i = 0; i < l; i++ )
+		var uvs = new Vector2[vertexRows * 3];
+		for (int i = 0; i < nodes.Count; i++)
 		{
-			var a = nodes[i].Position();
-			var b = nodes[i+1].Position();
-			var ab = b-a;
-			Vector3 o = new Vector3( ab.z, 0, -ab.x );
-			o.Normalize();
-			o *= GroundNode.size / 5;
-			Vector3 h = new Vector3( 0, GroundNode.size / 10, 0 );
+			for ( int b = 0; b < blocksInSection; b++ )
+            {
+				if (i == nodes.Count - 1 && b > 0)
+					continue;
 
-			vertices[i * 6 + 0] = a + o;
-			vertices[i * 6 + 1] = a + h;
-			vertices[i * 6 + 2] = a - o;
-			vertices[i * 6 + 3] = b + o;
-			vertices[i * 6 + 4] = b + h;
-			vertices[i * 6 + 5] = b - o;
-
-			uvs[i * 6 + 0] = new Vector2( 0.0f, 0.0f );
-			uvs[i * 6 + 1] = new Vector2( 0.5f, 0.0f );
-			uvs[i * 6 + 2] = new Vector2( 1.0f, 0.0f );
-			uvs[i * 6 + 3] = new Vector2( 0.0f, 1.0f );
-			uvs[i * 6 + 4] = new Vector2( 0.5f, 1.0f );
-			uvs[i * 6 + 5] = new Vector2( 1.0f, 1.0f );
+				float tv = 1.0f / blocksInSection * b * 2;
+				if ( tv > 1 )
+					tv = 2 - tv;
+				var pos = PositionAt(i, 1.0f / blocksInSection * b);
+				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
+				var side = new Vector3();
+				side.x = dir.z/2;
+				side.z = -dir.x/2;
+				uvs[v] = new Vector2(0.0f, tv );
+				vertices[v++] = pos + h - side;
+				uvs[v] = new Vector2(0.5f, tv );
+				vertices[v++] = pos + h;
+				uvs[v] = new Vector2(1.0f, tv );
+				vertices[v++] = pos + h + side;
+			}
 		}
+		Assert.AreEqual(v, vertexRows * 3);
 		mesh.vertices = vertices;
 		mesh.uv = uvs;
 
-		var triangles = new int[l*4*3];
-		for ( int j = 0; j < l; j++ )
+		int blockCount = (nodes.Count - 1) * blocksInSection;
+		var triangles = new int[blockCount * 4 * 3];
+		for ( int j = 0; j < blockCount	; j++ )
 		{
-			triangles[j * 4 * 3 + 00] = j * 6 + 0;
-			triangles[j * 4 * 3 + 01] = j * 6 + 1;
-			triangles[j * 4 * 3 + 02] = j * 6 + 3;
+			triangles[j * 4 * 3 + 00] = j * 3 + 3;
+			triangles[j * 4 * 3 + 01] = j * 3 + 1;
+			triangles[j * 4 * 3 + 02] = j * 3 + 0;
+			
+			triangles[j * 4 * 3 + 03] = j * 3 + 3;
+			triangles[j * 4 * 3 + 04] = j * 3 + 4;
+			triangles[j * 4 * 3 + 05] = j * 3 + 1;
+			
+			triangles[j * 4 * 3 + 06] = j * 3 + 4;
+			triangles[j * 4 * 3 + 07] = j * 3 + 2;
+			triangles[j * 4 * 3 + 08] = j * 3 + 1;
 
-			triangles[j * 4 * 3 + 03] = j * 6 + 1;
-			triangles[j * 4 * 3 + 04] = j * 6 + 4;
-			triangles[j * 4 * 3 + 05] = j * 6 + 3;
-
-			triangles[j * 4 * 3 + 06] = j * 6 + 1;
-			triangles[j * 4 * 3 + 07] = j * 6 + 2;
-			triangles[j * 4 * 3 + 08] = j * 6 + 4;
-
-			triangles[j * 4 * 3 + 09] = j * 6 + 2;
-			triangles[j * 4 * 3 + 10] = j * 6 + 5;
-			triangles[j * 4 * 3 + 11] = j * 6 + 4;
+			triangles[j * 4 * 3 + 09] = j * 3 + 4;
+			triangles[j * 4 * 3 + 10] = j * 3 + 5;
+			triangles[j * 4 * 3 + 11] = j * 3 + 2;
 		}
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals();
+	}
+
+	public Vector3 PositionAt( int block, float fraction )
+	{
+		if ( block == nodes.Count - 1 )
+		{
+			Assert.AreEqual( fraction, 0 );
+			block--;
+			fraction = 1;
+		}
+		return Vector3.Lerp( nodes[block].Position(), nodes[block + 1].Position(), fraction );
+	}
+
+	public Vector3 DirectionAt( int block, float fraction )
+	{
+		if ( block == nodes.Count - 1 )
+		{
+			Assert.AreEqual( fraction, 0 );
+			block--;
+			fraction = 1;
+		}
+		Vector3 startDirection, endDirection;
+		if ( block > 0 )
+			startDirection = nodes[block + 1].Position() - nodes[block - 1].Position();
+		else
+			startDirection = nodes[block + 1].Position() - nodes[block].Position();
+		if ( block < nodes.Count-2 )
+			endDirection = nodes[block + 2].Position() - nodes[block].Position();
+		else
+			endDirection = nodes[block + 1].Position() - nodes[block].Position();
+		return Vector3.Lerp( startDirection, endDirection, fraction ).normalized;
 	}
 
 	public int NodeIndex( GroundNode node )
