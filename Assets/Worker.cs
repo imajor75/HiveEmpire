@@ -89,7 +89,7 @@ public class Worker : MonoBehaviour
 			int point = 0;
 			if ( boss.node.flag == path.Road().GetEnd( 0 ) )
 				point = path.Road().nodes.Count - 1;
-			boss.ScheduleWalkToRoadPoint( path.Road(), point, true, false );
+			boss.ScheduleWalkToRoadPoint( path.NextRoad(), point, true, false );
 			return false;
 		}
 
@@ -144,6 +144,10 @@ public class Worker : MonoBehaviour
 
 		public override bool ExecuteFrame()
 		{
+			if ( boss.type == Type.constructor )
+			{
+				int h = 9;
+			}
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
 			Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
