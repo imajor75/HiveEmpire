@@ -76,6 +76,7 @@ public class Mission : MonoBehaviour
 		Building.Initialize();
 		Road.Initialize();
 		Worker.Initialize();
+		Flag.Initialize();
 	}
 
 	public void Load( string fileName )
@@ -98,6 +99,7 @@ public class Mission : MonoBehaviour
 		Building.Initialize();
 		Road.Initialize();
 		Worker.Initialize();
+		Flag.Initialize();
 	}
 
 	public void Save( string fileName )

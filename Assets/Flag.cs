@@ -9,11 +9,18 @@ public class Flag : MonoBehaviour
 	public Worker user;
 	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
 	public Building building;
+	static GameObject template;
+
+	static public void Initialize()
+	{
+		template = (GameObject)Resources.Load( "Tresure_box/tresure_box" );
+		Assert.IsNotNull( template );
+	}
 
 	public static Flag Create()
 	{
-		GameObject flagObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		flagObject.transform.localScale *= 0.3f;
+		GameObject flagObject = GameObject.Instantiate( template );
+		flagObject.transform.localScale *= 0.15f;
 		return flagObject.AddComponent<Flag>();
 	}
 
