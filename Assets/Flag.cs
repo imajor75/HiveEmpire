@@ -20,7 +20,7 @@ public class Flag : MonoBehaviour
 	public static Flag Create()
 	{
 		GameObject flagObject = GameObject.Instantiate( template );
-		flagObject.transform.localScale *= 0.15f;
+		flagObject.transform.localScale *= 0.1f;
 		return flagObject.AddComponent<Flag>();
 	}
 
@@ -66,7 +66,7 @@ public class Flag : MonoBehaviour
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
-		transform.localPosition = node.Position();
+		transform.localPosition = node.Position() + Vector3.up * GroundNode.size * Road.height;		;
 	}
 
 	public bool ReleaseItem( Item item )
