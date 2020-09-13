@@ -6,6 +6,7 @@ public class Resource : MonoBehaviour
 {
 	public Type type;
 	public int charges;
+	public GameObject body;
 
 	public enum Type
 	{
@@ -16,7 +17,7 @@ public class Resource : MonoBehaviour
 
 	static public Resource Create()
 	{
-		GameObject obj = GameObject.CreatePrimitive( PrimitiveType.Capsule );
+		GameObject obj = new GameObject();
 		return obj.AddComponent<Resource>();
 	}
 
