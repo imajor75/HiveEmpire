@@ -43,8 +43,6 @@ public class Ground : MonoBehaviour
 		gameObject.name = "Ground";
 		width = 50;
 		height = 30;
-		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
-		collider = gameObject.GetComponent<MeshCollider>();
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 		collider = gameObject.GetComponent<MeshCollider>();
@@ -87,13 +85,13 @@ public class Ground : MonoBehaviour
 
 	public void GenerateResources()
 	{
-		foreach ( var n in layout )
+		foreach ( var node in nodes )
 		{
 			int i = rnd.Next( 1000 );
 			if ( i < 4 )
-				n.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
+				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
 			if ( i >= 5 && i < 6 )
-				n.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
+				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
 		}
 	}
 
@@ -166,7 +164,7 @@ public class Ground : MonoBehaviour
 			var node = GroundNode.FromPosition( localPosition, this );
 			currentColumn = node.x;
 			currentRow = node.y;
-			currentNode.transform.localPosition = node.Position();
+			cursor.transform.localPosition = node.Position();
 		}
 	}
 

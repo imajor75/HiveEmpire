@@ -54,7 +54,7 @@ public class PathFinder : ScriptableObject
 
     void VisitNode( GroundNode node, float cost, Reached from, Road road = null )
     {
-		if ( node.owner != target.owner || node.building || node.resourc )
+		if ( node.owner != target.owner || node.building || node.resource )
 			return;
 
 		if ( mode == Mode.avoidRoads && node.road )
