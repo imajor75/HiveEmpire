@@ -7,22 +7,23 @@ public class BorderEdge : MonoBehaviour
     public GroundNode node;
     public int direction;
 
-    public void Setup(GroundNode node, int direction )
+	public static BorderEdge Create()
+	{
+		GameObject body = GameObject.CreatePrimitive( PrimitiveType.Cube );
+		return body.AddComponent<BorderEdge>();
+	}
+
+    public BorderEdge Setup( GroundNode node, int direction )
     {
         this.node = node;
         this.direction = direction;
 		Assert.AreNotEqual( node.owner, node.Neighbour( direction ).owner );
+		return this;
     }
 
-    // Start is called before the first frame update
     void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+		transform.SetParent( node.ground.transform );
+		transform.localPosition = Vector3.Lerp( node.Position(), node.Neighbour( direction ).Position(), 0.4f );
+	}
 }

@@ -16,9 +16,10 @@ public class Stock : Building
 		return buildingObject.AddComponent<Stock>();
 	}
 
-	public bool SetupMain( Ground ground, GroundNode node )
+	public bool SetupMain( Ground ground, GroundNode node, Player owner )
 	{
-		if ( !Setup( ground, node ) )
+		node.owner = owner;
+		if ( !Setup( ground, node, owner ) )
 			return false;
 
 		main = true;
@@ -28,7 +29,7 @@ public class Stock : Building
 		content[(int)Item.Type.plank] = 10;
 		worker = WorkerWoman.Create();
 		worker.SetupForBuilding( this );
-		ground.RegisterInfluence( this, node => influenceRange - node.DistanceFrom( this.node ) );
+		ground.RegisterInfluence( this );
 		return true;
 	}
 

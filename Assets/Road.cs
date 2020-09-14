@@ -39,13 +39,18 @@ public class Road : MonoBehaviour
 		return this;
 	}
 
-	public static bool AddNodeToNew( Ground ground, GroundNode node )
+	public static bool AddNodeToNew( Ground ground, GroundNode node, Player owner )
 	{
 		// Starting a new road
 		if ( newRoad == null || newRoad.nodes.Count == 0 )
 		{
 			if ( node.flag )
 			{
+				if ( node.flag.owner != owner )
+				{
+					UnityEngine.Debug.Log( "Flag belongs to another player" );
+					return false;
+				}
 				if ( newRoad == null )
 					newRoad = Create();
 				newRoad.ground = ground;

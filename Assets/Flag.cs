@@ -3,6 +3,7 @@ using UnityEngine.Assertions;
 
 public class Flag : MonoBehaviour
 {
+	public Player owner;
 	public static int maxItems = 8;
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
@@ -24,7 +25,7 @@ public class Flag : MonoBehaviour
 		return flagObject.AddComponent<Flag>();
 	}
 
-	public Flag Setup( Ground ground, GroundNode node )
+	public Flag Setup( Ground ground, GroundNode node, Player owner )
     {
         if ( node.flag )
         {
@@ -45,6 +46,12 @@ public class Flag : MonoBehaviour
 			Destroy( gameObject );
 			return null;
 		}
+		if ( node.owner != owner )
+		{
+			Debug.Log( "Node is outside of border" );
+			Destroy( gameObject );
+			return null;
+		}
         bool hasAdjacentFlag = false;
 		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
 		{
@@ -59,6 +66,7 @@ public class Flag : MonoBehaviour
         }
         node.flag = this;
         this.node = node;
+		this.owner = owner;
         return this;
     }
 

@@ -15,8 +15,9 @@ public class GroundNode
     public float height = 0;
     public int index = -1;
     public Ground ground;
-	public int[] inluences;
 	public Player owner;
+	public int influence;
+	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
 
     public Vector3 Position()
     {

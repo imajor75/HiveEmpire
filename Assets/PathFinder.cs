@@ -67,7 +67,7 @@ public class PathFinder : ScriptableObject
 		}
 
         // Check if the node was already visited
-        var i = node.pathFindingIndex;
+        var i = node.index;
         if ( i >= 0 && i < visited.Count && visited[i].node == node )
         {
             if ( cost < visited[i].costG )
@@ -90,7 +90,7 @@ public class PathFinder : ScriptableObject
         n.costF = n.costG + n.costH;
         n.from = from;
 		n.road = road;
-        node.pathFindingIndex = visited.Count;
+        node.index = visited.Count;
         visited.Add( n );
         openNodes++;
     }

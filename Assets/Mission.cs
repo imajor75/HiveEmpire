@@ -8,10 +8,12 @@ using UnityEngine.UI;
 public class Mission : MonoBehaviour
 {
 	public Ground ground;
-	public List<Player> players;
+	public List<Player> players = new List<Player>();
+	public Player mainPlayer;
 
     void Start()
     {
+		players.Add( mainPlayer = new Player() );
 		NewGame();
 	}
 

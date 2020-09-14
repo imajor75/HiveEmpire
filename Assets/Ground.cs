@@ -10,7 +10,7 @@ public class Ground : MonoBehaviour
 	[JsonIgnore]
 	public float speedModifier = 1;
 	public int width = 50, height = 50;
-	public GroundNode[] layout;
+	public GroundNode[] nodes;
 	public int layoutVersion = 1;
 	[JsonIgnore]
 	public int currentRow, currentColumn;
@@ -25,6 +25,7 @@ public class Ground : MonoBehaviour
 	public new MeshCollider collider;
 	public Stock mainBuilding;
 	public GroundNode zero;
+	public List<Building> influencers;
 
 	public static Ground Create()
 	{
@@ -56,14 +57,15 @@ public class Ground : MonoBehaviour
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";
 
-		if ( layout == null )
-			layout = new GroundNode[( width + 1 ) * ( height + 1 )];
+		if ( nodes == null )
+			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		FinishLayout();
 
+		Player mainPlayer = GameObject.FindObjectOfType<Mission>().mainPlayer;
 		if ( mainBuilding == null )
 		{
 			mainBuilding = Stock.Create();
-			mainBuilding.SetupMain( this, GetNode( width / 2, height / 2 ) );
+			mainBuilding.SetupMain( this, GetNode( width / 2, height / 2 ), mainPlayer );
 		}
 	}
 
@@ -73,8 +75,8 @@ public class Ground : MonoBehaviour
 		{
 			for ( int y = 0; y <= height; y++ )
 			{
-				if ( layout[y * ( width + 1 ) + x] == null )
-					layout[y * ( width + 1 ) + x] = new GroundNode();
+				if ( nodes[y * ( width + 1 ) + x] == null )
+					nodes[y * ( width + 1 ) + x] = new GroundNode();
 			}
 		}
 		for ( int x = 0; x <= width; x++ )
@@ -82,7 +84,7 @@ public class Ground : MonoBehaviour
 				GetNode( x, y ).Initialize( this, x, y );
 
 		var t = Resources.Load<Texture2D>( "heightMap" );
-		foreach ( var n in layout )
+		foreach ( var n in nodes )
 		{
 			Vector3 p = n.Position();
 			n.height = t.GetPixel( (int)( p.x / GroundNode.size / width * 3000 + 1400 ), (int)( p.z / GroundNode.size / height * 3000 + 1500 ) ).g * GroundNode.size * 2;
@@ -115,15 +117,15 @@ public class Ground : MonoBehaviour
 			x -= width + 1;
 		if ( y > height )
 			y -= height + 1;
-		return layout[y * ( width + 1 ) + x];
+		return nodes[y * ( width + 1 ) + x];
 	}
 
 	public void SetNode( int x, int y, GroundNode node )
 	{
-		if ( layout == null )
-			layout = new GroundNode[( width + 1 ) * ( height + 1 )];
+		if ( nodes == null )
+			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 
-		layout[y * ( width + 1 ) + x] = node;
+		nodes[y * ( width + 1 ) + x] = node;
 	}
 	void CheckMouse()
 	{
@@ -142,6 +144,7 @@ public class Ground : MonoBehaviour
 
 	void CheckUserInput()
 	{
+		Player player = GameObject.FindObjectOfType<Mission>().mainPlayer;
 		var currentNode = GetNode(currentColumn, currentRow);
 		if ( Input.GetKey( KeyCode.Z ) )
 			speedModifier = 5;
@@ -150,15 +153,15 @@ public class Ground : MonoBehaviour
 		if ( Input.GetKeyDown( KeyCode.F ) )
 		{
 			Flag flag = Flag.Create();
-			if ( !flag.Setup( this, currentNode ) )
+			if ( !flag.Setup( this, currentNode, player ) )
 				Destroy( flag );
 		};
 		if ( Input.GetKeyDown( KeyCode.R ) )
-			Road.AddNodeToNew( this, currentNode );
+			Road.AddNodeToNew( this, currentNode, player );
 		if ( Input.GetKeyDown( KeyCode.B ) )
 		{
 			var w = Workshop.Create();
-			if ( w.Setup( this, currentNode ) )
+			if ( w.Setup( this, currentNode, player ) )
 				w.SetType( Workshop.Type.woodcutter );
 			else
 				Destroy( w );
@@ -166,7 +169,7 @@ public class Ground : MonoBehaviour
 		if ( Input.GetKeyDown( KeyCode.V ) )
 		{
 			var w = Workshop.Create();
-			if ( w.Setup( this, currentNode ) )
+			if ( w.Setup( this, currentNode, player ) )
 				w.SetType( Workshop.Type.sawmill );
 			else
 				Destroy( w );
@@ -206,7 +209,7 @@ public class Ground : MonoBehaviour
 
 			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
 			{
-				var p = layout[i].Position();
+				var p = nodes[i].Position();
 				vertices[i] = p;
 				uvs[i] = new Vector2( p.x, p.z );
 			}
@@ -235,7 +238,7 @@ public class Ground : MonoBehaviour
 		{
 			var vertices = mesh.vertices;
 			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
-				vertices[i] = layout[i].Position();
+				vertices[i] = nodes[i].Position();
 			mesh.vertices = vertices;
 			collider.sharedMesh = mesh;
 		}
@@ -247,16 +250,68 @@ public class Ground : MonoBehaviour
 		int newValue;
 	}
 
-	public void RegisterInfluence( Building building, Func<GroundNode, int> influence )
+	public void RegisterInfluence( Building building )
 	{
-		List<InfluenceChange> changes;
+		influencers.Add( building );
+		RecalculateOwnership();
+	}
+
+	public void UnregisterInfuence( Building building )
+	{
+		influencers.Remove( building );
+		RecalculateOwnership();
+	}
+
+	void RecalculateOwnership()
+	{
+		foreach ( var n in nodes )
+		{
+			n.owner = null;
+			n.influence = 0;
+		}
+
+		foreach ( var building in influencers )
+		{
+			List<GroundNode> touched = new List<GroundNode>();
+			touched.Add( building.node );
+			for ( int i = 0; i < touched.Count; i++ )
+			{
+				int influence = building.Influence( touched[i] );
+				if ( influence <= 0 )
+					continue;
+				if ( touched[i].influence < influence )
+				{
+					touched[i].influence = influence;
+					touched[i].owner = building.owner;
+				}
+				for ( int j = 0; j < GroundNode.neighbourCount; j++ )
+				{
+					GroundNode neighbour = touched[i].Neighbour( j );
+					if ( neighbour.index >= 0 && neighbour.index < touched.Count && touched[neighbour.index] == neighbour )
+						continue;
+					touched.Add( neighbour );
+				}
+			}
+		}
+
+		foreach ( var node in nodes )
+		{
+			for ( int j = 0; j < GroundNode.neighbourCount; j++ )
+			{
+				GroundNode neighbour = node.Neighbour( j );
+				if ( node.owner == neighbour.owner )
+					node.borders[j] = null;
+				else
+					node.borders[j] = BorderEdge.Create().Setup( node, j );
+			}
+		}
 	}
 
     public void Validate()
     {
         Assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
-        Assert.AreEqual( ( width + 1 ) * ( height + 1 ), layout.Length, "Map layout size is incorrect" );
-        foreach ( var node in layout )
+        Assert.AreEqual( ( width + 1 ) * ( height + 1 ), nodes.Length, "Map layout size is incorrect" );
+        foreach ( var node in nodes )
             node.Validate();
     }
 }
