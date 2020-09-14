@@ -1,22 +1,24 @@
 ﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
+[RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
 public class Ground : MonoBehaviour
 {
 	[JsonIgnore]
 	public float speedModifier = 1;
-    public int width = 50, height = 50;
+	public int width = 50, height = 50;
 	public GroundNode[] layout;
-    public int layoutVersion = 1;
+	public int layoutVersion = 1;
 	[JsonIgnore]
 	public int currentRow, currentColumn;
 	[JsonIgnore]
 	public GameObject currentNode;
 	[JsonIgnore]
 	public GroundNode selectedNode;
-    public int meshVersion = 0;
+	public int meshVersion = 0;
 	[JsonIgnore]
 	public Mesh mesh;
 	[JsonIgnore]
@@ -31,7 +33,7 @@ public class Ground : MonoBehaviour
 	}
 
 	void Start()
-    {
+	{
 		if ( zero == null )
 			zero = Worker.zero;
 		else
@@ -39,8 +41,8 @@ public class Ground : MonoBehaviour
 		gameObject.name = "Ground";
 		width = 50;
 		height = 30;
-        MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
-        collider = gameObject.GetComponent<MeshCollider>();
+		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
+		collider = gameObject.GetComponent<MeshCollider>();
 
 		currentNode = GameObject.CreatePrimitive( PrimitiveType.Cube );
 		currentNode.name = "Cursor";
@@ -52,7 +54,7 @@ public class Ground : MonoBehaviour
 		GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
 
 		mesh = meshFilter.mesh = new Mesh();
-        mesh.name = "GroundMesh";
+		mesh.name = "GroundMesh";
 
 		if ( layout == null )
 			layout = new GroundNode[( width + 1 ) * ( height + 1 )];
@@ -63,7 +65,7 @@ public class Ground : MonoBehaviour
 			mainBuilding = Stock.Create();
 			mainBuilding.SetupMain( this, GetNode( width / 2, height / 2 ) );
 		}
-    }
+	}
 
 	public void FinishLayout()
 	{
@@ -88,33 +90,33 @@ public class Ground : MonoBehaviour
 	}
 
 	void Update()
-    {
-        if ( layoutVersion != meshVersion || mesh.vertexCount == 0 )
-        {
-            UpdateMesh();
-            meshVersion = layoutVersion;
-        }
-        CheckMouse();
-        CheckUserInput();
-    }
+	{
+		if ( layoutVersion != meshVersion || mesh.vertexCount == 0 )
+		{
+			UpdateMesh();
+			meshVersion = layoutVersion;
+		}
+		CheckMouse();
+		CheckUserInput();
+	}
 
 	void LateUpdate()
 	{
 		Validate();
 	}
 
-    public GroundNode GetNode( int x, int y )
-    {
-        if ( x < 0 )
-            x += width + 1;
-        if ( y < 0 )
-            y += height + 1;
-        if ( x > width )
-            x -= width + 1;
-        if ( y > height )
-            y -= height + 1;
-        return layout[y * (width + 1) + x];
-    }
+	public GroundNode GetNode( int x, int y )
+	{
+		if ( x < 0 )
+			x += width + 1;
+		if ( y < 0 )
+			y += height + 1;
+		if ( x > width )
+			x -= width + 1;
+		if ( y > height )
+			y -= height + 1;
+		return layout[y * ( width + 1 ) + x];
+	}
 
 	public void SetNode( int x, int y, GroundNode node )
 	{
@@ -124,19 +126,19 @@ public class Ground : MonoBehaviour
 		layout[y * ( width + 1 ) + x] = node;
 	}
 	void CheckMouse()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        var size = GroundNode.size;
-        if (collider.Raycast(ray, out hit, size * (width + height)))
-        {
-            Vector3 localPosition = transform.InverseTransformPoint(hit.point);
-            var node = GroundNode.FromPosition( localPosition, this );
-            currentColumn = node.x;
-            currentRow = node.y;
-            currentNode.transform.localPosition = node.Position();
-        }
-    }
+	{
+		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hit;
+		var size = GroundNode.size;
+		if ( collider.Raycast( ray, out hit, size * ( width + height ) ) )
+		{
+			Vector3 localPosition = transform.InverseTransformPoint(hit.point);
+			var node = GroundNode.FromPosition( localPosition, this );
+			currentColumn = node.x;
+			currentRow = node.y;
+			currentNode.transform.localPosition = node.Position();
+		}
+	}
 
 	void CheckUserInput()
 	{
@@ -145,7 +147,7 @@ public class Ground : MonoBehaviour
 			speedModifier = 5;
 		else
 			speedModifier = 1;
-			if ( Input.GetKeyDown( KeyCode.F ) )
+		if ( Input.GetKeyDown( KeyCode.F ) )
 		{
 			Flag flag = Flag.Create();
 			if ( !flag.Setup( this, currentNode ) )
@@ -193,51 +195,63 @@ public class Ground : MonoBehaviour
 	}
 
 	void UpdateMesh()
-    {
-        if ( mesh == null )
-            return;
+	{
+		if ( mesh == null )
+			return;
 
-        if ( mesh.vertices == null || mesh.vertices.Length == 0 )
-        {
-            var vertices = new Vector3[(width+1)*(height+1)];
+		if ( mesh.vertices == null || mesh.vertices.Length == 0 )
+		{
+			var vertices = new Vector3[(width+1)*(height+1)];
 			var uvs = new Vector2[(width+1)*(height+1)];
 
-			for ( int i = 0; i < (width+1)*(height+1); i++ )
-            {
+			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
+			{
 				var p = layout[i].Position();
 				vertices[i] = p;
 				uvs[i] = new Vector2( p.x, p.z );
-            }
-            mesh.vertices = vertices;
+			}
+			mesh.vertices = vertices;
 			mesh.uv = uvs;
 
-            var triangles = new int[width*height*2*3];
-            for ( int x = 0; x < width; x++ )
-            {
-                for ( int y = 0; y < height; y++ )
-                {
-                    var i = (y*width+x)*2*3;
-                    triangles[i+0] = (y+0)*(width+1)+(x+0);
-                    triangles[i+1] = (y+1)*(width+1)+(x+0);
-                    triangles[i+2] = (y+0)*(width+1)+(x+1);
-                    triangles[i+3] = (y+0)*(width+1)+(x+1);
-                    triangles[i+4] = (y+1)*(width+1)+(x+0);
-                    triangles[i+5] = (y+1)*(width+1)+(x+1);
-                }
-            }
-            mesh.triangles = triangles;
-            mesh.RecalculateNormals();
-            collider.sharedMesh = mesh;
-        }
-        else
-        {
-            var vertices = mesh.vertices;
-            for (int i = 0; i < (width + 1) * (height + 1); i++)
-                vertices[i] = layout[i].Position();
-            mesh.vertices = vertices;
-            collider.sharedMesh = mesh;
-        }
-    }
+			var triangles = new int[width*height*2*3];
+			for ( int x = 0; x < width; x++ )
+			{
+				for ( int y = 0; y < height; y++ )
+				{
+					var i = (y*width+x)*2*3;
+					triangles[i + 0] = ( y + 0 ) * ( width + 1 ) + ( x + 0 );
+					triangles[i + 1] = ( y + 1 ) * ( width + 1 ) + ( x + 0 );
+					triangles[i + 2] = ( y + 0 ) * ( width + 1 ) + ( x + 1 );
+					triangles[i + 3] = ( y + 0 ) * ( width + 1 ) + ( x + 1 );
+					triangles[i + 4] = ( y + 1 ) * ( width + 1 ) + ( x + 0 );
+					triangles[i + 5] = ( y + 1 ) * ( width + 1 ) + ( x + 1 );
+				}
+			}
+			mesh.triangles = triangles;
+			mesh.RecalculateNormals();
+			collider.sharedMesh = mesh;
+		}
+		else
+		{
+			var vertices = mesh.vertices;
+			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
+				vertices[i] = layout[i].Position();
+			mesh.vertices = vertices;
+			collider.sharedMesh = mesh;
+		}
+	}
+
+	class InfluenceChange
+	{
+		GroundNode node;
+		int newValue;
+	}
+
+	public void RegisterInfluence( Building building, Func<GroundNode, int> influence )
+	{
+		List<InfluenceChange> changes;
+	}
+
     public void Validate()
     {
         Assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );

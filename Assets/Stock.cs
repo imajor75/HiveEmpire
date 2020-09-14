@@ -1,10 +1,12 @@
-﻿using UnityEngine;
+﻿using UnityEditor.PackageManager;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Stock : Building
 {
 	public bool main = false;
 	public int[] content = new int[(int)Item.Type.total];
+	public static int influenceRange = 10;
 
 	public static Stock Create()
 	{
@@ -26,6 +28,7 @@ public class Stock : Building
 		content[(int)Item.Type.plank] = 10;
 		worker = WorkerWoman.Create();
 		worker.SetupForBuilding( this );
+		ground.RegisterInfluence( this, node => influenceRange - node.DistanceFrom( this.node ) );
 		return true;
 	}
 

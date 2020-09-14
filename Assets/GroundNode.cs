@@ -13,8 +13,10 @@ public class GroundNode
     public Road road;
 	public int roadIndex;
     public float height = 0;
-    public int pathFindingIndex = -1;
+    public int index = -1;
     public Ground ground;
+	public int[] inluences;
+	public Player owner;
 
     public Vector3 Position()
     {
