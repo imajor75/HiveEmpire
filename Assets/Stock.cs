@@ -32,7 +32,10 @@ public class Stock : Building
 	new void Start()
 	{
 		base.Start();
-		gameObject.name = "Stock " + node.x + ", " + node.y;
+		if ( main )
+			name = "Headquarters";
+		else
+			name = "Stock " + node.x + ", " + node.y;
 	}
 
 	new public void Update()

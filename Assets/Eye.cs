@@ -5,13 +5,19 @@ public class Eye : MonoBehaviour
 {
 	new Camera camera;
 
+	public static void Create()
+	{
+		var eyeObject = new GameObject();
+		Eye eye = eyeObject.AddComponent<Eye>();
+		eye.tag = "MainCamera";
+		eye.name = "Eye";
+		eye.camera = eye.GetComponent<Camera>();
+		eye.transform.position = new Vector3( 0, 4, -7 );
+		eye.transform.Rotate( Vector3.right * 40 );
+	}
+
 	void Start()
     {
-		tag = "MainCamera";
-		name = "Eye";
-        camera = GetComponent<Camera>();
-		transform.position = new Vector3( 0, 4, -7 );
-		transform.Rotate( Vector3.right * 40 );
     }
 
     void FixedUpdate()

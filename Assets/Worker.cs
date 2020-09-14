@@ -186,11 +186,14 @@ public class Worker : MonoBehaviour
 				{
 					bool coming = false;
 					var otherWorker = road.workerAtNodes[nextPoint];
-					var otherTask = otherWorker.taskQueue[0] as WalkToRoadPoint;
-					if ( otherTask && otherTask.wishedPoint == currentPoint )
+					if ( otherWorker.taskQueue.Count > 0 )
 					{
-						// TODO Workers should avoid each other
-						coming = otherTask.NextStep();
+						var otherTask = otherWorker.taskQueue[0] as WalkToRoadPoint;
+						if ( otherTask && otherTask.wishedPoint == currentPoint )
+						{
+							// TODO Workers should avoid each other
+							coming = otherTask.NextStep();
+						}
 					}
 					if ( !coming )
 					{
