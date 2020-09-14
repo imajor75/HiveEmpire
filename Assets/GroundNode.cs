@@ -83,19 +83,20 @@ public class GroundNode
     {
         //int e = ground.height, w = ground.width;
 
-        int h = Mathf.Abs(x-o.x);
+        int h = Mathf.Abs( x - o.x );
         //int h1 = Mathf.Abs(x-o.x-w);
         //int h2 = Mathf.Abs(x-o.x+w);
         //int h = Mathf.Min(Mathf.Min(h0,h1),h2);
 
-        int v = Mathf.Abs(y-o.y);
+        int v = Mathf.Abs( y - o.y );
 		//int v1 = Mathf.Abs(y-o.y-e);
 		//int v2 = Mathf.Abs(y-o.y+e);
 		//int v = Mathf.Min(Mathf.Min(v0,v1),v2);
 
 		//int d = Mathf.Max(h,v);
+		int d = Mathf.Abs( ( x - o.x ) + ( y - o.y ) );
 
-		return h + v;// + d;
+		return Mathf.Max( h, Mathf.Max( v, d ) );
     }
 
 	public void AddResourcePatch( Resource.Type type, int size, float density )

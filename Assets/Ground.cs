@@ -185,21 +185,9 @@ public class Ground : MonoBehaviour
 		if ( Input.GetKeyDown( KeyCode.R ) )
 			Road.AddNodeToNew( this, currentNode, player );
 		if ( Input.GetKeyDown( KeyCode.B ) )
-		{
-			var w = Workshop.Create();
-			if ( w.Setup( this, currentNode, player ) )
-				w.SetType( Workshop.Type.woodcutter );
-			else
-				Destroy( w );
-		}
+			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.woodcutter );
 		if ( Input.GetKeyDown( KeyCode.V ) )
-		{
-			var w = Workshop.Create();
-			if ( w.Setup( this, currentNode, player ) )
-				w.SetType( Workshop.Type.sawmill );
-			else
-				Destroy( w );
-		}
+			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.sawmill );
 		if ( Input.GetMouseButtonDown( 0 ) )
 		{
 			if ( currentNode.building )

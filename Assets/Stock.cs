@@ -11,7 +11,7 @@ public class Stock : Building
 
 	public static Stock Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( templateA );
+		var buildingObject = (GameObject)GameObject.Instantiate( templates[0] );
 		buildingObject.transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
 		buildingObject.transform.Rotate( Vector3.up * -55 );
 		return buildingObject.AddComponent<Stock>();

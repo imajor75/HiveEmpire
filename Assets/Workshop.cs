@@ -11,6 +11,7 @@ public class Workshop : Building
 	public bool working;
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
+	GameObject body;
 
 	[System.Serializable]
 	public class Buffer
@@ -32,10 +33,40 @@ public class Workshop : Building
 
 	public static Workshop Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( templateB );
-		buildingObject.transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
-		buildingObject.transform.Rotate( Vector3.up * -55 );
+		var buildingObject = new GameObject();
 		return buildingObject.AddComponent<Workshop>();
+	}
+
+	public Workshop Setup( Ground ground, GroundNode node, Player owner, Type type )
+	{
+		if ( Setup( ground, node, owner ) == null )
+			return null;
+
+		this.type = type;
+		buffers.Clear();
+		switch ( type )
+		{
+			case Type.woodcutter:
+			{
+				outputType = Item.Type.wood;
+				working = true;
+				construction.plankNeeded = 2;
+				body = (GameObject)GameObject.Instantiate( templates[1], transform );
+				break;
+			}
+			case Type.sawmill:
+			{
+				Buffer b = new Buffer();
+				b.itemType = Item.Type.wood;
+				buffers.Add( b );
+				outputType = Item.Type.plank;
+				working = false;
+				construction.plankNeeded = 2;
+				body = (GameObject)GameObject.Instantiate( templates[2], transform );
+				break;
+			}
+		}
+		return this;
 	}
 
 	new void Update()
@@ -107,32 +138,6 @@ public class Workshop : Building
 			}
 		}
 		Assert.IsTrue( false );
-	}
-
-	public void SetType( Type type )
-	{
-		this.type = type;
-		buffers.Clear();
-		switch ( type )
-		{
-			case Type.woodcutter:
-			{
-				outputType = Item.Type.wood;
-				working = true;
-				construction.plankNeeded = 2;
-				break;
-			}
-			case Type.sawmill:
-			{
-				Buffer b = new Buffer();
-				b.itemType = Item.Type.wood;
-				buffers.Add( b );
-				outputType = Item.Type.plank;
-				working = false;
-				construction.plankNeeded = 2;
-				break;
-			}
-		}
 	}
 
 	new void FixedUpdate()

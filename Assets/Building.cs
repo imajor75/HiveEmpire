@@ -12,8 +12,7 @@ abstract public class Building : MonoBehaviour
 	public GroundNode node;
 	[JsonIgnore]
 	public Road exit;
-	static public GameObject templateA;
-	static public GameObject templateB;
+	static public List<GameObject> templates = new List<GameObject>();
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction;
@@ -155,10 +154,9 @@ abstract public class Building : MonoBehaviour
 
 	public static void Initialize()
 	{
-		templateA = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
-		Assert.IsNotNull( templateA );
-		templateB = (GameObject)Resources.Load( "Medieval house/Medieval_house" );
-		Assert.IsNotNull( templateB );
+		templates.Add( (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" ) );
+		templates.Add( (GameObject)Resources.Load( "Medieval house/Medieval_house 1" ) );
+		templates.Add( (GameObject)Resources.Load( "Baker House/Prefabs/Baker_house" ) );
 		Construction.Initialize();
 	}
 
