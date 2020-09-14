@@ -13,7 +13,7 @@ public class Mission : MonoBehaviour
 
     void Start()
     {
-		players.Add( mainPlayer = new Player() );
+		players.Add( mainPlayer = ScriptableObject.CreateInstance<Player>() );
 		NewGame();
 	}
 

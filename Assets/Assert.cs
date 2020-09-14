@@ -49,6 +49,8 @@ public class Assert
 
 	public static void AreEqual<T>( T a, T b, string message = "" )
 	{
+		if ( a == null && b == null )
+			return;
 		if ( a.Equals( b ) )
 			return;
 
@@ -57,26 +59,31 @@ public class Assert
 
 	public static void AreNotEqual(int a, int b, string message = "")
 	{
-		if (a != b)
+		if ( a != b )
 			return;
 
 		message += "(" + a + " == " + b + ")";
-		Failed(message);
+		Failed( message );
 	}
 
 	public static void AreNotEqual(float a, float b, string message = "")
 	{
-		if (a != b)
+		if ( a != b )
 			return;
 
 		message += "(" + a + " == " + b + ")";
-		Failed(message);
+		Failed( message );
 	}
 
 	public static void AreNotEqual<T>(T a, T b, string message = "")
 	{
-		if (a.Equals(b))
-			Failed(message);
+		if ( b == null && a == null )
+			Failed( message );
+		if ( b == null || a == null )
+			return;
+		
+		if ( a.Equals( b ) )
+			Failed( message );
 	}
 
 	public static void AreApproximatelyEqual( float a, float b, string message = "", float tolerance = 0.00001f )

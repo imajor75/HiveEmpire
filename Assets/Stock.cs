@@ -7,6 +7,7 @@ public class Stock : Building
 	public bool main = false;
 	public int[] content = new int[(int)Item.Type.total];
 	public static int influenceRange = 10;
+	public static int mainBuildingInfluence = 10;
 
 	public static Stock Create()
 	{
@@ -19,6 +20,7 @@ public class Stock : Building
 	public bool SetupMain( Ground ground, GroundNode node, Player owner )
 	{
 		node.owner = owner;
+		ground.GetNode( node.x + 1, node.y - 1 ).owner = owner;
 		if ( !Setup( ground, node, owner ) )
 			return false;
 
@@ -53,6 +55,14 @@ public class Stock : Building
 			ItemDispatcher.lastInstance.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
 		}
     }
+
+	public override int Influence( GroundNode node )
+	{
+		if ( !main )
+			base.Influence( node );
+
+		return Stock.mainBuildingInfluence - node.DistanceFrom( this.node );
+	}
 
 	public override void OnClicked()
 	{

@@ -25,7 +25,7 @@ public class Ground : MonoBehaviour
 	public new MeshCollider collider;
 	public Stock mainBuilding;
 	public GroundNode zero;
-	public List<Building> influencers;
+	public List<Building> influencers = new List<Building>();
 
 	public static Ground Create()
 	{
@@ -184,7 +184,11 @@ public class Ground : MonoBehaviour
 				currentNode.road.OnClicked();
 		}
 		if ( Input.GetKeyDown( KeyCode.O ) )
+		{
 			selectedNode = currentNode;
+			Debug.Log( "Current pos: " + currentNode.x + ", " + currentNode.y );
+			Debug.Log( "Distance from main building: " + currentNode.DistanceFrom( mainBuilding.node ) );
+		}
 		if ( Input.GetKeyDown( KeyCode.K ) )
 		{
 			if ( currentNode.road )
@@ -289,6 +293,7 @@ public class Ground : MonoBehaviour
 					GroundNode neighbour = touched[i].Neighbour( j );
 					if ( neighbour.index >= 0 && neighbour.index < touched.Count && touched[neighbour.index] == neighbour )
 						continue;
+					neighbour.index = touched.Count;
 					touched.Add( neighbour );
 				}
 			}
@@ -300,9 +305,18 @@ public class Ground : MonoBehaviour
 			{
 				GroundNode neighbour = node.Neighbour( j );
 				if ( node.owner == neighbour.owner )
-					node.borders[j] = null;
+				{
+					if ( node.borders[j] )
+					{
+						Destroy( node.borders[j].gameObject );
+						node.borders[j] = null;
+					}
+				}
 				else
-					node.borders[j] = BorderEdge.Create().Setup( node, j );
+				{
+					if ( node.owner != null )
+						node.borders[j] = BorderEdge.Create().Setup( node, j );
+				}
 			}
 		}
 	}

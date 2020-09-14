@@ -25,5 +25,6 @@ public class BorderEdge : MonoBehaviour
     {
 		transform.SetParent( node.ground.transform );
 		transform.localPosition = Vector3.Lerp( node.Position(), node.Neighbour( direction ).Position(), 0.4f );
+		transform.localScale = Vector3.one * 0.2f;
 	}
 }
