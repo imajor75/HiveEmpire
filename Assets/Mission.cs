@@ -77,6 +77,7 @@ public class Mission : MonoBehaviour
 		Road.Initialize();
 		Worker.Initialize();
 		Flag.Initialize();
+		Resource.Initialize();
 	}
 
 	public void Load( string fileName )
@@ -100,6 +101,7 @@ public class Mission : MonoBehaviour
 		Road.Initialize();
 		Worker.Initialize();
 		Flag.Initialize();
+		Resource.Initialize();
 	}
 
 	public void Save( string fileName )

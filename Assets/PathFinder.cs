@@ -57,12 +57,12 @@ public class PathFinder : ScriptableObject
 		// If we cannot pass through the node, skip it
 		if ( mode == Mode.avoidRoads )
 		{
-			if ( node.road || node.building )
+			if ( node.road || node.building || node.resource )
 				return;
 		}
 		if ( mode == Mode.avoidObjects )
 		{
-			if ( node.building )
+			if ( node.building || node.resource )
 				return;
 		}
 

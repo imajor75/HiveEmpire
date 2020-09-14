@@ -11,6 +11,7 @@ public class GroundNode
     public Building building;
     public Flag flag;
     public Road road;
+	public Resource resource;
 	public int roadIndex;
     public float height = 0;
     public int pathFindingIndex = -1;
@@ -102,11 +103,28 @@ public class GroundNode
         return Mathf.Max( Mathf.Max( h, v ), d );
     }
 
+	public void AddForestPatch()
+	{
+		Resource.Create().Setup( this, Resource.Type.tree );
+	}
+
+	public void AddStonePatch()
+	{
+		Resource.Create().Setup( this, Resource.Type.rock );
+	}
+
 	public void Validate()
 	{
-		Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
-		Assert.IsTrue( flag == null || building == null );
-		Assert.IsTrue( building == null || road == null );
+		int o = 0;
+		if ( flag )
+			o++;
+		if ( road )
+			o++;
+		if ( building )
+			o++;
+		if ( resource )
+			o++;
+		Assert.IsTrue( o == 0 || o == 1 );
 		if ( building )
 			Assert.AreEqual( this, building.node );
 		if ( flag )
@@ -125,5 +143,10 @@ public class GroundNode
 		}
 		if ( road )
 			Assert.AreEqual( this, road.nodes[roadIndex] );
+		if ( resource )
+		{
+			Assert.AreEqual( resource.node, this );
+			resource.Validate();
+		}
 	}
 }

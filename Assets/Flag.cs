@@ -32,12 +32,18 @@ public class Flag : MonoBehaviour
 			Destroy( gameObject );
 			return null;
         }
-        if ( node.building )
-        {
-            Debug.Log( "Cannot create a flag at a building" );
+		if ( node.building )
+		{
+			Debug.Log( "Cannot create a flag at a building" );
 			Destroy( gameObject );
 			return null;
-        }
+		}
+		if ( node.resource )
+		{
+			Debug.Log( "Cannot create a flag on a resource" );
+			Destroy( gameObject );
+			return null;
+		}
 		if ( node.road )
 		{
 			// TODO Make it possible to create a flag at a road

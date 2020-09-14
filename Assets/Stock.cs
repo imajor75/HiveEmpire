@@ -26,6 +26,7 @@ public class Stock : Building
 		content[(int)Item.Type.plank] = 10;
 		worker = WorkerWoman.Create();
 		worker.SetupForBuilding( this );
+		name = "Headquarters";
 		return true;
 	}
 

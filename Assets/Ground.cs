@@ -23,6 +23,7 @@ public class Ground : MonoBehaviour
 	public new MeshCollider collider;
 	public Stock mainBuilding;
 	public GroundNode zero;
+	static public System.Random rnd = new System.Random( 0 );
 
 	public static Ground Create()
 	{
@@ -63,7 +64,21 @@ public class Ground : MonoBehaviour
 			mainBuilding = Stock.Create();
 			mainBuilding.SetupMain( this, GetNode( width / 2, height / 2 ) );
 		}
+
+		GenerateResources();
     }
+
+	public void GenerateResources()
+	{
+		foreach ( var n in layout )
+		{
+			int i = rnd.Next( 100 );
+			if ( i ==  0 )
+				n.AddForestPatch();
+			if ( i == 1 )
+				n.AddStonePatch();
+		}
+	}
 
 	public void FinishLayout()
 	{
