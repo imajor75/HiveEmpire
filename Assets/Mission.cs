@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class Mission : MonoBehaviour
 {
 	public Ground ground;
+	public List<Player> players;
 
     void Start()
     {
