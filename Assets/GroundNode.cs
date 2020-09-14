@@ -11,6 +11,7 @@ public class GroundNode
     public Building building;
     public Flag flag;
     public Road road;
+	public Resource resource;
 	public int roadIndex;
     public float height = 0;
     public int index = -1;
@@ -97,11 +98,33 @@ public class GroundNode
 		return h + v;// + d;
     }
 
+	public void AddResourcePatch( Resource.Type type, int size, float density )
+	{
+		for ( int x = -size; x < size; x++ )
+		{
+			for ( int y = -size; y < size; y++ )
+			{
+				GroundNode n = ground.GetNode( this.x + x, this.y + y );
+				int distance = DistanceFrom( n );
+				float chance = density * (size-distance) / size;
+				if ( chance * 100 > Ground.rnd.Next( 100 ) )
+					Resource.Create().Setup( n, type );
+			}
+		}
+	}
+
 	public void Validate()
 	{
-		Assert.IsTrue( flag == null || road == null, "Both flag and road at the same node (" + x + ", " + y );
-		Assert.IsTrue( flag == null || building == null );
-		Assert.IsTrue( building == null || road == null );
+		int o = 0;
+		if ( flag )
+			o++;
+		if ( road )
+			o++;
+		if ( building )
+			o++;
+		if ( resource )
+			o++;
+		Assert.IsTrue( o == 0 || o == 1 );
 		if ( building )
 			Assert.AreEqual( this, building.node );
 		if ( flag )
@@ -120,5 +143,10 @@ public class GroundNode
 		}
 		if ( road )
 			Assert.AreEqual( this, road.nodes[roadIndex] );
+		if ( resource )
+		{
+			Assert.AreEqual( resource.node, this );
+			resource.Validate();
+		}
 	}
 }

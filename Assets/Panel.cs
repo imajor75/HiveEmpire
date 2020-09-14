@@ -12,8 +12,6 @@ public class Panel : Image, IPointerClickHandler
 
 	static public void Initialize()
 	{
-		var o = GameObject.Find( "Canvas" );
-		canvas = o.GetComponent<Canvas>();
 		font = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
 		Assert.IsNotNull( font );
 	}
@@ -35,6 +33,8 @@ public class Panel : Image, IPointerClickHandler
 
 	protected override void Start()
 	{
+		var o = GameObject.Find( "Canvas" );
+		canvas = o.GetComponent<Canvas>();
 		base.Start();
 		rectTransform.anchorMin = rectTransform.anchorMax = Vector2.zero;
 	}

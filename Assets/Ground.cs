@@ -15,7 +15,7 @@ public class Ground : MonoBehaviour
 	[JsonIgnore]
 	public int currentRow, currentColumn;
 	[JsonIgnore]
-	public GameObject currentNode;
+	public GameObject cursor;
 	[JsonIgnore]
 	public GroundNode selectedNode;
 	public int meshVersion = 0;
@@ -26,6 +26,7 @@ public class Ground : MonoBehaviour
 	public Stock mainBuilding;
 	public GroundNode zero;
 	public List<Building> influencers = new List<Building>();
+	static public System.Random rnd = new System.Random( 0 );
 
 	public static Ground Create()
 	{
@@ -45,27 +46,54 @@ public class Ground : MonoBehaviour
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 		collider = gameObject.GetComponent<MeshCollider>();
 
-		currentNode = GameObject.CreatePrimitive( PrimitiveType.Cube );
-		currentNode.name = "Cursor";
-		currentNode.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
-		currentNode.transform.localScale *= 0.25f;
-		currentNode.transform.SetParent( transform );
-
-
+		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
+		collider = gameObject.GetComponent<MeshCollider>();
+		mesh = meshFilter.mesh = new Mesh();
+		mesh.name = "GroundMesh";
 		GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
 
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";
+		cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
+		cursor.name = "Cursor";
+		cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
+		cursor.transform.localScale *= 0.25f;
+		cursor.transform.SetParent( transform );
+	}
+
+	public Ground Setup()
+	{
+		gameObject.name = "Ground";
+		width = 50;
+		height = 30;
 
 		if ( nodes == null )
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		FinishLayout();
 
 		Player mainPlayer = GameObject.FindObjectOfType<Mission>().mainPlayer;
+		GroundNode center = GetNode( 21, 11 );
 		if ( mainBuilding == null )
 		{
 			mainBuilding = Stock.Create();
-			mainBuilding.SetupMain( this, GetNode( width / 2, height / 2 ), mainPlayer );
+			mainBuilding.SetupMain( this, center, mainPlayer );
+		}
+
+		Camera.main.transform.position = transform.TransformPoint( center.Position() ) - new Vector3( 0, -4, 8 );
+
+		GenerateResources();
+		return this;
+    }
+
+	public void GenerateResources()
+	{
+		foreach ( var n in layout )
+		{
+			int i = rnd.Next( 1000 );
+			if ( i < 4 )
+				n.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
+			if ( i >= 5 && i < 6 )
+				n.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
 		}
 	}
 

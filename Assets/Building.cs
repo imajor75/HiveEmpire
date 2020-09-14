@@ -164,7 +164,7 @@ abstract public class Building : MonoBehaviour
 
 	public Building Setup( Ground ground, GroundNode node, Player owner )
 	{
-		if ( node.flag || node.building || node.road )
+		if ( node.flag || node.building || node.road || node.resource )
 		{
 			Debug.Log( "Node is already occupied" );
 			Destroy( gameObject );

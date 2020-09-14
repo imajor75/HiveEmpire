@@ -14,6 +14,13 @@ public class Mission : MonoBehaviour
     void Start()
     {
 		players.Add( mainPlayer = ScriptableObject.CreateInstance<Player>() );
+		Item.Initialize();
+		Panel.Initialize();
+		Building.Initialize();
+		Road.Initialize();
+		Worker.Initialize();
+		Flag.Initialize();
+		Resource.Initialize();
 		NewGame();
 	}
 
@@ -26,8 +33,7 @@ public class Mission : MonoBehaviour
 		}
 		if ( Object.FindObjectOfType<Eye>() == null || force )
 		{
-			var eyeObject = new GameObject();
-			eyeObject.AddComponent<Eye>();
+			Eye.Create();
 		}
 		if ( Object.FindObjectOfType<Light>() == null || force )
 		{
@@ -69,18 +75,9 @@ public class Mission : MonoBehaviour
 	public void NewGame()
 	{
 		ClearScene();
-
-		var groundObject = new GameObject();
-		ground = groundObject.AddComponent<Ground>();
-
 		PrepareScene( true );
 
-		Item.Initialize();
-		Panel.Initialize();
-		Building.Initialize();
-		Road.Initialize();
-		Worker.Initialize();
-		Flag.Initialize();
+		ground = Ground.Create().Setup();
 	}
 
 	public void Load( string fileName )
@@ -97,13 +94,6 @@ public class Mission : MonoBehaviour
 		ground.FinishLayout();
 
 		PrepareScene( true );
-
-		Item.Initialize();
-		Panel.Initialize();
-		Building.Initialize();
-		Road.Initialize();
-		Worker.Initialize();
-		Flag.Initialize();
 	}
 
 	public void Save( string fileName )
