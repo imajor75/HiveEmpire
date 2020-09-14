@@ -103,14 +103,19 @@ public class GroundNode
         return Mathf.Max( Mathf.Max( h, v ), d );
     }
 
-	public void AddForestPatch()
+	public void AddResourcePatch( Resource.Type type, int size, float density )
 	{
-		Resource.Create().Setup( this, Resource.Type.tree );
-	}
-
-	public void AddStonePatch()
-	{
-		Resource.Create().Setup( this, Resource.Type.rock );
+		for ( int x = -size; x < size; x++ )
+		{
+			for ( int y = -size; y < size; y++ )
+			{
+				GroundNode n = ground.GetNode( this.x + x, this.y + y );
+				int distance = DistanceFrom( n );
+				float chance = density * (size-distance) / size;
+				if ( chance * 100 > Ground.rnd.Next( 100 ) )
+					Resource.Create().Setup( n, type );
+			}
+		}
 	}
 
 	public void Validate()

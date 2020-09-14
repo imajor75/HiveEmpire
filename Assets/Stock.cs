@@ -26,14 +26,16 @@ public class Stock : Building
 		content[(int)Item.Type.plank] = 10;
 		worker = WorkerWoman.Create();
 		worker.SetupForBuilding( this );
-		name = "Headquarters";
 		return true;
 	}
 
 	new void Start()
 	{
 		base.Start();
-		gameObject.name = "Stock " + node.x + ", " + node.y;
+		if ( main )
+			name = "Headquarters";
+		else
+			name = "Stock " + node.x + ", " + node.y;
 	}
 
 	new public void Update()

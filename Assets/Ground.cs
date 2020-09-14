@@ -13,7 +13,7 @@ public class Ground : MonoBehaviour
 	[JsonIgnore]
 	public int currentRow, currentColumn;
 	[JsonIgnore]
-	public GameObject currentNode;
+	public GameObject cursor;
 	[JsonIgnore]
 	public GroundNode selectedNode;
     public int meshVersion = 0;
@@ -32,51 +32,57 @@ public class Ground : MonoBehaviour
 	}
 
 	void Start()
-    {
+	{
 		if ( zero == null )
 			zero = Worker.zero;
 		else
 			Worker.zero = zero;
+
+		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
+		collider = gameObject.GetComponent<MeshCollider>();
+		mesh = meshFilter.mesh = new Mesh();
+		mesh.name = "GroundMesh";
+		GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
+
+		cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
+		cursor.name = "Cursor";
+		cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
+		cursor.transform.localScale *= 0.25f;
+		cursor.transform.SetParent( transform );
+	}
+
+	public Ground Setup()
+	{
 		gameObject.name = "Ground";
 		width = 50;
 		height = 30;
-        MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
-        collider = gameObject.GetComponent<MeshCollider>();
-
-		currentNode = GameObject.CreatePrimitive( PrimitiveType.Cube );
-		currentNode.name = "Cursor";
-		currentNode.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
-		currentNode.transform.localScale *= 0.25f;
-		currentNode.transform.SetParent( transform );
-
-
-		GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
-
-		mesh = meshFilter.mesh = new Mesh();
-        mesh.name = "GroundMesh";
 
 		if ( layout == null )
 			layout = new GroundNode[( width + 1 ) * ( height + 1 )];
 		FinishLayout();
 
+		GroundNode center = GetNode( 21, 11 );
 		if ( mainBuilding == null )
 		{
 			mainBuilding = Stock.Create();
-			mainBuilding.SetupMain( this, GetNode( width / 2, height / 2 ) );
+			mainBuilding.SetupMain( this, center );
 		}
 
+		Camera.main.transform.position = transform.TransformPoint( center.Position() ) - new Vector3( 0, -4, 8 );
+
 		GenerateResources();
+		return this;
     }
 
 	public void GenerateResources()
 	{
 		foreach ( var n in layout )
 		{
-			int i = rnd.Next( 100 );
-			if ( i ==  0 )
-				n.AddForestPatch();
-			if ( i == 1 )
-				n.AddStonePatch();
+			int i = rnd.Next( 1000 );
+			if ( i < 4 )
+				n.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
+			if ( i >= 5 && i < 6 )
+				n.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
 		}
 	}
 
@@ -149,7 +155,7 @@ public class Ground : MonoBehaviour
             var node = GroundNode.FromPosition( localPosition, this );
             currentColumn = node.x;
             currentRow = node.y;
-            currentNode.transform.localPosition = node.Position();
+            cursor.transform.localPosition = node.Position();
         }
     }
 

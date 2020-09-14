@@ -8,7 +8,8 @@ public class Resource : MonoBehaviour
 	public Type type;
 	public int charges;
 	GameObject body;
-	static GameObject[] templateTree;
+	static List<GameObject> templateTree = new List<GameObject>();
+	static List<GameObject> templateRock = new List<GameObject>();
 
 	public enum Type
 	{
@@ -19,11 +20,18 @@ public class Resource : MonoBehaviour
 
 	public static void Initialize()
 	{
-		templateTree = new GameObject[4];
-		templateTree[0] = (GameObject)Resources.Load( "Tree9/Tree9_2" );
-		templateTree[1] = (GameObject)Resources.Load( "Tree9/Tree9_3" );
-		templateTree[2] = (GameObject)Resources.Load( "Tree9/Tree9_4" );
-		templateTree[3] = (GameObject)Resources.Load( "Tree9/Tree9_5" );
+		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 05" ) );
+		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 02" ) );
+		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 05" ) );
+		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type5 04" ) );
+		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 02" ) );
+
+		templateRock.Add( (GameObject)Resources.Load( "LowPoly Rocks/Prefabs/Rock1" ) );
+		templateRock.Add( (GameObject)Resources.Load( "LowPoly Rocks/Prefabs/Rock3" ) );
+		templateRock.Add( (GameObject)Resources.Load( "LowPoly Rocks/Prefabs/Rock9" ) );
+		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock1" ) );
+		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock2" ) );
+		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock3" ) );
 	}
 
 	static public Resource Create()
@@ -34,47 +42,56 @@ public class Resource : MonoBehaviour
 
 	public Resource Setup( GroundNode node, Type type, int charges = 1 )
 	{
-		if ( node.building || node.flag )
+		if ( node.building || node.flag || node.resource )
 		{
 			Destroy( gameObject );
 			return null;
 		}
 
+		node.resource = this;
 		this.type = type;
 		this.charges = charges;
 		this.node = node;
-		transform.SetParent( node.ground.transform );
-		if ( type == Type.tree )
-		{
-			name = "Tree";
-			body = GameObject.Instantiate( templateTree[Ground.rnd.Next( 4 )] );
-			body.transform.Rotate( Vector3.up * Ground.rnd.Next( 360 ) );
-		}
-		if ( type == Type.rock )
-			name = "Rock";
-		if ( type == Type.other )
-			name = "Decoration";
-		if ( body != null )
-			body.transform.SetParent( transform );
-
-		transform.localPosition = node.Position();
 		return this;
 	}
 
     // Start is called before the first frame update
     void Start()
     {
-        
-    }
+		transform.SetParent( node.ground.transform );
+		transform.localPosition = node.Position();
 
-    // Update is called once per frame
-    void Update()
+		if ( type == Type.tree )
+		{
+			name = "Tree";
+			body = GameObject.Instantiate( templateTree[Ground.rnd.Next( templateTree.Count )] );
+			body.transform.Rotate( Vector3.up * Ground.rnd.Next( 360 ) );
+			body.transform.localScale = Vector3.one * 0.3f;
+		}
+		if ( type == Type.rock )
+		{
+			name = "Rock";
+			body = GameObject.Instantiate( templateRock[Ground.rnd.Next( templateRock.Count )] );
+			body.transform.Rotate( Vector3.up * Ground.rnd.Next( 360 ) );
+		}
+		if ( type == Type.other )
+			name = "Decoration";
+		if ( body != null )
+		{
+			body.transform.SetParent( transform );
+			body.transform.localPosition = Vector3.zero;
+		}
+		Assert.IsNotNull( body );
+	}
+
+	// Update is called once per frame
+	void Update()
     {
         
     }
 
 	public void Validate()
 	{
-		Assert.IsNotNull( body );
+		//Assert.IsNotNull( body );
 	}
 }
