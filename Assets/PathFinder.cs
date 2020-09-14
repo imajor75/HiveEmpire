@@ -54,20 +54,13 @@ public class PathFinder : ScriptableObject
 
     void VisitNode( GroundNode node, float cost, Reached from, Road road = null )
     {
-		// If we cannot pass through the node, skip it
-		if ( mode == Mode.avoidRoads )
-		{
-			if ( node.road || node.building || node.resource )
-				return;
-		}
-		if ( mode == Mode.avoidObjects )
-		{
-			if ( node.building || node.resource )
-				return;
-		}
+		if ( node.owner != target.owner || node.building || node.resourc )
+			return;
 
-        // Check if the node was already visited
-        var i = node.pathFindingIndex;
+		if ( mode == Mode.avoidRoads && node.road )
+				return;
+
+        var i = node.index;
         if ( i >= 0 && i < visited.Count && visited[i].node == node )
         {
             if ( cost < visited[i].costG )
@@ -90,7 +83,7 @@ public class PathFinder : ScriptableObject
         n.costF = n.costG + n.costH;
         n.from = from;
 		n.road = road;
-        node.pathFindingIndex = visited.Count;
+        node.index = visited.Count;
         visited.Add( n );
         openNodes++;
     }

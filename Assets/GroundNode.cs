@@ -14,8 +14,11 @@ public class GroundNode
 	public Resource resource;
 	public int roadIndex;
     public float height = 0;
-    public int pathFindingIndex = -1;
+    public int index = -1;
     public Ground ground;
+	public Player owner;
+	public int influence;
+	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
 
     public Vector3 Position()
     {
@@ -24,6 +27,7 @@ public class GroundNode
         Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
         return position;
     }
+
     public static GroundNode FromPosition( Vector3 position, Ground ground )
     {
         int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
@@ -77,30 +81,21 @@ public class GroundNode
 
     public int DistanceFrom( GroundNode o )
     {
-        int e = ground.height, w = ground.width;
+        //int e = ground.height, w = ground.width;
 
-        int h0 = Mathf.Abs(x-o.x);
-        int h1 = Mathf.Abs(x-o.x-w);
-        int h2 = Mathf.Abs(x-o.x+w);
-        int h = Mathf.Min(Mathf.Min(h0,h1),h2);
+        int h = Mathf.Abs(x-o.x);
+        //int h1 = Mathf.Abs(x-o.x-w);
+        //int h2 = Mathf.Abs(x-o.x+w);
+        //int h = Mathf.Min(Mathf.Min(h0,h1),h2);
 
-        int v0 = Mathf.Abs(y-o.y);
-        int v1 = Mathf.Abs(y-o.y-e);
-        int v2 = Mathf.Abs(y-o.y+e);
-        int v = Mathf.Min(Mathf.Min(v0,v1),v2);
+        int v = Mathf.Abs(y-o.y);
+		//int v1 = Mathf.Abs(y-o.y-e);
+		//int v2 = Mathf.Abs(y-o.y+e);
+		//int v = Mathf.Min(Mathf.Min(v0,v1),v2);
 
-        int d0 = Mathf.Abs(x-y-o.x+o.y+w*-1+h*-1);
-        int d1 = Mathf.Abs(x-y-o.x+o.y+w*00+h*-1);
-        int d2 = Mathf.Abs(x-y-o.x+o.y+w*01+h*-1);
-        int d3 = Mathf.Abs(x-y-o.x+o.y+w*-1+h*00);
-        int d4 = Mathf.Abs(x-y-o.x+o.y+w*00+h*00);
-        int d5 = Mathf.Abs(x-y-o.x+o.y+w*01+h*00);
-        int d6 = Mathf.Abs(x-y-o.x+o.y+w*-1+h*01);
-        int d7 = Mathf.Abs(x-y-o.x+o.y+w*00+h*01);
-        int d8 = Mathf.Abs(x-y-o.x+o.y+w*01+h*01);
-        int d = Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(Mathf.Min(d0,d1),d2),d3),d4),d5),d6),d7),d8);
+		//int d = Mathf.Max(h,v);
 
-        return Mathf.Max( Mathf.Max( h, v ), d );
+		return h + v;// + d;
     }
 
 	public void AddResourcePatch( Resource.Type type, int size, float density )

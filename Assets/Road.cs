@@ -5,6 +5,7 @@ using UnityEngine.Assertions;
 
 public class Road : MonoBehaviour
 {
+	public Player owner;
 	public List<Worker> workers = new List<Worker>();
 	public bool ready = false;
 	public Ground ground;
@@ -39,17 +40,23 @@ public class Road : MonoBehaviour
 		return this;
 	}
 
-	public static bool AddNodeToNew( Ground ground, GroundNode node )
+	public static bool AddNodeToNew( Ground ground, GroundNode node, Player owner )
 	{
 		// Starting a new road
 		if ( newRoad == null || newRoad.nodes.Count == 0 )
 		{
 			if ( node.flag )
 			{
+				if ( node.flag.owner != owner )
+				{
+					UnityEngine.Debug.Log( "Flag belongs to another player" );
+					return false;
+				}
 				if ( newRoad == null )
 					newRoad = Create();
 				newRoad.ground = ground;
 				newRoad.nodes.Add( node );
+				newRoad.owner = owner;
 				return true;
 			}
 			else
@@ -57,6 +64,12 @@ public class Road : MonoBehaviour
 				UnityEngine.Debug.Log( "Road must start at a flag" );
 				return false;
 			}
+		}
+
+		if ( node.owner != owner )
+		{
+			UnityEngine.Debug.Log( "Area belongs to another player" );
+			return false;
 		}
 
 		GroundNode last = newRoad.nodes[newRoad.nodes.Count - 1];
@@ -104,6 +117,8 @@ public class Road : MonoBehaviour
 					newRoad = null;
 					return true;
 				}
+				UnityEngine.Debug.Log( "No path found to connect to that flag" );
+				return false;
 			}
 			UnityEngine.Debug.Log( "Node must be adjacent to previous one" );
 			return false;
@@ -321,6 +336,9 @@ public class Road : MonoBehaviour
 
 	public int Jam()
 	{
+		if ( !ready )
+			return 0;
+
 		int itemCount = 0;
 		for ( int e = 0; e < 2; e++ )
 		{

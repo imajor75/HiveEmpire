@@ -22,6 +22,7 @@ public class Serializer : JsonSerializer
 		public static readonly SkipUnityContractResolver Instance = new SkipUnityContractResolver();
 		public static readonly Type[] gameClasses = {
 			typeof( Flag ),
+			typeof( BorderEdge ),
 			typeof( Worker ),
 			typeof( Road ),
 			typeof( Building ),
@@ -71,6 +72,8 @@ public class Serializer : JsonSerializer
 	{
 		if ( instance == null )
 		{
+			if ( type == typeof( BorderEdge ) )
+				instance = BorderEdge.Create();
 			if ( type == typeof( Flag ) )
 				instance = Flag.Create();
 			else if ( type == typeof( Stock ) )

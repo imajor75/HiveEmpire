@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -7,9 +8,12 @@ using UnityEngine.UI;
 public class Mission : MonoBehaviour
 {
 	public Ground ground;
+	public List<Player> players = new List<Player>();
+	public Player mainPlayer;
 
     void Start()
     {
+		players.Add( mainPlayer = ScriptableObject.CreateInstance<Player>() );
 		Item.Initialize();
 		Panel.Initialize();
 		Building.Initialize();

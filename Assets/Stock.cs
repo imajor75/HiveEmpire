@@ -1,10 +1,13 @@
-﻿using UnityEngine;
+﻿using UnityEditor.PackageManager;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Stock : Building
 {
 	public bool main = false;
 	public int[] content = new int[(int)Item.Type.total];
+	public static int influenceRange = 10;
+	public static int mainBuildingInfluence = 10;
 
 	public static Stock Create()
 	{
@@ -14,9 +17,11 @@ public class Stock : Building
 		return buildingObject.AddComponent<Stock>();
 	}
 
-	public bool SetupMain( Ground ground, GroundNode node )
+	public bool SetupMain( Ground ground, GroundNode node, Player owner )
 	{
-		if ( !Setup( ground, node ) )
+		node.owner = owner;
+		ground.GetNode( node.x + 1, node.y - 1 ).owner = owner;
+		if ( !Setup( ground, node, owner ) )
 			return false;
 
 		main = true;
@@ -26,6 +31,7 @@ public class Stock : Building
 		content[(int)Item.Type.plank] = 10;
 		worker = WorkerWoman.Create();
 		worker.SetupForBuilding( this );
+		ground.RegisterInfluence( this );
 		return true;
 	}
 
@@ -52,6 +58,14 @@ public class Stock : Building
 			ItemDispatcher.lastInstance.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
 		}
     }
+
+	public override int Influence( GroundNode node )
+	{
+		if ( !main )
+			base.Influence( node );
+
+		return Stock.mainBuildingInfluence - node.DistanceFrom( this.node );
+	}
 
 	public override void OnClicked()
 	{

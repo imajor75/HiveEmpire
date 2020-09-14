@@ -5,6 +5,7 @@ using UnityEngine.Assertions;
 
 abstract public class Building : MonoBehaviour
 {
+	public Player owner;
 	public Worker worker;
 	public Flag flag;
 	public Ground ground;
@@ -161,7 +162,7 @@ abstract public class Building : MonoBehaviour
 		Construction.Initialize();
 	}
 
-	public Building Setup( Ground ground, GroundNode node )
+	public Building Setup( Ground ground, GroundNode node, Player owner )
 	{
 		if ( node.flag || node.building || node.road || node.resource )
 		{
@@ -169,8 +170,14 @@ abstract public class Building : MonoBehaviour
 			Destroy( gameObject );
 			return null;
 		}
+		if ( node.owner != owner )
+		{
+			Debug.Log( "Node is outside of border" );
+			Destroy( gameObject );
+			return null;
+		}
 		var flagNode = ground.GetNode( node.x + 1, node.y - 1 );
-		Flag flag = Flag.Create().Setup( ground, flagNode );
+		Flag flag = Flag.Create().Setup( ground, flagNode, owner );
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
@@ -180,6 +187,7 @@ abstract public class Building : MonoBehaviour
 
 		this.ground = ground;
 		this.flag = flag;
+		this.owner = owner;
 		flag.building = this;
 
 		this.node = node;
@@ -288,6 +296,11 @@ abstract public class Building : MonoBehaviour
 		flag.building = null;
 		Destroy( gameObject );
 	}
+
+	public virtual int Influence( GroundNode node )
+	{
+		return 0;
+	}	
 
 	virtual public void Validate()
 	{
