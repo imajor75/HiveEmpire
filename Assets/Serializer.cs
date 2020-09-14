@@ -16,11 +16,13 @@ public class Serializer : JsonSerializer
 	Type staticType;
 	Serializer boss;
 	int index;
+	JsonReader reader;
 
 	public class SkipUnityContractResolver : DefaultContractResolver
 	{
 		public static readonly SkipUnityContractResolver Instance = new SkipUnityContractResolver();
 		public static readonly Type[] gameClasses = {
+			typeof( Player ),
 			typeof( Flag ),
 			typeof( BorderEdge ),
 			typeof( Worker ),
@@ -58,8 +60,9 @@ public class Serializer : JsonSerializer
 		}
 	}
 
-	public Serializer( Serializer boss = null )
+	public Serializer( JsonReader reader, Serializer boss = null )
 	{
+		this.reader = reader;
 		if ( boss == null )
 		{
 			boss = this;
@@ -72,9 +75,11 @@ public class Serializer : JsonSerializer
 	{
 		if ( instance == null )
 		{
-			if ( type == typeof( BorderEdge ) )
+			if ( type == typeof( Player ) )
+				instance = ScriptableObject.CreateInstance<Player>();
+			else if ( type == typeof( BorderEdge ) )
 				instance = BorderEdge.Create();
-			if ( type == typeof( Flag ) )
+			else if ( type == typeof( Flag ) )
 				instance = Flag.Create();
 			else if ( type == typeof( Stock ) )
 				instance = Stock.Create();
@@ -125,14 +130,14 @@ public class Serializer : JsonSerializer
 		}
 		return instance;
 	}
-	void ProcessField( JsonReader r )
+	void ProcessField()
 	{
-		Assert.AreEqual( r.TokenType, JsonToken.PropertyName );
-		string name = (string)r.Value;
+		Assert.AreEqual( reader.TokenType, JsonToken.PropertyName );
+		string name = (string)reader.Value;
 		if ( name[0] == '$' )
 		{
-			r.Read();
-			string value = (string)r.Value;
+			reader.Read();
+			string value = (string)reader.Value;
 			switch ( name )
 			{
 				case "$id":
@@ -159,13 +164,13 @@ public class Serializer : JsonSerializer
 		}
 		FieldInfo i = type.GetField( name );
 		Assert.IsNotNull( i );
-		r.Read();
-		i.SetValue( Object(), ProcessFieldValue( r, i.FieldType ) );
+		reader.Read();
+		i.SetValue( Object(), ProcessFieldValue( i.FieldType ) );
 	}
 
-	object ProcessFieldValue( JsonReader r, Type type )
+	object ProcessFieldValue( Type type )
 	{
-		switch ( r.TokenType )
+		switch ( reader.TokenType )
 		{
 			case JsonToken.Integer:
 			case JsonToken.Float:
@@ -173,16 +178,16 @@ public class Serializer : JsonSerializer
 			case JsonToken.Boolean:
 			{
 				if ( type.IsEnum )
-					return Enum.ToObject( type, r.Value );
-				return Convert.ChangeType( r.Value, type );
+					return Enum.ToObject( type, reader.Value );
+				return Convert.ChangeType( reader.Value, type );
 			}
 			case JsonToken.StartObject:
 			{
-				return new Serializer( boss ).Deserialize( type, r );
+				return new Serializer( reader, boss ).Deserialize( type );
 			}
 			case JsonToken.StartArray:
 			{
-				r.Read();
+				reader.Read();
 				Type elementType = null;
 				if ( type.IsArray )
 					elementType = type.GetElementType();
@@ -193,17 +198,17 @@ public class Serializer : JsonSerializer
 				Type listType = typeof( List<> ).MakeGenericType( new [] { elementType } );
 				IList list = (IList)Activator.CreateInstance( listType );
 
-				while ( r.TokenType != JsonToken.EndArray )
+				while ( reader.TokenType != JsonToken.EndArray )
 				{
-					if ( r.TokenType != JsonToken.Comment )
+					if ( reader.TokenType != JsonToken.Comment )
 					{
-						object value = ProcessFieldValue( r, elementType );
+						object value = ProcessFieldValue( elementType );
 						if ( value as IConvertible != null )
 							list.Add( Convert.ChangeType( value, elementType ) );
 						else
 							list.Add( value );
 					}
-					r.Read();
+					reader.Read();
 				}
 				if ( type.IsArray )
 				{
@@ -218,24 +223,25 @@ public class Serializer : JsonSerializer
 		return null;
 	}
 
-	object Deserialize( Type type, JsonReader r )
+	object Deserialize( Type type )
 	{
 		this.type = staticType = type;
-		Assert.AreEqual( r.TokenType, JsonToken.StartObject );
-		r.Read();
-		while ( r.TokenType == JsonToken.PropertyName )
+		Assert.AreEqual( reader.TokenType, JsonToken.StartObject );
+		reader.Read();
+		while ( reader.TokenType == JsonToken.PropertyName )
 		{
-			ProcessField( r );
-			r.Read();
+			ProcessField();
+			reader.Read();
 		}
-		Assert.AreEqual( r.TokenType, JsonToken.EndObject );
+		Assert.AreEqual( reader.TokenType, JsonToken.EndObject );
 		return Object();
 	}
 
 	new public T Deserialize<T>( JsonReader r )
 	{
+		reader = r;
 		r.Read();
-		T root = (T)Deserialize( typeof( T ), r );
+		T root = (T)Deserialize( typeof( T ) );
 		return root;
 	}
 }

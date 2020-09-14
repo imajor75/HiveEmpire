@@ -83,17 +83,18 @@ public class Mission : MonoBehaviour
 	public void Load( string fileName )
 	{
 		ClearScene();
-		var serializer = new Serializer();
+		PrepareScene( true );
 
 		using ( var sw = new StreamReader( fileName ) )
 		using ( var reader = new JsonTextReader( sw ) )
 		{
+			var serializer = new Serializer( reader );
 			ground = serializer.Deserialize<Ground>( reader );
 		}
 
 		ground.FinishLayout();
-
-		PrepareScene( true );
+		players.Clear();
+		players.Add( mainPlayer = ground.mainBuilding.owner );
 	}
 
 	public void Save( string fileName )
