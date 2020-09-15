@@ -27,6 +27,7 @@ public class Ground : MonoBehaviour
 	public GroundNode zero;
 	public List<Building> influencers = new List<Building>();
 	static public System.Random rnd = new System.Random( 0 );
+	int reservedCount, reservationCount;
 
 	public static Ground Create()
 	{
@@ -336,10 +337,12 @@ public class Ground : MonoBehaviour
 	}
 
     public void Validate()
-    {
+ 	{
+		reservationCount = reservedCount = 0;
         Assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
         Assert.AreEqual( ( width + 1 ) * ( height + 1 ), nodes.Length, "Map layout size is incorrect" );
         foreach ( var node in nodes )
             node.Validate();
+		Assert.AreEqual( reservedCount, reservationCount, "Reservation numbers are wrong" );
     }
 }

@@ -82,7 +82,7 @@ public class Workshop : Building
 			if ( missing > 0 )
 				ItemDispatcher.lastInstance.RegisterRequest( this, b.itemType, missing, b.priority );
 		}
-		if ( output > 0 )
+		if ( output > 0 && flag.FreeSpace() > 0 )
 			ItemDispatcher.lastInstance.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
 	}
 

@@ -11,6 +11,7 @@ public class Flag : MonoBehaviour
 	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
 	public Building building;
 	static GameObject template;
+	public int reserved;
 
 	static public void Initialize()
 	{
@@ -100,16 +101,18 @@ public class Flag : MonoBehaviour
 
 	public bool StoreItem( Item item )
 	{
+		int reserved = this.reserved;
 		Assert.IsNull( item.flag, "Item already has a flag" );
 		for ( int i = 0; i < items.Length; i++ )
 		{
-			if ( items[i] == null )
+			if ( items[i] == null && --reserved <= 0 )
 			{
 				items[i] = item;
 				item.flag = this;
 				return true;
 			}
 		}
+		Assert.IsTrue( false );
 		return false;
 	}
 
@@ -127,6 +130,15 @@ public class Flag : MonoBehaviour
 		node.Neighbour( 4 ).building?.Remove();
 
 		Destroy( gameObject );
+	}
+
+	public int FreeSpace()
+	{
+		int free = 0;
+		for ( int i = 0; i < maxItems; i++ )
+			if ( items[i] == null )
+				free++;
+		return free - reserved;
 	}
 
 	public void Validate()

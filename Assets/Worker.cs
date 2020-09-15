@@ -13,6 +13,7 @@ public class Worker : MonoBehaviour
 	public float walkProgress;
 	public GroundNode node;
 	public Item itemInHands;
+	public Flag reservation;
 
 	public Building construction;
 
@@ -462,6 +463,11 @@ public class Worker : MonoBehaviour
 
 	public void Remove()
 	{
+		if ( reservation )
+		{
+			reservation.reserved--;
+			reservation = null;
+		}
 		foreach ( var task in taskQueue )
 			task.Cancel();
 		taskQueue.Clear();
@@ -641,13 +647,14 @@ public class Worker : MonoBehaviour
 	{
 		Assert.IsNotNull( road );
 		Assert.AreEqual( road, item.path.Road() );
-		int itemPoint = road.NodeIndex( item.flag.node );
+		int itemPoint = road.NodeIndex( item.flag.node ), otherPoint = 0;
+		if ( itemPoint == 0 )
+			otherPoint = road.nodes.Count - 1;
+		Flag other = road.GetEnd( otherPoint );
+
 		ScheduleWalkToRoadPoint( road, itemPoint );
 		SchedulePickupItem( item );
-		if ( itemPoint > 0 )
-			ScheduleWalkToRoadPoint( road, 0 );
-		else
-			ScheduleWalkToRoadPoint( road, road.nodes.Count - 1 );
+		ScheduleWalkToRoadPoint( road, otherPoint );
 
 		if ( item.path.StepsLeft() == 1 )
 		{
@@ -657,7 +664,13 @@ public class Worker : MonoBehaviour
 			ScheduleWalkToNeighbour( destination.flag.node );
 		}
 		else
+		{
+			Assert.IsTrue( other.FreeSpace() > 0 );
+			other.reserved++;
+			Assert.IsNull( reservation );
+			reservation = other;
 			ScheduleDeliverItem( item );
+		}
 		item.worker = this;
 	}
 
@@ -688,7 +701,7 @@ public class Worker : MonoBehaviour
 	public bool IsIdleInBuilding()
 	{
 		Assert.IsNotNull( building );
-		return node == building.node && walkTo == zero;
+		return node == building.node && walkTo == zero && taskQueue.Count == 0;
 	}
 
 	public void Validate()

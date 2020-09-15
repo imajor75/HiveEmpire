@@ -12,7 +12,7 @@ public class Stock : Building
 	public static Stock Create()
 	{
 		var buildingObject = (GameObject)GameObject.Instantiate( templates[0] );
-		buildingObject.transform.localScale = new Vector3( 0.09f, 0.09f, 0.09f );
+		buildingObject.transform.localScale = new Vector3( 0.11f, 0.11f, 0.11f );
 		buildingObject.transform.Rotate( Vector3.up * -55 );
 		return buildingObject.AddComponent<Stock>();
 	}
@@ -53,7 +53,7 @@ public class Stock : Building
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			if ( content[itemType] > 0 )
+			if ( content[itemType] > 0 && flag.FreeSpace() > 0 )
 				ItemDispatcher.lastInstance.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.low );
 			ItemDispatcher.lastInstance.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
 		}

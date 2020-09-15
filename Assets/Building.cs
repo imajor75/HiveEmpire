@@ -243,13 +243,16 @@ abstract public class Building : MonoBehaviour
 
 	public virtual Item SendItem( Item.Type itemType, Building destination )
 	{
-		if ( worker == null || !worker.IsIdleInBuilding() )
+		if ( worker == null || !worker.IsIdleInBuilding() || flag.FreeSpace() == 0 )
 			return null;
 
 		// TODO Don't create the item, if there is no path between this and destination
 		Item item = Item.Create().Setup( itemType, this, destination );
 		if ( item != null )
 		{
+			Assert.IsNull( worker.reservation );
+			worker.reservation = flag;
+			flag.reserved++;
 			worker.SchedulePickupItem( item );
 			worker.ScheduleWalkToNeighbour( flag.node );
 			worker.ScheduleDeliverItem( item );

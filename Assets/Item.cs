@@ -102,6 +102,8 @@ public class Item : MonoBehaviour
 	{
 		Assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
 
+		flag.reserved--;
+		worker.reservation = null;
 		worker = null;
 		if ( path.IsFinished() && destination != null )
 		{
