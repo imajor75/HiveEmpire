@@ -81,7 +81,12 @@ public class Flag : MonoBehaviour
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
-		transform.localPosition = node.Position() + Vector3.up * GroundNode.size * Road.height;		;
+		UpdateBody();
+	}
+
+	public void UpdateBody()
+	{
+		transform.localPosition = node.Position() + Vector3.up * GroundNode.size * Road.height;
 	}
 
 	public bool ReleaseItem( Item item )

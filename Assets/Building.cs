@@ -15,7 +15,8 @@ abstract public class Building : MonoBehaviour
 	static public List<GameObject> templates = new List<GameObject>();
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
-	public Construction construction;
+	public Construction construction = new Construction();
+	static int flatteningTime = 500;
 
 	[System.Serializable]
 	public class Construction
@@ -33,12 +34,25 @@ abstract public class Building : MonoBehaviour
 		public static Shader shader;
 		public static int sliceLevelID;
 		public int timeSinceCreated;
+		public bool flatteningNeeded;
+		public int flatteningCorner;
+		public int flatteningCounter;
 
 		static public void Initialize()
 		{
 			shader = (Shader)Resources.Load( "Construction" );
 			Assert.IsNotNull( shader );
 			sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
+		}
+
+		public void Setup( Building boss )
+		{
+			this.boss = boss;
+			if ( flatteningNeeded )
+			{
+				foreach ( var o in Ground.areas[1] )
+					boss.node.Add( o ).fixedHeight = true;
+			}
 		}
 
 		public void Update( Building building )
@@ -71,6 +85,18 @@ abstract public class Building : MonoBehaviour
 			}
 			if ( worker == null || !worker.IsIdleInBuilding() )
 				return;
+			if ( flatteningNeeded )
+			{
+				flatteningCounter++;
+				if ( flatteningCounter > flatteningTime / 6 )
+				{
+					flatteningCounter = 0;
+					boss.node.Add( Ground.areas[1][flatteningCorner++] ).SetHeight( boss.node.height );
+					if ( flatteningCorner == Ground.areas[1].Count )
+						flatteningNeeded = false;
+				}
+				return;
+			}
 			progress += 0.001f*boss.ground.speedModifier;	// TODO This should be different for each building type
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
@@ -174,6 +200,18 @@ abstract public class Building : MonoBehaviour
 			Destroy( gameObject );
 			return null;
 		}
+		if ( construction.flatteningNeeded )
+		{
+			foreach ( var o in Ground.areas[1] )
+			{
+				if ( node.Add( o ).owner != owner )
+				{
+					Debug.Log( "Node perimeter is outside of border" );
+					Destroy( gameObject );
+					return null;
+				}
+			}
+		}
 		var flagNode = ground.GetNode( node.x + 1, node.y - 1 );
 		Flag flag = Flag.Create().Setup( ground, flagNode, owner );
 		if ( flag == null )
@@ -189,11 +227,7 @@ abstract public class Building : MonoBehaviour
 		flag.building = this;
 
 		this.node = node;
-		if ( construction == null )
-		{
-			construction = new Construction();
-			construction.boss = this;
-		}
+		construction.Setup( this );
 		node.building = this;
 
 		return this;

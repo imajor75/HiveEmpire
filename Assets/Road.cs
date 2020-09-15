@@ -203,7 +203,7 @@ public class Road : MonoBehaviour
 	}
 
 	static int blocksInSection = 8;
-	void RebuildMesh()
+	public void RebuildMesh()
 	{
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
 		Vector3 h = Vector3.up*GroundNode.size*height;

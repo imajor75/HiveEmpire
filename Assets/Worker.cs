@@ -556,6 +556,12 @@ public class Worker : MonoBehaviour
 		if ( item.path == null || item.path.Road() != road )
 			return 0;
 
+		Flag target = road.GetEnd( 0 );
+		if ( target == item.flag )
+			target = road.GetEnd( 1 );
+		if ( target.FreeSpace() == 0 )
+			return 0;
+
 		// TODO Better prioritization of items
 		if ( item.flag.node == node )
 			return 2;

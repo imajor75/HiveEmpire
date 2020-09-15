@@ -19,6 +19,7 @@ public class GroundNode
 	public Player owner;
 	public int influence;
 	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
+	public bool fixedHeight;
 
     public Vector3 Position()
     {
@@ -112,6 +113,36 @@ public class GroundNode
 					Resource.Create().Setup( n, type );
 			}
 		}
+	}
+
+	public GroundNode Add( Ground.Offset o )
+	{
+		return ground.GetNode( x + o.x, y + o.y );
+	}
+
+	public void SetHeight( float height )
+	{
+		this.height = height;
+		ground.layoutVersion++;
+		if ( flag )
+		{
+			flag.UpdateBody();
+			foreach ( var road in flag.roadsStartingHere )
+				road?.RebuildMesh();
+			flag?.building?.exit.RebuildMesh();
+		}
+		if ( road )
+			road.RebuildMesh();
+	}
+
+	public bool CanBeFlattened()
+	{
+		// TODO Check maximum height difference between neighbours
+		// TODO Check if any border node is part of another flattening
+		for ( int i = 0; i < neighbourCount; i++ )
+			if ( Neighbour( i ).fixedHeight )
+				return false;
+		return true;
 	}
 
 	public void Validate()

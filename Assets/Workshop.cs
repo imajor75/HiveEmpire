@@ -39,9 +39,6 @@ public class Workshop : Building
 
 	public Workshop Setup( Ground ground, GroundNode node, Player owner, Type type )
 	{
-		if ( Setup( ground, node, owner ) == null )
-			return null;
-
 		this.type = type;
 		buffers.Clear();
 		switch ( type )
@@ -51,6 +48,7 @@ public class Workshop : Building
 				outputType = Item.Type.wood;
 				working = true;
 				construction.plankNeeded = 2;
+				construction.flatteningNeeded = true;
 				body = (GameObject)GameObject.Instantiate( templates[1], transform );
 				break;
 			}
@@ -62,10 +60,14 @@ public class Workshop : Building
 				outputType = Item.Type.plank;
 				working = false;
 				construction.plankNeeded = 2;
+				construction.flatteningNeeded = true;
 				body = (GameObject)GameObject.Instantiate( templates[2], transform );
 				break;
 			}
 		}
+		if ( Setup( ground, node, owner ) == null )
+			return null;
+
 		return this;
 	}
 

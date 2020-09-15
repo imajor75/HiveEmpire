@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.SocialPlatforms.GameCenter;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
 public class Ground : MonoBehaviour
@@ -28,11 +29,24 @@ public class Ground : MonoBehaviour
 	public List<Building> influencers = new List<Building>();
 	static public System.Random rnd = new System.Random( 0 );
 	int reservedCount, reservationCount;
+	static int maxArea = 10;
+	public static List<Offset>[] areas = new List<Offset>[maxArea];
 
 	public static Ground Create()
 	{
 		var groundObject = new GameObject();
 		return groundObject.AddComponent<Ground>();
+	}
+
+	public class Offset
+	{
+		public Offset( int x, int y )
+		{
+			this.x = x;
+			this.y = y;
+		}
+		public int x;
+		public int y;
 	}
 
 	void Start()
@@ -69,6 +83,7 @@ public class Ground : MonoBehaviour
 		if ( nodes == null )
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		FinishLayout();
+		CreateAreas();
 
 		Player mainPlayer = GameObject.FindObjectOfType<Mission>().mainPlayer;
 		GroundNode center = GetNode( 21, 11 );
@@ -83,6 +98,35 @@ public class Ground : MonoBehaviour
 		GenerateResources();
 		return this;
     }
+
+	void CreateAreas()
+	{
+		for ( int i = 0; i < areas.Length; i++ )
+			areas[i] = new List<Offset>();
+
+		GroundNode center = GetNode( width/2, height/2 );
+		for ( int x = -maxArea; x < maxArea; x++ )
+		{
+			for ( int y = -maxArea; y < maxArea; y++ )
+			{
+				if ( x == 0 && y == 0 )
+					continue;
+				int distance = GetNode( width / 2 + x, height / 2 + y ).DistanceFrom( center );
+				for ( int j = 1; j < maxArea; j++ )
+				{
+					if ( distance > j )
+						continue;
+					areas[j].Add( new Offset( x, y ) );
+				}
+			}
+		}
+		int nodeCount = 0;
+		for ( int i = 0; i < areas.Length; i++ )
+		{
+			Assert.AreEqual( areas[i].Count, nodeCount );
+			nodeCount += ( i + 1 ) * 6;
+		}
+	}
 
 	public void GenerateResources()
 	{
