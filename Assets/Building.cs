@@ -16,7 +16,8 @@ abstract public class Building : MonoBehaviour
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	static int flatteningTime = 500;
+	static int flatteningTime = 300;
+	public float height = 1.5f;
 
 	[System.Serializable]
 	public class Construction
@@ -180,9 +181,14 @@ abstract public class Building : MonoBehaviour
 
 	public static void Initialize()
 	{
-		templates.Add( (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" ) );
-		templates.Add( (GameObject)Resources.Load( "Medieval house/Medieval_house 1" ) );
-		templates.Add( (GameObject)Resources.Load( "Baker House/Prefabs/Baker_house" ) );
+		string[] files = {
+			"Medieval fantasy house/Medieva_fantasy_house",
+			"Medieval house/Medieval_house 1",
+			"Baker House/Prefabs/Baker_house",
+			"Fantasy House/Prefab/Fantasy_House_6" };
+		foreach ( string file in files )
+			templates.Add( (GameObject)Resources.Load( file ) );
+
 		Construction.Initialize();
 	}
 
@@ -313,7 +319,7 @@ abstract public class Building : MonoBehaviour
 	public void UpdateLook()
 	{
 		float lowerLimit = transform.position.y;
-		float upperLimit = lowerLimit + 1.5f;
+		float upperLimit = lowerLimit + height;
 		float level = upperLimit;
 		if ( !construction.done )
 			level = lowerLimit+(upperLimit-lowerLimit)*construction.progress;

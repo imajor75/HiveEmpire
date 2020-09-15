@@ -61,7 +61,8 @@ public class Workshop : Building
 				working = false;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				body = (GameObject)GameObject.Instantiate( templates[2], transform );
+				body = (GameObject)GameObject.Instantiate( templates[3], transform );
+				height = 2;
 				break;
 			}
 		}
