@@ -12,13 +12,14 @@ public class Stock : Building
 	public static Stock Create()
 	{
 		var buildingObject = (GameObject)GameObject.Instantiate( templates[0] );
-		buildingObject.transform.localScale = new Vector3( 0.11f, 0.11f, 0.11f );
-		buildingObject.transform.Rotate( Vector3.up * -55 );
+		buildingObject.transform.localScale = new Vector3( 0.12f, 0.12f, 0.12f );
+		buildingObject.transform.Rotate( Vector3.up * -55 );	
 		return buildingObject.AddComponent<Stock>();
 	}
 
 	public bool SetupMain( Ground ground, GroundNode node, Player owner )
 	{
+		height = 2;
 		node.owner = owner;
 		ground.GetNode( node.x + 1, node.y - 1 ).owner = owner;
 		if ( !Setup( ground, node, owner ) )

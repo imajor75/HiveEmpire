@@ -27,7 +27,7 @@ public class Ground : MonoBehaviour
 	public Stock mainBuilding;
 	public GroundNode zero;
 	public List<Building> influencers = new List<Building>();
-	static public System.Random rnd = new System.Random( 0 );
+	static public System.Random rnd = new System.Random( 2 );
 	int reservedCount, reservationCount;
 	static int maxArea = 10;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
@@ -56,8 +56,6 @@ public class Ground : MonoBehaviour
 		else
 			Worker.zero = zero;
 		gameObject.name = "Ground";
-		width = 50;
-		height = 30;
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 		collider = gameObject.GetComponent<MeshCollider>();
@@ -78,15 +76,16 @@ public class Ground : MonoBehaviour
 	{
 		gameObject.name = "Ground";
 		width = 50;
-		height = 30;
+		height = 50;
 
 		if ( nodes == null )
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		FinishLayout();
+		SetHeights();
 		CreateAreas();
 
 		Player mainPlayer = GameObject.FindObjectOfType<Mission>().mainPlayer;
-		GroundNode center = GetNode( 21, 11 );
+		GroundNode center = GetNode( 28, 19 );
 		if ( mainBuilding == null )
 		{
 			mainBuilding = Stock.Create();
@@ -153,12 +152,20 @@ public class Ground : MonoBehaviour
 		for ( int x = 0; x <= width; x++ )
 			for ( int y = 0; y <= height; y++ )
 				GetNode( x, y ).Initialize( this, x, y );
+	}
 
-		var t = Resources.Load<Texture2D>( "heightMap" );
+	public void SetHeights()
+	{
+		var t = Resources.Load<Texture2D>( "height" );
+		Color[] colors = t.GetPixels();
 		foreach ( var n in nodes )
 		{
-			Vector3 p = n.Position();
-			n.height = t.GetPixel( (int)( p.x / GroundNode.size / width * 3000 + 1400 ), (int)( p.z / GroundNode.size / height * 3000 + 1500 ) ).g * GroundNode.size * 2;
+			float d = colors[(t.width*n.x/(width+1))+(t.height*n.y/(height+1))*t.width].g;
+			n.height = d*10;
+			if ( d > 0.35f )
+				n.type = GroundNode.Type.hill;
+			if ( d > 0.5f )
+				n.type = GroundNode.Type.mountain;
 		}
 	}
 
@@ -269,15 +276,35 @@ public class Ground : MonoBehaviour
 		{
 			var vertices = new Vector3[(width+1)*(height+1)];
 			var uvs = new Vector2[(width+1)*(height+1)];
+			var colors = new Color[(width+1)*(height+1)];
 
 			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
 			{
 				var p = nodes[i].Position();
 				vertices[i] = p;
 				uvs[i] = new Vector2( p.x, p.z );
+				switch ( nodes[i].type )
+				{
+					case GroundNode.Type.grass:
+					{
+						colors[i] = Color.red;
+						break;
+					}
+					case GroundNode.Type.hill:
+					{
+						colors[i] = Color.green;
+						break;
+					}
+					case GroundNode.Type.mountain:
+					{
+						colors[i] = Color.blue;
+						break;
+					}
+				}
 			}
 			mesh.vertices = vertices;
 			mesh.uv = uvs;
+			mesh.colors = colors;
 
 			var triangles = new int[width*height*2*3];
 			for ( int x = 0; x < width; x++ )

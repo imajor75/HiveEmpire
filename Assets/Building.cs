@@ -218,6 +218,12 @@ abstract public class Building : MonoBehaviour
 				}
 			}
 		}
+		if ( node.type != GroundNode.Type.grass )
+		{
+			Debug.Log( "Node is not grass" );
+			Destroy( gameObject );
+			return null;
+		}
 		var flagNode = ground.GetNode( node.x + 1, node.y - 1 );
 		Flag flag = Flag.Create().Setup( ground, flagNode, owner );
 		if ( flag == null )

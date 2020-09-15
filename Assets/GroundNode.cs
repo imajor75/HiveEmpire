@@ -20,6 +20,14 @@ public class GroundNode
 	public int influence;
 	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
 	public bool fixedHeight;
+	public Type type;
+
+	public enum Type
+	{
+		grass,
+		hill,
+		mountain
+	}
 
     public Vector3 Position()
     {
