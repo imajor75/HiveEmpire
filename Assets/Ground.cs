@@ -240,6 +240,8 @@ public class Ground : MonoBehaviour
 			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.woodcutter );
 		if ( Input.GetKeyDown( KeyCode.V ) )
 			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.sawmill );
+		if ( Input.GetKeyDown( KeyCode.G ) )
+			GuardHouse.Create().Setup( this, currentNode, player );
 		if ( Input.GetMouseButtonDown( 0 ) )
 		{
 			if ( currentNode.building )

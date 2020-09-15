@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GroundMaterial
-  m_Shader: {fileID: 4800000, guid: 4b36f6f7ddac29f498e2a01407a5ed0c, type: 3}
+  m_Name: Polyart
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -39,12 +39,8 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _GrassTex:
-        m_Texture: {fileID: 2800000, guid: 8cef1f579b7122e40a9395ff05837ead, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 8cef1f579b7122e40a9395ff05837ead, type: 3}
+        m_Texture: {fileID: 2800000, guid: 3b0a7c3ef31c2254eb1313fe9dd7ff1d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -59,23 +55,15 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _RockyTex:
-        m_Texture: {fileID: 2800000, guid: c26c15f7096561d4897983131d7b5d48, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _SnowyTex:
-        m_Texture: {fileID: 2800000, guid: 496cddd81af20254db35c01a86d70fee, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
-    - _Glossiness: 0.194
+    - _Glossiness: 0
     - _GlossyReflections: 1
-    - _Metallic: 0
+    - _Metallic: 0.3
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02

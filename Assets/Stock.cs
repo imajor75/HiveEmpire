@@ -30,7 +30,7 @@ public class Stock : Building
 		construction.boss = this;
 		construction.done = true;
 		content[(int)Item.Type.plank] = 10;
-		worker = WorkerWoman.Create();
+		worker = Worker.Create();
 		worker.SetupForBuilding( this );
 		ground.RegisterInfluence( this );
 		return true;
@@ -85,7 +85,7 @@ public class Stock : Building
 
 	public override void ItemOnTheWay( Item item, bool cancel = false )
 	{
-		construction.ItemOnTheWay( item, cancel );
+		base.ItemOnTheWay( item, cancel );
 	}
 
 	public override void ItemArrived( Item item )

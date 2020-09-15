@@ -78,7 +78,7 @@ abstract public class Building : MonoBehaviour
 				if ( timeSinceCreated > 50 )
 				{
 					Building main = boss.ground.mainBuilding;
-					worker = WorkerBoy.Create();
+					worker = Worker.Create();
 					worker.SetupForConstruction( boss );
 				}
 				else
@@ -185,7 +185,9 @@ abstract public class Building : MonoBehaviour
 			"Medieval fantasy house/Medieva_fantasy_house",
 			"Medieval house/Medieval_house 1",
 			"Baker House/Prefabs/Baker_house",
-			"Fantasy House/Prefab/Fantasy_House_6" };
+			"Fantasy House/Prefab/Fantasy_House_6",
+			"WatchTower/Tower"
+		};
 		foreach ( string file in files )
 			templates.Add( (GameObject)Resources.Load( file ) );
 
@@ -280,7 +282,7 @@ abstract public class Building : MonoBehaviour
 		construction.Update( this );
 		if ( worker == null && construction.done )
 		{
-			worker = WorkerWoman.Create();
+			worker = Worker.Create();
 			worker.SetupForBuilding( this );
 		}
 
@@ -309,12 +311,12 @@ abstract public class Building : MonoBehaviour
 
 	public virtual void ItemOnTheWay( Item item, bool cancel = false )
 	{
-		Assert.IsTrue( false );
+		construction.ItemOnTheWay( item, cancel );
 	}
 
 	public virtual void ItemArrived( Item item )
 	{
-		Assert.IsTrue( false );
+		construction.ItemArrived( item );
 	}
 
 	virtual public void OnClicked()

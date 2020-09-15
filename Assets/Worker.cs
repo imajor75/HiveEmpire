@@ -23,13 +23,12 @@ public class Worker : MonoBehaviour
 	public Building building;
 
 	public Animator animator;
-	public static GameObject templateWoman;
-	public static GameObject templateMan;
-	public static GameObject templateBoy;
+	public static List<GameObject> templates = new List<GameObject>();
 	public static RuntimeAnimatorController idleController, walkingController;
 	public static GroundNode zero = new GroundNode();	// HACK This is a big fat hack, to stop Unity editor from crashing
 
 	public List<Task> taskQueue = new List<Task>();
+	GameObject body;
 
 	public class Task : ScriptableObject
 	{
@@ -175,7 +174,7 @@ public class Worker : MonoBehaviour
 				Flag flag = road.nodes[nextPoint].flag;
 				if ( flag )
 				{
-					if ( flag.user )
+					if ( flag.user && flag.user.taskQueue.Count > 0 )
 					{
 						var otherTask = flag.user.taskQueue[0] as WalkToRoadPoint;
 						if ( otherTask != null && otherTask.wishedPoint != currentPoint )
@@ -349,19 +348,17 @@ public class Worker : MonoBehaviour
 		haluer,
 		tinkerer,
 		constructor,
+		soldier,
 		unemployed
 	}
 
 	public static void Initialize()
 	{
-		templateWoman = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" );
-		Assert.IsNotNull( templateWoman );
-		templateMan = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a" );
-		Assert.IsNotNull( templateMan );
-		templateBoy = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a" );
-		Assert.IsNotNull( templateBoy );
-		templateWoman = (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" );
-		Assert.IsNotNull( templateWoman );
+		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" ) );
+		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a" ) );
+		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a" ) );
+		templates.Add( (GameObject)Resources.Load( "FootmanPBRHPPolyart/Prefabs/footman_Blue_HP" ) );
+
 		idleController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Idle" );
 		Assert.IsNotNull( idleController );
 		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
@@ -370,10 +367,9 @@ public class Worker : MonoBehaviour
 
 	static public Worker Create()
 	{
-		GameObject workerBody = (GameObject)GameObject.Instantiate( templateMan );
+		GameObject workerBody = new GameObject();
 		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
-		worker.transform.localScale *= 0.35f;
 		return worker;
 	}
 
@@ -386,18 +382,28 @@ public class Worker : MonoBehaviour
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
 		ScheduleStartWorkingOnRoad( road );
+		body = (GameObject)GameObject.Instantiate( templates[1], transform );
 		return this;
 	}
 
 	public Worker SetupForBuilding( Building building )
 	{
 		type = Type.tinkerer;
+		body = (GameObject)GameObject.Instantiate( templates[0], transform );
 		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupForConstruction( Building building )
 	{
 		type = Type.constructor;
+		body = (GameObject)GameObject.Instantiate( templates[2], transform );
+		return SetupForBuildingSite( building );
+	}
+
+	public Worker SetupAsSoldier( Building building )
+	{
+		type = Type.soldier;
+		body = (GameObject)GameObject.Instantiate( templates[3], transform );
 		return SetupForBuildingSite( building );
 	}
 
@@ -423,7 +429,7 @@ public class Worker : MonoBehaviour
 		if ( building != null )
 			transform.SetParent( building.ground.transform );
 
-		animator = GetComponent<Animator>();
+		animator = body.GetComponent<Animator>();
 		animator.runtimeAnimatorController = idleController;
 		UpdateBody();
 	}
@@ -725,40 +731,3 @@ public class Worker : MonoBehaviour
 			task.Validate();
 	}
 }
-
-public class WorkerMan : Worker
-{
-	new static public Worker Create()
-	{
-		GameObject workerBody = (GameObject)GameObject.Instantiate( templateMan );
-		workerBody.name = "Worker";
-		Worker worker = workerBody.AddComponent<WorkerMan>();
-		worker.transform.localScale *= 0.35f;
-		return worker;
-	}
-}
-
-public class WorkerWoman : Worker
-{
-	new static public Worker Create()
-	{
-		GameObject workerBody = (GameObject)GameObject.Instantiate( templateWoman );
-		workerBody.name = "Worker";
-		Worker worker = workerBody.AddComponent<WorkerWoman>();
-		worker.transform.localScale *= 0.35f;
-		return worker;
-	}
-}
-
-public class WorkerBoy : Worker
-{
-	new static public Worker Create()
-	{
-		GameObject workerBody = (GameObject)GameObject.Instantiate( templateBoy );
-		workerBody.name = "Worker";
-		Worker worker = workerBody.AddComponent<WorkerBoy>();
-		worker.transform.localScale *= 0.35f;
-		return worker;
-	}
-}
-

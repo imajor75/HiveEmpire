@@ -46,7 +46,8 @@ public class Serializer : JsonSerializer
 			typeof( Worker.DeliverItem ),
 			typeof( PathFinder ),
 			typeof( Path ),
-			typeof( Resource )
+			typeof( Resource ),
+			typeof( GuardHouse )
 		};
 
 		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
@@ -85,6 +86,8 @@ public class Serializer : JsonSerializer
 				instance = Stock.Create();
 			else if ( type == typeof( Workshop ) )
 				instance = Workshop.Create();
+			else if ( type == typeof( GuardHouse ) )
+				instance = GuardHouse.Create();
 			else if ( type == typeof( Ground ) )
 				instance = Ground.Create();
 			else if ( type == typeof( Worker ) )
@@ -103,12 +106,6 @@ public class Serializer : JsonSerializer
 				instance = ScriptableObject.CreateInstance<Worker.WalkToNode>();
 			else if ( type == typeof( Worker.WalkToRoadPoint ) )
 				instance = ScriptableObject.CreateInstance<Worker.WalkToRoadPoint>();
-			else if ( type == typeof( WorkerMan ) )
-				instance = WorkerMan.Create();
-			else if ( type == typeof( WorkerWoman ) )
-				instance = WorkerWoman.Create();
-			else if ( type == typeof( WorkerBoy ) )
-				instance = WorkerBoy.Create();
 			else if ( type == typeof( Road ) )
 				instance = Road.Create();
 			else if ( type == typeof( Item ) )
