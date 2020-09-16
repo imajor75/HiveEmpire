@@ -10,10 +10,10 @@ public class Road : MonoBehaviour
 	public bool ready = false;
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
-	public Worker[] workerAtNodes;
+	public List<Worker> workerAtNodes = new List<Worker>();
 	public Mesh mesh;
 	public static Material material;
-	public int timeSinceWorkerAdded;
+	public int timeSinceWorkerAdded = 0;
 	public static int secBetweenWorkersAdded = 10;
 	public static Road newRoad;
 	public bool decorationOnly;
@@ -365,7 +365,8 @@ public class Road : MonoBehaviour
 
 	public void OnCreated()
 	{
-		workerAtNodes = new Worker[nodes.Count];
+		foreach ( var n in nodes )
+			workerAtNodes.Add( null );
 		CreateNewWorker();
 		RebuildMesh();
 	}
@@ -373,6 +374,66 @@ public class Road : MonoBehaviour
 	public void OnClicked()
 	{
 		RoadPanel.Open( this );
+	}
+
+	public void Split( Flag flag )
+	{
+		Assert.AreEqual( flag.node.road, this );
+		Road first = Create(), second = Create();
+		first.owner = second.owner = owner;	
+		first.ready = second.ready = true;
+		first.ground = second.ground = ground;
+		int splitPoint = 0;
+			while ( splitPoint < nodes.Count && nodes[splitPoint] != flag.node )
+				splitPoint++;
+		Assert.AreEqual( nodes[splitPoint], flag.node );
+		first.nodes = nodes.GetRange( 0, splitPoint + 1 );
+		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 );
+		second.nodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
+		second.workerAtNodes = workerAtNodes.GetRange( splitPoint, workerAtNodes.Count - splitPoint );
+		second.workerAtNodes[0] = null;
+
+		foreach ( var worker in workers )
+        {
+			int workerPoint = NodeIndex( worker.node );
+			if ( workerPoint == -1 )
+			{
+				Assert.AreEqual( flag.node, worker.node );
+				workerPoint = splitPoint;
+			}
+
+			if ( workerPoint <= splitPoint )
+			{
+				first.workers.Add( worker );
+				worker.road = first;
+			}
+			else
+			{
+				second.workers.Add( worker );
+				worker.road = second;
+			}
+		}
+
+		if ( first.workers.Count == 0 )
+			first.CreateNewWorker();
+		if ( second.workers.Count == 0 )
+			second.CreateNewWorker();
+
+		flag.node.road = null;
+		first.RegisterOnGround();
+		second.RegisterOnGround();
+		Destroy( gameObject );
+	}
+
+	void RegisterOnGround()
+	{
+		nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
+		nodes[nodes.Count - 1].flag.roadsStartingHere[nodes[nodes.Count - 1].DirectionTo( nodes[nodes.Count - 2] )] = this;
+		for ( int i = 1; i < nodes.Count - 1; i++ )
+		{
+			nodes[i].road = this;
+			nodes[i].roadIndex = i;
+		}
 	}
 
 	public void Remove()

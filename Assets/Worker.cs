@@ -150,6 +150,9 @@ public class Worker : MonoBehaviour
 
 		public override bool ExecuteFrame()
 		{
+			if ( road == null )
+				return false;
+
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
 			Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
@@ -234,7 +237,7 @@ public class Worker : MonoBehaviour
 			if ( exclusive )
 			{
 				int t = 0;
-				for ( int i = 0; i < road.workerAtNodes.Length; i++ )
+				for ( int i = 0; i < road.workerAtNodes.Count; i++ )
 				{
 					if ( road.workerAtNodes[i] == boss )
 					{
