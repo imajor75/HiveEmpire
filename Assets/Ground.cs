@@ -32,6 +32,10 @@ public class Ground : MonoBehaviour
 	static int maxArea = 10;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
 
+	public float eyeX, eyeY, eyeZ;
+	public float eyeDX, eyeDY, eyeDZ, eyeDW;
+	public float eyeAltitude;
+
 	public static Ground Create()
 	{
 		var groundObject = new GameObject();

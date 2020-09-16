@@ -14,6 +14,7 @@ public class Worker : MonoBehaviour
 	public GroundNode node;
 	public Item itemInHands;
 	public Flag reservation;
+	public int look;
 
 	public Building construction;
 
@@ -425,34 +426,34 @@ public class Worker : MonoBehaviour
 	public Worker SetupForRoad( Road road )
 	{
 		type = Type.haluer;
+		look = 2;
 		ground = road.ground;
 		Building main = road.ground.mainBuilding;
 		node = main.node;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
 		ScheduleStartWorkingOnRoad( road );
-		body = (GameObject)GameObject.Instantiate( templates[1], transform );
 		return this;
 	}
 
 	public Worker SetupForBuilding( Building building )
 	{
 		type = Type.tinkerer;
-		body = (GameObject)GameObject.Instantiate( templates[0], transform );
+		look = 1;
 		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupForConstruction( Building building )
 	{
 		type = Type.constructor;
-		body = (GameObject)GameObject.Instantiate( templates[2], transform );
+		look = 0;
 		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupAsSoldier( Building building )
 	{
 		type = Type.soldier;
-		body = (GameObject)GameObject.Instantiate( templates[3], transform );
+		look = 3;
 		return SetupForBuildingSite( building );
 	}
 
@@ -478,6 +479,7 @@ public class Worker : MonoBehaviour
 		if ( building != null )
 			transform.SetParent( building.ground.transform );
 
+		body = (GameObject)GameObject.Instantiate( templates[look], transform );
 		animator = body.GetComponent<Animator>();
 		animator.runtimeAnimatorController = idleController;
 		UpdateBody();

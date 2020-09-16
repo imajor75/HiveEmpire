@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿	using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -95,10 +95,23 @@ public class Mission : MonoBehaviour
 		ground.FinishLayout();
 		players.Clear();
 		players.Add( mainPlayer = ground.mainBuilding.owner );
+
+		Camera.main.transform.localPosition = new Vector3( ground.eyeX, ground.eyeY, ground.eyeZ );
+		Camera.main.transform.rotation = new Quaternion( ground.eyeDX, ground.eyeDY, ground.eyeDZ, ground.eyeDW );
+		Object.FindObjectOfType<Eye>().altitude = ground.eyeAltitude;
 	}
 
 	public void Save( string fileName )
 	{
+		ground.eyeX = Camera.main.transform.localPosition.x;
+		ground.eyeY = Camera.main.transform.localPosition.y;
+		ground.eyeZ = Camera.main.transform.localPosition.z;
+		ground.eyeDX = Camera.main.transform.rotation.x;
+		ground.eyeDY = Camera.main.transform.rotation.y;
+		ground.eyeDZ = Camera.main.transform.rotation.z;
+		ground.eyeDW = Camera.main.transform.rotation.w;
+		ground.eyeAltitude = Object.FindObjectOfType<Eye>().altitude;
+
 		JsonSerializerSettings jsonSettings = new JsonSerializerSettings();
 		jsonSettings.TypeNameHandling = TypeNameHandling.Auto;
 		jsonSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;

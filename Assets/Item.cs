@@ -53,7 +53,6 @@ public class Item : MonoBehaviour
 				Destroy( gameObject );
 				return null;
 			}
-			destination.ItemOnTheWay( this );
 		}
 		UpdateLook();
 		return this;
@@ -90,6 +89,7 @@ public class Item : MonoBehaviour
 		if ( path != null )
 		{
 			destination = building;
+			building.ItemOnTheWay( this );
 			return true;
 		}
 		return false;
