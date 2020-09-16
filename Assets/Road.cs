@@ -379,30 +379,32 @@ public class Road : MonoBehaviour
 	{
 		Assert.AreEqual( flag.node.road, this );
 		Road first = Create(), second = Create();
-		first.owner = second.owner = owner;
+		first.owner = second.owner = owner;	
 		first.ready = second.ready = true;
 		first.ground = second.ground = ground;
 		int splitPoint = NodeIndex( flag.node );
-		for ( int i = splitPoint; i < nodes.Count; i++ )
-		{
-			second.nodes.Add( nodes[i] );
-			second.workerAtNodes.Add( workerAtNodes[i] );
-		}
-		nodes.RemoveRange( splitPoint + 1, nodes.Count - splitPoint );
-		workerAtNodes.RemoveRange( splitPoint + 1, workerAtNodes.Count - splitPoint );
+		first.nodes = nodes.GetRange( 0, splitPoint + 1 );
+		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 );
+		second.nodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
+		second.workerAtNodes = workerAtNodes.GetRange( splitPoint, workerAtNodes.Count - splitPoint );
+		second.workerAtNodes = null;
 
 		foreach ( var worker in workers )
         {
 			int workerPoint = NodeIndex( worker.node );
 			Assert.IsTrue( workerPoint >= 0 );
 
-			if ( workerPoint > splitPoint )
+			if ( workerPoint <= splitPoint )
 			{
-				workers.Remove( worker );
+				first.workers.Add( worker );
+				worker.road = first;
+			}
+			else
+			{
 				second.workers.Add( worker );
 				worker.road = second;
 			}
-        }
+		}
 
 		if ( first.workers.Count == 0 )
 			first.CreateNewWorker();
@@ -410,8 +412,14 @@ public class Road : MonoBehaviour
 			second.CreateNewWorker();
 
 		flag.node.road = null;
-		flag.roadsStartingHere[flag.node.DirectionTo( nodes[splitPoint - 1] )] = this;
-		flag.roadsStartingHere[flag.node.DirectionTo( second.nodes[1] )] = second;
+		first.RegisterEndsAtFlags();
+		second.RegisterEndsAtFlags();
+	}
+
+	void RegisterEndsAtFlags()
+	{
+		nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
+		nodes[nodes.Count - 1].flag.roadsStartingHere[nodes[nodes.Count - 1].DirectionTo( nodes[nodes.Count - 2] )] = this;
 	}
 
 	public void Remove()

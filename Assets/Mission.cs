@@ -43,6 +43,7 @@ public class Mission : MonoBehaviour
 			lightObject.name = "Sun";
 			light.transform.Rotate( new Vector3( 40, -60, 0 ) );
 			light.shadows = LightShadows.Soft;
+			light.color = new Color( 0.7f, 0.7f, 0.7f );
 		}
 		if ( Object.FindObjectOfType<Canvas>() == null || force )
 		{
