@@ -10,10 +10,10 @@ public class Road : MonoBehaviour
 	public bool ready = false;
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
-	public Worker[] workerAtNodes;
+	public List<Worker> workerAtNodes = new List<Worker>();
 	public Mesh mesh;
 	public static Material material;
-	public int timeSinceWorkerAdded;
+	public int timeSinceWorkerAdded = 0;
 	public static int secBetweenWorkersAdded = 10;
 	public static Road newRoad;
 	public bool decorationOnly;
@@ -365,7 +365,7 @@ public class Road : MonoBehaviour
 
 	public void OnCreated()
 	{
-		workerAtNodes = new Worker[nodes.Count];
+		workerAtNodes = new List<Worker>( nodes.Count );
 		CreateNewWorker();
 		RebuildMesh();
 	}
@@ -373,6 +373,40 @@ public class Road : MonoBehaviour
 	public void OnClicked()
 	{
 		RoadPanel.Open( this );
+	}
+
+	public void Split( Flag flag )
+	{
+		Assert.AreEqual( flag.node.road, this );
+		Road second = Create();
+		second.owner = owner;
+		second.ready = true;
+		second.ground = ground;
+		int splitPoint = NodeIndex( flag.node );
+		for ( int i = splitPoint; i < nodes.Count; i++ )
+		{
+			second.nodes.Add( nodes[i] );
+			second.workerAtNodes.Add( workerAtNodes[i] );
+		}
+		nodes.RemoveRange( splitPoint + 1, nodes.Count - splitPoint );
+		workerAtNodes.RemoveRange( splitPoint + 1, workerAtNodes.Count - splitPoint );
+
+		foreach ( var worker in workers )
+        {
+			int workerPoint = NodeIndex( worker.node );
+			Assert.IsTrue( workerPoint >= 0 );
+
+			if ( workerPoint > splitPoint )
+			{
+				workers.Remove( worker );
+				second.workers.Add( worker );
+				worker.road = second;
+			}
+        }
+
+		flag.node.road = null;
+		flag.roadsStartingHere[flag.node.DirectionTo( nodes[splitPoint - 1] )] = this;
+		flag.roadsStartingHere[flag.node.DirectionTo( second.nodes[1] )] = second;
 	}
 
 	public void Remove()

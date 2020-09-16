@@ -234,7 +234,7 @@ public class Worker : MonoBehaviour
 			if ( exclusive )
 			{
 				int t = 0;
-				for ( int i = 0; i < road.workerAtNodes.Length; i++ )
+				for ( int i = 0; i < road.workerAtNodes.Count; i++ )
 				{
 					if ( road.workerAtNodes[i] == boss )
 					{

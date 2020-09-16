@@ -46,13 +46,6 @@ public class Flag : MonoBehaviour
 			Destroy( gameObject );
 			return null;
 		}
-		if ( node.road )
-		{
-			// TODO Make it possible to create a flag at a road
-			Debug.Log( "Cannot create a flag at a road" );
-			Destroy( gameObject );
-			return null;
-		}
 		if ( node.owner != owner )
 		{
 			Debug.Log( "Node is outside of border" );
@@ -71,10 +64,12 @@ public class Flag : MonoBehaviour
 			Destroy( gameObject );
 			return null;
         }
-        node.flag = this;
+		node.flag = this;
         this.node = node;
 		this.owner = owner;
-        return this;
+		if ( node.road )
+			node.road.Split( this );
+		return this;
     }
 
 	void Start()
