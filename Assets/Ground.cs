@@ -27,7 +27,7 @@ public class Ground : MonoBehaviour
 	public Stock mainBuilding;
 	public GroundNode zero;
 	public List<Building> influencers = new List<Building>();
-	static public System.Random rnd = new System.Random( 2 );
+	static public System.Random rnd = new System.Random( 5 );
 	int reservedCount, reservationCount;
 	static int maxArea = 10;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
@@ -233,7 +233,7 @@ public class Ground : MonoBehaviour
 	{
 		Player player = GameObject.FindObjectOfType<Mission>().mainPlayer;
 		var currentNode = GetNode(currentColumn, currentRow);
-		if ( Input.GetKey( KeyCode.R ) )
+		if ( Input.GetKey( KeyCode.Space ) )
 			speedModifier = 5;
 		else
 			speedModifier = 1;
