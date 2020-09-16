@@ -378,10 +378,10 @@ public class Road : MonoBehaviour
 	public void Split( Flag flag )
 	{
 		Assert.AreEqual( flag.node.road, this );
-		Road second = Create();
-		second.owner = owner;
-		second.ready = true;
-		second.ground = ground;
+		Road first = Create(), second = Create();
+		first.owner = second.owner = owner;
+		first.ready = second.ready = true;
+		first.ground = second.ground = ground;
 		int splitPoint = NodeIndex( flag.node );
 		for ( int i = splitPoint; i < nodes.Count; i++ )
 		{
