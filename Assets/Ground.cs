@@ -233,7 +233,7 @@ public class Ground : MonoBehaviour
 	{
 		Player player = GameObject.FindObjectOfType<Mission>().mainPlayer;
 		var currentNode = GetNode(currentColumn, currentRow);
-		if ( Input.GetKey( KeyCode.Z ) )
+		if ( Input.GetKey( KeyCode.R ) )
 			speedModifier = 5;
 		else
 			speedModifier = 1;

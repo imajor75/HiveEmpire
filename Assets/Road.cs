@@ -404,6 +404,11 @@ public class Road : MonoBehaviour
 			}
         }
 
+		if ( first.workers.Count == 0 )
+			first.CreateNewWorker();
+		if ( second.workers.Count == 0 )
+			second.CreateNewWorker();
+
 		flag.node.road = null;
 		flag.roadsStartingHere[flag.node.DirectionTo( nodes[splitPoint - 1] )] = this;
 		flag.roadsStartingHere[flag.node.DirectionTo( second.nodes[1] )] = second;
