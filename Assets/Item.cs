@@ -15,7 +15,7 @@ public class Item : MonoBehaviour
 
     public enum Type
     {
-        wood,
+        log,
         stone,
         plank,
         total,
@@ -24,7 +24,7 @@ public class Item : MonoBehaviour
 
 	public static void Initialize()
 	{
-		string[] filenames = { "log", "log", "plank", "log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log", };
+		string[] filenames = { "log", "rock", "plank", "log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log", };
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
@@ -41,9 +41,9 @@ public class Item : MonoBehaviour
 		return itemBody.AddComponent<Item>();
 	}
 
-	public Item Setup( Type type, Building origin, Building destination )
+	public Item Setup( Type type, Building origin, Building destination = null )
 	{
-		ground = destination.ground;
+		ground = origin.ground;
 		this.type = type;
 		this.origin = origin;
 		if ( destination )
@@ -75,6 +75,9 @@ public class Item : MonoBehaviour
 	void Update()
 	{
 		transform.LookAt( Camera.main.transform.position, -Vector3.up );
+		if ( destination == null && worker == null )
+			ItemDispatcher.lastInstance.RegisterOffer( this, ItemDispatcher.Priority.high );
+
 	}
 
 	public bool SetTarget( Building building )
@@ -96,20 +99,21 @@ public class Item : MonoBehaviour
 	{
 		path = null;
 		destination?.ItemOnTheWay( this, true );
+		destination = null;
 	}
 
 	public void ArrivedAt( Flag flag )
 	{
-		Assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
+		if ( destination )
+			Assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
 
 		flag.reserved--;
 		worker.reservation = null;
 		worker = null;
-		if ( path.IsFinished() && destination != null )
+		if ( destination != null && path.IsFinished() )
 		{
 			Assert.AreEqual( destination.flag, flag );
 			destination.ItemArrived( this );
-			GetComponent<SpriteRenderer>().enabled = false;
 			Destroy( gameObject );
 			return;
 		}
@@ -117,8 +121,10 @@ public class Item : MonoBehaviour
 		if ( destination == null )
 			CancelTrip();
 
-		flag.StoreItem( this );
-		UpdateLook();
+		if ( flag.StoreItem( this ) )
+			UpdateLook();
+		else
+			Remove();
 	}
 
 	public void Arrived()

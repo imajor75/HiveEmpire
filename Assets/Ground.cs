@@ -40,13 +40,15 @@ public class Ground : MonoBehaviour
 
 	public class Offset
 	{
-		public Offset( int x, int y )
+		public Offset( int x, int y, int d )
 		{
 			this.x = x;
 			this.y = y;
+			this.d = d;
 		}
 		public int x;
 		public int y;
+		public int d;
 	}
 
 	void Start()
@@ -115,7 +117,10 @@ public class Ground : MonoBehaviour
 				{
 					if ( distance > j )
 						continue;
-					areas[j].Add( new Offset( x, y ) );
+					int i = 0;
+					while ( i < areas[j].Count && areas[j][i].d < distance )
+						i++;
+					areas[j].Insert( i, new Offset( x, y, distance ) );
 				}
 			}
 		}
@@ -240,6 +245,8 @@ public class Ground : MonoBehaviour
 			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.woodcutter );
 		if ( Input.GetKeyDown( KeyCode.V ) )
 			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.sawmill );
+		if ( Input.GetKeyDown( KeyCode.C ) )
+			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.stonemason );
 		if ( Input.GetKeyDown( KeyCode.G ) )
 			GuardHouse.Create().Setup( this, currentNode, player );
 		if ( Input.GetMouseButtonDown( 0 ) )

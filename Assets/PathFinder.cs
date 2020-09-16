@@ -14,6 +14,7 @@ public class PathFinder : ScriptableObject
 	public bool ready = false;
 	public int openNodes;
 	public Mode mode;
+	public bool ignoreFinalObstacle;
 
 	public class Reached
     {
@@ -34,10 +35,11 @@ public class PathFinder : ScriptableObject
 		total
 	}
 
-    public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode )
+    public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false )
     {
         ready = false;
         target = end;
+		this.ignoreFinalObstacle = ignoreFinalObstacle;
 		if ( mode == PathFinder.Mode.onRoad )
 		{
 			Assert.IsNotNull( start.flag, "Trying to find a road path not starting at a flag" );
@@ -54,11 +56,14 @@ public class PathFinder : ScriptableObject
 
     void VisitNode( GroundNode node, float cost, Reached from, Road road = null )
     {
-		if ( node.owner != target.owner || node.building || node.resource )
-			return;
-
-		if ( mode == Mode.avoidRoads && node.road )
+		if ( !ignoreFinalObstacle || node != target )
+		{
+			if ( node.building || node.resource )
 				return;
+
+			if ( mode == Mode.avoidRoads && ( node.owner != target.owner || node.road ) )
+				return;
+		}
 
         var i = node.index;
         if ( i >= 0 && i < visited.Count && visited[i].node == node )
@@ -101,6 +106,7 @@ public class PathFinder : ScriptableObject
         if ( best != null )
             Process( best );
     }
+
     void Process( Reached r )
     {
 		if ( r.node == target )
@@ -184,10 +190,10 @@ public class Path : PathFinder
 {
 	public int progress;
 
-	public static Path Between( GroundNode start, GroundNode end, Mode mode )
+	public static Path Between( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false )
 	{
 		var p = ScriptableObject.CreateInstance<Path>();
-		if ( p.FindPathBetween( start, end, mode ) )
+		if ( p.FindPathBetween( start, end, mode, ignoreFinalObstacle ) )
 		{
 			if ( mode != Mode.onRoad )
 				p.progress = 1;

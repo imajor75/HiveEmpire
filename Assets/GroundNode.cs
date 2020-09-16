@@ -141,6 +141,8 @@ public class GroundNode
 		}
 		if ( road )
 			road.RebuildMesh();
+		if ( resource )
+			resource.UpdateBody();
 	}
 
 	public bool CanBeFlattened()

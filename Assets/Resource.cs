@@ -8,8 +8,10 @@ public class Resource : MonoBehaviour
 	public Type type;
 	public int charges;
 	GameObject body;
+	public Worker hunter;
 	static List<GameObject> templateTree = new List<GameObject>();
 	static List<GameObject> templateRock = new List<GameObject>();
+	public int keepAwayTimer = 0;
 
 	public enum Type
 	{
@@ -84,11 +86,33 @@ public class Resource : MonoBehaviour
 		Assert.IsNotNull( body );
 	}
 
-	// Update is called once per frame
-	void Update()
-    {
-        
-    }
+	void FixedUpdate()
+	{
+		keepAwayTimer--;
+	}
+
+	public Item.Type ItemType()
+	{
+		switch ( type )
+		{
+			case Type.tree:
+				return Item.Type.log;
+			case Type.rock:
+				return Item.Type.stone;
+			default:
+				return Item.Type.unknown;
+		}
+	}
+
+	public void Remove()
+	{
+		Destroy( gameObject );
+	}
+
+	public void UpdateBody()
+	{
+		transform.localPosition = node.Position();
+	}
 
 	public void Validate()
 	{

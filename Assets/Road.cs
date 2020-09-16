@@ -346,7 +346,7 @@ public class Road : MonoBehaviour
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
 				Item t = flag.items[i];
-				if ( t != null && t.path.Road() == this )
+				if ( t != null && t.path != null && t.path.Road() == this )
 					itemCount++;
 			};
 		}

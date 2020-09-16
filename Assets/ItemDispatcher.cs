@@ -20,6 +20,7 @@ public class ItemDispatcher : MonoBehaviour
 	public class Offer
 	{
 		public Building building;
+		public Item item;
 		public int quantity;
 		public Priority priority;
 	}
@@ -60,6 +61,18 @@ public class ItemDispatcher : MonoBehaviour
 			offers[(int)itemType].Insert( 0, o );
 	}
 
+	public void RegisterOffer( Item item, Priority priority )
+	{
+		var o = new Offer();
+		o.item = item;
+		o.quantity = 1;
+		o.priority = priority;
+		if ( priority == Priority.low )
+			offers[(int)item.type].Add( o );
+		else
+			offers[(int)item.type].Insert( 0, o );
+	}
+
 	void Start()
     {
 		name = "Item Dispatcher";
@@ -86,15 +99,31 @@ public class ItemDispatcher : MonoBehaviour
 					o.RemoveAt( 0 );
 				if ( r.Count == 0 || o.Count == 0 || (int)r[0].priority + (int)o[0].priority < 3 )
 					break;
-				if ( o[0].building.SendItem( (Item.Type)itemType, r[0].building ) )
+				if ( o[0].building != null )
 				{
-					r[0].quantity--;
-					o[0].quantity--;
+					if ( o[0].building.SendItem( (Item.Type)itemType, r[0].building ) )
+					{
+						r[0].quantity--;
+						o[0].quantity--;
+					}
+					else
+					{
+						// TODO Figure out if the request or the offer is wrong
+						o.RemoveAt( 0 );
+					}
+					break;
 				}
-				else
+				if ( o[0].item != null )
 				{
-					// TODO Figure out if the request or the offer is wrong
-					o.RemoveAt( 0 );
+					if ( o[0].item.SetTarget( r[0].building ) )
+					{
+						r[0].quantity--;
+						o[0].quantity--;
+					}
+					else
+					{
+						o.RemoveAt( 0 );
+					}
 				}
 			}
 		}

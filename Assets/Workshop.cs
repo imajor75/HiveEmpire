@@ -13,6 +13,9 @@ public class Workshop : Building
 	public List<Buffer> buffers = new List<Buffer>();
 	GameObject body;
 
+	public static int woodcutterRange = 8;
+	public static int stonemasonRange = 8;
+
 	[System.Serializable]
 	public class Buffer
 	{
@@ -27,6 +30,7 @@ public class Workshop : Building
 	{
 		woodcutter,
 		sawmill,
+		stonemason,
 		total,
 		unknown = -1
 	}
@@ -45,17 +49,26 @@ public class Workshop : Building
 		{
 			case Type.woodcutter:
 			{
-				outputType = Item.Type.wood;
+				outputType = Item.Type.log;
 				working = true;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
 				body = (GameObject)GameObject.Instantiate( templates[1], transform );
 				break;
 			}
+			case Type.stonemason:
+			{
+				outputType = Item.Type.stone;
+				working = true;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = true;
+				body = (GameObject)GameObject.Instantiate( templates[2], transform );
+				break;
+			}
 			case Type.sawmill:
 			{
 				Buffer b = new Buffer();
-				b.itemType = Item.Type.wood;
+				b.itemType = Item.Type.log;
 				buffers.Add( b );
 				outputType = Item.Type.plank;
 				working = false;
@@ -155,20 +168,14 @@ public class Workshop : Building
 		{
 			case Type.woodcutter:
 			{
-				if ( !working && output < outputMax )
-				{
-					working = true;
-					progress = 0;
-				}
-				if ( working && worker && worker.IsIdleInBuilding() )
-				{
-					progress += 0.02f * ground.speedModifier;  // TODO Speed needs to be defined somehow
-					if ( progress > 1 )
-					{
-						output++;
-						working = false;
-					}
-				}
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.tree, woodcutterRange );
+				break;
+			}
+			case Type.stonemason:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.rock, stonemasonRange );
 				break;
 			}
 			case Type.sawmill:
@@ -189,6 +196,29 @@ public class Workshop : Building
 					}
 				}
 				break;
+			}
+		}
+	}
+
+	void CollectResource( Resource.Type resourceType, int range )
+	{
+		Assert.IsTrue( range < Ground.areas.Length );
+		if ( range > Ground.areas.Length )
+			range = Ground.areas.Length - 1;
+		GroundNode prey;
+		foreach ( var o in Ground.areas[range] )
+		{
+			prey = node.Add( o );
+			Resource resource = prey.resource;
+			if ( resource == null )
+				continue;
+			if ( resource.type == resourceType && resource.hunter == null && resource.keepAwayTimer < 0 )
+			{
+				resource.hunter = worker;
+				worker.ScheduleWalkToNeighbour( flag.node );
+				worker.ScheduleWalkToNode( prey, true );
+				worker.ScheduleCutResource( resource );
+				return;
 			}
 		}
 	}
