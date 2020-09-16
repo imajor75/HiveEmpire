@@ -8,6 +8,11 @@ public class FlagPanel : Panel
 
 	public static void Open( Flag flag )
 	{
+		if ( Panel.last != null )
+		{
+			Destroy( Panel.last.gameObject );
+			Panel.last = null;
+		}
 		var g = new GameObject();
 		g.name = "Flag panel";
 		g.AddComponent<FlagPanel>().Attach( flag );
@@ -18,8 +23,8 @@ public class FlagPanel : Panel
 		location = this.flag = flag;
 		transform.SetParent( canvas.transform );
 		rectTransform.anchoredPosition = Vector2.zero;
-		rectTransform.sizeDelta = new Vector2( 200, 50 );
-		int col = 0;
+		rectTransform.sizeDelta = new Vector2( 240, 50 );
+		int col = 16;
 		for ( int i = 0; i < Flag.maxItems; i++ )
 		{
 			items[i] = CreateElement<Image>( this, col, -8, iconSize, iconSize, "item " + i );

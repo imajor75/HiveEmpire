@@ -17,6 +17,11 @@ public class WorkshopPanel : Panel
 
 	public static void Open( Workshop workshop )
 	{
+		if ( Panel.last != null )
+		{
+			Destroy( Panel.last.gameObject );
+			Panel.last = null;
+		}
 		var g = new GameObject();
 		g.name = "Workshop panel";
 		g.AddComponent<WorkshopPanel>().Attach( workshop );
@@ -27,14 +32,14 @@ public class WorkshopPanel : Panel
 		location = this.workshop = workshop;
 		transform.SetParent( canvas.transform );
 		rectTransform.anchoredPosition = Vector2.zero;
-		rectTransform.sizeDelta = new Vector2( 200, 100 );
+		rectTransform.sizeDelta = new Vector2( 240, 200 );
 
-		int row = 0;
+		int row = -20;
 		int col;
 		buffers = new List<BufferUI>();
 		foreach ( var b in workshop.buffers )
 		{
-			col = 0;
+			col = 16;
 			var bui = new BufferUI();
 			bui.items = new Image[b.size];
 			for ( int i = 0; i < b.size; i++ )			
@@ -49,7 +54,7 @@ public class WorkshopPanel : Panel
 		}
 
 		row -= iconSize / 2;
-		col = 0;
+		col = 16;
 		outputs = new Image[workshop.outputMax];
 		for ( int i = 0; i < workshop.outputMax; i++ )
 		{
@@ -59,7 +64,8 @@ public class WorkshopPanel : Panel
 			outputs[i] = image;
 		}
 
-		progressBar = CreateElement<Image>( this, 0, row - iconSize - iconSize / 2, iconSize * 8, iconSize, "Progress" );
+		progressBar = CreateElement<Image>( this, 20, row - iconSize - iconSize / 2, iconSize * 8, iconSize, "Progress" );
+		progressBar.sprite = templateProgress;
 	}
 
 	void UpdateIconRow( Image[] icons, int full, int half )
@@ -87,7 +93,7 @@ public class WorkshopPanel : Panel
 		if ( workshop.working )
 		{
 			progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
-			progressBar.color = Color.green;
+			progressBar.color = Color.white;
 		}
 		else
 			progressBar.color = Color.red;

@@ -8,6 +8,11 @@ public class StockPanel : Panel
 
 	public static void Open( Stock stock )
 	{
+		if ( Panel.last != null )
+		{
+			Destroy( Panel.last.gameObject );
+			Panel.last = null;
+		}
 		var g = new GameObject();
 		g.name = "Stock panel";
 		g.AddComponent<StockPanel>().Attach( stock );
@@ -20,13 +25,13 @@ public class StockPanel : Panel
 		rectTransform.anchoredPosition = Vector2.zero;
 		rectTransform.sizeDelta = new Vector2( 200, 200 );
 
-		int row = 0;
+		int row = -20;
 		for ( int j = 0; j < (int)Item.Type.total; j++ )
 		{
-			Image i = CreateElement<Image>( this, 8, row, iconSize, iconSize, ( (Item.Type)j ).ToString() );
+			Image i = CreateElement<Image>( this, 16, row, iconSize, iconSize, ( (Item.Type)j ).ToString() );
 			i.sprite = Item.sprites[j];
-			Text t = CreateElement<Text>( this, 32, row, 0, 0, ( (Item.Type)j ).ToString()+" count" );
-			t.color = Color.black;
+			Text t = CreateElement<Text>( this, 40, row, 0, 0, ( (Item.Type)j ).ToString()+" count" );
+			t.color = Color.yellow;
 			t.font = font;
 			counts[j] = t;
 			row -= iconSize;
