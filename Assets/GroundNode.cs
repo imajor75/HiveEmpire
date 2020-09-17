@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -21,12 +22,31 @@ public class GroundNode
 	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
 	public bool fixedHeight;
 	public Type type;
+	[JsonIgnore]
+	public NodeGizmo gizmo;
 
 	public enum Type
 	{
 		grass,
 		hill,
-		mountain
+		mountain,
+		underWater
+	}
+
+	public class NodeGizmo : MonoBehaviour
+	{
+		public GroundNode node;
+
+		void OnDrawGizmos()
+		{
+			Vector3 position = node.Position();
+			if ( ( position - SceneView.lastActiveSceneView.camera.transform.position ).magnitude > 10 )
+				return;
+
+			Gizmos.color = Color.blue;
+			Gizmos.DrawCube( position, Vector3.one * 0.1f );
+			Handles.Label( position, node.x.ToString()+":"+node.y.ToString() );
+		}
 	}
 
     public Vector3 Position()
@@ -80,12 +100,14 @@ public class GroundNode
         this.x = x;
         this.y = y;
 
-        //neighbours[0] = ground.GetNode( x + 0, y - 1 );
-        //neighbours[1] = ground.GetNode( x + 1, y - 1 );
-        //neighbours[2] = ground.GetNode( x + 1, y + 0 );
-        //neighbours[3] = ground.GetNode( x + 0, y + 1 );
-        //neighbours[4] = ground.GetNode( x - 1, y + 1 );
-        //neighbours[5] = ground.GetNode( x - 1, y + 0 );
+		//neighbours[0] = ground.GetNode( x + 0, y - 1 );
+		//neighbours[1] = ground.GetNode( x + 1, y - 1 );
+		//neighbours[2] = ground.GetNode( x + 1, y + 0 );
+		//neighbours[3] = ground.GetNode( x + 0, y + 1 );
+		//neighbours[4] = ground.GetNode( x - 1, y + 1 );
+		//neighbours[5] = ground.GetNode( x - 1, y + 0 );
+		gizmo = new GameObject().AddComponent<NodeGizmo>();
+		gizmo.node = this;
     }
 
     public int DistanceFrom( GroundNode o )
@@ -143,6 +165,8 @@ public class GroundNode
 			road.RebuildMesh();
 		if ( resource )
 			resource.UpdateBody();
+
+		gizmo.transform.localPosition = Position();
 	}
 
 	public bool CanBeFlattened()

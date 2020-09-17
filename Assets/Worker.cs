@@ -274,50 +274,6 @@ public class Worker : MonoBehaviour
 		}
 	}
 
-	public class CutResource : Task
-	{
-		public Resource resource;
-		public int waitTimer = 0;
-
-		public void Setup( Worker boss, Resource resource )
-		{
-			base.Setup( boss );
-			this.resource = resource;
-		}
-		public override void Cancel()
-		{
-			Assert.AreEqual( boss, resource.hunter );
-			resource.hunter = null;
-			base.Cancel();
-		}
-		public override bool ExecuteFrame()
-		{
-			Item item = null;
-			if ( resource )
-			{
-				Assert.AreEqual( boss, resource.hunter );
-				if ( resource.node == boss.node )
-				{
-					if ( waitTimer++ < 100 )    // TODO Working on the resource
-						return false;
-					item = Item.Create().Setup( resource.ItemType(), boss.building );
-					boss.itemInHands = item;
-					item.worker = boss;
-					if ( --resource.charges == 0 )
-						resource.Remove();
-				}
-				else
-					resource.keepAwayTimer = 500;   // TODO Settings
-				resource.hunter = null;
-			}
-			boss.ScheduleWalkToNode( boss.building.flag.node );
-			if ( item != null )
-				boss.ScheduleDeliverItem( item );
-			boss.ScheduleWalkToNeighbour( boss.building.node );
-			return true;
-		}
-	}
-
 	public class PickupItem : Task
 	{
 		public Item item;
@@ -357,7 +313,7 @@ public class Worker : MonoBehaviour
 		}
 		public override bool ExecuteFrame()
 		{
-			Assert.AreEqual( item, boss.itemInHands );
+    			Assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 				item.Arrived();
 			else
@@ -679,16 +635,6 @@ public class Worker : MonoBehaviour
 			taskQueue.Add( instance );
 	}
 
-	public void ScheduleCutResource( Resource resource, bool first = false )
-	{
-		var instance = ScriptableObject.CreateInstance<CutResource>();
-		instance.Setup( this, resource );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
-	}
-
 	public void SchedulePickupItem( Item item, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<PickupItem>();
@@ -717,6 +663,11 @@ public class Worker : MonoBehaviour
 			taskQueue.Insert( 0, instance );
 		else
 			taskQueue.Add( instance );
+	}
+
+	public void ScheduleTask( Task task )
+	{
+		taskQueue.Add( task );
 	}
 
 	public void CarryItem( Item item )
