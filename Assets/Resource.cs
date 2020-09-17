@@ -17,6 +17,7 @@ public class Resource : MonoBehaviour
 	{
 		tree,
 		rock,
+		fish,
 		other
 	}
 
@@ -44,7 +45,7 @@ public class Resource : MonoBehaviour
 
 	public Resource Setup( GroundNode node, Type type, int charges = 1 )
 	{
-		if ( node.building || node.flag || node.resource )
+		if ( node.building || node.flag || node.resource || node.type != GroundNode.Type.grass )
 		{
 			Destroy( gameObject );
 			return null;
@@ -91,7 +92,7 @@ public class Resource : MonoBehaviour
 		keepAwayTimer--;
 	}
 
-	public Item.Type ItemType()
+	static public Item.Type ItemType( Type type )
 	{
 		switch ( type )
 		{
@@ -99,6 +100,8 @@ public class Resource : MonoBehaviour
 				return Item.Type.log;
 			case Type.rock:
 				return Item.Type.stone;
+			case Type.fish:
+				return Item.Type.fish;
 			default:
 				return Item.Type.unknown;
 		}

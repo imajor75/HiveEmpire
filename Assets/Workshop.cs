@@ -15,6 +15,7 @@ public class Workshop : Building
 
 	public static int woodcutterRange = 8;
 	public static int stonemasonRange = 8;
+	public static int fisherRange = 8;
 
 	[System.Serializable]
 	public class Buffer
@@ -31,8 +32,71 @@ public class Workshop : Building
 		woodcutter,
 		sawmill,
 		stonemason,
+		fishingHut,
 		total,
 		unknown = -1
+	}
+
+	public class CutResource : Worker.Task
+	{
+		public GroundNode node;
+		public Resource.Type resourceType;
+		public int waitTimer = 0;
+
+		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
+		{
+			base.Setup( boss );
+			this.node = node;
+			this.resourceType = resourceType;
+		}
+		public override void Cancel()
+		{
+			if ( node.resource )
+			{
+				Assert.AreEqual( boss, node.resource.hunter );
+				node.resource.hunter = null;
+			}
+			base.Cancel();
+		}
+		public override bool ExecuteFrame()
+		{
+			if ( waitTimer++ < 100 )    // TODO Working on the resource
+				return false;
+
+			Item.Type itemType = Item.Type.unknown;
+			Resource resource = node.resource;
+			if ( resource )
+			{
+				Assert.AreEqual( resource.type, resourceType );
+				Assert.AreEqual( boss, resource.hunter );
+				if ( node == boss.node )
+				{
+					itemType = Resource.ItemType( resourceType );
+					if ( --resource.charges == 0 )
+						resource.Remove();
+				}
+				else
+					resource.keepAwayTimer = 500;   // TODO Settings
+				resource.hunter = null;
+			}
+			if ( resourceType == Resource.Type.fish )
+				itemType = Item.Type.fish;
+			FinishJob( boss, itemType );
+			return true;
+		}
+	}
+
+	static void FinishJob( Worker worker, Item.Type itemType )
+	{
+		worker.ScheduleWalkToNode( worker.building.flag.node );
+		if ( itemType != Item.Type.unknown )
+		{
+			Item item = Item.Create().Setup( itemType, worker.building );
+			worker.itemInHands = item;
+			item.worker = worker;
+			worker.ScheduleDeliverItem( item );
+		}
+		worker.ScheduleWalkToNeighbour( worker.building.node );
 	}
 
 	public static Workshop Create()
@@ -78,6 +142,16 @@ public class Workshop : Building
 				height = 2;
 				break;
 			}
+			case Type.fishingHut:
+			{
+				outputType = Item.Type.fish;
+				working = true;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				body = (GameObject)GameObject.Instantiate( templates[1], transform );
+				break;
+			}
+
 		}
 		if ( Setup( ground, node, owner ) == null )
 			return null;
@@ -182,7 +256,7 @@ public class Workshop : Building
 			{
 				if ( !working && output < outputMax && buffers[0].stored > 0 )
 				{
-					working = true;				
+					working = true;
 					progress = 0;
 					buffers[0].stored--;
 				}
@@ -197,6 +271,12 @@ public class Workshop : Building
 				}
 				break;
 			}
+			case Type.fishingHut:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.fish, fisherRange );
+				break;
+			}
 		}
 	}
 
@@ -209,18 +289,40 @@ public class Workshop : Building
 		foreach ( var o in Ground.areas[range] )
 		{
 			prey = node.Add( o );
+			if ( resourceType == Resource.Type.fish )
+			{
+				int water = 0;
+				for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+					if ( prey.Neighbour( i ).type == GroundNode.Type.underWater )
+						water++;
+
+				if ( water >= 0 && prey.type != GroundNode.Type.underWater && prey.resource == null )
+				{
+					// TODO Randomly select the spot
+					CollectResourceFromNode( prey, resourceType );
+				}
+				continue;
+			}
 			Resource resource = prey.resource;
 			if ( resource == null )
 				continue;
 			if ( resource.type == resourceType && resource.hunter == null && resource.keepAwayTimer < 0 )
 			{
 				resource.hunter = worker;
-				worker.ScheduleWalkToNeighbour( flag.node );
-				worker.ScheduleWalkToNode( prey, true );
-				worker.ScheduleCutResource( resource );
+				CollectResourceFromNode( prey, resourceType );
 				return;
 			}
 		}
+	}
+
+	void CollectResourceFromNode( GroundNode prey, Resource.Type resourceType )
+	{
+		Assert.IsTrue( resourceType == Resource.Type.fish || prey.resource.type == resourceType );
+		worker.ScheduleWalkToNeighbour( flag.node );
+		worker.ScheduleWalkToNode( prey, true );
+		var task = ScriptableObject.CreateInstance<CutResource>();
+		task.Setup( worker, prey, resourceType );
+		worker.ScheduleTask( task );
 	}
 
 	public override void OnClicked()

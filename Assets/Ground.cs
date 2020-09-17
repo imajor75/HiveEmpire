@@ -29,8 +29,13 @@ public class Ground : MonoBehaviour
 	public List<Building> influencers = new List<Building>();
 	static public System.Random rnd = new System.Random( 5 );
 	int reservedCount, reservationCount;
-	static int maxArea = 10;
+	public static int maxArea = 10;
+	public static float maxHeight = 10;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
+	public static float waterLevel = 0.2f;
+	static public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
+	[JsonIgnore]
+	public GameObject water;
 
 	public float eyeX, eyeY, eyeZ;
 	public float eyeDX, eyeDY, eyeDZ, eyeDW;
@@ -76,6 +81,13 @@ public class Ground : MonoBehaviour
 		cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
 		cursor.transform.localScale *= 0.25f;
 		cursor.transform.SetParent( transform );
+
+		water = GameObject.CreatePrimitive( PrimitiveType.Plane );
+		water.transform.SetParent( transform );
+		water.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
+		water.name = "Water";
+		water.transform.localPosition = Vector3.up* 2 ;
+		water.transform.localScale = Vector3.one * Math.Max( width, height ) * GroundNode.size;
 	}
 
 	public Ground Setup()
@@ -170,11 +182,13 @@ public class Ground : MonoBehaviour
 		foreach ( var n in nodes )
 		{
 			float d = colors[(t.width*n.x/(width+1))+(t.height*n.y/(height+1))*t.width].g;
-			n.height = d*10;
+			n.height = d*maxHeight;
 			if ( d > 0.35f )
 				n.type = GroundNode.Type.hill;
 			if ( d > 0.5f )
 				n.type = GroundNode.Type.mountain;
+			if ( d < waterLevel )
+				n.type = GroundNode.Type.underWater;
 		}
 	}
 
@@ -245,14 +259,10 @@ public class Ground : MonoBehaviour
 		};
 		if ( Input.GetKeyDown( KeyCode.R ) )
 			Road.AddNodeToNew( this, currentNode, player );
-		if ( Input.GetKeyDown( KeyCode.B ) )
-			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.woodcutter );
 		if ( Input.GetKeyDown( KeyCode.V ) )
-			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.sawmill );
-		if ( Input.GetKeyDown( KeyCode.C ) )
-			Workshop.Create().Setup( this, currentNode, player, Workshop.Type.stonemason );
-		if ( Input.GetKeyDown( KeyCode.G ) )
-			GuardHouse.Create().Setup( this, currentNode, player );
+			Dialog.Open( Dialog.Type.selectBuildingType );
+		if ( Input.GetKeyDown( KeyCode.B ) && selectedWorkshopType != Workshop.Type.unknown )
+			Workshop.Create().Setup( this, currentNode, player, selectedWorkshopType );
 		if ( Input.GetMouseButtonDown( 0 ) )
 		{
 			if ( currentNode.building )

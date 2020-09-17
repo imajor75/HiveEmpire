@@ -33,7 +33,12 @@ public class Eye : MonoBehaviour
 		RaycastHit hit;
 		var size = GroundNode.size;
 		if ( ground.collider.Raycast( ray, out hit, GroundNode.size * 100 ) )
-			transform.position = hit.point + Vector3.up * altitude;
+		{
+			Vector3 position = hit.point;
+			if ( position.y < Ground.waterLevel * Ground.maxHeight )
+				position.y = Ground.waterLevel * Ground.maxHeight;
+			transform.position = position + Vector3.up * altitude;
+		}
 	}
 
 	void FixedUpdate()

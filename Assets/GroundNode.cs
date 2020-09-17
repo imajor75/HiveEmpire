@@ -26,7 +26,8 @@ public class GroundNode
 	{
 		grass,
 		hill,
-		mountain
+		mountain,
+		underWater
 	}
 
     public Vector3 Position()

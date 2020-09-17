@@ -10,6 +10,7 @@ public class BorderEdge : MonoBehaviour
 	public static BorderEdge Create()
 	{
 		GameObject body = GameObject.CreatePrimitive( PrimitiveType.Cube );
+		Destroy( body.GetComponent<BoxCollider>() );
 		return body.AddComponent<BorderEdge>();
 	}
 
@@ -23,8 +24,11 @@ public class BorderEdge : MonoBehaviour
 
     void Start()
     {
+		Vector3 position = Vector3.Lerp( node.Position(), node.Neighbour( direction ).Position(), 0.4f );
+		if ( position.y < Ground.waterLevel * Ground.maxHeight )
+			position.y = Ground.waterLevel * Ground.maxHeight;
 		transform.SetParent( node.ground.transform );
-		transform.localPosition = Vector3.Lerp( node.Position(), node.Neighbour( direction ).Position(), 0.4f );
+		transform.localPosition = position;
 		transform.localScale = Vector3.one * 0.2f;
 	}
 }

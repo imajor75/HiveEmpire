@@ -18,13 +18,14 @@ public class Item : MonoBehaviour
         log,
         stone,
         plank,
+		fish,
         total,
 		unknown = -1
     }
 
 	public static void Initialize()
 	{
-		string[] filenames = { "log", "rock", "plank", "log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log", };
+		string[] filenames = { "log", "rock", "plank", "fish","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log","log", };
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );

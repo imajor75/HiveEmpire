@@ -13,11 +13,11 @@ public class Panel : Image, IPointerClickHandler
 	public static Sprite templateFrame;
 	public static Sprite templateProgress;
 
-	public new Canvas canvas
+	static public new Canvas canvas
     {
 		get 
 		{
-			if ( canvasCached == null)
+			if ( canvasCached == null )
 				canvasCached = Object.FindObjectOfType<Canvas>();
 			return canvasCached;
 		}
@@ -47,6 +47,16 @@ public class Panel : Image, IPointerClickHandler
 		return mainObject;
 	}
 
+	public T CreateSelectableElement<T>( Component parent, int x, int y, string name = "" ) where T : Selectable
+	{
+		GameObject gameObject = new GameObject();
+		if ( name.Length > 0 )
+			gameObject.name = name;
+		T mainObject = gameObject.AddComponent<T>();
+		gameObject.transform.SetParent( parent.transform );
+		return mainObject;
+	}
+
 	protected override void Start()
 	{
 		last = this;
@@ -65,7 +75,7 @@ public class Panel : Image, IPointerClickHandler
 		rectTransform.anchoredPosition = new Vector3( screenPosition.x, screenPosition.y, 0 );
 	}
 
-	public void OnPointerClick( PointerEventData data )
+	public virtual void OnPointerClick( PointerEventData data )
 	{
 		Destroy( gameObject );
 	}
