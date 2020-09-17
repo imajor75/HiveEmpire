@@ -282,12 +282,16 @@ public class Workshop : Building
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
+		Assert.IsTrue( worker.taskQueue.Count == 0 );
 		Assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
 		GroundNode prey;
-		foreach ( var o in Ground.areas[range] )
+		int t = Ground.areas[range].Count;
+		int r = Ground.rnd.Next( t );
+		for ( int j = 0; j < t; j++ )
 		{
+			var o = Ground.areas[range][(j+r)%t];
 			prey = node.Add( o );
 			if ( resourceType == Resource.Type.fish )
 			{
@@ -296,10 +300,11 @@ public class Workshop : Building
 					if ( prey.Neighbour( i ).type == GroundNode.Type.underWater )
 						water++;
 
-				if ( water >= 0 && prey.type != GroundNode.Type.underWater && prey.resource == null )
+				if ( water > 0 && prey.type != GroundNode.Type.underWater && prey.resource == null )
 				{
 					// TODO Randomly select the spot
 					CollectResourceFromNode( prey, resourceType );
+					return;
 				}
 				continue;
 			}
@@ -317,6 +322,7 @@ public class Workshop : Building
 
 	void CollectResourceFromNode( GroundNode prey, Resource.Type resourceType )
 	{
+		Assert.IsTrue( worker.taskQueue.Count == 0 );
 		Assert.IsTrue( resourceType == Resource.Type.fish || prey.resource.type == resourceType );
 		worker.ScheduleWalkToNeighbour( flag.node );
 		worker.ScheduleWalkToNode( prey, true );

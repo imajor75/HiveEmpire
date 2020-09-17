@@ -58,7 +58,7 @@ public class PathFinder : ScriptableObject
     {
 		if ( !ignoreFinalObstacle || node != target )
 		{
-			if ( node.building || node.resource )
+			if ( node.building || node.resource || node.type == GroundNode.Type.underWater )
 				return;
 
 			if ( mode == Mode.avoidRoads && ( node.owner != target.owner || node.road ) )

@@ -189,6 +189,7 @@ public class Ground : MonoBehaviour
 				n.type = GroundNode.Type.mountain;
 			if ( d < waterLevel )
 				n.type = GroundNode.Type.underWater;
+			n.gizmo.transform.localPosition = n.Position();
 		}
 	}
 

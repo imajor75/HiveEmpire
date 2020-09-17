@@ -313,7 +313,7 @@ public class Worker : MonoBehaviour
 		}
 		public override bool ExecuteFrame()
 		{
-        			Assert.AreEqual( item, boss.itemInHands );
+    			Assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 				item.Arrived();
 			else
