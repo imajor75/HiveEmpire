@@ -1,11 +1,13 @@
-﻿using UnityEditor.PackageManager;
+﻿using System.Collections.Generic;
+using System.Data;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 public class Stock : Building
 {
 	public bool main = false;
-	public int[] content = new int[(int)Item.Type.total];
+	public List<int> content = new List<int>();
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
 
@@ -15,6 +17,16 @@ public class Stock : Building
 		buildingObject.transform.localScale = new Vector3( 0.12f, 0.12f, 0.12f );
 		buildingObject.transform.Rotate( Vector3.up * -55 );	
 		return buildingObject.AddComponent<Stock>();
+	}
+
+	new public Stock Setup( Ground ground, GroundNode node, Player owner )
+	{
+		while ( content.Count < (int)Item.Type.total )
+			content.Add( 0 );
+		if ( base.Setup( ground, node, owner ) == null )
+			return null;
+
+		return this;
 	}
 
 	public bool SetupMain( Ground ground, GroundNode node, Player owner )
@@ -54,7 +66,7 @@ public class Stock : Building
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			if ( content[itemType] > 0 && flag.FreeSpace() > 0 )
+			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 0 )
 				ItemDispatcher.lastInstance.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.low );
 			ItemDispatcher.lastInstance.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
 		}
@@ -93,6 +105,8 @@ public class Stock : Building
 		if ( construction.ItemArrived( item ) )
 			return;
 
+		while ( content.Count <= (int)item.type )
+			content.Add( 0 );
 		content[(int)item.type]++;
 	}
 

@@ -37,6 +37,7 @@ public class Workshop : Building
 		stonemason,
 		fishingHut,
 		farm,
+		mill,
 		total,
 		unknown = -1
 	}
@@ -184,6 +185,17 @@ public class Workshop : Building
 				construction.flatteningNeeded = true;
 				break;
 			}
+			case Type.mill:
+			{
+				Buffer b = new Buffer();
+				b.itemType = Item.Type.grain;
+				buffers.Add( b );
+				outputType = Item.Type.flour;
+				working = true;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				break;
+			}
 		}
 		if ( Setup( ground, node, owner ) == null )
 			return null;
@@ -193,7 +205,7 @@ public class Workshop : Building
 
 	new void Start()
 	{
-		int[] look = { 1, 2, 3, 1, 5 };
+		int[] look = { 1, 2, 3, 1, 5, 5 };
 		body = (GameObject)GameObject.Instantiate( templates[look[(int)type]], transform );
 		base.Start();
 	}
@@ -339,6 +351,25 @@ public class Workshop : Building
 						Resource cornfield = place.resource;
 						PlantWheatAt( place );
 						return;
+					}
+				}
+				break;
+			}
+			case Type.mill:
+			{
+				if ( !working && output < outputMax && buffers[0].stored > 0 )
+				{
+					working = true;
+					progress = 0;
+					buffers[0].stored--;
+				}
+				if ( working && worker && worker.IsIdleInBuilding() )
+				{
+					progress += 0.0015f * ground.speedModifier;
+					if ( progress > 1 )
+					{
+						output++;
+						working = false;
 					}
 				}
 				break;
