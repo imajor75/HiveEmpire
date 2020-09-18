@@ -16,6 +16,9 @@ public class Workshop : Building
 	public static int woodcutterRange = 8;
 	public static int stonemasonRange = 8;
 	public static int fisherRange = 8;
+	public static int cornfieldGrowthMax = 6000;
+	public static int plantingTime = 100;
+	public static int resourceCutTime = 250;
 
 	[System.Serializable]
 	public class Buffer
@@ -33,6 +36,7 @@ public class Workshop : Building
 		sawmill,
 		stonemason,
 		fishingHut,
+		farm,
 		total,
 		unknown = -1
 	}
@@ -60,7 +64,7 @@ public class Workshop : Building
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( waitTimer++ < 100 )    // TODO Working on the resource
+			if ( waitTimer++ < resourceCutTime )    // TODO Working on the resource
 				return false;
 
 			Item.Type itemType = Item.Type.unknown;
@@ -86,17 +90,40 @@ public class Workshop : Building
 		}
 	}
 
-	static void FinishJob( Worker worker, Item.Type itemType )
+	public class PlantWheat : Worker.Task
 	{
-		worker.ScheduleWalkToNode( worker.building.flag.node );
-		if ( itemType != Item.Type.unknown )
+		public GroundNode node;
+		public int waitTimer = 0;
+		public bool done;
+
+		public void Setup( Worker boss, GroundNode node )
 		{
-			Item item = Item.Create().Setup( itemType, worker.building );
-			worker.itemInHands = item;
-			item.worker = worker;
-			worker.ScheduleDeliverItem( item );
+			base.Setup( boss );
+			this.node = node;
 		}
-		worker.ScheduleWalkToNeighbour( worker.building.node );
+		public override bool ExecuteFrame()
+		{
+			if ( waitTimer > 0 )
+			{
+				waitTimer--;
+				return false;
+			}
+
+			if ( done )
+				return true;
+			if ( boss.node != node )
+				return true;
+			if ( node.building || node.flag || node.road || node.fixedHeight || node.resource || node.type != GroundNode.Type.grass )
+				return true;
+
+			Resource.Create().Setup( node, Resource.Type.cornfield );
+			done = true;
+			Assert.IsNotNull( node.resource );
+			waitTimer = plantingTime;
+			boss.ScheduleWalkToNode( boss.building.flag.node );
+			boss.ScheduleWalkToNeighbour( boss.building.node );
+			return false;
+		}
 	}
 
 	public static Workshop Create()
@@ -117,7 +144,6 @@ public class Workshop : Building
 				working = true;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				body = (GameObject)GameObject.Instantiate( templates[1], transform );
 				break;
 			}
 			case Type.stonemason:
@@ -126,7 +152,7 @@ public class Workshop : Building
 				working = true;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				body = (GameObject)GameObject.Instantiate( templates[2], transform );
+				height = 2;
 				break;
 			}
 			case Type.sawmill:
@@ -138,7 +164,6 @@ public class Workshop : Building
 				working = false;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				body = (GameObject)GameObject.Instantiate( templates[3], transform );
 				height = 2;
 				break;
 			}
@@ -148,15 +173,29 @@ public class Workshop : Building
 				working = true;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
-				body = (GameObject)GameObject.Instantiate( templates[1], transform );
 				break;
 			}
-
+			case Type.farm:
+			{
+				outputType = Item.Type.grain;
+				working = true;
+				construction.plankNeeded = 2;
+				construction.stoneNeeded = 2;
+				construction.flatteningNeeded = true;
+				break;
+			}
 		}
 		if ( Setup( ground, node, owner ) == null )
 			return null;
 
 		return this;
+	}
+
+	new void Start()
+	{
+		int[] look = { 1, 2, 3, 1, 5 };
+		body = (GameObject)GameObject.Instantiate( templates[look[(int)type]], transform );
+		base.Start();
 	}
 
 	new void Update()
@@ -277,6 +316,33 @@ public class Workshop : Building
 					CollectResource( Resource.Type.fish, fisherRange );
 				break;
 			}
+			case Type.farm:
+			{
+				if ( worker.IsIdleInBuilding() )
+				{
+					foreach ( var o in Ground.areas[3] )
+					{
+						GroundNode place = node.Add( o );
+						if ( place.building || place.flag || place.road || place.fixedHeight )
+							continue;
+						Resource cornfield = place.resource;
+						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || cornfield.growth < cornfieldGrowthMax )
+							continue;
+						CollectResourceFromNode( place, Resource.Type.cornfield );
+						return;
+					}
+					foreach ( var o in Ground.areas[3] )
+					{
+						GroundNode place = node.Add( o );
+						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
+							continue;
+						Resource cornfield = place.resource;
+						PlantWheatAt( place );
+						return;
+					}
+				}
+				break;
+			}
 		}
 	}
 
@@ -302,7 +368,6 @@ public class Workshop : Building
 
 				if ( water > 0 && prey.type != GroundNode.Type.underWater && prey.resource == null )
 				{
-					// TODO Randomly select the spot
 					CollectResourceFromNode( prey, resourceType );
 					return;
 				}
@@ -313,7 +378,6 @@ public class Workshop : Building
 				continue;
 			if ( resource.type == resourceType && resource.hunter == null && resource.keepAwayTimer < 0 )
 			{
-				resource.hunter = worker;
 				CollectResourceFromNode( prey, resourceType );
 				return;
 			}
@@ -328,6 +392,31 @@ public class Workshop : Building
 		worker.ScheduleWalkToNode( prey, true );
 		var task = ScriptableObject.CreateInstance<CutResource>();
 		task.Setup( worker, prey, resourceType );
+		worker.ScheduleTask( task );
+		if ( prey.resource )
+			prey.resource.hunter = worker;
+	}
+
+	static void FinishJob( Worker worker, Item.Type itemType )
+	{
+		worker.ScheduleWalkToNode( worker.building.flag.node );
+		if ( itemType != Item.Type.unknown )
+		{
+			Item item = Item.Create().Setup( itemType, worker.building );
+			worker.itemInHands = item;
+			item.worker = worker;
+			worker.ScheduleDeliverItem( item );
+		}
+		worker.ScheduleWalkToNeighbour( worker.building.node );
+	}
+
+	void PlantWheatAt( GroundNode place )
+	{
+		Assert.IsTrue( worker.taskQueue.Count == 0 );
+		worker.ScheduleWalkToNeighbour( flag.node );
+		worker.ScheduleWalkToNode( place, true );
+		var task = ScriptableObject.CreateInstance<PlantWheat>();
+		task.Setup( worker, place );
 		worker.ScheduleTask( task );
 	}
 

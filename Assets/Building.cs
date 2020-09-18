@@ -186,7 +186,8 @@ abstract public class Building : MonoBehaviour
 			"Medieval house/Medieval_house 1",
 			"Baker House/Prefabs/Baker_house",
 			"Fantasy House/Prefab/Fantasy_House_6",
-			"WatchTower/Tower"
+			"WatchTower/Tower",
+			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07"
 		};
 		foreach ( string file in files )
 			templates.Add( (GameObject)Resources.Load( file ) );

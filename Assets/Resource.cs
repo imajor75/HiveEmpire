@@ -6,18 +6,21 @@ public class Resource : MonoBehaviour
 {
 	public GroundNode node;
 	public Type type;
+	public int growth = 0;
 	public int charges;
 	GameObject body;
+	public int keepAwayTimer = 0;
 	public Worker hunter;
 	static List<GameObject> templateTree = new List<GameObject>();
 	static List<GameObject> templateRock = new List<GameObject>();
-	public int keepAwayTimer = 0;
+	static Material cornfieldMaterial;
 
 	public enum Type
 	{
 		tree,
 		rock,
 		fish,
+		cornfield,
 		other
 	}
 
@@ -35,6 +38,8 @@ public class Resource : MonoBehaviour
 		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock1" ) );
 		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock2" ) );
 		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock3" ) );
+
+		cornfieldMaterial = Resources.Load<Material>( "cornfield" );
 	}
 
 	static public Resource Create()
@@ -77,8 +82,13 @@ public class Resource : MonoBehaviour
 			body = GameObject.Instantiate( templateRock[Ground.rnd.Next( templateRock.Count )] );
 			body.transform.Rotate( Vector3.up * Ground.rnd.Next( 360 ) );
 		}
-		if ( type == Type.other )
-			name = "Decoration";
+		if ( type == Type.cornfield )
+		{
+			body = GameObject.CreatePrimitive( PrimitiveType.Capsule );
+			body.transform.localScale = new Vector3( 0.5f, 0, 0.5f );
+			body.GetComponent<MeshRenderer>().material = cornfieldMaterial;
+			name = "Cornfield";
+		}
 		if ( body != null )
 		{
 			body.transform.SetParent( transform );
@@ -87,8 +97,18 @@ public class Resource : MonoBehaviour
 		Assert.IsNotNull( body );
 	}
 
+	void Update()
+	{
+		if ( type == Type.cornfield )
+		{
+			float growth = (float)this.growth / Workshop.cornfieldGrowthMax;
+			body.transform.localScale = new Vector3( 0.5f, growth / 2, 0.5f );
+		}
+	}
+
 	void FixedUpdate()
 	{
+		growth++;
 		keepAwayTimer--;
 	}
 
@@ -102,6 +122,8 @@ public class Resource : MonoBehaviour
 				return Item.Type.stone;
 			case Type.fish:
 				return Item.Type.fish;
+			case Type.cornfield:
+				return Item.Type.grain;
 			default:
 				return Item.Type.unknown;
 		}
