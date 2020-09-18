@@ -7,7 +7,7 @@ public class Resource : MonoBehaviour
 	public GroundNode node;
 	public Type type;
 	public int growth = 0;
-	public int charges;
+	public int charges = 1;
 	GameObject body;
 	public int keepAwayTimer = 0;
 	public Worker hunter;
@@ -50,6 +50,9 @@ public class Resource : MonoBehaviour
 
 	public Resource Setup( GroundNode node, Type type, int charges = 1 )
 	{
+		if ( charges < 1 )
+			charges = 1;
+
 		if ( node.building || node.flag || node.resource || node.type != GroundNode.Type.grass )
 		{
 			Destroy( gameObject );

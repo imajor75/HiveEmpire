@@ -21,6 +21,8 @@ public class Item : MonoBehaviour
 		fish,
 		grain,
 		flour,
+		salt,
+		pretzel,
         total,
 		unknown = -1
     }
@@ -33,7 +35,9 @@ public class Item : MonoBehaviour
 			"plank", 
 			"fish",
 			"wheat",
-			"flour" };
+			"flour", 
+			"salt",
+			"pretzel" };
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );

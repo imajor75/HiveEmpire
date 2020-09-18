@@ -12,6 +12,9 @@ public class Workshop : Building
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
 	GameObject body;
+	public int inputStep = 1;
+	public int outputStep = 1;
+	public float processSpeed = 0.0015f;
 
 	public static int woodcutterRange = 8;
 	public static int stonemasonRange = 8;
@@ -38,6 +41,7 @@ public class Workshop : Building
 		fishingHut,
 		farm,
 		mill,
+		bakery,
 		total,
 		unknown = -1
 	}
@@ -142,7 +146,6 @@ public class Workshop : Building
 			case Type.woodcutter:
 			{
 				outputType = Item.Type.log;
-				working = true;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
 				break;
@@ -150,7 +153,6 @@ public class Workshop : Building
 			case Type.stonemason:
 			{
 				outputType = Item.Type.stone;
-				working = true;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
 				height = 2;
@@ -158,11 +160,8 @@ public class Workshop : Building
 			}
 			case Type.sawmill:
 			{
-				Buffer b = new Buffer();
-				b.itemType = Item.Type.log;
-				buffers.Add( b );
+				AddInput( Item.Type.log );
 				outputType = Item.Type.plank;
-				working = false;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
 				height = 2;
@@ -171,7 +170,6 @@ public class Workshop : Building
 			case Type.fishingHut:
 			{
 				outputType = Item.Type.fish;
-				working = true;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
 				break;
@@ -179,7 +177,6 @@ public class Workshop : Building
 			case Type.farm:
 			{
 				outputType = Item.Type.grain;
-				working = true;
 				construction.plankNeeded = 2;
 				construction.stoneNeeded = 2;
 				construction.flatteningNeeded = true;
@@ -187,12 +184,19 @@ public class Workshop : Building
 			}
 			case Type.mill:
 			{
-				Buffer b = new Buffer();
-				b.itemType = Item.Type.grain;
-				buffers.Add( b );
+				AddInput( Item.Type.grain );
 				outputType = Item.Type.flour;
-				working = true;
 				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				break;
+			}
+			case Type.bakery:
+			{
+				AddInput( Item.Type.salt );
+				AddInput( Item.Type.flour );
+				outputType = Item.Type.pretzel;
+				construction.plankNeeded = 2;
+				construction.stoneNeeded = 2;
 				construction.flatteningNeeded = false;
 				break;
 			}
@@ -203,9 +207,16 @@ public class Workshop : Building
 		return this;
 	}
 
+	void AddInput( Item.Type itemType )
+	{
+		Buffer b = new Buffer();
+		b.itemType = itemType;
+		buffers.Add( b );
+	}
+
 	new void Start()
 	{
-		int[] look = { 1, 2, 3, 1, 5, 5 };
+		int[] look = { 1, 2, 3, 1, 5, 6, 2 };
 		body = (GameObject)GameObject.Instantiate( templates[look[(int)type]], transform );
 		base.Start();
 	}
@@ -305,21 +316,7 @@ public class Workshop : Building
 			}
 			case Type.sawmill:
 			{
-				if ( !working && output < outputMax && buffers[0].stored > 0 )
-				{
-					working = true;
-					progress = 0;
-					buffers[0].stored--;
-				}
-				if ( working && worker && worker.IsIdleInBuilding() )
-				{
-					progress += 0.0015f * ground.speedModifier;
-					if ( progress > 1 )
-					{
-						output++;
-						working = false;
-					}
-				}
+				ProcessInput();
 				break;
 			}
 			case Type.fishingHut:
@@ -357,22 +354,38 @@ public class Workshop : Building
 			}
 			case Type.mill:
 			{
-				if ( !working && output < outputMax && buffers[0].stored > 0 )
-				{
-					working = true;
-					progress = 0;
-					buffers[0].stored--;
-				}
-				if ( working && worker && worker.IsIdleInBuilding() )
-				{
-					progress += 0.0015f * ground.speedModifier;
-					if ( progress > 1 )
-					{
-						output++;
-						working = false;
-					}
-				}
+				ProcessInput();
 				break;
+			}
+			case Type.bakery:
+			{
+				ProcessInput();
+				break;
+			}
+		}
+	}
+
+	void ProcessInput()
+	{
+		int input = int.MaxValue;
+		foreach ( var buffer in buffers )
+			if ( buffer.stored < input )
+				input = buffer.stored;
+
+		if ( !working && output + outputStep <= outputMax && input > inputStep )
+		{
+			working = true;
+			progress = 0;
+			foreach ( var buffer in buffers )
+				buffer.stored -= inputStep;
+		}
+		if ( working && worker && worker.IsIdleInBuilding() )
+		{
+			progress += processSpeed * ground.speedModifier;
+			if ( progress > 1 )
+			{
+				output += outputStep;
+				working = false;
 			}
 		}
 	}
