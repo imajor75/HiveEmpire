@@ -15,6 +15,7 @@ public class Workshop : Building
 	public int inputStep = 1;
 	public int outputStep = 1;
 	public float processSpeed = 0.0015f;
+	public Transform millWheel;
 
 	public static int woodcutterRange = 8;
 	public static int stonemasonRange = 8;
@@ -187,6 +188,7 @@ public class Workshop : Building
 				AddInput( Item.Type.grain );
 				outputType = Item.Type.flour;
 				construction.plankNeeded = 2;
+				height = 2;
 				construction.flatteningNeeded = false;
 				break;
 			}
@@ -218,6 +220,11 @@ public class Workshop : Building
 	{
 		int[] look = { 1, 2, 3, 1, 5, 6, 2 };
 		body = (GameObject)GameObject.Instantiate( templates[look[(int)type]], transform );
+		if ( type == Type.mill )
+		{
+			millWheel = body.transform.Find( "group1/millWheel" );
+			Assert.IsNotNull( millWheel );
+		}
 		base.Start();
 	}
 
@@ -355,6 +362,8 @@ public class Workshop : Building
 			case Type.mill:
 			{
 				ProcessInput();
+				if ( working )
+					millWheel?.Rotate( 0, 0, 1 );
 				break;
 			}
 			case Type.bakery:
