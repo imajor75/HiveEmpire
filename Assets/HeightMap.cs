@@ -8,6 +8,8 @@ public class HeightMap : ScriptableObject
 	public bool tileable = false;
 	public float magnitudeReduction = 0.5f;
 	public bool island = true;
+	public double squareDiamondRatio = 1;
+	public double randomness = 0.2f;
 	public System.Random random;
 	double[,] data;
 
@@ -47,8 +49,9 @@ public class HeightMap : ScriptableObject
 		average += data[x + s, y - s];
 		average += data[x - s, y + s];
 		average += data[x + s, y + s];
-		average /= 4;
-		data[x, y] = average + random.NextDouble() * m;
+		double r = randomness * squareDiamondRatio;
+		average += random.NextDouble() * m * r;
+		data[x, y] = average / ( 4 + m * r );		;
 		ProcessDiamond( x, y - s, s, m );
 		ProcessDiamond( x - s, y, s, m );
 		ProcessDiamond( x + s, y, s, m );
@@ -63,7 +66,7 @@ public class HeightMap : ScriptableObject
 		{
 			if ( tileable )
 			{
-				average += data[x, sizeY - l];
+				average += data[x, sizeY - s - 1];
 				count++;
 			}
 		}
@@ -72,7 +75,48 @@ public class HeightMap : ScriptableObject
 			average += data[x, y - s];
 			count++;
 		}
-			;
+		if ( x == 0 )
+		{
+			if ( tileable )
+			{
+				average += data[sizeX - s - 1, y];
+				count++;
+			}
+		}
+		else
+		{
+			average += data[x - s, y];
+			count++;
+		}
+		if ( y == sizeY - 1 )
+		{
+			if ( tileable )
+			{
+				average += data[x, s];
+				count++;
+			}
+		}
+		else
+		{
+			average += data[x, y + s];
+			count++;
+		}
+		if ( x == sizeY - 1 )
+		{
+			if ( tileable )
+			{
+				average += data[s, x];
+				count++;
+			}
+		}
+		else
+		{
+			average += data[x + s, y];
+			count++;
+		}
+		Assert.IsTrue( count == 3 || count == 4 );
+		average /= count;
+		data[x, y] = average + random.NextDouble() * m;
 	}
 }
 		
