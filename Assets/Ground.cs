@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEngine.SocialPlatforms.GameCenter;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
 public class Ground : MonoBehaviour
@@ -31,9 +29,11 @@ public class Ground : MonoBehaviour
 	static public System.Random rnd = new System.Random( 5 );
 	int reservedCount, reservationCount;
 	public static int maxArea = 10;
-	public static float maxHeight = 10;
+	public static float maxHeight = 30;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
-	public static float waterLevel = 0.2f;
+	public static float waterLevel = 0.35f;
+	public static float hillLevel = 0.55f;
+	public static float mountainLevel = 0.6f;
 	static public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	[JsonIgnore]
 	public GameObject water;
@@ -41,6 +41,8 @@ public class Ground : MonoBehaviour
 	public float eyeX, eyeY, eyeZ;
 	public float eyeDX, eyeDY, eyeDZ, eyeDW;
 	public float eyeAltitude;
+
+	public HeightMap heightMap;
 
 	public static Ground Create()
 	{
@@ -87,7 +89,7 @@ public class Ground : MonoBehaviour
 		water.transform.SetParent( transform );
 		water.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
 		water.name = "Water";
-		water.transform.localPosition = Vector3.up* 2 ;
+		water.transform.localPosition = Vector3.up * waterLevel * maxHeight ;
 		water.transform.localScale = Vector3.one * Math.Max( width, height ) * GroundNode.size;
 	}
 
@@ -178,23 +180,24 @@ public class Ground : MonoBehaviour
 
 	public void SetHeights()
 	{
-		HeightMap map = new HeightMap();
-		map.Setup( 8 );
-		map.Fill( rnd.Next() );
+		heightMap = ScriptableObject.CreateInstance<HeightMap>();
+		heightMap.Setup( 9, rnd.Next() );
+		heightMap.Fill();
 
 		{
-			var t = new Texture2D( 512, 512 );
+			var mapTexture = new Texture2D( 512, 512 );
 			for ( int x = 0; x < 512; x++ )
 			{
 				for ( int y = 0; y < 512; y++ )
 				{
-					float h = map.data[x, y];
-					t.SetPixel( x, y, new Color( h, h, h ) );
+					float h = heightMap.data[x, y];
+					mapTexture.SetPixel( x, y, new Color( h, h, h ) );
 				}
 			}
 
-			var bytes = t.EncodeToPNG();
-			FileStream file = File.Open("akarmi",FileMode.Create);
+			mapTexture.Apply();
+			var bytes = mapTexture.EncodeToPNG();
+			FileStream file = File.Open("akarmi.png",FileMode.Create);
 			BinaryWriter binary = new BinaryWriter(file);
 			binary.Write( bytes );
 			file.Close();
@@ -202,11 +205,11 @@ public class Ground : MonoBehaviour
 
 		foreach ( var n in nodes )
 		{
-			float d = (float)map.data[n.x, n.y];
+			float d = (float)heightMap.data[n.x, n.y];
 			n.height = d*maxHeight;
-			if ( d > 0.35f )
+			if ( d > hillLevel )
 				n.type = GroundNode.Type.hill;
-			if ( d > 0.5f )
+			if ( d > mountainLevel )
 				n.type = GroundNode.Type.mountain;
 			if ( d < waterLevel )
 				n.type = GroundNode.Type.underWater;
@@ -309,7 +312,6 @@ public class Ground : MonoBehaviour
 			if ( currentNode.flag )
 				currentNode.flag.Remove();
 		}
-
 	}
 
 	void UpdateMesh()
@@ -331,6 +333,7 @@ public class Ground : MonoBehaviour
 				switch ( nodes[i].type )
 				{
 					case GroundNode.Type.grass:
+					case GroundNode.Type.underWater:
 					{
 						colors[i] = Color.red;
 						break;

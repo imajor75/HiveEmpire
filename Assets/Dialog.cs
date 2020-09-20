@@ -47,7 +47,6 @@ public class Dialog : Panel
 		if ( i <= (int)Workshop.Type.total )
 			Ground.selectedWorkshopType = (Workshop.Type)i;
 
-		Debug.Log( "wtr" + y );
 		base.OnPointerClick( data );
 	}
 }

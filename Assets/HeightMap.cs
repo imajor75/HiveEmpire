@@ -5,24 +5,32 @@ using UnityEngine;
 public class HeightMap : ScriptableObject
 {
 	int sizeX = 513, sizeY = 513;
-	public bool tileable = false;
+	public bool tileable = true;
+	[Range(0.0f, 1.0f)]    
 	public float magnitudeReduction = 0.5f;
+	[Range(0.0f, 2.0f)]
 	public float magnitudeStart = 1;
-	public bool island = true;
+	[Range(-1.0f, 1.0f)]
+	public float magnitudeOffset = 0;
+	public bool island = false;
+	[Range(0.5f, 1.5f)]
 	public float squareDiamondRatio = 1;
-	public float randomness = 0.2f;
+	[Range(0.0f, 50.0f)]
+	public float randomness = 20;
 	public System.Random random;
 	public float[,] data;
+	public int seed;
 
-	public void Setup( int size, bool tileable = false, bool island = true, float magnitudeReduction = 0.5f )
+	public void Setup( int size, int seed, bool tileable = false, bool island = false, float magnitudeReduction = 0.5f )
 	{
 		sizeX = sizeY = ( 1 << size ) + 1;
 		this.tileable = tileable;
 		this.island = island;
+		this.seed = seed;
 		this.magnitudeReduction = magnitudeReduction;
 	}
 
-	public void Fill( int seed )
+	public void Fill()
 	{
 		random = new System.Random( seed );
 		data = new float[sizeX, sizeY];
@@ -31,16 +39,37 @@ public class HeightMap : ScriptableObject
 			data[0, 0] =
 			data[sizeX - 1, 0] =
 			data[0, sizeY - 1] =
-			data[sizeX - 1, sizeY - 1] = 0;
+			data[sizeX - 1, sizeY - 1] = magnitudeOffset;
 		}
 		else
 		{
-			data[0, 0] = (float)random.NextDouble();
-			data[sizeX - 1, 0] = (float)random.NextDouble();
-			data[0, sizeY - 1] = (float)random.NextDouble();
-			data[sizeX - 1, sizeY - 1] = (float)random.NextDouble();
+			data[0, 0] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
+			data[sizeX - 1, 0] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
+			data[0, sizeY - 1] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
+			data[sizeX - 1, sizeY - 1] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
 		}
-		ProcessSquare( ( sizeX - 1 ) / 2, ( sizeY - 1 ) / 2, ( sizeX - 1 / 2 ), magnitudeStart );
+		int i = sizeX - 1;
+		float m = magnitudeStart;
+		while ( i > 1 )
+		{
+			ProcessLevel( i, m );
+			i /= 2;
+			m *= magnitudeReduction;
+		}
+	}
+
+	void ProcessLevel( int i, float m )
+	{
+		for ( int x = i / 2; x < sizeX; x += i )
+			for ( int y = i / 2; y < sizeY; y += i )
+				ProcessSquare( x, y, i / 2, m );
+
+		for ( int x = 0; x < sizeX; x += i )
+			for ( int y = i / 2; y < sizeY; y += i )
+				ProcessDiamond( x, y, i / 2, m );
+		for ( int x = i / 2; x < sizeX; x += i )
+			for ( int y = 0; y < sizeY; y += i )
+				ProcessDiamond( x, y, i / 2, m );
 	}
 
 	void ProcessSquare( int x, int y, int s, float m )
@@ -51,19 +80,8 @@ public class HeightMap : ScriptableObject
 		average += data[x - s, y + s];
 		average += data[x + s, y + s];
 		float r = randomness * squareDiamondRatio;
-		average += (float)random.NextDouble() * m * r;
+		average += magnitudeOffset + (float)random.NextDouble() * m * r;
 		data[x, y] = average / ( 4 + m * r );		;
-		ProcessDiamond( x, y - s, s, m );
-		ProcessDiamond( x - s, y, s, m );
-		ProcessDiamond( x + s, y, s, m );
-		ProcessDiamond( x, y + s, s, m );
-		if ( s == 1 )
-			return;
-		int n = s / 2;
-		ProcessSquare( x - n, y - n, n, m * magnitudeReduction );
-		ProcessSquare( x + n, y - n, n, m * magnitudeReduction );
-		ProcessSquare( x - n, y + n, n, m * magnitudeReduction );
-		ProcessSquare( x + n, y + n, n, m * magnitudeReduction );
 	}
 
 	void ProcessDiamond( int x, int y, int s, float m )
@@ -123,7 +141,7 @@ public class HeightMap : ScriptableObject
 			count++;
 		}
 		Assert.IsTrue( count == 3 || count == 4 );
-		data[x, y] = (average + (float)random.NextDouble() * m)/(m+count);
+		data[x, y] = ( average + randomness * ( magnitudeOffset + (float)random.NextDouble() * m ) ) / ( randomness * m + count );
 	}
 }
 		
