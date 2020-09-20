@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SocialPlatforms.GameCenter;
@@ -177,11 +178,31 @@ public class Ground : MonoBehaviour
 
 	public void SetHeights()
 	{
-		var t = Resources.Load<Texture2D>( "height" );
-		Color[] colors = t.GetPixels();
+		HeightMap map = new HeightMap();
+		map.Setup( 8 );
+		map.Fill( rnd.Next() );
+
+		{
+			var t = new Texture2D( 512, 512 );
+			for ( int x = 0; x < 512; x++ )
+			{
+				for ( int y = 0; y < 512; y++ )
+				{
+					float h = map.data[x, y];
+					t.SetPixel( x, y, new Color( h, h, h ) );
+				}
+			}
+
+			var bytes = t.EncodeToPNG();
+			FileStream file = File.Open("akarmi",FileMode.Create);
+			BinaryWriter binary = new BinaryWriter(file);
+			binary.Write( bytes );
+			file.Close();
+		}
+
 		foreach ( var n in nodes )
 		{
-			float d = colors[(t.width*n.x/(width+1))+(t.height*n.y/(height+1))*t.width].g;
+			float d = (float)map.data[n.x, n.y];
 			n.height = d*maxHeight;
 			if ( d > 0.35f )
 				n.type = GroundNode.Type.hill;
