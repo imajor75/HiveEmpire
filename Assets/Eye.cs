@@ -5,10 +5,9 @@ using UnityEngine.Assertions.Must;
 [RequireComponent( typeof( Camera ))]
 public class Eye : MonoBehaviour
 {
-	new Camera camera;
-	public float altitude = 3;
-	static public float minAltitude = 2;
-	static public float maxAltitude = 10;
+	public float altitude = 0.3f;
+	static public float minAltitude = 0.2f;
+	static public float maxAltitude = 1.0f;
 	public Ground ground;
 
 	public static void Create()
@@ -17,7 +16,6 @@ public class Eye : MonoBehaviour
 		Eye eye = eyeObject.AddComponent<Eye>();
 		eye.tag = "MainCamera";
 		eye.name = "Eye";
-		eye.camera = eye.GetComponent<Camera>();
 		eye.transform.position = new Vector3( 0, 4, -7 );
 		eye.transform.Rotate( Vector3.right * 40 );
 	}
@@ -37,24 +35,29 @@ public class Eye : MonoBehaviour
 			Vector3 position = hit.point;
 			if ( position.y < Ground.waterLevel * Ground.maxHeight )
 				position.y = Ground.waterLevel * Ground.maxHeight;
-			transform.position = position + Vector3.up * altitude;
+			transform.position = position + Vector3.up * altitude * Ground.maxHeight;
 		}
+	}
+
+	public void FocusOn( GroundNode node )
+	{
+		transform.position = node.Position() - new Vector3( 0, 4, 8 );
 	}
 
 	void FixedUpdate()
     {
         if ( Input.GetKey( KeyCode.A ) )
-            camera.transform.localPosition += Vector3.left * 0.1f;
+            transform.localPosition += Vector3.left * 0.1f;
         if ( Input.GetKey( KeyCode.D ) )
-            camera.transform.localPosition += Vector3.right * 0.1f;
+            transform.localPosition += Vector3.right * 0.1f;
         if ( Input.GetKey( KeyCode.W ) )
-            camera.transform.position += Vector3.forward * 0.1f;
+            transform.position += Vector3.forward * 0.1f;
 		if ( Input.GetKey( KeyCode.S ) )
-			camera.transform.position += Vector3.back * 0.1f;
+			transform.position += Vector3.back * 0.1f;
 		if ( Input.GetKey( KeyCode.Q ) )
-			camera.transform.Rotate( Vector3.up, 2, Space.World );
+			transform.Rotate( Vector3.up, 2, Space.World );
 		if ( Input.GetKey( KeyCode.E ) )
-			camera.transform.Rotate( Vector3.up, -2, Space.World );
+			transform.Rotate( Vector3.up, -2, Space.World );
 		if ( Input.GetKey( KeyCode.Z ) && altitude < maxAltitude )
 			altitude *= 1.01f;
 		if ( Input.GetKey( KeyCode.X ) && altitude > minAltitude )

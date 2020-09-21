@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class HeightMap : ScriptableObject
@@ -15,8 +16,8 @@ public class HeightMap : ScriptableObject
 	public bool island = false;
 	[Range(0.5f, 1.5f)]
 	public float squareDiamondRatio = 1;
-	[Range(0.0f, 50.0f)]
-	public float randomness = 20;
+	[Range(0.0f, 1.0f)]
+	public float randomness = 0.5f;
 	public System.Random random;
 	public float[,] data;
 	public int seed;
@@ -34,20 +35,11 @@ public class HeightMap : ScriptableObject
 	{
 		random = new System.Random( seed );
 		data = new float[sizeX, sizeY];
-		if ( island )
-		{
-			data[0, 0] =
-			data[sizeX - 1, 0] =
-			data[0, sizeY - 1] =
-			data[sizeX - 1, sizeY - 1] = magnitudeOffset;
-		}
-		else
-		{
-			data[0, 0] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
-			data[sizeX - 1, 0] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
-			data[0, sizeY - 1] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
-			data[sizeX - 1, sizeY - 1] = magnitudeOffset + (float)random.NextDouble() * magnitudeStart;
-		}
+		float w = island ? 0 : 1;
+		Randomize( ref data[0, 0], magnitudeStart, w );
+		Randomize( ref data[sizeX-1, 0], magnitudeStart, w );
+		Randomize( ref data[0, sizeY-1], magnitudeStart, w );
+		Randomize( ref data[sizeX-1, sizeY-1], magnitudeStart, w );
 		int i = sizeX - 1;
 		float m = magnitudeStart;
 		while ( i > 1 )
@@ -80,8 +72,9 @@ public class HeightMap : ScriptableObject
 		average += data[x - s, y + s];
 		average += data[x + s, y + s];
 		float r = randomness * squareDiamondRatio;
-		average += magnitudeOffset + (float)random.NextDouble() * m * r;
-		data[x, y] = average / ( 4 + m * r );		;
+		average /= 4;
+		Randomize( ref average, m );
+		data[x, y] = average;
 	}
 
 	void ProcessDiamond( int x, int y, int s, float m )
@@ -141,7 +134,43 @@ public class HeightMap : ScriptableObject
 			count++;
 		}
 		Assert.IsTrue( count == 3 || count == 4 );
-		data[x, y] = ( average + randomness * ( magnitudeOffset + (float)random.NextDouble() * m ) ) / ( randomness * m + count );
+		average /= count;
+		Randomize( ref average, m );
+		data[x, y] = average;
+	}
+
+	void Randomize( ref float value, float magnitude, float weight = -1 )
+	{
+		if ( weight < 0 )
+			weight = randomness;
+		float randomValue = (float)Ground.rnd.NextDouble();
+		randomValue = magnitudeOffset + ( randomValue - 0.5f ) * magnitude + 0.5f;
+		value = value * ( 1 - weight ) + randomValue * weight;
+	}
+
+	public Texture2D mapTexture;
+	void OnValidate()
+	{
+		Fill();
+		if ( mapTexture == null )
+			mapTexture = new Texture2D( 512, 512 );
+
+		for ( int x = 0; x < 512; x++ )
+		{
+			for ( int y = 0; y < 512; y++ )
+			{
+				float h = data[x, y];
+				mapTexture.SetPixel( x, y, new Color( h, h, h ) );
+			}
+		}
+
+		var bytes = mapTexture.EncodeToPNG();
+		FileStream file = File.Open("akarmi.png",FileMode.Create);
+		BinaryWriter binary = new BinaryWriter(file);
+		binary.Write( bytes );
+		file.Close();
+
+		mapTexture.Apply();
 	}
 }
 		
