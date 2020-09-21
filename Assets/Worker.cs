@@ -360,7 +360,7 @@ public class Worker : MonoBehaviour
 		{
 			if ( resource == null )
 			{
-				resource = Resource.Create().Setup( boss.node, Resource.Type.pasturingAnimal );
+				resource = Resource.Create().SetupAsPrey( boss );
 				timer = 100;
 				return false;
 			}
@@ -369,6 +369,7 @@ public class Worker : MonoBehaviour
 
 			if ( resource.hunter == null )
 			{
+				resource.animals.Clear();
 				resource.Remove();
 				return true;
 			}
@@ -379,7 +380,10 @@ public class Worker : MonoBehaviour
 		public override void Cancel()
 		{
 			if ( resource )
+			{
+				resource.animals.Clear();
 				resource.Remove();
+			}
 			base.Cancel();
 		}
 

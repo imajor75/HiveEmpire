@@ -73,6 +73,15 @@ public class Resource : MonoBehaviour
 		return this;
 	}
 
+	public Resource SetupAsPrey( Worker animal )
+	{
+		if ( Setup( animal.node, Type.pasturingAnimal ) == null )
+			return null;
+
+		animals.Add( animal );
+		return this;
+	}
+
     // Start is called before the first frame update
     void Start()
     {
@@ -165,6 +174,8 @@ public class Resource : MonoBehaviour
 
 	public void Remove()
 	{
+		if ( type == Type.pasturingAnimal && animals.Count > 0 )
+			animals[0].Remove();
 		Destroy( gameObject );
 	}
 
@@ -176,7 +187,10 @@ public class Resource : MonoBehaviour
 	public void Validate()
 	{
 		//Assert.IsNotNull( body );
-		foreach ( var w in animals )
-			Assert.IsNotNull( w );
+		if ( type == Type.animalSpawner )
+			foreach ( var w in animals )
+				Assert.IsNotNull( w );
+		if ( type == Type.pasturingAnimal )
+			Assert.AreEqual( animals.Count, 1 );
 	}
 }
