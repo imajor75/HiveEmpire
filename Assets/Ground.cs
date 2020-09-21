@@ -26,7 +26,7 @@ public class Ground : MonoBehaviour
 	public Stock mainBuilding;
 	public GroundNode zero;
 	public List<Building> influencers = new List<Building>();
-	static public System.Random rnd = new System.Random( 5 );
+	static public System.Random rnd;
 	int reservedCount, reservationCount;
 	public static int maxArea = 10;
 	public static float maxHeight = 20;
@@ -93,8 +93,9 @@ public class Ground : MonoBehaviour
 		water.transform.localScale = Vector3.one * Math.Max( width, height ) * GroundNode.size;
 	}
 
-	public Ground Setup()
+	public Ground Setup( int seed )
 	{
+		rnd = new System.Random( seed );
 		gameObject.name = "Ground";
 		width = 50;
 		height = 50;
@@ -144,7 +145,7 @@ public class Ground : MonoBehaviour
 
 		Assert.IsNull( mainBuilding );
 		mainBuilding = Stock.Create();
-		mainBuilding.SetupMain( this, center, mainPlayer );
+		mainBuilding.SetupMain( this, best, mainPlayer );
 		GameObject.FindObjectOfType<Eye>().FocusOn( mainBuilding.node );
 	}
 
@@ -210,14 +211,14 @@ public class Ground : MonoBehaviour
 	public void SetHeights()
 	{
 		heightMap = ScriptableObject.CreateInstance<HeightMap>();
-		heightMap.Setup( 9, rnd.Next() );
+		heightMap.Setup( 6, rnd.Next() );
 		heightMap.Fill();
 
 		{
-			var mapTexture = new Texture2D( 512, 512 );
-			for ( int x = 0; x < 512; x++ )
+			var mapTexture = new Texture2D( 64, 64 );
+			for ( int x = 0; x < 64; x++ )
 			{
-				for ( int y = 0; y < 512; y++ )
+				for ( int y = 0; y < 64; y++ )
 				{
 					float h = heightMap.data[x, y];
 					mapTexture.SetPixel( x, y, new Color( h, h, h ) );
@@ -229,7 +230,7 @@ public class Ground : MonoBehaviour
 
 		foreach ( var n in nodes )
 		{
-			float d = (float)heightMap.data[n.x*3, n.y*3];
+			float d = (float)heightMap.data[n.x, n.y];
 			n.height = d*maxHeight;
 			if ( d > hillLevel )
 				n.type = GroundNode.Type.hill;

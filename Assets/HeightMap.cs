@@ -5,14 +5,14 @@ using UnityEngine;
 
 public class HeightMap : ScriptableObject
 {
-	int sizeX = 513, sizeY = 513;
+	int sizeX = 513, sizeY = 513, size = 9;
 	public bool tileable = true;
-	[Range(0.0f, 1.0f)]    
-	public float magnitudeReduction = 0.5f;
-	[Range(0.0f, 2.0f)]
-	public float magnitudeStart = 1;
+	[Range(-2.0f, 2.0f)]    
+	public float deepnessExp = 0;
+	[Range(0.0f, 5.0f)]
+	public float deepnessStart = 1;
 	[Range(-1.0f, 1.0f)]
-	public float magnitudeOffset = 0;
+	public float deepnessOffset = 0;
 	public bool island = false;
 	[Range(0.5f, 1.5f)]
 	public float squareDiamondRatio = 1;
@@ -21,14 +21,17 @@ public class HeightMap : ScriptableObject
 	public System.Random random;
 	public float[,] data;
 	public int seed;
+	public bool deepnessAffectsMagnitude = true;
+	public bool deepnessAffectsRandomness = true;
 
-	public void Setup( int size, int seed, bool tileable = false, bool island = false, float magnitudeReduction = 0.5f )
+	public void Setup( int size, int seed, bool tileable = false, bool island = false, float deepnessExp = 0 )
 	{
+		this.size = size;
 		sizeX = sizeY = ( 1 << size ) + 1;
 		this.tileable = tileable;
 		this.island = island;
 		this.seed = seed;
-		this.magnitudeReduction = magnitudeReduction;
+		this.deepnessExp = deepnessExp;
 	}
 
 	public void Fill()
@@ -36,17 +39,19 @@ public class HeightMap : ScriptableObject
 		random = new System.Random( seed );
 		data = new float[sizeX, sizeY];
 		float w = island ? 0 : 1;
-		Randomize( ref data[0, 0], magnitudeStart, w );
-		Randomize( ref data[sizeX-1, 0], magnitudeStart, w );
-		Randomize( ref data[0, sizeY-1], magnitudeStart, w );
-		Randomize( ref data[sizeX-1, sizeY-1], magnitudeStart, w );
+		Randomize( ref data[0, 0], deepnessStart, w );
+		Randomize( ref data[sizeX - 1, 0], deepnessStart, w );
+		Randomize( ref data[0, sizeY - 1], deepnessStart, w );
+		Randomize( ref data[sizeX - 1, sizeY - 1], deepnessStart, w );
 		int i = sizeX - 1;
-		float m = magnitudeStart;
+		float step = 0;
+		float c = deepnessStart, a = deepnessExp;
+		float b = - a - c;
 		while ( i > 1 )
 		{
-			ProcessLevel( i, m );
+			ProcessLevel( i, a * step * step + b * step + c );
 			i /= 2;
-			m *= magnitudeReduction;
+			step += 1f/size;
 		}
 	}
 
@@ -71,9 +76,9 @@ public class HeightMap : ScriptableObject
 		average += data[x + s, y - s];
 		average += data[x - s, y + s];
 		average += data[x + s, y + s];
-		float r = randomness * squareDiamondRatio;
 		average /= 4;
-		Randomize( ref average, m );
+		float r = randomness * squareDiamondRatio;
+		Randomize( ref average, m, r );
 		data[x, y] = average;
 	}
 
@@ -139,12 +144,15 @@ public class HeightMap : ScriptableObject
 		data[x, y] = average;
 	}
 
-	void Randomize( ref float value, float magnitude, float weight = -1 )
+	void Randomize( ref float value, float deepness, float weight = -1 )
 	{
 		if ( weight < 0 )
 			weight = randomness;
-		float randomValue = (float)Ground.rnd.NextDouble();
-		randomValue = magnitudeOffset + ( randomValue - 0.5f ) * magnitude + 0.5f;
+		if ( deepnessAffectsMagnitude )
+			weight *= deepness;
+		float randomValue = (float)random.NextDouble();
+		if ( deepnessAffectsRandomness )
+			randomValue = deepnessOffset + ( randomValue - 0.5f ) * deepness + 0.5f;
 		value = value * ( 1 - weight ) + randomValue * weight;
 	}
 
@@ -152,25 +160,26 @@ public class HeightMap : ScriptableObject
 	void OnValidate()
 	{
 		Fill();
+		int w = 1 << size;
 		if ( mapTexture == null )
-			mapTexture = new Texture2D( 512, 512 );
+			mapTexture = new Texture2D( w, w );
 
-		for ( int x = 0; x < 512; x++ )
+		for ( int x = 0; x < w; x++ )
 		{
-			for ( int y = 0; y < 512; y++ )
+			for ( int y = 0; y < w; y++ )
 			{
 				float h = data[x, y];
 				mapTexture.SetPixel( x, y, new Color( h, h, h ) );
 			}
 		}
+		mapTexture.Apply();
+		Color c = mapTexture.GetPixel( 0, 0 );
 
 		var bytes = mapTexture.EncodeToPNG();
 		FileStream file = File.Open("akarmi.png",FileMode.Create);
 		BinaryWriter binary = new BinaryWriter(file);
 		binary.Write( bytes );
 		file.Close();
-
-		mapTexture.Apply();
 	}
 }
 		
