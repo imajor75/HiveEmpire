@@ -174,12 +174,6 @@ public class HeightMap : ScriptableObject
 		}
 		mapTexture.Apply();
 		Color c = mapTexture.GetPixel( 0, 0 );
-
-		var bytes = mapTexture.EncodeToPNG();
-		FileStream file = File.Open("akarmi.png",FileMode.Create);
-		BinaryWriter binary = new BinaryWriter(file);
-		binary.Write( bytes );
-		file.Close();
 	}
 }
 		

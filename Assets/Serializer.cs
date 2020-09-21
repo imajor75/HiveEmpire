@@ -44,7 +44,7 @@ public class Serializer : JsonSerializer
 			typeof( Worker.StartWorkingOnRoad ),
 			typeof( Worker.PickupItem ),
 			typeof( Worker.DeliverItem ),
-			typeof( Workshop.CutResource ),
+			typeof( Workshop.GetResource ),
 			typeof( Workshop.PlantWheat ),
 			typeof( PathFinder ),
 			typeof( Path ),
@@ -108,8 +108,8 @@ public class Serializer : JsonSerializer
 				instance = ScriptableObject.CreateInstance<Worker.WalkToNode>();
 			else if ( type == typeof( Worker.WalkToRoadPoint ) )
 				instance = ScriptableObject.CreateInstance<Worker.WalkToRoadPoint>();
-			else if ( type == typeof( Workshop.CutResource ) )
-				instance = ScriptableObject.CreateInstance<Workshop.CutResource>();
+			else if ( type == typeof( Workshop.GetResource ) )
+				instance = ScriptableObject.CreateInstance<Workshop.GetResource>();
 			else if ( type == typeof( Workshop.PlantWheat ) )
 				instance = ScriptableObject.CreateInstance<Workshop.PlantWheat>();
 			else if ( type == typeof( Road ) )

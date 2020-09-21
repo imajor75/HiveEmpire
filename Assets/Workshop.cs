@@ -18,6 +18,7 @@ public class Workshop : Building
 	public Transform millWheel;
 
 	public static int woodcutterRange = 8;
+	public static int hunterRange = 8;
 	public static int stonemasonRange = 8;
 	public static int fisherRange = 8;
 	public static int cornfieldGrowthMax = 6000;
@@ -43,11 +44,12 @@ public class Workshop : Building
 		farm,
 		mill,
 		bakery,
+		hunter,
 		total,
 		unknown = -1
 	}
 
-	public class CutResource : Worker.Task
+	public class GetResource : Worker.Task
 	{
 		public GroundNode node;
 		public Resource.Type resourceType;
@@ -202,6 +204,14 @@ public class Workshop : Building
 				construction.flatteningNeeded = false;
 				break;
 			}
+			case Type.hunter:
+			{
+				outputType = Item.Type.hide;
+				construction.plankNeeded = 1;
+				construction.flatteningNeeded = false;
+				height = 2;
+				break;
+			}
 		}
 		if ( Setup( ground, node, owner ) == null )
 			return null;
@@ -218,7 +228,7 @@ public class Workshop : Building
 
 	new void Start()
 	{
-		int[] look = { 1, 2, 3, 1, 5, 6, 2 };
+		int[] look = { 1, 2, 3, 1, 5, 6, 2, 3 };
 		body = (GameObject)GameObject.Instantiate( templates[look[(int)type]], transform );
 		if ( type == Type.mill )
 		{
@@ -371,6 +381,12 @@ public class Workshop : Building
 				ProcessInput();
 				break;
 			}
+			case Type.hunter:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.pasturingAnimal, hunterRange );
+				break;
+			}
 		}
 	}
 
@@ -443,7 +459,7 @@ public class Workshop : Building
 		Assert.IsTrue( resourceType == Resource.Type.fish || prey.resource.type == resourceType );
 		worker.ScheduleWalkToNeighbour( flag.node );
 		worker.ScheduleWalkToNode( prey, true );
-		var task = ScriptableObject.CreateInstance<CutResource>();
+		var task = ScriptableObject.CreateInstance<GetResource>();
 		task.Setup( worker, prey, resourceType );
 		worker.ScheduleTask( task );
 		if ( prey.resource )

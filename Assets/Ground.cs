@@ -190,6 +190,8 @@ public class Ground : MonoBehaviour
 				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
 			if ( i >= 5 && i < 6 )
 				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
+			if ( i == 100 )
+				node.AddResource( Resource.Type.animalSpawner );
 		}
 	}
 

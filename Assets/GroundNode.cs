@@ -140,9 +140,14 @@ public class GroundNode
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > Ground.rnd.Next( 100 ) )
-					Resource.Create().Setup( n, type );
+					n.AddResource( type );
 			}
 		}
+	}
+
+	public void AddResource( Resource.Type type )
+	{
+		Resource.Create().Setup( this, type );
 	}
 
 	public GroundNode Add( Ground.Offset o )
