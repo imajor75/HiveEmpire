@@ -1,6 +1,7 @@
 ﻿	using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -21,7 +22,7 @@ public class Mission : MonoBehaviour
 		Worker.Initialize();
 		Flag.Initialize();
 		Resource.Initialize();
-		NewGame();
+		NewGame( 792469403 );
 	}
 
 	public void PrepareScene( bool force = false )
@@ -73,12 +74,13 @@ public class Mission : MonoBehaviour
 		}
 	}
 
-	public void NewGame()
+	public void NewGame( int seed )
 	{
+		Debug.Log( "Starting new game with seed " + seed );
 		ClearScene();
 		PrepareScene( true );
 
-		ground = Ground.Create().Setup();
+		ground = Ground.Create().Setup( seed );
 	}
 
 	public void Load( string fileName )
@@ -143,7 +145,7 @@ public class Mission : MonoBehaviour
 		}
 		if ( Input.GetKeyDown( KeyCode.N ) )
 		{
-			NewGame();
+			NewGame( new System.Random().Next() );
 			Debug.Log( "New game created" );
 		}
 	}

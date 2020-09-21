@@ -1,9 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEngine.SocialPlatforms.GameCenter;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
 public class Ground : MonoBehaviour
@@ -27,12 +26,14 @@ public class Ground : MonoBehaviour
 	public Stock mainBuilding;
 	public GroundNode zero;
 	public List<Building> influencers = new List<Building>();
-	static public System.Random rnd = new System.Random( 5 );
+	static public System.Random rnd;
 	int reservedCount, reservationCount;
 	public static int maxArea = 10;
-	public static float maxHeight = 10;
+	public static float maxHeight = 20;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
-	public static float waterLevel = 0.2f;
+	public static float waterLevel = 0.35f;
+	public static float hillLevel = 0.55f;
+	public static float mountainLevel = 0.6f;
 	static public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	[JsonIgnore]
 	public GameObject water;
@@ -40,6 +41,8 @@ public class Ground : MonoBehaviour
 	public float eyeX, eyeY, eyeZ;
 	public float eyeDX, eyeDY, eyeDZ, eyeDW;
 	public float eyeAltitude;
+
+	public HeightMap heightMap;
 
 	public static Ground Create()
 	{
@@ -86,12 +89,13 @@ public class Ground : MonoBehaviour
 		water.transform.SetParent( transform );
 		water.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
 		water.name = "Water";
-		water.transform.localPosition = Vector3.up* 2 ;
+		water.transform.localPosition = Vector3.up * waterLevel * maxHeight ;
 		water.transform.localScale = Vector3.one * Math.Max( width, height ) * GroundNode.size;
 	}
 
-	public Ground Setup()
+	public Ground Setup( int seed )
 	{
+		rnd = new System.Random( seed );
 		gameObject.name = "Ground";
 		width = 50;
 		height = 50;
@@ -101,20 +105,49 @@ public class Ground : MonoBehaviour
 		FinishLayout();
 		SetHeights();
 		CreateAreas();
-
-		Player mainPlayer = GameObject.FindObjectOfType<Mission>().mainPlayer;
-		GroundNode center = GetNode( 28, 19 );
-		if ( mainBuilding == null )
-		{
-			mainBuilding = Stock.Create();
-			mainBuilding.SetupMain( this, center, mainPlayer );
-		}
-
-		Camera.main.transform.position = transform.TransformPoint( center.Position() ) - new Vector3( 0, -4, 8 );
-
+		CreateMainBuilding();
 		GenerateResources();
 		return this;
     }
+
+	void CreateMainBuilding()
+	{
+		Player mainPlayer = GameObject.FindObjectOfType<Mission>().mainPlayer;
+
+		GroundNode center = GetNode( width/2, height/2 ), best = null;
+		float heightdDif = float.MaxValue;
+		foreach ( var o in areas[8] )
+		{
+			GroundNode node = center.Add( o );
+			if ( node.type != GroundNode.Type.grass )
+				continue;
+			float min, max;
+			min = max = node.height;
+			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+			{
+				if ( node.Neighbour( i ).type != GroundNode.Type.grass )
+				{
+					max = float.MaxValue;
+					break;
+				}
+				float height = node.Neighbour( i ).height;
+				if ( height < min )
+					min = height;
+				if ( height > max )
+					max = height;
+			}
+			if ( max - min < heightdDif )
+			{
+				best = node;
+				heightdDif = max - min;
+			}
+		}
+
+		Assert.IsNull( mainBuilding );
+		mainBuilding = Stock.Create();
+		mainBuilding.SetupMain( this, best, mainPlayer );
+		GameObject.FindObjectOfType<Eye>().FocusOn( mainBuilding.node );
+	}
 
 	void CreateAreas()
 	{
@@ -177,15 +210,31 @@ public class Ground : MonoBehaviour
 
 	public void SetHeights()
 	{
-		var t = Resources.Load<Texture2D>( "height" );
-		Color[] colors = t.GetPixels();
+		heightMap = ScriptableObject.CreateInstance<HeightMap>();
+		heightMap.Setup( 6, rnd.Next() );
+		heightMap.Fill();
+
+		{
+			var mapTexture = new Texture2D( 64, 64 );
+			for ( int x = 0; x < 64; x++ )
+			{
+				for ( int y = 0; y < 64; y++ )
+				{
+					float h = heightMap.data[x, y];
+					mapTexture.SetPixel( x, y, new Color( h, h, h ) );
+				}
+			}
+
+			mapTexture.Apply();
+		}
+
 		foreach ( var n in nodes )
 		{
-			float d = colors[(t.width*n.x/(width+1))+(t.height*n.y/(height+1))*t.width].g;
+			float d = (float)heightMap.data[n.x, n.y];
 			n.height = d*maxHeight;
-			if ( d > 0.35f )
+			if ( d > hillLevel )
 				n.type = GroundNode.Type.hill;
-			if ( d > 0.5f )
+			if ( d > mountainLevel )
 				n.type = GroundNode.Type.mountain;
 			if ( d < waterLevel )
 				n.type = GroundNode.Type.underWater;
@@ -288,7 +337,6 @@ public class Ground : MonoBehaviour
 			if ( currentNode.flag )
 				currentNode.flag.Remove();
 		}
-
 	}
 
 	void UpdateMesh()
@@ -310,6 +358,7 @@ public class Ground : MonoBehaviour
 				switch ( nodes[i].type )
 				{
 					case GroundNode.Type.grass:
+					case GroundNode.Type.underWater:
 					{
 						colors[i] = Color.red;
 						break;
@@ -431,7 +480,13 @@ public class Ground : MonoBehaviour
 		}
 	}
 
-    public void Validate()
+	void OnGUI()
+	{
+		if ( heightMap.mapTexture != null )
+			GUI.DrawTexture( new Rect( 0, 0, 512, 512 ), heightMap.mapTexture );
+	}
+
+	public void Validate()
  	{
 		reservationCount = reservedCount = 0;
         Assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );

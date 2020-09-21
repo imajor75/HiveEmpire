@@ -29,13 +29,13 @@ public class Stock : Building
 		return this;
 	}
 
-	public bool SetupMain( Ground ground, GroundNode node, Player owner )
+	public Stock SetupMain( Ground ground, GroundNode node, Player owner )
 	{
 		height = 2;
 		node.owner = owner;
 		ground.GetNode( node.x + 1, node.y - 1 ).owner = owner;
 		if ( !Setup( ground, node, owner ) )
-			return false;
+			return null;
 
 		main = true;
 		construction = new Construction();
@@ -45,7 +45,7 @@ public class Stock : Building
 		worker = Worker.Create();
 		worker.SetupForBuilding( this );
 		ground.RegisterInfluence( this );
-		return true;
+		return this;
 	}
 
 	new void Start()
