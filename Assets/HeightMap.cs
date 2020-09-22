@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using Newtonsoft.Json;
 using UnityEngine;
 
 public class HeightMap : ScriptableObject
@@ -19,6 +17,7 @@ public class HeightMap : ScriptableObject
 	[Range(0.0f, 1.0f)]
 	public float randomness = 0.5f;
 	public System.Random random;
+	[JsonIgnore]
 	public float[,] data;
 	public int seed;
 	public bool deepnessAffectsMagnitude = true;

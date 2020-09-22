@@ -35,9 +35,10 @@ public class Worker : MonoBehaviour
 	{
 		public Worker boss;
 
-		public void Setup( Worker boss )
+		public Task Setup( Worker boss )
 		{
 			this.boss = boss;
+			return this;
 		}
 		public virtual bool ExecuteFrame() { return false; }
 		public virtual void Cancel() { }
@@ -352,52 +353,6 @@ public class Worker : MonoBehaviour
 		}
 	}
 
-	public class Pasture : Task
-	{
-		public Resource resource;
-		public int timer;
-		public override bool ExecuteFrame()
-		{
-			if ( resource == null )
-			{
-				resource = Resource.Create().SetupAsPrey( boss );
-				timer = 100;
-				return false;
-			}
-			if ( timer-- > 0 )
-				return false;
-
-			if ( resource.hunter == null )
-			{
-				resource.animals.Clear();
-				resource.Remove();
-				return true;
-			}
-			return false;
-
-		}
-
-		public override void Cancel()
-		{
-			if ( resource )
-			{
-				resource.animals.Clear();
-				resource.Remove();
-			}
-			base.Cancel();
-		}
-
-		public override void Validate()
-		{
-			if ( resource )
-			{
-				Assert.AreEqual( resource.type, Resource.Type.pasturingAnimal );
-				Assert.AreEqual( resource.node, boss.node );
-			}
-			base.Validate();
-		}
-	}
-
 	public enum Type
 	{
 		haluer,
@@ -537,7 +492,7 @@ public class Worker : MonoBehaviour
 		UpdateBody();
 	}
 
-	public void Remove()
+	public void Remove( bool returnToMainBuilding = true )
 	{
 		if ( origin != null )
 		{
@@ -558,6 +513,11 @@ public class Worker : MonoBehaviour
 		{
 			itemInHands.Remove();
 			itemInHands = null;
+		}
+		if ( !returnToMainBuilding )
+		{
+			Destroy( gameObject );
+			return;
 		}
 		if ( road != null && atRoad )
 		{
@@ -624,7 +584,7 @@ public class Worker : MonoBehaviour
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
-				SchedulePasture();
+				ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
 				Walk( t );
 				return;
 			}
@@ -748,19 +708,12 @@ public class Worker : MonoBehaviour
 			taskQueue.Add( instance );
 	}
 
-	public void SchedulePasture( bool first = false )
+	public void ScheduleTask( Task task, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<Pasture>();
-		instance.Setup( this );
 		if ( first )
-			taskQueue.Insert( 0, instance );
+			taskQueue.Insert( 0, task );
 		else
-			taskQueue.Add( instance );
-	}
-
-	public void ScheduleTask( Task task )
-	{
-		taskQueue.Add( task );
+			taskQueue.Add( task );
 	}
 
 	public void CarryItem( Item item )

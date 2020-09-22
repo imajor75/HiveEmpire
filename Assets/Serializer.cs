@@ -17,46 +17,17 @@ public class Serializer : JsonSerializer
 	Serializer boss;
 	int index;
 	JsonReader reader;
+	static MethodInfo scriptableObjectCreator;
 
 	public class SkipUnityContractResolver : DefaultContractResolver
 	{
 		public static readonly SkipUnityContractResolver Instance = new SkipUnityContractResolver();
-		public static readonly Type[] gameClasses = {
-			typeof( Player ),
-			typeof( Flag ),
-			typeof( BorderEdge ),
-			typeof( Worker ),
-			typeof( Road ),
-			typeof( Building ),
-			typeof( Building.Construction ),
-			typeof( Stock ),
-			typeof( Workshop ),
-			typeof( PathFinder ),
-			typeof( Ground ),
-			typeof( GroundNode ),
-			typeof( Item ),
-			typeof( Workshop.Buffer ),
-			typeof( Worker.WalkToFlag ),
-			typeof( Worker.WalkToNeighbour ),
-			typeof( Worker.WalkToNode ),
-			typeof( Worker.WalkToRoadPoint ),
-			typeof( Worker.Task ),
-			typeof( Worker.StartWorkingOnRoad ),
-			typeof( Worker.PickupItem ),
-			typeof( Worker.DeliverItem ),
-			typeof( Workshop.GetResource ),
-			typeof( Workshop.PlantWheat ),
-			typeof( PathFinder ),
-			typeof( Path ),
-			typeof( Resource ),
-			typeof( GuardHouse )
-		};
 
 		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
 		{
-			JsonProperty property = base.CreateProperty(member, memberSerialization);
+			JsonProperty property = base.CreateProperty( member, memberSerialization );
 
-			if ( !gameClasses.Contains( member.DeclaringType ) )
+			if ( member.DeclaringType.Module != GetType().Module )
 				property.ShouldSerialize = instance => false;
 
 			return property;
@@ -74,57 +45,40 @@ public class Serializer : JsonSerializer
 		this.boss = boss;
 	}
 
+	static object CreateObject( Type type )
+	{
+		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
+		{
+			var m = type.GetMethod( "Create" );
+			Assert.AreEqual( m.IsStatic, true );
+			object[] empty = new object[0];
+			return m.Invoke( null, empty );
+		}
+		if ( typeof( ScriptableObject ).IsAssignableFrom( type ) )
+		{
+			if ( scriptableObjectCreator == null )
+			{
+				MethodInfo[] methods = typeof( ScriptableObject ).GetMethods();
+				foreach ( var method in methods )
+				{
+					if ( method.Name == "CreateInstance" && method.IsGenericMethodDefinition )
+						scriptableObjectCreator = method;
+				}
+				Assert.IsNotNull( scriptableObjectCreator );
+			}
+			Type[] types = { type };
+			MethodInfo creator = scriptableObjectCreator.MakeGenericMethod( types );
+			object[] parameters = null;
+			return creator.Invoke( null, parameters );
+		}
+		return Activator.CreateInstance( type );
+	}
+
 	object Object()
 	{
 		if ( instance == null )
-		{
-			if ( type == typeof( Player ) )
-				instance = ScriptableObject.CreateInstance<Player>();
-			else if ( type == typeof( BorderEdge ) )
-				instance = BorderEdge.Create();
-			else if ( type == typeof( Flag ) )
-				instance = Flag.Create();
-			else if ( type == typeof( Stock ) )
-				instance = Stock.Create();
-			else if ( type == typeof( Workshop ) )
-				instance = Workshop.Create();
-			else if ( type == typeof( GuardHouse ) )
-				instance = GuardHouse.Create();
-			else if ( type == typeof( Ground ) )
-				instance = Ground.Create();
-			else if ( type == typeof( Worker ) )
-				instance = Worker.Create();
-			else if ( type == typeof( Worker.DeliverItem ) )
-				instance = ScriptableObject.CreateInstance<Worker.DeliverItem>();
-			else if ( type == typeof( Worker.PickupItem ) )
-				instance = ScriptableObject.CreateInstance<Worker.PickupItem>();
-			else if ( type == typeof( Worker.StartWorkingOnRoad ) )
-				instance = ScriptableObject.CreateInstance<Worker.StartWorkingOnRoad>();
-			else if ( type == typeof( Worker.WalkToFlag ) )
-				instance = ScriptableObject.CreateInstance<Worker.WalkToFlag>();
-			else if ( type == typeof( Worker.WalkToNeighbour ) )
-				instance = ScriptableObject.CreateInstance<Worker.WalkToNeighbour>();
-			else if ( type == typeof( Worker.WalkToNode ) )
-				instance = ScriptableObject.CreateInstance<Worker.WalkToNode>();
-			else if ( type == typeof( Worker.WalkToRoadPoint ) )
-				instance = ScriptableObject.CreateInstance<Worker.WalkToRoadPoint>();
-			else if ( type == typeof( Workshop.GetResource ) )
-				instance = ScriptableObject.CreateInstance<Workshop.GetResource>();
-			else if ( type == typeof( Workshop.PlantWheat ) )
-				instance = ScriptableObject.CreateInstance<Workshop.PlantWheat>();
-			else if ( type == typeof( Road ) )
-				instance = Road.Create();
-			else if ( type == typeof( Item ) )
-				instance = Item.Create();
-			else if ( type == typeof( Resource ) )
-				instance = Resource.Create();
-			else if ( type == typeof( Path ) )
-				instance = ScriptableObject.CreateInstance<Path>();
-			else if ( type == typeof( PathFinder ) )
-				instance = ScriptableObject.CreateInstance<PathFinder>();
-			else
-				instance = Activator.CreateInstance( type );
-		}
+			instance = CreateObject( type );
+
 		if ( index > 0 )
 		{
 			while ( boss.objects.Count <= index )

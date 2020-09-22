@@ -91,8 +91,6 @@ public class Workshop : Building
 					resource.keepAwayTimer = 500;   // TODO Settings
 				resource.hunter = null;
 			}
-			if ( resourceType == Resource.Type.fish )
-				itemType = Item.Type.fish;
 			FinishJob( boss, itemType );
 			return true;
 		}
@@ -131,6 +129,55 @@ public class Workshop : Building
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
 			return false;
+		}
+	}
+
+	public class Pasturing : Worker.Task
+	{
+		public Resource resource;
+		public int timer;
+		public override bool ExecuteFrame()
+		{
+			if ( resource == null )
+			{
+				resource = Resource.Create().SetupAsPrey( boss );
+				timer = 100;
+				if ( resource == null )
+					return true;
+
+				return false;
+			}
+			if ( timer-- > 0 )
+				return false;
+
+			if ( resource.hunter == null )
+			{
+				resource.animals.Clear();
+				resource.Remove();
+				return true;
+			}
+			return false;
+
+		}
+
+		public override void Cancel()
+		{
+			if ( resource )
+			{
+				resource.animals.Clear();
+				resource.Remove();
+			}
+			base.Cancel();
+		}
+
+		public override void Validate()
+		{
+			if ( resource )
+			{
+				Assert.AreEqual( resource.type, Resource.Type.pasturingAnimal );
+				Assert.AreEqual( resource.node, boss.node );
+			}
+			base.Validate();
 		}
 	}
 

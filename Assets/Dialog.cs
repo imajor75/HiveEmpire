@@ -23,8 +23,6 @@ public class Dialog : Panel
 		dialog.transform.SetParent( Panel.canvas.transform );
 		Vector2 position = Panel.canvas.pixelRect.center;
 		dialog.transform.localPosition = new Vector3( position.x, position.y, 0 );
-		Debug.Log( "startx: " + position.x );
-		Debug.Log( "startx2: " + dialog.transform.localPosition.x );
 		dialog.rectTransform.sizeDelta = new Vector2( 300, 300 );
 
 		int row = -40;

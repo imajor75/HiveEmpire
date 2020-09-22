@@ -113,6 +113,8 @@ public class Resource : MonoBehaviour
 			name = "Cave";
 			body = GameObject.Instantiate( templateAnimalRock );
 		}
+		if ( type == Type.pasturingAnimal )
+			name = "Pasturing Animal Resource";
 		if ( body != null )
 		{
 			body.transform.SetParent( transform );
@@ -167,6 +169,8 @@ public class Resource : MonoBehaviour
 				return Item.Type.fish;
 			case Type.cornfield:
 				return Item.Type.grain;
+			case Type.pasturingAnimal:
+				return Item.Type.hide;
 			default:
 				return Item.Type.unknown;
 		}
@@ -175,7 +179,12 @@ public class Resource : MonoBehaviour
 	public void Remove()
 	{
 		if ( type == Type.pasturingAnimal && animals.Count > 0 )
-			animals[0].Remove();
+		{
+			animals[0].taskQueue.Clear();
+			animals[0].Remove( false );
+		}
+		Assert.AreEqual( this, node.resource );
+		node.resource = null;
 		Destroy( gameObject );
 	}
 
