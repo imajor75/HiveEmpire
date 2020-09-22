@@ -10,9 +10,12 @@ public class Resource : MonoBehaviour
 	public int charges = 1;
 	GameObject body;
 	public int keepAwayTimer = 0;
+	public int spawnTimer = 0;
 	public Worker hunter;
+	public List<Worker> animals = new List<Worker>();
 	static List<GameObject> templateTree = new List<GameObject>();
 	static List<GameObject> templateRock = new List<GameObject>();
+	static GameObject templateAnimalRock;
 	static Material cornfieldMaterial;
 
 	public enum Type
@@ -21,6 +24,8 @@ public class Resource : MonoBehaviour
 		rock,
 		fish,
 		cornfield,
+		animalSpawner,
+		pasturingAnimal,
 		other
 	}
 
@@ -40,6 +45,8 @@ public class Resource : MonoBehaviour
 		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock3" ) );
 
 		cornfieldMaterial = Resources.Load<Material>( "cornfield" );
+
+		templateAnimalRock = (GameObject)Resources.Load( "AnimalCave/animRock(Clone)" );
 	}
 
 	static public Resource Create()
@@ -66,6 +73,15 @@ public class Resource : MonoBehaviour
 		return this;
 	}
 
+	public Resource SetupAsPrey( Worker animal )
+	{
+		if ( Setup( animal.node, Type.pasturingAnimal ) == null )
+			return null;
+
+		animals.Add( animal );
+		return this;
+	}
+
     // Start is called before the first frame update
     void Start()
     {
@@ -87,17 +103,23 @@ public class Resource : MonoBehaviour
 		}
 		if ( type == Type.cornfield )
 		{
+			name = "Cornfield";
 			body = GameObject.CreatePrimitive( PrimitiveType.Capsule );
 			body.transform.localScale = new Vector3( 0.5f, 0, 0.5f );
 			body.GetComponent<MeshRenderer>().material = cornfieldMaterial;
-			name = "Cornfield";
 		}
+		if ( type == Type.animalSpawner )
+		{
+			name = "Cave";
+			body = GameObject.Instantiate( templateAnimalRock );
+		}
+		if ( type == Type.pasturingAnimal )
+			name = "Pasturing Animal Resource";
 		if ( body != null )
 		{
 			body.transform.SetParent( transform );
 			body.transform.localPosition = Vector3.zero;
 		}
-		Assert.IsNotNull( body );
 	}
 
 	void Update()
@@ -113,6 +135,26 @@ public class Resource : MonoBehaviour
 	{
 		growth++;
 		keepAwayTimer--;
+		if ( type == Type.animalSpawner && spawnTimer-- <= 0 )
+		{
+			foreach ( var o in Ground.areas[1] )
+			{
+				GroundNode n = node.Add( o );
+				if ( n.building != null || n.resource != null )
+					continue;
+				if ( animals.Count >= 3 )
+					continue;
+				var animal = Worker.Create().SetupAsAnimal( this, n );
+				if ( animal != null )
+				{
+					animals.Add( animal );
+					break;
+				}
+				else
+					Assert.IsTrue( false );
+			}
+			spawnTimer = 1000;
+		}
 	}
 
 	static public Item.Type ItemType( Type type )
@@ -127,6 +169,8 @@ public class Resource : MonoBehaviour
 				return Item.Type.fish;
 			case Type.cornfield:
 				return Item.Type.grain;
+			case Type.pasturingAnimal:
+				return Item.Type.hide;
 			default:
 				return Item.Type.unknown;
 		}
@@ -134,6 +178,13 @@ public class Resource : MonoBehaviour
 
 	public void Remove()
 	{
+		if ( type == Type.pasturingAnimal && animals.Count > 0 )
+		{
+			animals[0].taskQueue.Clear();
+			animals[0].Remove( false );
+		}
+		Assert.AreEqual( this, node.resource );
+		node.resource = null;
 		Destroy( gameObject );
 	}
 
@@ -145,5 +196,10 @@ public class Resource : MonoBehaviour
 	public void Validate()
 	{
 		//Assert.IsNotNull( body );
+		if ( type == Type.animalSpawner )
+			foreach ( var w in animals )
+				Assert.IsNotNull( w );
+		if ( type == Type.pasturingAnimal )
+			Assert.AreEqual( animals.Count, 1 );
 	}
 }

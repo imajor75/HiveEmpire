@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using Newtonsoft.Json;
 using UnityEngine;
 
 public class HeightMap : ScriptableObject
@@ -19,6 +17,7 @@ public class HeightMap : ScriptableObject
 	[Range(0.0f, 1.0f)]
 	public float randomness = 0.5f;
 	public System.Random random;
+	[JsonIgnore]
 	public float[,] data;
 	public int seed;
 	public bool deepnessAffectsMagnitude = true;
@@ -174,12 +173,6 @@ public class HeightMap : ScriptableObject
 		}
 		mapTexture.Apply();
 		Color c = mapTexture.GetPixel( 0, 0 );
-
-		var bytes = mapTexture.EncodeToPNG();
-		FileStream file = File.Open("akarmi.png",FileMode.Create);
-		BinaryWriter binary = new BinaryWriter(file);
-		binary.Write( bytes );
-		file.Close();
 	}
 }
 		

@@ -34,7 +34,12 @@ public class WorkshopPanel : Panel
 		rectTransform.anchoredPosition = Vector2.zero;
 		rectTransform.sizeDelta = new Vector2( 240, 200 );
 
-		int row = -20;
+		Text title = CreateElement<Text>( this, 20, -20 );
+		title.text = workshop.type.ToString();
+		title.color = Color.yellow;
+		title.font = font;
+
+		int row = -40;
 		int col;
 		buffers = new List<BufferUI>();
 		foreach ( var b in workshop.buffers )

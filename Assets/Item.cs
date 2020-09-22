@@ -23,21 +23,24 @@ public class Item : MonoBehaviour
 		flour,
 		salt,
 		pretzel,
+		hide,
         total,
 		unknown = -1
     }
 
 	public static void Initialize()
 	{
-		string[] filenames = { 
-			"log", 
-			"rock", 
-			"plank", 
+		string[] filenames = {
+			"log",
+			"rock",
+			"plank",
 			"fish",
 			"wheat",
-			"flour", 
+			"flour",
 			"salt",
-			"pretzel" };
+			"pretzel",
+			"hide"
+		};
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );

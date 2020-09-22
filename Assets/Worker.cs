@@ -1,8 +1,7 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 public class Worker : MonoBehaviour
 {
@@ -15,6 +14,7 @@ public class Worker : MonoBehaviour
 	public Item itemInHands;
 	public Flag reservation;
 	public int look;
+	public Resource origin;
 
 	public Building construction;
 
@@ -35,9 +35,10 @@ public class Worker : MonoBehaviour
 	{
 		public Worker boss;
 
-		public void Setup( Worker boss )
+		public Task Setup( Worker boss )
 		{
 			this.boss = boss;
+			return this;
 		}
 		public virtual bool ExecuteFrame() { return false; }
 		public virtual void Cancel() { }
@@ -358,6 +359,7 @@ public class Worker : MonoBehaviour
 		tinkerer,
 		constructor,
 		soldier,
+		wildAnimal,
 		unemployed
 	}
 
@@ -367,7 +369,8 @@ public class Worker : MonoBehaviour
 		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a" ) );
 		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a" ) );
 		templates.Add( (GameObject)Resources.Load( "FootmanPBRHPPolyart/Prefabs/footman_Blue_HP" ) );
-
+		templates.Add( (GameObject)Resources.Load( "Rabbits/Prefabs/Rabbit 1" ) );
+		
 		idleController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Idle" );
 		Assert.IsNotNull( idleController );
 		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
@@ -431,12 +434,24 @@ public class Worker : MonoBehaviour
 		return this;
 	}
 
+	public Worker SetupAsAnimal( Resource origin, GroundNode node )
+	{
+		type = Type.wildAnimal;
+		look = 4;
+		this.node = node;
+		this.origin = origin;
+		this.ground = node.ground;
+		return this;
+	}
+
 	void Start()
 	{
 		if ( road != null )
 			transform.SetParent( road.ground.transform );
 		if ( building != null )
 			transform.SetParent( building.ground.transform );
+		if ( node != null )
+			transform.SetParent( node.ground.transform );
 
 		body = (GameObject)GameObject.Instantiate( templates[look], transform );
 		animator = body.GetComponent<Animator>();
@@ -477,8 +492,14 @@ public class Worker : MonoBehaviour
 		UpdateBody();
 	}
 
-	public void Remove()
+	public void Remove( bool returnToMainBuilding = true )
 	{
+		if ( origin != null )
+		{
+			Assert.AreEqual( type, Type.wildAnimal );
+			Assert.AreEqual( origin.type, Resource.Type.animalSpawner );
+			origin.animals.Remove( this );
+		}
 		if ( reservation )
 		{
 			reservation.reserved--;
@@ -492,6 +513,11 @@ public class Worker : MonoBehaviour
 		{
 			itemInHands.Remove();
 			itemInHands = null;
+		}
+		if ( !returnToMainBuilding )
+		{
+			Destroy( gameObject );
+			return;
 		}
 		if ( road != null && atRoad )
 		{
@@ -545,6 +571,23 @@ public class Worker : MonoBehaviour
 		{
 			ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
 			return;
+		}
+
+		if ( type == Type.wildAnimal )
+		{
+			int r = Ground.rnd.Next( 6 );
+			var d = Ground.areas[1];
+			for ( int i = 0; i < d.Count; i++ )
+			{
+				GroundNode t = node.Add( d[(i+r)%d.Count] );
+				if ( t.building || t.resource )
+					continue;
+				if ( t.DistanceFrom( origin.node ) > 8 )
+					continue;
+				ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
+				Walk( t );
+				return;
+			}
 		}
 
 		if ( type == Type.unemployed )
@@ -665,9 +708,12 @@ public class Worker : MonoBehaviour
 			taskQueue.Add( instance );
 	}
 
-	public void ScheduleTask( Task task )
+	public void ScheduleTask( Task task, bool first = false )
 	{
-		taskQueue.Add( task );
+		if ( first )
+			taskQueue.Insert( 0, task );
+		else
+			taskQueue.Add( task );
 	}
 
 	public void CarryItem( Item item )
@@ -733,6 +779,13 @@ public class Worker : MonoBehaviour
 
 	public void Validate()
 	{
+		if ( type == Type.wildAnimal )
+		{
+			Assert.IsNotNull( origin );
+			Assert.AreEqual( origin.type, Resource.Type.animalSpawner );
+		}
+		else
+			Assert.IsNull( origin );
 		Assert.IsTrue( road == null || building == null );
 		if ( road )
 			Assert.IsTrue( road.workers.Contains( this ) );
