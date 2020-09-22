@@ -453,7 +453,7 @@ public class Workshop : Building
 		}
 		if ( working && worker && worker.IsIdleInBuilding() )
 		{
-			progress += processSpeed * ground.speedModifier;
+			progress += processSpeed * ground.world.speedModifier;
 			if ( progress > 1 )
 			{
 				output += outputStep;
@@ -470,7 +470,7 @@ public class Workshop : Building
 			range = Ground.areas.Length - 1;
 		GroundNode prey;
 		int t = Ground.areas[range].Count;
-		int r = Ground.rnd.Next( t );
+		int r = ground.world.rnd.Next( t );
 		for ( int j = 0; j < t; j++ )
 		{
 			var o = Ground.areas[range][(j+r)%t];

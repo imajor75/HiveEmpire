@@ -390,7 +390,7 @@ public class Worker : MonoBehaviour
 		type = Type.haluer;
 		look = 2;
 		ground = road.ground;
-		Building main = road.ground.mainBuilding;
+		Building main = road.ground.world.mainBuilding;
 		node = main.node;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
@@ -423,7 +423,7 @@ public class Worker : MonoBehaviour
 	{
 		ground = building.ground;
 		this.building = building;
-		Building main = ground.mainBuilding;
+		Building main = ground.world.mainBuilding;
 		node = main.node;
 		if ( building != main )
 		{
@@ -475,7 +475,7 @@ public class Worker : MonoBehaviour
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != zero )
 		{
-			walkProgress += 0.015f*ground.speedModifier; // TODO Speed should depend on the steepness of the road
+			walkProgress += 0.015f*ground.world.speedModifier; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = zero;
@@ -575,7 +575,7 @@ public class Worker : MonoBehaviour
 
 		if ( type == Type.wildAnimal )
 		{
-			int r = Ground.rnd.Next( 6 );
+			int r = ground.world.rnd.Next( 6 );
 			var d = Ground.areas[1];
 			for ( int i = 0; i < d.Count; i++ )
 			{
@@ -592,18 +592,18 @@ public class Worker : MonoBehaviour
 
 		if ( type == Type.unemployed )
 		{
-			if ( node == ground.mainBuilding.node )
+			if ( node == ground.world.mainBuilding.node )
 			{
 				if ( walkTo == zero )
 					Destroy( gameObject );
 				return;
 			}
-			if ( node == ground.mainBuilding.flag.node )
+			if ( node == ground.world.mainBuilding.flag.node )
 			{
-				ScheduleWalkToNeighbour( ground.mainBuilding.node );
+				ScheduleWalkToNeighbour( ground.world.mainBuilding.node );
 				return;
 			}
-			ScheduleWalkToFlag( ground.mainBuilding.flag );
+			ScheduleWalkToFlag( ground.world.mainBuilding.flag );
 		}
 	}
 

@@ -91,15 +91,15 @@ public class Resource : MonoBehaviour
 		if ( type == Type.tree )
 		{
 			name = "Tree";
-			body = GameObject.Instantiate( templateTree[Ground.rnd.Next( templateTree.Count )] );
-			body.transform.Rotate( Vector3.up * Ground.rnd.Next( 360 ) );
+			body = GameObject.Instantiate( templateTree[node.ground.world.rnd.Next( templateTree.Count )] );
+			body.transform.Rotate( Vector3.up * node.ground.world.rnd.Next( 360 ) );
 			body.transform.localScale = Vector3.one * 0.3f;
 		}
 		if ( type == Type.rock )
 		{
 			name = "Rock";
-			body = GameObject.Instantiate( templateRock[Ground.rnd.Next( templateRock.Count )] );
-			body.transform.Rotate( Vector3.up * Ground.rnd.Next( 360 ) );
+			body = GameObject.Instantiate( templateRock[node.ground.world.rnd.Next( templateRock.Count )] );
+			body.transform.Rotate( Vector3.up * node.ground.world.rnd.Next( 360 ) );
 		}
 		if ( type == Type.cornfield )
 		{

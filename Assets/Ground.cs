@@ -7,10 +7,10 @@ using UnityEngine;
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
 public class Ground : MonoBehaviour
 {
-	[JsonIgnore]
-	public float speedModifier = 1;
+	public World world;
 	public int width = 50, height = 50;
 	public GroundNode[] nodes;
+	public List<Building> influencers = new List<Building>();
 	public int layoutVersion = 1;
 	[JsonIgnore]
 	public int currentRow, currentColumn;
@@ -23,11 +23,6 @@ public class Ground : MonoBehaviour
 	public Mesh mesh;
 	[JsonIgnore]
 	public new MeshCollider collider;
-	public Stock mainBuilding;
-	public GroundNode zero;
-	public List<Building> influencers = new List<Building>();
-	static public System.Random rnd;
-	int reservedCount, reservationCount;
 	public static int maxArea = 10;
 	public static float maxHeight = 20;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
@@ -37,10 +32,7 @@ public class Ground : MonoBehaviour
 	static public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	[JsonIgnore]
 	public GameObject water;
-
-	public float eyeX, eyeY, eyeZ;
-	public float eyeDX, eyeDY, eyeDZ, eyeDW;
-	public float eyeAltitude;
+	int reservedCount, reservationCount;
 
 	public HeightMap heightMap;
 
@@ -65,10 +57,10 @@ public class Ground : MonoBehaviour
 
 	void Start()
 	{
-		if ( zero == null )
-			zero = Worker.zero;
+		if ( world.zero == null )
+			world.zero = Worker.zero;
 		else
-			Worker.zero = zero;
+			Worker.zero = world.zero;
 		gameObject.name = "Ground";
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
@@ -93,9 +85,10 @@ public class Ground : MonoBehaviour
 		water.transform.localScale = Vector3.one * Math.Max( width, height ) * GroundNode.size;
 	}
 
-	public Ground Setup( int seed )
+	public Ground Setup( World world, int seed )
 	{
-		rnd = new System.Random( seed );
+		this.world = world;
+		world.rnd = new System.Random( seed );
 		gameObject.name = "Ground";
 		width = 50;
 		height = 50;
@@ -112,7 +105,7 @@ public class Ground : MonoBehaviour
 
 	void CreateMainBuilding()
 	{
-		Player mainPlayer = GameObject.FindObjectOfType<Mission>().mainPlayer;
+		Player mainPlayer = world.mainPlayer;
 
 		GroundNode center = GetNode( width/2, height/2 ), best = null;
 		float heightdDif = float.MaxValue;
@@ -143,10 +136,10 @@ public class Ground : MonoBehaviour
 			}
 		}
 
-		Assert.IsNull( mainBuilding );
-		mainBuilding = Stock.Create();
-		mainBuilding.SetupMain( this, best, mainPlayer );
-		GameObject.FindObjectOfType<Eye>().FocusOn( mainBuilding.node );
+		Assert.IsNull( world.mainBuilding );
+		world.mainBuilding = Stock.Create();
+		world.mainBuilding.SetupMain( this, best, mainPlayer );
+		world.eye.FocusOn( world.mainBuilding.node );
 	}
 
 	void CreateAreas()
@@ -185,7 +178,7 @@ public class Ground : MonoBehaviour
 	{
 		foreach ( var node in nodes )
 		{
-			int i = rnd.Next( 1000 );
+			int i = world.rnd.Next( 1000 );
 			if ( i < 4 )
 				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
 			if ( i >= 5 && i < 6 )
@@ -213,7 +206,7 @@ public class Ground : MonoBehaviour
 	public void SetHeights()
 	{
 		heightMap = ScriptableObject.CreateInstance<HeightMap>();
-		heightMap.Setup( 6, rnd.Next() );
+		heightMap.Setup( 6, world.rnd.Next() );
 		heightMap.Fill();
 
 		{
@@ -280,6 +273,7 @@ public class Ground : MonoBehaviour
 
 		nodes[y * ( width + 1 ) + x] = node;
 	}
+
 	void CheckMouse()
 	{
 		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -297,12 +291,12 @@ public class Ground : MonoBehaviour
 
 	void CheckUserInput()
 	{
-		Player player = GameObject.FindObjectOfType<Mission>().mainPlayer;
+		Player player = world.mainPlayer;
 		var currentNode = GetNode(currentColumn, currentRow);
 		if ( Input.GetKey( KeyCode.Space ) )
-			speedModifier = 5;
+			world.speedModifier = 5;
 		else
-			speedModifier = 1;
+			world.speedModifier = 1;
 		if ( Input.GetKeyDown( KeyCode.F ) )
 		{
 			Flag flag = Flag.Create();
@@ -328,7 +322,7 @@ public class Ground : MonoBehaviour
 		{
 			selectedNode = currentNode;
 			Debug.Log( "Current pos: " + currentNode.x + ", " + currentNode.y );
-			Debug.Log( "Distance from main building: " + currentNode.DistanceFrom( mainBuilding.node ) );
+			Debug.Log( "Distance from main building: " + currentNode.DistanceFrom( world.mainBuilding.node ) );
 		}
 		if ( Input.GetKeyDown( KeyCode.K ) )
 		{
@@ -484,7 +478,7 @@ public class Ground : MonoBehaviour
 
 	void OnGUI()
 	{
-		if ( heightMap.mapTexture != null )
+		if ( heightMap?.mapTexture != null )
 			GUI.DrawTexture( new Rect( 0, 0, 512, 512 ), heightMap.mapTexture );
 	}
 

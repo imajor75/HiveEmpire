@@ -47,6 +47,8 @@ public class Serializer : JsonSerializer
 
 	static object CreateObject( Type type )
 	{
+		if ( type == typeof( World ) )
+			return World.instance;
 		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
 		{
 			var m = type.GetMethod( "Create" );

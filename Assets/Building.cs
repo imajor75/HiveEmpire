@@ -73,11 +73,11 @@ abstract public class Building : MonoBehaviour
 				return;
 
 			// TODO Try to find a path only if the road network has been changed
-			if ( worker == null && Path.Between( boss.ground.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad ) != null )
+			if ( worker == null && Path.Between( boss.ground.world.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad ) != null )
 			{
 				if ( timeSinceCreated > 50 )
 				{
-					Building main = boss.ground.mainBuilding;
+					Building main = boss.ground.world.mainBuilding;
 					worker = Worker.Create();
 					worker.SetupForConstruction( boss );
 				}
@@ -98,7 +98,7 @@ abstract public class Building : MonoBehaviour
 				}
 				return;
 			}
-			progress += 0.001f*boss.ground.speedModifier;	// TODO This should be different for each building type
+			progress += 0.001f*boss.ground.world.speedModifier;	// TODO This should be different for each building type
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
 				progress = maxProgress;

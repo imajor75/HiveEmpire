@@ -139,7 +139,7 @@ public class GroundNode
 				GroundNode n = ground.GetNode( this.x + x, this.y + y );
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
-				if ( chance * 100 > Ground.rnd.Next( 100 ) )
+				if ( chance * 100 > ground.world.rnd.Next( 100 ) )
 					n.AddResource( type );
 			}
 		}
