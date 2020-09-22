@@ -12,6 +12,7 @@ public class Eye : MonoBehaviour
 	public World world;
 	public float x, y;
 	public float direction;
+	public new Camera camera;
 
 	public static Eye Create()
 	{
@@ -23,11 +24,12 @@ public class Eye : MonoBehaviour
 	public Eye Setup( World world )
 	{
 		this.world = world;
+		camera = GetComponent<Camera>();
 		return this;
 	}
 
 	void Start()
-    {
+	{
 		tag = "MainCamera";
 		name = "Eye";
 		transform.position = new Vector3( 0, 4, -7 );
@@ -59,13 +61,13 @@ public class Eye : MonoBehaviour
 	}
 
 	void FixedUpdate()
-    {
+	{
 		Vector3 movement = new Vector3();
-        if ( Input.GetKey( KeyCode.A ) )
-            movement += transform.right * -0.1f;
-        if ( Input.GetKey( KeyCode.D ) )
+		if ( Input.GetKey( KeyCode.A ) )
+			movement += transform.right * -0.1f;
+		if ( Input.GetKey( KeyCode.D ) )
 			movement += transform.right * 0.1f;
-        if ( Input.GetKey( KeyCode.W ) )
+		if ( Input.GetKey( KeyCode.W ) )
 			movement += transform.forward * 0.13f;
 		if ( Input.GetKey( KeyCode.S ) )
 			movement += transform.forward * -0.13f;
@@ -85,5 +87,16 @@ public class Eye : MonoBehaviour
 			direction -= 360;
 		if ( direction < 0 )
 			direction += 360;
+	}
+
+	public GroundNode FindNodeAt( Vector3 screenPosition )
+	{
+		Ray ray = camera.ScreenPointToRay( screenPosition );
+		RaycastHit hit;
+		if ( !world.ground.collider.Raycast( ray, out hit, 1000 ) )	// TODO How long the ray should really be?
+			return null;
+
+		Vector3 localPosition = transform.InverseTransformPoint( hit.point );
+		return GroundNode.FromPosition( localPosition, world.ground );
 	}
 }

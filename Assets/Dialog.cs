@@ -40,10 +40,12 @@ public class Dialog : Panel
 
 	public override void OnPointerClick( PointerEventData data )
 	{
+		Interface root = GameObject.FindObjectOfType<Interface>();
+
 		int y = (int)(rectTransform.anchoredPosition.y + rectTransform.sizeDelta.y / 2 - data.position.y);
 		int i = (y - 40) / 30;
 		if ( i <= (int)Workshop.Type.total )
-			Ground.selectedWorkshopType = (Workshop.Type)i;
+			root.selectedWorkshopType = (Workshop.Type)i;
 
 		base.OnPointerClick( data );
 	}
