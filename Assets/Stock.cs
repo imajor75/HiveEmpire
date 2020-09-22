@@ -82,7 +82,7 @@ public class Stock : Building
 
 	public override void OnClicked()
 	{
-		StockPanel.Open( this );
+		//StockPanel.Open( this );
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination )

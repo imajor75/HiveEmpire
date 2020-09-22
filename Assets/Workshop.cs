@@ -538,7 +538,7 @@ public class Workshop : Building
 
 	public override void OnClicked()
 	{
-		WorkshopPanel.Open( this );
+		//WorkshopPanel.Open( this );
 	}
 
 	public override void Validate()

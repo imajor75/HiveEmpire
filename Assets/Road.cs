@@ -373,7 +373,7 @@ public class Road : MonoBehaviour
 
 	public void OnClicked()
 	{
-		RoadPanel.Open( this );
+		//RoadPanel.Open( this );
 	}
 
 	public void Split( Flag flag )

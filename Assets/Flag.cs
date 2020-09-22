@@ -118,7 +118,7 @@ public class Flag : MonoBehaviour
 
 	public void OnClicked()
 	{
-		FlagPanel.Open( this );
+		Interface.FlagPanel.Create().Setup( this );
 	}
 
 	public void Remove()
