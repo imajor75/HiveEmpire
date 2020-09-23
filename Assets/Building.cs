@@ -12,7 +12,6 @@ abstract public class Building : MonoBehaviour
 	public GroundNode node;
 	[JsonIgnore]
 	public Road exit;
-	static public List<GameObject> templates = new List<GameObject>();
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
@@ -181,23 +180,6 @@ abstract public class Building : MonoBehaviour
 
 	public static void Initialize()
 	{
-		string[] files = {
-			"Medieval fantasy house/Medieva_fantasy_house",
-			"Medieval house/Medieval_house 1",
-			"Baker House/Prefabs/Baker_house",
-			"Fantasy House/Prefab/Fantasy_House_6",
-			"WatchTower/Tower",
-			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07",
-			"mill/melnica_mod",
-			"Mines/saltmine",
-			"Mines/coalmine",
-			"Mines/ironmine",
-			"Mines/goldmine",
-			"Mines/stonemine"
-		};
-		foreach ( string file in files )
-			templates.Add( (GameObject)Resources.Load( file ) );
-
 		Construction.Initialize();
 	}
 

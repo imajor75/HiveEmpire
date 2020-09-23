@@ -39,6 +39,9 @@ public class Interface : MonoBehaviour
 		Flag.Initialize();
 		Resource.Initialize();
 		Interface.Initialize();
+		Workshop.Initialize();
+		Stock.Initialize();
+		GuardHouse.Initialize();
 
 		canvas = gameObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;

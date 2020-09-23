@@ -10,10 +10,16 @@ public class Stock : Building
 	public List<int> content = new List<int>();
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
+	public static GameObject template;
+
+	public static void Initialize()
+	{
+		template = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
+	}
 
 	public static Stock Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( templates[0] );
+		var buildingObject = (GameObject)GameObject.Instantiate( template );
 		buildingObject.transform.localScale = new Vector3( 0.12f, 0.12f, 0.12f );
 		buildingObject.transform.Rotate( Vector3.up * -55 );	
 		return buildingObject.AddComponent<Stock>();

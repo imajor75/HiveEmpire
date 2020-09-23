@@ -7,6 +7,12 @@ public class GuardHouse : Building
 	public List<Worker> soldiers = new List<Worker>();
 	public bool ready;
 	public int influence = 8;
+	public static GameObject template;
+
+	public static void Initialize()
+	{
+		template = (GameObject)Resources.Load( "WatchTower/Tower" );
+	}
 
 	public static GuardHouse Create()
 	{
@@ -25,7 +31,7 @@ public class GuardHouse : Building
 
 	new void Start()
 	{
-		GameObject.Instantiate( templates[4], transform );
+		GameObject.Instantiate( template, transform );
 		base.Start();
 	}
 

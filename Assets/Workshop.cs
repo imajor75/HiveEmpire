@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -24,6 +26,14 @@ public class Workshop : Building
 	public static int cornfieldGrowthMax = 6000;
 	public static int plantingTime = 100;
 	public static int resourceCutTime = 250;
+	static List<Look> looks = new List<Look>();
+
+	class Look
+	{
+		public string file;
+		public GameObject template;
+		public List<Type> types = new List<Type>();
+	}
 
 	[System.Serializable]
 	public class Buffer
@@ -45,6 +55,11 @@ public class Workshop : Building
 		mill,
 		bakery,
 		hunter,
+		saltmine,
+		ironmine,
+		coalmine,
+		stonemine,
+		goldmine,
 		total,
 		unknown = -1
 	}
@@ -181,6 +196,39 @@ public class Workshop : Building
 		}
 	}
 
+	public static new void Initialize()
+	{
+		object[] looksData = {
+			"Medieval fantasy house/Medieva_fantasy_house",
+			"Medieval house/Medieval_house 1", Type.woodcutter, Type.fishingHut, 
+			"Baker House/Prefabs/Baker_house", Type.bakery, Type.hunter,
+			"Fantasy House/Prefab/Fantasy_House_6", Type.stonemason, Type.sawmill,
+			"WatchTower/Tower",
+			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", Type.farm, 
+			"mill/melnica_mod", Type.mill,
+			"Mines/saltmine", Type.saltmine,
+			"Mines/coalmine", Type.coalmine,
+			"Mines/ironmine", Type.ironmine,
+			"Mines/goldmine", Type.goldmine,
+			"Mines/stonemine", Type.stonemine };
+		foreach ( var g in looksData )
+		{
+			string file = g as string;
+			if ( file != null )
+			{
+				Look look = new Look();
+				look.file = file;
+				looks.Add( look );
+			}
+			Type? type = g as Type?;
+			if ( type != null )
+				looks[looks.Count - 1].types.Add( (Type)type );
+			Debug.Log( file );
+		}
+		foreach ( var l in looks )
+			l.template = (GameObject)Resources.Load( l.file );
+	}
+
 	public static Workshop Create()
 	{
 		var buildingObject = new GameObject();
@@ -259,6 +307,41 @@ public class Workshop : Building
 				height = 2;
 				break;
 			}
+			case Type.coalmine:
+			{
+				outputType = Item.Type.coal;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				break;
+			}
+			case Type.stonemine:
+			{
+				outputType = Item.Type.stone;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				break;
+			}
+			case Type.ironmine:
+			{
+				outputType = Item.Type.iron;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				break;
+			}
+			case Type.goldmine:
+			{
+				outputType = Item.Type.gold;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				break;
+			}
+			case Type.saltmine:
+			{
+				outputType = Item.Type.salt;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				break;
+			}
 		}
 		if ( Setup( ground, node, owner ) == null )
 			return null;
@@ -275,8 +358,12 @@ public class Workshop : Building
 
 	new void Start()
 	{
-		int[] look = { 1, 2, 3, 1, 5, 6, 2, 3 };
-		body = (GameObject)GameObject.Instantiate( templates[look[(int)type]], transform );
+		foreach ( var l in looks )
+		{
+			if ( l.types.Contains( type ) )
+				body = (GameObject)GameObject.Instantiate( l.template, transform );
+		}
+		Assert.IsNotNull( body );
 		if ( type == Type.mill )
 		{
 			millWheel = body.transform.Find( "group1/millWheel" );
