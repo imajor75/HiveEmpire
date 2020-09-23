@@ -188,7 +188,12 @@ abstract public class Building : MonoBehaviour
 			"Fantasy House/Prefab/Fantasy_House_6",
 			"WatchTower/Tower",
 			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07",
-			"mill/melnica_mod"
+			"mill/melnica_mod",
+			"Mines/saltmine",
+			"Mines/coalmine",
+			"Mines/ironmine",
+			"Mines/goldmine",
+			"Mines/stonemine"
 		};
 		foreach ( string file in files )
 			templates.Add( (GameObject)Resources.Load( file ) );
