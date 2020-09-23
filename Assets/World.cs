@@ -87,17 +87,10 @@ public class World : ScriptableObject
 			light.shadows = LightShadows.Soft;
 			light.color = new Color( 0.6f, 0.6f, 0.6f );
 		}
-		if ( Object.FindObjectOfType<Canvas>() == null || force )
-		{
-			var canvasObject = new GameObject();
-			canvasObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-			canvasObject.AddComponent<GraphicRaycaster>();
-			canvasObject.name = "Canvas";
-		}
 		if ( Object.FindObjectOfType<EventSystem>() == null || force )
 		{
 			var esObject = new GameObject();
-			esObject.name = "Event System";
+			esObject.name = "Event System";	
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();
 		}
@@ -111,7 +104,7 @@ public class World : ScriptableObject
 		eye = null;
 		foreach ( GameObject o in Object.FindObjectsOfType<GameObject>() )
 		{
-			if ( o.GetComponent<Mission>() != null )
+			if ( o.GetComponent<Interface>() != null )
 				continue;
 
 			o.name += " - DESTROYED";

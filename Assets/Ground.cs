@@ -12,12 +12,6 @@ public class Ground : MonoBehaviour
 	public GroundNode[] nodes;
 	public List<Building> influencers = new List<Building>();
 	public int layoutVersion = 1;
-	[JsonIgnore]
-	public int currentRow, currentColumn;
-	[JsonIgnore]
-	public GameObject cursor;
-	[JsonIgnore]
-	public GroundNode selectedNode;
 	public int meshVersion = 0;
 	[JsonIgnore]
 	public Mesh mesh;
@@ -29,7 +23,6 @@ public class Ground : MonoBehaviour
 	public static float waterLevel = 0.35f;
 	public static float hillLevel = 0.55f;
 	public static float mountainLevel = 0.6f;
-	static public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	[JsonIgnore]
 	public GameObject water;
 	int reservedCount, reservationCount;
@@ -71,11 +64,6 @@ public class Ground : MonoBehaviour
 
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";
-		cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
-		cursor.name = "Cursor";
-		cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
-		cursor.transform.localScale *= 0.25f;
-		cursor.transform.SetParent( transform );
 
 		water = GameObject.CreatePrimitive( PrimitiveType.Plane );
 		water.transform.SetParent( transform );
@@ -244,8 +232,6 @@ public class Ground : MonoBehaviour
 			UpdateMesh();
 			meshVersion = layoutVersion;
 		}
-		CheckMouse();
-		CheckUserInput();
 	}
 
 	void LateUpdate()
@@ -272,67 +258,6 @@ public class Ground : MonoBehaviour
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 
 		nodes[y * ( width + 1 ) + x] = node;
-	}
-
-	void CheckMouse()
-	{
-		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-		RaycastHit hit;
-		var size = GroundNode.size;
-		if ( collider.Raycast( ray, out hit, size * ( width + height ) ) )
-		{
-			Vector3 localPosition = transform.InverseTransformPoint(hit.point);
-			var node = GroundNode.FromPosition( localPosition, this );
-			currentColumn = node.x;
-			currentRow = node.y;
-			cursor.transform.localPosition = node.Position();
-		}
-	}
-
-	void CheckUserInput()
-	{
-		Player player = world.mainPlayer;
-		var currentNode = GetNode(currentColumn, currentRow);
-		if ( Input.GetKey( KeyCode.Space ) )
-			world.speedModifier = 5;
-		else
-			world.speedModifier = 1;
-		if ( Input.GetKeyDown( KeyCode.F ) )
-		{
-			Flag flag = Flag.Create();
-			if ( !flag.Setup( this, currentNode, player ) )
-				Destroy( flag );
-		};
-		if ( Input.GetKeyDown( KeyCode.R ) )
-			Road.AddNodeToNew( this, currentNode, player );
-		if ( Input.GetKeyDown( KeyCode.V ) )
-			Dialog.Open( Dialog.Type.selectBuildingType );
-		if ( Input.GetKeyDown( KeyCode.B ) && selectedWorkshopType != Workshop.Type.unknown )
-			Workshop.Create().Setup( this, currentNode, player, selectedWorkshopType );
-		if ( Input.GetMouseButtonDown( 0 ) )
-		{
-			if ( currentNode.building )
-				currentNode.building.OnClicked();
-			if ( currentNode.flag )
-				currentNode.flag.OnClicked();
-			if ( currentNode.road )
-				currentNode.road.OnClicked();
-		}
-		if ( Input.GetKeyDown( KeyCode.O ) )
-		{
-			selectedNode = currentNode;
-			Debug.Log( "Current pos: " + currentNode.x + ", " + currentNode.y );
-			Debug.Log( "Distance from main building: " + currentNode.DistanceFrom( world.mainBuilding.node ) );
-		}
-		if ( Input.GetKeyDown( KeyCode.K ) )
-		{
-			if ( currentNode.road )
-				currentNode.road.Remove();
-			if ( currentNode.building )
-				currentNode.building.Remove();
-			if ( currentNode.flag )
-				currentNode.flag.Remove();
-		}
 	}
 
 	void UpdateMesh()

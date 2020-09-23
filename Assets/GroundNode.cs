@@ -37,6 +37,11 @@ public class GroundNode
 	{
 		public GroundNode node;
 
+		private void Start()
+		{
+			gameObject.hideFlags = HideFlags.HideInHierarchy;
+		}
+
 		void OnDrawGizmos()
 		{
 			Vector3 position = node.Position();
