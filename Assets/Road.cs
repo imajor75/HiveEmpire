@@ -175,6 +175,8 @@ public class Road : MonoBehaviour
 	void Start()
 	{
 		transform.SetParent( ground.transform, false );
+		if ( nodes.Count > 0 )	
+			transform.localPosition = nodes[nodes.Count / 2].Position();
 		var renderer = gameObject.AddComponent<MeshRenderer>();
 		renderer.material = material;
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -227,6 +229,7 @@ public class Road : MonoBehaviour
 				if ( tv > 1 )
 					tv = 2 - tv;
 				var pos = PositionAt(i, 1.0f / blocksInSection * b);
+				pos = transform.InverseTransformPoint( pos );
 				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
 				var side = new Vector3();
 				side.x = dir.z/2;
@@ -368,12 +371,13 @@ public class Road : MonoBehaviour
 		foreach ( var n in nodes )
 			workerAtNodes.Add( null );
 		CreateNewWorker();
+		transform.localPosition = nodes[nodes.Count / 2].Position();
 		RebuildMesh();
 	}
 
 	public void OnClicked()
 	{
-		//RoadPanel.Open( this );
+		Interface.RoadPanel.Create().Open( this );
 	}
 
 	public void Split( Flag flag )

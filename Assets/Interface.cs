@@ -2,12 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class Interface : MonoBehaviour
 {
+	public List<Panel> panels = new List<Panel>();
 	public static int iconSize = 24;
 	public static Font font;
 	public World world;
@@ -38,11 +40,9 @@ public class Interface : MonoBehaviour
 		Resource.Initialize();
 		Interface.Initialize();
 
-		cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
-		cursor.name = "Cursor";
-		cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
-		cursor.transform.localScale *= 0.25f;
-		cursor.transform.SetParent( transform );
+		canvas = gameObject.AddComponent<Canvas>();
+		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+		gameObject.AddComponent<GraphicRaycaster>();
 
 		world = ScriptableObject.CreateInstance<World>();
 		world.NewGame( 792469403 );
@@ -53,9 +53,20 @@ public class Interface : MonoBehaviour
 		GroundNode node = world.eye.FindNodeAt( Input.mousePosition );
 		if ( node != null )
 		{
+			if ( cursor == null )
+			{
+				cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
+				cursor.name = "Cursor";
+				cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
+				cursor.transform.localScale *= 0.25f;
+				cursor.transform.SetParent( world.ground.transform );
+			}
 			cursor.transform.localPosition = node.Position();
 			CheckNodeContext( node );
 		};
+
+		if ( Input.GetKeyDown( KeyCode.V ) )
+			BuildingTypeSelector.Create().Open( (int)Input.mousePosition.x, (int)Input.mousePosition.y-Screen.height );
 
 		if ( Input.GetKey( KeyCode.Space ) )
 			world.speedModifier = 5;
@@ -78,7 +89,6 @@ public class Interface : MonoBehaviour
 			world.NewGame( new System.Random().Next() );
 			Debug.Log( "New game created" );
 		}
-
 	}
 
 	void CheckNodeContext( GroundNode node )
@@ -92,8 +102,6 @@ public class Interface : MonoBehaviour
 		};
 		if ( Input.GetKeyDown( KeyCode.R ) )
 			Road.AddNodeToNew( world.ground, node, player );
-		//if ( Input.GetKeyDown( KeyCode.V ) )
-		//	Dialog.Open( Dialog.Type.selectBuildingType );
 		if ( Input.GetKeyDown( KeyCode.B ) && selectedWorkshopType != Workshop.Type.unknown )
 			Workshop.Create().Setup( world.ground, node, player, selectedWorkshopType );
 		if ( Input.GetMouseButtonDown( 0 ) )
@@ -123,62 +131,84 @@ public class Interface : MonoBehaviour
 	}
 	public class Panel : MonoBehaviour, IPointerClickHandler
 	{
-		public Interface root;
-
-		public Panel Setup()
+		public Component target;
+		public Image frame;
+		public Interface cachedRoot;
+		public Interface Root
 		{
-			//transform.SetParent( canvas.transform );
-			//rectTransform.anchoredPosition = Vector2.zero;
-			//rectTransform.sizeDelta = new Vector2( 120, 72 );
-			return this;
+			get
+			{
+				if ( cachedRoot == null )
+					cachedRoot = GameObject.FindObjectOfType<Interface>();
+				return cachedRoot;
+			}
 		}
 
-		public T CreateElement<T>( Component parent, int x, int y, int width = 0, int height = 0, string name = "" ) where T : Graphic
+		public void Open( Component target = null, int x = 0, int y = 0 )
 		{
-			GameObject gameObject = new GameObject();
-			if ( name.Length > 0 )
-				gameObject.name = name;
-			T mainObject = gameObject.AddComponent<T>();
-			gameObject.transform.SetParent( parent.transform );
-			mainObject.rectTransform.anchorMin = mainObject.rectTransform.anchorMax = Vector2.up;
-			mainObject.rectTransform.pivot = Vector2.up;
-			mainObject.rectTransform.anchoredPosition = new Vector2( x, y );
-			if ( width > 0 && height > 0 )
-				mainObject.rectTransform.sizeDelta = new Vector2( width, height );
-			return mainObject;
+			foreach ( var panel in Root.panels )
+				Destroy( panel.gameObject );
+			Root.panels.Add( this );
+			name = "Panel";
+			frame = gameObject.AddComponent<Image>();
+			Init( frame.rectTransform, x, y, 100, 100, Root );
+			frame.enabled = false;
+			this.target = target;
+			UpdatePosition();
 		}
 
-		public T CreateSelectableElement<T>( Component parent, int x, int y, string name = "" ) where T : Selectable
+		void OnDestroy()
 		{
-			GameObject gameObject = new GameObject();
-			if ( name.Length > 0 )
-				gameObject.name = name;
-			T mainObject = gameObject.AddComponent<T>();
-			gameObject.transform.SetParent( parent.transform );
-			return mainObject;
+			Assert.IsTrue( Root.panels.Contains( this ) );
+			Root.panels.Remove( this );
 		}
 
-		public Image Image( int x, int y, int xs, int ys, Component parent = null )
+		public Image Image( int x, int y, int xs, int ys, Sprite picture = null, Component parent = null )
 		{
-			return null;
+			Image i = new GameObject().AddComponent<Image>();
+			i.name = "Image";
+			i.sprite = picture;
+			Init( i.rectTransform, x, y, xs, ys, parent );
+			return i;
 		}
 
-		//protected override void Start()
-		//{
-		//	last = this;
-		//	base.Start();
-		//	sprite = templateFrame;
-		//	rectTransform.anchorMin = rectTransform.anchorMax = Vector2.zero;
-		//}
+		public Text Text( int x, int y, string text, Component parent = null )
+		{
+			Text t = new GameObject().AddComponent<Text>();
+			t.name = "Text";
+			Init( t.rectTransform, x, y, 200, 20, parent );
+			t.font = Interface.font;
+			t.text = text;
+			t.color = Color.yellow;
+			return t;
+		}
 
-		// Update is called once per frame
+		void Init( RectTransform t, int x, int y, int xs, int ys, Component parent = null )
+		{
+			if ( parent == null )
+				parent = this;
+			t.SetParent( parent.transform );
+			t.anchorMin = t.anchorMax = t.pivot = Vector2.up;
+			t.anchoredPosition = new Vector2( x, y );
+			if ( xs != 0 && ys != 0 )
+				t.sizeDelta = new Vector2( xs, ys );
+		}
+
 		public virtual void Update()
 		{
-			//if ( location == null )
-			//	return;
+			UpdatePosition();
+		}
 
-			//Vector3 screenPosition = Camera.main.WorldToScreenPoint( location.transform.position + Vector3.up * 2 * GroundNode.size );
-			//rectTransform.anchoredPosition = new Vector3( screenPosition.x, screenPosition.y, 0 );
+		void UpdatePosition()
+		{
+			if ( target == null )
+				return;
+
+			Vector3 screenPosition = Camera.main.WorldToScreenPoint( target.transform.position + Vector3.up * GroundNode.size );
+			if ( screenPosition.y > Screen.height )
+				screenPosition = Camera.main.WorldToScreenPoint( target.transform.position - Vector3.up * GroundNode.size );
+			screenPosition.y -= Screen.height;
+			frame.rectTransform.anchoredPosition = screenPosition;
 		}
 
 		public virtual void OnPointerClick( PointerEventData data )
@@ -186,253 +216,208 @@ public class Interface : MonoBehaviour
 			Destroy( gameObject );
 		}
 	}
-	//public class WorkshopPanel : Panel
-	//{
-	//	public Workshop workshop;
-	//	public Image progressBar;
 
-	//	public class BufferUI
-	//	{
-	//		public Image[] items;
-	//	}
+	public class WorkshopPanel : Panel
+	{
+		public Workshop workshop;
+		public Image progressBar;
 
-	//	public List<BufferUI> buffers;
-	//	public Image[] outputs;
+		public class BufferUI
+		{
+			public Image[] items;
+		}
 
-	//	public static void Open( Workshop workshop )
-	//	{
-	//		if ( Panel.last != null )
-	//		{
-	//			Destroy( Panel.last.gameObject );
-	//			Panel.last = null;
-	//		}
-	//		var g = new GameObject();
-	//		g.name = "Workshop panel";
-	//		g.AddComponent<WorkshopPanel>().Attach( workshop );
-	//	}
+		public List<BufferUI> buffers;
+		public Image[] outputs;
 
-	//	public void Attach( Workshop workshop )
-	//	{
-	//		location = this.workshop = workshop;
-	//		transform.SetParent( canvas.transform );
-	//		rectTransform.anchoredPosition = Vector2.zero;
-	//		rectTransform.sizeDelta = new Vector2( 240, 200 );
+		public static WorkshopPanel Create()
+		{
+			return new GameObject().AddComponent<WorkshopPanel>();
+		}
+		
+		public void Open( Workshop workshop )
+		{
+			base.Open( workshop );
+			this.workshop = workshop;
+			Image( 0, 0, 240, 200, templateFrame );
 
-	//		Text title = CreateElement<Text>( this, 20, -20 );
-	//		title.text = workshop.type.ToString();
-	//		title.color = Color.yellow;
-	//		title.font = font;
+			Text( 20, -20, workshop.type.ToString() );
 
-	//		int row = -40;
-	//		int col;
-	//		buffers = new List<BufferUI>();
-	//		foreach ( var b in workshop.buffers )
-	//		{
-	//			col = 16;
-	//			var bui = new BufferUI();
-	//			bui.items = new Image[b.size];
-	//			for ( int i = 0; i < b.size; i++ )
-	//			{
-	//				Image image = CreateElement<Image>( this, col, row, iconSize, iconSize, b.itemType.ToString() );
-	//				image.sprite = Item.sprites[(int)b.itemType];
-	//				col += iconSize;
-	//				bui.items[i] = image;
-	//			}
-	//			row -= iconSize * 2;
-	//			buffers.Add( bui );
-	//		}
+			int row = -40;
+			int col;
+			buffers = new List<BufferUI>();
+			foreach ( var b in workshop.buffers )
+			{
+				col = 16;
+				var bui = new BufferUI();
+				bui.items = new Image[b.size];
+				for ( int i = 0; i < b.size; i++ )
+				{
+					bui.items[i] = Image( col, row, iconSize, iconSize, Item.sprites[(int)b.itemType] );
+					col += iconSize;
+				}
+				row -= iconSize * 2;
+				buffers.Add( bui );
+			}
 
-	//		row -= iconSize / 2;
-	//		col = 16;
-	//		outputs = new Image[workshop.outputMax];
-	//		for ( int i = 0; i < workshop.outputMax; i++ )
-	//		{
-	//			Image image = CreateElement<Image>( this, col, row, iconSize, iconSize, workshop.outputType.ToString() );
-	//			image.sprite = Item.sprites[(int)workshop.outputType];
-	//			col += iconSize;
-	//			outputs[i] = image;
-	//		}
+			row -= iconSize / 2;
+			col = 16;
+			outputs = new Image[workshop.outputMax];
+			for ( int i = 0; i < workshop.outputMax; i++ )
+			{
+				outputs[i] = Image( col, row, iconSize, iconSize, Item.sprites[(int)workshop.outputType] );
+				col += iconSize;
+			}
 
-	//		progressBar = CreateElement<Image>( this, 20, row - iconSize - iconSize / 2, iconSize * 8, iconSize, "Progress" );
-	//		progressBar.sprite = templateProgress;
-	//	}
+			progressBar = Image( 20, row - iconSize - iconSize / 2, iconSize * 8, iconSize, templateProgress );
+		}
 
-	//	void UpdateIconRow( Image[] icons, int full, int half )
-	//	{
-	//		for ( int i = 0; i < icons.Length; i++ )
-	//		{
-	//			float a = 0;
-	//			if ( i < half + full )
-	//				a = 0.5f;
-	//			if ( i < full )
-	//				a = 1;
-	//			icons[i].color = new Color( 1, 1, 1, a );
-	//		}
-	//	}
+		void UpdateIconRow( Image[] icons, int full, int half )
+		{
+			for ( int i = 0; i < icons.Length; i++ )
+			{
+				float a = 0;
+				if ( i < half + full )
+					a = 0.5f;
+				if ( i < full )
+					a = 1;
+				icons[i].color = new Color( 1, 1, 1, a );
+			}
+		}
 
-	//	// Update is called once per frame
-	//	public override void Update()
-	//	{
-	//		base.Update();
+		public override void Update()
+		{
+			base.Update();
 
-	//		for ( int j = 0; j < buffers.Count; j++ )
-	//			UpdateIconRow( buffers[j].items, workshop.buffers[j].stored, workshop.buffers[j].onTheWay );
+			for ( int j = 0; j < buffers.Count; j++ )
+				UpdateIconRow( buffers[j].items, workshop.buffers[j].stored, workshop.buffers[j].onTheWay );
 
-	//		UpdateIconRow( outputs, workshop.output, 0 );
-	//		if ( workshop.working )
-	//		{
-	//			progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
-	//			progressBar.color = Color.white;
-	//		}
-	//		else
-	//			progressBar.color = Color.red;
-	//	}
-	//}
-	//public class StockPanel : Panel
-	//{
-	//	public Stock stock;
-	//	public Text[] counts = new Text[(int)Item.Type.total];
+			UpdateIconRow( outputs, workshop.output, 0 );
+			if ( workshop.working )
+			{
+				progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
+				progressBar.color = Color.white;
+			}
+			else
+				progressBar.color = Color.red;
+		}
+	}
 
-	//	public static void Open( Stock stock )
-	//	{
-	//		if ( Panel.last != null )
-	//		{
-	//			Destroy( Panel.last.gameObject );
-	//			Panel.last = null;
-	//		}
-	//		var g = new GameObject();
-	//		g.name = "Stock panel";
-	//		g.AddComponent<StockPanel>().Attach( stock );
-	//	}
+	public class StockPanel : Panel
+	{
+		public Stock stock;
+		public Text[] counts = new Text[(int)Item.Type.total];
 
-	//	public void Attach( Stock stock )
-	//	{
-	//		location = this.stock = stock;
-	//		transform.SetParent( canvas.transform );
-	//		rectTransform.anchoredPosition = Vector2.zero;
-	//		rectTransform.sizeDelta = new Vector2( 200, 200 );
+		public static StockPanel Create()
+		{
+			return new GameObject().AddComponent<StockPanel>();
+		}
 
-	//		int row = -20;
-	//		for ( int j = 0; j < (int)Item.Type.total; j++ )
-	//		{
-	//			Image i = CreateElement<Image>( this, 16, row, iconSize, iconSize, ( (Item.Type)j ).ToString() );
-	//			i.sprite = Item.sprites[j];
-	//			Text t = CreateElement<Text>( this, 40, row, 0, 0, ( (Item.Type)j ).ToString()+" count" );
-	//			t.color = Color.yellow;
-	//			t.font = font;
-	//			counts[j] = t;
-	//			row -= iconSize;
-	//		}
-	//	}
+		public void Open( Stock stock )
+		{
+			base.Open( stock );
+			this.stock = stock;
+			Image( 0, 0, 200, 300, templateFrame );
 
-	//	public override void Update()
-	//	{
-	//		base.Update();
-	//		for ( int i = 0; i < (int)Item.Type.total; i++ )
-	//			counts[i].text = stock.content[i].ToString();
-	//	}
-	//}
+			int row = -25;
+			for ( int j = 0; j < (int)Item.Type.total; j++ )
+			{
+				Image( 16, row, iconSize, iconSize, Item.sprites[j] );
+				counts[j] = Text( 40, row, "" );
+				row -= iconSize;
+			}
+		}
 
-	//public class Dialog : Panel
-	//{
-	//	public new Type type;
+		public override void Update()
+		{
+			base.Update();
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+				counts[i].text = stock.content[i].ToString();
+		}
+	}
 
-	//	public new enum Type
-	//	{
-	//		selectBuildingType
-	//	}
+	public class BuildingTypeSelector : Panel
+	{
+		public static BuildingTypeSelector Create()
+		{
+			return new GameObject().AddComponent<BuildingTypeSelector>();
+		}
 
-	//	public static Dialog Open( Type type )
-	//	{
-	//		var g = new GameObject();
-	//		g.name = "Dialog";
-	//		Dialog dialog = g.AddComponent<Dialog>();
-	//		dialog.type = type;
-	//		dialog.transform.SetParent( Panel.canvas.transform );
-	//		Vector2 position = Panel.canvas.pixelRect.center;
-	//		dialog.transform.localPosition = new Vector3( position.x, position.y, 0 );
-	//		dialog.rectTransform.sizeDelta = new Vector2( 300, 300 );
+		public void Open( int x = 0, int y = 0 )
+		{
+			base.Open( null, x, y );
 
-	//		int row = -40;
-	//		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
-	//		{
-	//			Text t = dialog.CreateElement<Text>( dialog, 40, row, 150, 20 );
-	//			t.color = Color.yellow;
-	//			t.text = ( (Workshop.Type)i ).ToString();
-	//			t.font = font;
-	//			row -= 30;
-	//		}
-	//		dialog.CreateSelectableElement<Button>( dialog, 20, 20, "woorcutter" );
-	//		return dialog;
-	//	}
+			int row = -20;
+			Image( 0, 0, 200, 250, templateFrame );
+			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			{
+				Text( 16, row, ((Workshop.Type)i).ToString() );
+				row -= 25;
+			}
+		}
 
-	//	public override void OnPointerClick( PointerEventData data )
-	//	{
-	//		Interface root = GameObject.FindObjectOfType<Interface>();
+		public override void OnPointerClick( PointerEventData data )
+		{
+			Vector2 localPos;
+			RectTransformUtility.ScreenPointToLocalPointInRectangle( frame.rectTransform, data.position, data.pressEventCamera, out localPos );
+			int i = -((int)localPos.y+20)/25;
+			if ( i <= (int)Workshop.Type.total )
+				Root.selectedWorkshopType = (Workshop.Type)i;
 
-	//		int y = (int)(rectTransform.anchoredPosition.y + rectTransform.sizeDelta.y / 2 - data.position.y);
-	//		int i = (y - 40) / 30;
-	//		if ( i <= (int)Workshop.Type.total )
-	//			root.selectedWorkshopType = (Workshop.Type)i;
+			base.OnPointerClick( data );
+		}
+	}
+	public class RoadPanel : Panel
+	{
+		public Road road;
+		public Text jam;
+		public Text workers;
 
-	//		base.OnPointerClick( data );
-	//	}
-	//}
-	//public class RoadPanel : Panel
-	//{
-	//	public Road road;
-	//	public Text jam;
-	//	public Text workers;
+		public static RoadPanel Create()
+		{
+			return new GameObject().AddComponent<RoadPanel>();
+		}
 
-	//	public static RoadPanel Create()
-	//	{
-	//		return new GameObject().AddComponent<RoadPanel>();
-	//	}
+		public void Open( Road road )
+		{
+			base.Open( road );
+			this.road = road;
+			Image( 0, 0, 150, 50, templateFrame );
+			jam = Text( 12, -4, "Jam" );
+			workers = Text( 12, -24, "Worker count" );
+			name = "Road panel";
+		}
 
-	//	public RoadPanel Setup( Road road )
-	//	{
-	//		base.Setup();
-	//		this.road = road;
-	//		jam = CreateElement<Text>( this, 8, -8, 108, iconSize, "Jam text" );
-	//		jam.color = Color.black;
-	//		jam.font = font;
-	//		workers = CreateElement<Text>( this, 8, -40, 108, iconSize, "Worker count" );
-	//		workers.color = Color.black;
-	//		workers.font = font;
-	//		return this;
-	//	}
-
-	//	public override void Update()
-	//	{
-	//		base.Update();
-	//		jam.text = "Items waiting: " + road.Jam();
-	//		workers.text = "Worker count: " + road.workers.Count;
-	//	}
-	//}
+		public override void Update()
+		{
+			base.Update();
+			jam.text = "Items waiting: " + road.Jam();
+			workers.text = "Worker count: " + road.workers.Count;
+		}
+	}
 	public class FlagPanel : Panel
 	{
 		public Flag flag;
 		public Image[] items = new Image[Flag.maxItems];
-
 
 		public static FlagPanel Create()
 		{
 			return new GameObject().AddComponent<FlagPanel>();
 		}
 
-		public FlagPanel Setup( Flag flag )
+		public void Open( Flag flag )
 		{
-			if ( base.Setup() == null )
-				return null;
+			base.Open( flag );
 			this.flag = flag;
 			int col = 16;
+			Image( 0, 0, 250, 40, templateFrame );
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
-				items[i] = Image( col, 8, iconSize, iconSize );
+				items[i] = Image( col, -8, iconSize, iconSize, null );
 				items[i].name = "item " + i;
 				col += iconSize;
 			}
-			return this;
+			name = "Flag Panel";
 		}
 
 		public override void Update()

@@ -24,7 +24,6 @@ public class Eye : MonoBehaviour
 	public Eye Setup( World world )
 	{
 		this.world = world;
-		camera = GetComponent<Camera>();
 		return this;
 	}
 
@@ -32,8 +31,7 @@ public class Eye : MonoBehaviour
 	{
 		tag = "MainCamera";
 		name = "Eye";
-		transform.position = new Vector3( 0, 4, -7 );
-		transform.Rotate( Vector3.right * 40 );
+		camera = GetComponent<Camera>();
 	}
 
 	private void Update()
@@ -96,7 +94,7 @@ public class Eye : MonoBehaviour
 		if ( !world.ground.collider.Raycast( ray, out hit, 1000 ) )	// TODO How long the ray should really be?
 			return null;
 
-		Vector3 localPosition = transform.InverseTransformPoint( hit.point );
+		Vector3 localPosition = world.ground.transform.InverseTransformPoint( hit.point );
 		return GroundNode.FromPosition( localPosition, world.ground );
 	}
 }
