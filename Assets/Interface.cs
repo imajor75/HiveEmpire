@@ -27,6 +27,12 @@ public class Interface : MonoBehaviour
 		instance = this;
 	}
 
+	public void Clear()
+	{
+		foreach ( Transform d in debug.transform )
+			Destroy( d.gameObject );
+	}
+
 	static void Initialize()
 	{
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );

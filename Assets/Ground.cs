@@ -20,7 +20,7 @@ public class Ground : MonoBehaviour
 	public static int maxArea = 10;
 	public static float maxHeight = 20;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
-	public static float waterLevel = 0.35f;
+	public static float waterLevel = 0.40f;
 	public static float hillLevel = 0.55f;
 	public static float mountainLevel = 0.6f;
 	[JsonIgnore]
@@ -30,11 +30,11 @@ public class Ground : MonoBehaviour
 	public static float forestChance = 0.004f;
 	public static float rocksChance = 0.002f;
 	public static float animalSpawnerChance = 0.001f;
-	public static float ironChance = 0.4f;
-	public static float coalChance = 0.4f;
-	public static float stoneChance = 0.2f;
-	public static float saltChance = 0.2f;
-	public static float goldChance = 0.2f;
+	public static float ironChance = 0.04f;	
+	public static float coalChance = 0.04f;
+	public static float stoneChance = 0.02f;
+	public static float saltChance = 0.02f;
+	public static float goldChance = 0.02f;
 
 	public HeightMap heightMap;
 

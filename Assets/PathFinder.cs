@@ -63,6 +63,9 @@ public class PathFinder : ScriptableObject
 
 			if ( mode == Mode.avoidRoadsAndFlags && ( node.owner != target.owner || node.road ) )
 				return;
+
+			if ( node.type == GroundNode.Type.underWater )
+				return;
 		}
 
         var i = node.index;

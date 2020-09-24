@@ -110,5 +110,6 @@ public class World : ScriptableObject
 			o.name += " - DESTROYED";
 			Destroy( o );
 		}
+		Interface.instance.Clear();
 	}
 }

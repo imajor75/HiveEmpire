@@ -160,6 +160,9 @@ public class GroundNode
 
 	public void AddResource( Resource.Type type )
 	{
+		if ( resource != null )
+			return;
+
 		if ( type == Resource.Type.coal || type == Resource.Type.iron || type == Resource.Type.stone || type == Resource.Type.gold || type == Resource.Type.salt )
 		{
 			if ( this.type != Type.hill && this.type != Type.mountain )

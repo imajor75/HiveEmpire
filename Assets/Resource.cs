@@ -32,7 +32,7 @@ public class Resource : MonoBehaviour
 		iron,
 		gold,
 		stone,
-		other
+		total
 	}
 
 	public static void Initialize()
@@ -61,9 +61,14 @@ public class Resource : MonoBehaviour
 		return obj.AddComponent<Resource>();
 	}
 
+	public static bool IsUnderGround( Type type )
+	{
+		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
+	}
+
 	public Resource Setup( GroundNode node, Type type, int charges = 1 )
 	{
-		underGround = type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
+		underGround = IsUnderGround( type );
 
 		if ( charges < 1 )
 		{
@@ -192,6 +197,16 @@ public class Resource : MonoBehaviour
 				return Item.Type.grain;
 			case Type.pasturingAnimal:
 				return Item.Type.hide;
+			case Type.salt:
+				return Item.Type.salt;
+			case Type.iron:
+				return Item.Type.iron;
+			case Type.gold:
+				return Item.Type.gold;
+			case Type.coal:
+				return Item.Type.coal;
+			case Type.stone:
+				return Item.Type.stone;
 			default:
 				return Item.Type.unknown;
 		}

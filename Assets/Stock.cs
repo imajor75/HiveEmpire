@@ -48,6 +48,7 @@ public class Stock : Building
 		construction.boss = this;
 		construction.done = true;
 		content[(int)Item.Type.plank] = 10;
+		content[(int)Item.Type.fish] = 10;
 		worker = Worker.Create();
 		worker.SetupForBuilding( this );
 		ground.RegisterInfluence( this );
