@@ -21,6 +21,7 @@ public class Interface : MonoBehaviour
 	public static Sprite templateProgress;
 	public GameObject debug;
 	public static Interface instance;
+	RectTransform debughekk;
 
 	public Interface()
 	{
@@ -41,6 +42,7 @@ public class Interface : MonoBehaviour
 		templateFrame = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.0f, 0.0f ) );
 		tex = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
 		templateProgress = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.0f, 0.0f ) );
+		Frame.Initialize();
 	}
 
 	void Start()
@@ -194,6 +196,15 @@ public class Interface : MonoBehaviour
 			return i;
 		}
 
+		public Frame Frame( int x, int y, int xs, int ys, int borderWidth = 30, Component parent = null )
+		{
+			Frame f = new GameObject().AddComponent<Frame>();
+			f.name = "Image";
+			f.borderWidth = borderWidth;
+			Init( f.rectTransform, x, y, xs, ys, parent );
+			return f;
+		}
+
 		public Text Text( int x, int y, string text, Component parent = null )
 		{
 			Text t = new GameObject().AddComponent<Text>();
@@ -239,6 +250,112 @@ public class Interface : MonoBehaviour
 		}
 	}
 
+	public class Frame : Image
+	{
+		public int borderWidth = 30;
+
+		static Sprite[] pieces = new Sprite[9];
+		public static void Initialize()
+		{
+			string[] files = {
+				"simple UI & icons/box/frame11",
+				"simple UI & icons/box/frame21",
+				"simple UI & icons/box/frame31",
+				"simple UI & icons/box/frame12",
+				"simple UI & icons/box/frame22",
+				"simple UI & icons/box/frame32",
+				"simple UI & icons/box/frame13",
+				"simple UI & icons/box/frame23",
+				"simple UI & icons/box/frame33" };
+			for ( int i = 0; i < files.Length; i++ )
+			{
+				var t = Resources.Load<Texture2D>( files[i] );
+				pieces[i] = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
+			}
+		}
+
+		new void Start()
+		{
+			int w = borderWidth;
+			int a = 0;
+			base.Start();
+			Image i11 = new GameObject().AddComponent<Image>();
+			i11.rectTransform.SetParent( transform );
+			i11.rectTransform.anchorMin = new Vector2( 0, 1 );
+			i11.rectTransform.anchorMax = new Vector2( 0, 1 );
+			i11.rectTransform.offsetMin = new Vector2( 0, -w-a );
+			i11.rectTransform.offsetMax = new Vector2( w+a, 0 );
+			i11.sprite = pieces[0];
+
+			Image i21 = new GameObject().AddComponent<Image>();
+			i21.rectTransform.SetParent( transform );
+			i21.rectTransform.anchorMin = new Vector2( 0, 1 );
+			i21.rectTransform.anchorMax = new Vector2( 1, 1 );
+			i21.rectTransform.offsetMin = new Vector2( w-a, -w-a );
+			i21.rectTransform.offsetMax = new Vector2( -w+a, 0 );
+			i21.sprite = pieces[1];
+			Interface.instance.debughekk = i21.rectTransform;
+
+			Image i31 = new GameObject().AddComponent<Image>();
+			i31.rectTransform.SetParent( transform );
+			i31.rectTransform.anchorMin = new Vector2( 1, 1 );
+			i31.rectTransform.anchorMax = new Vector2( 1, 1 );
+			i31.rectTransform.offsetMin = new Vector2( -w-a, -w-a );
+			i31.rectTransform.offsetMax = new Vector2( 0, 0 );
+			i31.sprite = pieces[2];
+
+			Image i12 = new GameObject().AddComponent<Image>();
+			i12.rectTransform.SetParent( transform );
+			i12.rectTransform.anchorMin = new Vector2( 0, 0 );
+			i12.rectTransform.anchorMax = new Vector2( 0, 1 );
+			i12.rectTransform.offsetMin = new Vector2( 0, w-a );
+			i12.rectTransform.offsetMax = new Vector2( w+a, -w+a );
+			i12.sprite = pieces[3];
+
+			Image i22 = new GameObject().AddComponent<Image>();
+			i22.rectTransform.SetParent( transform );
+			i22.rectTransform.anchorMin = new Vector2( 0, 0 );
+			i22.rectTransform.anchorMax = new Vector2( 1, 1 );
+			i22.rectTransform.offsetMin = new Vector2( w-a, w-a );
+			i22.rectTransform.offsetMax = new Vector2( -w+a, -w+a );
+			i22.sprite = pieces[4];
+
+			Image i32 = new GameObject().AddComponent<Image>();
+			i32.rectTransform.SetParent( transform );
+			i32.rectTransform.anchorMin = new Vector2( 1, 0 );
+			i32.rectTransform.anchorMax = new Vector2( 1, 1 );
+			i32.rectTransform.offsetMin = new Vector2( -w-a, w-a );
+			i32.rectTransform.offsetMax = new Vector2( 0, -w+a );
+			i32.sprite = pieces[5];
+
+			Image i13 = new GameObject().AddComponent<Image>();
+			i13.rectTransform.SetParent( transform );
+			i13.rectTransform.anchorMin = new Vector2( 0, 0 );
+			i13.rectTransform.anchorMax = new Vector2( 0, 0 );
+			i13.rectTransform.offsetMin = new Vector2( 0, 0 );
+			i13.rectTransform.offsetMax = new Vector2( w+a, w+a );
+			i13.sprite = pieces[6];
+
+			Image i23 = new GameObject().AddComponent<Image>();
+			i23.rectTransform.SetParent( transform );
+			i23.rectTransform.anchorMin = new Vector2( 0, 0 );
+			i23.rectTransform.anchorMax = new Vector2( 1, 0 );
+			i23.rectTransform.offsetMin = new Vector2( w-a, 0 );
+			i23.rectTransform.offsetMax = new Vector2( -w+a, w+a );
+			i23.sprite = pieces[7];
+
+			Image i33 = new GameObject().AddComponent<Image>();
+			i33.rectTransform.SetParent( transform );
+			i33.rectTransform.anchorMin = new Vector2( 1, 0 );
+			i33.rectTransform.anchorMax = new Vector2( 1, 0 );
+			i33.rectTransform.offsetMin = new Vector2( -w-a, 0 );
+			i33.rectTransform.offsetMax = new Vector2( 0, w+a );
+			i33.sprite = pieces[8];
+
+			enabled = false;
+		}
+	}
+
 	public class WorkshopPanel : Panel
 	{
 		public Workshop workshop;
@@ -261,7 +378,7 @@ public class Interface : MonoBehaviour
 		{
 			base.Open( workshop );
 			this.workshop = workshop;
-			Image( 0, 0, 240, 200, templateFrame );
+			Frame( 0, 0, 240, 200 );
 
 			Text( 20, -20, workshop.type.ToString() );
 
@@ -339,13 +456,18 @@ public class Interface : MonoBehaviour
 		{
 			base.Open( stock );
 			this.stock = stock;
-			Image( 0, 0, 200, 300, templateFrame );
+			Frame( 0, 0, 200, 200 );
 
 			int row = -25;
-			for ( int j = 0; j < (int)Item.Type.total; j++ )
+			for ( int j = 0; j < (int)Item.Type.total; j += 2 )
 			{
 				Image( 16, row, iconSize, iconSize, Item.sprites[j] );
 				counts[j] = Text( 40, row, "" );
+				if ( j + 1 < Item.sprites.Length )
+				{
+					Image( 100, row, iconSize, iconSize, Item.sprites[j + 1] );
+					counts[j + 1] = Text( 124, row, "" );
+				};
 				row -= iconSize;
 			}
 		}
@@ -370,7 +492,7 @@ public class Interface : MonoBehaviour
 			base.Open( null, x, y );
 
 			int row = -30;
-			Image( 0, 0, 200, 400, templateFrame );
+			Frame( 0, 0, 200, 400, 30 );
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				Text( 16, row, ((Workshop.Type)i).ToString() );
@@ -404,7 +526,7 @@ public class Interface : MonoBehaviour
 		{
 			base.Open( road );
 			this.road = road;
-			Image( 0, 0, 150, 50, templateFrame );
+			Frame( 0, 0, 150, 50, 10 );
 			jam = Text( 12, -4, "Jam" );
 			workers = Text( 12, -24, "Worker count" );
 			name = "Road panel";
@@ -432,7 +554,7 @@ public class Interface : MonoBehaviour
 			base.Open( flag );
 			this.flag = flag;
 			int col = 16;
-			Image( 0, 0, 250, 40, templateFrame );
+			Frame( 0, 0, 250, 40, 10 );
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
 				items[i] = Image( col, -8, iconSize, iconSize, null );
