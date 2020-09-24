@@ -33,6 +33,7 @@ public class Workshop : Building
 		public string file;
 		public GameObject template;
 		public List<Type> types = new List<Type>();
+		public float height = 1.5f;
 	}
 
 	[System.Serializable]
@@ -206,11 +207,11 @@ public class Workshop : Building
 			"WatchTower/Tower",
 			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", Type.farm, 
 			"mill/melnica_mod", Type.mill,
-			"Mines/saltmine", Type.saltmine,
-			"Mines/coalmine", Type.coalmine,
-			"Mines/ironmine", Type.ironmine,
-			"Mines/goldmine", Type.goldmine,
-			"Mines/stonemine", Type.stonemine };
+			"Mines/saltmine_final", Type.saltmine,
+			"Mines/coalmine_final", Type.coalmine,
+			"Mines/ironmine_final", Type.ironmine,
+			"Mines/goldmine_final", Type.goldmine,
+			"Mines/stonemine_final", Type.stonemine };
 		foreach ( var g in looksData )
 		{
 			string file = g as string;
@@ -223,10 +224,22 @@ public class Workshop : Building
 			Type? type = g as Type?;
 			if ( type != null )
 				looks[looks.Count - 1].types.Add( (Type)type );
-			Debug.Log( file );
+			float? height = g as float?;
+			if ( height != null )
+				looks[looks.Count - 1].height = (float)height;
 		}
 		foreach ( var l in looks )
-			l.template = (GameObject)Resources.Load( l.file );
+		{
+			object o = Resources.Load( l.file ) as GameObject;
+			if ( o == null )
+			{
+				Debug.Log( "Resource " + l.file + " not found" );
+				continue;
+			}
+			l.template = o as GameObject;
+			if ( l.template == null )
+				Debug.Log( "Resource " + l.file + " has a root " + o.GetType().Name );
+		}
 	}
 
 	public static Workshop Create()
@@ -253,7 +266,6 @@ public class Workshop : Building
 				outputType = Item.Type.stone;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				height = 2;
 				break;
 			}
 			case Type.sawmill:
@@ -262,7 +274,6 @@ public class Workshop : Building
 				outputType = Item.Type.plank;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				height = 2;
 				break;
 			}
 			case Type.fishingHut:
@@ -285,7 +296,6 @@ public class Workshop : Building
 				AddInput( Item.Type.grain );
 				outputType = Item.Type.flour;
 				construction.plankNeeded = 2;
-				height = 2;
 				construction.flatteningNeeded = false;
 				break;
 			}
@@ -304,7 +314,6 @@ public class Workshop : Building
 				outputType = Item.Type.hide;
 				construction.plankNeeded = 1;
 				construction.flatteningNeeded = false;
-				height = 2;
 				break;
 			}
 			case Type.coalmine:
@@ -312,6 +321,7 @@ public class Workshop : Building
 				outputType = Item.Type.coal;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
 				break;
 			}
 			case Type.stonemine:
@@ -319,6 +329,7 @@ public class Workshop : Building
 				outputType = Item.Type.stone;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
 				break;
 			}
 			case Type.ironmine:
@@ -326,6 +337,7 @@ public class Workshop : Building
 				outputType = Item.Type.iron;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
 				break;
 			}
 			case Type.goldmine:
@@ -333,6 +345,7 @@ public class Workshop : Building
 				outputType = Item.Type.gold;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
 				break;
 			}
 			case Type.saltmine:
@@ -340,6 +353,7 @@ public class Workshop : Building
 				outputType = Item.Type.salt;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
 				break;
 			}
 		}
@@ -361,7 +375,10 @@ public class Workshop : Building
 		foreach ( var l in looks )
 		{
 			if ( l.types.Contains( type ) )
+			{
 				body = (GameObject)GameObject.Instantiate( l.template, transform );
+				height = l.height;
+			}
 		}
 		Assert.IsNotNull( body );
 		if ( type == Type.mill )

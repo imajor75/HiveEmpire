@@ -5,6 +5,7 @@ using UnityEngine;
 public class Resource : MonoBehaviour
 {
 	public GroundNode node;
+	public bool underGround;
 	public Type type;
 	public int growth = 0;
 	public int charges = 1;
@@ -26,6 +27,11 @@ public class Resource : MonoBehaviour
 		cornfield,
 		animalSpawner,
 		pasturingAnimal,
+		salt,
+		coal,
+		iron,
+		gold,
+		stone,
 		other
 	}
 
@@ -57,10 +63,23 @@ public class Resource : MonoBehaviour
 
 	public Resource Setup( GroundNode node, Type type, int charges = 1 )
 	{
-		if ( charges < 1 )
-			charges = 1;
+		underGround = type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
 
-		if ( node.building || node.flag || node.resource || node.type != GroundNode.Type.grass )
+		if ( charges < 1 )
+		{
+			if ( underGround )
+				charges = -1;
+			else
+				charges = 1;
+		}
+
+		if ( ( underGround && node.type != GroundNode.Type.hill ) || ( !underGround && node.type != GroundNode.Type.grass ) )
+		{
+			Destroy( gameObject );
+			return null;
+		}
+
+		if ( node.building || node.flag || node.resource )
 		{
 			Destroy( gameObject );
 			return null;
@@ -87,6 +106,8 @@ public class Resource : MonoBehaviour
     {
 		transform.SetParent( node.ground.transform );
 		transform.localPosition = node.Position();
+
+		name = type.ToString();
 
 		if ( type == Type.tree )
 		{

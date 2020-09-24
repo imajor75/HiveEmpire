@@ -29,7 +29,7 @@ public class PathFinder : ScriptableObject
 
 	public enum Mode
 	{
-		avoidRoads,
+		avoidRoadsAndFlags,
 		onRoad,
 		avoidObjects,
 		total
@@ -58,10 +58,10 @@ public class PathFinder : ScriptableObject
     {
 		if ( !ignoreFinalObstacle || node != target )
 		{
-			if ( node.building || node.resource || node.type == GroundNode.Type.underWater )
+			if ( node.IsBlocking( mode == Mode.avoidRoadsAndFlags ) )
 				return;
 
-			if ( mode == Mode.avoidRoads && ( node.owner != target.owner || node.road ) )
+			if ( mode == Mode.avoidRoadsAndFlags && ( node.owner != target.owner || node.road ) )
 				return;
 		}
 

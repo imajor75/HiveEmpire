@@ -9,7 +9,7 @@ public class GuardHouse : Building
 	public int influence = 8;
 	public static GameObject template;
 
-	public static void Initialize()
+	public static new void Initialize()
 	{
 		template = (GameObject)Resources.Load( "WatchTower/Tower" );
 	}

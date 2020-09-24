@@ -27,6 +27,15 @@ public class Ground : MonoBehaviour
 	public GameObject water;
 	int reservedCount, reservationCount;
 
+	public static float forestChance = 0.004f;
+	public static float rocksChance = 0.002f;
+	public static float animalSpawnerChance = 0.001f;
+	public static float ironChance = 0.4f;
+	public static float coalChance = 0.4f;
+	public static float stoneChance = 0.2f;
+	public static float saltChance = 0.2f;
+	public static float goldChance = 0.2f;
+
 	public HeightMap heightMap;
 
 	public static Ground Create()
@@ -166,13 +175,23 @@ public class Ground : MonoBehaviour
 	{
 		foreach ( var node in nodes )
 		{
-			int i = world.rnd.Next( 1000 );
-			if ( i < 4 )
+			var r = new System.Random( world.rnd.Next() );
+			if ( r.NextDouble() < forestChance )
 				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
-			if ( i >= 5 && i < 6 )
+			if ( r.NextDouble() < rocksChance )
 				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
-			if ( i == 100 )
+			if ( r.NextDouble() < animalSpawnerChance )
 				node.AddResource( Resource.Type.animalSpawner );
+			if ( r.NextDouble() < ironChance )
+				node.AddResourcePatch( Resource.Type.iron, 5, 10 );
+			if ( r.NextDouble() < coalChance )
+				node.AddResourcePatch( Resource.Type.coal, 5, 10 );
+			if ( r.NextDouble() < stoneChance )
+				node.AddResourcePatch( Resource.Type.stone, 3, 10 );
+			if ( r.NextDouble() < saltChance )
+				node.AddResourcePatch( Resource.Type.salt, 3, 10 );
+			if ( r.NextDouble() < goldChance )
+				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
 		}
 	}
 

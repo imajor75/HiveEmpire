@@ -37,6 +37,7 @@ abstract public class Building : MonoBehaviour
 		public bool flatteningNeeded;
 		public int flatteningCorner;
 		public int flatteningCounter;
+		public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
 
 		static public void Initialize()
 		{
@@ -185,7 +186,7 @@ abstract public class Building : MonoBehaviour
 
 	public Building Setup( Ground ground, GroundNode node, Player owner )
 	{
-		if ( node.flag || node.building || node.road || node.resource )
+		if ( node.IsBlocking() )
 		{
 			Debug.Log( "Node is already occupied" );
 			Destroy( gameObject );
@@ -209,9 +210,9 @@ abstract public class Building : MonoBehaviour
 				}
 			}
 		}
-		if ( node.type != GroundNode.Type.grass )
+		if ( node.type != construction.groundTypeNeeded )
 		{
-			Debug.Log( "Node is not grass" );
+			Debug.Log( "Node has different type" );
 			Destroy( gameObject );
 			return null;
 		}

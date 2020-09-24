@@ -12,7 +12,7 @@ public class Stock : Building
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template;
 
-	public static void Initialize()
+	public static new void Initialize()
 	{
 		template = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
 	}
