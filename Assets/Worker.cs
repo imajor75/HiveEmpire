@@ -15,6 +15,7 @@ public class Worker : MonoBehaviour
 	public Flag reservation;
 	public int look;
 	public Resource origin;
+	public float currentSpeed;
 
 	public Building construction;
 
@@ -459,9 +460,17 @@ public class Worker : MonoBehaviour
 		UpdateBody();
 	}
 
+	public static float SpeedBetween( GroundNode a, GroundNode b )
+	{
+		float heightDifference = Math.Abs( a.height - b.height );
+		float time = 2f + heightDifference * 4f;
+		return 1 / time / 50;
+	}
+
 	public void Walk( GroundNode target )
 	{
 		Assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
+		currentSpeed = SpeedBetween( target, node );
 		walkFrom = node;
 		node = walkTo = target;
 
@@ -475,7 +484,7 @@ public class Worker : MonoBehaviour
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != zero )
 		{
-			walkProgress += 0.015f*ground.world.speedModifier; // TODO Speed should depend on the steepness of the road
+			walkProgress += currentSpeed*ground.world.speedModifier; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = zero;

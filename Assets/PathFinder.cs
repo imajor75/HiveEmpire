@@ -128,19 +128,22 @@ public class PathFinder : ScriptableObject
 					continue;
 				int index = road.NodeIndex( r.node );
 				if ( index == 0 )
-					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.nodes.Count - 1 + road.Jam(), r, road );
+					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.Cost() + road.Jam(), r, road );
 				else
 				{
 					Assert.AreEqual( index, road.nodes.Count - 1 );
 					// TODO Calculate the additional cost better based on traffic jam
-					VisitNode( road.nodes[0], r.costG + road.nodes.Count - 1 + road.Jam(), r, road );
+					VisitNode( road.nodes[0], r.costG + road.Cost() + road.Jam(), r, road );
 				}
 			}
 		}
 		else
 		{
 			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
-				VisitNode( r.node.Neighbour( i ), r.costG + 1, r ); // TODO cost should depend on steepness of the road
+			{
+				GroundNode t = r.node.Neighbour( i );
+				VisitNode( t, r.costG + 0.01f/Worker.SpeedBetween( r.node, t ), r ); // TODO cost should depend on steepness of the road
+			}
 		}
     }
 

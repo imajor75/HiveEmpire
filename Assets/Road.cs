@@ -18,6 +18,7 @@ public class Road : MonoBehaviour
 	public static Road newRoad;
 	public bool decorationOnly;
 	public static float height = 1.0f/20;
+	public float cost = 0;
 
 	public static void Initialize()
 	{
@@ -436,8 +437,8 @@ public class Road : MonoBehaviour
 
 	public void Remove()
 	{
-		while ( workers.Count > 0 )
-			workers[0].Remove();
+		foreach ( var worker in workers )
+			worker.Remove();
 		for ( int i = 0; i < 2; i++ )
 		{
 			Flag flag = GetEnd( i );
@@ -459,6 +460,16 @@ public class Road : MonoBehaviour
 	public GroundNode CenterNode()
 	{
 		return nodes[nodes.Count / 2];
+	}
+
+	public float Cost()
+	{
+		if ( cost == 0 )
+		{
+			for ( int i = 0; i < nodes.Count - 1; i++ )
+				cost += 0.01f/Worker.SpeedBetween( nodes[i], nodes[i + 1] );
+		}
+		return cost;
 	}
 
 	public void Validate()
