@@ -21,7 +21,6 @@ public class Interface : MonoBehaviour
 	public static Sprite templateProgress;
 	public GameObject debug;
 	public static Interface instance;
-	RectTransform debughekk;
 
 	public Interface()
 	{
@@ -286,6 +285,7 @@ public class Interface : MonoBehaviour
 			i11.rectTransform.offsetMin = new Vector2( 0, -w-a );
 			i11.rectTransform.offsetMax = new Vector2( w+a, 0 );
 			i11.sprite = pieces[0];
+			i11.name = "Frame piece";
 
 			Image i21 = new GameObject().AddComponent<Image>();
 			i21.rectTransform.SetParent( transform );
@@ -294,7 +294,7 @@ public class Interface : MonoBehaviour
 			i21.rectTransform.offsetMin = new Vector2( w-a, -w-a );
 			i21.rectTransform.offsetMax = new Vector2( -w+a, 0 );
 			i21.sprite = pieces[1];
-			Interface.instance.debughekk = i21.rectTransform;
+			i21.name = "Frame piece";
 
 			Image i31 = new GameObject().AddComponent<Image>();
 			i31.rectTransform.SetParent( transform );
@@ -303,6 +303,7 @@ public class Interface : MonoBehaviour
 			i31.rectTransform.offsetMin = new Vector2( -w-a, -w-a );
 			i31.rectTransform.offsetMax = new Vector2( 0, 0 );
 			i31.sprite = pieces[2];
+			i31.name = "Frame piece";
 
 			Image i12 = new GameObject().AddComponent<Image>();
 			i12.rectTransform.SetParent( transform );
@@ -311,6 +312,7 @@ public class Interface : MonoBehaviour
 			i12.rectTransform.offsetMin = new Vector2( 0, w-a );
 			i12.rectTransform.offsetMax = new Vector2( w+a, -w+a );
 			i12.sprite = pieces[3];
+			i12.name = "Frame piece";
 
 			Image i22 = new GameObject().AddComponent<Image>();
 			i22.rectTransform.SetParent( transform );
@@ -319,6 +321,7 @@ public class Interface : MonoBehaviour
 			i22.rectTransform.offsetMin = new Vector2( w-a, w-a );
 			i22.rectTransform.offsetMax = new Vector2( -w+a, -w+a );
 			i22.sprite = pieces[4];
+			i22.name = "Frame piece";
 
 			Image i32 = new GameObject().AddComponent<Image>();
 			i32.rectTransform.SetParent( transform );
@@ -327,6 +330,7 @@ public class Interface : MonoBehaviour
 			i32.rectTransform.offsetMin = new Vector2( -w-a, w-a );
 			i32.rectTransform.offsetMax = new Vector2( 0, -w+a );
 			i32.sprite = pieces[5];
+			i32.name = "Frame piece";
 
 			Image i13 = new GameObject().AddComponent<Image>();
 			i13.rectTransform.SetParent( transform );
@@ -335,6 +339,7 @@ public class Interface : MonoBehaviour
 			i13.rectTransform.offsetMin = new Vector2( 0, 0 );
 			i13.rectTransform.offsetMax = new Vector2( w+a, w+a );
 			i13.sprite = pieces[6];
+			i13.name = "Frame piece";
 
 			Image i23 = new GameObject().AddComponent<Image>();
 			i23.rectTransform.SetParent( transform );
@@ -343,6 +348,7 @@ public class Interface : MonoBehaviour
 			i23.rectTransform.offsetMin = new Vector2( w-a, 0 );
 			i23.rectTransform.offsetMax = new Vector2( -w+a, w+a );
 			i23.sprite = pieces[7];
+			i23.name = "Frame piece";
 
 			Image i33 = new GameObject().AddComponent<Image>();
 			i33.rectTransform.SetParent( transform );
@@ -351,6 +357,7 @@ public class Interface : MonoBehaviour
 			i33.rectTransform.offsetMin = new Vector2( -w-a, 0 );
 			i33.rectTransform.offsetMax = new Vector2( 0, w+a );
 			i33.sprite = pieces[8];
+			i33.name = "Frame piece";
 
 			enabled = false;
 		}

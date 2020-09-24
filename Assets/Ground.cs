@@ -26,6 +26,8 @@ public class Ground : MonoBehaviour
 	[JsonIgnore]
 	public GameObject water;
 	int reservedCount, reservationCount;
+	public GameObject resources;
+	public GameObject buoys;
 
 	public static float forestChance = 0.004f;
 	public static float rocksChance = 0.002f;
@@ -80,6 +82,28 @@ public class Ground : MonoBehaviour
 		water.name = "Water";
 		water.transform.localPosition = Vector3.up * waterLevel * maxHeight ;
 		water.transform.localScale = Vector3.one * Math.Max( width, height ) * GroundNode.size;
+	}
+
+	public GameObject ResourcesGameObject()
+	{
+		if ( resources == null )
+		{
+			resources = new GameObject();
+			resources.transform.SetParent( transform );
+			resources.name = "Resources";
+		}
+		return resources;
+	}
+
+	public GameObject BuoysGameObject()
+	{
+		if ( buoys == null )
+		{
+			buoys = new GameObject();
+			buoys.transform.SetParent( transform );
+			buoys.name = "Buoys";
+		}
+		return buoys;
 	}
 
 	public Ground Setup( World world, int seed )

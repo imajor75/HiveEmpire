@@ -381,7 +381,6 @@ public class Worker : MonoBehaviour
 	static public Worker Create()
 	{
 		GameObject workerBody = new GameObject();
-		workerBody.name = "Worker";
 		Worker worker = workerBody.AddComponent<Worker>();
 		return worker;
 	}
@@ -458,6 +457,18 @@ public class Worker : MonoBehaviour
 		animator = body.GetComponent<Animator>();
 		animator.runtimeAnimatorController = idleController;
 		UpdateBody();
+		switch ( type )
+		{
+			case Type.soldier:
+				name = "Soldier";
+				break;
+			case Type.wildAnimal:
+				name = "Bunny";
+				break;
+			default:
+				name = "Worker";
+				break;
+		}
 	}
 
 	public static float SpeedBetween( GroundNode a, GroundNode b )

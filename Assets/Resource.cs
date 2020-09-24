@@ -109,7 +109,7 @@ public class Resource : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-		transform.SetParent( node.ground.transform );
+		transform.SetParent( node.ground.ResourcesGameObject().transform );
 		transform.localPosition = node.Position();
 
 		name = type.ToString();
