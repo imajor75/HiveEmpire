@@ -5,6 +5,7 @@ using UnityEngine;
 public class Resource : MonoBehaviour
 {
 	public GroundNode node;
+	public bool underGround;
 	public Type type;
 	public int growth = 0;
 	public int charges = 1;
@@ -26,7 +27,12 @@ public class Resource : MonoBehaviour
 		cornfield,
 		animalSpawner,
 		pasturingAnimal,
-		other
+		salt,
+		coal,
+		iron,
+		gold,
+		stone,
+		total
 	}
 
 	public static void Initialize()
@@ -55,12 +61,30 @@ public class Resource : MonoBehaviour
 		return obj.AddComponent<Resource>();
 	}
 
+	public static bool IsUnderGround( Type type )
+	{
+		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
+	}
+
 	public Resource Setup( GroundNode node, Type type, int charges = 1 )
 	{
-		if ( charges < 1 )
-			charges = 1;
+		underGround = IsUnderGround( type );
 
-		if ( node.building || node.flag || node.resource || node.type != GroundNode.Type.grass )
+		if ( charges < 1 )
+		{
+			if ( underGround )
+				charges = -1;
+			else
+				charges = 1;
+		}
+
+		if ( ( underGround && node.type != GroundNode.Type.hill ) || ( !underGround && node.type != GroundNode.Type.grass ) )
+		{
+			Destroy( gameObject );
+			return null;
+		}
+
+		if ( node.building || node.flag || node.resource )
 		{
 			Destroy( gameObject );
 			return null;
@@ -87,6 +111,8 @@ public class Resource : MonoBehaviour
     {
 		transform.SetParent( node.ground.transform );
 		transform.localPosition = node.Position();
+
+		name = type.ToString();
 
 		if ( type == Type.tree )
 		{
@@ -171,6 +197,16 @@ public class Resource : MonoBehaviour
 				return Item.Type.grain;
 			case Type.pasturingAnimal:
 				return Item.Type.hide;
+			case Type.salt:
+				return Item.Type.salt;
+			case Type.iron:
+				return Item.Type.iron;
+			case Type.gold:
+				return Item.Type.gold;
+			case Type.coal:
+				return Item.Type.coal;
+			case Type.stone:
+				return Item.Type.stone;
 			default:
 				return Item.Type.unknown;
 		}

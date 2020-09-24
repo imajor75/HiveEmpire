@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -11,6 +13,7 @@ public class Workshop : Building
 	public bool working;
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
+	public bool commonInputs = false;
 	GameObject body;
 	public int inputStep = 1;
 	public int outputStep = 1;
@@ -19,16 +22,31 @@ public class Workshop : Building
 
 	public static int woodcutterRange = 8;
 	public static int hunterRange = 8;
+	public static int goldMineRange = 8;
+	public static int ironMineRange = 8;
+	public static int coalMineRange = 8;
+	public static int saltMineRange = 8;
+	public static int stoneMineRange = 8;
 	public static int stonemasonRange = 8;
 	public static int fisherRange = 8;
 	public static int cornfieldGrowthMax = 6000;
 	public static int plantingTime = 100;
-	public static int resourceCutTime = 250;
+	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
+	static List<Look> looks = new List<Look>();
+	public static int mineOreRestTime = 6000;
+
+	class Look
+	{
+		public string file;
+		public GameObject template;
+		public List<Type> types = new List<Type>();
+		public float height = 1.5f;
+	}
 
 	[System.Serializable]
 	public class Buffer
 	{
-		public int size = 8;
+		public int size = 6;
 		public int stored;
 		public int onTheWay;
 		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
@@ -45,6 +63,11 @@ public class Workshop : Building
 		mill,
 		bakery,
 		hunter,
+		saltmine,
+		ironmine,
+		coalmine,
+		stonemine,
+		goldmine,
 		total,
 		unknown = -1
 	}
@@ -72,26 +95,29 @@ public class Workshop : Building
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( waitTimer++ < resourceCutTime )    // TODO Working on the resource
+			if ( waitTimer++ < resourceCutTime[(int)resourceType] )    // TODO Working on the resource
 				return false;
 
-			Item.Type itemType = Item.Type.unknown;
 			Resource resource = node.resource;
 			if ( resource )
 			{
 				Assert.AreEqual( resource.type, resourceType );
 				Assert.AreEqual( boss, resource.hunter );
-				if ( node == boss.node )
+				if ( resource.underGround || node == boss.node )
 				{
-					itemType = Resource.ItemType( resourceType );
 					if ( --resource.charges == 0 )
 						resource.Remove();
+					else
+					{
+						if ( resource.underGround )
+							resource.keepAwayTimer = mineOreRestTime;
+					}
 				}
 				else
 					resource.keepAwayTimer = 500;   // TODO Settings
 				resource.hunter = null;
 			}
-			FinishJob( boss, itemType );
+			FinishJob( boss, Resource.ItemType( resourceType ) );
 			return true;
 		}
 	}
@@ -181,6 +207,58 @@ public class Workshop : Building
 		}
 	}
 
+	public static new void Initialize()
+	{
+		object[] looksData = {
+			"Medieval fantasy house/Medieva_fantasy_house",
+			"Medieval house/Medieval_house 1", Type.woodcutter, Type.fishingHut, 
+			"Baker House/Prefabs/Baker_house", Type.bakery, Type.hunter,
+			"Fantasy House/Prefab/Fantasy_House_6", 1.8f, Type.stonemason, Type.sawmill,
+			"WatchTower/Tower",
+			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", Type.farm, 
+			"mill/melnica_mod", Type.mill,
+			"Mines/saltmine_final", Type.saltmine,
+			"Mines/coalmine_final", Type.coalmine,
+			"Mines/ironmine_final", Type.ironmine,
+			"Mines/goldmine_final", Type.goldmine,
+			"Mines/stonemine_final", Type.stonemine };
+		foreach ( var g in looksData )
+		{
+			string file = g as string;
+			if ( file != null )
+			{
+				Look look = new Look();
+				look.file = file;
+				looks.Add( look );
+			}
+			Type? type = g as Type?;
+			if ( type != null )
+				looks[looks.Count - 1].types.Add( (Type)type );
+			float? height = g as float?;
+			if ( height != null )
+				looks[looks.Count - 1].height = (float)height;
+		}
+		foreach ( var l in looks )
+		{
+			object o = Resources.Load( l.file ) as GameObject;
+			if ( o == null )
+			{
+				Debug.Log( "Resource " + l.file + " not found" );
+				continue;
+			}
+			l.template = o as GameObject;
+			if ( l.template == null )
+				Debug.Log( "Resource " + l.file + " has a root " + o.GetType().Name );
+		}
+		for ( int i = 0; i < resourceCutTime.Length; i++ )
+		{
+			if ( Resource.IsUnderGround( (Resource.Type)i ) )
+				resourceCutTime[i] = 1000;
+			else
+				resourceCutTime[i] = 250;
+		}
+	}
+
 	public static Workshop Create()
 	{
 		var buildingObject = new GameObject();
@@ -195,6 +273,7 @@ public class Workshop : Building
 		{
 			case Type.woodcutter:
 			{
+				inputStep = 0;
 				outputType = Item.Type.log;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
@@ -202,10 +281,10 @@ public class Workshop : Building
 			}
 			case Type.stonemason:
 			{
+				inputStep = 0;
 				outputType = Item.Type.stone;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				height = 2;
 				break;
 			}
 			case Type.sawmill:
@@ -214,11 +293,11 @@ public class Workshop : Building
 				outputType = Item.Type.plank;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				height = 2;
 				break;
 			}
 			case Type.fishingHut:
 			{
+				inputStep = 0;
 				outputType = Item.Type.fish;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
@@ -226,6 +305,7 @@ public class Workshop : Building
 			}
 			case Type.farm:
 			{
+				inputStep = 0;
 				outputType = Item.Type.grain;
 				construction.plankNeeded = 2;
 				construction.stoneNeeded = 2;
@@ -237,7 +317,6 @@ public class Workshop : Building
 				AddInput( Item.Type.grain );
 				outputType = Item.Type.flour;
 				construction.plankNeeded = 2;
-				height = 2;
 				construction.flatteningNeeded = false;
 				break;
 			}
@@ -253,10 +332,60 @@ public class Workshop : Building
 			}
 			case Type.hunter:
 			{
+				inputStep = 0;
 				outputType = Item.Type.hide;
 				construction.plankNeeded = 1;
 				construction.flatteningNeeded = false;
-				height = 2;
+				break;
+			}
+			case Type.coalmine:
+			{
+				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
+				AddInputGroup( types );
+				outputType = Item.Type.coal;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
+				break;
+			}
+			case Type.stonemine:
+			{
+				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
+				AddInputGroup( types );
+				outputType = Item.Type.stone;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
+				break;
+			}
+			case Type.ironmine:
+			{
+				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
+				AddInputGroup( types );
+				outputType = Item.Type.iron;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
+				break;
+			}
+			case Type.goldmine:
+			{
+				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
+				AddInputGroup( types );
+				outputType = Item.Type.gold;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
+				break;
+			}
+			case Type.saltmine:
+			{
+				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
+				AddInputGroup( types );
+				outputType = Item.Type.salt;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
+				construction.groundTypeNeeded = GroundNode.Type.hill;
 				break;
 			}
 		}
@@ -266,17 +395,34 @@ public class Workshop : Building
 		return this;
 	}
 
-	void AddInput( Item.Type itemType )
+	void AddInput( Item.Type itemType, int size = 6 )
 	{
+		Assert.IsFalse( commonInputs );
 		Buffer b = new Buffer();
 		b.itemType = itemType;
+		b.size = size;
 		buffers.Add( b );
+	}
+
+	void AddInputGroup( Item.Type[] itemTypes, int size = 2 )
+	{
+		Assert.AreEqual( buffers.Count, 0 );
+		foreach ( var itemType in itemTypes )
+			AddInput( itemType, size );
+		commonInputs = true;
 	}
 
 	new void Start()
 	{
-		int[] look = { 1, 2, 3, 1, 5, 6, 2, 3 };
-		body = (GameObject)GameObject.Instantiate( templates[look[(int)type]], transform );
+		foreach ( var l in looks )
+		{
+			if ( l.types.Contains( type ) )
+			{
+				body = (GameObject)GameObject.Instantiate( l.template, transform );
+				height = l.height;
+			}
+		}
+		Assert.IsNotNull( body );
 		if ( type == Type.mill )
 		{
 			millWheel = body.transform.Find( "group1/millWheel" );
@@ -434,22 +580,78 @@ public class Workshop : Building
 					CollectResource( Resource.Type.pasturingAnimal, hunterRange );
 				break;
 			}
+			case Type.goldmine:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.gold, goldMineRange );
+				break;
+			}
+			case Type.ironmine:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.iron, ironMineRange );
+				break;
+			}
+			case Type.coalmine:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.coal, coalMineRange );
+				break;
+			}
+			case Type.saltmine:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.salt, saltMineRange );
+				break;
+			}
+			case Type.stonemine:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.stone, stoneMineRange );
+				break;
+			}
 		}
+	}
+
+	bool UseInput( int count = 0 )
+	{
+		if ( count == 0 )
+			count = inputStep;
+		if ( count == 0 )
+			return true;
+
+		Assert.IsTrue( buffers.Count > 0 );
+
+		int min = int.MaxValue, sum = 0;
+		foreach ( var b in buffers )
+		{
+			sum += b.stored;
+			if ( min > b.stored )
+				min = b.stored;
+		}
+		if ( (commonInputs && sum < count) || (!commonInputs && min < count) )
+			return false;
+
+		foreach ( var b in buffers )
+		{
+			if ( commonInputs )
+			{
+				int used = Math.Min( b.stored, count );
+				count -= used;
+				b.stored -= used;
+			}
+			else
+				b.stored -= count;
+		}
+		return true;
 	}
 
 	void ProcessInput()
 	{
-		int input = int.MaxValue;
-		foreach ( var buffer in buffers )
-			if ( buffer.stored < input )
-				input = buffer.stored;
-
-		if ( !working && output + outputStep <= outputMax && input > inputStep )
+		if ( !working && output + outputStep <= outputMax && UseInput() )
 		{
 			working = true;
 			progress = 0;
-			foreach ( var buffer in buffers )
-				buffer.stored -= inputStep;
 		}
 		if ( working && worker && worker.IsIdleInBuilding() )
 		{
@@ -468,49 +670,55 @@ public class Workshop : Building
 		Assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
-		GroundNode prey;
+		GroundNode target;
 		int t = Ground.areas[range].Count;
 		int r = ground.world.rnd.Next( t );
 		for ( int j = 0; j < t; j++ )
 		{
 			var o = Ground.areas[range][(j+r)%t];
-			prey = node.Add( o );
+			target = node.Add( o );
 			if ( resourceType == Resource.Type.fish )
 			{
 				int water = 0;
 				for ( int i = 0; i < GroundNode.neighbourCount; i++ )
-					if ( prey.Neighbour( i ).type == GroundNode.Type.underWater )
+					if ( target.Neighbour( i ).type == GroundNode.Type.underWater )
 						water++;
 
-				if ( water > 0 && prey.type != GroundNode.Type.underWater && prey.resource == null )
+				if ( water > 0 && target.type != GroundNode.Type.underWater && target.resource == null )
 				{
-					CollectResourceFromNode( prey, resourceType );
+					CollectResourceFromNode( target, resourceType );
 					return;
 				}
 				continue;
 			}
-			Resource resource = prey.resource;
+			Resource resource = target.resource;
 			if ( resource == null )
 				continue;
 			if ( resource.type == resourceType && resource.hunter == null && resource.keepAwayTimer < 0 )
 			{
-				CollectResourceFromNode( prey, resourceType );
+				CollectResourceFromNode( target, resourceType );
 				return;
 			}
 		}
 	}
 
-	void CollectResourceFromNode( GroundNode prey, Resource.Type resourceType )
+	void CollectResourceFromNode( GroundNode target, Resource.Type resourceType )
 	{
+		if ( !UseInput() )
+			return;
+
 		Assert.IsTrue( worker.taskQueue.Count == 0 );
-		Assert.IsTrue( resourceType == Resource.Type.fish || prey.resource.type == resourceType );
-		worker.ScheduleWalkToNeighbour( flag.node );
-		worker.ScheduleWalkToNode( prey, true );
+		Assert.IsTrue( resourceType == Resource.Type.fish || target.resource.type == resourceType );
+		if ( !Resource.IsUnderGround( resourceType ) )
+		{
+			worker.ScheduleWalkToNeighbour( flag.node );
+			worker.ScheduleWalkToNode( target, true );
+		}
 		var task = ScriptableObject.CreateInstance<GetResource>();
-		task.Setup( worker, prey, resourceType );
+		task.Setup( worker, target, resourceType );
 		worker.ScheduleTask( task );
-		if ( prey.resource )
-			prey.resource.hunter = worker;
+		if ( target.resource )
+			target.resource.hunter = worker;
 	}
 
 	static void FinishJob( Worker worker, Item.Type itemType )

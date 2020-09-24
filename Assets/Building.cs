@@ -12,7 +12,6 @@ abstract public class Building : MonoBehaviour
 	public GroundNode node;
 	[JsonIgnore]
 	public Road exit;
-	static public List<GameObject> templates = new List<GameObject>();
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
@@ -38,6 +37,7 @@ abstract public class Building : MonoBehaviour
 		public bool flatteningNeeded;
 		public int flatteningCorner;
 		public int flatteningCounter;
+		public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
 
 		static public void Initialize()
 		{
@@ -181,24 +181,12 @@ abstract public class Building : MonoBehaviour
 
 	public static void Initialize()
 	{
-		string[] files = {
-			"Medieval fantasy house/Medieva_fantasy_house",
-			"Medieval house/Medieval_house 1",
-			"Baker House/Prefabs/Baker_house",
-			"Fantasy House/Prefab/Fantasy_House_6",
-			"WatchTower/Tower",
-			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07",
-			"mill/melnica_mod"
-		};
-		foreach ( string file in files )
-			templates.Add( (GameObject)Resources.Load( file ) );
-
 		Construction.Initialize();
 	}
 
 	public Building Setup( Ground ground, GroundNode node, Player owner )
 	{
-		if ( node.flag || node.building || node.road || node.resource )
+		if ( node.IsBlocking() )
 		{
 			Debug.Log( "Node is already occupied" );
 			Destroy( gameObject );
@@ -222,9 +210,9 @@ abstract public class Building : MonoBehaviour
 				}
 			}
 		}
-		if ( node.type != GroundNode.Type.grass )
+		if ( node.type != construction.groundTypeNeeded )
 		{
-			Debug.Log( "Node is not grass" );
+			Debug.Log( "Node has different type" );
 			Destroy( gameObject );
 			return null;
 		}
@@ -277,17 +265,16 @@ abstract public class Building : MonoBehaviour
 	public void FixedUpdate()
 	{
 		construction.FixedUpdate();
-	}
-
-	public void Update()
-	{
-		construction.Update( this );
 		if ( worker == null && construction.done )
 		{
 			worker = Worker.Create();
 			worker.SetupForBuilding( this );
 		}
+	}
 
+	public void Update()
+	{
+		construction.Update( this );
 		UpdateLook();
 	}
 

@@ -87,20 +87,6 @@ public class Road : MonoBehaviour
 			return true;
 		}
 
-		// Check if the current node is already on a road
-		if ( node.road )
-		{
-			UnityEngine.Debug.Log( "Roads cannot cross" );
-			return false;
-		}
-
-		// Check if the current node has a building
-		if ( node.building )
-		{
-			UnityEngine.Debug.Log( "Cannot build a road on a building" );
-			return false;
-		}
-
 		// Check if the current node is adjacent to the previous one
 		int direction = last.DirectionTo( node );
 		if ( direction < 0 )
@@ -108,7 +94,7 @@ public class Road : MonoBehaviour
 			if ( node.flag )
 			{
 				// Find a path to the flag, and finish the road based on it
-				var p = Path.Between( last, node, PathFinder.Mode.avoidRoads );
+				var p = Path.Between( last, node, PathFinder.Mode.avoidRoadsAndFlags, true );
 				if ( p )
 				{
 					for ( int i = 1; i < p.path.Count; i++ )
@@ -123,6 +109,14 @@ public class Road : MonoBehaviour
 			UnityEngine.Debug.Log( "Node must be adjacent to previous one" );
 			return false;
 		}
+
+		// Check if the current node is blocking
+		if ( node.IsBlocking() )
+		{
+			UnityEngine.Debug.Log( "Node is occupied" );
+			return false;
+		}
+
 		bool finished = newRoad.AddNode( node );
 		if ( finished )
 		{

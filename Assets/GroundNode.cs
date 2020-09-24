@@ -37,9 +37,18 @@ public class GroundNode
 	{
 		public GroundNode node;
 
+		public static void CreateFor( GroundNode node )
+		{
+			var gizmo = new GameObject().AddComponent<NodeGizmo>();
+			gizmo.node = node;
+			gizmo.transform.SetParent( Interface.instance.debug.transform );
+			gizmo.name = "NodeGizmo";
+			node.gizmo = gizmo;
+		}
+
 		private void Start()
 		{
-			gameObject.hideFlags = HideFlags.HideInHierarchy;
+			gameObject.hideFlags |= HideFlags.DontSave;
 		}
 
 		void OnDrawGizmos()
@@ -111,8 +120,7 @@ public class GroundNode
 		//neighbours[3] = ground.GetNode( x + 0, y + 1 );
 		//neighbours[4] = ground.GetNode( x - 1, y + 1 );
 		//neighbours[5] = ground.GetNode( x - 1, y + 0 );
-		gizmo = new GameObject().AddComponent<NodeGizmo>();
-		gizmo.node = this;
+		NodeGizmo.CreateFor( this );
     }
 
     public int DistanceFrom( GroundNode o )
@@ -152,12 +160,32 @@ public class GroundNode
 
 	public void AddResource( Resource.Type type )
 	{
+		if ( resource != null )
+			return;
+
+		if ( type == Resource.Type.coal || type == Resource.Type.iron || type == Resource.Type.stone || type == Resource.Type.gold || type == Resource.Type.salt )
+		{
+			if ( this.type != Type.hill && this.type != Type.mountain )
+				return;
+		}
 		Resource.Create().Setup( this, type );
 	}
 
 	public GroundNode Add( Ground.Offset o )
 	{
 		return ground.GetNode( x + o.x, y + o.y );
+	}
+
+	public bool IsBlocking( bool roadsBlocking = true )
+	{
+		if ( building )
+			return true;
+		if ( resource && !resource.underGround )
+			return true;
+		if ( !roadsBlocking )
+			return false;
+
+		return flag || road;
 	}
 
 	public void SetHeight( float height )
@@ -198,7 +226,7 @@ public class GroundNode
 			o++;
 		if ( building )
 			o++;
-		if ( resource )
+		if ( resource && !resource.underGround )
 			o++;
 		Assert.IsTrue( o == 0 || o == 1 );
 		if ( building )

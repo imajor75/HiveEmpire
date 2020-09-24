@@ -104,11 +104,12 @@ public class World : ScriptableObject
 		eye = null;
 		foreach ( GameObject o in Object.FindObjectsOfType<GameObject>() )
 		{
-			if ( o.GetComponent<Interface>() != null )
+			if ( o.transform.root.GetComponent<Interface>() != null )
 				continue;
 
 			o.name += " - DESTROYED";
 			Destroy( o );
 		}
+		Interface.instance.Clear();
 	}
 }

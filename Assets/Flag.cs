@@ -28,24 +28,12 @@ public class Flag : MonoBehaviour
 
 	public Flag Setup( Ground ground, GroundNode node, Player owner )
     {
-        if ( node.flag )
+		if ( node.IsBlocking() )
         {
-            Debug.Log( "There is a flag there already" );
+            Debug.Log( "There is already occupied" );
 			Destroy( gameObject );
 			return null;
         }
-		if ( node.building )
-		{
-			Debug.Log( "Cannot create a flag at a building" );
-			Destroy( gameObject );
-			return null;
-		}
-		if ( node.resource )
-		{
-			Debug.Log( "Cannot create a flag on a resource" );
-			Destroy( gameObject );
-			return null;
-		}
 		if ( node.owner != owner )
 		{
 			Debug.Log( "Node is outside of border" );
@@ -58,7 +46,7 @@ public class Flag : MonoBehaviour
 			if ( node.Neighbour( i ).flag )
 				hasAdjacentFlag = true;
 		}
-        if (hasAdjacentFlag)
+        if ( hasAdjacentFlag )
         {
             Debug.Log("Another flag is too close");
 			Destroy( gameObject );

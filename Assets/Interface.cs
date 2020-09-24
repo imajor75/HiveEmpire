@@ -19,6 +19,19 @@ public class Interface : MonoBehaviour
 	public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	public static Sprite templateFrame;
 	public static Sprite templateProgress;
+	public GameObject debug;
+	public static Interface instance;
+
+	public Interface()
+	{
+		instance = this;
+	}
+
+	public void Clear()
+	{
+		foreach ( Transform d in debug.transform )
+			Destroy( d.gameObject );
+	}
 
 	static void Initialize()
 	{
@@ -39,13 +52,20 @@ public class Interface : MonoBehaviour
 		Flag.Initialize();
 		Resource.Initialize();
 		Interface.Initialize();
+		Workshop.Initialize();
+		Stock.Initialize();
+		GuardHouse.Initialize();
 
 		canvas = gameObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 		gameObject.AddComponent<GraphicRaycaster>();
 
+		debug = new GameObject();
+		debug.name = "Debug";
+		debug.transform.SetParent( transform );
+
 		world = ScriptableObject.CreateInstance<World>();
-		world.NewGame( 792469403 );
+		world.NewGame( 117274283 );
 	}
 
 	void Update()
@@ -102,6 +122,8 @@ public class Interface : MonoBehaviour
 		};
 		if ( Input.GetKeyDown( KeyCode.R ) )
 			Road.AddNodeToNew( world.ground, node, player );
+		if ( Input.GetKeyDown( KeyCode.J ) )
+			GuardHouse.Create().Setup( world.ground, node, player );
 		if ( Input.GetKeyDown( KeyCode.B ) && selectedWorkshopType != Workshop.Type.unknown )
 			Workshop.Create().Setup( world.ground, node, player, selectedWorkshopType );
 		if ( Input.GetMouseButtonDown( 0 ) )
@@ -347,8 +369,8 @@ public class Interface : MonoBehaviour
 		{
 			base.Open( null, x, y );
 
-			int row = -20;
-			Image( 0, 0, 200, 250, templateFrame );
+			int row = -30;
+			Image( 0, 0, 200, 400, templateFrame );
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				Text( 16, row, ((Workshop.Type)i).ToString() );

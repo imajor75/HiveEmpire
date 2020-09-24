@@ -24,6 +24,9 @@ public class Item : MonoBehaviour
 		salt,
 		pretzel,
 		hide,
+		iron,
+		coal,
+		gold,
         total,
 		unknown = -1
     }
@@ -39,7 +42,10 @@ public class Item : MonoBehaviour
 			"flour",
 			"salt",
 			"pretzel",
-			"hide"
+			"hide",
+			"iron",
+			"coal",
+			"gold"
 		};
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
