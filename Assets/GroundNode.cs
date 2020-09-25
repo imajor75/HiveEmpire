@@ -230,7 +230,7 @@ public class GroundNode
 			o++;
 		if ( resource && !resource.underGround )
 			o++;
-		Assert.IsTrue( o == 0 || o == 1 );
+		Assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 		if ( building )
 			Assert.AreEqual( this, building.node );
 		if ( flag )

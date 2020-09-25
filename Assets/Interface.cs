@@ -499,7 +499,7 @@ public class Interface : MonoBehaviour
 			base.Open( null, x, y );
 
 			int row = -30;
-			Frame( 0, 0, 200, 400, 30 );
+			Frame( 0, 0, 200, 425, 30 );
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				Text( 16, row, ((Workshop.Type)i).ToString() );

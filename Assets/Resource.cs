@@ -9,6 +9,7 @@ public class Resource : MonoBehaviour
 	public bool underGround;
 	public Type type;
 	public int growth = 0;
+	public int exposed = 0;
 	public int charges = 1;
 	GameObject body;
 	public int keepAwayTimer = 0;
@@ -17,10 +18,12 @@ public class Resource : MonoBehaviour
 	public List<Worker> animals = new List<Worker>();
 	static List<GameObject> templateTree = new List<GameObject>();
 	static List<GameObject> templateRock = new List<GameObject>();
+	static List<GameObject> templateTable = new List<GameObject>();
 	static GameObject templateAnimalRock;
 	static Material cornfieldMaterial;
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 6000;
+	public static int exposeMax = 9000;
 
 	public enum Type
 	{
@@ -35,6 +38,7 @@ public class Resource : MonoBehaviour
 		iron,
 		gold,
 		stone,
+		expose,
 		total
 	}
 
@@ -52,6 +56,12 @@ public class Resource : MonoBehaviour
 		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock1" ) );
 		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock2" ) );
 		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock3" ) );
+
+		templateTable.Add( (GameObject)Resources.Load( "Ores/coaltable_final" ) );
+		templateTable.Add( (GameObject)Resources.Load( "Ores/goldtable_final" ) );
+		templateTable.Add( (GameObject)Resources.Load( "Ores/irontable_final" ) );
+		templateTable.Add( (GameObject)Resources.Load( "Ores/salttable_final" ) );
+		templateTable.Add( (GameObject)Resources.Load( "Ores/stonetable_final" ) );
 
 		cornfieldMaterial = Resources.Load<Material>( "cornfield" );
 
@@ -144,6 +154,16 @@ public class Resource : MonoBehaviour
 		}
 		if ( type == Type.pasturingAnimal )
 			name = "Pasturing Animal Resource";
+		if ( type == Type.coal )
+			body = GameObject.Instantiate( templateTable[0] );
+		if ( type == Type.gold )
+			body = GameObject.Instantiate( templateTable[1] );
+		if ( type == Type.iron )
+			body = GameObject.Instantiate( templateTable[2] );
+		if ( type == Type.salt )
+			body = GameObject.Instantiate( templateTable[3] );
+		if ( type == Type.stone )
+			body = GameObject.Instantiate( templateTable[4] );
 		if ( body != null )
 		{
 			body.transform.SetParent( transform );
@@ -171,6 +191,9 @@ public class Resource : MonoBehaviour
 	{
 		growth += (int)node.ground.world.speedModifier;
 		keepAwayTimer -= (int)node.ground.world.speedModifier;
+		exposed -= (int)node.ground.world.speedModifier;
+		if ( underGround )
+			body?.SetActive( exposed > 0 );
 		if ( type == Type.animalSpawner && spawnTimer-- <= 0 )
 		{
 			foreach ( var o in Ground.areas[1] )

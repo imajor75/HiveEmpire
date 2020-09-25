@@ -51,7 +51,7 @@
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
 			if ( _SliceLevel > IN.worldPos.y )
-				o.Alpha = 1;
+				o.Alpha = c.a;
 			else
 				o.Alpha = 0;
         }

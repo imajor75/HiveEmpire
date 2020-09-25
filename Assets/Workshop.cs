@@ -30,6 +30,7 @@ public class Workshop : Building
 	public static int stoneMineRange = 8;
 	public static int stonemasonRange = 8;
 	public static int fisherRange = 8;
+	public static int geologistRange = 8;
 	public static int plantingTime = 100;
 	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
 	static List<Look> looks = new List<Look>();
@@ -69,6 +70,7 @@ public class Workshop : Building
 		stonemine,
 		goldmine,
 		forester,
+		geologist,
 		total,
 		unknown = -1
 	}
@@ -102,16 +104,22 @@ public class Workshop : Building
 			Resource resource = node.resource;
 			if ( resource )
 			{
-				Assert.AreEqual( resource.type, resourceType );
+				if ( resourceType != Resource.Type.expose )
+					Assert.AreEqual( resource.type, resourceType );
 				Assert.AreEqual( boss, resource.hunter );
-				if ( resource.underGround || node == boss.node )
+				if ( Resource.IsUnderGround( resourceType ) || node == boss.node )
 				{
-					if ( --resource.charges == 0 )
-						resource.Remove();
+					if ( resourceType == Resource.Type.expose )
+						resource.exposed = Resource.exposeMax;
 					else
 					{
-						if ( resource.underGround )
-							resource.keepAwayTimer = mineOreRestTime;
+						if ( --resource.charges == 0 )
+							resource.Remove();
+						else
+						{
+							if ( resource.underGround )
+								resource.keepAwayTimer = mineOreRestTime;
+						}
 					}
 				}
 				else
@@ -226,7 +234,8 @@ public class Workshop : Building
 			"Mines/goldmine_final", Type.goldmine,
 			"Mines/stonemine_final", Type.stonemine,
 			"Forest/woodcutter_final", Type.woodcutter,
-			"Forest/forester_final", Type.forester };
+			"Forest/forester_final", Type.forester,
+			"Ores/geologist_final", 0.8f, Type.geologist };
 		foreach ( var g in looksData )
 		{
 			string file = g as string;
@@ -398,6 +407,13 @@ public class Workshop : Building
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
 				construction.groundTypeNeeded = GroundNode.Type.hill;
+				break;
+			}
+			case Type.geologist:
+			{
+				inputStep = 0;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
 				break;
 			}
 		}
@@ -639,6 +655,12 @@ public class Workshop : Building
 					CollectResource( Resource.Type.stone, stoneMineRange );
 				break;
 			}
+			case Type.geologist:
+			{
+				if ( worker.IsIdleInBuilding() )
+					CollectResource( Resource.Type.expose, geologistRange );
+				break;
+			}
 		}
 	}
 
@@ -723,6 +745,14 @@ public class Workshop : Building
 			Resource resource = target.resource;
 			if ( resource == null )
 				continue;
+			if ( resourceType == Resource.Type.expose )
+			{
+				if ( resource.underGround && resource.exposed < 0 )
+				{
+					CollectResourceFromNode( target, resourceType );
+					return;
+				}
+			}
 			if ( resource.type == resourceType && resource.hunter == null && resource.IsReadyToBeHarvested() )
 			{
 				CollectResourceFromNode( target, resourceType );
@@ -737,7 +767,7 @@ public class Workshop : Building
 			return;
 
 		Assert.IsTrue( worker.taskQueue.Count == 0 );
-		Assert.IsTrue( resourceType == Resource.Type.fish || target.resource.type == resourceType );
+		Assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
 			worker.ScheduleWalkToNeighbour( flag.node );
