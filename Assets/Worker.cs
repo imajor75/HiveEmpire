@@ -17,7 +17,7 @@ public class Worker : MonoBehaviour
 	public int look;
 	public Resource origin;
 	public float currentSpeed;
-	static public AudioClip soundClip;
+	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
 	public AudioSource soundSource;
 	static public int soundMaxDistance = 15;
 
@@ -381,7 +381,9 @@ public class Worker : MonoBehaviour
 		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
 		Assert.IsNotNull( walkingController );
 
-		soundClip = Resources.Load<AudioClip>( "Mines/pickaxe_deep" );
+		object[] sounds = {
+			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt };
+		resourceGetSounds.Fill( sounds );
 	}
 
 	static public Worker Create()

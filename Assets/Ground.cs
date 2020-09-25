@@ -61,10 +61,10 @@ public class Ground : MonoBehaviour
 
 	void Start()
 	{
-		if ( World.zero == null )
-			World.zero = Worker.zero;
+		if ( world.zero == null )
+			world.zero = Worker.zero;
 		else
-			Worker.zero = World.zero;
+			Worker.zero = world.zero;
 		gameObject.name = "Ground";
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
