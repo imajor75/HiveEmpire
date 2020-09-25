@@ -17,6 +17,9 @@ public class Worker : MonoBehaviour
 	public int look;
 	public Resource origin;
 	public float currentSpeed;
+	static public AudioClip soundClip;
+	public AudioSource soundSource;
+	static public int soundMaxDistance = 15;
 
 	public Building construction;
 
@@ -377,6 +380,8 @@ public class Worker : MonoBehaviour
 		Assert.IsNotNull( idleController );
 		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
 		Assert.IsNotNull( walkingController );
+
+		soundClip = Resources.Load<AudioClip>( "Mines/pickaxe_deep" );
 	}
 
 	static public Worker Create()
@@ -470,6 +475,9 @@ public class Worker : MonoBehaviour
 				name = "Worker";
 				break;
 		}
+		soundSource = gameObject.AddComponent<AudioSource>();
+		soundSource.minDistance = 0;
+		soundSource.maxDistance = GroundNode.size * soundMaxDistance;
 	}
 
 	public static float SpeedBetween( GroundNode a, GroundNode b )

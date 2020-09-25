@@ -3,7 +3,7 @@ using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 
-[RequireComponent( typeof( Camera ) )]
+[RequireComponent( typeof( Camera ), typeof( AudioListener ) )]
 public class Eye : MonoBehaviour
 {
 	public float altitude = 0.3f;

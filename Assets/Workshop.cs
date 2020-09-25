@@ -22,6 +22,7 @@ public class Workshop : Building
 	public float processSpeed = 0.0015f;
 	public Transform millWheel;
 	public GroundNode resourcePlace = World.zero;
+	public AudioSource sound;
 
 	public static int woodcutterRange = 8;
 	public static int foresterRange = 8;
@@ -101,6 +102,12 @@ public class Workshop : Building
 		}
 		public override bool ExecuteFrame()
 		{
+			if ( !boss.soundSource.isPlaying )
+			{
+				boss.soundSource.clip = Worker.soundClip;
+				boss.soundSource.Play();
+			}
+
 			if ( waitTimer++ < resourceCutTime[(int)resourceType] )    // TODO Working on the resource
 				return false;
 
@@ -236,8 +243,8 @@ public class Workshop : Building
 			"Mines/ironmine_final", Type.ironmine,
 			"Mines/goldmine_final", Type.goldmine,
 			"Mines/stonemine_final", Type.stonemine,
-			"Forest/woodcutter_final", 1.0f, Type.woodcutter,
-			"Forest/forester_final", 1.0f, Type.forester,
+			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
+			"Forest/forester_final", 1.1f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist };
 		foreach ( var g in looksData )
 		{
@@ -462,6 +469,7 @@ public class Workshop : Building
 		base.Start();
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
+		sound = gameObject.AddComponent<AudioSource>();
 	}
 
 	new void Update()
