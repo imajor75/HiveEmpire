@@ -160,7 +160,7 @@ public class GroundNode
 
 	public void AddResource( Resource.Type type )
 	{
-		if ( resource != null )
+		if ( this.resource != null )
 			return;
 
 		if ( type == Resource.Type.coal || type == Resource.Type.iron || type == Resource.Type.stone || type == Resource.Type.gold || type == Resource.Type.salt )
@@ -168,7 +168,9 @@ public class GroundNode
 			if ( this.type != Type.hill && this.type != Type.mountain )
 				return;
 		}
-		Resource.Create().Setup( this, type );
+		Resource resource = Resource.Create().Setup( this, type );
+		if ( resource && type == Resource.Type.tree )
+			resource.growth = Resource.treeGrowthMax;
 	}
 
 	public GroundNode Add( Ground.Offset o )

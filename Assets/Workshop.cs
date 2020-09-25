@@ -21,6 +21,7 @@ public class Workshop : Building
 	public Transform millWheel;
 
 	public static int woodcutterRange = 8;
+	public static int foresterRange = 8;
 	public static int hunterRange = 8;
 	public static int goldMineRange = 8;
 	public static int ironMineRange = 8;
@@ -29,7 +30,6 @@ public class Workshop : Building
 	public static int stoneMineRange = 8;
 	public static int stonemasonRange = 8;
 	public static int fisherRange = 8;
-	public static int cornfieldGrowthMax = 6000;
 	public static int plantingTime = 100;
 	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
 	static List<Look> looks = new List<Look>();
@@ -68,6 +68,7 @@ public class Workshop : Building
 		coalmine,
 		stonemine,
 		goldmine,
+		forester,
 		total,
 		unknown = -1
 	}
@@ -122,16 +123,18 @@ public class Workshop : Building
 		}
 	}
 
-	public class PlantWheat : Worker.Task
+	public class Plant : Worker.Task
 	{
 		public GroundNode node;
 		public int waitTimer = 0;
 		public bool done;
+		public Resource.Type resourceType;
 
-		public void Setup( Worker boss, GroundNode node )
+		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
 		{
 			base.Setup( boss );
 			this.node = node;
+			this.resourceType = resourceType;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -148,7 +151,7 @@ public class Workshop : Building
 			if ( node.building || node.flag || node.road || node.fixedHeight || node.resource || node.type != GroundNode.Type.grass )
 				return true;
 
-			Resource.Create().Setup( node, Resource.Type.cornfield );
+			Resource.Create().Setup( node, resourceType );
 			done = true;
 			Assert.IsNotNull( node.resource );
 			waitTimer = plantingTime;
@@ -222,7 +225,8 @@ public class Workshop : Building
 			"Mines/ironmine_final", Type.ironmine,
 			"Mines/goldmine_final", Type.goldmine,
 			"Mines/stonemine_final", Type.stonemine,
-			"Forest/woodcutter_final", Type.woodcutter };
+			"Forest/woodcutter_final", Type.woodcutter,
+			"Forest/forester_final", Type.forester };
 		foreach ( var g in looksData )
 		{
 			string file = g as string;
@@ -277,7 +281,14 @@ public class Workshop : Building
 				inputStep = 0;
 				outputType = Item.Type.log;
 				construction.plankNeeded = 2;
-				construction.flatteningNeeded = true;
+				construction.flatteningNeeded = false;
+				break;
+			}
+			case Type.forester:
+			{
+				inputStep = 0;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = false;
 				break;
 			}
 			case Type.stonemason:
@@ -546,7 +557,7 @@ public class Workshop : Building
 						if ( place.building || place.flag || place.road || place.fixedHeight )
 							continue;
 						Resource cornfield = place.resource;
-						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || cornfield.growth < cornfieldGrowthMax )
+						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || !cornfield.IsReadyToBeHarvested() )
 							continue;
 						CollectResourceFromNode( place, Resource.Type.cornfield );
 						return;
@@ -556,8 +567,25 @@ public class Workshop : Building
 						GroundNode place = node.Add( o );
 						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
 							continue;
-						Resource cornfield = place.resource;
-						PlantWheatAt( place );
+						PlantAt( place, Resource.Type.cornfield );
+						return;
+					}
+				}
+				break;
+			}
+			case Type.forester:
+			{
+				if ( worker.IsIdleInBuilding() )
+				{
+					var o = Ground.areas[foresterRange];
+					for ( int i = 0; i < o.Count; i++ )
+					{
+						int randomOffset = ground.world.rnd.Next( o.Count );
+						int x = (i + randomOffset) % o.Count;
+						GroundNode place = node.Add( o[x] );
+						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
+							continue;
+						PlantAt( place, Resource.Type.tree );
 						return;
 					}
 				}
@@ -695,7 +723,7 @@ public class Workshop : Building
 			Resource resource = target.resource;
 			if ( resource == null )
 				continue;
-			if ( resource.type == resourceType && resource.hunter == null && resource.keepAwayTimer < 0 )
+			if ( resource.type == resourceType && resource.hunter == null && resource.IsReadyToBeHarvested() )
 			{
 				CollectResourceFromNode( target, resourceType );
 				return;
@@ -735,13 +763,13 @@ public class Workshop : Building
 		worker.ScheduleWalkToNeighbour( worker.building.node );
 	}
 
-	void PlantWheatAt( GroundNode place )
+	void PlantAt( GroundNode place, Resource.Type resourceType )
 	{
 		Assert.IsTrue( worker.taskQueue.Count == 0 );
 		worker.ScheduleWalkToNeighbour( flag.node );
 		worker.ScheduleWalkToNode( place, true );
-		var task = ScriptableObject.CreateInstance<PlantWheat>();
-		task.Setup( worker, place );
+		var task = ScriptableObject.CreateInstance<Plant>();
+		task.Setup( worker, place, resourceType );
 		worker.ScheduleTask( task );
 	}
 

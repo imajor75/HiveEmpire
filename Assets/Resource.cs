@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,6 +19,8 @@ public class Resource : MonoBehaviour
 	static List<GameObject> templateRock = new List<GameObject>();
 	static GameObject templateAnimalRock;
 	static Material cornfieldMaterial;
+	public static int treeGrowthMax = 15000;    // 5 minutes
+	public static int cornfieldGrowthMax = 6000;
 
 	public enum Type
 	{
@@ -152,15 +155,22 @@ public class Resource : MonoBehaviour
 	{
 		if ( type == Type.cornfield )
 		{
-			float growth = (float)this.growth / Workshop.cornfieldGrowthMax;
-			body.transform.localScale = new Vector3( 0.5f, growth / 2, 0.5f );
+			float growth = (float)this.growth / cornfieldGrowthMax;
+			transform.localScale = new Vector3( 0.5f, growth / 2, 0.5f );
+		}
+		if ( type == Type.tree )
+		{
+			float size = (float)growth/treeGrowthMax;
+			size = Math.Max( size, 0.1f );
+			size = Math.Min( size, 1 );
+			transform.localScale = Vector3.one * size;
 		}
 	}
 
 	void FixedUpdate()
 	{
-		growth++;
-		keepAwayTimer--;
+		growth += (int)node.ground.world.speedModifier;
+		keepAwayTimer -= (int)node.ground.world.speedModifier;
 		if ( type == Type.animalSpawner && spawnTimer-- <= 0 )
 		{
 			foreach ( var o in Ground.areas[1] )
@@ -222,6 +232,17 @@ public class Resource : MonoBehaviour
 		Assert.AreEqual( this, node.resource );
 		node.resource = null;
 		Destroy( gameObject );
+	}
+
+	public bool IsReadyToBeHarvested()
+	{
+		if ( keepAwayTimer > 0 )
+			return false;
+		if ( type == Type.tree )
+			return growth > treeGrowthMax;
+		if ( type == Type.cornfield )
+			return growth > cornfieldGrowthMax;
+		return true;
 	}
 
 	public void UpdateBody()
