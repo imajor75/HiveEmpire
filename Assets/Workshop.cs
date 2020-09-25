@@ -211,7 +211,7 @@ public class Workshop : Building
 	{
 		object[] looksData = {
 			"Medieval fantasy house/Medieva_fantasy_house",
-			"Medieval house/Medieval_house 1", Type.woodcutter, Type.fishingHut, 
+			"Medieval house/Medieval_house 1", Type.fishingHut, 
 			"Baker House/Prefabs/Baker_house", Type.bakery, Type.hunter,
 			"Fantasy House/Prefab/Fantasy_House_6", 1.8f, Type.stonemason, Type.sawmill,
 			"WatchTower/Tower",
@@ -221,7 +221,8 @@ public class Workshop : Building
 			"Mines/coalmine_final", Type.coalmine,
 			"Mines/ironmine_final", Type.ironmine,
 			"Mines/goldmine_final", Type.goldmine,
-			"Mines/stonemine_final", Type.stonemine };
+			"Mines/stonemine_final", Type.stonemine,
+			"Forest/woodcutter_final", Type.woodcutter };
 		foreach ( var g in looksData )
 		{
 			string file = g as string;
