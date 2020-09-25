@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Assertions;
 
+[SelectionBase]
 public class Item : MonoBehaviour
 {
 	public Flag flag;

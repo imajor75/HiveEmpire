@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[SelectionBase]
 public class Worker : MonoBehaviour
 {
 	public Type type;

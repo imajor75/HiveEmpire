@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
 
+[SelectionBase]
 public class Flag : MonoBehaviour
 {
 	public Player owner;

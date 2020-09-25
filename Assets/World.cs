@@ -12,7 +12,7 @@ public class World : ScriptableObject
 	[JsonIgnore]
 	public float speedModifier = 1;
 	public Stock mainBuilding;
-	public GroundNode zero;
+	static public GroundNode zero;
 	public System.Random rnd;
 	public List<Player> players = new List<Player>();
 	public Player mainPlayer;

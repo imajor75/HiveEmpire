@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
+[SelectionBase]
 abstract public class Building : MonoBehaviour
 {
 	public Player owner;

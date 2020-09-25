@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -19,6 +21,7 @@ public class Workshop : Building
 	public int outputStep = 1;
 	public float processSpeed = 0.0015f;
 	public Transform millWheel;
+	public GroundNode resourcePlace = World.zero;
 
 	public static int woodcutterRange = 8;
 	public static int foresterRange = 8;
@@ -233,8 +236,8 @@ public class Workshop : Building
 			"Mines/ironmine_final", Type.ironmine,
 			"Mines/goldmine_final", Type.goldmine,
 			"Mines/stonemine_final", Type.stonemine,
-			"Forest/woodcutter_final", Type.woodcutter,
-			"Forest/forester_final", Type.forester,
+			"Forest/woodcutter_final", 1.0f, Type.woodcutter,
+			"Forest/forester_final", 1.0f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist };
 		foreach ( var g in looksData )
 		{
@@ -457,6 +460,8 @@ public class Workshop : Building
 			Assert.IsNotNull( millWheel );
 		}
 		base.Start();
+		string name = type.ToString();
+		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
 	}
 
 	new void Update()
@@ -717,6 +722,7 @@ public class Workshop : Building
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
+		resourcePlace = World.zero;
 		Assert.IsTrue( worker.taskQueue.Count == 0 );
 		Assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
@@ -773,6 +779,7 @@ public class Workshop : Building
 			worker.ScheduleWalkToNeighbour( flag.node );
 			worker.ScheduleWalkToNode( target, true );
 		}
+		resourcePlace = target;
 		var task = ScriptableObject.CreateInstance<GetResource>();
 		task.Setup( worker, target, resourceType );
 		worker.ScheduleTask( task );
@@ -806,6 +813,15 @@ public class Workshop : Building
 	public override void OnClicked()
 	{
 		Interface.WorkshopPanel.Create().Open( this );
+	}
+
+	void OnDrawGizmos()
+	{
+		if ( Selection.Contains( gameObject ) && resourcePlace != World.zero )
+		{
+			Gizmos.color = Color.red;
+			Gizmos.DrawLine( node.Position() + Vector3.up * GroundNode.size, resourcePlace.Position() );
+		}
 	}
 
 	public override void Validate()
