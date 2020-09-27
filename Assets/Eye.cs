@@ -1,18 +1,21 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 
-[RequireComponent( typeof( Camera ), typeof( AudioListener ) )]
+[RequireComponent( typeof( Camera ) )]
 public class Eye : MonoBehaviour
 {
-	public float altitude = 0.3f;
-	static public float minAltitude = 0.2f;
-	static public float maxAltitude = 1.0f;
+	public float altitude = 4.0f;
+	static public float minAltitude = 2.0f;
+	static public float maxAltitude = 15.0f;
+	static public float viewDistance = 5.0f;
 	public World world;
 	public float x, y;
 	public float direction;
 	public new Camera camera;
+	public Transform ear;
 
 	public static Eye Create()
 	{
@@ -32,6 +35,10 @@ public class Eye : MonoBehaviour
 		tag = "MainCamera";
 		name = "Eye";
 		camera = GetComponent<Camera>();
+
+		ear = new GameObject().transform;
+		ear.gameObject.AddComponent<AudioListener>();
+		ear.name = "Ear";
 	}
 
 	private void Update()
@@ -44,16 +51,16 @@ public class Eye : MonoBehaviour
 			Vector3 position = hit.point;
 			if ( position.y < Ground.waterLevel * Ground.maxHeight )
 				position.y = Ground.waterLevel * Ground.maxHeight;
-			transform.position = position + Vector3.up * altitude * Ground.maxHeight;
+			ear.position = position;
+			Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
+			transform.position = position - viewer;
+			transform.LookAt( ear );
 		}
-		transform.rotation = Quaternion.identity;
-		transform.Rotate( Vector3.right * 40 );
-		transform.Rotate( Vector3.up * direction, Space.World );
 	}
 
 	public void FocusOn( GroundNode node )
 	{
-		var p = node.Position() - transform.forward * 8;
+		var p = node.Position();
 		x = p.x;
 		y = p.z;
 	}
@@ -73,18 +80,18 @@ public class Eye : MonoBehaviour
 		y += movement.z;
 
 		if ( Input.GetKey( KeyCode.Q ) )
-			direction -= 1;
+			direction += 0.03f;
 		if ( Input.GetKey( KeyCode.E ) )
-			direction += 1;
+			direction -= 0.03f;
 		if ( Input.GetKey( KeyCode.Z ) && altitude < maxAltitude )
 			altitude *= 1.01f;
 		if ( Input.GetKey( KeyCode.X ) && altitude > minAltitude )
 			altitude *= 0.99f;
 
-		if ( direction >= 360 )
-			direction -= 360;
+		if ( direction >= Math.PI * 2 )
+			direction -= (float)Math.PI * 2;
 		if ( direction < 0 )
-			direction += 360;
+			direction += (float)Math.PI * 2;
 	}
 
 	public GroundNode FindNodeAt( Vector3 screenPosition )
