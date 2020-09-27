@@ -382,7 +382,9 @@ public class Worker : MonoBehaviour
 		Assert.IsNotNull( walkingController );
 
 		object[] sounds = {
-			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt };
+			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
+			"Forest/treecut", Resource.Type.tree,
+			"Mines/pickaxe", Resource.Type.stone };
 		resourceGetSounds.Fill( sounds );
 	}
 
@@ -478,7 +480,8 @@ public class Worker : MonoBehaviour
 				break;
 		}
 		soundSource = gameObject.AddComponent<AudioSource>();
-		soundSource.minDistance = 0;
+		soundSource.spatialBlend = 1;
+		soundSource.minDistance = 2;
 		soundSource.maxDistance = GroundNode.size * soundMaxDistance;
 	}
 

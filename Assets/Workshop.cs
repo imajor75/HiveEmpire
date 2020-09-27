@@ -22,7 +22,6 @@ public class Workshop : Building
 	public float processSpeed = 0.0015f;
 	public Transform millWheel;
 	public GroundNode resourcePlace = Worker.zero;
-	public AudioSource sound;
 
 	public static int woodcutterRange = 8;
 	public static int foresterRange = 8;
@@ -104,6 +103,7 @@ public class Workshop : Building
 			if ( waitTimer++ < resourceCutTime[(int)resourceType] )    // TODO Working on the resource
 				return false;
 
+			boss.soundSource.Stop();
 			Resource resource = node.resource;
 			if ( resource )
 			{
@@ -245,7 +245,7 @@ public class Workshop : Building
 			if ( Resource.IsUnderGround( (Resource.Type)i ) )
 				resourceCutTime[i] = 1000;
 			else
-				resourceCutTime[i] = 250;
+				resourceCutTime[i] = 500;
 		}
 	}
 
@@ -430,7 +430,6 @@ public class Workshop : Building
 		base.Start();
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
-		sound = gameObject.AddComponent<AudioSource>();
 	}
 
 	new void Update()
