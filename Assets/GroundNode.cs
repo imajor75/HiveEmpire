@@ -202,7 +202,7 @@ public class GroundNode
 			flag?.building?.exit.RebuildMesh();
 		}
 		if ( road )
-			road.RebuildMesh();
+			road.RebuildMesh( true );
 		if ( resource )
 			resource.UpdateBody();
 

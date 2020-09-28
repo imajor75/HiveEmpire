@@ -205,8 +205,10 @@ public class Road : MonoBehaviour
 	}
 
 	static int blocksInSection = 8;
-	public void RebuildMesh()
+	public void RebuildMesh( bool force = false )
 	{
+		if ( force )
+			curves = null;
 		CreateCurves();
 
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
