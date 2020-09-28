@@ -31,12 +31,15 @@ public class Worker : MonoBehaviour
 	public Building building;
 
 	public Animator animator;
-	public static List<GameObject> templates = new List<GameObject>();
-	public static RuntimeAnimatorController idleController, walkingController;
+	static public List<GameObject> templates = new List<GameObject>();
+	static public RuntimeAnimatorController animationController;
+	static public int walkingID, pickupID, putdownID;
 	public static GroundNode zero = new GroundNode();	// HACK This is a big fat hack, to stop Unity editor from crashing
 
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
+	GameObject box;
+	static GameObject boxTemplate;
 
 	public class Task : ScriptableObject
 	{
@@ -295,12 +298,15 @@ public class Worker : MonoBehaviour
 
 	public class PickupItem : Task
 	{
+		static public int pickupTimeStart = 100;
 		public Item item;
+		public int pickupTimer = pickupTimeStart; 
 
 		public void Setup( Worker boss, Item item )
 		{
 			base.Setup( boss );
 			this.item = item;
+
 		}
 		public override void Cancel()
 		{
@@ -310,6 +316,14 @@ public class Worker : MonoBehaviour
 		}
 		public override bool ExecuteFrame()
 		{
+			if ( pickupTimer == pickupTimeStart )
+			{
+				boss.animator.SetTrigger( pickupID );
+				boss.box?.SetActive( true );
+			}
+			if ( pickupTimer-- > 0 )
+				return false;
+
 			if ( item.flag != null )
 				item.flag.ReleaseItem( item );
 			boss.itemInHands = item;
@@ -323,7 +337,9 @@ public class Worker : MonoBehaviour
 
 	public class DeliverItem : Task 
 	{
+		static public int putdownTimeStart = 100;
 		public Item item;
+		public int putdownTimer = putdownTimeStart;
 
 		public void Setup( Worker boss, Item item )
 		{
@@ -332,7 +348,13 @@ public class Worker : MonoBehaviour
 		}
 		public override bool ExecuteFrame()
 		{
-    			Assert.AreEqual( item, boss.itemInHands );
+			if ( putdownTimer == putdownTimeStart )
+				boss.animator.SetTrigger( putdownID );
+			if ( putdownTimer-- > 0 )
+				return false;
+
+			boss.box?.SetActive( false );
+    		Assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 				item.Arrived();
 			else
@@ -388,11 +410,15 @@ public class Worker : MonoBehaviour
 		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a" ) );
 		templates.Add( (GameObject)Resources.Load( "FootmanPBRHPPolyart/Prefabs/footman_Blue_HP" ) );
 		templates.Add( (GameObject)Resources.Load( "Rabbits/Prefabs/Rabbit 1" ) );
-		
-		idleController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Idle" );
-		Assert.IsNotNull( idleController );
-		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
-		Assert.IsNotNull( walkingController );
+
+		boxTemplate = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands" );
+		Assert.IsNotNull( boxTemplate );
+
+		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
+		Assert.IsNotNull( animationController );
+		walkingID = Animator.StringToHash( "Moving" );
+		pickupID = Animator.StringToHash( "CarryPickupTrigger" );
+		putdownID = Animator.StringToHash( "CarryPutdownTrigger" );
 
 		object[] sounds = {
 			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
@@ -477,8 +503,15 @@ public class Worker : MonoBehaviour
 			transform.SetParent( node.ground.transform );
 
 		body = (GameObject)GameObject.Instantiate( templates[look], transform );
+		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
+		if ( hand != null && type == Type.haluer )
+		{
+			box = (GameObject)GameObject.Instantiate( boxTemplate, hand );
+			box.SetActive( false );
+		}
 		animator = body.GetComponent<Animator>();
-		animator.runtimeAnimatorController = idleController;
+		animator.runtimeAnimatorController = animationController;
+		animator.applyRootMotion = false;
 		UpdateBody();
 		switch ( type )
 		{
@@ -797,14 +830,11 @@ public class Worker : MonoBehaviour
 	{
 		if ( walkTo == zero )
 		{
-			if ( animator != null && animator.runtimeAnimatorController == walkingController )
-				animator.runtimeAnimatorController = idleController;
-
+			animator?.SetBool( walkingID, false );
 			transform.localPosition = node.Position();
 			return;
 		}
-		if ( animator != null && animator.runtimeAnimatorController == idleController )
-			animator.runtimeAnimatorController = walkingController;
+		animator.SetBool( walkingID, true );
 
 		if ( itemInHands )
 			itemInHands.UpdateLook();

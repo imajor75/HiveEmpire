@@ -122,4 +122,18 @@ public class World : ScriptableObject
 		}
 		Interface.instance.Clear();
 	}
+
+	public static Transform FindChildRecursive( Transform parent, string substring )
+	{
+		foreach ( Transform child in parent )
+		{
+			if ( child.name.Contains( substring ) )
+				return child;
+			Transform grandChild = FindChildRecursive( child, substring );
+			if ( grandChild )
+				return grandChild;
+		}
+
+		return null;
+	}
 }
