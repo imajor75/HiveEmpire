@@ -30,9 +30,12 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			}
 			if ( g.GetType() == typeof( Key ) )
 				table[table.Count - 1].keys.Add( (Key)g );
-			float? height = g as float?;
-			if ( height != null )
-				table[table.Count - 1].floatData = (float)height;
+			if ( g.GetType() == typeof( int ) )
+				table[table.Count - 1].intData = (int)g;
+			if ( g.GetType() == typeof( float ) )
+				table[table.Count - 1].floatData = (float)g;
+			if ( g.GetType() == typeof( bool ) )
+				table[table.Count - 1].boolData = (bool)g;
 		}
 		foreach ( var l in table )
 		{

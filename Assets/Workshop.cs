@@ -22,6 +22,8 @@ public class Workshop : Building
 	public float processSpeed = 0.0015f;
 	public Transform millWheel;
 	public GroundNode resourcePlace = Worker.zero;
+	public AudioSource soundSource;
+	static public MediaTable<AudioClip, Type> processingSounds;
 
 	public static int woodcutterRange = 8;
 	public static int foresterRange = 8;
@@ -240,6 +242,9 @@ public class Workshop : Building
 			"Forest/forester_final", 1.1f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist };
 		looks.Fill( looksData );
+		object[] sounds = {
+			"handsaw", Type.sawmill };
+		processingSounds.Fill( sounds );
 		for ( int i = 0; i < resourceCutTime.Length; i++ )
 		{
 			if ( Resource.IsUnderGround( (Resource.Type)i ) )
@@ -430,6 +435,8 @@ public class Workshop : Building
 		base.Start();
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
+
+		soundSource = World.CreateSoundSource( this );
 	}
 
 	new void Update()
@@ -674,6 +681,9 @@ public class Workshop : Building
 	{
 		if ( !working && output + outputStep <= outputMax && UseInput() )
 		{
+			soundSource.loop = true;
+			soundSource.clip = processingSounds.GetMediaData( type );
+			soundSource.Play();
 			working = true;
 			progress = 0;
 		}
@@ -684,6 +694,7 @@ public class Workshop : Building
 			{
 				output += outputStep;
 				working = false;
+				soundSource.Stop();
 			}
 		}
 	}

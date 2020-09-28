@@ -19,7 +19,6 @@ public class Worker : MonoBehaviour
 	public float currentSpeed;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
 	public AudioSource soundSource;
-	static public int soundMaxDistance = 15;
 
 	public Building construction;
 
@@ -479,10 +478,7 @@ public class Worker : MonoBehaviour
 				name = "Worker";
 				break;
 		}
-		soundSource = gameObject.AddComponent<AudioSource>();
-		soundSource.spatialBlend = 1;
-		soundSource.minDistance = 2;
-		soundSource.maxDistance = GroundNode.size * soundMaxDistance;
+		soundSource = World.CreateSoundSource( this );
 	}
 
 	public static float SpeedBetween( GroundNode a, GroundNode b )

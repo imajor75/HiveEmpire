@@ -18,11 +18,21 @@ public class World : ScriptableObject
 	public Player mainPlayer;
 	static public World instance;
 	public Eye eye;
+	static public int soundMaxDistance = 15;
 
 	World()
 	{
 		Assert.IsNull( instance );
 		instance = this;
+	}
+
+	static public AudioSource CreateSoundSource( Component component )
+	{
+		var soundSource = component.gameObject.AddComponent<AudioSource>();
+		soundSource.spatialBlend = 1;
+		soundSource.minDistance = 1;
+		soundSource.maxDistance = GroundNode.size * World.soundMaxDistance;
+		return soundSource;
 	}
 
 	public void NewGame( int seed )
