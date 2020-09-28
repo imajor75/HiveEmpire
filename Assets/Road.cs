@@ -383,7 +383,7 @@ public class Road : MonoBehaviour
 		{
 			int p = Math.Max( j - 1, 0 );
 			int n = Math.Min( j + 1, nodes.Count - 1 );
-			directions.Add( nodes[n].Position() - nodes[p].Position() );
+			directions.Add( ( nodes[n].Position() - nodes[p].Position() ).normalized );
 		}
 		for ( int i = 0; i < 3; i++ )
 		{
