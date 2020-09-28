@@ -473,10 +473,11 @@ public class Road : MonoBehaviour
 		}
 	}
 
-	public void Remove()
+	public bool Remove()
 	{
 		foreach ( var worker in workers )
-			worker.Remove();
+			if ( !worker.Remove() )
+				return false;
 		for ( int i = 0; i < 2; i++ )
 		{
 			Flag flag = GetEnd( i );
@@ -493,6 +494,7 @@ public class Road : MonoBehaviour
 				node.road = null;
 		}
 		Destroy( gameObject );
+		return true;
 	}
 
 	public GroundNode CenterNode()

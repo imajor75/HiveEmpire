@@ -327,13 +327,16 @@ abstract public class Building : MonoBehaviour
 				m.SetFloat( Construction.sliceLevelID, level );
 	}
 
-	public virtual void Remove()
+	public virtual bool Remove()
 	{
-		exit.Remove();
-		worker?.Remove();
+		if ( !exit.Remove() )
+			return false;
+		if ( worker != null && !worker.Remove() )
+			return false;
 		node.building = null;
 		flag.building = null;
 		Destroy( gameObject );
+		return true;
 	}
 
 	public virtual int Influence( GroundNode node )

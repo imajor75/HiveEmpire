@@ -110,16 +110,18 @@ public class Flag : MonoBehaviour
 		Interface.FlagPanel.Create().Open( this );
 	}
 
-	public void Remove()
+	public bool Remove()
 	{
+		if ( building && !building.Remove() )
+			return false;
 		node.flag = null;
 		foreach ( var road in roadsStartingHere )
 			road?.Remove();
 		foreach ( var item in items )
 			item?.Remove();
-		node.Neighbour( 4 ).building?.Remove();
 
 		Destroy( gameObject );
+		return true;
 	}
 
 	public int FreeSpace()

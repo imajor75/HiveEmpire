@@ -55,6 +55,13 @@ public class Stock : Building
 		return this;
 	}
 
+	public override bool Remove()
+	{
+		if ( main )
+			return false;
+		return base.Remove();
+	}
+
 	new void Start()
 	{
 		base.Start();

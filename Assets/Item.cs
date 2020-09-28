@@ -178,10 +178,11 @@ public class Item : MonoBehaviour
 		}
 	}
 
-	public void Remove()
+	public bool Remove()
 	{
 		CancelTrip();
 		Destroy( gameObject );
+		return true;
 	}
 
 	public void Validate()

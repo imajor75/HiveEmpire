@@ -570,7 +570,7 @@ public class Worker : MonoBehaviour
 		UpdateBody();
 	}
 
-	public void Remove( bool returnToMainBuilding = true )
+	public bool Remove( bool returnToMainBuilding = true )
 	{
 		if ( origin != null )
 		{
@@ -595,7 +595,7 @@ public class Worker : MonoBehaviour
 		if ( !returnToMainBuilding )
 		{
 			Destroy( gameObject );
-			return;
+			return true;
 		}
 		if ( road != null && atRoad )
 		{
@@ -616,6 +616,7 @@ public class Worker : MonoBehaviour
 		building = null;
 		construction = null;
 		type = Type.unemployed;
+		return true;
 	}
 
 	public void FindTask()
@@ -681,7 +682,10 @@ public class Worker : MonoBehaviour
 				ScheduleWalkToNeighbour( ground.world.mainBuilding.node );
 				return;
 			}
-			ScheduleWalkToFlag( ground.world.mainBuilding.flag );
+			if ( node.flag )
+				ScheduleWalkToFlag( ground.world.mainBuilding.flag );
+			else
+				ScheduleWalkToNode( ground.world.mainBuilding.flag.node );
 		}
 	}
 

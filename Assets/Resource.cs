@@ -255,7 +255,7 @@ public class Resource : MonoBehaviour
 		}
 	}
 
-	public void Remove()
+	public bool Remove()
 	{
 		if ( type == Type.pasturingAnimal && animals.Count > 0 )
 		{
@@ -265,6 +265,7 @@ public class Resource : MonoBehaviour
 		Assert.AreEqual( this, node.resource );
 		node.resource = null;
 		Destroy( gameObject );
+		return this;
 	}
 
 	public bool IsReadyToBeHarvested()
