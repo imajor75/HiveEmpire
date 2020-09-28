@@ -25,6 +25,10 @@ public class Resource : MonoBehaviour
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 6000;
 	public static int exposeMax = 9000;
+	public int silenceTimer;
+	public AudioClip nextSound;
+	static public MediaTable<AudioClip, Type> ambientSounds;
+	public AudioSource soundSource;
 
 	public enum Type
 	{
@@ -67,6 +71,13 @@ public class Resource : MonoBehaviour
 		cornfieldMaterial = Resources.Load<Material>( "cornfield" );
 
 		templateAnimalRock = (GameObject)Resources.Load( "AnimalCave/animRock(Clone)" );
+
+		object[] sounds = {
+			"bird1", 1000, Type.tree,
+			"bird2", 1000, Type.tree,
+			"bird3", 1000, Type.tree,
+			"bird4", 1000, Type.tree };
+		ambientSounds.Fill( sounds );
 	}
 
 	static public Resource Create()
@@ -131,15 +142,15 @@ public class Resource : MonoBehaviour
 		if ( type == Type.tree )
 		{
 			name = "Tree";
-			body = GameObject.Instantiate( templateTree[node.ground.world.rnd.Next( templateTree.Count )] );
-			body.transform.Rotate( Vector3.up * node.ground.world.rnd.Next( 360 ) );
+			body = GameObject.Instantiate( templateTree[World.rnd.Next( templateTree.Count )] );
+			body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
 			body.transform.localScale = Vector3.one * 0.3f;
 		}
 		if ( type == Type.rock )
 		{
 			name = "Rock";
-			body = GameObject.Instantiate( templateRock[node.ground.world.rnd.Next( templateRock.Count )] );
-			body.transform.Rotate( Vector3.up * node.ground.world.rnd.Next( 360 ) );
+			body = GameObject.Instantiate( templateRock[World.rnd.Next( templateRock.Count )] );
+			body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
 		}
 		if ( type == Type.cornfield )
 		{
@@ -170,6 +181,8 @@ public class Resource : MonoBehaviour
 			body.transform.SetParent( transform );
 			body.transform.localPosition = Vector3.zero;
 		}
+
+		soundSource = World.CreateSoundSource( this );
 	}
 
 	void Update()
@@ -214,6 +227,28 @@ public class Resource : MonoBehaviour
 					Assert.IsTrue( false );
 			}
 			spawnTimer = 1000;
+		}
+		silenceTimer--;
+		if ( silenceTimer < 0 )
+		{
+			if ( nextSound )
+			{
+				soundSource.clip = nextSound;
+				soundSource.loop = false;
+				soundSource.Play();
+				nextSound = null;
+			}
+			else
+			{
+				var m = ambientSounds.GetMedia( type );
+				if ( m == null )
+					silenceTimer = 1500;
+				else
+				{
+					silenceTimer = (int)( World.rnd.NextDouble() * m.intData * 50 );
+					nextSound = m.data;
+				}
+			}
 		}
 	}
 

@@ -50,11 +50,16 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 
 	public Media GetMedia( Key key )
 	{
+		List<Media> candidates = new List<Media>();
 		foreach ( Media media in table )
 			if ( media.keys.Contains( key ) )
-				return media;
+				candidates.Add( media );
 
-		return null;
+		if ( candidates.Count == 0 )
+			return null;
+		if ( candidates.Count == 1 )
+			return candidates[0];
+		return candidates[World.rnd.Next( candidates.Count )];
 	}
 
 	public MediaType GetMediaData( Key key )

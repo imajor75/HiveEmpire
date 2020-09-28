@@ -13,7 +13,7 @@ public class World : ScriptableObject
 	public float speedModifier = 1;
 	public Stock mainBuilding;
 	public GroundNode zero;
-	public System.Random rnd;
+	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
 	public Player mainPlayer;
 	static public World instance;

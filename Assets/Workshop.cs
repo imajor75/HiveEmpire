@@ -576,7 +576,7 @@ public class Workshop : Building
 					var o = Ground.areas[foresterRange];
 					for ( int i = 0; i < o.Count; i++ )
 					{
-						int randomOffset = ground.world.rnd.Next( o.Count );
+						int randomOffset = World.rnd.Next( o.Count );
 						int x = (i + randomOffset) % o.Count;
 						GroundNode place = node.Add( o[x] );
 						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
@@ -708,7 +708,7 @@ public class Workshop : Building
 			range = Ground.areas.Length - 1;
 		GroundNode target;
 		int t = Ground.areas[range].Count;
-		int r = ground.world.rnd.Next( t );
+		int r = World.rnd.Next( t );
 		for ( int j = 0; j < t; j++ )
 		{
 			var o = Ground.areas[range][(j+r)%t];

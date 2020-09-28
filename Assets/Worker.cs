@@ -605,7 +605,7 @@ public class Worker : MonoBehaviour
 
 		if ( type == Type.wildAnimal )
 		{
-			int r = ground.world.rnd.Next( 6 );
+			int r = World.rnd.Next( 6 );
 			var d = Ground.areas[1];
 			for ( int i = 0; i < d.Count; i++ )
 			{
