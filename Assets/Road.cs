@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using System;
 
 [SelectionBase]
 public class Road : MonoBehaviour
@@ -20,6 +21,7 @@ public class Road : MonoBehaviour
 	public bool decorationOnly;
 	public static float height = 1.0f/20;
 	public float cost = 0;
+	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 
 	public static void Initialize()
 	{
@@ -32,6 +34,7 @@ public class Road : MonoBehaviour
 		roadObject.name = "Road";
 		return (Road)roadObject.AddComponent( typeof( Road ) );
 	}
+
 	public Road SetupAsBuildingExit( Building building )
 	{
 		Assert.AreEqual( nodes.Count, 0 );
@@ -39,6 +42,7 @@ public class Road : MonoBehaviour
 		nodes.Add( building.node );
 		nodes.Add( building.flag.node );
 		ground = building.ground;
+		CreateCurves();
 		return this;
 	}
 
@@ -203,6 +207,8 @@ public class Road : MonoBehaviour
 	static int blocksInSection = 8;
 	public void RebuildMesh()
 	{
+		CreateCurves();
+
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
 		Vector3 h = Vector3.up*GroundNode.size*height;
 		mesh.Clear();
@@ -268,34 +274,29 @@ public class Road : MonoBehaviour
 
 	public Vector3 PositionAt( int block, float fraction )
 	{
-		if ( block == nodes.Count - 1 )
+		if ( fraction == 0 && block == nodes.Count - 1 )
 		{
-			Assert.AreEqual( fraction, 0 );
-			block--;
+			block -= 1;
 			fraction = 1;
 		}
-		return Vector3.Lerp( nodes[block].Position(), nodes[block + 1].Position(), fraction );
+		return new Vector3(
+			curves[0][block].PositionAt( fraction ),
+			curves[1][block].PositionAt( fraction ),
+			curves[2][block].PositionAt( fraction ) );
 	}
 
 	public Vector3 DirectionAt( int block, float fraction )
 	{
-		if ( block == nodes.Count - 1 )
+		if ( fraction == 0 && block == nodes.Count - 1 )
 		{
-			Assert.AreEqual( fraction, 0 );
-			block--;
+			block -= 1;
 			fraction = 1;
 		}
-		Vector3 startDirection, endDirection;
-		if ( block > 0 )
-			startDirection = nodes[block + 1].Position() - nodes[block - 1].Position();
-		else
-			startDirection = nodes[block + 1].Position() - nodes[block].Position();
-		if ( block < nodes.Count-2 )
-			endDirection = nodes[block + 2].Position() - nodes[block].Position();
-		else
-			endDirection = nodes[block + 1].Position() - nodes[block].Position();
-		return Vector3.Lerp( startDirection, endDirection, fraction ).normalized;
-	}
+		return new Vector3(
+			curves[0][block].DirectionAt( fraction ),
+			curves[1][block].DirectionAt( fraction ),
+			curves[2][block].DirectionAt( fraction ) );
+	}						 
 
 	public int NodeIndex( GroundNode node )
 	{
@@ -368,7 +369,43 @@ public class Road : MonoBehaviour
 			workerAtNodes.Add( null );
 		CreateNewWorker();
 		transform.localPosition = nodes[nodes.Count / 2].Position();
+		CreateCurves();
 		RebuildMesh();
+	}
+
+	public void CreateCurves()
+	{
+		if ( curves[0] != null && curves[0].Count == nodes.Count - 1 )
+			return;
+
+		List<Vector3> directions = new List<Vector3>();
+		for ( int j = 0; j < nodes.Count; j++ )
+		{
+			int p = Math.Max( j - 1, 0 );
+			int n = Math.Min( j + 1, nodes.Count - 1 );
+			directions.Add( nodes[n].Position() - nodes[p].Position() );
+		}
+		for ( int i = 0; i < 3; i++ )
+		{
+			curves[i] = new List<CubicCurve>();
+			for ( int j = 0; j < nodes.Count - 1; j++ )
+			{
+				if ( i == 1 )
+				{
+					curves[i].Add( CubicCurve.Create().SetupAsLinear(
+						nodes[j].Position()[i],
+						nodes[j + 1].Position()[i] ) );
+				}
+				else
+				{
+					curves[i].Add( CubicCurve.Create().Setup(
+						nodes[j].Position()[i],
+						nodes[j + 1].Position()[i],
+						directions[j][i],
+						directions[j + 1][i] ) );
+				}
+			}
+		}
 	}
 
 	public void OnClicked()

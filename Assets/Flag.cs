@@ -112,6 +112,7 @@ public class Flag : MonoBehaviour
 
 	public void Remove()
 	{
+		node.flag = null;
 		foreach ( var road in roadsStartingHere )
 			road?.Remove();
 		foreach ( var item in items )

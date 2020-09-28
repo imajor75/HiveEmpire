@@ -10,6 +10,9 @@ public class Worker : MonoBehaviour
 	public Ground ground;
 	public GroundNode walkFrom = zero;
 	public GroundNode walkTo = zero;
+	public Road walkBase;
+	public int walkBlock;
+	public bool walkBackward;
 	public float walkProgress;
 	public GroundNode node;
 	public Item itemInHands;
@@ -222,6 +225,17 @@ public class Worker : MonoBehaviour
 
 			Assert.AreEqual( boss.node, road.nodes[currentPoint] );
 			boss.Walk( road.nodes[nextPoint] );
+			boss.walkBase = road;
+			if ( nextPoint > currentPoint )
+			{
+				boss.walkBlock = currentPoint;
+				boss.walkBackward = false;
+			}
+			else
+			{
+				boss.walkBlock = nextPoint;
+				boss.walkBackward = true;
+			}
 			currentPoint = nextPoint;
 			if ( exclusive )
 			{
@@ -509,6 +523,7 @@ public class Worker : MonoBehaviour
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = zero;
+				walkBase = null;
 				walkProgress -= 1;
 			}
 		}
@@ -788,17 +803,31 @@ public class Worker : MonoBehaviour
 			transform.localPosition = node.Position();
 			return;
 		}
-		else
-			if ( animator != null && animator.runtimeAnimatorController == idleController )
+		if ( animator != null && animator.runtimeAnimatorController == idleController )
 			animator.runtimeAnimatorController = walkingController;
 
 		if ( itemInHands )
 			itemInHands.UpdateLook();
 
-		transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress ) + Vector3.up * GroundNode.size * Road.height;
-		int direction = walkFrom.DirectionTo( walkTo );
-		Assert.IsTrue( direction >= 0 );
-		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+		if ( walkBase != null )
+		{
+			float progress = walkProgress;
+			if ( walkBackward )
+				progress = 1 - progress;
+			transform.localPosition = walkBase.PositionAt( walkBlock, progress );
+			Vector3 direction = walkBase.DirectionAt( walkBlock, progress );
+			direction.y = 0;
+			if ( walkBackward )
+				direction = -direction;
+			transform.rotation = Quaternion.LookRotation( direction );
+		}
+		else
+		{
+			transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress ) + Vector3.up * GroundNode.size * Road.height;
+			int direction = walkFrom.DirectionTo( walkTo );
+			Assert.IsTrue( direction >= 0 );
+			transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+		}
 	}
 
 	public bool IsIdleInBuilding()
