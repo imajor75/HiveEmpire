@@ -117,7 +117,7 @@ public class Road : MonoBehaviour
 		}
 
 		// Check if the current node is blocking
-		if ( node.IsBlocking() )
+		if ( node.IsBlocking() && node.flag == null )
 		{
 			UnityEngine.Debug.Log( "Node is occupied" );
 			return false;
