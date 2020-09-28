@@ -21,7 +21,9 @@ public class Workshop : Building
 	public int outputStep = 1;
 	public float processSpeed = 0.0015f;
 	public Transform millWheel;
-	public GroundNode resourcePlace = World.zero;
+	public GroundNode resourcePlace = Worker.zero;
+	public AudioSource soundSource;
+	static public MediaTable<AudioClip, Type> processingSounds;
 
 	public static int woodcutterRange = 8;
 	public static int foresterRange = 8;
@@ -36,16 +38,8 @@ public class Workshop : Building
 	public static int geologistRange = 8;
 	public static int plantingTime = 100;
 	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
-	static List<Look> looks = new List<Look>();
+	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
-
-	class Look
-	{
-		public string file;
-		public GameObject template;
-		public List<Type> types = new List<Type>();
-		public float height = 1.5f;
-	}
 
 	[System.Serializable]
 	public class Buffer
@@ -101,9 +95,17 @@ public class Workshop : Building
 		}
 		public override bool ExecuteFrame()
 		{
+			if ( !boss.soundSource.isPlaying )
+			{
+				boss.soundSource.clip = Worker.resourceGetSounds.GetMediaData( resourceType );
+				boss.soundSource.loop = true;
+				boss.soundSource.Play();
+			}
+
 			if ( waitTimer++ < resourceCutTime[(int)resourceType] )    // TODO Working on the resource
 				return false;
 
+			boss.soundSource.Stop();
 			Resource resource = node.resource;
 			if ( resource )
 			{
@@ -236,43 +238,19 @@ public class Workshop : Building
 			"Mines/ironmine_final", Type.ironmine,
 			"Mines/goldmine_final", Type.goldmine,
 			"Mines/stonemine_final", Type.stonemine,
-			"Forest/woodcutter_final", 1.0f, Type.woodcutter,
-			"Forest/forester_final", 1.0f, Type.forester,
+			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
+			"Forest/forester_final", 1.1f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist };
-		foreach ( var g in looksData )
-		{
-			string file = g as string;
-			if ( file != null )
-			{
-				Look look = new Look();
-				look.file = file;
-				looks.Add( look );
-			}
-			Type? type = g as Type?;
-			if ( type != null )
-				looks[looks.Count - 1].types.Add( (Type)type );
-			float? height = g as float?;
-			if ( height != null )
-				looks[looks.Count - 1].height = (float)height;
-		}
-		foreach ( var l in looks )
-		{
-			object o = Resources.Load( l.file ) as GameObject;
-			if ( o == null )
-			{
-				Debug.Log( "Resource " + l.file + " not found" );
-				continue;
-			}
-			l.template = o as GameObject;
-			if ( l.template == null )
-				Debug.Log( "Resource " + l.file + " has a root " + o.GetType().Name );
-		}
+		looks.Fill( looksData );
+		object[] sounds = {
+			"handsaw", Type.sawmill };
+		processingSounds.Fill( sounds );
 		for ( int i = 0; i < resourceCutTime.Length; i++ )
 		{
 			if ( Resource.IsUnderGround( (Resource.Type)i ) )
 				resourceCutTime[i] = 1000;
 			else
-				resourceCutTime[i] = 250;
+				resourceCutTime[i] = 500;
 		}
 	}
 
@@ -445,14 +423,9 @@ public class Workshop : Building
 
 	new void Start()
 	{
-		foreach ( var l in looks )
-		{
-			if ( l.types.Contains( type ) )
-			{
-				body = (GameObject)GameObject.Instantiate( l.template, transform );
-				height = l.height;
-			}
-		}
+		var m = looks.GetMedia( type );
+		body = (GameObject)GameObject.Instantiate( m.data, transform );
+		height = m.floatData;
 		Assert.IsNotNull( body );
 		if ( type == Type.mill )
 		{
@@ -462,6 +435,8 @@ public class Workshop : Building
 		base.Start();
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
+
+		soundSource = World.CreateSoundSource( this );
 	}
 
 	new void Update()
@@ -601,7 +576,7 @@ public class Workshop : Building
 					var o = Ground.areas[foresterRange];
 					for ( int i = 0; i < o.Count; i++ )
 					{
-						int randomOffset = ground.world.rnd.Next( o.Count );
+						int randomOffset = World.rnd.Next( o.Count );
 						int x = (i + randomOffset) % o.Count;
 						GroundNode place = node.Add( o[x] );
 						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
@@ -706,6 +681,9 @@ public class Workshop : Building
 	{
 		if ( !working && output + outputStep <= outputMax && UseInput() )
 		{
+			soundSource.loop = true;
+			soundSource.clip = processingSounds.GetMediaData( type );
+			soundSource.Play();
 			working = true;
 			progress = 0;
 		}
@@ -716,20 +694,21 @@ public class Workshop : Building
 			{
 				output += outputStep;
 				working = false;
+				soundSource.Stop();
 			}
 		}
 	}
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
-		resourcePlace = World.zero;
+		resourcePlace = Worker.zero;
 		Assert.IsTrue( worker.taskQueue.Count == 0 );
 		Assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
 		GroundNode target;
 		int t = Ground.areas[range].Count;
-		int r = ground.world.rnd.Next( t );
+		int r = World.rnd.Next( t );
 		for ( int j = 0; j < t; j++ )
 		{
 			var o = Ground.areas[range][(j+r)%t];
@@ -817,7 +796,7 @@ public class Workshop : Building
 
 	void OnDrawGizmos()
 	{
-		if ( Selection.Contains( gameObject ) && resourcePlace != World.zero )
+		if ( Selection.Contains( gameObject ) && resourcePlace != Worker.zero )
 		{
 			Gizmos.color = Color.red;
 			Gizmos.DrawLine( node.Position() + Vector3.up * GroundNode.size, resourcePlace.Position() );

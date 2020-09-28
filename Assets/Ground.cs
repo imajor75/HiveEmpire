@@ -61,10 +61,10 @@ public class Ground : MonoBehaviour
 
 	void Start()
 	{
-		if ( World.zero == null )
-			World.zero = Worker.zero;
+		if ( world.zero == null )
+			world.zero = Worker.zero;
 		else
-			Worker.zero = World.zero;
+			Worker.zero = world.zero;
 		gameObject.name = "Ground";
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
@@ -109,7 +109,7 @@ public class Ground : MonoBehaviour
 	public Ground Setup( World world, int seed )
 	{
 		this.world = world;
-		world.rnd = new System.Random( seed );
+		World.rnd = new System.Random( seed );
 		gameObject.name = "Ground";
 		width = 50;
 		height = 50;
@@ -199,7 +199,7 @@ public class Ground : MonoBehaviour
 	{
 		foreach ( var node in nodes )
 		{
-			var r = new System.Random( world.rnd.Next() );
+			var r = new System.Random( World.rnd.Next() );
 			if ( r.NextDouble() < forestChance )
 				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
 			if ( r.NextDouble() < rocksChance )
@@ -237,7 +237,7 @@ public class Ground : MonoBehaviour
 	public void SetHeights()
 	{
 		heightMap = ScriptableObject.CreateInstance<HeightMap>();
-		heightMap.Setup( 6, world.rnd.Next() );
+		heightMap.Setup( 6, World.rnd.Next() );
 		heightMap.Fill();
 
 		{

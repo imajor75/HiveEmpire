@@ -12,17 +12,27 @@ public class World : ScriptableObject
 	[JsonIgnore]
 	public float speedModifier = 1;
 	public Stock mainBuilding;
-	static public GroundNode zero;
-	public System.Random rnd;
+	public GroundNode zero;
+	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
 	public Player mainPlayer;
 	static public World instance;
 	public Eye eye;
+	static public int soundMaxDistance = 15;
 
 	World()
 	{
 		Assert.IsNull( instance );
 		instance = this;
+	}
+
+	static public AudioSource CreateSoundSource( Component component )
+	{
+		var soundSource = component.gameObject.AddComponent<AudioSource>();
+		soundSource.spatialBlend = 1;
+		soundSource.minDistance = 1;
+		soundSource.maxDistance = GroundNode.size * World.soundMaxDistance;
+		return soundSource;
 	}
 
 	public void NewGame( int seed )

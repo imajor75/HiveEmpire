@@ -17,6 +17,8 @@ public class Worker : MonoBehaviour
 	public int look;
 	public Resource origin;
 	public float currentSpeed;
+	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
+	public AudioSource soundSource;
 
 	public Building construction;
 
@@ -377,6 +379,12 @@ public class Worker : MonoBehaviour
 		Assert.IsNotNull( idleController );
 		walkingController = (RuntimeAnimatorController)Resources.Load( "Kevin Iglesias/Basic Motions Pack/AnimationControllers/BasicMotions@Walk" );
 		Assert.IsNotNull( walkingController );
+
+		object[] sounds = {
+			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
+			"Forest/treecut", Resource.Type.tree,
+			"Mines/pickaxe", Resource.Type.stone };
+		resourceGetSounds.Fill( sounds );
 	}
 
 	static public Worker Create()
@@ -470,6 +478,7 @@ public class Worker : MonoBehaviour
 				name = "Worker";
 				break;
 		}
+		soundSource = World.CreateSoundSource( this );
 	}
 
 	public static float SpeedBetween( GroundNode a, GroundNode b )
@@ -596,7 +605,7 @@ public class Worker : MonoBehaviour
 
 		if ( type == Type.wildAnimal )
 		{
-			int r = ground.world.rnd.Next( 6 );
+			int r = World.rnd.Next( 6 );
 			var d = Ground.areas[1];
 			for ( int i = 0; i < d.Count; i++ )
 			{
