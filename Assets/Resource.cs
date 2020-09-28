@@ -22,9 +22,9 @@ public class Resource : MonoBehaviour
 	public static int cornfieldGrowthMax = 6000;
 	public static int exposeMax = 9000;
 	public int silenceTimer;
-	public AudioClip nextSound;
+	AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;
-	public AudioSource soundSource;
+	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
 
 	public enum Type

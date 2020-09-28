@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Linq.Expressions;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 [RequireComponent( typeof( Camera ) )]
 public class Eye : MonoBehaviour
@@ -14,8 +11,8 @@ public class Eye : MonoBehaviour
 	public World world;
 	public float x, y;
 	public float direction;
-	public new Camera camera;
-	public Transform ear;
+	new Camera camera;
+	Transform ear;
 
 	public static Eye Create()
 	{

@@ -20,9 +20,9 @@ public class Workshop : Building
 	public int inputStep = 1;
 	public int outputStep = 1;
 	public float processSpeed = 0.0015f;
-	public Transform millWheel;
+	Transform millWheel;
 	public GroundNode resourcePlace = Worker.zero;
-	public AudioSource soundSource;
+	AudioSource soundSource;
 	static public MediaTable<AudioClip, Type> processingSounds;
 
 	public static int woodcutterRange = 8;

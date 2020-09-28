@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,6 +22,7 @@ public class Worker : MonoBehaviour
 	public Resource origin;
 	public float currentSpeed;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
+	[JsonIgnore]
 	public AudioSource soundSource;
 
 	public Building construction;
@@ -30,7 +32,7 @@ public class Worker : MonoBehaviour
 
 	public Building building;
 
-	public Animator animator;
+	Animator animator;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
 	static public int walkingID, pickupID, putdownID;
