@@ -17,10 +17,6 @@ public class Resource : MonoBehaviour
 	public int spawnTimer = 0;
 	public Worker hunter;
 	public List<Worker> animals = new List<Worker>();
-	static List<GameObject> templateTree = new List<GameObject>();
-	static List<GameObject> templateRock = new List<GameObject>();
-	static List<GameObject> templateTable = new List<GameObject>();
-	static GameObject templateAnimalRock;
 	static Material cornfieldMaterial;
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 6000;
@@ -29,6 +25,7 @@ public class Resource : MonoBehaviour
 	public AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	public AudioSource soundSource;
+	static public MediaTable<GameObject, Type> meshes;
 
 	public enum Type
 	{
@@ -49,28 +46,29 @@ public class Resource : MonoBehaviour
 
 	public static void Initialize()
 	{
-		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 05" ) );
-		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 02" ) );
-		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 05" ) );
-		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type5 04" ) );
-		templateTree.Add( (GameObject)Resources.Load( "BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 02" ) );
+		object[] meshes = {
+		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 05", Type.tree,
+		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 02", Type.tree,
+		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 05", Type.tree,
+		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type5 04", Type.tree,
+		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 02", Type.tree,
 
-		templateRock.Add( (GameObject)Resources.Load( "LowPoly Rocks/Prefabs/Rock1" ) );
-		templateRock.Add( (GameObject)Resources.Load( "LowPoly Rocks/Prefabs/Rock3" ) );
-		templateRock.Add( (GameObject)Resources.Load( "LowPoly Rocks/Prefabs/Rock9" ) );
-		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock1" ) );
-		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock2" ) );
-		templateRock.Add( (GameObject)Resources.Load( "Rocks pack Lite/Prefabs/Rock3" ) );
+		"LowPoly Rocks/Prefabs/Rock1", Type.rock,
+		"LowPoly Rocks/Prefabs/Rock3", Type.rock,
+		"LowPoly Rocks/Prefabs/Rock9", Type.rock,
+		"Rocks pack Lite/Prefabs/Rock2", Type.rock,
+		"Rocks pack Lite/Prefabs/Rock1", Type.rock,
+		"Rocks pack Lite/Prefabs/Rock3", Type.rock,
 
-		templateTable.Add( (GameObject)Resources.Load( "Ores/coaltable_final" ) );
-		templateTable.Add( (GameObject)Resources.Load( "Ores/goldtable_final" ) );
-		templateTable.Add( (GameObject)Resources.Load( "Ores/irontable_final" ) );
-		templateTable.Add( (GameObject)Resources.Load( "Ores/salttable_final" ) );
-		templateTable.Add( (GameObject)Resources.Load( "Ores/stonetable_final" ) );
+		"Ores/coaltable_final" , Type.coal,
+		"Ores/goldtable_final" , Type.gold,
+		"Ores/irontable_final" , Type.iron,
+		"Ores/salttable_final" , Type.salt,
+		"Ores/stonetable_final" , Type.stone,
+		"AnimalCave/animRock(Clone)", Type.animalSpawner };
+		Resource.meshes.Fill( meshes );
 
 		cornfieldMaterial = Resources.Load<Material>( "cornfield" );
-
-		templateAnimalRock = (GameObject)Resources.Load( "AnimalCave/animRock(Clone)" );
 
 		object[] sounds = {
 			"bird1", 1000, Type.tree,
@@ -138,20 +136,9 @@ public class Resource : MonoBehaviour
 		transform.localPosition = node.Position();
 
 		name = type.ToString();
-
-		if ( type == Type.tree )
-		{
-			name = "Tree";
-			body = GameObject.Instantiate( templateTree[World.rnd.Next( templateTree.Count )] );
-			body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
-			body.transform.localScale = Vector3.one * 0.3f;
-		}
-		if ( type == Type.rock )
-		{
-			name = "Rock";
-			body = GameObject.Instantiate( templateRock[World.rnd.Next( templateRock.Count )] );
-			body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
-		}
+		GameObject prefab = meshes.GetMediaData( type );
+		if ( prefab )
+			body = GameObject.Instantiate( prefab );
 		if ( type == Type.cornfield )
 		{
 			name = "Cornfield";
@@ -159,25 +146,12 @@ public class Resource : MonoBehaviour
 			body.transform.localScale = new Vector3( 0.5f, 0, 0.5f );
 			body.GetComponent<MeshRenderer>().material = cornfieldMaterial;
 		}
-		if ( type == Type.animalSpawner )
-		{
-			name = "Cave";
-			body = GameObject.Instantiate( templateAnimalRock );
-		}
 		if ( type == Type.pasturingAnimal )
 			name = "Pasturing Animal Resource";
-		if ( type == Type.coal )
-			body = GameObject.Instantiate( templateTable[0] );
-		if ( type == Type.gold )
-			body = GameObject.Instantiate( templateTable[1] );
-		if ( type == Type.iron )
-			body = GameObject.Instantiate( templateTable[2] );
-		if ( type == Type.salt )
-			body = GameObject.Instantiate( templateTable[3] );
-		if ( type == Type.stone )
-			body = GameObject.Instantiate( templateTable[4] );
 		if ( body != null )
 		{
+			if ( type == Type.tree || type == Type.rock )
+				body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
 			body.transform.SetParent( transform );
 			body.transform.localPosition = Vector3.zero;
 		}
