@@ -29,12 +29,12 @@ public class Flag : MonoBehaviour
 
 	public Flag Setup( Ground ground, GroundNode node, Player owner )
     {
-		if ( node.IsBlocking() )
-        {
-            Debug.Log( "There is already occupied" );
+		if ( node.IsBlocking() && node.road == null )
+		{
+			Debug.Log( "That block is already occupied" );
 			Destroy( gameObject );
 			return null;
-        }
+		}
 		if ( node.owner != owner )
 		{
 			Debug.Log( "Node is outside of border" );

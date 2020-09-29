@@ -1,24 +1,24 @@
-﻿using Newtonsoft.Json;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Unity.Collections.LowLevel.Unsafe;
+﻿using System.Collections.Generic;
+using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Interface : MonoBehaviour
+public class Interface : MonoBehaviour, IPointerClickHandler
 {
 	public List<Panel> panels = new List<Panel>();
 	public static int iconSize = 24;
 	public static Font font;
 	public World world;
-	public GameObject cursor;
 	Canvas canvas;
 	public GroundNode selectedNode;
 	public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	public static Sprite templateFrame;
 	public static Sprite templateProgress;
+	public static Sprite iconExit;
+	public static Sprite iconDestroy;
+	public static Sprite iconPath;
+	public static Sprite iconButton;
 	public GameObject debug;
 	public static Interface instance;
 
@@ -33,14 +33,22 @@ public class Interface : MonoBehaviour
 			Destroy( d.gameObject );
 	}
 
+	static Sprite LoadSprite( string fileName )
+	{
+		Texture2D tex = Resources.Load<Texture2D>( fileName );
+		return Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.0f, 0.0f ) );
+	}
+
 	static void Initialize()
 	{
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.IsNotNull( font );
-		Texture2D tex = Resources.Load<Texture2D>( "simple UI & icons/box/box_event1" );
-		templateFrame = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.0f, 0.0f ) );
-		tex = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
-		templateProgress = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.0f, 0.0f ) );
+		templateFrame = LoadSprite( "simple UI & icons/box/box_event1" );
+		templateProgress = LoadSprite( "simple UI & icons/button/board" );
+		iconExit = LoadSprite( "simple UI & icons/button/button_exit" );
+		iconDestroy = LoadSprite( "destroy" );
+		iconPath = LoadSprite( "road" );
+		iconButton = LoadSprite( "simple UI & icons/button/button_login" );
 		Frame.Initialize();
 	}
 
@@ -61,6 +69,10 @@ public class Interface : MonoBehaviour
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 		gameObject.AddComponent<GraphicRaycaster>();
 
+		var viewport = new GameObject();
+		viewport.AddComponent<Viewport>();
+		viewport.transform.SetParent( transform );
+
 		debug = new GameObject();
 		debug.name = "Debug";
 		debug.transform.SetParent( transform );
@@ -72,22 +84,6 @@ public class Interface : MonoBehaviour
 	void Update()
 	{
 		GroundNode node = world.eye.FindNodeAt( Input.mousePosition );
-		if ( node != null )
-		{
-			if ( cursor == null )
-			{
-				cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
-				cursor.name = "Cursor";
-				cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
-				cursor.transform.localScale *= 0.25f;
-				cursor.transform.SetParent( world.ground.transform );
-			}
-			cursor.transform.localPosition = node.Position();
-			CheckNodeContext( node );
-		};
-
-		if ( Input.GetKeyDown( KeyCode.V ) )
-			BuildingTypeSelector.Create().Open( (int)Input.mousePosition.x, (int)Input.mousePosition.y-Screen.height );
 
 		if ( Input.GetKey( KeyCode.Space ) )
 			world.speedModifier = 5;
@@ -112,49 +108,15 @@ public class Interface : MonoBehaviour
 		}
 	}
 
-	void CheckNodeContext( GroundNode node )
+	public void OnPointerClick( PointerEventData eventData )
 	{
-		Player player = world.mainPlayer;
-		if ( Input.GetKeyDown( KeyCode.F ) )
-		{
-			Flag flag = Flag.Create();
-			if ( !flag.Setup( world.ground, node, player ) )
-				Destroy( flag );
-		};
-		if ( Input.GetKeyDown( KeyCode.R ) )
-			Road.AddNodeToNew( world.ground, node, player );
-		if ( Input.GetKeyDown( KeyCode.J ) )
-			GuardHouse.Create().Setup( world.ground, node, player );
-		if ( Input.GetKeyDown( KeyCode.B ) && selectedWorkshopType != Workshop.Type.unknown )
-			Workshop.Create().Setup( world.ground, node, player, selectedWorkshopType );
-		if ( Input.GetMouseButtonDown( 0 ) )
-		{
-			if ( node.building )
-				node.building.OnClicked();
-			if ( node.flag )
-				node.flag.OnClicked();
-			if ( node.road )
-				node.road.OnClicked();
-		}
-		if ( Input.GetKeyDown( KeyCode.O ) )
-		{
-			selectedNode = node;
-			Debug.Log( "Current pos: " + node.x + ", " + node.y );
-			Debug.Log( "Distance from main building: " + node.DistanceFrom( world.mainBuilding.node ) );
-		}
-		if ( Input.GetKeyDown( KeyCode.K ) )
-		{
-			if ( node.road )
-				node.road.Remove();
-			if ( node.building )
-				node.building.Remove();
-			if ( node.flag )
-				node.flag.Remove();
-		}
+		throw new System.NotImplementedException();
 	}
-	public class Panel : MonoBehaviour, IPointerClickHandler
+
+	public class Panel : MonoBehaviour, IDragHandler, IPointerClickHandler
 	{
-		public Component target;
+		public GroundNode target;
+		public bool followTarget = true;
 		public Image frame;
 		public Interface cachedRoot;
 		public Interface Root
@@ -167,7 +129,7 @@ public class Interface : MonoBehaviour
 			}
 		}
 
-		public void Open( Component target = null, int x = 0, int y = 0 )
+		public void Open( GroundNode target = null, int x = 0, int y = 0 )
 		{
 			foreach ( var panel in Root.panels )
 				Destroy( panel.gameObject );
@@ -204,15 +166,34 @@ public class Interface : MonoBehaviour
 			return f;
 		}
 
-		public Text Text( int x, int y, string text, Component parent = null )
+		public Button Button( int x, int y, int xs, int ys, Sprite picture, Component parent = null )
+		{
+			Image i = Image( x, y, xs, ys, picture, parent );
+			return i.gameObject.AddComponent<Button>();
+		}
+
+		public Button Button( int x, int y, int xs, int ys, string text, Component parent = null )
+		{
+			Image i = Image( x, y, xs, ys, null, parent );
+			i.enabled = false;
+			Text( 0, 0, xs, ys, text, i );
+			return i.gameObject.AddComponent<Button>();
+		}
+
+		public Text Text( int x, int y, int xs, int ys, string text, Component parent = null )
 		{
 			Text t = new GameObject().AddComponent<Text>();
 			t.name = "Text";
-			Init( t.rectTransform, x, y, 200, 20, parent );
+			Init( t.rectTransform, x, y, xs, ys, parent );
 			t.font = Interface.font;
 			t.text = text;
 			t.color = Color.yellow;
 			return t;
+		}
+
+		public void Close()
+		{
+			Destroy( gameObject );
 		}
 
 		void Init( RectTransform t, int x, int y, int xs, int ys, Component parent = null )
@@ -233,19 +214,30 @@ public class Interface : MonoBehaviour
 
 		void UpdatePosition()
 		{
-			if ( target == null )
+			if ( target == null || !followTarget )
 				return;
 
-			Vector3 screenPosition = Camera.main.WorldToScreenPoint( target.transform.position + Vector3.up * GroundNode.size );
+			Vector3 screenPosition = Camera.main.WorldToScreenPoint( target.Position() + Vector3.up * GroundNode.size );
 			if ( screenPosition.y > Screen.height )
-				screenPosition = Camera.main.WorldToScreenPoint( target.transform.position - Vector3.up * GroundNode.size );
+				screenPosition = Camera.main.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
 			frame.rectTransform.anchoredPosition = screenPosition;
 		}
 
-		public virtual void OnPointerClick( PointerEventData data )
+		public void OnDrag( PointerEventData eventData )
 		{
-			Destroy( gameObject );
+			followTarget = false;
+			frame.rectTransform.anchoredPosition += eventData.delta;
+		}
+
+		public void OnPointerClick( PointerEventData eventData )
+		{
+			if ( eventData.clickCount == 2 && target != null )
+			{
+				World.instance.eye.FocusOn( target );
+				followTarget = true;
+			};
+
 		}
 	}
 
@@ -383,11 +375,13 @@ public class Interface : MonoBehaviour
 		
 		public void Open( Workshop workshop )
 		{
-			base.Open( workshop );
+			base.Open( workshop.node );
 			this.workshop = workshop;
 			Frame( 0, 0, 240, 200 );
+			Button( 200, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 190, -150, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 
-			Text( 20, -20, workshop.type.ToString() );
+			Text( 20, -20, 160, 20, workshop.type.ToString() );
 
 			int row = -40;
 			int col;
@@ -416,6 +410,12 @@ public class Interface : MonoBehaviour
 			}
 
 			progressBar = Image( 20, row - iconSize - iconSize / 2, iconSize * 8, iconSize, templateProgress );
+		}
+
+		void Remove()
+		{
+			if ( workshop && workshop.Remove() )
+				Close();
 		}
 
 		void UpdateIconRow( Image[] icons, int full, int half )
@@ -461,7 +461,7 @@ public class Interface : MonoBehaviour
 
 		public void Open( Stock stock )
 		{
-			base.Open( stock );
+			base.Open( stock.node );
 			this.stock = stock;
 			Frame( 0, 0, 200, 200 );
 
@@ -469,14 +469,22 @@ public class Interface : MonoBehaviour
 			for ( int j = 0; j < (int)Item.Type.total; j += 2 )
 			{
 				Image( 16, row, iconSize, iconSize, Item.sprites[j] );
-				counts[j] = Text( 40, row, "" );
+				Button( 170, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+				Button( 150, -150, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+				counts[j] = Text( 40, row, 100, 20, "" );
 				if ( j + 1 < Item.sprites.Length )
 				{
 					Image( 100, row, iconSize, iconSize, Item.sprites[j + 1] );
-					counts[j + 1] = Text( 124, row, "" );
+					counts[j + 1] = Text( 124, row, 100, 20, "" );
 				};
 				row -= iconSize;
 			}
+		}
+
+		void Remove()
+		{
+			if ( stock && stock.Remove() )
+				Close();
 		}
 
 		public override void Update()
@@ -487,35 +495,58 @@ public class Interface : MonoBehaviour
 		}
 	}
 
-	public class BuildingTypeSelector : Panel
+	public class NodePanel : Panel
 	{
-		public static BuildingTypeSelector Create()
+		public GroundNode node;
+
+		public static NodePanel Create()
 		{
-			return new GameObject().AddComponent<BuildingTypeSelector>();
+			return new GameObject().AddComponent<NodePanel>();
 		}
 
-		public void Open( int x = 0, int y = 0 )
+		public void Open( GroundNode node )
 		{
-			base.Open( null, x, y );
+			base.Open( node );
+			this.node = node;
 
-			int row = -30;
-			Frame( 0, 0, 200, 425, 30 );
+			Frame( 0, 0, 400, 425, 30 );
+			Button( 360, -20, 20, 20, iconExit ).onClick.AddListener( Close );
+
+			int row = -20;
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
-				Text( 16, row, ((Workshop.Type)i).ToString() );
-				row -= 25;
+				var type = (Workshop.Type)i;
+				Button( 160, row, 200, 20, ( type.ToString() ) ).onClick.AddListener( delegate { BuildWorkshop( type ); } );
+				row -= 20;
 			}
+			Button( 20, -20, 140, 20, "Flag" ).onClick.AddListener( AddFlag );
+			Button( 20, -40, 140, 20, "Stock" ).onClick.AddListener( AddStock );
+			Button( 20, -60, 140, 20, "Guardhouse" ).onClick.AddListener( AddGuardHouse );
 		}
 
-		public override void OnPointerClick( PointerEventData data )
+		void AddFlag()
 		{
-			Vector2 localPos;
-			RectTransformUtility.ScreenPointToLocalPointInRectangle( frame.rectTransform, data.position, data.pressEventCamera, out localPos );
-			int i = -((int)localPos.y+20)/25;
-			if ( i <= (int)Workshop.Type.total )
-				Root.selectedWorkshopType = (Workshop.Type)i;
+			if ( Flag.Create().Setup( node.ground, node, node.owner ) != null )
+				Close();
+		}
 
-			base.OnPointerClick( data );
+		void AddStock()
+		{
+			if ( Stock.Create().Setup( node.ground, node, node.owner ) != null )
+				Close();
+		}
+
+		void AddGuardHouse()
+		{
+			if ( GuardHouse.Create().Setup( node.ground, node, node.owner ) != null )
+				Close();
+		}
+
+
+		public void BuildWorkshop( Workshop.Type type )
+		{
+			if ( Workshop.Create().Setup( node.ground, node, node.owner, type ) != null )
+				Close();
 		}
 	}
 	public class RoadPanel : Panel
@@ -531,12 +562,20 @@ public class Interface : MonoBehaviour
 
 		public void Open( Road road )
 		{
-			base.Open( road );
+			base.Open( road.CenterNode() );
 			this.road = road;
-			Frame( 0, 0, 150, 50, 10 );
-			jam = Text( 12, -4, "Jam" );
-			workers = Text( 12, -24, "Worker count" );
+			Frame( 0, 0, 170, 50, 10 );
+			Button( 150, 0, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 130, -10, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			jam = Text( 12, -4, 120, 20, "Jam" );
+			workers = Text( 12, -24, 120, 20, "Worker count" );
 			name = "Road panel";
+		}
+
+		void Remove()
+		{
+			if ( road && road.Remove() )
+				Close();
 		}
 
 		public override void Update()
@@ -558,10 +597,14 @@ public class Interface : MonoBehaviour
 
 		public void Open( Flag flag )
 		{
-			base.Open( flag );
+			base.Open( flag.node );
 			this.flag = flag;
 			int col = 16;
-			Frame( 0, 0, 250, 40, 10 );
+			Frame( 0, 0, 250, 70, 10 );
+			Button( 230, 0, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 210, -40, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			Button( 20, -40, 20, 20, iconPath ).onClick.AddListener( StartRoad );
+
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
 				items[i] = Image( col, -8, iconSize, iconSize, null );
@@ -569,6 +612,19 @@ public class Interface : MonoBehaviour
 				col += iconSize;
 			}
 			name = "Flag Panel";
+		}
+
+		void Remove()
+		{
+			if ( flag && flag.Remove() )
+				Close();
+		}
+
+		void StartRoad()
+		{
+			if ( flag )
+				Road.AddNodeToNew( flag.node.ground, flag.node, flag.owner );
+			Close();
 		}
 
 		public override void Update()
@@ -585,6 +641,76 @@ public class Interface : MonoBehaviour
 					items[i].enabled = true;
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 				}
+			}
+		}
+	}
+
+	class Viewport : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+	{
+		public bool mouseOver;
+		public GameObject cursor;
+
+		public void OnPointerClick( PointerEventData eventData )
+		{
+			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
+			if ( Road.newRoad != null )
+			{
+				Road.AddNodeToNew( node.ground, node, node.owner );
+				return;
+			}
+			if ( node.building )
+			{
+				node.building.OnClicked();
+				return;
+			}
+			if ( node.flag )
+			{
+				node.flag.OnClicked();
+				return;
+			}
+			if ( node.road )
+			{
+				node.road.OnClicked();
+				return;
+			}
+			node.OnClicked();
+		}
+
+		public void OnPointerEnter( PointerEventData eventData )
+		{
+			mouseOver = true;
+		}
+
+		public void OnPointerExit( PointerEventData eventData )
+		{
+			mouseOver = false;
+		}
+
+		void Start()
+		{
+			Image image = gameObject.AddComponent<Image>();
+			image.rectTransform.anchorMin = Vector2.zero;
+			image.rectTransform.anchorMax = Vector2.one;
+			image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
+			image.color = new Color( 1, 1, 1, 0 );
+		}
+
+		void Update()
+		{
+			if ( !mouseOver )
+				return;
+			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
+			if ( node != null )
+			{
+				if ( cursor == null )
+				{
+					cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
+					cursor.name = "Cursor";
+					cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
+					cursor.transform.localScale *= 0.25f;
+					cursor.transform.SetParent( World.instance.ground.transform );
+				}
+				cursor.transform.localPosition = node.Position();
 			}
 		}
 	}

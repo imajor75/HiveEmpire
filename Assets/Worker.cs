@@ -128,8 +128,8 @@ public class Worker : MonoBehaviour
 		public override bool ExecuteFrame()
 		{
 			if ( boss.node == target )
-				return true;
-
+				return false;
+	
 			if ( path == null )
 			{
 				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, ignoreFinalObstacle );
@@ -164,7 +164,10 @@ public class Worker : MonoBehaviour
 		public override bool ExecuteFrame()
 		{
 			if ( road == null )
+			{
+				boss.Reset();
 				return false;
+			}
 
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
@@ -574,26 +577,7 @@ public class Worker : MonoBehaviour
 
 	public bool Remove( bool returnToMainBuilding = true )
 	{
-		if ( origin != null )
-		{
-			Assert.AreEqual( type, Type.wildAnimal );
-			Assert.AreEqual( origin.type, Resource.Type.animalSpawner );
-			origin.animals.Remove( this );
-		}
-		if ( reservation )
-		{
-			reservation.reserved--;
-			reservation = null;
-		}
-		foreach ( var task in taskQueue )
-			task.Cancel();
-		taskQueue.Clear();
-
-		if ( itemInHands )
-		{
-			itemInHands.Remove();
-			itemInHands = null;
-		}
+		Reset();
 		if ( !returnToMainBuilding )
 		{
 			Destroy( gameObject );
@@ -831,6 +815,31 @@ public class Worker : MonoBehaviour
 		item.worker = this;
 	}
 
+	public void Reset()
+	{
+		if ( origin != null )
+		{
+			Assert.AreEqual( type, Type.wildAnimal );
+			Assert.AreEqual( origin.type, Resource.Type.animalSpawner );
+			origin.animals.Remove( this );
+		}
+		if ( reservation )
+		{
+			reservation.reserved--;
+			reservation = null;
+		}
+		foreach ( var task in taskQueue )
+			task.Cancel();
+		taskQueue.Clear();
+
+		if ( itemInHands )
+		{
+			itemInHands.Remove();
+			animator.SetTrigger( putdownID );
+			itemInHands = null;
+		}
+	}
+
 	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
 	public void UpdateBody()
 	{
@@ -886,7 +895,7 @@ public class Worker : MonoBehaviour
 			Assert.IsTrue( road.workers.Contains( this ) );
 		if ( itemInHands )
 		{
-			Assert.AreEqual( itemInHands.worker, this );
+			Assert.AreEqual( itemInHands.worker, this );	
 			Assert.IsNull( itemInHands.flag );
 			itemInHands.Validate();
 		}

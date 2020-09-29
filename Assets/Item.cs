@@ -97,9 +97,10 @@ public class Item : MonoBehaviour
 	void Update()
 	{
 		transform.LookAt( Camera.main.transform.position, -Vector3.up );
+		if ( path && !path.IsFinished() && path.Road() == null )
+			CancelTrip();
 		if ( destination == null && worker == null )
 			ItemDispatcher.lastInstance.RegisterOffer( this, ItemDispatcher.Priority.high );
-
 	}
 
 	public bool SetTarget( Building building )

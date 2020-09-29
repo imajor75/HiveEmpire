@@ -219,6 +219,11 @@ public class GroundNode
 		return true;
 	}
 
+	public void OnClicked()
+	{
+		Interface.NodePanel.Create().Open( this );
+	}
+
 	public void Validate()
 	{
 		int o = 0;

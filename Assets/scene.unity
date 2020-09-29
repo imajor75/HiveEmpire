@@ -152,6 +152,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0e6e47b332622f499bb17dad910ef02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  panels: []
+  world: {fileID: 0}
+  cursor: {fileID: 0}
+  selectedNode:
+    x: 0
+    y: 0
+    building: {fileID: 0}
+    flag: {fileID: 0}
+    road: {fileID: 0}
+    resource: {fileID: 0}
+    roadIndex: 0
+    height: 0
+    index: -1
+    ground: {fileID: 0}
+    owner: {fileID: 0}
+    influence: 0
+    borders:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    fixedHeight: 0
+    type: 0
+    gizmo: {fileID: 0}
+  selectedWorkshopType: -1
+  debug: {fileID: 0}
 --- !u!4 &1680099500
 Transform:
   m_ObjectHideFlags: 0
