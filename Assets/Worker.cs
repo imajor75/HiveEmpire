@@ -128,7 +128,7 @@ public class Worker : MonoBehaviour
 		public override bool ExecuteFrame()
 		{
 			if ( boss.node == target )
-				return false;
+				return true;
 	
 			if ( path == null )
 			{
