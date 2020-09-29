@@ -109,6 +109,14 @@ public class Item : MonoBehaviour
 		if ( flag )
 			current = flag.node;
 
+		if ( current == building.flag.node )
+		{
+			destination = building;
+			building.ItemOnTheWay( this );
+			Arrived();
+			return true;
+		}
+
 		path = Path.Between( current, building.flag.node, PathFinder.Mode.onRoad );
 		if ( path != null )
 		{
@@ -137,8 +145,7 @@ public class Item : MonoBehaviour
 		if ( destination != null && path.IsFinished() )
 		{
 			Assert.AreEqual( destination.flag, flag );
-			destination.ItemArrived( this );
-			Destroy( gameObject );
+			Arrived();
 			return;
 		}
 
@@ -153,6 +160,7 @@ public class Item : MonoBehaviour
 
 	public void Arrived()
 	{
+		Assert.AreEqual( destination.flag, flag );
 		destination.ItemArrived( this );
 		Destroy( gameObject );
 	}

@@ -37,6 +37,7 @@ public class PathFinder : ScriptableObject
 
     public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false )
     {
+		Assert.AreNotEqual( start, end );
         ready = false;
         target = end;
 		this.ignoreFinalObstacle = ignoreFinalObstacle;
