@@ -208,7 +208,7 @@ public class Road : MonoBehaviour
 	public void RebuildMesh( bool force = false )
 	{
 		if ( force )
-			curves = null;
+			curves = new List<CubicCurve>[3];
 		CreateCurves();
 
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
