@@ -518,6 +518,12 @@ public class Workshop : Building
 			return;
 		}
 
+		if ( worker == null )
+		{
+			worker = Worker.Create();
+			worker.SetupForBuilding( this );
+		}
+
 		switch ( type )
 		{
 			case Type.woodcutter:

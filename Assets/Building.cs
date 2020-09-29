@@ -266,11 +266,6 @@ abstract public class Building : MonoBehaviour
 	public void FixedUpdate()
 	{
 		construction.FixedUpdate();
-		if ( worker == null && construction.done )
-		{
-			worker = Worker.Create();
-			worker.SetupForBuilding( this );
-		}
 	}
 
 	public void Update()

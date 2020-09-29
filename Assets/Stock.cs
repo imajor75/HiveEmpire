@@ -86,6 +86,16 @@ public class Stock : Building
 		}
     }
 
+	new void FixedUpdate()
+	{
+		base.FixedUpdate();
+		if ( worker == null && construction.done )
+		{
+			worker = Worker.Create();
+			worker.SetupForBuilding( this );
+		}
+	}
+
 	public override int Influence( GroundNode node )
 	{
 		if ( !main )
