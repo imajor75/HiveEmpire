@@ -198,13 +198,15 @@ public class GroundNode
 		{
 			flag.UpdateBody();
 			foreach ( var road in flag.roadsStartingHere )
-				road?.RebuildMesh();
-			flag?.building?.exit.RebuildMesh();
+				road?.RebuildMesh( true );
+			flag?.building?.exit.RebuildMesh( true );
 		}
 		if ( road )
 			road.RebuildMesh( true );
 		if ( resource )
 			resource.UpdateBody();
+		foreach ( var border in borders )
+			border?.UpdateBody();
 
 		gizmo.transform.localPosition = Position();
 	}

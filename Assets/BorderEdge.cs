@@ -23,13 +23,18 @@ public class BorderEdge : MonoBehaviour
 		return this;
     }
 
-    void Start()
-    {
+	void Start()
+	{
+		transform.localScale = Vector3.one * 0.2f;
+		transform.SetParent( node.ground.BuoysGameObject().transform );
+		UpdateBody();
+	}
+
+	public void UpdateBody()
+	{
 		Vector3 position = Vector3.Lerp( node.Position(), node.Neighbour( direction ).Position(), 0.4f );
 		if ( position.y < Ground.waterLevel * Ground.maxHeight )
 			position.y = Ground.waterLevel * Ground.maxHeight;
-		transform.SetParent( node.ground.BuoysGameObject().transform );
 		transform.localPosition = position;
-		transform.localScale = Vector3.one * 0.2f;
 	}
 }
