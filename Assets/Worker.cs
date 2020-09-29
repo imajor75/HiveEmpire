@@ -25,8 +25,6 @@ public class Worker : MonoBehaviour
 	[JsonIgnore]
 	public AudioSource soundSource;
 
-	public Building construction;
-
 	public Road road;
 	public bool atRoad;
 
@@ -388,10 +386,11 @@ public class Worker : MonoBehaviour
 		{
 			int i = road.NodeIndex( boss.node );
 			Assert.IsTrue( i >= 0 );
+			Assert.IsFalse( boss.atRoad );
 			if ( road.workerAtNodes[i] == null )
 			{
 				road.workerAtNodes[i] = boss;
-				boss.road = road;
+				boss.atRoad = true;
 				return true;
 			}
 			return false;
@@ -446,6 +445,8 @@ public class Worker : MonoBehaviour
 		ground = road.ground;
 		Building main = road.ground.world.mainBuilding;
 		node = main.node;
+		this.road = road;
+		atRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
 		ScheduleStartWorkingOnRoad( road );
@@ -600,7 +601,6 @@ public class Worker : MonoBehaviour
 		}
 		road = null;
 		building = null;
-		construction = null;
 		type = Type.unemployed;
 		return true;
 	}
@@ -610,6 +610,12 @@ public class Worker : MonoBehaviour
 		Assert.AreEqual( taskQueue.Count, 0 );
 		if ( road != null )
 		{
+			if ( !atRoad )
+			{
+				ScheduleWalkToNode( road.nodes[0] );
+				ScheduleStartWorkingOnRoad( road );
+				return;
+			}
 			Assert.IsNotSelected( this );
 			Item bestItem = null;
 			float bestScore = 0;
@@ -653,6 +659,16 @@ public class Worker : MonoBehaviour
 				Walk( t );
 				return;
 			}
+		}
+
+		if ( building != null && node != building.node )
+		{
+			if ( node.flag )
+				ScheduleWalkToFlag( building.flag );
+			else
+				ScheduleWalkToNode( building.flag.node );
+			ScheduleWalkToNeighbour( building.node );
+			return;
 		}
 
 		if ( type == Type.unemployed )
@@ -892,7 +908,11 @@ public class Worker : MonoBehaviour
 			Assert.IsNull( origin );
 		Assert.IsTrue( road == null || building == null );
 		if ( road )
+		{
 			Assert.IsTrue( road.workers.Contains( this ) );
+			int point = road.NodeIndex( node );
+			Assert.AreEqual( road.workerAtNodes[point], this );
+		}
 		if ( itemInHands )
 		{
 			Assert.AreEqual( itemInHands.worker, this );	

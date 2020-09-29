@@ -160,7 +160,8 @@ public class Item : MonoBehaviour
 
 	public void Arrived()
 	{
-		Assert.AreEqual( destination.flag, flag );
+		if ( flag != null )
+			Assert.AreEqual( destination.flag, flag );
 		destination.ItemArrived( this );
 		Destroy( gameObject );
 	}
