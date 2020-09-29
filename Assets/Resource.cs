@@ -20,7 +20,7 @@ public class Resource : MonoBehaviour
 	static Material cornfieldMaterial;
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 6000;
-	public static int exposeMax = 9000;
+	public static int exposeMax = 39000;
 	public int silenceTimer;
 	AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;

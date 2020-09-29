@@ -479,7 +479,8 @@ public class Road : MonoBehaviour
 
 	public bool Remove()
 	{
-		foreach ( var worker in workers )
+		var localWorkers = workers.GetRange( 0, workers.Count );
+		foreach ( var worker in localWorkers )
 			if ( !worker.Remove() )
 				return false;
 		for ( int i = 0; i < 2; i++ )
