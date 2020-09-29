@@ -326,7 +326,7 @@ public class Worker : MonoBehaviour
 				boss.animator.SetTrigger( pickupID );
 				boss.box?.SetActive( true );
 			}
-			if ( pickupTimer-- > 0 )
+			if ( (pickupTimer -= (int)World.instance.speedModifier) > 0 )
 				return false;
 
 			if ( item.flag != null )
@@ -355,7 +355,7 @@ public class Worker : MonoBehaviour
 		{
 			if ( putdownTimer == putdownTimeStart )
 				boss.animator.SetTrigger( putdownID );
-			if ( putdownTimer-- > 0 )
+			if ( ( putdownTimer -= ( int )World.instance.speedModifier) > 0 )
 				return false;
 
 			boss.box?.SetActive( false );
