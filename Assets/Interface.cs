@@ -21,6 +21,7 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 	public static Sprite iconDestroy;
 	public static Sprite iconPath;
 	public static Sprite iconButton;
+	public static Sprite iconBox;
 	public GameObject debug;
 	public static Interface instance;
 
@@ -51,6 +52,7 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 		iconDestroy = LoadSprite( "destroy" );
 		iconPath = LoadSprite( "road" );
 		iconButton = LoadSprite( "simple UI & icons/button/button_login" );
+		iconBox = LoadSprite( "box" );
 		Frame.Initialize();
 	}
 
@@ -558,6 +560,7 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 	public class RoadPanel : Panel
 	{
 		public Road road;
+		public GroundNode node;
 		public Text jam;
 		public Text workers;
 
@@ -566,13 +569,15 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 			return new GameObject().AddComponent<RoadPanel>();
 		}
 
-		public void Open( Road road )
+		public void Open( Road road, GroundNode node )
 		{
-			base.Open( road.CenterNode() );
+			base.Open( node );
 			this.road = road;
-			Frame( 0, 0, 170, 50, 10 );
-			Button( 150, 0, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 130, -10, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			this.node = node;
+			Frame( 0, 0, 190, 50, 10 );
+			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 150, -10, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			Button( 130, -10, 20, 20, iconBox ).onClick.AddListener( Split );
 			jam = Text( 12, -4, 120, 20, "Jam" );
 			workers = Text( 12, -24, 120, 20, "Worker count" );
 			name = "Road panel";
@@ -581,6 +586,12 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 		void Remove()
 		{
 			if ( road && road.Remove() )
+				Close();
+		}
+
+		void Split()
+		{
+			if ( Flag.Create().Setup( node.ground, node, node.owner ) != null )
 				Close();
 		}
 
@@ -676,7 +687,7 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 			}
 			if ( node.road )
 			{
-				node.road.OnClicked();
+				node.road.OnClicked( node );
 				return;
 			}
 			node.OnClicked();

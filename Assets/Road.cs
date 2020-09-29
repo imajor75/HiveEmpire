@@ -410,9 +410,10 @@ public class Road : MonoBehaviour
 		}
 	}
 
-	public void OnClicked()
+	public void OnClicked( GroundNode node )
 	{
-		Interface.RoadPanel.Create().Open( this );
+		Assert.AreEqual( node.road, this );
+		Interface.RoadPanel.Create().Open( this, node );
 	}
 
 	public void Split( Flag flag )

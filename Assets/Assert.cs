@@ -49,8 +49,12 @@ public class Assert
 
 	public static void AreEqual<T>( T a, T b, string message = "" )
 	{
-		if ( a == null && b == null )
+		if ( a == null )
+		{
+			if ( b != null )
+				Failed( message );
 			return;
+		}
 		if ( a.Equals( b ) )
 			return;
 
