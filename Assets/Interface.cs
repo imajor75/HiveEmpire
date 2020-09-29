@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -65,6 +67,8 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 		Stock.Initialize();
 		GuardHouse.Initialize();
 
+		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
+			
 		canvas = gameObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 		gameObject.AddComponent<GraphicRaycaster>();
@@ -91,15 +95,17 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 			world.speedModifier = 1;
 		if ( Input.GetKeyDown( KeyCode.P ) )
 		{
-			string fileName = "test.json";
+
+			string fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
 			world.Save( fileName );
 			Debug.Log( fileName + " is saved" );
 		}
 		if ( Input.GetKeyDown( KeyCode.L ) )
 		{
-			string fileName = "test.json";
-			world.Load( "test.json" );
-			Debug.Log( fileName + " is loaded" );
+			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
+			world.Load( myFile.FullName );
+			Debug.Log( myFile.FullName + " is loaded" );
 		}
 		if ( Input.GetKeyDown( KeyCode.N ) )
 		{
