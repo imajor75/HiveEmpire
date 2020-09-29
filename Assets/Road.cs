@@ -452,6 +452,7 @@ public class Road : MonoBehaviour
 				second.workers.Add( worker );
 				worker.road = second;
 			}
+			worker.Reset();
 		}
 
 		if ( first.workers.Count == 0 )

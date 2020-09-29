@@ -593,6 +593,7 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 		{
 			if ( Flag.Create().Setup( node.ground, node, node.owner ) != null )
 				Close();
+			World.instance.Validate();
 		}
 
 		public override void Update()

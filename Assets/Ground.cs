@@ -277,11 +277,6 @@ public class Ground : MonoBehaviour
 		}
 	}
 
-	void LateUpdate()
-	{
-		Validate();
-	}
-
 	public GroundNode GetNode( int x, int y )
 	{
 		if ( x < 0 )

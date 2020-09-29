@@ -123,6 +123,11 @@ public class World : ScriptableObject
 		Interface.instance.Clear();
 	}
 
+	void LateUpdate()
+	{
+		Validate();
+	}
+
 	public static Transform FindChildRecursive( Transform parent, string substring )
 	{
 		foreach ( Transform child in parent )
@@ -135,5 +140,10 @@ public class World : ScriptableObject
 		}
 
 		return null;
+	}
+
+	public void Validate()
+	{
+		ground.Validate();
 	}
 }
