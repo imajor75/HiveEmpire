@@ -5,7 +5,7 @@ using System.IO;
 using UnityEngine;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
-public class Ground : MonoBehaviour
+public class Ground : Assert.Base
 {
 	public World world;
 	public int width = 50, height = 50;
@@ -157,7 +157,7 @@ public class Ground : MonoBehaviour
 			}
 		}
 
-		Assert.IsNull( world.mainBuilding );
+		assert.IsNull( world.mainBuilding );
 		world.mainBuilding = Stock.Create();
 		world.mainBuilding.SetupMain( this, best, mainPlayer );
 		world.eye.FocusOn( world.mainBuilding.node );
@@ -190,7 +190,7 @@ public class Ground : MonoBehaviour
 		int nodeCount = 0;
 		for ( int i = 0; i < areas.Length; i++ )
 		{
-			Assert.AreEqual( areas[i].Count, nodeCount );
+			assert.AreEqual( areas[i].Count, nodeCount );
 			nodeCount += ( i + 1 ) * 6;
 		}
 	}
@@ -448,10 +448,10 @@ public class Ground : MonoBehaviour
 	public void Validate()
  	{
 		reservationCount = reservedCount = 0;
-        Assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
-        Assert.AreEqual( ( width + 1 ) * ( height + 1 ), nodes.Length, "Map layout size is incorrect" );
+        assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
+        assert.AreEqual( ( width + 1 ) * ( height + 1 ), nodes.Length, "Map layout size is incorrect" );
         foreach ( var node in nodes )
             node.Validate();
-		Assert.AreEqual( reservedCount, reservationCount, "Reservation numbers are wrong" );
+		assert.AreEqual( reservedCount, reservationCount, "Reservation numbers are wrong" );
     }
 }

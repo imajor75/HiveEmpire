@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 using System;
 
 [SelectionBase]
-public class Road : MonoBehaviour
+public class Road : Assert.Base
 {
 	public Player owner;
 	public List<Worker> workers = new List<Worker>();
@@ -37,7 +37,7 @@ public class Road : MonoBehaviour
 
 	public Road SetupAsBuildingExit( Building building )
 	{
-		Assert.AreEqual( nodes.Count, 0 );
+		assert.AreEqual( nodes.Count, 0 );
 		decorationOnly = true;
 		nodes.Add( building.node );
 		nodes.Add( building.flag.node );
@@ -246,7 +246,7 @@ public class Road : MonoBehaviour
 				vertices[v++] = pos + h + side;
 			}
 		}
-		Assert.AreEqual(v, vertexRows * 3);
+		assert.AreEqual(v, vertexRows * 3);
 		mesh.vertices = vertices;
 		mesh.uv = uvs;
 
@@ -312,14 +312,14 @@ public class Road : MonoBehaviour
 		}
 		if ( node.road != this )
 			return -1;
-		Assert.AreEqual( nodes[node.roadIndex], node );
+		assert.AreEqual( nodes[node.roadIndex], node );
 		return node.roadIndex;
 	}
 
 	static public Road Between( GroundNode first, GroundNode second )
 	{
-		Assert.IsNotNull( first.flag );
-		Assert.IsNotNull( second.flag );
+		Assert.global.IsNotNull( first.flag );
+		Assert.global.IsNotNull( second.flag );
 		if ( first.flag == null || second.flag == null )
 			return null;
 		foreach ( var road in first.flag.roadsStartingHere )
@@ -412,13 +412,13 @@ public class Road : MonoBehaviour
 
 	public void OnClicked( GroundNode node )
 	{
-		Assert.AreEqual( node.road, this );
+		assert.AreEqual( node.road, this );
 		Interface.RoadPanel.Create().Open( this, node );
 	}
 
 	public void Split( Flag flag )
 	{
-		Assert.AreEqual( flag.node.road, this );
+		assert.AreEqual( flag.node.road, this );
 		Road first = Create(), second = Create();
 		first.owner = second.owner = owner;	
 		first.ready = second.ready = true;
@@ -426,7 +426,7 @@ public class Road : MonoBehaviour
 		int splitPoint = 0;
 			while ( splitPoint < nodes.Count && nodes[splitPoint] != flag.node )
 				splitPoint++;
-		Assert.AreEqual( nodes[splitPoint], flag.node );
+		assert.AreEqual( nodes[splitPoint], flag.node );
 		first.nodes = nodes.GetRange( 0, splitPoint + 1 );
 		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 );
 		second.nodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
@@ -438,7 +438,7 @@ public class Road : MonoBehaviour
 			int workerPoint = NodeIndex( worker.node );
 			if ( workerPoint == -1 )
 			{
-				Assert.AreEqual( flag.node, worker.node );
+				assert.AreEqual( flag.node, worker.node );
 				workerPoint = splitPoint;
 			}
 
@@ -520,24 +520,24 @@ public class Road : MonoBehaviour
 	public void Validate()
 	{
 		int length = nodes.Count;
-		Assert.IsTrue( length > 1 );
+		assert.IsTrue( length > 1 );
 		if ( decorationOnly )
 		{
-			Assert.AreEqual( nodes.Count, 2 );
-			Assert.IsNotNull( nodes[0].building );
-			Assert.AreEqual( nodes[1].flag, nodes[0].building.flag );
+			assert.AreEqual( nodes.Count, 2 );
+			assert.IsNotNull( nodes[0].building );
+			assert.AreEqual( nodes[1].flag, nodes[0].building.flag );
 			return;
 		}
 		var first = nodes[0];
 		var last = nodes[length-1];
-		Assert.IsNotNull( first.flag );
-		Assert.IsNotNull( last.flag );
-		Assert.AreEqual( this, first.flag.roadsStartingHere[first.DirectionTo( nodes[1] )] );
-		Assert.AreEqual( this, last.flag.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
+		assert.IsNotNull( first.flag );
+		assert.IsNotNull( last.flag );
+		assert.AreEqual( this, first.flag.roadsStartingHere[first.DirectionTo( nodes[1] )] );
+		assert.AreEqual( this, last.flag.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
 		for ( int i = 1; i < length - 1; i++ )
-			Assert.AreEqual( this, nodes[i].road );	// TODO This assert fired once
+			assert.AreEqual( this, nodes[i].road );	// TODO This assert fired once
 		for ( int i = 0; i < length - 1; i++ )
-			Assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
+			assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
 		foreach ( var worker in workers )
 		{
 			if ( !worker.atRoad )
@@ -546,7 +546,7 @@ public class Road : MonoBehaviour
 			foreach ( var w in workerAtNodes )
 				if ( w == worker )
 					i++;
-			Assert.AreEqual( i, 1 );
+			assert.AreEqual( i, 1 );
 			worker.Validate();
 		}
 	}

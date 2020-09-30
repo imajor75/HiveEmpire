@@ -111,7 +111,7 @@ public class Stock : Building
 
 	public override Item SendItem( Item.Type itemType, Building destination )
 	{
-		Assert.IsTrue( content[(int)itemType] > 0 );
+		assert.IsTrue( content[(int)itemType] > 0 );
 		Item item = base.SendItem( itemType, destination );
 		if ( item != null )
 			content[(int)itemType]--;

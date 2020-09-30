@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [SelectionBase]
-public class Worker : MonoBehaviour
+public class Worker : Assert.Base
 {
 	public Type type;
 	public Ground ground;
@@ -55,7 +55,7 @@ public class Worker : MonoBehaviour
 		public virtual void Cancel() { }
 		public void ReplaceThisWith( Task another )
 		{
-			Assert.AreEqual( this, boss.taskQueue[0] );
+			boss.assert.AreEqual( this, boss.taskQueue[0] );
 			boss.taskQueue.RemoveAt( 0 );
 			boss.taskQueue.Insert( 0, another );
 		}
@@ -69,7 +69,7 @@ public class Worker : MonoBehaviour
 
 		public virtual void Validate()
 		{
-			Assert.IsTrue( boss.taskQueue.Contains( this ) );
+			boss.assert.IsTrue( boss.taskQueue.Contains( this ) );
 		}
 	}
 
@@ -170,7 +170,7 @@ public class Worker : MonoBehaviour
 
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
-			Assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
+			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
 			if ( currentPoint == targetPoint )
 				return true;
 			else
@@ -181,8 +181,8 @@ public class Worker : MonoBehaviour
 		public bool NextStep()
 		{
 			if ( exclusive )
-				Assert.AreEqual( road.workerAtNodes[currentPoint], boss );
-			Assert.AreEqual( boss.walkTo, zero );
+				boss.assert.AreEqual( road.workerAtNodes[currentPoint], boss );
+			boss.assert.AreEqual( boss.walkTo, zero );
 
 			if ( currentPoint == targetPoint )
 				return false;
@@ -235,7 +235,7 @@ public class Worker : MonoBehaviour
 
 			wishedPoint = -1;
 
-			Assert.AreEqual( boss.node, road.nodes[currentPoint] );
+			boss.assert.AreEqual( boss.node, road.nodes[currentPoint] );
 			boss.Walk( road.nodes[nextPoint] );
 			boss.walkBase = road;
 			if ( nextPoint > currentPoint )
@@ -258,7 +258,11 @@ public class Worker : MonoBehaviour
 					boss.exclusiveFlag = boss.walkTo.flag;
 				}
 				if ( boss.walkFrom.flag && boss.walkFrom.flag.user == boss )
+				{
+					boss.assert.AreEqual( boss.walkFrom.flag, boss.exclusiveFlag );
 					boss.walkFrom.flag.user = null;
+					boss.exclusiveFlag = null;
+				}
 			}
 			return true;
 		}
@@ -269,7 +273,8 @@ public class Worker : MonoBehaviour
 			if ( this != boss.taskQueue[0] )
 				return;
 				
-			Assert.IsTrue( currentPoint >= -1 && currentPoint < road.nodes.Count );
+			boss.assert.IsTrue( currentPoint >= -1 && currentPoint < road.nodes.Count );
+			int cp = road.NodeIndex( boss.node );
 			if ( exclusive )
 			{
 				int t = 0;
@@ -278,17 +283,17 @@ public class Worker : MonoBehaviour
 					if ( road.workerAtNodes[i] == boss )
 					{
 						t++;
-						Assert.AreEqual( i, currentPoint );
+						boss.assert.AreEqual( i, cp );
 					}
 				}
-				Assert.AreEqual( t, 1 );
+				boss.assert.AreEqual( t, 1 );
 			}
 
-			Assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
+			boss.assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
 			if ( wishedPoint >= 0 )
 			{
-				Assert.IsTrue( wishedPoint <= road.nodes.Count );
-				Assert.AreEqual( Math.Abs( wishedPoint - currentPoint ), 1 );
+				boss.assert.IsTrue( wishedPoint <= road.nodes.Count );
+				boss.assert.AreEqual( Math.Abs( wishedPoint - cp ), 1 );
 			}
 		}
 	}
@@ -323,7 +328,7 @@ public class Worker : MonoBehaviour
 		}
 		public override void Cancel()
 		{
-			Assert.AreEqual( boss, item.worker );
+			boss.assert.AreEqual( boss, item.worker );
 			item.worker = null;
 			base.Cancel();
 		}
@@ -340,7 +345,7 @@ public class Worker : MonoBehaviour
 			if ( item.flag != null )
 				item.flag.ReleaseItem( item );
 			boss.itemInHands = item;
-			Assert.IsTrue( item.worker == boss || item.worker == null );
+			boss.assert.IsTrue( item.worker == boss || item.worker == null );
 			item.worker = boss;
 			if ( item.worker.type == Type.haluer )
 				item.path.NextRoad();
@@ -367,13 +372,13 @@ public class Worker : MonoBehaviour
 				return false;
 
 			boss.box?.SetActive( false );
-    		Assert.AreEqual( item, boss.itemInHands );
+    		boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 				item.Arrived();
 			else
 			{
 				Flag flag = boss.node.flag;
-				Assert.IsNotNull( flag, "Trying to deliver an item at a location where there is no flag" );
+				boss.assert.IsNotNull( flag, "Trying to deliver an item at a location where there is no flag" );
 				item.ArrivedAt( flag );
 			}
 			boss.itemInHands = null;
@@ -395,8 +400,8 @@ public class Worker : MonoBehaviour
 		public override bool ExecuteFrame()
 		{
 			int i = road.NodeIndex( boss.node );
-			Assert.IsTrue( i >= 0 );
-			Assert.IsFalse( boss.atRoad );
+			boss.assert.IsTrue( i >= 0 );
+			boss.assert.IsFalse( boss.atRoad );
 			if ( road.workerAtNodes[i] == null )
 			{
 				road.workerAtNodes[i] = boss;
@@ -426,10 +431,10 @@ public class Worker : MonoBehaviour
 		templates.Add( (GameObject)Resources.Load( "Rabbits/Prefabs/Rabbit 1" ) );
 
 		boxTemplate = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands" );
-		Assert.IsNotNull( boxTemplate );
+		Assert.global.IsNotNull( boxTemplate );
 
 		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
-		Assert.IsNotNull( animationController );
+		Assert.global.IsNotNull( animationController );
 		walkingID = Animator.StringToHash( "Moving" );
 		pickupID = Animator.StringToHash( "CarryPickupTrigger" );
 		putdownID = Animator.StringToHash( "CarryPutdownTrigger" );
@@ -553,7 +558,7 @@ public class Worker : MonoBehaviour
 
 	public void Walk( GroundNode target )
 	{
-		Assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
+		assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
 		currentSpeed = SpeedBetween( target, node );
 		walkFrom = node;
 		node = walkTo = target;
@@ -594,11 +599,11 @@ public class Worker : MonoBehaviour
 		if ( road != null && atRoad )
 		{
 			int currentPoint = road.NodeIndex( node );
-			Assert.AreEqual( road.workerAtNodes[currentPoint], this );
+			assert.AreEqual( road.workerAtNodes[currentPoint], this );
 			road.workerAtNodes[currentPoint] = null;
 			if ( exclusiveFlag )
 			{
-				Assert.AreEqual( exclusiveFlag.user, this );
+				assert.AreEqual( exclusiveFlag.user, this );
 				exclusiveFlag.user = null;
 			}
 			road.workers.Remove( this );
@@ -613,7 +618,7 @@ public class Worker : MonoBehaviour
 
 	public void FindTask()
 	{
-		Assert.AreEqual( taskQueue.Count, 0 );
+		assert.AreEqual( taskQueue.Count, 0 );
 		if ( road != null )
 		{
 			if ( !atRoad )
@@ -622,7 +627,6 @@ public class Worker : MonoBehaviour
 				ScheduleStartWorkingOnRoad( road );
 				return;
 			}
-			Assert.IsNotSelected( this );
 			Item bestItem = null;
 			float bestScore = 0;
 			for ( int c = 0; c < 2; c++ )
@@ -808,8 +812,8 @@ public class Worker : MonoBehaviour
 
 	public void CarryItem( Item item )
 	{
-		Assert.IsNotNull( road );
-		Assert.AreEqual( road, item.path.Road() );
+		assert.IsNotNull( road );
+		assert.AreEqual( road, item.path.Road() );
 		int itemPoint = road.NodeIndex( item.flag.node ), otherPoint = 0;
 		if ( itemPoint == 0 )
 			otherPoint = road.nodes.Count - 1;
@@ -828,9 +832,9 @@ public class Worker : MonoBehaviour
 		}
 		else
 		{
-			Assert.IsTrue( other.FreeSpace() > 0 );
+			assert.IsTrue( other.FreeSpace() > 0 );
 			other.reserved++;
-			Assert.IsNull( reservation );
+			assert.IsNull( reservation );
 			reservation = other;
 			ScheduleDeliverItem( item );
 		}
@@ -841,8 +845,8 @@ public class Worker : MonoBehaviour
 	{
 		if ( origin != null )
 		{
-			Assert.AreEqual( type, Type.wildAnimal );
-			Assert.AreEqual( origin.type, Resource.Type.animalSpawner );
+			assert.AreEqual( type, Type.wildAnimal );
+			assert.AreEqual( origin.type, Resource.Type.animalSpawner );
 			origin.animals.Remove( this );
 		}
 		if ( reservation )
@@ -892,14 +896,14 @@ public class Worker : MonoBehaviour
 		{
 			transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress ) + Vector3.up * GroundNode.size * Road.height;
 			int direction = walkFrom.DirectionTo( walkTo );
-			Assert.IsTrue( direction >= 0 );
+			assert.IsTrue( direction >= 0 );
 			transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
 		}
 	}
 
 	public bool IsIdleInBuilding()
 	{
-		Assert.IsNotNull( building );
+		assert.IsNotNull( building );
 		return node == building.node && walkTo == zero && taskQueue.Count == 0;
 	}
 
@@ -907,32 +911,38 @@ public class Worker : MonoBehaviour
 	{
 		if ( type == Type.wildAnimal )
 		{
-			Assert.IsNotNull( origin );
-			Assert.AreEqual( origin.type, Resource.Type.animalSpawner );
+			assert.IsNotNull( origin );
+			assert.AreEqual( origin.type, Resource.Type.animalSpawner );
 		}
 		else
-			Assert.IsNull( origin );
-		Assert.IsTrue( road == null || building == null );
+			assert.IsNull( origin );
+		assert.IsTrue( road == null || building == null );
 		if ( road )
 		{
-			Assert.IsTrue( road.workers.Contains( this ) );
+			assert.IsTrue( road.workers.Contains( this ) );
 			int point = road.NodeIndex( node );
-			Assert.AreEqual( road.workerAtNodes[point], this );
+			if ( point < 0 )
+			{
+				assert.IsNotNull( node.building );
+				point = road.NodeIndex( node.building.flag.node );
+				assert.IsTrue( point >= 0 );
+			}
+			assert.AreEqual( road.workerAtNodes[point], this );
 		}
 		if ( itemInHands )
 		{
-			Assert.AreEqual( itemInHands.worker, this );	
-			Assert.IsNull( itemInHands.flag );
+			assert.AreEqual( itemInHands.worker, this );	
+			assert.IsNull( itemInHands.flag );
 			itemInHands.Validate();
 		}
 		foreach ( Task task in taskQueue )
 			task.Validate();
 		if ( exclusiveFlag )
 		{
-			Assert.AreEqual( type, Type.haluer );
-			Assert.IsTrue( atRoad );
-			Assert.IsNotNull( road );
-			Assert.AreEqual( exclusiveFlag.user, this );
+			assert.AreEqual( type, Type.haluer );
+			assert.IsTrue( atRoad );
+			assert.IsNotNull( road );
+			assert.AreEqual( exclusiveFlag.user, this );
 		}
 	}
 }

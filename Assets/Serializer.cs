@@ -52,7 +52,7 @@ public class Serializer : JsonSerializer
 		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
 		{
 			var m = type.GetMethod( "Create" );
-			Assert.AreEqual( m.IsStatic, true );
+			Assert.global.AreEqual( m.IsStatic, true );
 			object[] empty = new object[0];
 			return m.Invoke( null, empty );
 		}
@@ -66,7 +66,7 @@ public class Serializer : JsonSerializer
 					if ( method.Name == "CreateInstance" && method.IsGenericMethodDefinition )
 						scriptableObjectCreator = method;
 				}
-				Assert.IsNotNull( scriptableObjectCreator );
+				Assert.global.IsNotNull( scriptableObjectCreator );
 			}
 			Type[] types = { type };
 			MethodInfo creator = scriptableObjectCreator.MakeGenericMethod( types );
@@ -91,7 +91,7 @@ public class Serializer : JsonSerializer
 	}
 	void ProcessField()
 	{
-		Assert.AreEqual( reader.TokenType, JsonToken.PropertyName );
+		Assert.global.AreEqual( reader.TokenType, JsonToken.PropertyName );
 		string name = (string)reader.Value;
 		if ( name[0] == '$' )
 		{
@@ -102,19 +102,19 @@ public class Serializer : JsonSerializer
 				case "$id":
 				{
 					index = int.Parse( value );
-					Assert.IsTrue( index > 0 );
+					Assert.global.IsTrue( index > 0 );
 					break;
 				}
 				case "$type":
 				{
 					type = Type.GetType( value );
-					Assert.IsNotNull( type );
+					Assert.global.IsNotNull( type );
 					break;
 				}
 				case "$ref":
 				{
 					index = int.Parse( value );
-					Assert.IsTrue( index > 0 );
+					Assert.global.IsTrue( index > 0 );
 					instance = boss.objects[index];
 					break;
 				}
@@ -122,7 +122,7 @@ public class Serializer : JsonSerializer
 			return;
 		}
 		FieldInfo i = type.GetField( name );
-		Assert.IsNotNull( i );
+		Assert.global.IsNotNull( i );
 		reader.Read();
 		i.SetValue( Object(), ProcessFieldValue( i.FieldType ) );
 	}
@@ -152,7 +152,7 @@ public class Serializer : JsonSerializer
 					elementType = type.GetElementType();
 				if ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( List<> ) )
 					elementType = type.GetGenericArguments()[0];
-				Assert.IsNotNull( elementType );
+				Assert.global.IsNotNull( elementType );
 
 				Type listType = typeof( List<> ).MakeGenericType( new [] { elementType } );
 				IList list = (IList)Activator.CreateInstance( listType );
@@ -185,14 +185,14 @@ public class Serializer : JsonSerializer
 	object Deserialize( Type type )
 	{
 		this.type = staticType = type;
-		Assert.AreEqual( reader.TokenType, JsonToken.StartObject );
+		Assert.global.AreEqual( reader.TokenType, JsonToken.StartObject );
 		reader.Read();
 		while ( reader.TokenType == JsonToken.PropertyName )
 		{
 			ProcessField();
 			reader.Read();
 		}
-		Assert.AreEqual( reader.TokenType, JsonToken.EndObject );
+		Assert.global.AreEqual( reader.TokenType, JsonToken.EndObject );
 		return Object();
 	}
 

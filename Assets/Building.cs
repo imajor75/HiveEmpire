@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [SelectionBase]
-abstract public class Building : MonoBehaviour
+abstract public class Building : Assert.Base
 {
 	public Player owner;
 	public Worker worker;
@@ -43,7 +43,7 @@ abstract public class Building : MonoBehaviour
 		static public void Initialize()
 		{
 			shader = (Shader)Resources.Load( "Construction" );
-			Assert.IsNotNull( shader );
+			Assert.global.IsNotNull( shader );
 			sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
 		}
 
@@ -121,12 +121,12 @@ abstract public class Building : MonoBehaviour
 				if ( cancel )
 				{
 					plankOnTheWay--;
-					Assert.IsTrue( plankOnTheWay >= 0 );
+					boss.assert.IsTrue( plankOnTheWay >= 0 );
 				}
 				else
 				{
 					plankOnTheWay++;
-					Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
+					boss.assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
 				}
 				return true;
 			}
@@ -135,16 +135,16 @@ abstract public class Building : MonoBehaviour
 				if ( cancel )
 				{
 					stoneOnTheWay--;
-					Assert.IsTrue( stoneOnTheWay >= 0 );
+					boss.assert.IsTrue( stoneOnTheWay >= 0 );
 				}
 				else
 				{
 					stoneOnTheWay++;
-					Assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
+					boss.assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
 				}
 				return true;			}
 
-			Assert.IsTrue( false );
+			boss.assert.IsTrue( false );
 			return false;
 		}
 
@@ -155,22 +155,22 @@ abstract public class Building : MonoBehaviour
 
 			if ( item.type == Item.Type.plank )
 			{
-				Assert.IsTrue( plankOnTheWay > 0 );
+				boss.assert.IsTrue( plankOnTheWay > 0 );
 				plankOnTheWay--;
 				plankArrived++;
-				Assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
+				boss.assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
 				return true;
 			}
 			if ( item.type == Item.Type.stone )
 			{
-				Assert.IsTrue( stoneOnTheWay > 0 );
+				boss.assert.IsTrue( stoneOnTheWay > 0 );
 				stoneOnTheWay--;
 				stoneArrived++;
-				Assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
+				boss.assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
 				return true;
 			}
 
-			Assert.IsTrue( false );
+			boss.assert.IsTrue( false );
 			return false;
 		}
 
@@ -249,7 +249,7 @@ abstract public class Building : MonoBehaviour
 			foreach ( var m in renderer.materials )
 				m.shader = Construction.shader;
 
-		Assert.IsNull( exit, "Building already has an exit road" );
+		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this );
 	}
@@ -283,7 +283,7 @@ abstract public class Building : MonoBehaviour
 		Item item = Item.Create().Setup( itemType, this, destination );
 		if ( item != null )
 		{
-			Assert.IsNull( worker.reservation );
+			assert.IsNull( worker.reservation );
 			worker.reservation = flag;
 			flag.reserved++;
 			worker.SchedulePickupItem( item );
@@ -306,7 +306,7 @@ abstract public class Building : MonoBehaviour
 
 	virtual public void OnClicked()
 	{
-		Assert.IsTrue( false );
+		assert.IsTrue( false );
 	}
 
 	public void UpdateLook()
@@ -341,9 +341,9 @@ abstract public class Building : MonoBehaviour
 
 	virtual public void Validate()
 	{
-		Assert.AreEqual( this, flag.building );
-		Assert.AreEqual( this, node.building );
-		Assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
+		assert.AreEqual( this, flag.building );
+		assert.AreEqual( this, node.building );
+		assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
 		worker?.Validate();
 		exit?.Validate();
 		construction?.Validate();

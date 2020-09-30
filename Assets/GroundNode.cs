@@ -33,7 +33,7 @@ public class GroundNode
 		underWater
 	}
 
-	public class NodeGizmo : MonoBehaviour
+	public class NodeGizmo : Assert.Base
 	{
 		public GroundNode node;
 
@@ -89,7 +89,7 @@ public class GroundNode
 
 	public GroundNode Neighbour( int i )
 	{
-		Assert.IsTrue( i >= 0 && i < 6 );
+		gizmo.assert.IsTrue( i >= 0 && i < 6 );
 		switch ( i )
 		{
 			case 0:
@@ -237,28 +237,28 @@ public class GroundNode
 			o++;
 		if ( resource && !resource.underGround )
 			o++;
-		Assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
+		gizmo.assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 		if ( building )
-			Assert.AreEqual( this, building.node );
+			gizmo.assert.AreEqual( this, building.node );
 		if ( flag )
-			Assert.AreEqual( this, flag.node );
+			gizmo.assert.AreEqual( this, flag.node );
 		for ( int i = 0; i < 6; i++ )
-			Assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
+			gizmo.assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
 		if ( flag )
 		{
-			Assert.AreEqual( this, flag.node );
+			gizmo.assert.AreEqual( this, flag.node );
 			flag.Validate();
 		}
 		if ( building )
 		{
-			Assert.AreEqual( this, building.node );
+			gizmo.assert.AreEqual( this, building.node );
 			building.Validate();
 		}
 		if ( road )
-			Assert.AreEqual( this, road.nodes[roadIndex] );
+			gizmo.assert.AreEqual( this, road.nodes[roadIndex] );
 		if ( resource )
 		{
-			Assert.AreEqual( resource.node, this );
+			gizmo.assert.AreEqual( resource.node, this );
 			resource.Validate();
 		}
 	}

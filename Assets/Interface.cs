@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Interface : MonoBehaviour, IPointerClickHandler
+public class Interface : Assert.Base, IPointerClickHandler
 {
 	public List<Panel> panels = new List<Panel>();
 	public static int iconSize = 24;
@@ -44,7 +44,7 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 	static void Initialize()
 	{
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
-		Assert.IsNotNull( font );
+		Assert.global.IsNotNull( font );
 		templateFrame = LoadSprite( "simple UI & icons/box/box_event1" );
 		templateProgress = LoadSprite( "simple UI & icons/button/board" );
 		iconExit = LoadSprite( "simple UI & icons/button/button_exit" );
@@ -120,9 +120,19 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 		}
 	}
 
+	void LateUpdate()
+	{
+		Validate();
+	}
+
 	public void OnPointerClick( PointerEventData eventData )
 	{
 		throw new System.NotImplementedException();
+	}
+
+	void Validate()
+	{
+		world.Validate();
 	}
 
 	public class Panel : MonoBehaviour, IDragHandler, IPointerClickHandler
@@ -156,7 +166,7 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 
 		void OnDestroy()
 		{
-			Assert.IsTrue( Root.panels.Contains( this ) );
+			Assert.global.IsTrue( Root.panels.Contains( this ) );
 			Root.panels.Remove( this );
 		}
 

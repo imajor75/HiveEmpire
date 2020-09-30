@@ -2,7 +2,7 @@
 using UnityEngine.Assertions;
 
 [SelectionBase]
-public class Flag : MonoBehaviour
+public class Flag : Assert.Base
 {
 	public Player owner;
 	public static int maxItems = 8;
@@ -17,7 +17,7 @@ public class Flag : MonoBehaviour
 	static public void Initialize()
 	{
 		template = (GameObject)Resources.Load( "Tresure_box/tresure_box" );
-		Assert.IsNotNull( template );
+		Assert.global.IsNotNull( template );
 	}
 
 	public static Flag Create()
@@ -84,14 +84,14 @@ public class Flag : MonoBehaviour
 				return true;
 			}
 		}
-		Assert.IsTrue( false );
+		assert.IsTrue( false );
 		return false;
 	}
 
 	public bool StoreItem( Item item )
 	{
 		int reserved = this.reserved;
-		Assert.IsNull( item.flag, "Item already has a flag" );
+		assert.IsNull( item.flag, "Item already has a flag" );
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == null && --reserved <= 0 )
@@ -101,7 +101,7 @@ public class Flag : MonoBehaviour
 				return true;
 			}
 		}
-		Assert.IsTrue( false );
+		assert.IsTrue( false );
 		return false;
 	}
 
@@ -136,15 +136,15 @@ public class Flag : MonoBehaviour
 	public void Validate()
     {
 		if ( building )
-			Assert.AreEqual( building.flag, this );
-        Assert.AreEqual( this, node.flag );
+			assert.AreEqual( building.flag, this );
+        assert.AreEqual( this, node.flag );
         for ( int i = 0; i < 6; i++ )
-            Assert.IsNull( node.Neighbour( i ).flag );
+            assert.IsNull( node.Neighbour( i ).flag );
 		foreach ( var i in items )
 		{
 			if ( i )
 			{
-				Assert.AreEqual( i.flag, this );
+				assert.AreEqual( i.flag, this );
 				i.Validate();
 			}
 		}
@@ -153,10 +153,10 @@ public class Flag : MonoBehaviour
 				roadsStartingHere[j].Validate();
 		if ( user )
 		{
-			Assert.AreEqual( user.type, Worker.Type.haluer );
-			Assert.IsNotNull( user.road );
-			Assert.IsTrue( user.atRoad );
-			Assert.AreEqual( user.exclusiveFlag, this );
+			assert.AreEqual( user.type, Worker.Type.haluer );
+			assert.IsNotNull( user.road );
+			assert.IsTrue( user.atRoad );
+			assert.AreEqual( user.exclusiveFlag, this );
 		}
 	}
 }

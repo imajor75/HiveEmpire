@@ -34,7 +34,7 @@ public class ItemDispatcher : MonoBehaviour
 		if ( quantity == 0 )
 			return;
 
-		Assert.IsTrue( quantity > 0 );
+		Assert.global.IsTrue( quantity > 0 );
 		var r = new Request();
 		r.building = building;
 		r.quantity = quantity;
@@ -50,7 +50,7 @@ public class ItemDispatcher : MonoBehaviour
 		if ( quantity == 0 )
 			return;
 
-		Assert.IsTrue( quantity > 0 );
+		Assert.global.IsTrue( quantity > 0 );
 		var o = new Offer();
 		o.building = building;
 		o.quantity = quantity;

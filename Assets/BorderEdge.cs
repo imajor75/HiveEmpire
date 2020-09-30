@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BorderEdge : MonoBehaviour
+public class BorderEdge : Assert.Base
 {
     public GroundNode node;
     public int direction;
@@ -19,7 +19,7 @@ public class BorderEdge : MonoBehaviour
     {
         this.node = node;
         this.direction = direction;
-		Assert.AreNotEqual( node.owner, node.Neighbour( direction ).owner );
+		assert.AreNotEqual( node.owner, node.Neighbour( direction ).owner );
 		return this;
     }
 

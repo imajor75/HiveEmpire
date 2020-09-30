@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [SelectionBase]
-public class Resource : MonoBehaviour
+public class Resource : Assert.Base
 {
 	public GroundNode node;
 	public bool underGround;
@@ -189,7 +189,7 @@ public class Resource : MonoBehaviour
 					break;
 				}
 				else
-					Assert.IsTrue( false );
+					assert.IsTrue( false );
 			}
 			spawnTimer = 1000;
 		}
@@ -253,7 +253,7 @@ public class Resource : MonoBehaviour
 			animals[0].taskQueue.Clear();
 			animals[0].Remove( false );
 		}
-		Assert.AreEqual( this, node.resource );
+		assert.AreEqual( this, node.resource );
 		node.resource = null;
 		Destroy( gameObject );
 		return this;
@@ -277,11 +277,11 @@ public class Resource : MonoBehaviour
 
 	public void Validate()
 	{
-		//Assert.IsNotNull( body );
+		//assert.IsNotNull( body );
 		if ( type == Type.animalSpawner )
 			foreach ( var w in animals )
-				Assert.IsNotNull( w );
+				assert.IsNotNull( w );
 		if ( type == Type.pasturingAnimal )
-			Assert.AreEqual( animals.Count, 1 );
+			assert.AreEqual( animals.Count, 1 );
 	}
 }

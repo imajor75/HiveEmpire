@@ -88,7 +88,7 @@ public class Workshop : Building
 		{
 			if ( node.resource )
 			{
-				Assert.AreEqual( boss, node.resource.hunter );
+				boss.assert.AreEqual( boss, node.resource.hunter );
 				node.resource.hunter = null;
 			}
 			base.Cancel();
@@ -110,8 +110,8 @@ public class Workshop : Building
 			if ( resource )
 			{
 				if ( resourceType != Resource.Type.expose )
-					Assert.AreEqual( resource.type, resourceType );
-				Assert.AreEqual( boss, resource.hunter );
+					boss.assert.AreEqual( resource.type, resourceType );
+				boss.assert.AreEqual( boss, resource.hunter );
 				if ( Resource.IsUnderGround( resourceType ) || node == boss.node )
 				{
 					if ( resourceType == Resource.Type.expose )
@@ -166,7 +166,7 @@ public class Workshop : Building
 
 			Resource.Create().Setup( node, resourceType );
 			done = true;
-			Assert.IsNotNull( node.resource );
+			boss.assert.IsNotNull( node.resource );
 			waitTimer = plantingTime;
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
@@ -216,8 +216,8 @@ public class Workshop : Building
 		{
 			if ( resource )
 			{
-				Assert.AreEqual( resource.type, Resource.Type.pasturingAnimal );
-				Assert.AreEqual( resource.node, boss.node );
+				boss.assert.AreEqual( resource.type, Resource.Type.pasturingAnimal );
+				boss.assert.AreEqual( resource.node, boss.node );
 			}
 			base.Validate();
 		}
@@ -406,7 +406,7 @@ public class Workshop : Building
 
 	void AddInput( Item.Type itemType, int size = 6 )
 	{
-		Assert.IsFalse( commonInputs );
+		assert.IsFalse( commonInputs );
 		Buffer b = new Buffer();
 		b.itemType = itemType;
 		b.size = size;
@@ -415,7 +415,7 @@ public class Workshop : Building
 
 	void AddInputGroup( Item.Type[] itemTypes, int size = 2 )
 	{
-		Assert.AreEqual( buffers.Count, 0 );
+		assert.AreEqual( buffers.Count, 0 );
 		foreach ( var itemType in itemTypes )
 			AddInput( itemType, size );
 		commonInputs = true;
@@ -426,11 +426,11 @@ public class Workshop : Building
 		var m = looks.GetMedia( type );
 		body = (GameObject)GameObject.Instantiate( m.data, transform );
 		height = m.floatData;
-		Assert.IsNotNull( body );
+		assert.IsNotNull( body );
 		if ( type == Type.mill )
 		{
 			millWheel = body.transform.Find( "group1/millWheel" );
-			Assert.IsNotNull( millWheel );
+			assert.IsNotNull( millWheel );
 		}
 		base.Start();
 		string name = type.ToString();
@@ -458,8 +458,8 @@ public class Workshop : Building
 
 	public override Item SendItem( Item.Type itemType, Building destination )
 	{
-		Assert.AreEqual( outputType, itemType );
-		Assert.IsTrue( output > 0 );
+		assert.AreEqual( outputType, itemType );
+		assert.IsTrue( output > 0 );
 		Item item = base.SendItem( itemType, destination );
 		if ( item != null )
 			output--;
@@ -477,18 +477,18 @@ public class Workshop : Building
 			{
 				if ( cancel )
 				{
-					Assert.IsTrue( b.onTheWay > 0 );
+					assert.IsTrue( b.onTheWay > 0 );
 					b.onTheWay--;
 				}
 				else
 				{
-					Assert.IsTrue( b.stored + b.onTheWay < b.size );
+					assert.IsTrue( b.stored + b.onTheWay < b.size );
 					b.onTheWay++;
 				}
 				return;
 			}
 		}
-		Assert.IsTrue( false );
+		assert.IsTrue( false );
 	}
 
 	public override void ItemArrived( Item item )
@@ -500,14 +500,14 @@ public class Workshop : Building
 		{
 			if ( b.itemType == item.type )
 			{
-				Assert.IsTrue( b.onTheWay > 0 );
+				assert.IsTrue( b.onTheWay > 0 );
 				b.onTheWay--;
-				Assert.IsTrue( b.onTheWay + b.stored < b.size );
+				assert.IsTrue( b.onTheWay + b.stored < b.size );
 				b.stored++;
 				return;
 			}
 		}
-		Assert.IsTrue( false );
+		assert.IsTrue( false );
 	}
 
 	new void FixedUpdate()
@@ -657,7 +657,7 @@ public class Workshop : Building
 		if ( count == 0 )
 			return true;
 
-		Assert.IsTrue( buffers.Count > 0 );
+		assert.IsTrue( buffers.Count > 0 );
 
 		int min = int.MaxValue, sum = 0;
 		foreach ( var b in buffers )
@@ -708,8 +708,8 @@ public class Workshop : Building
 	void CollectResource( Resource.Type resourceType, int range )
 	{
 		resourcePlace = Worker.zero;
-		Assert.IsTrue( worker.taskQueue.Count == 0 );
-		Assert.IsTrue( range < Ground.areas.Length );
+		assert.IsTrue( worker.taskQueue.Count == 0 );
+		assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
 		GroundNode target;
@@ -757,8 +757,8 @@ public class Workshop : Building
 		if ( !UseInput() )
 			return;
 
-		Assert.IsTrue( worker.taskQueue.Count == 0 );
-		Assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
+		assert.IsTrue( worker.taskQueue.Count == 0 );
+		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
 			worker.ScheduleWalkToNeighbour( flag.node );
@@ -787,7 +787,7 @@ public class Workshop : Building
 
 	void PlantAt( GroundNode place, Resource.Type resourceType )
 	{
-		Assert.IsTrue( worker.taskQueue.Count == 0 );
+		assert.IsTrue( worker.taskQueue.Count == 0 );
 		worker.ScheduleWalkToNeighbour( flag.node );
 		worker.ScheduleWalkToNode( place, true );
 		var task = ScriptableObject.CreateInstance<Plant>();
@@ -813,6 +813,6 @@ public class Workshop : Building
 	{
 		base.Validate();
 		foreach ( Buffer b in buffers )
-			Assert.IsTrue( b.stored + b.onTheWay <= b.size );
+			assert.IsTrue( b.stored + b.onTheWay <= b.size );
 	}
 }

@@ -5,31 +5,44 @@ using UnityEngine;
 
 public class Assert
 {
-	public static void IsTrue( bool condition, string message = "" )
+	Component boss;
+	public static Assert global = new Assert( null );
+
+	public Assert( Component boss )
+	{
+		this.boss = boss;
+	}
+
+	[Conditional( "DEBUG" )]
+	public void IsTrue( bool condition, string message = "" )
 	{
 		if ( !condition )
 			Failed( message );
 	}
 
-	public static void IsFalse( bool condition, string message = "" )
+	[Conditional( "DEBUG" )]
+	public void IsFalse( bool condition, string message = "" )
 	{
 		if ( condition )
 			Failed( message );
 	}
 
-	public static void IsNull<T>( T reference, string message = "" )
+	[Conditional( "DEBUG" )]
+	public void IsNull<T>( T reference, string message = "" )
 	{
 		if ( reference != null )
 			Failed( message );
 	}
 
-	public static void IsNotNull<T>( T reference, string message = "" )
+	[Conditional( "DEBUG" )]
+	public void IsNotNull<T>( T reference, string message = "" )
 	{
 		if ( reference == null )
 			Failed( message );
 	}
 
-	public static void AreEqual( int a, int b, string message = "" )
+	[Conditional( "DEBUG" )]
+	public void AreEqual( int a, int b, string message = "" )
 	{
 		if ( a == b )
 			return;
@@ -38,7 +51,8 @@ public class Assert
 		Failed( message );
 	}
 
-	public static void AreEqual( float a, float b, string message = "" )
+	[Conditional( "DEBUG" )]
+	public void AreEqual( float a, float b, string message = "" )
 	{
 		if ( a == b )
 			return;
@@ -47,7 +61,8 @@ public class Assert
 		Failed( message );
 	}
 
-	public static void AreEqual<T>( T a, T b, string message = "" )
+	[Conditional( "DEBUG" )]
+	public void AreEqual<T>( T a, T b, string message = "" )
 	{
 		if ( a == null )
 		{
@@ -61,7 +76,8 @@ public class Assert
 		Failed( message );
 	}
 
-	public static void AreNotEqual(int a, int b, string message = "")
+	[Conditional( "DEBUG" )]
+	public void AreNotEqual(int a, int b, string message = "")
 	{
 		if ( a != b )
 			return;
@@ -70,7 +86,8 @@ public class Assert
 		Failed( message );
 	}
 
-	public static void AreNotEqual(float a, float b, string message = "")
+	[Conditional( "DEBUG" )]
+	public void AreNotEqual(float a, float b, string message = "")
 	{
 		if ( a != b )
 			return;
@@ -79,7 +96,8 @@ public class Assert
 		Failed( message );
 	}
 
-	public static void AreNotEqual<T>(T a, T b, string message = "")
+	[Conditional( "DEBUG" )]
+	public void AreNotEqual<T>(T a, T b, string message = "")
 	{
 		if ( b == null && a == null )
 			Failed( message );
@@ -90,7 +108,8 @@ public class Assert
 			Failed( message );
 	}
 
-	public static void AreApproximatelyEqual( float a, float b, string message = "", float tolerance = 0.00001f )
+	[Conditional( "DEBUG" )]
+	public void AreApproximatelyEqual( float a, float b, string message = "", float tolerance = 0.00001f )
 	{
 		if ( Math.Abs( a - b ) < tolerance )
 			return;
@@ -98,13 +117,14 @@ public class Assert
 		Failed( message );
 	}
 
-	public static void IsNotSelected( Component instance )
+	[Conditional( "DEBUG" )]
+	public void IsNotSelected( Component instance )
 	{
 		if ( Selection.Contains( instance.gameObject ) )
 			UnityEngine.Debug.Log( "Code on selected" );
 	}
 
-	static void Failed( string message )
+	void Failed( string message )
 	{
 		var stackTrace = new StackTrace();
 		var stackFrame = stackTrace.GetFrame( 2 );
@@ -113,7 +133,19 @@ public class Assert
 		if ( message != "" )
 			UnityEngine.Debug.LogAssertion( message );
 
+		if ( boss != null )
+			Selection.activeGameObject = boss.gameObject;
+
 		throw new System.Exception( "The condition was false" );
 	}
 
+	public class Base : MonoBehaviour
+	{
+		public Assert assert;
+
+		public Base()
+		{
+			assert = new Assert( this );
+		}
+	}
 }

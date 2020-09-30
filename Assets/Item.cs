@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [SelectionBase]
-public class Item : MonoBehaviour
+public class Item : Assert.Base
 {
 	public Flag flag;
 	public Worker worker;
@@ -14,7 +14,7 @@ public class Item : MonoBehaviour
 	public Building destination;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 
-    public enum Type
+	public enum Type
     {
         log,
         stone,
@@ -52,7 +52,7 @@ public class Item : MonoBehaviour
 		{
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
-			Assert.IsNotNull( sprites[i] );
+			Assert.global.IsNotNull( sprites[i] );
 		}
 	}
 
@@ -137,14 +137,14 @@ public class Item : MonoBehaviour
 	public void ArrivedAt( Flag flag )
 	{
 		if ( destination )
-			Assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
+			assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
 
 		flag.reserved--;
 		worker.reservation = null;
 		worker = null;
 		if ( destination != null && path.IsFinished() )
 		{
-			Assert.AreEqual( destination.flag, flag );
+			assert.AreEqual( destination.flag, flag );
 			Arrived();
 			return;
 		}
@@ -161,7 +161,7 @@ public class Item : MonoBehaviour
 	public void Arrived()
 	{
 		if ( flag != null )
-			Assert.AreEqual( destination.flag, flag );
+			assert.AreEqual( destination.flag, flag );
 		destination.ItemArrived( this );
 		Destroy( gameObject );
 	}
@@ -179,7 +179,7 @@ public class Item : MonoBehaviour
 					return;
 				}
 			}
-			Assert.IsTrue( false );
+			assert.IsTrue( false );
 		}
 		if ( worker )
 		{
@@ -197,17 +197,17 @@ public class Item : MonoBehaviour
 
 	public void Validate()
 	{
-		Assert.IsTrue( flag || worker );
+		assert.IsTrue( flag || worker );
 		if ( flag )
 		{
 			int s = 0;
 			foreach ( var i in flag.items )
 				if ( i == this )
 					s++;
-			Assert.AreEqual( s, 1 );
+			assert.AreEqual( s, 1 );
 		}
 		if ( worker && worker.itemInHands != null )
-			Assert.AreEqual( this, worker.itemInHands );
+			assert.AreEqual( this, worker.itemInHands );
 		if ( path != null )
 			path.Validate();
 	}

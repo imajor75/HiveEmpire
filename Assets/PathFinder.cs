@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 public class PathFinder : ScriptableObject
 {
@@ -37,14 +36,14 @@ public class PathFinder : ScriptableObject
 
     public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false )
     {
-		Assert.AreNotEqual( start, end );
+		Assert.global.AreNotEqual( start, end );
         ready = false;
         target = end;
 		this.ignoreFinalObstacle = ignoreFinalObstacle;
 		if ( mode == PathFinder.Mode.onRoad )
 		{
-			Assert.IsNotNull( start.flag, "Trying to find a road path not starting at a flag" );
-			Assert.IsNotNull( end.flag );
+			Assert.global.IsNotNull( start.flag, "Trying to find a road path not starting at a flag" );
+			Assert.global.IsNotNull( end.flag );
 		}
 		this.mode = mode;
         visited.Clear();
@@ -132,7 +131,7 @@ public class PathFinder : ScriptableObject
 					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.Cost() + road.Jam(), r, road );
 				else
 				{
-					Assert.AreEqual( index, road.nodes.Count - 1 );
+					Assert.global.AreEqual( index, road.nodes.Count - 1 );
 					// TODO Calculate the additional cost better based on traffic jam
 					VisitNode( road.nodes[0], r.costG + road.Cost() + road.Jam(), r, road );
 				}
@@ -175,20 +174,20 @@ public class PathFinder : ScriptableObject
 		{
 			if ( mode == Mode.onRoad )
 			{
-				Assert.IsTrue( path.Count == 0 && roadPath.Count > 0 );
+				Assert.global.IsTrue( path.Count == 0 && roadPath.Count > 0 );
 				Road last = roadPath[roadPath.Count - 1];
-				Assert.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
+				Assert.global.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
 			}
 			else
 			{
-				Assert.IsTrue( path.Count > 0 && roadPath.Count == 0 );
-				Assert.AreEqual( path[path.Count - 1], target );
+				Assert.global.IsTrue( path.Count > 0 && roadPath.Count == 0 );
+				Assert.global.AreEqual( path[path.Count - 1], target );
 			}
 		}
 		else
 		{
-			Assert.AreEqual( path.Count, 0 );
-			Assert.AreEqual( roadPath.Count, 0 );
+			Assert.global.AreEqual( path.Count, 0 );
+			Assert.global.AreEqual( roadPath.Count, 0 );
 		}
 	}
 }
@@ -248,10 +247,10 @@ public class Path : PathFinder
 	public override void Validate()
 	{
 		base.Validate();
-		Assert.IsTrue( progress >= 0 );
+		Assert.global.IsTrue( progress >= 0 );
 		if ( mode == Mode.onRoad )
-			Assert.IsTrue( progress <= roadPath.Count );
+			Assert.global.IsTrue( progress <= roadPath.Count );
 		else
-			Assert.IsTrue( progress <= path.Count );
+			Assert.global.IsTrue( progress <= path.Count );
 	}
 }

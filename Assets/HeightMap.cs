@@ -137,7 +137,7 @@ public class HeightMap : ScriptableObject
 			average += data[x + s, y];
 			count++;
 		}
-		Assert.IsTrue( count == 3 || count == 4 );
+		Assert.global.IsTrue( count == 3 || count == 4 );
 		average /= count;
 		Randomize( ref average, m );
 		data[x, y] = average;

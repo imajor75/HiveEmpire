@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -22,7 +23,7 @@ public class World : ScriptableObject
 
 	World()
 	{
-		Assert.IsNull( instance );
+		Assert.global.IsNull( instance );
 		instance = this;
 	}
 
@@ -56,7 +57,7 @@ public class World : ScriptableObject
 		{
 			var serializer = new Serializer( reader );
 			World world = serializer.Deserialize<World>( reader );
-			Assert.AreEqual( world, this );
+			Assert.global.AreEqual( world, this );
 		}
 
 		ground.FinishLayout();
@@ -121,11 +122,6 @@ public class World : ScriptableObject
 			Destroy( o );
 		}
 		Interface.instance.Clear();
-	}
-
-	void LateUpdate()
-	{
-		Validate();
 	}
 
 	public static Transform FindChildRecursive( Transform parent, string substring )
