@@ -140,6 +140,8 @@ public class Flag : Assert.Base
         assert.AreEqual( this, node.flag );
         for ( int i = 0; i < 6; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
+		assert.IsTrue( FreeSpace() >= 0 );
+		assert.IsTrue( reserved >= 0 );
 		foreach ( var i in items )
 		{
 			if ( i )
@@ -149,7 +151,7 @@ public class Flag : Assert.Base
 			}
 		}
 		for ( int j = 0; j < 6; j++ )
-			if ( roadsStartingHere[j] )
+			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node )
 				roadsStartingHere[j].Validate();
 		if ( user )
 		{
@@ -158,6 +160,8 @@ public class Flag : Assert.Base
 			assert.IsTrue( user.atRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}
+		assert.IsNotSelected( this );
+		node.ground.reservedCount += reserved;
 	}
 }
  

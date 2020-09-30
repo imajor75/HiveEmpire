@@ -1,4 +1,5 @@
 ﻿using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -139,8 +140,10 @@ public class Item : Assert.Base
 		if ( destination )
 			assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
 
-		flag.reserved--;
+		assert.IsNotNull( worker.reservation );
+		assert.IsTrue( flag.reserved > 0 );
 		worker.reservation = null;
+		flag.reserved--;
 		worker = null;
 		if ( destination != null && path.IsFinished() )
 		{
@@ -150,7 +153,7 @@ public class Item : Assert.Base
 		}
 
 		if ( destination == null )
-			CancelTrip();
+			CancelTrip();	
 
 		if ( flag.StoreItem( this ) )
 			UpdateLook();

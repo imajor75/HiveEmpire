@@ -607,44 +607,37 @@ public class Workshop : Building
 			}
 			case Type.hunter:
 			{
-				if ( worker.IsIdleInBuilding() )
-					CollectResource( Resource.Type.pasturingAnimal, hunterRange );
+				CollectResource( Resource.Type.pasturingAnimal, hunterRange );
 				break;
 			}
 			case Type.goldmine:
 			{
-				if ( worker.IsIdleInBuilding() )
-					CollectResource( Resource.Type.gold, goldMineRange );
+				CollectResource( Resource.Type.gold, goldMineRange );
 				break;
 			}
 			case Type.ironmine:
 			{
-				if ( worker.IsIdleInBuilding() )
-					CollectResource( Resource.Type.iron, ironMineRange );
+				CollectResource( Resource.Type.iron, ironMineRange );
 				break;
 			}
 			case Type.coalmine:
 			{
-				if ( worker.IsIdleInBuilding() )
-					CollectResource( Resource.Type.coal, coalMineRange );
+				CollectResource( Resource.Type.coal, coalMineRange );
 				break;
 			}
 			case Type.saltmine:
 			{
-				if ( worker.IsIdleInBuilding() )
-					CollectResource( Resource.Type.salt, saltMineRange );
+				CollectResource( Resource.Type.salt, saltMineRange );
 				break;
 			}
 			case Type.stonemine:
 			{
-				if ( worker.IsIdleInBuilding() )
-					CollectResource( Resource.Type.stone, stoneMineRange );
+				CollectResource( Resource.Type.stone, stoneMineRange );
 				break;
 			}
 			case Type.geologist:
 			{
-				if ( worker.IsIdleInBuilding() )
-					CollectResource( Resource.Type.expose, geologistRange );
+				CollectResource( Resource.Type.expose, geologistRange );
 				break;
 			}
 		}
@@ -707,6 +700,11 @@ public class Workshop : Building
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
+		if ( !worker.IsIdleInBuilding() )
+			return;
+		if ( outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
+			return;
+
 		resourcePlace = Worker.zero;
 		assert.IsTrue( worker.taskQueue.Count == 0 );
 		assert.IsTrue( range < Ground.areas.Length );
@@ -757,6 +755,11 @@ public class Workshop : Building
 		if ( !UseInput() )
 			return;
 
+		if ( outputType != Item.Type.unknown )
+		{
+			flag.reserved++;
+			worker.reservation = flag;
+		}
 		assert.IsTrue( worker.taskQueue.Count == 0 );
 		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )

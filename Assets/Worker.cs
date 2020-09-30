@@ -907,8 +907,11 @@ public class Worker : Assert.Base
 		return node == building.node && walkTo == zero && taskQueue.Count == 0;
 	}
 
+	int lastValidationID = -1;
 	public void Validate()
 	{
+		if ( lastValidationID == node.ground.validationID )
+			return;
 		if ( type == Type.wildAnimal )
 		{
 			assert.IsNotNull( origin );
@@ -944,5 +947,13 @@ public class Worker : Assert.Base
 			assert.IsNotNull( road );
 			assert.AreEqual( exclusiveFlag.user, this );
 		}
+		if ( reservation != null )
+		{
+			assert.IsTrue( reservation.reserved > 0 );
+			if ( road != null )
+				assert.IsTrue( road.GetEnd( 0 ) == reservation || road.GetEnd( 1 ) == reservation );
+			ground.reservationCount++;
+		}
+		lastValidationID = node.ground.validationID;
 	}
-}
+}	

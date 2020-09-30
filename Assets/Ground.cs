@@ -25,7 +25,6 @@ public class Ground : Assert.Base
 	public static float mountainLevel = 0.6f;
 	[JsonIgnore]
 	public GameObject water;
-	int reservedCount, reservationCount;
 	public GameObject resources;
 	public GameObject buoys;
 
@@ -445,6 +444,8 @@ public class Ground : Assert.Base
 			GUI.DrawTexture( new Rect( 0, 0, 512, 512 ), heightMap.mapTexture );
 	}
 
+	[JsonIgnore]
+	public int reservedCount, reservationCount, validationID = 0;
 	public void Validate()
  	{
 		reservationCount = reservedCount = 0;
@@ -453,5 +454,6 @@ public class Ground : Assert.Base
         foreach ( var node in nodes )
             node.Validate();
 		assert.AreEqual( reservedCount, reservationCount, "Reservation numbers are wrong" );
+		validationID++;
     }
 }
