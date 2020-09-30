@@ -113,6 +113,11 @@ public class Interface : MonoBehaviour, IPointerClickHandler
 			world.NewGame( new System.Random().Next() );
 			Debug.Log( "New game created" );
 		}
+		if ( Input.GetKeyDown( KeyCode.Escape ) )
+		{
+			foreach ( var panel in panels )
+				panel.Close();
+		}
 	}
 
 	public void OnPointerClick( PointerEventData eventData )
