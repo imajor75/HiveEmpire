@@ -151,6 +151,13 @@ public class Flag : MonoBehaviour
 		for ( int j = 0; j < 6; j++ )
 			if ( roadsStartingHere[j] )
 				roadsStartingHere[j].Validate();
+		if ( user )
+		{
+			Assert.AreEqual( user.type, Worker.Type.haluer );
+			Assert.IsNotNull( user.road );
+			Assert.IsTrue( user.atRoad );
+			Assert.AreEqual( user.exclusiveFlag, this );
+		}
 	}
 }
  

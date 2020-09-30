@@ -21,6 +21,7 @@ public class Worker : MonoBehaviour
 	public int look;
 	public Resource origin;
 	public float currentSpeed;
+	public Flag exclusiveFlag;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
 	[JsonIgnore]
 	public AudioSource soundSource;
@@ -197,11 +198,16 @@ public class Worker : MonoBehaviour
 				Flag flag = road.nodes[nextPoint].flag;
 				if ( flag )
 				{
-					if ( flag.user && flag.user.taskQueue.Count > 0 )
+					if ( flag.user )
 					{
-						var otherTask = flag.user.taskQueue[0] as WalkToRoadPoint;
-						if ( otherTask != null && otherTask.wishedPoint != currentPoint )
+						if ( flag.user.road != road )
 							return false;
+						if ( flag.user.taskQueue.Count > 0 )
+						{
+							var otherTask = flag.user.taskQueue[0] as WalkToRoadPoint;
+							if ( otherTask != null && otherTask.wishedPoint != currentPoint )
+								return false;
+						}
 					}
 				}
 				road.workerAtNodes[currentPoint] = null;
@@ -247,7 +253,15 @@ public class Worker : MonoBehaviour
 			{
 				road.workerAtNodes[currentPoint] = boss;
 				if ( boss.walkTo.flag )
+				{
 					boss.walkTo.flag.user = boss;
+					boss.exclusiveFlag = boss.walkTo.flag;
+				}
+				if ( boss.walkFrom.flag )
+				{
+					Assert.AreEqual( boss.walkFrom.flag.user, boss );
+					boss.walkFrom.flag.user = null;
+				}
 			}
 			return true;
 		}
@@ -272,7 +286,6 @@ public class Worker : MonoBehaviour
 				}
 				Assert.AreEqual( t, 1 );
 			}
-
 
 			Assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
 			if ( wishedPoint >= 0 )
@@ -547,9 +560,6 @@ public class Worker : MonoBehaviour
 		currentSpeed = SpeedBetween( target, node );
 		walkFrom = node;
 		node = walkTo = target;
-
-		if ( walkFrom.flag && walkFrom.flag.user == this )
-			walkFrom.flag.user = null;
 	}
 
 	// Update is called once per frame
@@ -589,11 +599,10 @@ public class Worker : MonoBehaviour
 			int currentPoint = road.NodeIndex( node );
 			Assert.AreEqual( road.workerAtNodes[currentPoint], this );
 			road.workerAtNodes[currentPoint] = null;
-			Flag flag = node.flag;
-			if ( flag )
+			if ( exclusiveFlag )
 			{
-				Assert.AreEqual( flag.user, this );
-				flag.user = null;
+				Assert.AreEqual( exclusiveFlag.user, this );
+				exclusiveFlag.user = null;
 			}
 			road.workers.Remove( this );
 			// TODO Pick the closer end
@@ -921,5 +930,12 @@ public class Worker : MonoBehaviour
 		}
 		foreach ( Task task in taskQueue )
 			task.Validate();
+		if ( exclusiveFlag )
+		{
+			Assert.AreEqual( type, Type.haluer );
+			Assert.IsTrue( atRoad );
+			Assert.IsNotNull( road );
+			Assert.AreEqual( exclusiveFlag.user, this );
+		}
 	}
 }
