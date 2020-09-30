@@ -5,6 +5,7 @@ using UnityEngine;
 public class Eye : MonoBehaviour
 {
 	public float altitude = 4.0f;
+	public float targetAltitude = 4.0f;
 	static public float minAltitude = 2.0f;
 	static public float maxAltitude = 15.0f;
 	static public float viewDistance = 5.0f;
@@ -80,15 +81,26 @@ public class Eye : MonoBehaviour
 			direction += 0.03f;
 		if ( Input.GetKey( KeyCode.E ) )
 			direction -= 0.03f;
-		if ( Input.GetKey( KeyCode.Z ) && altitude < maxAltitude )
-			altitude *= 1.01f;
-		if ( Input.GetKey( KeyCode.X ) && altitude > minAltitude )
-			altitude *= 0.99f;
-
 		if ( direction >= Math.PI * 2 )
 			direction -= (float)Math.PI * 2;
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
+
+		if ( Input.GetKey( KeyCode.Z ) )
+			targetAltitude *= 1.01f;
+		if ( Input.GetKey( KeyCode.X ) )
+			targetAltitude *= 0.99f;
+		if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )		// TODO Use something else instead of strings here
+			targetAltitude += 1;	
+		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )		
+			targetAltitude -= 1;
+		if ( targetAltitude < minAltitude )
+			targetAltitude = minAltitude;
+		if ( targetAltitude > maxAltitude )
+			targetAltitude = maxAltitude;
+
+
+		altitude += ( targetAltitude - altitude ) * 0.1f;
 	}
 
 	public GroundNode FindNodeAt( Vector3 screenPosition )
