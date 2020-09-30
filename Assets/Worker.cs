@@ -257,11 +257,8 @@ public class Worker : MonoBehaviour
 					boss.walkTo.flag.user = boss;
 					boss.exclusiveFlag = boss.walkTo.flag;
 				}
-				if ( boss.walkFrom.flag )
-				{
-					Assert.AreEqual( boss.walkFrom.flag.user, boss );
+				if ( boss.walkFrom.flag && boss.walkFrom.flag.user == boss )
 					boss.walkFrom.flag.user = null;
-				}
 			}
 			return true;
 		}

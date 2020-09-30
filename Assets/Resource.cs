@@ -17,7 +17,6 @@ public class Resource : MonoBehaviour
 	public int spawnTimer = 0;
 	public Worker hunter;
 	public List<Worker> animals = new List<Worker>();
-	static Material cornfieldMaterial;
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 6000;
 	public static int exposeMax = 39000;
@@ -65,10 +64,9 @@ public class Resource : MonoBehaviour
 		"Ores/irontable_final" , Type.iron,
 		"Ores/salttable_final" , Type.salt,
 		"Ores/stonetable_final" , Type.stone,
-		"AnimalCave/animRock(Clone)", Type.animalSpawner };
+		"AnimalCave/animRock(Clone)", Type.animalSpawner,
+		"grainfield_final", Type.cornfield };
 		Resource.meshes.Fill( meshes );
-
-		cornfieldMaterial = Resources.Load<Material>( "cornfield" );
 
 		object[] sounds = {
 			"bird1", 1000, Type.tree,
@@ -139,13 +137,6 @@ public class Resource : MonoBehaviour
 		GameObject prefab = meshes.GetMediaData( type );
 		if ( prefab )
 			body = GameObject.Instantiate( prefab );
-		if ( type == Type.cornfield )
-		{
-			name = "Cornfield";
-			body = GameObject.CreatePrimitive( PrimitiveType.Capsule );
-			body.transform.localScale = new Vector3( 0.5f, 0, 0.5f );
-			body.GetComponent<MeshRenderer>().material = cornfieldMaterial;
-		}
 		if ( type == Type.pasturingAnimal )
 			name = "Pasturing Animal Resource";
 		if ( body != null )
@@ -164,7 +155,7 @@ public class Resource : MonoBehaviour
 		if ( type == Type.cornfield )
 		{
 			float growth = (float)this.growth / cornfieldGrowthMax;
-			transform.localScale = new Vector3( 0.5f, growth / 2, 0.5f );
+			transform.localScale = new Vector3( 1, growth, 1 );
 		}
 		if ( type == Type.tree )
 		{
