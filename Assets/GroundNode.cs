@@ -44,6 +44,7 @@ public class GroundNode
 			gizmo.transform.SetParent( Interface.instance.debug.transform );
 			gizmo.name = "NodeGizmo";
 			node.gizmo = gizmo;
+			gizmo.transform.position = node.Position();
 		}
 
 		private void Start()
@@ -235,7 +236,7 @@ public class GroundNode
 			o++;
 		if ( building )
 			o++;
-		if ( resource && !resource.underGround )
+		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal )
 			o++;
 		gizmo.assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 		if ( building )

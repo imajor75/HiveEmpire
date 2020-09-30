@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -99,19 +100,19 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 			string fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
 			world.Save( fileName );
-			Debug.Log( fileName + " is saved" );
+			print( fileName + " is saved" );
 		}
 		if ( Input.GetKeyDown( KeyCode.L ) )
 		{
 			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
 			world.Load( myFile.FullName );
-			Debug.Log( myFile.FullName + " is loaded" );
+			print( myFile.FullName + " is loaded" );
 		}
 		if ( Input.GetKeyDown( KeyCode.N ) )
 		{
 			world.NewGame( new System.Random().Next() );
-			Debug.Log( "New game created" );
+			print( "New game created" );
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )
 		{
@@ -130,6 +131,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		throw new System.NotImplementedException();
 	}
 
+	[Conditional( "DEBUG" )]
 	void Validate()
 	{
 		world.Validate();

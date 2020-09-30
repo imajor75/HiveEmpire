@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using UnityEditor;
 using UnityEngine;
@@ -8,7 +9,9 @@ public class Assert
 	Component boss;
 	public static Assert global = new Assert( null );
 
-	public Assert( Component boss )
+	public Assert() { }
+
+	public Assert( Component boss = null )
 	{
 		this.boss = boss;
 	}
@@ -141,6 +144,7 @@ public class Assert
 
 	public class Base : MonoBehaviour
 	{
+		[JsonIgnore]
 		public Assert assert;
 
 		public Base()
