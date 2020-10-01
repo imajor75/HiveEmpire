@@ -576,6 +576,7 @@ public class Worker : Assert.Base
 
 	public bool Remove( bool returnToMainBuilding = true )
 	{
+		assert.IsNotSelected();
 		Reset();
 		if ( road != null && atRoad )
 		{
@@ -588,17 +589,22 @@ public class Worker : Assert.Base
 				exclusiveFlag.user = null;
 			}
 			road.workers.Remove( this );
+			atRoad = false;
+			road = null;
 		}
 		if ( !returnToMainBuilding )
 		{
 			Destroy( gameObject );
 			return true;
 		}
-		if ( road != null && atRoad )
-		{
-			// TODO Pick the closer end
-			ScheduleWalkToRoadPoint( road, 0 );
-		}
+
+		// Try to get to a flag, so that we could walk on the road network to the main building
+		// In case of haulers, node.road should be nonzero, except for the ends, but those already 
+		// has a flag
+		// TODO Pick the closer end
+		if ( node.road != null )
+			ScheduleWalkToRoadPoint( node.road, 0, false );
+
 		road = null;
 		building = null;
 		type = Type.unemployed;
