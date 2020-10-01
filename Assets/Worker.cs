@@ -322,6 +322,7 @@ public class Worker : Assert.Base
 		{
 			if ( pickupTimer == pickupTimeStart )
 			{
+				boss.animator.ResetTrigger( putdownID );
 				boss.animator.SetTrigger( pickupID );
 				boss.box?.SetActive( true );
 			}
@@ -353,7 +354,10 @@ public class Worker : Assert.Base
 		public override bool ExecuteFrame()
 		{
 			if ( putdownTimer == putdownTimeStart )
+			{
+				boss.animator.ResetTrigger( pickupID );
 				boss.animator.SetTrigger( putdownID );
+			}
 			if ( ( putdownTimer -= (int)World.instance.speedModifier ) > 0 )
 				return false;
 
