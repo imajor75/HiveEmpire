@@ -571,11 +571,6 @@ public class Worker : Assert.Base
 	public bool Remove( bool returnToMainBuilding = true )
 	{
 		Reset();
-		if ( !returnToMainBuilding )
-		{
-			Destroy( gameObject );
-			return true;
-		}
 		if ( road != null && atRoad )
 		{
 			int currentPoint = road.NodeIndex( node );
@@ -587,6 +582,14 @@ public class Worker : Assert.Base
 				exclusiveFlag.user = null;
 			}
 			road.workers.Remove( this );
+		}
+		if ( !returnToMainBuilding )
+		{
+			Destroy( gameObject );
+			return true;
+		}
+		if ( road != null && atRoad )
+		{
 			// TODO Pick the closer end
 			ScheduleWalkToRoadPoint( road, 0 );
 		}
