@@ -205,7 +205,13 @@ public class Worker : Assert.Base
 					other = flag.user;
 				}
 				if ( other && !other.Call( road, currentPoint ) )
-					return false;
+				{
+					// As a last resort to make space is to simply remove the other hauler
+					if ( other.atRoad && other.road != road && other.road.workers.Count > 1 && other.IsIdle() )
+						other.Remove();
+					else
+						return false;
+				}
 			}
 
 			wishedPoint = -1;
@@ -563,7 +569,7 @@ public class Worker : Assert.Base
 			if ( taskQueue.Count > 0 && taskQueue[0].ExecuteFrame() )
 				taskQueue.RemoveAt( 0 );
 		}
-		if ( walkTo == zero && taskQueue.Count == 0 )
+		if ( IsIdle() )
 			FindTask();
 		UpdateBody();
 	}
@@ -601,7 +607,7 @@ public class Worker : Assert.Base
 
 	public void FindTask()
 	{
-		assert.AreEqual( taskQueue.Count, 0 );
+		assert.IsTrue( IsIdle() );
 		if ( road != null )
 		{
 			if ( !atRoad )
@@ -884,17 +890,19 @@ public class Worker : Assert.Base
 		}
 	}
 
-	public bool IsIdleInBuilding()
+	public bool IsIdle( bool inBuilding = false )
 	{
+		if ( taskQueue.Count != 0 || walkTo != null )
+			return false;
 		assert.IsNotNull( building );
-		return node == building.node && walkTo == zero && taskQueue.Count == 0;
+		return node == building.node;
 	}
 
 	public bool Call( Road road, int point )
 	{
 		if ( this.road != road || !atRoad )
 			return false;
-		if ( taskQueue.Count == 0 )
+		if ( IsIdle() )
 		{
 			// Give an order to the worker to change position with us. This
 			// will not immediately move him away, but during the next calls the
@@ -902,6 +910,8 @@ public class Worker : Assert.Base
 			ScheduleWalkToRoadPoint( road, point );
 			return false;
 		}
+		if ( walkTo != null )
+			return false;
 		var currentTask = taskQueue[0] as WalkToRoadPoint;
 		if ( currentTask == null )
 			return false;
