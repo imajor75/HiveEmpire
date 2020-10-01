@@ -35,7 +35,7 @@ public class Worker : Assert.Base
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
 	static public int walkingID, pickupID, putdownID;
-	public static GroundNode zero = new GroundNode();	// HACK This is a big fat hack, to stop Unity editor from crashing
+	public static GroundNode zero = new GroundNode();   // HACK This is a big fat hack, to stop Unity editor from crashing
 
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
@@ -128,7 +128,7 @@ public class Worker : Assert.Base
 		{
 			if ( boss.node == target )
 				return true;
-	
+
 			if ( path == null )
 			{
 				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, ignoreFinalObstacle );
@@ -178,8 +178,9 @@ public class Worker : Assert.Base
 			return false;
 		}
 
-		public bool NextStep()
+		public bool NextStep( bool ignoreOtherWorkers = false )
 		{
+			boss.assert.IsNotSelected();
 			if ( exclusive )
 				boss.assert.AreEqual( road.workerAtNodes[currentPoint], boss );
 			boss.assert.AreEqual( boss.walkTo, zero );
@@ -192,48 +193,24 @@ public class Worker : Assert.Base
 				nextPoint = currentPoint + 1;
 			else
 				nextPoint = currentPoint - 1;
+			wishedPoint = nextPoint;
 
-			if ( exclusive )
+			if ( exclusive && !ignoreOtherWorkers )
 			{
+				Worker other = road.workerAtNodes[nextPoint];
 				Flag flag = road.nodes[nextPoint].flag;
 				if ( flag )
 				{
-					if ( flag.user )
-					{
-						if ( flag.user.road != road )
-							return false;
-						if ( flag.user.taskQueue.Count > 0 )
-						{
-							var otherTask = flag.user.taskQueue[0] as WalkToRoadPoint;
-							if ( otherTask != null && otherTask.wishedPoint != currentPoint )
-								return false;
-						}
-					}
+					boss.assert.IsTrue( other == null || other == flag.user );
+					other = flag.user;
 				}
-				road.workerAtNodes[currentPoint] = null;
-				if ( road.workerAtNodes[nextPoint] != null )
-				{
-					bool coming = false;
-					var otherWorker = road.workerAtNodes[nextPoint];
-					if ( otherWorker.taskQueue.Count > 0 )
-					{
-						var otherTask = otherWorker.taskQueue[0] as WalkToRoadPoint;
-						if ( otherTask && otherTask.wishedPoint == currentPoint )
-						{
-							// TODO Workers should avoid each other
-							coming = otherTask.NextStep();
-						}
-					}
-					if ( !coming )
-					{
-						road.workerAtNodes[currentPoint] = boss;
-						wishedPoint = nextPoint;
-						return false;
-					}
-				}
+				if ( other && !other.Call( road, currentPoint ) )
+					return false;
 			}
 
 			wishedPoint = -1;
+			if ( road.workerAtNodes[currentPoint] == boss ) // it is possible that the other worker already took the place, so it must be checked
+				road.workerAtNodes[currentPoint] = null;
 
 			boss.assert.AreEqual( boss.node, road.nodes[currentPoint] );
 			boss.Walk( road.nodes[nextPoint] );
@@ -254,13 +231,16 @@ public class Worker : Assert.Base
 				road.workerAtNodes[currentPoint] = boss;
 				if ( boss.walkTo.flag )
 				{
+					if ( !ignoreOtherWorkers )
+						boss.assert.IsNull( boss.walkTo.flag.user, "Worker still in way at flag." );
 					boss.walkTo.flag.user = boss;
 					boss.exclusiveFlag = boss.walkTo.flag;
 				}
-				if ( boss.walkFrom.flag && boss.walkFrom.flag.user == boss )
+				if ( boss.walkFrom.flag )
 				{
+					if ( boss.walkFrom.flag.user == boss )
+						boss.walkFrom.flag.user = null;
 					boss.assert.AreEqual( boss.walkFrom.flag, boss.exclusiveFlag );
-					boss.walkFrom.flag.user = null;
 					boss.exclusiveFlag = null;
 				}
 			}
@@ -272,7 +252,7 @@ public class Worker : Assert.Base
 			base.Validate();
 			if ( this != boss.taskQueue[0] )
 				return;
-				
+
 			boss.assert.IsTrue( currentPoint >= -1 && currentPoint < road.nodes.Count );
 			int cp = road.NodeIndex( boss.node );
 			if ( exclusive )
@@ -318,7 +298,7 @@ public class Worker : Assert.Base
 	{
 		static public int pickupTimeStart = 100;
 		public Item item;
-		public int pickupTimer = pickupTimeStart; 
+		public int pickupTimer = pickupTimeStart;
 
 		public void Setup( Worker boss, Item item )
 		{
@@ -339,7 +319,7 @@ public class Worker : Assert.Base
 				boss.animator.SetTrigger( pickupID );
 				boss.box?.SetActive( true );
 			}
-			if ( (pickupTimer -= (int)World.instance.speedModifier) > 0 )
+			if ( ( pickupTimer -= (int)World.instance.speedModifier ) > 0 )
 				return false;
 
 			if ( item.flag != null )
@@ -353,7 +333,7 @@ public class Worker : Assert.Base
 		}
 	}
 
-	public class DeliverItem : Task 
+	public class DeliverItem : Task
 	{
 		static public int putdownTimeStart = 100;
 		public Item item;
@@ -368,11 +348,11 @@ public class Worker : Assert.Base
 		{
 			if ( putdownTimer == putdownTimeStart )
 				boss.animator.SetTrigger( putdownID );
-			if ( ( putdownTimer -= ( int )World.instance.speedModifier) > 0 )
+			if ( ( putdownTimer -= (int)World.instance.speedModifier ) > 0 )
 				return false;
 
 			boss.box?.SetActive( false );
-    		boss.assert.AreEqual( item, boss.itemInHands );
+			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 				item.Arrived();
 			else
@@ -570,7 +550,7 @@ public class Worker : Assert.Base
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != zero )
 		{
-			walkProgress += currentSpeed*ground.world.speedModifier; // TODO Speed should depend on the steepness of the road
+			walkProgress += currentSpeed * ground.world.speedModifier; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = zero;
@@ -646,12 +626,12 @@ public class Worker : Assert.Base
 				CarryItem( bestItem );
 				return;
 			}
-		}
 
-		if ( road != null && node != road.CenterNode() && road.workers.Count == 1 )
-		{
-			ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
-			return;
+			if ( node != road.CenterNode() && road.workers.Count == 1 )
+			{
+				ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
+				return;
+			}
 		}
 
 		if ( type == Type.wildAnimal )
@@ -907,6 +887,28 @@ public class Worker : Assert.Base
 		return node == building.node && walkTo == zero && taskQueue.Count == 0;
 	}
 
+	public bool Call( Road road, int point )
+	{
+		if ( this.road != road || !atRoad )
+			return false;
+		if ( taskQueue.Count == 0 )
+		{
+			// Give an order to the worker to change position with us. This
+			// will not immediately move him away, but during the next calls the
+			// worker will eventually come.
+			ScheduleWalkToRoadPoint( road, point );
+			return false;
+		}
+		var currentTask = taskQueue[0] as WalkToRoadPoint;
+		if ( currentTask == null )
+			return false;
+		if ( currentTask.wishedPoint != point )
+			return false;
+
+		currentTask.NextStep( true );
+		return true;			
+	}
+
 	int lastValidationID = -1;
 	public void Validate()
 	{
@@ -945,7 +947,7 @@ public class Worker : Assert.Base
 			assert.AreEqual( type, Type.haluer );
 			assert.IsTrue( atRoad );
 			assert.IsNotNull( road );
-			assert.AreEqual( exclusiveFlag.user, this );
+			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
 		}
 		if ( reservation != null )
 		{

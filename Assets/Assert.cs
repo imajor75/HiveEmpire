@@ -8,6 +8,7 @@ public class Assert
 {
 	Component boss;
 	public static Assert global = new Assert( null );
+	static bool problemSelected = false;
 
 	public Assert() { }
 
@@ -121,9 +122,9 @@ public class Assert
 	}
 
 	[Conditional( "DEBUG" )]
-	public void IsNotSelected( Component instance )
+	public void IsNotSelected()
 	{
-		if ( Selection.Contains( instance.gameObject ) )
+		if ( Selection.Contains( boss.gameObject ) )
 			UnityEngine.Debug.Log( "Code on selected" );
 	}
 
@@ -136,10 +137,13 @@ public class Assert
 		if ( message != "" )
 			UnityEngine.Debug.LogAssertion( message );
 
-		if ( boss != null )
+		if ( boss != null && !problemSelected )
+		{
 			Selection.activeGameObject = boss.gameObject;
+			problemSelected = true;
+		}
 
-		throw new System.Exception( "The condition was false" );
+		Application.Quit();
 	}
 
 	public class Base : MonoBehaviour

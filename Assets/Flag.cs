@@ -160,7 +160,6 @@ public class Flag : Assert.Base
 			assert.IsTrue( user.atRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}
-		assert.IsNotSelected( this );
 		node.ground.reservedCount += reserved;
 	}
 }
