@@ -46,7 +46,7 @@ public class GuardHouse : Building
 
 			soldiers.Add( soldier );
 		}
-		if ( !ready && soldiers.Count > 0 && soldiers[0].IsIdleInBuilding() )
+		if ( !ready && soldiers.Count > 0 && soldiers[0].IsIdle( true ) )
 		{
 			ready = true;
 			ground.RegisterInfluence( this );

@@ -528,13 +528,13 @@ public class Workshop : Building
 		{
 			case Type.woodcutter:
 			{
-				if ( worker.IsIdleInBuilding() )
+				if ( worker.IsIdle( true ) )
 					CollectResource( Resource.Type.tree, woodcutterRange );
 				break;
 			}
 			case Type.stonemason:
 			{
-				if ( worker.IsIdleInBuilding() )
+				if ( worker.IsIdle( true ) )
 					CollectResource( Resource.Type.rock, stonemasonRange );
 				break;
 			}
@@ -545,13 +545,13 @@ public class Workshop : Building
 			}
 			case Type.fishingHut:
 			{
-				if ( worker.IsIdleInBuilding() )
+				if ( worker.IsIdle( true ) )
 					CollectResource( Resource.Type.fish, fisherRange );
 				break;
 			}
 			case Type.farm:
 			{
-				if ( worker.IsIdleInBuilding() )
+				if ( worker.IsIdle( true ) )
 				{
 					foreach ( var o in Ground.areas[3] )
 					{
@@ -577,7 +577,7 @@ public class Workshop : Building
 			}
 			case Type.forester:
 			{
-				if ( worker.IsIdleInBuilding() )
+				if ( worker.IsIdle( true ) )
 				{
 					var o = Ground.areas[foresterRange];
 					for ( int i = 0; i < o.Count; i++ )
@@ -686,7 +686,7 @@ public class Workshop : Building
 			working = true;
 			progress = 0;
 		}
-		if ( working && worker && worker.IsIdleInBuilding() )
+		if ( working && worker && worker.IsIdle( true ) )
 		{
 			progress += processSpeed * ground.world.speedModifier;
 			if ( progress > 1 )
@@ -700,13 +700,13 @@ public class Workshop : Building
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
-		if ( !worker.IsIdleInBuilding() )
+		if ( !worker.IsIdle( true ) )
 			return;
 		if ( outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;
 
 		resourcePlace = Worker.zero;
-		assert.IsTrue( worker.taskQueue.Count == 0 );
+		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
@@ -760,7 +760,7 @@ public class Workshop : Building
 			flag.reserved++;
 			worker.reservation = flag;
 		}
-		assert.IsTrue( worker.taskQueue.Count == 0 );
+		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
@@ -790,7 +790,7 @@ public class Workshop : Building
 
 	void PlantAt( GroundNode place, Resource.Type resourceType )
 	{
-		assert.IsTrue( worker.taskQueue.Count == 0 );
+		assert.IsTrue( worker.IsIdle() );
 		worker.ScheduleWalkToNeighbour( flag.node );
 		worker.ScheduleWalkToNode( place, true );
 		var task = ScriptableObject.CreateInstance<Plant>();

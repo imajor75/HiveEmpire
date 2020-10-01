@@ -85,7 +85,7 @@ abstract public class Building : Assert.Base
 				else
 					timeSinceCreated++;
 			}
-			if ( worker == null || !worker.IsIdleInBuilding() )
+			if ( worker == null || !worker.IsIdle( true ) )
 				return;
 			if ( flatteningNeeded )
 			{
@@ -276,7 +276,7 @@ abstract public class Building : Assert.Base
 
 	public virtual Item SendItem( Item.Type itemType, Building destination )
 	{
-		if ( worker == null || !worker.IsIdleInBuilding() || flag.FreeSpace() == 0 )
+		if ( worker == null || !worker.IsIdle( true ) || flag.FreeSpace() == 0 )
 			return null;
 
 		// TODO Don't create the item, if there is no path between this and destination
