@@ -549,5 +549,9 @@ public class Road : Assert.Base
 			assert.AreEqual( i, 1 );
 			worker.Validate();
 		}
+		if ( workerAtNodes[0] != null )
+			assert.AreEqual( GetEnd( 0 ).user, workerAtNodes[0] );
+		if ( workerAtNodes[nodes.Count - 1] != null )
+			assert.AreEqual( GetEnd( 1 ).user, workerAtNodes[nodes.Count - 1] );
 	}
 }

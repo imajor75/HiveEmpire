@@ -143,7 +143,7 @@ public class Assert
 			problemSelected = true;
 		}
 
-		Application.Quit();
+		EditorApplication.isPaused = true;
 	}
 
 	public class Base : MonoBehaviour

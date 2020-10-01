@@ -385,6 +385,12 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
+			boss.assert.IsNull( boss.node.flag );
+			if ( road == null || boss.node.flag != null )
+			{
+				boss.Remove();
+				return true;
+			};
 			int i = road.NodeIndex( boss.node );
 			boss.assert.IsTrue( i >= 0 );
 			boss.assert.IsFalse( boss.atRoad );
@@ -450,6 +456,7 @@ public class Worker : Assert.Base
 		atRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
+		ScheduleWalkToRoadNode( road, road.CenterNode() );
 		ScheduleStartWorkingOnRoad( road );
 		return this;
 	}
@@ -566,8 +573,13 @@ public class Worker : Assert.Base
 		}
 		if ( walkTo == zero )
 		{
-			if ( taskQueue.Count > 0 && taskQueue[0].ExecuteFrame() )
-				taskQueue.RemoveAt( 0 );
+			if ( taskQueue.Count > 0 )
+			{
+				// We need to remember the task, because during the call to ExecuteFrame the task might be removed from the queue
+				Task task = taskQueue[0];
+				if ( task.ExecuteFrame() )
+					taskQueue.Remove( task );
+			}
 		}
 		if ( IsIdle() )
 			FindTask();
@@ -618,7 +630,7 @@ public class Worker : Assert.Base
 		{
 			if ( !atRoad )
 			{
-				ScheduleWalkToNode( road.nodes[0] );
+				ScheduleWalkToNode( road.CenterNode() );
 				ScheduleStartWorkingOnRoad( road );
 				return;
 			}
