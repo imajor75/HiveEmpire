@@ -464,6 +464,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 				for ( int i = 0; i < b.size; i++ )
 				{
 					bui.items[i] = ItemIcon( col, row, iconSize, iconSize, b.itemType );
+					bui.items[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { TrackItem( b, i ); } );
 					col += iconSize + 5;
 				}
 				buffers.Add( bui );
@@ -505,6 +506,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 					a = 1;
 				icons[i].color = new Color( 1, 1, 1, a );
 			}
+		}
+
+		void TrackItem( Workshop.Buffer buffer, int index )
+		{
+			print( "hopp " + index );
 		}
 
 		public override void Update()
