@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -80,6 +81,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		var viewport = new GameObject();
 		viewport.AddComponent<Viewport>();
 		viewport.transform.SetParent( transform );
+		viewport.name = "Viewport";
 
 		debug = new GameObject();
 		debug.name = "Debug";
@@ -261,6 +263,16 @@ public class Interface : Assert.Base, IPointerClickHandler
 			if ( screenPosition.y > Screen.height )
 				screenPosition = Camera.main.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
+			Rect size = new Rect();
+			foreach ( RectTransform t in frame.rectTransform )
+			{
+				size.xMin = Math.Min( size.xMin, t.rect.xMin );
+				size.yMin = Math.Min( size.yMin, t.rect.yMin );
+				size.xMax = Math.Max( size.xMax, t.rect.xMax );
+				size.yMax = Math.Max( size.yMax, t.rect.yMax );
+			}
+			if ( screenPosition.x + size.width > Screen.width )
+				screenPosition.x -= size.width;
 			frame.rectTransform.anchoredPosition = screenPosition;
 		}
 
