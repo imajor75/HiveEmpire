@@ -436,11 +436,10 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
 
 			int row = -40;
-			int col;
+			int col = 20;
 			buffers = new List<BufferUI>();
 			foreach ( var b in workshop.buffers )
 			{
-				col = 16;
 				var bui = new BufferUI();
 				bui.items = new Image[b.size];
 				for ( int i = 0; i < b.size; i++ )
@@ -448,12 +447,18 @@ public class Interface : Assert.Base, IPointerClickHandler
 					bui.items[i] = ItemIcon( col, row, iconSize, iconSize, b.itemType );
 					col += iconSize + 5;
 				}
-				row -= iconSize * 2;
 				buffers.Add( bui );
+				if ( !workshop.commonInputs )
+				{
+					col = 20;
+					row -= iconSize * 3 / 2;
+				}
 			}
+			if ( workshop.commonInputs )
+				row -= iconSize * 3 / 2;
 
 			row -= iconSize / 2;
-			col = 16;
+			col = 20;
 			outputs = new Image[workshop.outputMax];
 			for ( int i = 0; i < workshop.outputMax; i++ )
 			{
@@ -461,7 +466,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 				col += iconSize + 5;
 			}
 
-			progressBar = Image( 20, row - iconSize - iconSize / 2, iconSize * 8, iconSize, templateProgress );
+			progressBar = Image( 20, row - iconSize - iconSize / 2, ( iconSize + 5 ) * 8, iconSize, templateProgress );
 		}
 
 		void Remove()

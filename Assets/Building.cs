@@ -306,7 +306,6 @@ abstract public class Building : Assert.Base
 
 	virtual public void OnClicked()
 	{
-		assert.IsTrue( false );
 	}
 
 	public void UpdateLook()
