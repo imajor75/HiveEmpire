@@ -740,11 +740,13 @@ public class Worker : Assert.Base
 		if ( target.FreeSpace() == 0 )
 			return 0;
 
+		float value = road.owner.itemHaulPriorities[(int)item.type];
+
 		// TODO Better prioritization of items
 		if ( item.flag.node == node )
-			return 2;
+			value *= 2;
 
-		return 1;
+		return value;
 	}
 
 	public void ScheduleWalkToNeighbour( GroundNode target, bool first = false )
