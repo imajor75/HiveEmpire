@@ -46,6 +46,13 @@ public class Assert
 	}
 
 	[Conditional( "DEBUG" )]
+	public void IsValid( UnityEngine.Object reference, string message = "" )
+	{
+		if ( reference == null )
+			Failed( message );
+	}
+
+	[Conditional( "DEBUG" )]
 	public void AreEqual( int a, int b, string message = "" )
 	{
 		if ( a == b )
@@ -144,6 +151,7 @@ public class Assert
 		}
 
 		EditorApplication.isPaused = true;
+		throw new System.Exception();
 	}
 
 	public class Base : MonoBehaviour

@@ -59,6 +59,14 @@ public class Interface : Assert.Base, IPointerClickHandler
 		iconBox = LoadSprite( "box" );
 		templateSmallFrame = LoadSprite( "simple UI & icons/box/smallFrame" );
 		Frame.Initialize();
+		print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
+#if DEVELOPMENT_BUILD
+		print( "DEVELOPMENT_BUILD" );
+#endif
+#if DEBUG
+		print( "DEBUG" );
+#endif
+
 	}
 
 	void Start()
@@ -767,7 +775,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
 		}
 
-		void OnDestroy()
+		new void OnDestroy()
 		{
 			base.OnDestroy();
 			World.instance.eye.viewDistance = 5;

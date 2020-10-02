@@ -157,6 +157,7 @@ public class Worker : Assert.Base
 
 		public void Setup( Worker boss, Road road, int point, bool exclusive )
 		{
+			boss.assert.IsTrue( point >= 0 && point < road.nodes.Count );
 			base.Setup( boss );
 			this.road = road;
 			this.exclusive = exclusive;
@@ -183,7 +184,7 @@ public class Worker : Assert.Base
 
 		public bool NextStep( bool ignoreOtherWorkers = false )
 		{
-			boss.assert.IsNotSelected();
+			boss.assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
 			if ( exclusive )
 				boss.assert.AreEqual( road.workerAtNodes[currentPoint], boss );
 			boss.assert.AreEqual( boss.walkTo, zero );

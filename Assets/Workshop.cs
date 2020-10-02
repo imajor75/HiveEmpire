@@ -110,7 +110,7 @@ public class Workshop : Building
 			if ( resource )
 			{
 				if ( resourceType != Resource.Type.expose )
-					boss.assert.AreEqual( resource.type, resourceType );
+					boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting "+ resourceType.ToString()+" but was "+ resource.type.ToString() +")" );	// TODO Fired once (maybe fisherman met a tree?)
 				boss.assert.AreEqual( boss, resource.hunter );
 				if ( Resource.IsUnderGround( resourceType ) || node == boss.node )
 				{
@@ -232,7 +232,7 @@ public class Workshop : Building
 			"Fantasy House/Prefab/Fantasy_House_6", 1.8f, Type.stonemason, Type.sawmill,
 			"WatchTower/Tower",
 			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", 1.5f, Type.farm, 
-			"mill/melnica_mod", 1.5f, Type.mill,
+			"mill/melnica_mod", 2.0f, Type.mill,
 			"Mines/saltmine_final", 1.5f, Type.saltmine,
 			"Mines/coalmine_final", 1.5f, Type.coalmine,
 			"Mines/ironmine_final", 1.5f, Type.ironmine,

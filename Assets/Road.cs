@@ -195,7 +195,7 @@ public class Road : Assert.Base
 			return;
 
 		// TODO Refine when a new worker should be added
-		if ( Jam() > 4 )
+		if ( Jam() > 4 || workers.Count == 0 )
 			CreateNewWorker();
 	}
 
@@ -418,6 +418,7 @@ public class Road : Assert.Base
 
 	public void Split( Flag flag )
 	{
+		assert.IsNull( flag.user );
 		assert.AreEqual( flag.node.road, this );
 		Road first = Create(), second = Create();
 		first.owner = second.owner = owner;	
@@ -440,6 +441,8 @@ public class Road : Assert.Base
 			{
 				assert.AreEqual( flag.node, worker.node );
 				workerPoint = splitPoint;
+				flag.user = worker;
+				worker.exclusiveFlag = flag;
 			}
 
 			if ( workerPoint <= splitPoint )
@@ -455,14 +458,15 @@ public class Road : Assert.Base
 			worker.Reset();
 		}
 
+		flag.node.road = null;
+		first.RegisterOnGround();
+		second.RegisterOnGround();
+
 		if ( first.workers.Count == 0 )
 			first.CreateNewWorker();
 		if ( second.workers.Count == 0 )
 			second.CreateNewWorker();
 
-		flag.node.road = null;
-		first.RegisterOnGround();
-		second.RegisterOnGround();
 		Destroy( gameObject );
 	}
 
@@ -540,6 +544,7 @@ public class Road : Assert.Base
 			assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
 		foreach ( var worker in workers )
 		{
+			assert.IsValid( worker );
 			if ( !worker.atRoad )
 				continue;
 			int i = 0;
