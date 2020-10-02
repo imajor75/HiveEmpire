@@ -595,9 +595,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 				Button( 160, row, 200, 20, ( type.ToString() ) ).onClick.AddListener( delegate { BuildWorkshop( type ); } );
 				row -= 20;
 			}
-			Button( 20, -20, 140, 20, "Flag" ).onClick.AddListener( AddFlag );
-			Button( 20, -40, 140, 20, "Stock" ).onClick.AddListener( AddStock );
-			Button( 20, -60, 140, 20, "Guardhouse" ).onClick.AddListener( AddGuardHouse );
+			Button( 20, -220, 140, 20, "Flag" ).onClick.AddListener( AddFlag );
+			Button( 20, -240, 140, 20, "Stock" ).onClick.AddListener( AddStock );
+			Button( 20, -260, 140, 20, "Guardhouse" ).onClick.AddListener( AddGuardHouse );
+			if ( node.resource && ( !node.resource.underGround || node.resource.exposed > 0 ) )
+				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
 		}
 
 		void AddFlag()
