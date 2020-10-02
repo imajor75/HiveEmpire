@@ -217,5 +217,7 @@ public class Item : Assert.Base
 			assert.AreEqual( this, worker.itemInHands );
 		if ( path != null )
 			path.Validate();
+		if ( destination )
+			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
 	}
 }

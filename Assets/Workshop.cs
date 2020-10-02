@@ -468,7 +468,8 @@ public class Workshop : Building
 
 	public override void ItemOnTheWay( Item item, bool cancel = false )
 	{
-		if ( construction.ItemOnTheWay( item, cancel ) )
+		base.ItemOnTheWay( item, cancel );
+		if ( !construction.done )
 			return;
 
 		foreach ( var b in buffers )
@@ -493,7 +494,9 @@ public class Workshop : Building
 
 	public override void ItemArrived( Item item )
 	{
-		if ( construction.ItemArrived( item ) )
+		base.ItemArrived( item );
+
+		if ( !construction.done )
 			return;
 
 		foreach ( var b in buffers )
@@ -816,7 +819,13 @@ public class Workshop : Building
 	public override void Validate()
 	{
 		base.Validate();
+		int itemsOnTheWayCount = 0;
 		foreach ( Buffer b in buffers )
+		{
 			assert.IsTrue( b.stored + b.onTheWay <= b.size );
+			itemsOnTheWayCount += b.onTheWay;
+		}
+		if ( construction.done )
+			assert.AreEqual( itemsOnTheWayCount, itemsOnTheWay.Count );
 	}
 }

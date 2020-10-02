@@ -126,7 +126,9 @@ public class Stock : Building
 
 	public override void ItemArrived( Item item )
 	{
-		if ( construction.ItemArrived( item ) )
+		base.ItemArrived( item );
+
+		if ( !construction.done )
 			return;
 
 		while ( content.Count <= (int)item.type )

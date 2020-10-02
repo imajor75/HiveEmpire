@@ -19,6 +19,7 @@ abstract public class Building : Assert.Base
 	static int flatteningTime = 300;
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
+	public List<Item> itemsOnTheWay = new List<Item>();
 
 	[System.Serializable]
 	public class Construction
@@ -178,6 +179,8 @@ abstract public class Building : Assert.Base
 		public void Validate()
 		{
 			worker?.Validate();
+			if ( !done )
+				boss.assert.AreEqual( plankOnTheWay + stoneOnTheWay, boss.itemsOnTheWay.Count );
 		}
 	}
 
@@ -297,11 +300,20 @@ abstract public class Building : Assert.Base
 
 	public virtual void ItemOnTheWay( Item item, bool cancel = false )
 	{
+		if ( cancel )
+		{
+			assert.IsTrue( itemsOnTheWay.Contains( item ) );
+			itemsOnTheWay.Remove( item );
+		}
+		else
+			itemsOnTheWay.Add( item );
 		construction.ItemOnTheWay( item, cancel );
 	}
 
 	public virtual void ItemArrived( Item item )
 	{
+		assert.IsTrue( itemsOnTheWay.Contains( item ) );
+		itemsOnTheWay.Remove( item );
 		construction.ItemArrived( item );
 	}
 
@@ -324,6 +336,9 @@ abstract public class Building : Assert.Base
 
 	public virtual bool Remove()
 	{
+		var list = itemsOnTheWay.GetRange( 0, itemsOnTheWay.Count );
+		foreach ( var item in list )
+			item.CancelTrip();
 		if ( !exit.Remove() )
 			return false;
 		if ( worker != null && !worker.Remove() )
@@ -347,5 +362,7 @@ abstract public class Building : Assert.Base
 		worker?.Validate();
 		exit?.Validate();
 		construction?.Validate();
+		foreach ( var item in itemsOnTheWay )
+			assert.AreEqual( item.destination, this );
 	}
 }
