@@ -716,6 +716,16 @@ public class Interface : Assert.Base, IPointerClickHandler
 	{
 		public bool mouseOver;
 		public GameObject cursor;
+		GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
+		GameObject cursorFlag;
+		GameObject cursorBuilding;
+		enum CursorType
+		{
+			nothing,
+			flag,
+			building,
+			total
+		}
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
@@ -771,13 +781,31 @@ public class Interface : Assert.Base, IPointerClickHandler
 			{
 				if ( cursor == null )
 				{
-					cursor = GameObject.CreatePrimitive( PrimitiveType.Cube );
-					cursor.name = "Cursor";
-					cursor.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Cursor" );
-					cursor.transform.localScale *= 0.25f;
+					cursor = GameObject.Instantiate( Resources.Load<GameObject>( "cursor" ) );
 					cursor.transform.SetParent( World.instance.ground.transform );
+					for ( int i = 0; i < cursorTypes.Length; i++ )
+					{
+						cursorTypes[i] = World.FindChildRecursive( cursor.transform, ((CursorType)i).ToString() ).gameObject;
+						Assert.global.IsNotNull( cursorTypes[i] );
+					}
 				}
 				cursor.transform.localPosition = node.Position();
+
+				CursorType t = CursorType.nothing;
+				GroundNode flagNode = node.Add( Building.flagOffset );
+				bool hasFlagAround = false, hasFlagAroundFlag = false;
+				foreach ( var o in Ground.areas[1] )
+					if ( node.Add( o ).flag != null )
+						hasFlagAround = true;
+				foreach ( var o in Ground.areas[1] )
+					if ( flagNode.Add( o ).flag != null )
+						hasFlagAroundFlag = true;
+				if ( !node.IsBlocking( false ) && !hasFlagAround )
+					t = CursorType.flag;
+				if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
+					t = CursorType.building;
+				for ( int i = 0; i < cursorTypes.Length; i++ )
+					cursorTypes[i].SetActive( i == (int)t );
 			}
 		}
 	}

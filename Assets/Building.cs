@@ -18,6 +18,7 @@ abstract public class Building : Assert.Base
 	public Construction construction = new Construction();
 	static int flatteningTime = 300;
 	public float height = 1.5f;
+	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 
 	[System.Serializable]
 	public class Construction
@@ -217,7 +218,7 @@ abstract public class Building : Assert.Base
 			Destroy( gameObject );
 			return null;
 		}
-		var flagNode = ground.GetNode( node.x + 1, node.y - 1 );
+		var flagNode = node.Add( flagOffset );
 		Flag flag = Flag.Create().Setup( ground, flagNode, owner );
 		if ( flag == null )
 		{
@@ -342,7 +343,7 @@ abstract public class Building : Assert.Base
 	{
 		assert.AreEqual( this, flag.building );
 		assert.AreEqual( this, node.building );
-		assert.AreEqual( flag, ground.GetNode( node.x + 1, node.y - 1 ).flag );
+		assert.AreEqual( flag, node.Add( flagOffset ).flag );
 		worker?.Validate();
 		exit?.Validate();
 		construction?.Validate();
