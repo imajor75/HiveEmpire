@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class Interface : Assert.Base, IPointerClickHandler
 {
 	public List<Panel> panels = new List<Panel>();
-	public static int iconSize = 24;
+	public static int iconSize = 20;
 	public static Font font;
 	public World world;
 	Canvas canvas;
@@ -22,6 +22,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public static Sprite iconPath;
 	public static Sprite iconButton;
 	public static Sprite iconBox;
+	public static Sprite templateSmallFrame;
 	public GameObject debug;
 	public static Interface instance;
 
@@ -53,6 +54,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		iconPath = LoadSprite( "road" );
 		iconButton = LoadSprite( "simple UI & icons/button/button_login" );
 		iconBox = LoadSprite( "box" );
+		templateSmallFrame = LoadSprite( "simple UI & icons/box/smallFrame" );
 		Frame.Initialize();
 	}
 
@@ -143,6 +145,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 		public bool followTarget = true;
 		public Image frame;
 		public Interface cachedRoot;
+
+		public static int itemIconBorderSize = 2;
+
 		public Interface Root
 		{
 			get
@@ -188,6 +193,17 @@ public class Interface : Assert.Base, IPointerClickHandler
 			f.borderWidth = borderWidth;
 			Init( f.rectTransform, x, y, xs, ys, parent );
 			return f;
+		}
+
+		public Image ItemIcon( int x, int y, int xs, int ys, Item.Type type, Component parent = null )
+		{
+			Image( x - itemIconBorderSize, y - itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
+			Image i = new GameObject().AddComponent<Image>();
+			i.name = "Image";
+			if ( type != Item.Type.unknown )
+				i.sprite = Item.sprites[(int)type];
+			Init( i.rectTransform, x, y, xs, ys, parent );
+			return i;
 		}
 
 		public Button Button( int x, int y, int xs, int ys, Sprite picture, Component parent = null )
@@ -417,8 +433,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 				bui.items = new Image[b.size];
 				for ( int i = 0; i < b.size; i++ )
 				{
-					bui.items[i] = Image( col, row, iconSize, iconSize, Item.sprites[(int)b.itemType] );
-					col += iconSize;
+					bui.items[i] = ItemIcon( col, row, iconSize, iconSize, b.itemType );
+					col += iconSize + 5;
 				}
 				row -= iconSize * 2;
 				buffers.Add( bui );
@@ -429,8 +445,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 			outputs = new Image[workshop.outputMax];
 			for ( int i = 0; i < workshop.outputMax; i++ )
 			{
-				outputs[i] = Image( col, row, iconSize, iconSize, Item.sprites[(int)workshop.outputType] );
-				col += iconSize;
+				outputs[i] = ItemIcon( col, row, iconSize, iconSize, workshop.outputType );
+				col += iconSize + 5;
 			}
 
 			progressBar = Image( 20, row - iconSize - iconSize / 2, iconSize * 8, iconSize, templateProgress );
@@ -641,9 +657,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
-				items[i] = Image( col, -8, iconSize, iconSize, null );
+				items[i] = ItemIcon( col, -8, iconSize, iconSize, Item.Type.unknown );
 				items[i].name = "item " + i;
-				col += iconSize;
+				col += iconSize+5;
 			}
 			name = "Flag Panel";
 		}
