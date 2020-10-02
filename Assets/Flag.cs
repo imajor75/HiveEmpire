@@ -17,7 +17,7 @@ public class Flag : Assert.Base
 
 	static public void Initialize()
 	{
-		template = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands" );
+		template = (GameObject)Resources.Load( "Tresure_box/tresure_box_flag" );
 		template.transform.localScale = Vector3.one;
 		template.transform.rotation = Quaternion.AngleAxis( 135, Vector3.up );
 		Assert.global.IsNotNull( template );

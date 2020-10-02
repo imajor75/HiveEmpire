@@ -777,14 +777,15 @@ public class Workshop : Building
 
 	static void FinishJob( Worker worker, Item.Type itemType )
 	{
+		Item item = null;
+		if( itemType != Item.Type.unknown )
+		{
+			item = Item.Create().Setup( itemType, worker.building );
+			worker.SchedulePickupItem( item );
+		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
 		if ( itemType != Item.Type.unknown )
-		{
-			Item item = Item.Create().Setup( itemType, worker.building );
-			worker.itemInHands = item;
-			item.worker = worker;
 			worker.ScheduleDeliverItem( item );
-		}
 		worker.ScheduleWalkToNeighbour( worker.building.node );
 	}
 

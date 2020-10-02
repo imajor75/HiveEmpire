@@ -41,7 +41,8 @@ public class Worker : Assert.Base
 	GameObject body;
 	GameObject box;
 	MeshRenderer itemTable;
-	static GameObject boxTemplate;
+	static GameObject boxTemplateBoy;
+	static GameObject boxTemplateMan;
 
 	public class Task : ScriptableObject
 	{
@@ -429,8 +430,10 @@ public class Worker : Assert.Base
 		templates.Add( (GameObject)Resources.Load( "FootmanPBRHPPolyart/Prefabs/footman_Blue_HP" ) );
 		templates.Add( (GameObject)Resources.Load( "Rabbits/Prefabs/Rabbit 1" ) );
 
-		boxTemplate = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands" );
-		Assert.global.IsNotNull( boxTemplate );
+		boxTemplateBoy = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands_boy" );
+		Assert.global.IsNotNull( boxTemplateBoy );
+		boxTemplateMan = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands_man" );
+		Assert.global.IsNotNull( boxTemplateMan );
 
 		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
 		Assert.global.IsNotNull( animationController );
@@ -525,9 +528,12 @@ public class Worker : Assert.Base
 
 		body = (GameObject)GameObject.Instantiate( templates[look], transform );
 		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
-		if ( hand != null && type == Type.haluer )
+		if ( hand != null )
 		{
-			box = (GameObject)GameObject.Instantiate( boxTemplate, hand );
+			if ( type == Type.haluer )
+				box = (GameObject)GameObject.Instantiate( boxTemplateBoy, hand );
+			else
+				box = (GameObject)GameObject.Instantiate( boxTemplateMan, hand );
 			box.SetActive( false );
 			itemTable = World.FindChildRecursive( box.transform, "ItemTable" ).GetComponent<MeshRenderer>();
 			assert.IsNotNull( itemTable );
