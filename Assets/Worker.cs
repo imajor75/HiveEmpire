@@ -22,6 +22,7 @@ public class Worker : Assert.Base
 	public Resource origin;
 	public float currentSpeed;
 	public Flag exclusiveFlag;
+	public int itemsDelivered;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
 	[JsonIgnore]
 	public AudioSource soundSource;
@@ -365,6 +366,7 @@ public class Worker : Assert.Base
 			if ( ( putdownTimer -= (int)World.instance.speedModifier ) > 0 )
 				return false;
 
+			boss.itemsDelivered++;
 			boss.box?.SetActive( false );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )

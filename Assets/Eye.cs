@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using UnityEngine;
 
 [RequireComponent( typeof( Camera ) )]
@@ -8,7 +9,8 @@ public class Eye : MonoBehaviour
 	public float targetAltitude = 4.0f;
 	static public float minAltitude = 2.0f;
 	static public float maxAltitude = 15.0f;
-	static public float viewDistance = 5.0f;
+	[JsonIgnore]
+	public float viewDistance = 5.0f;
 	public World world;
 	public float x, y;
 	public float direction;
@@ -61,6 +63,12 @@ public class Eye : MonoBehaviour
 		var p = node.Position();
 		x = p.x;
 		y = p.z;
+	}
+
+	public void FocusOn( Component component )
+	{
+		x = component.transform.position.x;
+		y = component.transform.position.z;
 	}
 
 	void FixedUpdate()

@@ -20,6 +20,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public static Sprite templateProgress;
 	public static Sprite iconExit;
 	public static Sprite iconDestroy;
+	public static Sprite iconHauler;
 	public static Sprite iconPath;
 	public static Sprite iconButton;
 	public static Sprite iconBox;
@@ -52,6 +53,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		templateProgress = LoadSprite( "simple UI & icons/button/board" );
 		iconExit = LoadSprite( "simple UI & icons/button/button_exit" );
 		iconDestroy = LoadSprite( "destroy" );
+		iconHauler = LoadSprite( "hauler" );
 		iconPath = LoadSprite( "road" );
 		iconButton = LoadSprite( "simple UI & icons/button/button_login" );
 		iconBox = LoadSprite( "box" );
@@ -173,7 +175,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			UpdatePosition();
 		}
 
-		void OnDestroy()
+		public void OnDestroy()
 		{
 			Assert.global.IsTrue( Root.panels.Contains( this ) );
 			Root.panels.Remove( this );
@@ -197,8 +199,12 @@ public class Interface : Assert.Base, IPointerClickHandler
 			return f;
 		}
 
-		public Image ItemIcon( int x, int y, int xs, int ys, Item.Type type, Component parent = null )
+		public Image ItemIcon( int x, int y, int xs = 0, int ys = 0, Item.Type type = Item.Type.unknown, Component parent = null )
 		{
+			if ( xs == 0 )
+				xs = iconSize;
+			if ( ys == 0 )
+				ys = iconSize;
 			Image( x - itemIconBorderSize, y - itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
 			Image i = new GameObject().AddComponent<Image>();
 			i.name = "Image";
@@ -259,7 +265,12 @@ public class Interface : Assert.Base, IPointerClickHandler
 			if ( target == null || !followTarget )
 				return;
 
-			Vector3 screenPosition = Camera.main.WorldToScreenPoint( target.Position() + Vector3.up * GroundNode.size );
+			MoveTo( target.Position() + Vector3.up * GroundNode.size );
+		}
+
+		public void MoveTo( Vector3 position )
+		{
+			Vector3 screenPosition = Camera.main.WorldToScreenPoint( position );
 			if ( screenPosition.y > Screen.height )
 				screenPosition = Camera.main.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
@@ -623,8 +634,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 			base.Open( node );
 			this.road = road;
 			this.node = node;
-			Frame( 0, 0, 190, 50, 10 );
-			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
+			Frame( 0, 0, 210, 50, 10 );
+			Button( 190, 0, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 170, -10, 20, 20, iconHauler ).onClick.AddListener( Hauler );
 			Button( 150, -10, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 			Button( 130, -10, 20, 20, iconBox ).onClick.AddListener( Split );
 			jam = Text( 12, -4, 120, 20, "Jam" );
@@ -636,6 +648,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 		{
 			if ( road && road.Remove() )
 				Close();
+		}
+
+		void Hauler()
+		{
+			WorkerPanel.Create().Open( road.workers[0] ); // TODO Make it possibe to view additional workers
 		}
 
 		void Split()
@@ -709,6 +726,51 @@ public class Interface : Assert.Base, IPointerClickHandler
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 				}
 			}
+		}
+	}
+
+	public class WorkerPanel : Panel
+	{
+		public Worker worker;
+		Text itemCount;
+		Image item;
+
+		public static WorkerPanel Create()
+		{
+			return new GameObject().AddComponent<WorkerPanel>();
+		}
+
+		public void Open( Worker worker )
+		{
+			base.Open( worker.node );
+			this.worker = worker;
+			Frame( 0, 0, 200, 80 );
+			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
+			item = ItemIcon( 20, -20 );
+			itemCount = Text( 20, -44, 120, 20, "Items" );
+
+		}
+
+		public override void Update()
+		{
+			base.Update();
+			itemCount.text = "Items delivered: " + worker.itemsDelivered;
+			if ( worker.itemInHands != null )
+			{
+				item.sprite = Item.sprites[(int)worker.itemInHands.type];
+				item.enabled = true;
+			}
+			else
+				item.enabled = false;
+			World.instance.eye.viewDistance = 2;
+			World.instance.eye.FocusOn( worker );
+			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
+		}
+
+		void OnDestroy()
+		{
+			base.OnDestroy();
+			World.instance.eye.viewDistance = 5;
 		}
 	}
 
