@@ -13,17 +13,19 @@ public class Flag : Assert.Base
 	public Building building;
 	static GameObject template;
 	public int reserved;
+	MeshRenderer itemTable;
 
 	static public void Initialize()
 	{
-		template = (GameObject)Resources.Load( "Tresure_box/tresure_box" );
+		template = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands" );
+		template.transform.localScale = Vector3.one;
+		template.transform.rotation = Quaternion.AngleAxis( 135, Vector3.up );
 		Assert.global.IsNotNull( template );
 	}
 
 	public static Flag Create()
 	{
 		GameObject flagObject = GameObject.Instantiate( template );
-		flagObject.transform.localScale *= 0.1f;
 		return flagObject.AddComponent<Flag>();
 	}
 
@@ -65,11 +67,35 @@ public class Flag : Assert.Base
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
+		itemTable = World.FindChildRecursive( transform, "ItemTable" ).gameObject.GetComponent<MeshRenderer>();
+		assert.IsNotNull( itemTable );
 		UpdateBody();
 	}
 
 	public void UpdateBody()
 	{
+		int[] l = new int[(int)Item.Type.total];
+		foreach ( var i in items )
+		{
+			if ( i != null )
+				l[(int)i.type]++;
+		}
+		int t = 0, b = 0;
+		for ( int i = 0; i < l.Length; i++ )
+		{
+			if ( l[i] > b )
+			{
+				b = l[i];
+				t = i;
+			}
+		}
+		if ( b > 0 )
+		{
+			itemTable.material = Item.materials[t];
+			itemTable.enabled = true;
+		}
+		else
+			itemTable.enabled = false;
 		transform.localPosition = node.Position() + Vector3.up * GroundNode.size * Road.height;
 	}
 
@@ -81,6 +107,7 @@ public class Flag : Assert.Base
 			{
 				items[i] = null;
 				item.flag = null;
+				UpdateBody();
 				return true;
 			}
 		}
@@ -98,6 +125,7 @@ public class Flag : Assert.Base
 			{
 				items[i] = item;
 				item.flag = this;
+				UpdateBody();
 				return true;
 			}
 		}

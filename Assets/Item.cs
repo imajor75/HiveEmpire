@@ -14,6 +14,7 @@ public class Item : Assert.Base
 	public Building origin;
 	public Building destination;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
+	static public Material[] materials = new Material[(int)Type.total];
 
 	public enum Type
     {
@@ -49,19 +50,27 @@ public class Item : Assert.Base
 			"coal",
 			"gold"
 		};
+		var shader = Shader.Find( "Standard" );
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 			Assert.global.IsNotNull( sprites[i] );
+			materials[i] = new Material( shader );
+			materials[i].SetTexture( "_MainTex", tex );
+			materials[i].SetInt( "_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One );
+			materials[i].SetInt( "_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero );
+			materials[i].SetInt( "_ZWrite", 1 );
+			materials[i].EnableKeyword( "_ALPHATEST_ON" );
+			materials[i].DisableKeyword( "_ALPHABLEND_ON" );
+			materials[i].DisableKeyword( "_ALPHAPREMULTIPLY_ON" );
+			materials[i].renderQueue = 2450;
 		}
 	}
 
 	public static Item Create()
 	{
 		GameObject itemBody = new GameObject();
-		itemBody.name = "Item";
-		itemBody.AddComponent<SpriteRenderer>();
 		return itemBody.AddComponent<Item>();
 	}
 
@@ -82,15 +91,10 @@ public class Item : Assert.Base
 		return this;
 	}
 
-	static void CancelNew()
-	{
-	}
-
 	void Start()
 	{
 		transform.SetParent( ground.transform );
 		transform.localScale *= 0.05f;
-		gameObject.GetComponent<SpriteRenderer>().sprite = sprites[(int)type];
 		name = type.ToString();
 		UpdateLook();
 	}

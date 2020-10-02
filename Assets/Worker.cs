@@ -40,6 +40,7 @@ public class Worker : Assert.Base
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
 	GameObject box;
+	MeshRenderer itemTable;
 	static GameObject boxTemplate;
 
 	public class Task : ScriptableObject
@@ -102,7 +103,7 @@ public class Worker : Assert.Base
 			int point = 0;
 			if ( boss.node.flag == path.Road().GetEnd( 0 ) )
 				point = path.Road().nodes.Count - 1;
-			boss.ScheduleWalkToRoadPoint( path.NextRoad(), point, true, false );
+			boss.ScheduleWalkToRoadPoint( path.NextRoad(), point, false, true );
 			return false;
 		}
 
@@ -324,6 +325,8 @@ public class Worker : Assert.Base
 			{
 				boss.animator.ResetTrigger( putdownID );
 				boss.animator.SetTrigger( pickupID );
+				if ( boss.itemTable )
+					boss.itemTable.material = Item.materials[(int)item.type];
 				boss.box?.SetActive( true );
 			}
 			if ( ( pickupTimer -= (int)World.instance.speedModifier ) > 0 )
@@ -460,7 +463,7 @@ public class Worker : Assert.Base
 		atRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
-		ScheduleWalkToRoadNode( road, road.CenterNode() );
+		ScheduleWalkToRoadNode( road, road.CenterNode(), false );
 		ScheduleStartWorkingOnRoad( road );
 		return this;
 	}
@@ -526,6 +529,8 @@ public class Worker : Assert.Base
 		{
 			box = (GameObject)GameObject.Instantiate( boxTemplate, hand );
 			box.SetActive( false );
+			itemTable = World.FindChildRecursive( box.transform, "ItemTable" ).GetComponent<MeshRenderer>();
+			assert.IsNotNull( itemTable );
 		}
 		animator = body.GetComponent<Animator>();
 		animator.runtimeAnimatorController = animationController;
@@ -634,7 +639,7 @@ public class Worker : Assert.Base
 		{
 			if ( !atRoad )
 			{
-				ScheduleWalkToNode( road.CenterNode() );
+				ScheduleWalkToRoadNode( road, road.CenterNode(), false );
 				ScheduleStartWorkingOnRoad( road );
 				return;
 			}
@@ -763,7 +768,7 @@ public class Worker : Assert.Base
 			taskQueue.Add( instance );
 	}
 
-	public void ScheduleWalkToRoadPoint( Road road, int target, bool first = false, bool exclusive = true )
+	public void ScheduleWalkToRoadPoint( Road road, int target, bool exclusive = true, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
 		instance.Setup( this, road, target, exclusive );
@@ -773,10 +778,10 @@ public class Worker : Assert.Base
 			taskQueue.Add( instance );
 	}
 
-	public void ScheduleWalkToRoadNode( Road road, GroundNode target, bool first = false )
+	public void ScheduleWalkToRoadNode( Road road, GroundNode target, bool exclusive = true, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
-		instance.Setup( this, road, road.NodeIndex( target ), true );
+		instance.Setup( this, road, road.NodeIndex( target ), exclusive );
 		if ( first )
 			taskQueue.Insert( 0, instance );
 		else
