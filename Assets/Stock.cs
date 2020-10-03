@@ -106,7 +106,10 @@ public class Stock : Building
 
 	public override void OnClicked()
 	{
-		Interface.StockPanel.Create().Open( this );
+		if ( construction.done )
+			Interface.StockPanel.Create().Open( this );
+		else
+			Interface.ConstructionPanel.Create().Open( construction );
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination )

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.PlayerLoop;
 using UnityEngine.UI;
 
 public class Interface : Assert.Base, IPointerClickHandler
@@ -207,18 +208,19 @@ public class Interface : Assert.Base, IPointerClickHandler
 			return f;
 		}
 
-		public Image ItemIcon( int x, int y, int xs = 0, int ys = 0, Item.Type type = Item.Type.unknown, Component parent = null )
+		public ItemImage ItemIcon( int x, int y, int xs = 0, int ys = 0, Item.Type type = Item.Type.unknown, Component parent = null )
 		{
 			if ( xs == 0 )
 				xs = iconSize;
 			if ( ys == 0 )
 				ys = iconSize;
 			Image( x - itemIconBorderSize, y - itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
-			Image i = new GameObject().AddComponent<Image>();
-			i.name = "Image";
+			ItemImage i = new GameObject().AddComponent<ItemImage>();
+			i.name = "ItemImage";
 			if ( type != Item.Type.unknown )
 				i.sprite = Item.sprites[(int)type];
 			Init( i.rectTransform, x, y, xs, ys, parent );
+			i.gameObject.AddComponent<Button>().onClick.AddListener( i.Track );
 			return i;
 		}
 
@@ -309,6 +311,34 @@ public class Interface : Assert.Base, IPointerClickHandler
 				followTarget = true;
 			};
 
+		}
+
+		public class ItemImage : Image
+		{
+			public Item item;
+			public bool trackDestination;
+
+			public void Track()
+			{
+				if ( item == null )
+					return;
+
+				if ( trackDestination )
+				{
+					if ( item.flag )
+						FlagPanel.Create().Open( item.flag, true );
+					if ( item.worker )
+						WorkerPanel.Create().Open( item.worker );
+					return;
+				}
+
+				Workshop workshop = item.destination as Workshop;
+				if ( workshop )
+					WorkshopPanel.Create().Open( workshop, true );
+				Stock stock = item.destination as Stock;
+				if ( stock )
+					StockPanel.Create().Open( stock, true );
+			}
 		}
 	}
 
@@ -426,17 +456,22 @@ public class Interface : Assert.Base, IPointerClickHandler
 		}
 	}
 
-	public class WorkshopPanel : Panel
+	public class BuildingPanel : Panel
+	{
+		public Building building;
+		public void Open( Building building )
+		{
+			base.Open( building.node );
+			this.building = building;
+		}
+	}
+
+	public class WorkshopPanel : BuildingPanel
 	{
 		public Workshop workshop;
 		public Image progressBar;
 
-		public class BufferUI
-		{
-			public Image[] items;
-		}
-
-		public List<BufferUI> buffers;
+		public List<Buffer> buffers;
 		public Image[] outputs;
 
 		public static WorkshopPanel Create()
@@ -456,18 +491,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 			int row = -40;
 			int col = 20;
-			buffers = new List<BufferUI>();
+			buffers = new List<Buffer>();
 			foreach ( var b in workshop.buffers )
 			{
-				var bui = new BufferUI();
-				bui.items = new Image[b.size];
-				for ( int i = 0; i < b.size; i++ )
-				{
-					bui.items[i] = ItemIcon( col, row, iconSize, iconSize, b.itemType );
-					int j = i;
-					bui.items[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { TrackItem( b, j ); } );
-					col += iconSize + 5;
-				}
+				var bui = new Buffer();
+				bui.Setup( this, b.itemType, b.size, col, row, iconSize + 5 );
 				buffers.Add( bui );
 				if ( !workshop.commonInputs )
 				{
@@ -499,43 +527,12 @@ public class Interface : Assert.Base, IPointerClickHandler
 				Close();
 		}
 
-		void UpdateIconRow( Image[] icons, int full, int half )
-		{
-			for ( int i = 0; i < icons.Length; i++ )
-			{
-				float a = 0;
-				if ( i < half + full )
-					a = 0.25f;
-				if ( i < full )
-					a = 1;
-				icons[i].color = new Color( 1, 1, 1, a );
-			}
-		}
-
-		void TrackItem( Workshop.Buffer buffer, int index )
-		{
-			foreach ( var item in workshop.itemsOnTheWay )
-			{
-				if ( item.type != buffer.itemType )
-					continue;
-				if ( index-- == 0 )
-				{
-					if ( item.flag )
-						FlagPanel.Create().Open( item.flag, true );
-					if ( item.worker )
-						WorkerPanel.Create().Open( item.worker );
-				}
-			}
-		}
-
 		public override void Update()
 		{
 			base.Update();
+			foreach ( var buffer in buffers )
+				buffer.Update();
 
-			for ( int j = 0; j < buffers.Count; j++ )
-				UpdateIconRow( buffers[j].items, workshop.buffers[j].stored, workshop.buffers[j].onTheWay );
-
-			UpdateIconRow( outputs, workshop.output, 0 );
 			if ( workshop.working )
 			{
 				progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
@@ -544,6 +541,64 @@ public class Interface : Assert.Base, IPointerClickHandler
 			else
 				progressBar.color = Color.red;
 		}
+		public class Buffer
+		{
+			public ItemImage[] items;
+			public BuildingPanel boss;
+			public Item.Type itemType;
+			Workshop.Buffer buffer;
+
+			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi )
+			{
+				this.boss = boss;
+				this.itemType = itemType;
+				for ( int i = 0; i < itemCount; i++ )
+				{
+					items[i] = boss.ItemIcon( x, y, iconSize, iconSize, itemType );
+					x += xi;
+				}
+			}
+
+			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int x, int y, int xi )
+			{
+				this.buffer = buffer;
+				Setup( boss, buffer.itemType, buffer.size, x, y, xi );
+			}
+
+			public void Update( int inStock, int onTheWay )
+			{
+				var itemsOnTheWay = boss.building.itemsOnTheWay;
+				int k = 0;
+				for ( int i = 0; i < items.Length; i++ )
+				{
+					if ( i < inStock )
+					{
+						items[i].color = Color.white;
+						items[i].item = null;
+					}
+					else
+					{
+						if ( i < inStock + onTheWay )
+						{
+							items[i].color = new Color( 1, 1, 1, 0.25f );
+							while ( itemsOnTheWay[k].type != itemType )
+								k++;
+							items[i].item = itemsOnTheWay[k];
+							items[i].trackDestination = false;
+						}
+						else
+							items[i].color = new Color( 1, 1, 1, 0 );
+					}
+				}
+			}
+
+			public void Update()
+			{
+				Assert.global.IsNotNull( buffer );
+				Update( buffer.stored, buffer.onTheWay );
+			}
+		}
+
 	}
 
 	public class StockPanel : Panel
@@ -706,7 +761,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public class FlagPanel : Panel
 	{
 		public Flag flag;
-		public Image[] items = new Image[Flag.maxItems];
+		public ItemImage[] items = new ItemImage[Flag.maxItems];
 
 		public static FlagPanel Create()
 		{
@@ -727,7 +782,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 			{
 				items[i] = ItemIcon( col, -8, iconSize, iconSize, Item.Type.unknown );
 				int j = i;
-				items[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { TrackItem( j ); } );
 				items[i].name = "item " + i;
 				col += iconSize+5;
 			}
@@ -749,19 +803,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Close();
 		}
 
-		void TrackItem( int index )
-		{
-			Item item = flag.items[index];
-			if ( item == null )
-				return;
-			Workshop workshop = item.destination as Workshop;
-			if ( workshop )
-				WorkshopPanel.Create().Open( workshop, true );
-			Stock stock = item.destination as Stock;
-			if ( stock )
-				StockPanel.Create().Open( stock, true );
-		}
-
 		public override void Update()
 		{
 			base.Update();
@@ -776,6 +817,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 					items[i].enabled = true;
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 				}
+				items[i].item = flag.items[i];
 			}
 		}
 	}
@@ -784,7 +826,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	{
 		public Worker worker;
 		Text itemCount;
-		Image item;
+		ItemImage item;
 
 		public static WorkerPanel Create()
 		{
@@ -798,7 +840,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Frame( 0, 0, 200, 80 );
 			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
-			item.gameObject.AddComponent<Button>().onClick.AddListener( TrackItem );
 			itemCount = Text( 20, -44, 120, 20, "Items" );
 		}
 
@@ -813,28 +854,66 @@ public class Interface : Assert.Base, IPointerClickHandler
 			}
 			else
 				item.enabled = false;
+			item.item = worker.itemInHands;
 			World.instance.eye.viewDistance = 2;
 			World.instance.eye.FocusOn( worker );
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
-		}
-
-		void TrackItem()
-		{
-			Item item = worker.itemInHands;
-			if ( item == null )
-				return;
-			Workshop workshop = item.destination as Workshop;
-			if ( workshop )
-				WorkshopPanel.Create().Open( workshop, true );
-			Stock stock = item.destination as Stock;
-			if ( stock )
-				StockPanel.Create().Open( stock, true );
 		}
 
 		new void OnDestroy()
 		{
 			base.OnDestroy();
 			World.instance.eye.viewDistance = 5;
+		}
+	}
+
+	public class ConstructionPanel : BuildingPanel
+	{
+		public Image progressBar;
+		public Building.Construction construction;
+		public WorkshopPanel.Buffer planks;
+		public WorkshopPanel.Buffer stones;
+
+		public static ConstructionPanel Create()
+		{
+			return new GameObject().AddComponent<ConstructionPanel>();
+		}
+
+		public void Open( Building.Construction construction, bool show = false )
+		{
+			base.Open( construction.boss );
+			this.construction = construction;
+			Frame( 0, 0, 240, 200 );
+			Button( 200, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 190, -150, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+
+			Workshop workshop = construction.boss as Workshop;
+			if ( workshop )
+				Text( 20, -20, 160, 20, workshop.type.ToString() );
+
+			planks = new WorkshopPanel.Buffer();
+			planks.Setup( this, Item.Type.plank, construction.plankNeeded, 20, -40, iconSize + 5 );
+			stones = new WorkshopPanel.Buffer();
+			stones.Setup( this, Item.Type.stone, construction.stoneNeeded, 20, -60, iconSize + 5 );
+
+			progressBar = Image( 20, -80, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+
+			if ( show )
+				Root.world.eye.FocusOn( workshop );
+		}
+
+		new void Update()
+		{
+			base.Update();
+			planks.Update( construction.plankArrived, construction.plankOnTheWay );
+			stones.Update( construction.stoneArrived, construction.stoneOnTheWay );
+			progressBar.rectTransform.sizeDelta = new Vector2( construction.progress * ( iconSize + 5 ) * 8, iconSize );
+		}
+
+		void Remove()
+		{
+			if ( construction != null && construction.boss != null && construction.boss.Remove() )
+				Close();
 		}
 	}
 

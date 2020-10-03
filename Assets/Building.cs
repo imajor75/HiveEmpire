@@ -319,6 +319,8 @@ abstract public class Building : Assert.Base
 
 	virtual public void OnClicked()
 	{
+		if ( !construction.done )
+			Interface.ConstructionPanel.Create().Open( construction );
 	}
 
 	public void UpdateLook()

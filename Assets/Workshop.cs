@@ -804,7 +804,10 @@ public class Workshop : Building
 
 	public override void OnClicked()
 	{
-		Interface.WorkshopPanel.Create().Open( this );
+		if ( construction.done )
+			Interface.WorkshopPanel.Create().Open( this );
+		else
+			Interface.ConstructionPanel.Create().Open( this.construction );
 	}
 
 	void OnDrawGizmos()
