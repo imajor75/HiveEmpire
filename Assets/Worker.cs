@@ -643,6 +643,7 @@ public class Worker : Assert.Base
 
 	public void FindTask()
 	{
+		assert.IsNotSelected();
 		assert.IsTrue( IsIdle() );
 		if ( road != null )
 		{
@@ -737,7 +738,7 @@ public class Worker : Assert.Base
 		Flag target = road.GetEnd( 0 );
 		if ( target == item.flag )
 			target = road.GetEnd( 1 );
-		if ( target.FreeSpace() == 0 )
+		if ( target.FreeSpace() == 0 && item.path.StepsLeft() != 1 )
 			return 0;
 
 		float value = road.owner.itemHaulPriorities[(int)item.type];
@@ -900,6 +901,16 @@ public class Worker : Assert.Base
 		{
 			animator?.SetBool( walkingID, false );
 			transform.localPosition = node.Position();
+			if ( taskQueue.Count > 0 )
+			{
+				WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;
+				if ( task == null || task.wishedPoint < 0 )
+					return;
+
+				int direction = node.DirectionTo( task.road.nodes[task.wishedPoint] );
+				assert.IsTrue( direction >= 0 );
+				transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+			}
 			return;
 		}
 		animator.SetBool( walkingID, true );
