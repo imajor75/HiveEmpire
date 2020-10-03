@@ -87,14 +87,14 @@ public class Resource : Assert.Base
 		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
 	}
 
-	public Resource Setup( GroundNode node, Type type, int charges = 1 )
+	public Resource Setup( GroundNode node, Type type, int charges = -1 )
 	{
 		underGround = IsUnderGround( type );
 
 		if ( charges < 1 )
 		{
 			if ( underGround )
-				charges = -1;
+				charges = int.MaxValue;
 			else
 				charges = 1;
 		}
