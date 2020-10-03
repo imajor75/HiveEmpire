@@ -444,7 +444,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			return new GameObject().AddComponent<WorkshopPanel>();
 		}
 		
-		public void Open( Workshop workshop )
+		public void Open( Workshop workshop, bool show = false )
 		{
 			base.Open( workshop.node );
 			this.workshop = workshop;
@@ -464,6 +464,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 				for ( int i = 0; i < b.size; i++ )
 				{
 					bui.items[i] = ItemIcon( col, row, iconSize, iconSize, b.itemType );
+					int j = i;
+					bui.items[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { TrackItem( b, j ); } );
 					col += iconSize + 5;
 				}
 				buffers.Add( bui );
@@ -486,6 +488,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 			}
 
 			progressBar = Image( 20, row - iconSize - iconSize / 2, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+
+			if ( show )
+				Root.world.eye.FocusOn( workshop );
 		}
 
 		void Remove()
@@ -500,10 +505,26 @@ public class Interface : Assert.Base, IPointerClickHandler
 			{
 				float a = 0;
 				if ( i < half + full )
-					a = 0.5f;
+					a = 0.25f;
 				if ( i < full )
 					a = 1;
 				icons[i].color = new Color( 1, 1, 1, a );
+			}
+		}
+
+		void TrackItem( Workshop.Buffer buffer, int index )
+		{
+			foreach ( var item in workshop.itemsOnTheWay )
+			{
+				if ( item.type != buffer.itemType )
+					continue;
+				if ( index-- == 0 )
+				{
+					if ( item.flag )
+						FlagPanel.Create().Open( item.flag, true );
+					if ( item.worker )
+						WorkerPanel.Create().Open( item.worker );
+				}
 			}
 		}
 
@@ -535,7 +556,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			return new GameObject().AddComponent<StockPanel>();
 		}
 
-		public void Open( Stock stock )
+		public void Open( Stock stock, bool show = false )
 		{
 			base.Open( stock.node );
 			this.stock = stock;
@@ -555,6 +576,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 				};
 				row -= iconSize;
 			}
+
+			if ( show )
+				Root.world.eye.FocusOn( stock );
 		}
 
 		void Remove()
@@ -689,7 +713,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			return new GameObject().AddComponent<FlagPanel>();
 		}
 
-		public void Open( Flag flag )
+		public void Open( Flag flag, bool show = false )
 		{
 			base.Open( flag.node );
 			this.flag = flag;
@@ -702,10 +726,14 @@ public class Interface : Assert.Base, IPointerClickHandler
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
 				items[i] = ItemIcon( col, -8, iconSize, iconSize, Item.Type.unknown );
+				int j = i;
+				items[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { TrackItem( j ); } );
 				items[i].name = "item " + i;
 				col += iconSize+5;
 			}
 			name = "Flag Panel";
+			if ( show )
+				Root.world.eye.FocusOn( flag );
 		}
 
 		void Remove()
@@ -719,6 +747,19 @@ public class Interface : Assert.Base, IPointerClickHandler
 			if ( flag )
 				Road.AddNodeToNew( flag.node.ground, flag.node, flag.owner );
 			Close();
+		}
+
+		void TrackItem( int index )
+		{
+			Item item = flag.items[index];
+			if ( item == null )
+				return;
+			Workshop workshop = item.destination as Workshop;
+			if ( workshop )
+				WorkshopPanel.Create().Open( workshop, true );
+			Stock stock = item.destination as Stock;
+			if ( stock )
+				StockPanel.Create().Open( stock, true );
 		}
 
 		public override void Update()
@@ -757,8 +798,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Frame( 0, 0, 200, 80 );
 			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
+			item.gameObject.AddComponent<Button>().onClick.AddListener( TrackItem );
 			itemCount = Text( 20, -44, 120, 20, "Items" );
-
 		}
 
 		public override void Update()
@@ -775,6 +816,19 @@ public class Interface : Assert.Base, IPointerClickHandler
 			World.instance.eye.viewDistance = 2;
 			World.instance.eye.FocusOn( worker );
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
+		}
+
+		void TrackItem()
+		{
+			Item item = worker.itemInHands;
+			if ( item == null )
+				return;
+			Workshop workshop = item.destination as Workshop;
+			if ( workshop )
+				WorkshopPanel.Create().Open( workshop, true );
+			Stock stock = item.destination as Stock;
+			if ( stock )
+				StockPanel.Create().Open( stock, true );
 		}
 
 		new void OnDestroy()
