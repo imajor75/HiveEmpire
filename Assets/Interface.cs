@@ -323,7 +323,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 				if ( item == null )
 					return;
 
-				if ( trackDestination )
+				if ( !trackDestination )
 				{
 					if ( item.flag )
 						FlagPanel.Create().Open( item.flag, true );
@@ -332,6 +332,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 					return;
 				}
 
+				if ( !item.destination.construction.done )
+				{
+					ConstructionPanel.Create().Open( item.destination.construction );
+					return;
+				}
 				Workshop workshop = item.destination as Workshop;
 				if ( workshop )
 					WorkshopPanel.Create().Open( workshop, true );
@@ -472,7 +477,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		public Image progressBar;
 
 		public List<Buffer> buffers;
-		public Image[] outputs;
+		public Buffer outputs;
 
 		public static WorkshopPanel Create()
 		{
@@ -481,7 +486,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		
 		public void Open( Workshop workshop, bool show = false )
 		{
-			base.Open( workshop.node );
+			base.Open( workshop );
 			this.workshop = workshop;
 			Frame( 0, 0, 240, 200 );
 			Button( 200, -10, 20, 20, iconExit ).onClick.AddListener( Close );
@@ -495,7 +500,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			foreach ( var b in workshop.buffers )
 			{
 				var bui = new Buffer();
-				bui.Setup( this, b.itemType, b.size, col, row, iconSize + 5 );
+				bui.Setup( this, b, col, row, iconSize + 5 );
 				buffers.Add( bui );
 				if ( !workshop.commonInputs )
 				{
@@ -507,13 +512,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 				row -= iconSize * 3 / 2;
 
 			row -= iconSize / 2;
-			col = 20;
-			outputs = new Image[workshop.outputMax];
-			for ( int i = 0; i < workshop.outputMax; i++ )
-			{
-				outputs[i] = ItemIcon( col, row, iconSize, iconSize, workshop.outputType );
-				col += iconSize + 5;
-			}
+			outputs = new Buffer();
+			outputs.Setup( this, workshop.outputType, workshop.outputMax, col, row, iconSize + 5 );
 
 			progressBar = Image( 20, row - iconSize - iconSize / 2, ( iconSize + 5 ) * 8, iconSize, templateProgress );
 
@@ -533,6 +533,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 			foreach ( var buffer in buffers )
 				buffer.Update();
 
+			outputs.Update( workshop.output, 0 );
+
 			if ( workshop.working )
 			{
 				progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
@@ -550,6 +552,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi )
 			{
+				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
 				for ( int i = 0; i < itemCount; i++ )
@@ -601,7 +604,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 	}
 
-	public class StockPanel : Panel
+	public class StockPanel : BuildingPanel
 	{
 		public Stock stock;
 		public Text[] counts = new Text[(int)Item.Type.total];
@@ -613,7 +616,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 		public void Open( Stock stock, bool show = false )
 		{
-			base.Open( stock.node );
+			base.Open( stock );
 			this.stock = stock;
 			Frame( 0, 0, 200, 200 );
 
@@ -818,6 +821,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 				}
 				items[i].item = flag.items[i];
+				items[i].trackDestination = true;
 			}
 		}
 	}
@@ -855,6 +859,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			else
 				item.enabled = false;
 			item.item = worker.itemInHands;
+			item.trackDestination = true;
 			World.instance.eye.viewDistance = 2;
 			World.instance.eye.FocusOn( worker );
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
@@ -904,6 +909,17 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 		new void Update()
 		{
+			if ( construction.done )
+			{
+				Workshop workshop = construction.boss as Workshop;
+				if ( workshop )
+					WorkshopPanel.Create().Open( workshop );
+				Stock stock = construction.boss as Stock;
+				if ( stock )
+					StockPanel.Create().Open( stock );
+				Close();
+				return;
+			}
 			base.Update();
 			planks.Update( construction.plankArrived, construction.plankOnTheWay );
 			stones.Update( construction.stoneArrived, construction.stoneOnTheWay );

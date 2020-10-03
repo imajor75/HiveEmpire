@@ -25,7 +25,9 @@ public class Ground : Assert.Base
 	public static float mountainLevel = 0.6f;
 	[JsonIgnore]
 	public GameObject water;
+	[JsonIgnore]
 	public GameObject resources;
+	[JsonIgnore]
 	public GameObject buoys;
 
 	public static float forestChance = 0.004f;

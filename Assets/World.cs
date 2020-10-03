@@ -43,7 +43,7 @@ public class World : ScriptableObject
 		Prepare( true );
 
 		eye = Eye.Create().Setup( this );
-		players.Add( mainPlayer = ScriptableObject.CreateInstance<Player>() );
+		players.Add( mainPlayer = Player.Create().Setup() );
 		ground = Ground.Create().Setup( this, seed );
 	}
 
