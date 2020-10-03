@@ -134,6 +134,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 			foreach ( var panel in panels )
 				panel.Close();
 		}
+		if ( Input.GetKeyDown( KeyCode.M ) )
+			Map.Create().Open();
 	}
 
 	void LateUpdate()
@@ -254,7 +256,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Destroy( gameObject );
 		}
 
-		void Init( RectTransform t, int x, int y, int xs, int ys, Component parent = null )
+		public void Init( RectTransform t, int x, int y, int xs, int ys, Component parent = null )
 		{
 			if ( parent == null )
 				parent = this;
