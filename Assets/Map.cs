@@ -1,12 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Xml.Serialization;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Map : Interface.Panel
 {
 	public MapImage content;
+	public float zoom;
+	const float zoomMin = 1;
+	const float zoomMax = 20;
+
 
 	static public Map Create()
 	{
@@ -20,7 +22,26 @@ public class Map : Interface.Panel
 		Frame( 0, 0, 316, 316 );
 		content = MapImage.Create();
 		content.Setup();
+		zoom = 10f;
 		Init( content.rawImage.rectTransform, 30, -30, 256, 256 );
+		Button( 290, -10, 20, 20, Interface.iconExit ).onClick.AddListener( Close );
+	}
+
+	new void Update()
+	{
+		base.Update();
+
+		if ( Input.GetKey( KeyCode.Equals ) )
+			zoom *= 0.99f;
+		if ( Input.GetKey( KeyCode.Minus ) )
+			zoom *= 1.01f;
+		if ( zoom < zoomMin )
+			zoom = zoomMin;
+		if ( zoom > zoomMax )
+			zoom = zoomMax;
+
+		float rotation = World.instance.eye.direction / (float)Math.PI * 180f;
+		content.SetTarget( new Vector2( World.instance.eye.x, World.instance.eye.y ), zoom, rotation );
 	}
 
 	public class MapImage : MonoBehaviour
@@ -51,13 +72,14 @@ public class Map : Interface.Panel
 		public void SetTarget( Vector2 position, float zoom, float rotation )
 		{
 			camera.orthographic = true;
-			camera.transform.position = new Vector3( position.x, zoom, position.y );
-			camera.transform.rotation = Quaternion.Euler( 0, rotation, 0 );
+			camera.transform.position = new Vector3( position.x, 20, position.y );
+			camera.orthographicSize = zoom;
+			camera.transform.rotation = Quaternion.Euler( 90, rotation, 0 );
 		}
 
-		void Update()
+		void OnDestroy()
 		{
-			SetTarget( new Vector2( World.instance.eye.x, World.instance.eye.y ), 10, 0 );
+			Destroy( camera );
 		}
 	}
 }

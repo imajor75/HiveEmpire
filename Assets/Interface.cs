@@ -119,6 +119,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 		}
 		if ( Input.GetKeyDown( KeyCode.L ) )
 		{
+			var panels = this.panels.GetRange( 0, this.panels.Count );
+			foreach ( var panel in panels )
+				panel.Close();
 			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
 			world.Load( myFile.FullName );

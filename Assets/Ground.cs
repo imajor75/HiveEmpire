@@ -62,10 +62,6 @@ public class Ground : Assert.Base
 
 	void Start()
 	{
-		if ( world.zero == null )
-			world.zero = Worker.zero;
-		else
-			Worker.zero = world.zero;
 		gameObject.name = "Ground";
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
@@ -227,7 +223,7 @@ public class Ground : Assert.Base
 			for ( int y = 0; y <= height; y++ )
 			{
 				if ( nodes[y * ( width + 1 ) + x] == null )
-					nodes[y * ( width + 1 ) + x] = new GroundNode();
+					nodes[y * ( width + 1 ) + x] = ScriptableObject.CreateInstance<GroundNode>();
 			}
 		}
 		for ( int x = 0; x <= width; x++ )
