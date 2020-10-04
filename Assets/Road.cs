@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using System;
+using Newtonsoft.Json;
 
 [SelectionBase]
 public class Road : Assert.Base
@@ -13,6 +14,7 @@ public class Road : Assert.Base
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
 	public List<Worker> workerAtNodes = new List<Worker>();
+	[JsonIgnore]
 	public Mesh mesh;
 	public static Material material;
 	public int timeSinceWorkerAdded = 0;
@@ -22,6 +24,10 @@ public class Road : Assert.Base
 	public static float height = 1.0f/20;
 	public float cost = 0;
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
+	[JsonIgnore]
+	Material mapMaterial;
+	[JsonIgnore]
+	Mesh mapMesh;
 
 	public static void Initialize()
 	{
@@ -182,11 +188,22 @@ public class Road : Assert.Base
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
+
+		GameObject mapObject = new GameObject();
+		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new Mesh();
+		mapMaterial = mapObject.AddComponent<MeshRenderer>().material = new Material( World.defaultShader );
+		mapObject.transform.SetParent( transform, false );
+		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
+		World.SetRenderMode( mapMaterial, World.BlendMode.Transparent );
+
 		RebuildMesh();
 	}
 
 	void Update()
 	{
+		int jam = Jam();
+		mapMaterial.color = new Color( 1, 0, 0, jam * 0.15f );
+
 		if ( decorationOnly )
 			return;
 		if ( timeSinceWorkerAdded < secBetweenWorkersAdded * 50 )
@@ -195,7 +212,7 @@ public class Road : Assert.Base
 			return;
 
 		// TODO Refine when a new worker should be added
-		if ( Jam() > 4 || workers.Count == 0 )
+		if ( jam > 4 || workers.Count == 0 )
 			CreateNewWorker();
 	}
 
@@ -222,6 +239,9 @@ public class Road : Assert.Base
 		for ( int j = 0; j < vertices.Length; j++ )
 			vertices[j] = new Vector3();
 		var uvs = new Vector2[vertexRows * 3];
+
+		var mapVertices = new Vector3[nodes.Count * 2];
+
 		for (int i = 0; i < nodes.Count; i++)
 		{
 			for ( int b = 0; b < blocksInSection; b++ )
@@ -238,6 +258,13 @@ public class Road : Assert.Base
 				var side = new Vector3();
 				side.x = dir.z/2;
 				side.z = -dir.x/2;
+
+				if ( b == 0 )
+				{
+					mapVertices[i * 2 + 0] = pos - side * 0.2f + Vector3.up;
+					mapVertices[i * 2 + 1] = pos + side * 0.2f + Vector3.up;
+				}
+
 				uvs[v] = new Vector2(0.0f, tv );
 				vertices[v++] = pos + h - side;
 				uvs[v] = new Vector2(0.5f, tv );
@@ -246,9 +273,10 @@ public class Road : Assert.Base
 				vertices[v++] = pos + h + side;
 			}
 		}
-		assert.AreEqual(v, vertexRows * 3);
+		assert.AreEqual( v, vertexRows * 3 );
 		mesh.vertices = vertices;
 		mesh.uv = uvs;
+		mapMesh.vertices = mapVertices;
 
 		int blockCount = (nodes.Count - 1) * blocksInSection;
 		var triangles = new int[blockCount * 4 * 3];
@@ -270,8 +298,22 @@ public class Road : Assert.Base
 			triangles[j * 4 * 3 + 10] = j * 3 + 5;
 			triangles[j * 4 * 3 + 11] = j * 3 + 2;
 		}
+
+		var mapTriangles = new int[(nodes.Count - 1) * 2 * 3];
+		for ( int i = 0; i < nodes.Count - 1; i++ )
+		{
+			mapTriangles[i * 6 + 0] = i * 2;
+			mapTriangles[i * 6 + 1] = i * 2 + 2;
+			mapTriangles[i * 6 + 2] = i * 2 + 1;
+			mapTriangles[i * 6 + 3] = i * 2 + 1;
+			mapTriangles[i * 6 + 4] = i * 2 + 2;
+			mapTriangles[i * 6 + 5] = i * 2 + 3;
+		}
 		mesh.triangles = triangles;
+		mapMesh.triangles = mapTriangles;
+
 		mesh.RecalculateNormals();
+		mapMesh.RecalculateNormals();
 	}
 
 	public Vector3 PositionAt( int block, float fraction )
@@ -338,6 +380,7 @@ public class Road : Assert.Base
 
 	public int Jam()
 	{
+		// TODO Recalculate this only if necessary
 		if ( !ready )
 			return 0;
 

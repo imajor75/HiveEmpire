@@ -50,21 +50,14 @@ public class Item : Assert.Base
 			"coal",
 			"gold"
 		};
-		var shader = Shader.Find( "Standard" );
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 			Assert.global.IsNotNull( sprites[i] );
-			materials[i] = new Material( shader );
+			materials[i] = new Material( World.defaultShader );
 			materials[i].SetTexture( "_MainTex", tex );
-			materials[i].SetInt( "_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One );
-			materials[i].SetInt( "_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero );
-			materials[i].SetInt( "_ZWrite", 1 );
-			materials[i].EnableKeyword( "_ALPHATEST_ON" );
-			materials[i].DisableKeyword( "_ALPHABLEND_ON" );
-			materials[i].DisableKeyword( "_ALPHAPREMULTIPLY_ON" );
-			materials[i].renderQueue = 2450;
+			World.SetRenderMode( materials[i], World.BlendMode.Cutout );
 		}
 	}
 
@@ -145,9 +138,9 @@ public class Item : Assert.Base
 			assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
 
 		assert.IsNotNull( worker.reservation );
-		assert.IsTrue( flag.reserved > 0 );
+		assert.IsTrue( flag.reservedItemCount > 0 );
 		worker.reservation = null;
-		flag.reserved--;
+		flag.reservedItemCount--;
 		worker = null;
 		if ( destination != null && path.IsFinished() )
 		{

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Newtonsoft.Json;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 [SelectionBase]
@@ -12,7 +13,8 @@ public class Flag : Assert.Base
 	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
 	public Building building;
 	static GameObject template;
-	public int reserved;
+	public int reservedItemCount;
+	public int storedItemCount;
 	MeshRenderer itemTable;
 
 	static public void Initialize()
@@ -106,6 +108,7 @@ public class Flag : Assert.Base
 			if ( items[i] == item )
 			{
 				items[i] = null;
+				storedItemCount--;
 				item.flag = null;
 				UpdateBody();
 				return true;
@@ -117,13 +120,14 @@ public class Flag : Assert.Base
 
 	public bool StoreItem( Item item )
 	{
-		int reserved = this.reserved;
+		int reserved = this.reservedItemCount;
 		assert.IsNull( item.flag, "Item already has a flag" );
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == null && --reserved <= 0 )
 			{
 				items[i] = item;
+				storedItemCount++;
 				item.flag = this;
 				UpdateBody();
 				return true;
@@ -158,7 +162,7 @@ public class Flag : Assert.Base
 		for ( int i = 0; i < maxItems; i++ )
 			if ( items[i] == null )
 				free++;
-		return free - reserved;
+		return free - reservedItemCount;
 	}
 
 	public void Validate()
@@ -169,7 +173,7 @@ public class Flag : Assert.Base
         for ( int i = 0; i < 6; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( FreeSpace() >= 0 );
-		assert.IsTrue( reserved >= 0 );
+		assert.IsTrue( reservedItemCount >= 0 );
 		foreach ( var i in items )
 		{
 			if ( i )
@@ -188,7 +192,12 @@ public class Flag : Assert.Base
 			assert.IsTrue( user.atRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}
-		node.ground.reservedCount += reserved;
+		node.ground.reservedCount += reservedItemCount;
+		int storedItemCount = 0;
+		foreach ( var item in items )
+			if ( item != null )
+				storedItemCount++;
+		assert.AreEqual( storedItemCount, this.storedItemCount );
 	}
 }
  

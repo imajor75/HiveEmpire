@@ -67,6 +67,7 @@ public class Map : Interface.Panel
 			camera.name = "MapCamera";
 			camera.transform.SetParent( World.instance.ground.transform );
 			camera.targetTexture = renderTexture;
+			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
 		}
 
 		public void SetTarget( Vector2 position, float zoom, float rotation )
