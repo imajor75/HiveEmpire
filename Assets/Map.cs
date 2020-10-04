@@ -15,23 +15,33 @@ public class Map : Interface.Panel
 	public void Open()
 	{
 		base.Open();
+		name = "Map";
 		Frame( 0, 0, 316, 316 );
-		content = new GameObject().AddComponent<MapImage>();
-		Init( content.rectTransform, 30, -30, 256, 256 );
+		content = MapImage.Create();
+		content.Setup();
+		Init( content.rawImage.rectTransform, 30, -30, 256, 256 );
 	}
 
-	public class MapImage : RawImage
+	public class MapImage : MonoBehaviour
 	{
 		public RenderTexture renderTexture;
 		new public Camera camera;
+		public RawImage rawImage;
 
-		new void Start()
+		public static MapImage Create()
 		{
-			base.Start();
-			name = "MapImage";
-			texture = renderTexture;
+			return new GameObject().AddComponent<MapImage>();
+		}
 
-			camera = new GameObject().AddComponent<Camera>();
+		public void Setup()
+		{
+			rawImage = gameObject.AddComponent<RawImage>();
+			name = "MapImage";
+			rawImage.texture = renderTexture;
+
+			renderTexture = new RenderTexture( 256, 256, 24 );
+
+			camera = gameObject.AddComponent<Camera>();
 			camera.targetTexture = renderTexture;
 		}
 
