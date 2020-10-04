@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,18 +36,28 @@ public class Map : Interface.Panel
 
 		public void Setup()
 		{
+			renderTexture = new RenderTexture( 256, 256, 24 );
+
 			rawImage = gameObject.AddComponent<RawImage>();
 			name = "MapImage";
 			rawImage.texture = renderTexture;
 
-			renderTexture = new RenderTexture( 256, 256, 24 );
-
-			camera = gameObject.AddComponent<Camera>();
+			camera = new GameObject().AddComponent<Camera>();
+			camera.name = "MapCamera";
+			camera.transform.SetParent( World.instance.ground.transform );
 			camera.targetTexture = renderTexture;
+		}
+
+		public void SetTarget( Vector2 position, float zoom, float rotation )
+		{
+			camera.orthographic = true;
+			camera.transform.position = new Vector3( position.x, zoom, position.y );
+			camera.transform.rotation = Quaternion.Euler( 0, rotation, 0 );
 		}
 
 		void Update()
 		{
+			SetTarget( new Vector2( World.instance.eye.x, World.instance.eye.y ), 10, 0 );
 		}
 	}
 }
