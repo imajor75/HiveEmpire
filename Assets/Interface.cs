@@ -285,9 +285,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 		public void MoveTo( Vector3 position )
 		{
-			Vector3 screenPosition = Camera.main.WorldToScreenPoint( position );
+			Vector3 screenPosition = World.instance.eye.camera.WorldToScreenPoint( position );
 			if ( screenPosition.y > Screen.height )
-				screenPosition = Camera.main.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
 			Rect size = new Rect();
 			foreach ( RectTransform t in frame.rectTransform )

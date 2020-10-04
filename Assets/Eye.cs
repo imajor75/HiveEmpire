@@ -14,7 +14,7 @@ public class Eye : MonoBehaviour
 	public World world;
 	public float x, y;
 	public float direction;
-	new Camera camera;
+	public new Camera camera;
 	Transform ear;
 
 	public static Eye Create()
@@ -32,7 +32,6 @@ public class Eye : MonoBehaviour
 
 	void Start()
 	{
-		tag = "MainCamera";
 		name = "Eye";
 		camera = GetComponent<Camera>();
 

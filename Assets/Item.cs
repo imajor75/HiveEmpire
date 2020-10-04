@@ -101,7 +101,7 @@ public class Item : Assert.Base
 
 	void Update()
 	{
-		transform.LookAt( Camera.main.transform.position, -Vector3.up );
+		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
 		if ( path && !path.IsFinished() && path.Road() == null )
 			CancelTrip();
 		if ( destination == null && worker == null )
