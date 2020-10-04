@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -19,6 +20,15 @@ public class World : ScriptableObject
 	static public World instance;
 	public Eye eye;
 	static public int soundMaxDistance = 15;
+	static public int layerIndexNotOnMap;
+	static public int layerIndexMapOnly;
+
+	public static void Initialize()
+	{
+		layerIndexNotOnMap = LayerMask.NameToLayer( "Not on map" );
+		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
+		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
+	}
 
 	World()
 	{
@@ -135,6 +145,13 @@ public class World : ScriptableObject
 		}
 
 		return null;
+	}
+
+	public static void SetLayerRecursive( GameObject gameObject, int layer )
+	{
+		gameObject.layer = layer;
+		foreach ( Transform child in gameObject.transform )
+			SetLayerRecursive( child.gameObject, layer );
 	}
 
 	public void Validate()

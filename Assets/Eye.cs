@@ -34,6 +34,7 @@ public class Eye : MonoBehaviour
 	{
 		name = "Eye";
 		camera = GetComponent<Camera>();
+		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
 
 		ear = new GameObject().transform;
 		ear.gameObject.AddComponent<AudioListener>();

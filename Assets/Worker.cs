@@ -557,6 +557,7 @@ public class Worker : Assert.Base
 				break;
 		}
 		soundSource = World.CreateSoundSource( this );
+		World.SetLayerRecursive( gameObject, World.layerIndexNotOnMap );
 	}
 
 	public static float SpeedBetween( GroundNode a, GroundNode b )
