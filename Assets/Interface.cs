@@ -119,6 +119,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 		}
 		if ( Input.GetKeyDown( KeyCode.L ) )
 		{
+			var panels = this.panels.GetRange( 0, this.panels.Count );
+			foreach ( var panel in panels )
+				panel.Close();
 			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
 			world.Load( myFile.FullName );
@@ -134,6 +137,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 			foreach ( var panel in panels )
 				panel.Close();
 		}
+		if ( Input.GetKeyDown( KeyCode.M ) )
+			Map.Create().Open();
 	}
 
 	void LateUpdate()
@@ -254,7 +259,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Destroy( gameObject );
 		}
 
-		void Init( RectTransform t, int x, int y, int xs, int ys, Component parent = null )
+		public void Init( RectTransform t, int x, int y, int xs, int ys, Component parent = null )
 		{
 			if ( parent == null )
 				parent = this;

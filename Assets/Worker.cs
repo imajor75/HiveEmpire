@@ -9,8 +9,8 @@ public class Worker : Assert.Base
 {
 	public Type type;
 	public Ground ground;
-	public GroundNode walkFrom = zero;
-	public GroundNode walkTo = zero;
+	public GroundNode walkFrom;
+	public GroundNode walkTo;
 	public Road walkBase;
 	public int walkBlock;
 	public bool walkBackward;
@@ -36,7 +36,6 @@ public class Worker : Assert.Base
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
 	static public int walkingID, pickupID, putdownID;
-	public static GroundNode zero = new GroundNode();   // HACK This is a big fat hack, to stop Unity editor from crashing
 
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
@@ -187,7 +186,7 @@ public class Worker : Assert.Base
 			boss.assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
 			if ( exclusive )
 				boss.assert.AreEqual( road.workerAtNodes[currentPoint], boss );
-			boss.assert.AreEqual( boss.walkTo, zero );
+			boss.assert.IsNull( boss.walkTo );
 
 			if ( currentPoint == targetPoint )
 				return false;
@@ -579,17 +578,17 @@ public class Worker : Assert.Base
 	void FixedUpdate()
 	{
 		// If worker is between two nodes, simply advancing it
-		if ( walkTo != zero )
+		if ( walkTo != null )
 		{
 			walkProgress += currentSpeed * ground.world.speedModifier; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
-				walkTo = walkFrom = zero;
+				walkTo = walkFrom = null;
 				walkBase = null;
 				walkProgress -= 1;
 			}
 		}
-		if ( walkTo == zero )
+		if ( walkTo == null )
 		{
 			if ( taskQueue.Count > 0 )
 			{
@@ -711,7 +710,7 @@ public class Worker : Assert.Base
 		{
 			if ( node == ground.world.mainBuilding.node )
 			{
-				if ( walkTo == zero )
+				if ( walkTo == null )
 					Destroy( gameObject );
 				return;
 			}
@@ -897,7 +896,7 @@ public class Worker : Assert.Base
 	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
 	public void UpdateBody()
 	{
-		if ( walkTo == zero )
+		if ( walkTo == null )
 		{
 			animator?.SetBool( walkingID, false );
 			transform.localPosition = node.Position();
@@ -941,7 +940,7 @@ public class Worker : Assert.Base
 
 	public bool IsIdle( bool inBuilding = false )
 	{
-		if ( taskQueue.Count != 0 || walkTo != zero )
+		if ( taskQueue.Count != 0 || walkTo != null )
 			return false;
 		if ( !inBuilding )
 			return true;
@@ -961,7 +960,7 @@ public class Worker : Assert.Base
 			ScheduleWalkToRoadPoint( road, point );
 			return false;
 		}
-		if ( walkTo != zero )
+		if ( walkTo != null )
 			return false;
 		var currentTask = taskQueue[0] as WalkToRoadPoint;
 		if ( currentTask == null )

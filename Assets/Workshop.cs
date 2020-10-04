@@ -21,7 +21,7 @@ public class Workshop : Building
 	public int outputStep = 1;
 	public float processSpeed = 0.0015f;
 	Transform millWheel;
-	public GroundNode resourcePlace = Worker.zero;
+	public GroundNode resourcePlace;
 	AudioSource soundSource;
 	static public MediaTable<AudioClip, Type> processingSounds;
 
@@ -708,7 +708,7 @@ public class Workshop : Building
 		if ( outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;
 
-		resourcePlace = Worker.zero;
+		resourcePlace = null;
 		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
@@ -812,7 +812,7 @@ public class Workshop : Building
 
 	void OnDrawGizmos()
 	{
-		if ( Selection.Contains( gameObject ) && resourcePlace != Worker.zero )
+		if ( Selection.Contains( gameObject ) && resourcePlace != null )
 		{
 			Gizmos.color = Color.red;
 			Gizmos.DrawLine( node.Position() + Vector3.up * GroundNode.size, resourcePlace.Position() );

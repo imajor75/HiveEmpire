@@ -13,7 +13,6 @@ public class World : ScriptableObject
 	[JsonIgnore]
 	public float speedModifier = 1;
 	public Stock mainBuilding;
-	public GroundNode zero;
 	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
 	public Player mainPlayer;
@@ -59,7 +58,7 @@ public class World : ScriptableObject
 			World world = serializer.Deserialize<World>( reader );
 			Assert.global.AreEqual( world, this );
 		}
-
+		
 		ground.FinishLayout();
 		players.Clear();
 		players.Add( mainPlayer = mainBuilding.owner );

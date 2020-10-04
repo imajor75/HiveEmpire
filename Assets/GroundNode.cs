@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [System.Serializable]
-public class GroundNode
+public class GroundNode : ScriptableObject
 {
     public static float size = 1;
     public static int neighbourCount = 6;
