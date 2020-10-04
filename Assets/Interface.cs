@@ -72,6 +72,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 	void Start()
 	{
+		World.Initialize();
 		Item.Initialize();
 		Building.Initialize();
 		Road.Initialize();

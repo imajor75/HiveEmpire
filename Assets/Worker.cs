@@ -26,6 +26,9 @@ public class Worker : Assert.Base
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
 	[JsonIgnore]
 	public AudioSource soundSource;
+	[JsonIgnore]
+	public GameObject mapObject;
+	Material mapMaterial;
 
 	public Road road;
 	public bool atRoad;
@@ -558,6 +561,13 @@ public class Worker : Assert.Base
 		}
 		soundSource = World.CreateSoundSource( this );
 		World.SetLayerRecursive( gameObject, World.layerIndexNotOnMap );
+
+		mapObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
+		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
+		mapObject.transform.SetParent( transform );
+		mapObject.transform.localPosition = Vector3.up * 2;
+		mapObject.transform.localScale = Vector3.one * 0.3f;
+		mapObject.GetComponent<MeshRenderer>().material = mapMaterial = new Material( World.defaultShader );
 	}
 
 	public static float SpeedBetween( GroundNode a, GroundNode b )
@@ -602,6 +612,37 @@ public class Worker : Assert.Base
 		if ( IsIdle() )
 			FindTask();
 		UpdateBody();
+		UpdateOnMap();
+	}
+
+	void UpdateOnMap()
+	{
+		switch ( type )
+		{
+			case Type.unemployed:
+				mapMaterial.color = Color.yellow;
+				break;
+			case Type.soldier:
+				mapMaterial.color = Color.red;
+				break;
+			case Type.constructor:
+				mapMaterial.color = Color.blue;
+				break;
+			case Type.tinkerer:
+				mapMaterial.color = Color.cyan;
+				break;
+			case Type.haluer:
+				if ( !atRoad )
+				{
+					mapMaterial.color = Color.grey;
+					break;
+				}
+				if ( IsIdle() )
+					mapMaterial.color = Color.green;
+				else
+					mapMaterial.color = Color.white;
+				break;
+		}
 	}
 
 	public bool Remove( bool returnToMainBuilding = true )
@@ -861,7 +902,7 @@ public class Worker : Assert.Base
 		else
 		{
 			assert.IsTrue( other.FreeSpace() > 0 );
-			other.reserved++;
+			other.reservedItemCount++;
 			assert.IsNull( reservation );
 			reservation = other;
 			ScheduleDeliverItem( item );
@@ -879,7 +920,7 @@ public class Worker : Assert.Base
 		}
 		if ( reservation )
 		{
-			reservation.reserved--;
+			reservation.reservedItemCount--;
 			reservation = null;
 		}
 		foreach ( var task in taskQueue )
@@ -1015,7 +1056,7 @@ public class Worker : Assert.Base
 		}
 		if ( reservation != null )
 		{
-			assert.IsTrue( reservation.reserved > 0 );
+			assert.IsTrue( reservation.reservedItemCount > 0 );
 			if ( road != null )
 				assert.IsTrue( road.GetEnd( 0 ) == reservation || road.GetEnd( 1 ) == reservation );
 			ground.reservationCount++;

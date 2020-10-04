@@ -760,7 +760,7 @@ public class Workshop : Building
 
 		if ( outputType != Item.Type.unknown )
 		{
-			flag.reserved++;
+			flag.reservedItemCount++;
 			worker.reservation = flag;
 		}
 		assert.IsTrue( worker.IsIdle() );
