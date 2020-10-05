@@ -202,7 +202,7 @@ public class Road : Assert.Base
 	void Update()
 	{
 		int jam = Jam();
-		mapMaterial.color = new Color( 1, 0, 0, jam * 0.15f );
+		mapMaterial.color = new Color( 1, 0, 0, Math.Max( 0, ( jam - 2 ) * 0.15f ) );
 
 		if ( decorationOnly )
 			return;

@@ -22,8 +22,12 @@ public class Workshop : Building
 	public float processSpeed = 0.0015f;
 	Transform millWheel;
 	public GroundNode resourcePlace;
+	public int itemsProduced;
+	public Productivity productivity = new Productivity( 0.5f );
 	AudioSource soundSource;
 	static public MediaTable<AudioClip, Type> processingSounds;
+	GameObject mapIndicator;
+	Material mapIndicatorMaterial;
 
 	public static int woodcutterRange = 8;
 	public static int foresterRange = 8;
@@ -40,6 +44,34 @@ public class Workshop : Building
 	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
+
+	public struct Productivity
+	{
+		public Productivity( float current )
+		{
+			this.current = current;
+			counter = workCounter = 0;
+			weight = 0.5f;
+			timinglength = 3000;
+		}
+		public void FixedUpdate( Workshop boss )
+		{
+			counter += (int)World.instance.speedModifier;
+			if ( boss.IsWorking() )
+				workCounter += (int)World.instance.speedModifier;
+			if ( counter >= timinglength )
+			{
+				float p = (float)workCounter/counter;
+				current = current * ( 1 - weight ) + p * weight;
+				counter = workCounter = 0;
+			}
+		}
+		public float current;
+		public int counter;
+		public int workCounter;
+		public float weight;
+		public int timinglength;
+	}
 
 	[System.Serializable]
 	public class Buffer
@@ -421,6 +453,11 @@ public class Workshop : Building
 		commonInputs = true;
 	}
 
+	public bool IsWorking()
+	{
+		return worker != null && !worker.IsIdle( true ); 
+	}
+
 	new void Start()
 	{
 		var m = looks.GetMedia( type );
@@ -437,6 +474,13 @@ public class Workshop : Building
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
 
 		soundSource = World.CreateSoundSource( this );
+
+		mapIndicator = GameObject.CreatePrimitive( PrimitiveType.Plane );
+		mapIndicator.transform.SetParent( transform, false );
+		World.SetLayerRecursive( mapIndicator, World.layerIndexMapOnly );
+		mapIndicatorMaterial = mapIndicator.GetComponent<MeshRenderer>().material = new Material( World.defaultShader );
+		mapIndicator.transform.position = node.Position() + new Vector3( 0, 2, GroundNode.size * 0.5f );
+		mapIndicator.SetActive( false );
 	}
 
 	new void Update()
@@ -452,8 +496,12 @@ public class Workshop : Building
 			if ( missing > 0 )
 				ItemDispatcher.lastInstance.RegisterRequest( this, b.itemType, missing, b.priority );
 		}
-		if ( output > 0 && flag.FreeSpace() > 0 )
+		if ( output > 0 && flag.FreeSpace() > 0 && worker.IsIdle( true ) )
 			ItemDispatcher.lastInstance.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
+
+		mapIndicator.SetActive( true );
+		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
+		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.green, productivity.current );
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination )
@@ -515,6 +563,8 @@ public class Workshop : Building
 
 	new void FixedUpdate()
 	{
+		productivity.FixedUpdate( this );
+
 		if ( !construction.done )
 		{
 			base.FixedUpdate();
@@ -681,7 +731,7 @@ public class Workshop : Building
 
 	void ProcessInput()
 	{
-		if ( !working && output + outputStep <= outputMax && UseInput() )
+		if ( !working && output + outputStep <= outputMax && UseInput() && worker.IsIdle( true ) )
 		{
 			soundSource.loop = true;
 			soundSource.clip = processingSounds.GetMediaData( type );
@@ -689,7 +739,7 @@ public class Workshop : Building
 			working = true;
 			progress = 0;
 		}
-		if ( working && worker && worker.IsIdle( true ) )
+		if ( working )
 		{
 			progress += processSpeed * ground.world.speedModifier;
 			if ( progress > 1 )
@@ -697,6 +747,7 @@ public class Workshop : Building
 				output += outputStep;
 				working = false;
 				soundSource.Stop();
+				itemsProduced += outputStep;
 			}
 		}
 	}
@@ -785,6 +836,7 @@ public class Workshop : Building
 		{
 			item = Item.Create().Setup( itemType, worker.building );
 			worker.SchedulePickupItem( item );
+			( (Workshop)worker.building ).itemsProduced++;
 		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
 		if ( itemType != Item.Type.unknown )

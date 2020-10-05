@@ -905,7 +905,7 @@ public class Worker : Assert.Base
 			other.reservedItemCount++;
 			assert.IsNull( reservation );
 			reservation = other;
-			ScheduleDeliverItem( item );
+					ScheduleDeliverItem( item );
 		}
 		item.worker = this;
 	}
@@ -987,6 +987,9 @@ public class Worker : Assert.Base
 		if ( !inBuilding )
 			return true;
 		assert.IsNotNull( building );
+		Workshop workshop = building as Workshop;
+		if ( workshop && workshop.working )
+			return false;
 		return node == building.node;
 	}
 

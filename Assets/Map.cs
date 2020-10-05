@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class Map : Interface.Panel
 {
 	public MapImage content;
-	public float zoom;
+	static public float zoom = 6f;
 	const float zoomMin = 1;
 	const float zoomMax = 20;
 
@@ -22,7 +22,6 @@ public class Map : Interface.Panel
 		Frame( 0, 0, 316, 316 );
 		content = MapImage.Create();
 		content.Setup();
-		zoom = 10f;
 		Init( content.rawImage.rectTransform, 30, -30, 256, 256 );
 		Button( 290, -10, 20, 20, Interface.iconExit ).onClick.AddListener( Close );
 	}
@@ -80,7 +79,7 @@ public class Map : Interface.Panel
 
 		void OnDestroy()
 		{
-			Destroy( camera );
+			Destroy( camera.gameObject );
 		}
 	}
 }

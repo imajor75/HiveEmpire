@@ -1,11 +1,14 @@
-﻿using System;
+﻿using Packages.Rider.Editor.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.PlayerLoop;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class Interface : Assert.Base, IPointerClickHandler
@@ -136,8 +139,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )
 		{
-			foreach ( var panel in panels )
-				panel.Close();
+			if ( panels.Count > 0 )
+				panels[panels.Count - 1].Close();
 		}
 		if ( Input.GetKeyDown( KeyCode.M ) )
 			Map.Create().Open();
@@ -188,8 +191,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 		public void Open( GroundNode target = null, int x = 0, int y = 0 )
 		{
-			foreach ( var panel in Root.panels )
-				Destroy( panel.gameObject );
 			Root.panels.Add( this );
 			name = "Panel";
 			frame = gameObject.AddComponent<Image>();
@@ -253,7 +254,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			return i.gameObject.AddComponent<Button>();
 		}
 
-		public Text Text( int x, int y, int xs, int ys, string text, Component parent = null )
+		public Text Text( int x, int y, int xs, int ys, string text = "", Component parent = null )
 		{
 			Text t = new GameObject().AddComponent<Text>();
 			t.name = "Text";
@@ -490,6 +491,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 	{
 		public Workshop workshop;
 		public Image progressBar;
+		public Text productivity;
+		public Text itemsProduced;
 
 		public List<Buffer> buffers;
 		public Buffer outputs;
@@ -505,9 +508,10 @@ public class Interface : Assert.Base, IPointerClickHandler
 			this.workshop = workshop;
 			Frame( 0, 0, 240, 200 );
 			Button( 200, -10, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 190, -150, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			Button( 190, -170, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
+			productivity = Text( 180, -20, 40, 20 );
 
 			int row = -40;
 			int col = 20;
@@ -530,7 +534,10 @@ public class Interface : Assert.Base, IPointerClickHandler
 			outputs = new Buffer();
 			outputs.Setup( this, workshop.outputType, workshop.outputMax, col, row, iconSize + 5 );
 
-			progressBar = Image( 20, row - iconSize - iconSize / 2, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+			row -= (int)((float)iconSize * 1.5f);
+			progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+
+			itemsProduced = Text( 20, row - 24, 200, 20 );
 
 			if ( show )
 				Root.world.eye.FocusOn( workshop );
@@ -557,7 +564,10 @@ public class Interface : Assert.Base, IPointerClickHandler
 			}
 			else
 				progressBar.color = Color.red;
+			productivity.text = ( (int)(workshop.productivity.current * 100) ).ToString() + "%";
+			itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 		}
+
 		public class Buffer
 		{
 			public ItemImage[] items;
@@ -779,6 +789,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public class FlagPanel : Panel
 	{
 		public Flag flag;
+		public Text reserved;
 		public ItemImage[] items = new ItemImage[Flag.maxItems];
 
 		public static FlagPanel Create()
@@ -795,6 +806,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Button( 230, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			Button( 210, -40, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 			Button( 20, -40, 20, 20, iconPath ).onClick.AddListener( StartRoad );
+			reserved = Text( 50, -40, 180, 20 );
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
@@ -838,6 +850,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 				items[i].item = flag.items[i];
 				items[i].trackDestination = true;
 			}
+			reserved.text = "Reserved: " + flag.reservedItemCount;
 		}
 	}
 
