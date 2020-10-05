@@ -38,6 +38,8 @@ public class Ground : Assert.Base
 	public static float stoneChance = 0.02f;
 	public static float saltChance = 0.02f;
 	public static float goldChance = 0.02f;
+	[JsonIgnore]
+	public Material material;
 
 	public HeightMap heightMap;
 
@@ -68,7 +70,7 @@ public class Ground : Assert.Base
 		collider = gameObject.GetComponent<MeshCollider>();
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";
-		GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
+		material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
 
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";

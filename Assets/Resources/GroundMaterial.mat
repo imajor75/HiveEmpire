@@ -43,6 +43,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 8cef1f579b7122e40a9395ff05837ead, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _HeightStripes:
+        m_Texture: {fileID: 2800000, guid: 21f32745421cb7049a5086bfef7f0f38, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 8cef1f579b7122e40a9395ff05837ead, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -67,6 +71,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 496cddd81af20254db35c01a86d70fee, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Stripes:
+        m_Texture: {fileID: 2800000, guid: 21f32745421cb7049a5086bfef7f0f38, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -75,6 +83,8 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.194
     - _GlossyReflections: 1
+    - _HeightMax: 15
+    - _HeightMin: 10
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1

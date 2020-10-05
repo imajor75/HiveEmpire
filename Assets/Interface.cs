@@ -28,6 +28,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public static Sprite templateSmallFrame;
 	public GameObject debug;
 	public static Interface instance;
+	public bool heightStrips;
 
 	public Interface()
 	{
@@ -140,6 +141,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 		}
 		if ( Input.GetKeyDown( KeyCode.M ) )
 			Map.Create().Open();
+		if ( Input.GetKeyDown( KeyCode.Alpha9 ) )
+			SetHeightStrips( !heightStrips );
 	}
 
 	void LateUpdate()
@@ -150,6 +153,12 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public void OnPointerClick( PointerEventData eventData )
 	{
 		throw new System.NotImplementedException();
+	}
+
+	void SetHeightStrips( bool value )
+	{
+		this.heightStrips = value;
+		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 ); 
 	}
 
 	[Conditional( "DEBUG" )]
