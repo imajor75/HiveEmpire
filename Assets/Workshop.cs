@@ -275,7 +275,8 @@ public class Workshop : Building
 			"Ores/geologist_final", 0.8f, Type.geologist };
 		looks.Fill( looksData );
 		object[] sounds = {
-			"handsaw", Type.sawmill };
+			"handsaw", Type.sawmill, 
+			"windmill", Type.mill };
 		processingSounds.Fill( sounds );
 		for ( int i = 0; i < resourceCutTime.Length; i++ )
 		{
