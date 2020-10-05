@@ -176,6 +176,8 @@ public class Worker : Assert.Base
 
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
+			if ( currentPoint == -1 )
+				return true;	// Task failed
 			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
 			if ( currentPoint == targetPoint )
 				return true;
@@ -398,11 +400,10 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
-			boss.assert.IsNull( boss.node.flag );
 			if ( road == null || boss.node.flag != null )
 			{
 				boss.Remove();
-				return true;
+				return true;	// Task failed
 			};
 			int i = road.NodeIndex( boss.node );
 			boss.assert.IsTrue( i >= 0 );
@@ -659,8 +660,11 @@ public class Worker : Assert.Base
 				assert.AreEqual( exclusiveFlag.user, this );
 				exclusiveFlag.user = null;
 			}
-			road.workers.Remove( this );
 			atRoad = false;
+		}
+		if ( road != null )
+		{
+			road.workers.Remove( this );
 			road = null;
 		}
 		if ( !returnToMainBuilding )
