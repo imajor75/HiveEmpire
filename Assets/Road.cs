@@ -480,7 +480,7 @@ public class Road : Assert.Base
 		foreach ( var worker in workers )
         {
 			int workerPoint = NodeIndex( worker.node );
-			if ( workerPoint == -1 )
+			if ( workerPoint == -1 && worker.atRoad )
 			{
 				assert.AreEqual( flag.node, worker.node );
 				workerPoint = splitPoint;
@@ -522,6 +522,11 @@ public class Road : Assert.Base
 			nodes[i].road = this;
 			nodes[i].roadIndex = i;
 		}
+	}
+
+	void OnDestroyed()
+	{
+		owner.versionedRoadDelete.Trigger();
 	}
 
 	public bool Remove()

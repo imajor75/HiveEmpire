@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 
-public class ItemDispatcher : MonoBehaviour
+public class ItemDispatcher : ScriptableObject
 {
 	public enum Priority
 	{
@@ -21,28 +20,28 @@ public class ItemDispatcher : MonoBehaviour
 	{
 		public Building building;
 		public Item item;
+		public GroundNode location;
 		public int quantity;
 		public Priority priority;
 	}
-	public List<Request>[] requests = new List<Request>[(int)Item.Type.total];
-	public List<Offer>[] offers = new List<Offer>[(int)Item.Type.total];
 
-	public static ItemDispatcher lastInstance;
+	public Market[] markets = new Market[(int)Item.Type.total];
 
+	public void Setup()
+	{
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+		{
+			markets[i] = ScriptableObject.CreateInstance<Market>();
+			markets[i].Setup( (Item.Type)i );
+		}
+	}
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority )
 	{
 		if ( quantity == 0 )
 			return;
 
 		Assert.global.IsTrue( quantity > 0 );
-		var r = new Request();
-		r.building = building;
-		r.quantity = quantity;
-		r.priority = priority;
-		if ( priority == Priority.low )
-			requests[(int)itemType].Add( r );
-		else
-			requests[(int)itemType].Insert( 0, r );
+		markets[(int)itemType].RegisterRequest( building, quantity, priority );
 	}
 
 	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority )
@@ -51,86 +50,153 @@ public class ItemDispatcher : MonoBehaviour
 			return;
 
 		Assert.global.IsTrue( quantity > 0 );
-		var o = new Offer();
-		o.building = building;
-		o.quantity = quantity;
-		o.priority = priority;
-		if ( priority == Priority.low )
-			offers[(int)itemType].Add( o );
-		else
-			offers[(int)itemType].Insert( 0, o );
+		markets[(int)itemType].RegisterOffer( building, quantity, priority );
 	}
 
 	public void RegisterOffer( Item item, Priority priority )
 	{
-		var o = new Offer();
-		o.item = item;
-		o.quantity = 1;
-		o.priority = priority;
-		if ( priority == Priority.low )
-			offers[(int)item.type].Add( o );
-		else
-			offers[(int)item.type].Insert( 0, o );
+		markets[(int)item.type].RegisterOffer( item, priority );
 	}
 
-	void Start()
-    {
-		name = "Item Dispatcher";
-		for ( int i = 0; i < requests.Length; i++ )
-			requests[i] = new List<Request>();
-		for ( int i = 0; i < requests.Length; i++ )
-			offers[i] = new List<Offer>();
-		lastInstance = this;
+	public void LateUpdate()
+	{
+		foreach ( var market in markets )
+			market.LateUpdate();
 	}
 
-	void LateUpdate()
-    {
-		// TODO Take into account the distance between buildings
-		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
+	public class Market : ScriptableObject
+	{
+		public Item.Type itemType;
+		public List<Offer> offers = new List<Offer>();
+		public List<Request> requests = new List<Request>();
+
+		public void Setup( Item.Type itemType )
 		{
-			var r = requests[itemType];
-			var o = offers[itemType];
-
-			while ( true )
-			{
-				while ( r.Count > 0 && r[0].quantity == 0 )
-					r.RemoveAt( 0 );
-				while ( o.Count > 0 && o[0].quantity == 0 )
-					o.RemoveAt( 0 );
-				if ( r.Count == 0 || o.Count == 0 || (int)r[0].priority + (int)o[0].priority < 3 )
-					break;
-				if ( o[0].building != null )
-				{
-					if ( o[0].building.SendItem( (Item.Type)itemType, r[0].building ) )
-					{
-						r[0].quantity--;
-						o[0].quantity--;
-					}
-					else
-					{
-						// TODO Figure out if the request or the offer is wrong
-						o.RemoveAt( 0 );
-					}
-					break;
-				}
-				if ( o[0].item != null )
-				{
-					if ( o[0].item.SetTarget( r[0].building ) )
-					{
-						r[0].quantity--;
-						o[0].quantity--;
-					}
-					else
-					{
-						o.RemoveAt( 0 );
-					}
-				}
-			}
+			this.itemType = itemType;
 		}
 
-		foreach ( var list in requests )
-			list.Clear();
-		foreach ( var list in offers )
-			list.Clear();
+		public void RegisterRequest( Building building, int quantity, Priority priority )
+		{
+			var r = new Request();
+			r.building = building;
+			r.quantity = quantity;
+			r.priority = priority;
+			if ( priority == Priority.low )
+				requests.Add( r );
+			else
+				requests.Insert( 0, r );
+		}
+
+		public void RegisterOffer( Building building, int quantity, Priority priority )
+		{
+			var o = new Offer();
+			o.building = building;
+			o.quantity = quantity;
+			o.priority = priority;
+			o.location = building.node;
+			if ( priority == Priority.low )
+				offers.Add( o );
+			else
+				offers.Insert( 0, o );
+		}
+
+		public void RegisterOffer( Item item, Priority priority )
+		{
+			Assert.global.IsNotNull( item.flag );
+			var o = new Offer();
+			o.item = item;
+			o.quantity = 1;
+			o.priority = priority;
+			o.location = item.flag.node;
+			if ( priority == Priority.low )
+				offers.Add( o );
+			else
+				offers.Insert( 0, o );
+		}
+
+		public void LateUpdate()
+		{
+			foreach ( var request in requests )
+			{
+				if ( request.priority < Priority.high )
+					break;
+				while ( request.quantity > 0 && FindOfferFor( request ) );
+			}
+
+			foreach ( var offer in offers )
+			{
+				if ( offer.priority < Priority.high )
+					break;
+				while ( offer.quantity > 0 && FindRequestFor( offer ) );
+			}
+
+			requests.Clear();
+			offers.Clear();
+		}
+
+		bool FindOfferFor( Request request )
+		{
+			Offer bestOffer = null;
+			float bestScore = 0;
+
+			foreach ( var offer in offers )
+			{
+				if ( request.priority == Priority.low && offer.priority == Priority.low )
+					break;  // No point in searching further
+				if ( offer.quantity == 0 )
+					continue;
+				float score = 1f / offer.location.DistanceFrom( request.building.node );
+				if ( score > bestScore )
+				{
+					bestScore = score;
+					bestOffer = offer;
+				}
+			}
+			if ( bestOffer != null )
+				return Attach( bestOffer, request );    // TODO If this fails, the second best should be used
+
+			return false;
+		}
+
+		bool FindRequestFor( Offer offer )
+		{
+			Request bestRequest = null;
+			float bestScore = 0;
+
+			foreach ( var request in requests )
+			{
+				if ( request.priority == Priority.low && offer.priority == Priority.low )
+					break;  // No point in searching further
+				if ( request.quantity == 0 )
+					continue;
+				float score = 1f / offer.location.DistanceFrom( request.building.node );
+				if ( score > bestScore )
+				{
+					bestScore = score;
+					bestRequest = request;
+				}
+			}
+			if ( bestRequest != null )
+				return Attach( offer, bestRequest );    // TODO If this fails, the second best should be used
+
+			return false;
+		}
+
+		public bool Attach( Offer offer, Request request )
+		{
+			bool success = false;
+			if ( offer.building != null )
+				success = offer.building.SendItem( (Item.Type)itemType, request.building );
+			else if ( offer.item != null )
+				success = offer.item.SetTarget( request.building );
+
+			if ( !success )
+				return false;
+
+			request.quantity--;
+			offer.quantity--;
+
+			return true;
+		}
 	}
 }

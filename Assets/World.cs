@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using UnityEditor;
 using UnityEngine;
@@ -50,6 +51,12 @@ public class World : ScriptableObject
 		return soundSource;
 	}
 
+	public void LateUpdate()
+	{
+		foreach( var player in players )
+			player.LateUpdate();
+	}
+
 	public void NewGame( int seed )
 	{
 		Debug.Log( "Starting new game with seed " + seed );
@@ -74,6 +81,15 @@ public class World : ScriptableObject
 			Assert.global.AreEqual( world, this );
 		}
 
+		//{
+		//	var list = Resources.FindObjectsOfTypeAll<Item>();
+		//	foreach ( var o in list )
+		//	{
+		//		o.owner = mainPlayer;
+		//		o.watchRoadDelete.Attach( o.owner.versionedRoadDelete );
+		//	}
+		//}
+
 		ground.FinishLayout();
 		players.Clear();
 		players.Add( mainPlayer = mainBuilding.owner );
@@ -97,11 +113,6 @@ public class World : ScriptableObject
 
 	public void Prepare( bool force = false )
 	{
-		if ( Object.FindObjectOfType<ItemDispatcher>() == null || force )
-		{
-			var itemDispatcherObject = new GameObject();
-			itemDispatcherObject.AddComponent<ItemDispatcher>();
-		}
 		if ( Object.FindObjectOfType<Light>() == null || force )
 		{
 			var lightObject = new GameObject();

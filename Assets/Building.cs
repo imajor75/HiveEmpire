@@ -65,9 +65,9 @@ abstract public class Building : Assert.Base
 				return;
 
 			int plankMissing = plankNeeded - plankOnTheWay - plankArrived;
-			ItemDispatcher.lastInstance.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high );
 			int stoneMissing = stoneNeeded - stoneOnTheWay - stoneArrived;
-			ItemDispatcher.lastInstance.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high );
 		}
 
 		public void FixedUpdate()

@@ -44,6 +44,12 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Destroy( d.gameObject );
 	}
 
+	void LateUpdate()
+	{
+		world.LateUpdate();
+		Validate();
+	}
+
 	static Sprite LoadSprite( string fileName )
 	{
 		Texture2D tex = Resources.Load<Texture2D>( fileName );
@@ -146,11 +152,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Map.Create().Open();
 		if ( Input.GetKeyDown( KeyCode.Alpha9 ) )
 			SetHeightStrips( !heightStrips );
-	}
-
-	void LateUpdate()
-	{
-		Validate();
 	}
 
 	public void OnPointerClick( PointerEventData eventData )
@@ -927,9 +928,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 			planks = new WorkshopPanel.Buffer();
 			planks.Setup( this, Item.Type.plank, construction.plankNeeded, 20, -40, iconSize + 5 );
 			stones = new WorkshopPanel.Buffer();
-			stones.Setup( this, Item.Type.stone, construction.stoneNeeded, 20, -60, iconSize + 5 );
+			stones.Setup( this, Item.Type.stone, construction.stoneNeeded, 20, -64, iconSize + 5 );
 
-			progressBar = Image( 20, -80, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+			progressBar = Image( 20, -90, ( iconSize + 5 ) * 8, iconSize, templateProgress );
 
 			if ( show )
 				Root.world.eye.FocusOn( workshop );

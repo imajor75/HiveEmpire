@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Linq;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -6,6 +7,7 @@ using UnityEngine.Assertions;
 [SelectionBase]
 public class Item : Assert.Base
 {
+	public Player owner;
 	public Flag flag;
 	public Worker worker;
 	public Type type;
@@ -15,6 +17,7 @@ public class Item : Assert.Base
 	public Building destination;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
+	public Player.Watch watchRoadDelete;
 
 	public enum Type
     {
@@ -70,6 +73,8 @@ public class Item : Assert.Base
 	public Item Setup( Type type, Building origin, Building destination = null )
 	{
 		ground = origin.ground;
+		owner = origin.owner;
+		watchRoadDelete.Attach( owner.versionedRoadDelete );
 		this.type = type;
 		this.origin = origin;
 		if ( destination )
@@ -94,11 +99,16 @@ public class Item : Assert.Base
 
 	void Update()
 	{
+		assert.IsNotSelected();
 		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
-		if ( path && !path.IsFinished() && path.Road() == null )
-			CancelTrip();
-		if ( destination == null && worker == null )
-			ItemDispatcher.lastInstance.RegisterOffer( this, ItemDispatcher.Priority.high );
+		if ( watchRoadDelete.Check() && path && !path.IsFinished() )
+		{
+			for ( int i = path.progress; i < path.roadPath.Count; i++ )
+				if ( path.roadPath[i] == null )
+					CancelTrip();
+		}
+		if ( destination == null && worker == null && flag != null )
+			owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.high );
 	}
 
 	public bool SetTarget( Building building )
@@ -205,6 +215,7 @@ public class Item : Assert.Base
 				if ( i == this )
 					s++;
 			assert.AreEqual( s, 1 );
+			assert.IsTrue( flag.roadsStartingHere.Contains( path.Road() ) );
 		}
 		if ( worker && worker.itemInHands != null )
 			assert.AreEqual( this, worker.itemInHands );

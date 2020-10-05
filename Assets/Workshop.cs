@@ -495,10 +495,10 @@ public class Workshop : Building
 		{
 			int missing = b.size-b.stored-b.onTheWay;
 			if ( missing > 0 )
-				ItemDispatcher.lastInstance.RegisterRequest( this, b.itemType, missing, b.priority );
+				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, b.priority );
 		}
 		if ( output > 0 && flag.FreeSpace() > 0 && worker.IsIdle( true ) )
-			ItemDispatcher.lastInstance.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
+			owner.itemDispatcher.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );

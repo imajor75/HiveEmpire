@@ -27,6 +27,10 @@ public class Stock : Building
 
 	new public Stock Setup( Ground ground, GroundNode node, Player owner )
 	{
+		construction.plankNeeded = 3;
+		construction.stoneNeeded = 3;
+		height = 2;
+
 		while ( content.Count < (int)Item.Type.total )
 			content.Add( 0 );
 		if ( base.Setup( ground, node, owner ) == null )
@@ -37,7 +41,6 @@ public class Stock : Building
 
 	public Stock SetupMain( Ground ground, GroundNode node, Player owner )
 	{
-		height = 2;
 		node.owner = owner;
 		ground.GetNode( node.x + 1, node.y - 1 ).owner = owner;
 		if ( !Setup( ground, node, owner ) )
@@ -81,8 +84,8 @@ public class Stock : Building
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
 			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 0 )
-				ItemDispatcher.lastInstance.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.low );
-			ItemDispatcher.lastInstance.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
+				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.low );
+			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.low );
 		}
     }
 

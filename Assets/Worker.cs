@@ -400,13 +400,14 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
-			if ( road == null || boss.node.flag != null )
+			if ( road == null )
 			{
 				boss.Remove();
-				return true;	// Task failed
-			};
+				return true;    // Task failed
+			}
 			int i = road.NodeIndex( boss.node );
-			boss.assert.IsTrue( i >= 0 );
+			if ( i < 0 || boss.node.flag != null )
+				return true;
 			boss.assert.IsFalse( boss.atRoad );
 			if ( road.workerAtNodes[i] == null )
 			{
