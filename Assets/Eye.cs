@@ -35,10 +35,12 @@ public class Eye : MonoBehaviour
 		name = "Eye";
 		camera = GetComponent<Camera>();
 		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
+		transform.SetParent( World.instance.transform );
 
 		ear = new GameObject().transform;
 		ear.gameObject.AddComponent<AudioListener>();
 		ear.name = "Ear";
+		ear.transform.SetParent( World.instance.transform );
 	}
 
 	private void Update()

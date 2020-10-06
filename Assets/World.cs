@@ -1,16 +1,10 @@
 ﻿using Newtonsoft.Json;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
-public class World : ScriptableObject
+public class World : MonoBehaviour
 {
 	public Ground ground;
 	[JsonIgnore]
@@ -43,6 +37,16 @@ public class World : ScriptableObject
 		instance = this;
 	}
 
+	public static World Create()
+	{
+		return new GameObject().AddComponent<World>();
+	}
+
+	public World Setup()
+	{
+		return this;
+	}
+
 	static public AudioSource CreateSoundSource( Component component )
 	{
 		var soundSource = component.gameObject.AddComponent<AudioSource>();
@@ -62,17 +66,22 @@ public class World : ScriptableObject
 	{
 		Debug.Log( "Starting new game with seed " + seed );
 		Clear();
-		Prepare( true );
+		Prepare();
 
 		eye = Eye.Create().Setup( this );
 		players.Add( mainPlayer = Player.Create().Setup() );
 		ground = Ground.Create().Setup( this, seed );
 	}
 
+	void Start()
+	{
+		name = "World";
+	}
+
 	public void Load( string fileName )
 	{
 		Clear();
-		Prepare( true );
+		Prepare();
 
 		using ( var sw = new StreamReader( fileName ) )
 		using ( var reader = new JsonTextReader( sw ) )
@@ -136,22 +145,23 @@ public class World : ScriptableObject
 		}
 	}
 
-	public void Prepare( bool force = false )
+	public void Prepare()
 	{
-		if ( Object.FindObjectOfType<Light>() == null || force )
+		var lightObject = new GameObject();
+		var light = lightObject.AddComponent<Light>();
+		light.type = UnityEngine.LightType.Directional;
+		lightObject.name = "Sun";
+		light.transform.Rotate( new Vector3( 40, -60, 0 ) );
+		light.shadows = LightShadows.Soft;
+		light.color = new Color( 0.6f, 0.6f, 0.6f );
+		light.transform.SetParent( transform );
+
 		{
-			var lightObject = new GameObject();
-			var light = lightObject.AddComponent<Light>();
-			light.type = UnityEngine.LightType.Directional;
-			lightObject.name = "Sun";
-			light.transform.Rotate( new Vector3( 40, -60, 0 ) );
-			light.shadows = LightShadows.Soft;
-			light.color = new Color( 0.6f, 0.6f, 0.6f );
-		}
-		if ( Object.FindObjectOfType<EventSystem>() == null || force )
-		{
+			// HACK The event system needs to be recreated after the main camera is destroyed,
+			// otherwise there is a crash in unity
+			Destroy( GameObject.FindObjectOfType<EventSystem>().gameObject );
 			var esObject = new GameObject();
-			esObject.name = "Event System";	
+			esObject.name = "Event System";
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();
 		}
@@ -163,13 +173,10 @@ public class World : ScriptableObject
 		mainPlayer = null;
 		mainBuilding = null;
 		eye = null;
-		foreach ( GameObject o in Object.FindObjectsOfType<GameObject>() )
+		foreach ( Transform o in transform )
 		{
-			if ( o.transform.root.GetComponent<Interface>() != null )
-				continue;
-
 			o.name += " - DESTROYED";
-			Destroy( o );
+			Destroy( o.gameObject );
 		}
 		Interface.instance.Clear();
 	}

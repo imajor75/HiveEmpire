@@ -65,6 +65,7 @@ public class Ground : Assert.Base
 	void Start()
 	{
 		gameObject.name = "Ground";
+		transform.SetParent( World.instance.transform );
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 		collider = gameObject.GetComponent<MeshCollider>();

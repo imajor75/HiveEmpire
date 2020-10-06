@@ -105,11 +105,16 @@ public class Interface : Assert.Base, IPointerClickHandler
 		viewport.transform.SetParent( transform );
 		viewport.name = "Viewport";
 
+		var esObject = new GameObject();
+		esObject.name = "Event System";
+		esObject.AddComponent<EventSystem>();
+		esObject.AddComponent<StandaloneInputModule>();
+
 		debug = new GameObject();
 		debug.name = "Debug";
 		debug.transform.SetParent( transform );
 
-		world = ScriptableObject.CreateInstance<World>();
+		world = World.Create().Setup();
 		world.NewGame( 117274283 );
 	}
 

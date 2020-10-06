@@ -1065,7 +1065,8 @@ public class Worker : Assert.Base
 		}
 		if ( reservation != null )
 		{
-			assert.IsTrue( reservation.items.Contains( itemInHands ) );
+			if ( itemInHands != null )
+				assert.IsTrue( reservation.items.Contains( itemInHands ) );
 			if ( road != null )
 				assert.IsTrue( road.GetEnd( 0 ) == reservation || road.GetEnd( 1 ) == reservation );
 		}
