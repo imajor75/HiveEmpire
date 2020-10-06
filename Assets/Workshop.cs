@@ -102,6 +102,8 @@ public class Workshop : Building
 		forester,
 		geologist,
 		bowmaker,
+		smelter,
+		weaponmaker,
 		total,
 		unknown = -1
 	}
@@ -119,6 +121,12 @@ public class Workshop : Building
 			this.node = node;
 			this.item = item;
 			this.resourceType = resourceType;
+		}
+		public override void Validate()
+		{
+			if ( node.resource && resourceType != Resource.Type.fish )
+				boss.assert.AreEqual( boss, node.resource.hunter );
+			base.Validate();
 		}
 		public override void Cancel()
 		{
@@ -144,7 +152,7 @@ public class Workshop : Building
 
 			boss.soundSource.Stop();
 			Resource resource = node.resource;
-			if ( resource )
+			if ( resource && resourceType != Resource.Type.fish )
 			{
 				if ( resourceType != Resource.Type.expose )
 					boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting "+ resourceType.ToString()+" but was "+ resource.type.ToString() +")" );	// TODO Fired once (maybe fisherman met a tree?)
@@ -166,6 +174,7 @@ public class Workshop : Building
 				}
 				else
 					resource.keepAwayTimer = 500;   // TODO Settings
+				boss.assert.AreEqual( resource.hunter, boss );
 				resource.hunter = null;
 			}
 			FinishJob( boss, item );
@@ -271,18 +280,22 @@ public class Workshop : Building
 			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", 1.5f, Type.farm, 
 			"mill/melnica_mod", 2.0f, Type.mill,
 			"Mines/saltmine_final", 1.5f, Type.saltmine,
-			"Mines/coalmine_final", 1.5f, Type.coalmine,
+			"Mines/coalmine_final", 1.1f, Type.coalmine,
 			"Mines/ironmine_final", 1.5f, Type.ironmine,
 			"Mines/goldmine_final", 1.5f, Type.goldmine,
 			"Mines/stonemine_final", 1.5f, Type.stonemine,
 			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
 			"Forest/forester_final", 1.1f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist,
+			"SAdK/smelter_final", 1.5f, Type.smelter,
+			"SAdK/weaponmaker_final", 1.5f, Type.weaponmaker,
 			"SAdK/bowmaker_final", 1.5f, Type.bowmaker };
 		looks.Fill( looksData );
 		object[] sounds = {
 			"handsaw", Type.sawmill,
 			"SAdK/bowmaker", Type.bowmaker,
+			"SAdK/smelter", Type.smelter,
+			"SAdK/weaponmaker", Type.weaponmaker,
 			"windmill", Type.mill };
 		processingSounds.Fill( sounds );
 		for ( int i = 0; i < resourceCutTime.Length; i++ )
@@ -445,6 +458,26 @@ public class Workshop : Building
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
 				height = 1.7f;
+				break;
+			}
+			case Type.smelter:
+			{
+				AddInput( Item.Type.coal );
+				AddInput( Item.Type.iron );
+				outputType = Item.Type.steel;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = true;
+				height = 2f;
+				break;
+			}
+			case Type.weaponmaker:
+			{
+				AddInput( Item.Type.coal );
+				AddInput( Item.Type.steel );
+				outputType = Item.Type.weapon;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = true;
+				height = 2f;
 				break;
 			}
 		}
@@ -716,6 +749,16 @@ public class Workshop : Building
 				ProcessInput();
 				break;
 			}
+			case Type.smelter:
+			{
+				ProcessInput();
+				break;
+			}
+			case Type.weaponmaker:
+			{
+				ProcessInput();
+				break;
+			}
 		}
 	}
 
@@ -809,7 +852,7 @@ public class Workshop : Building
 				continue;
 			}
 			Resource resource = target.resource;
-			if ( resource == null )
+			if ( resource == null || resource.hunter != null )
 				continue;
 			if ( resourceType == Resource.Type.expose )
 			{
@@ -819,7 +862,7 @@ public class Workshop : Building
 					return;
 				}
 			}
-			if ( resource.type == resourceType && resource.hunter == null && resource.IsReadyToBeHarvested() )
+			if ( resource.type == resourceType && resource.IsReadyToBeHarvested() )
 			{
 				CollectResourceFromNode( target, resourceType );
 				return;
