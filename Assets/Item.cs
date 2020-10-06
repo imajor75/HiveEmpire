@@ -8,7 +8,8 @@ using UnityEngine.Assertions;
 public class Item : Assert.Base
 {
 	public Player owner;
-	public Flag flag;
+	public Flag flag;			// If this is a valid reference, the item is waiting at the flag for a worker to pick it up
+	public Flag nextFlag;		// If this is a valid reference, the item is on the way to nextFlag
 	public Worker worker;
 	public Type type;
 	public Ground ground;
@@ -99,7 +100,6 @@ public class Item : Assert.Base
 
 	void Update()
 	{
-		assert.IsNotSelected();
 		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
 		if ( watchRoadDelete.Check() && path && !path.IsFinished() )
 		{
@@ -144,13 +144,13 @@ public class Item : Assert.Base
 
 	public void ArrivedAt( Flag flag )
 	{
+		assert.IsNull( this.flag );
+		assert.AreEqual( flag, nextFlag );
 		if ( destination )
 			assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
 
 		assert.IsNotNull( worker.reservation );
-		assert.IsTrue( flag.reservedItemCount > 0 );
 		worker.reservation = null;
-		flag.reservedItemCount--;
 		worker = null;
 		if ( destination != null && path.IsFinished() )
 		{
@@ -160,12 +160,10 @@ public class Item : Assert.Base
 		}
 
 		if ( destination == null )
-			CancelTrip();	
+			CancelTrip();
 
-		if ( flag.StoreItem( this ) )
-			UpdateLook();
-		else
-			Remove();
+		this.flag = flag;
+		nextFlag = null;
 	}
 
 	public void Arrived()
@@ -207,21 +205,30 @@ public class Item : Assert.Base
 
 	public void Validate()
 	{
-		assert.IsTrue( flag || worker );
+		assert.IsTrue( flag != null || worker != null );
+		if ( worker )
+		{
+			if ( path == null || path.StepsLeft() > 1 ) 
+				assert.IsNotNull( nextFlag );
+			if ( worker.itemInHands )
+				assert.AreEqual( this, worker.itemInHands );
+		}
 		if ( flag )
 		{
-			int s = 0;
-			foreach ( var i in flag.items )
-				if ( i == this )
-					s++;
-			assert.AreEqual( s, 1 );
+			assert.IsTrue( flag.items.Contains( this ) );
 			assert.IsTrue( flag.roadsStartingHere.Contains( path.Road() ) );
 		}
-		if ( worker && worker.itemInHands != null )
-			assert.AreEqual( this, worker.itemInHands );
+		if ( nextFlag )
+		{
+			assert.IsNotNull( worker );
+			assert.IsTrue( nextFlag.items.Contains( this ) );
+		}
 		if ( path != null )
 			path.Validate();
 		if ( destination )
+		{
+			assert.IsNotNull( path );
 			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
+		}
 	}
 }

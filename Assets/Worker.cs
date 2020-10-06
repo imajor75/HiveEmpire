@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [SelectionBase]
@@ -703,8 +704,11 @@ public class Worker : Assert.Base
 			float bestScore = 0;
 			for ( int c = 0; c < 2; c++ )
 			{
-				foreach ( var item in road.GetEnd( c ).items )
+				Flag flag = road.GetEnd( c );
+				foreach ( var item in flag.items )
 				{
+					if ( item == null || item.flag == null )	// It can be nextFlag as well
+						continue;
 					float score = CheckItem( item );
 					if ( score > bestScore )
 					{
@@ -775,7 +779,7 @@ public class Worker : Assert.Base
 
 	public float CheckItem( Item item )
 	{
-		if ( item == null || item.worker || item.destination == null )
+		if ( item.worker || item.destination == null )
 			return 0;
 
 		if ( item.path == null || item.path.Road() != road )
@@ -907,10 +911,10 @@ public class Worker : Assert.Base
 		else
 		{
 			assert.IsTrue( other.FreeSpace() > 0 );
-			other.reservedItemCount++;
+			other.ReserveItem( item );
 			assert.IsNull( reservation );
 			reservation = other;
-					ScheduleDeliverItem( item );
+			ScheduleDeliverItem( item );
 		}
 		item.worker = this;
 	}
@@ -925,7 +929,8 @@ public class Worker : Assert.Base
 		}
 		if ( reservation )
 		{
-			reservation.reservedItemCount--;
+			assert.IsNotNull( itemInHands );
+			reservation.ReleaseItem( itemInHands );
 			reservation = null;
 		}
 		foreach ( var task in taskQueue )
@@ -934,7 +939,7 @@ public class Worker : Assert.Base
 
 		if ( itemInHands )
 		{
-			itemInHands.Remove();
+			itemInHands.Remove();	// TODO Items should not be lost
 			animator.SetTrigger( putdownID );
 			itemInHands = null;
 		}
@@ -1022,11 +1027,8 @@ public class Worker : Assert.Base
 		return true;			
 	}
 
-	int lastValidationID = -1;
 	public void Validate()
 	{
-		if ( lastValidationID == node.ground.validationID )
-			return;
 		if ( type == Type.wildAnimal )
 		{
 			assert.IsNotNull( origin );
@@ -1050,7 +1052,6 @@ public class Worker : Assert.Base
 		if ( itemInHands )
 		{
 			assert.AreEqual( itemInHands.worker, this );	
-			assert.IsNull( itemInHands.flag );
 			itemInHands.Validate();
 		}
 		foreach ( Task task in taskQueue )
@@ -1064,11 +1065,9 @@ public class Worker : Assert.Base
 		}
 		if ( reservation != null )
 		{
-			assert.IsTrue( reservation.reservedItemCount > 0 );
+			assert.IsTrue( reservation.items.Contains( itemInHands ) );
 			if ( road != null )
 				assert.IsTrue( road.GetEnd( 0 ) == reservation || road.GetEnd( 1 ) == reservation );
-			ground.reservationCount++;
 		}
-		lastValidationID = node.ground.validationID;
 	}
 }	

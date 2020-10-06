@@ -117,10 +117,20 @@ public class Interface : Assert.Base, IPointerClickHandler
 	{
 		GroundNode node = world.eye.FindNodeAt( Input.mousePosition );
 
-		if ( Input.GetKey( KeyCode.Space ) )
-			world.speedModifier = 5;
-		else
-			world.speedModifier = 1;
+		if ( world.speedModifier != 0 )
+		{
+			if ( Input.GetKey( KeyCode.Space ) )
+				world.speedModifier = 5;
+			else
+				world.speedModifier = 1;
+		}
+		if ( Input.GetKeyDown( KeyCode.Pause ) )
+		{
+			if ( world.speedModifier > 0 )
+				world.speedModifier = 0;
+			else
+				world.speedModifier = 1;
+		}
 		if ( Input.GetKeyDown( KeyCode.P ) )
 		{
 
@@ -344,14 +354,14 @@ public class Interface : Assert.Base, IPointerClickHandler
 				{
 					if ( item.flag )
 						FlagPanel.Create().Open( item.flag, true );
-					if ( item.worker )
+					else if ( item.worker )
 						WorkerPanel.Create().Open( item.worker );
 					return;
 				}
 
 				if ( !item.destination.construction.done )
 				{
-					ConstructionPanel.Create().Open( item.destination.construction );
+					ConstructionPanel.Create().Open( item.destination.construction, true );
 					return;
 				}
 				Workshop workshop = item.destination as Workshop;
@@ -790,7 +800,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public class FlagPanel : Panel
 	{
 		public Flag flag;
-		public Text reserved;
 		public ItemImage[] items = new ItemImage[Flag.maxItems];
 
 		public static FlagPanel Create()
@@ -807,7 +816,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 			Button( 230, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			Button( 210, -40, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 			Button( 20, -40, 20, 20, iconPath ).onClick.AddListener( StartRoad );
-			reserved = Text( 50, -40, 180, 20 );
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
@@ -847,11 +855,19 @@ public class Interface : Assert.Base, IPointerClickHandler
 				{
 					items[i].enabled = true;
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
+					if ( flag.items[i].flag && flag.items[i].flag == flag )
+					{
+						items[i].color = new Color( 1, 1, 1, 1 );
+						items[i].trackDestination = true;
+					}
+					else
+					{
+						items[i].color = new Color( 1, 1, 1, 0.25f );
+						items[i].trackDestination = false;
+					}
 				}
 				items[i].item = flag.items[i];
-				items[i].trackDestination = true;
 			}
-			reserved.text = "Reserved: " + flag.reservedItemCount;
 		}
 	}
 

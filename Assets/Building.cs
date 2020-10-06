@@ -289,11 +289,13 @@ abstract public class Building : Assert.Base
 		{
 			assert.IsNull( worker.reservation );
 			worker.reservation = flag;
-			flag.reservedItemCount++;
+			flag.ReserveItem( item );
 			worker.SchedulePickupItem( item );
 			worker.ScheduleWalkToNeighbour( flag.node );
 			worker.ScheduleDeliverItem( item );
 			worker.ScheduleWalkToNeighbour( node );
+			worker.itemInHands = item;
+			item.worker = worker;
 		}
 		return item;
 	}

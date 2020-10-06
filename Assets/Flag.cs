@@ -13,8 +13,6 @@ public class Flag : Assert.Base
 	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
 	public Building building;
 	static GameObject template;
-	public int reservedItemCount;
-	public int storedItemCount;
 	MeshRenderer itemTable;
 
 	static public void Initialize()
@@ -77,6 +75,8 @@ public class Flag : Assert.Base
 	public void UpdateBody()
 	{
 		int[] l = new int[(int)Item.Type.total];
+		if ( itemTable == null )
+			return;
 		foreach ( var i in items )
 		{
 			if ( i != null )
@@ -103,12 +103,12 @@ public class Flag : Assert.Base
 
 	public bool ReleaseItem( Item item )
 	{
+		assert.AreEqual( item.flag, this );
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == item )
 			{
 				items[i] = null;
-				storedItemCount--;
 				item.flag = null;
 				UpdateBody();
 				return true;
@@ -118,17 +118,15 @@ public class Flag : Assert.Base
 		return false;
 	}
 
-	public bool StoreItem( Item item )
+	public bool ReserveItem( Item item )
 	{
-		int reserved = this.reservedItemCount;
-		assert.IsNull( item.flag, "Item already has a flag" );
+		assert.IsNull( item.nextFlag, "Item already has a flag" );
 		for ( int i = 0; i < items.Length; i++ )
 		{
-			if ( items[i] == null && --reserved <= 0 )
+			if ( items[i] == null )
 			{
 				items[i] = item;
-				storedItemCount++;
-				item.flag = this;
+				item.nextFlag = this;
 				UpdateBody();
 				return true;
 			}
@@ -162,7 +160,7 @@ public class Flag : Assert.Base
 		for ( int i = 0; i < maxItems; i++ )
 			if ( items[i] == null )
 				free++;
-		return free - reservedItemCount;
+		return free;
 	}
 
 	public void Validate()
@@ -173,12 +171,11 @@ public class Flag : Assert.Base
         for ( int i = 0; i < 6; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( FreeSpace() >= 0 );
-		assert.IsTrue( reservedItemCount >= 0 );
 		foreach ( var i in items )
 		{
 			if ( i )
 			{
-				assert.AreEqual( i.flag, this );
+				assert.IsTrue( i.flag == this || i.nextFlag == this );
 				i.Validate();
 			}
 		}
@@ -192,12 +189,6 @@ public class Flag : Assert.Base
 			assert.IsTrue( user.atRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}
-		node.ground.reservedCount += reservedItemCount;
-		int storedItemCount = 0;
-		foreach ( var item in items )
-			if ( item != null )
-				storedItemCount++;
-		assert.AreEqual( storedItemCount, this.storedItemCount );
 	}
 }
  

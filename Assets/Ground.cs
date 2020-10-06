@@ -444,16 +444,11 @@ public class Ground : Assert.Base
 			GUI.DrawTexture( new Rect( 0, 0, 512, 512 ), heightMap.mapTexture );
 	}
 
-	[JsonIgnore]
-	public int reservedCount, reservationCount, validationID = 0;
 	public void Validate()
  	{
-		reservationCount = reservedCount = 0;
         assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
         assert.AreEqual( ( width + 1 ) * ( height + 1 ), nodes.Length, "Map layout size is incorrect" );
         foreach ( var node in nodes )
             node.Validate();
-		assert.AreEqual( reservedCount, reservationCount, "Reservation numbers are wrong" );
-		validationID++;
     }
 }

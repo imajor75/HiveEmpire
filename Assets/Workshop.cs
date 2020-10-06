@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -109,11 +110,13 @@ public class Workshop : Building
 		public GroundNode node;
 		public Resource.Type resourceType;
 		public int waitTimer = 0;
+		public Item item;
 
-		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
+		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType, Item item )
 		{
 			base.Setup( boss );
 			this.node = node;
+			this.item = item;
 			this.resourceType = resourceType;
 		}
 		public override void Cancel()
@@ -123,6 +126,7 @@ public class Workshop : Building
 				boss.assert.AreEqual( boss, node.resource.hunter );
 				node.resource.hunter = null;
 			}
+			item.Remove();
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
@@ -163,7 +167,7 @@ public class Workshop : Building
 					resource.keepAwayTimer = 500;   // TODO Settings
 				resource.hunter = null;
 			}
-			FinishJob( boss, Resource.ItemType( resourceType ) );
+			FinishJob( boss, item );
 			return true;
 		}
 	}
@@ -810,9 +814,12 @@ public class Workshop : Building
 		if ( !UseInput() )
 			return;
 
+		Item item = null;
 		if ( outputType != Item.Type.unknown )
 		{
-			flag.reservedItemCount++;
+			item = Item.Create().Setup( outputType, this );
+			flag.ReserveItem( item );
+			item.worker = worker;
 			worker.reservation = flag;
 		}
 		assert.IsTrue( worker.IsIdle() );
@@ -824,23 +831,21 @@ public class Workshop : Building
 		}
 		resourcePlace = target;
 		var task = ScriptableObject.CreateInstance<GetResource>();
-		task.Setup( worker, target, resourceType );
+		task.Setup( worker, target, resourceType, item );
 		worker.ScheduleTask( task );
 		if ( target.resource )
 			target.resource.hunter = worker;
 	}
 
-	static void FinishJob( Worker worker, Item.Type itemType )
+	static void FinishJob( Worker worker, Item item )
 	{
-		Item item = null;
-		if( itemType != Item.Type.unknown )
+		if ( item != null )
 		{
-			item = Item.Create().Setup( itemType, worker.building );
 			worker.SchedulePickupItem( item );
 			( (Workshop)worker.building ).itemsProduced++;
 		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
-		if ( itemType != Item.Type.unknown )
+		if ( item != null )
 			worker.ScheduleDeliverItem( item );
 		worker.ScheduleWalkToNeighbour( worker.building.node );
 	}
