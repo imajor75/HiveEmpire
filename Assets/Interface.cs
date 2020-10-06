@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.PlayerLoop;
@@ -499,6 +500,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		public Building building;
 		public void Open( Building building )
 		{
+			Selection.activeGameObject = building.gameObject;
 			base.Open( building.node );
 			this.building = building;
 		}
@@ -524,11 +526,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 			base.Open( workshop );
 			this.workshop = workshop;
 			Frame( 0, 0, 240, 200 );
-			Button( 200, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 210, -10, 20, 20, iconExit ).onClick.AddListener( Close );
 			Button( 190, -170, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
-			productivity = Text( 180, -20, 40, 20 );
+			productivity = Text( 180, -20, 30, 20 );
 
 			int row = -40;
 			int col = 20;
@@ -815,6 +817,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 		public void Open( Flag flag, bool show = false )
 		{
+			Selection.activeGameObject = flag.gameObject;
 			base.Open( flag.node );
 			this.flag = flag;
 			int col = 16;

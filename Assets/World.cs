@@ -76,6 +76,8 @@ public class World : MonoBehaviour
 	void Start()
 	{
 		name = "World";
+		foreach ( var player in players )
+			player.Start();
 	}
 
 	public void Load( string fileName )
@@ -90,6 +92,9 @@ public class World : MonoBehaviour
 			World world = serializer.Deserialize<World>( reader );
 			Assert.global.AreEqual( world, this );
 		}
+
+		foreach ( var player in players )
+			player.Start();
 
 		//{
 		//	var list = Resources.FindObjectsOfTypeAll<Item>();

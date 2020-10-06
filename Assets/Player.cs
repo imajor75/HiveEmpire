@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Player : ScriptableObject
 {
-	public float[] itemHaulPriorities = new float[(int)Item.Type.total];
+	public List<float> itemHaulPriorities = new List<float>();
 	public ItemDispatcher itemDispatcher;
 	public Versioned versionedRoadDelete;
 
@@ -16,15 +17,22 @@ public class Player : ScriptableObject
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
 			if ( i == (int)Item.Type.plank || i == (int)Item.Type.stone )
-				itemHaulPriorities[i] = 1.1f;
+				itemHaulPriorities.Add( 1.1f );
 			else
-				itemHaulPriorities[i] = 1;
+				itemHaulPriorities.Add( 1 );
 		}
 
 		itemDispatcher = ScriptableObject.CreateInstance<ItemDispatcher>();
 		itemDispatcher.Setup();
 
 		return this;
+	}
+
+	public void Start()
+	{
+		while ( itemHaulPriorities.Count < (int)Item.Type.total )
+			itemHaulPriorities.Add( 1 );
+		itemDispatcher.Start();
 	}
 
 	public void LateUpdate()

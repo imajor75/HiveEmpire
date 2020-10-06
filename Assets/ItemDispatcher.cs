@@ -25,16 +25,25 @@ public class ItemDispatcher : ScriptableObject
 		public Priority priority;
 	}
 
-	public Market[] markets = new Market[(int)Item.Type.total];
+	public Market[] markets;
 
 	public void Setup()
 	{
-		for ( int i = 0; i < (int)Item.Type.total; i++ )
+	}
+
+	public void Start()
+	{
+		if ( markets == null || markets.Length != (int)Item.Type.total )
 		{
-			markets[i] = ScriptableObject.CreateInstance<Market>();
-			markets[i].Setup( (Item.Type)i );
+			markets = new Market[(int)Item.Type.total];
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+			{
+				markets[i] = ScriptableObject.CreateInstance<Market>();
+				markets[i].Setup( (Item.Type)i );
+			}
 		}
 	}
+
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority )
 	{
 		if ( quantity == 0 )

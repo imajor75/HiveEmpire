@@ -101,6 +101,7 @@ public class Workshop : Building
 		goldmine,
 		forester,
 		geologist,
+		bowmaker,
 		total,
 		unknown = -1
 	}
@@ -276,10 +277,12 @@ public class Workshop : Building
 			"Mines/stonemine_final", 1.5f, Type.stonemine,
 			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
 			"Forest/forester_final", 1.1f, Type.forester,
-			"Ores/geologist_final", 0.8f, Type.geologist };
+			"Ores/geologist_final", 0.8f, Type.geologist,
+			"SAdK/bowmaker_final", 1.5f, Type.bowmaker };
 		looks.Fill( looksData );
 		object[] sounds = {
-			"handsaw", Type.sawmill, 
+			"handsaw", Type.sawmill,
+			"SAdK/bowmaker", Type.bowmaker,
 			"windmill", Type.mill };
 		processingSounds.Fill( sounds );
 		for ( int i = 0; i < resourceCutTime.Length; i++ )
@@ -432,6 +435,16 @@ public class Workshop : Building
 				inputStep = 0;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = false;
+				break;
+			}
+			case Type.bowmaker:
+			{
+				AddInput( Item.Type.plank );
+				AddInput( Item.Type.hide );
+				outputType = Item.Type.bow;
+				construction.plankNeeded = 2;
+				construction.flatteningNeeded = true;
+				height = 1.7f;
 				break;
 			}
 		}
@@ -696,6 +709,11 @@ public class Workshop : Building
 			case Type.geologist:
 			{
 				CollectResource( Resource.Type.expose, geologistRange );
+				break;
+			}
+			case Type.bowmaker:
+			{
+				ProcessInput();
 				break;
 			}
 		}

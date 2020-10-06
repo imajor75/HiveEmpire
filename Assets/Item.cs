@@ -34,6 +34,7 @@ public class Item : Assert.Base
 		iron,
 		coal,
 		gold,
+		bow,
         total,
 		unknown = -1
     }
@@ -52,7 +53,8 @@ public class Item : Assert.Base
 			"hide",
 			"iron",
 			"coal",
-			"gold"
+			"gold",
+			"crossbow"
 		};
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
