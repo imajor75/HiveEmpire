@@ -6,7 +6,7 @@ using System;
 using Newtonsoft.Json;
 
 [SelectionBase]
-public class Road : Assert.Base
+public class Road : Assert.Base, Interface.InputHandler
 {
 	public Player owner;
 	public List<Worker> workers = new List<Worker>();
@@ -62,7 +62,7 @@ public class Road : Assert.Base
 				if ( node.flag.owner != owner )
 				{
 					UnityEngine.Debug.Log( "Flag belongs to another player" );
-					return false;
+					return true;
 				}
 				if ( newRoad == null )
 					newRoad = Create();
@@ -74,14 +74,14 @@ public class Road : Assert.Base
 			else
 			{
 				UnityEngine.Debug.Log( "Road must start at a flag" );
-				return false;
+				return true;
 			}
 		}
 
 		if ( node.owner != owner )
 		{
 			UnityEngine.Debug.Log( "Area belongs to another player" );
-			return false;
+			return true;
 		}
 
 		GroundNode last = newRoad.nodes[newRoad.nodes.Count - 1];
@@ -91,7 +91,7 @@ public class Road : Assert.Base
 			if ( newRoad.nodes.Count == 1 )
 			{
 				CancelNew();
-				return true;
+				return false;
 			}
 			newRoad.nodes.RemoveAt( newRoad.nodes.Count - 1 );
 			node.road = null;
@@ -113,20 +113,20 @@ public class Road : Assert.Base
 						newRoad.AddNode( p.path[i] );
 					newRoad.OnCreated();
 					newRoad = null;
-					return true;
+					return false;
 				}
 				UnityEngine.Debug.Log( "No path found to connect to that flag" );
-				return false;
+				return true;
 			}
 			UnityEngine.Debug.Log( "Node must be adjacent to previous one" );
-			return false;
+			return true;
 		}
 
 		// Check if the current node is blocking
 		if ( node.IsBlocking() && node.flag == null )
 		{
 			UnityEngine.Debug.Log( "Node is occupied" );
-			return false;
+			return true;
 		}
 
 		bool finished = newRoad.AddNode( node );
@@ -134,6 +134,7 @@ public class Road : Assert.Base
 		{
 			newRoad.OnCreated();
 			newRoad = null;
+			return false;
 		}
 		else
 			newRoad.RebuildMesh();
@@ -606,5 +607,15 @@ public class Road : Assert.Base
 			assert.AreEqual( GetEnd( 0 ).user, workerAtNodes[0] );
 		if ( workerAtNodes[nodes.Count - 1] != null )
 			assert.AreEqual( GetEnd( 1 ).user, workerAtNodes[nodes.Count - 1] );
+	}
+
+	public bool OnMovingOverNode( GroundNode node )
+	{
+		return true;
+	}
+
+	public bool OnNodeClicked( GroundNode node )
+	{
+		return AddNodeToNew( node.ground, node, owner );
 	}
 }

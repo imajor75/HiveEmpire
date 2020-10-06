@@ -20,6 +20,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	Canvas canvas;
 	public GroundNode selectedNode;
 	public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
+	public Viewport viewport;
 	public static Sprite templateFrame;
 	public static Sprite templateProgress;
 	public static Sprite iconExit;
@@ -101,7 +102,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 		gameObject.AddComponent<GraphicRaycaster>();
 
 		var viewport = new GameObject();
-		viewport.AddComponent<Viewport>();
+		this.viewport = viewport.AddComponent<Viewport>();
 		viewport.transform.SetParent( transform );
 		viewport.name = "Viewport";
 
@@ -843,7 +844,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 		void StartRoad()
 		{
 			if ( flag )
+			{
 				Road.AddNodeToNew( flag.node.ground, flag.node, flag.owner );
+				if ( Road.newRoad )
+					Root.viewport.inputHandler = Road.newRoad;
+			}
 			Close();
 		}
 
@@ -983,10 +988,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 		}
 	}
 
-	class Viewport : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+	public class Viewport : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, InputHandler
 	{
 		public bool mouseOver;
 		public GameObject cursor;
+		public InputHandler inputHandler;
 		GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
 		GameObject cursorFlag;
 		GameObject cursorBuilding;
@@ -1001,27 +1007,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 		public void OnPointerClick( PointerEventData eventData )
 		{
 			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
-			if ( Road.newRoad != null )
-			{
-				Road.AddNodeToNew( node.ground, node, node.owner );
-				return;
-			}
-			if ( node.building )
-			{
-				node.building.OnClicked();
-				return;
-			}
-			if ( node.flag )
-			{
-				node.flag.OnClicked();
-				return;
-			}
-			if ( node.road )
-			{
-				node.road.OnClicked( node );
-				return;
-			}
-			node.OnClicked();
+			if ( !inputHandler.OnNodeClicked( node ) )
+				inputHandler = this;
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )
@@ -1041,6 +1028,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 			image.rectTransform.anchorMax = Vector2.one;
 			image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
 			image.color = new Color( 1, 1, 1, 0 );
+
+			inputHandler = this;
 		}
 
 		void Update()
@@ -1048,6 +1037,12 @@ public class Interface : Assert.Base, IPointerClickHandler
 			if ( !mouseOver )
 				return;
 			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
+			if ( !inputHandler.OnMovingOverNode( node ) )
+				inputHandler = this;
+		}
+
+		public bool OnMovingOverNode( GroundNode node )
+		{
 			if ( node != null )
 			{
 				if ( cursor == null )
@@ -1056,7 +1051,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 					cursor.transform.SetParent( World.instance.ground.transform );
 					for ( int i = 0; i < cursorTypes.Length; i++ )
 					{
-						cursorTypes[i] = World.FindChildRecursive( cursor.transform, ((CursorType)i).ToString() ).gameObject;
+						cursorTypes[i] = World.FindChildRecursive( cursor.transform, ( (CursorType)i ).ToString() ).gameObject;
 						Assert.global.IsNotNull( cursorTypes[i] );
 					}
 				}
@@ -1078,6 +1073,35 @@ public class Interface : Assert.Base, IPointerClickHandler
 				for ( int i = 0; i < cursorTypes.Length; i++ )
 					cursorTypes[i].SetActive( i == (int)t );
 			}
+			return true;
+		}
+
+		public bool OnNodeClicked( GroundNode node )
+		{
+			if ( node.building )
+			{
+				node.building.OnClicked();
+				return true;
+			}
+			if ( node.flag )
+			{
+				node.flag.OnClicked();
+				return true;
+			}
+			if ( node.road )
+			{
+				node.road.OnClicked( node );
+				return true;
+			}
+			node.OnClicked();
+			return true;
 		}
 	}
+
+	public interface InputHandler
+	{
+		bool OnMovingOverNode( GroundNode node );
+		bool OnNodeClicked( GroundNode node );
+	}
 }
+
