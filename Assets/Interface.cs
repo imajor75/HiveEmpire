@@ -541,17 +541,16 @@ public class Interface : Assert.Base, IPointerClickHandler
 				bui.Setup( this, b, col, row, iconSize + 5 );
 				buffers.Add( bui );
 				if ( !workshop.commonInputs )
-				{
-					col = 20;
 					row -= iconSize * 3 / 2;
-				}
+				else
+					col += b.size * ( iconSize + 5 ) + 10;
 			}
 			if ( workshop.commonInputs )
 				row -= iconSize * 3 / 2;
 
 			row -= iconSize / 2;
 			outputs = new Buffer();
-			outputs.Setup( this, workshop.outputType, workshop.outputMax, col, row, iconSize + 5 );
+			outputs.Setup( this, workshop.outputType, workshop.outputMax, 20, row, iconSize + 5 );
 
 			row -= (int)((float)iconSize * 1.5f);
 			progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, templateProgress );
