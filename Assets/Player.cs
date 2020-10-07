@@ -7,6 +7,10 @@ public class Player : ScriptableObject
 	public ItemDispatcher itemDispatcher;
 	public Versioned versionedRoadDelete = new Versioned();
 
+	public int soldiersProduced = 0;
+	public int bowmansProduced = 0;
+	public int coinsProduced = 0;
+
 	public static Player Create()
 	{
 		return ScriptableObject.CreateInstance<Player>();

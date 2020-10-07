@@ -89,15 +89,13 @@ abstract public class Building : Assert.Base
 			}
 			if ( worker == null || !worker.IsIdle( true ) )
 				return;
-			if ( flatteningNeeded )
+			if ( flatteningNeeded && flatteningCorner < GroundNode.neighbourCount )
 			{
 				flatteningCounter++;
 				if ( flatteningCounter > flatteningTime / 6 )
 				{
 					flatteningCounter = 0;
 					boss.node.Add( Ground.areas[1][flatteningCorner++] ).SetHeight( boss.node.height );
-					if ( flatteningCorner == Ground.areas[1].Count )
-						flatteningNeeded = false;
 				}
 				return;
 			}
@@ -222,7 +220,9 @@ abstract public class Building : Assert.Base
 			return null;
 		}
 		var flagNode = node.Add( flagOffset );
-		Flag flag = Flag.Create().Setup( ground, flagNode, owner );
+		Flag flag = flagNode.flag;
+		if ( flag == null )
+			flag = Flag.Create().Setup( ground, flagNode, owner );
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
@@ -347,6 +347,11 @@ abstract public class Building : Assert.Base
 			return false;
 		if ( worker != null && !worker.Remove() )
 			return false;
+		if ( construction.flatteningNeeded )
+		{
+			foreach ( var o in Ground.areas[1] )
+				node.Add( o ).fixedHeight = false;
+		}
 		node.building = null;
 		flag.building = null;
 		Destroy( gameObject );

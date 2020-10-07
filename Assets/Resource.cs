@@ -41,7 +41,7 @@ public class Resource : Assert.Base
 		stone,
 		expose,
 		total,
-		unknown = -1
+		unknown = -1	
 	}
 
 	public static void Initialize()

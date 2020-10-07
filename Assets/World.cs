@@ -45,6 +45,7 @@ public class World : MonoBehaviour
 
 	public World Setup()
 	{
+		rnd = new System.Random();
 		return this;
 	}
 
@@ -98,10 +99,12 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Item>();
+		//	var list = Resources.FindObjectsOfTypeAll<Workshop>();
 		//	foreach ( var o in list )
 		//	{
-		//		o.watchRoadDelete.Attach( o.owner.versionedRoadDelete );
+		//		foreach ( var b in o.buffers )
+		//			if ( b.stored < 0 )
+		//				b.stored = 0;
 		//	}
 		//}
 

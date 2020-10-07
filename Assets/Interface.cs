@@ -81,6 +81,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	void Start()
 	{
 		World.Initialize();
+		Ground.Initialize();
 		Item.Initialize();
 		Building.Initialize();
 		Road.Initialize();
@@ -113,7 +114,10 @@ public class Interface : Assert.Base, IPointerClickHandler
 		debug.transform.SetParent( transform );
 
 		world = World.Create().Setup();
-		world.NewGame( 117274283 );
+		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+		var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
+		world.Load( myFile.FullName );
+		//world.NewGame( 117274283 );
 	}
 
 	void Update()
@@ -521,9 +525,10 @@ public class Interface : Assert.Base, IPointerClickHandler
 		{
 			base.Open( workshop );
 			this.workshop = workshop;
-			Frame( 0, 0, 240, 200 );
+			int height = 150+workshop.buffers.Count * iconSize * 3 / 2;
+			Frame( 0, 0, 240, height );
 			Button( 210, -10, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 190, -170, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			Button( 190, 30 - height, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
 			productivity = Text( 180, -20, 30, 20 );

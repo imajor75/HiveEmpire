@@ -106,6 +106,11 @@ public class Ground : Assert.Base
 		return buoys;
 	}
 
+	static public void Initialize()
+	{
+		CreateAreas();
+	}
+
 	public Ground Setup( World world, int seed )
 	{
 		this.world = world;
@@ -118,7 +123,6 @@ public class Ground : Assert.Base
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		FinishLayout();
 		SetHeights();
-		CreateAreas();
 		CreateMainBuilding();
 		GenerateResources();
 		return this;
@@ -163,19 +167,22 @@ public class Ground : Assert.Base
 		world.eye.FocusOn( world.mainBuilding.node );
 	}
 
-	void CreateAreas()
+	static void CreateAreas()
 	{
 		for ( int i = 0; i < areas.Length; i++ )
 			areas[i] = new List<Offset>();
 
-		GroundNode center = GetNode( width/2, height/2 );
 		for ( int x = -maxArea; x < maxArea; x++ )
 		{
 			for ( int y = -maxArea; y < maxArea; y++ )
 			{
 				if ( x == 0 && y == 0 )
 					continue;
-				int distance = GetNode( width / 2 + x, height / 2 + y ).DistanceFrom( center );
+				int h = Mathf.Abs( x );
+				int v = Mathf.Abs( y );
+				int d = Mathf.Abs( x + y );
+
+				int distance = Mathf.Max( h, Mathf.Max( v, d ) );
 				for ( int j = 1; j < maxArea; j++ )
 				{
 					if ( distance > j )
@@ -190,7 +197,7 @@ public class Ground : Assert.Base
 		int nodeCount = 0;
 		for ( int i = 0; i < areas.Length; i++ )
 		{
-			assert.AreEqual( areas[i].Count, nodeCount );
+			Assert.global.AreEqual( areas[i].Count, nodeCount );
 			nodeCount += ( i + 1 ) * 6;
 		}
 	}

@@ -312,7 +312,7 @@ public class Workshop : Building
 			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
 			"Forest/forester_final", 1.1f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist,
-			"SAdK/smelter_final", 1.5f, Type.smelter,
+			"SAdK/smelter_final", 2f, Type.smelter,
 			"SAdK/weaponmaker_final", 1.7f, Type.weaponmaker,
 			"SAdK/bowmaker_final", 1.7f, Type.bowmaker,
 			"SAdK/brewery_final", 1.4f, Type.brewery,
@@ -551,6 +551,30 @@ public class Workshop : Building
 				}
 				break;
 			}
+			case Type.barrack:
+			{
+				while ( buffers[0].stored > 0 && buffers[1].stored > 0 )
+				{
+					buffers[0].stored--;
+					buffers[1].stored--;
+					owner.soldiersProduced++;
+					print( "Soldier produced" );
+				}
+				while ( buffers[0].stored > 0 && buffers[2].stored > 0 )
+				{
+					buffers[0].stored--;
+					buffers[2].stored--;
+					owner.soldiersProduced++;
+					print( "Bowman produced" );
+				}
+				while ( buffers[3].stored > 0 )
+				{
+					buffers[3].stored--;
+					owner.coinsProduced++;
+					print( "Coin produced" );
+				};
+				break;
+			}
 			default:
 			{
 				if ( configuration.gatheredResource != Resource.Type.unknown )
@@ -750,6 +774,7 @@ public class Workshop : Building
 		{
 			assert.IsTrue( b.stored + b.onTheWay <= b.size );
 			itemsOnTheWayCount += b.onTheWay;
+			assert.IsTrue( b.stored >= 0 && b.stored <= b.size, "Invalid store count for " + b.itemType + " (" + b.stored + ")" );
 		}
 		if ( construction.done )
 			assert.AreEqual( itemsOnTheWayCount, itemsOnTheWay.Count );
