@@ -432,7 +432,7 @@ public class Ground : Assert.Base
 				}
 				else
 				{
-					if ( node.owner != null )
+					if ( node.owner != null && node.borders[j] == null )
 						node.borders[j] = BorderEdge.Create().Setup( node, j );
 				}
 			}

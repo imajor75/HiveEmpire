@@ -314,7 +314,7 @@ public class Workshop : Building
 			"SAdK/weaponmaker_final", 1.7f, Type.weaponmaker,
 			"SAdK/bowmaker_final", 1.7f, Type.bowmaker,
 			"SAdK/brewery_final", 1.4f, Type.brewery,
-			"SAdK/butcher_final", 1.5f, Type.butcher,
+			"SAdK/butcher_final", 1.8f, Type.butcher,
 			"SAdK/barrack_final", 1.5f, Type.barrack,
 			"SAdK/coinmaker_final", 2f, Type.coinmaker,
 			"Stylized Well/Well/Prefab", 1f, Type.well };
