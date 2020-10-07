@@ -1,15 +1,11 @@
-﻿using Packages.Rider.Editor.UnitTesting;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.PlayerLoop;
-using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class Interface : Assert.Base, IPointerClickHandler

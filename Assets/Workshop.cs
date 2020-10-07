@@ -567,6 +567,7 @@ public class Workshop : Building
 
 	bool UseInput( int count = 1 )
 	{
+		assert.IsNotSelected();
 		bool common = configuration.commonInputs;
 		if ( count == 0 || buffers.Count == 0 )
 			return true;
@@ -578,7 +579,7 @@ public class Workshop : Building
 			if ( min > b.stored )
 				min = b.stored;
 		}
-		if ( (common && sum < count) || (common && min < count) )
+		if ( (common && sum < count) || (!common && min < count) )
 			return false;
 
 		foreach ( var b in buffers )
