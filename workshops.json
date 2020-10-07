@@ -192,5 +192,48 @@
     "plankNeeded": 1,
     "stoneNeeded": 1,
     "flatteningNeeded": false
- },
+  },
+  {
+    "type": "brewery",
+    "stoneNeeded": 2,
+    "outputType": "beer",
+    "inputs": [
+      {
+        "itemType": "water"
+      },
+      {
+        "itemType": "grain"
+      }
+    ]
+  },
+  {
+    "type": "butcher",
+    "stoneNeeded": 2,
+    "outputType": "pork",
+    "inputs": [
+      {
+        "itemType": "beer"
+      },
+      {
+        "itemType": "grain"
+      }
+    ]
+  },
+  {
+    "type": "barrack",
+    "stoneNeeded": 2
+  },
+  {
+    "type": "coinmaker",
+    "stoneNeeded": 2,
+    "outputType": "coin",
+    "inputs": [
+      {
+        "itemType": "coal"
+      },
+      {
+        "itemType": "gold"
+      }
+    ]
+  }
 ]

@@ -710,7 +710,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			base.Open( node );
 			this.node = node;
 
-			Frame( 0, 0, 400, 425, 30 );
+			Frame( 0, 0, 400, 550, 30 );
 			Button( 360, -20, 20, 20, iconExit ).onClick.AddListener( Close );
 
 			int row = -20;

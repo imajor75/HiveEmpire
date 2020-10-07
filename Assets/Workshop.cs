@@ -29,8 +29,10 @@ public class Workshop : Building
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
 
+	[System.Serializable]
 	public class Configuration
 	{
+		[System.Serializable]
 		public class Input
 		{
 			public Item.Type itemType;
@@ -42,7 +44,7 @@ public class Workshop : Building
 		public int stoneNeeded = 0;
 		public bool flatteningNeeded = true;
 
-		public Resource.Type gatheredResource;
+		public Resource.Type gatheredResource = Resource.Type.unknown;
 		public int gatheringRange = 8;
 
 		public Item.Type outputType = Item.Type.unknown;
@@ -114,6 +116,10 @@ public class Workshop : Building
 		smelter,
 		weaponmaker,
 		well,
+		brewery,
+		butcher,
+		barrack,
+		coinmaker,
 		total,
 		unknown = -1
 	}
@@ -305,8 +311,12 @@ public class Workshop : Building
 			"Forest/forester_final", 1.1f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist,
 			"SAdK/smelter_final", 1.5f, Type.smelter,
-			"SAdK/weaponmaker_final", 1.5f, Type.weaponmaker,
-			"SAdK/bowmaker_final", 1.5f, Type.bowmaker,
+			"SAdK/weaponmaker_final", 1.7f, Type.weaponmaker,
+			"SAdK/bowmaker_final", 1.7f, Type.bowmaker,
+			"SAdK/brewery_final", 1.4f, Type.brewery,
+			"SAdK/butcher_final", 1.5f, Type.butcher,
+			"SAdK/barrack_final", 1.5f, Type.barrack,
+			"SAdK/coinmaker_final", 2f, Type.coinmaker,
 			"Stylized Well/Well/Prefab", 1f, Type.well };
 		looks.Fill( looksData );
 		object[] sounds = {
@@ -335,18 +345,32 @@ public class Workshop : Building
 	{
 		this.type = type;
 		buffers.Clear();
-		foreach ( var c in configurations )
-			if ( c.type == type )
-				configuration = c;
-		assert.IsNotNull( configuration );
-		foreach ( var input in configuration.inputs )
-		{
-			Buffer b = new Buffer();
-			b.itemType = input.itemType;
-			b.size = input.bufferSize;
-			b.stackSize = input.stackSize;
-			buffers.Add( b );
 
+		foreach ( var c in configurations )
+		{
+			if ( c.type == type )
+			{
+				configuration = c;
+				break;
+			}
+		}
+		assert.IsNotNull( configuration );
+
+		construction.plankNeeded = configuration.plankNeeded;
+		construction.stoneNeeded = configuration.stoneNeeded;
+		construction.flatteningNeeded = configuration.flatteningNeeded;
+
+		if ( configuration.inputs != null )
+		{
+			foreach ( var input in configuration.inputs )
+			{
+				Buffer b = new Buffer();
+				b.itemType = input.itemType;
+				b.size = input.bufferSize;
+				b.stackSize = input.stackSize;
+				buffers.Add( b );
+
+			}
 		}
 		if ( Setup( ground, node, owner ) == null )
 			return null;
@@ -478,59 +502,74 @@ public class Workshop : Building
 			worker.SetupForBuilding( this );
 		}
 
-		if ( type == Type.farm )
+		if ( configuration.outputType == Item.Type.unknown )
+			return;
+
+		switch ( type )
 		{
-			if ( worker.IsIdle( true ) )
+			case Type.farm:
 			{
-				foreach ( var o in Ground.areas[3] )
+				if ( worker.IsIdle( true ) )
 				{
-					GroundNode place = node.Add( o );
-					if ( place.building || place.flag || place.road || place.fixedHeight )
-						continue;
-					Resource cornfield = place.resource;
-					if ( cornfield == null || cornfield.type != Resource.Type.cornfield || !cornfield.IsReadyToBeHarvested() )
-						continue;
-					CollectResourceFromNode( place, Resource.Type.cornfield );
-					return;
+					foreach ( var o in Ground.areas[3] )
+					{
+						GroundNode place = node.Add( o );
+						if ( place.building || place.flag || place.road || place.fixedHeight )
+							continue;
+						Resource cornfield = place.resource;
+						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || !cornfield.IsReadyToBeHarvested() )
+							continue;
+						CollectResourceFromNode( place, Resource.Type.cornfield );
+						return;
+					}
+					foreach ( var o in Ground.areas[3] )
+					{
+						GroundNode place = node.Add( o );
+						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
+							continue;
+						PlantAt( place, Resource.Type.cornfield );
+						return;
+					}
 				}
-				foreach ( var o in Ground.areas[3] )
+				break;
+			}
+			case Type.forester:
+			{
+				if ( worker.IsIdle( true ) )
 				{
-					GroundNode place = node.Add( o );
-					if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
-						continue;
-					PlantAt( place, Resource.Type.cornfield );
-					return;
+					var o = Ground.areas[configuration.gatheringRange];
+					for ( int i = 0; i < o.Count; i++ )
+					{
+						int randomOffset = World.rnd.Next( o.Count );
+						int x = (i + randomOffset) % o.Count;
+						GroundNode place = node.Add( o[x] );
+						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
+							continue;
+						PlantAt( place, Resource.Type.tree );
+						return;
+					}
 				}
+				break;
+			}
+			default:
+			{
+				if ( configuration.gatheredResource != Resource.Type.unknown )
+					CollectResource( configuration.gatheredResource, configuration.gatheringRange );
+				else
+					ProcessInput();
+
+				if ( type == Type.mill && working )
+					millWheel?.Rotate( 0, 0, 1 );
+				break;
 			}
 		}
-		if ( type == Type.forester )
-		{
-			if ( worker.IsIdle( true ) )
-			{
-				var o = Ground.areas[configuration.gatheringRange];
-				for ( int i = 0; i < o.Count; i++ )
-				{
-					int randomOffset = World.rnd.Next( o.Count );
-					int x = (i + randomOffset) % o.Count;
-					GroundNode place = node.Add( o[x] );
-					if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
-						continue;
-					PlantAt( place, Resource.Type.tree );
-					return;
-				}
-			}
-		}
-		if ( type == Type.mill && working )
-			millWheel?.Rotate( 0, 0, 1 );
 	}
 
 	bool UseInput( int count = 1 )
 	{
 		bool common = configuration.commonInputs;
-		if ( count == 0 )
+		if ( count == 0 || buffers.Count == 0 )
 			return true;
-
-		assert.IsTrue( buffers.Count > 0 );
 
 		int min = int.MaxValue, sum = 0;
 		foreach ( var b in buffers )

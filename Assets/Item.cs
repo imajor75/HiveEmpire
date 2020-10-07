@@ -38,6 +38,9 @@ public class Item : Assert.Base
 		steel,
 		weapon,
 		water,
+		beer,
+		pork,
+		coin,
         total,
 		unknown = -1
     }
@@ -60,7 +63,10 @@ public class Item : Assert.Base
 			"crossbow",
 			"steel",
 			"weapon",
-			"Water"
+			"water",
+			"beer",
+			"pork",
+			"coin"
 		};
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
