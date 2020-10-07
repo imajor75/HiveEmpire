@@ -5,7 +5,7 @@ public class Player : ScriptableObject
 {
 	public List<float> itemHaulPriorities = new List<float>();
 	public ItemDispatcher itemDispatcher;
-	public Versioned versionedRoadDelete;
+	public Versioned versionedRoadDelete = new Versioned();
 
 	public static Player Create()
 	{
@@ -40,7 +40,8 @@ public class Player : ScriptableObject
 		itemDispatcher.LateUpdate();
 	}
 
-	public struct Versioned
+	[System.Serializable]
+	public class Versioned
 	{
 		public int version;
 
@@ -50,10 +51,11 @@ public class Player : ScriptableObject
 		}
 	}
 
-	public struct Watch
+	[System.Serializable]
+	public class Watch
 	{
-		Versioned source;
-		int localVersion;
+		public Versioned source;
+		public int localVersion;
 
 		public void Attach( Versioned source )
 		{

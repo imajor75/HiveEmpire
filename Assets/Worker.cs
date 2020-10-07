@@ -160,7 +160,7 @@ public class Worker : Assert.Base
 
 		public void Setup( Worker boss, Road road, int point, bool exclusive )
 		{
-			boss.assert.IsTrue( point >= 0 && point < road.nodes.Count );
+			boss.assert.IsTrue( point >= 0 && point < road.nodes.Count, "Invalid road point (" + point + ", " + road.nodes.Count + ")" );
 			base.Setup( boss );
 			this.road = road;
 			this.exclusive = exclusive;

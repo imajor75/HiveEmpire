@@ -43,6 +43,7 @@ public class Road : Assert.Base, Interface.InputHandler
 
 	public Road SetupAsBuildingExit( Building building )
 	{
+		owner = building.owner;
 		assert.AreEqual( nodes.Count, 0 );
 		decorationOnly = true;
 		nodes.Add( building.node );
@@ -525,7 +526,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		}
 	}
 
-	void OnDestroyed()
+	void OnDestroy()
 	{
 		owner.versionedRoadDelete.Trigger();
 	}

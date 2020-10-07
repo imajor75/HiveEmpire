@@ -40,6 +40,8 @@ public class Workshop : Building
 			public int stackSize = 1;
 		}
 		public Type type;
+		public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
+
 		public int plankNeeded = 2;
 		public int stoneNeeded = 0;
 		public bool flatteningNeeded = true;
@@ -356,6 +358,7 @@ public class Workshop : Building
 		}
 		assert.IsNotNull( configuration );
 
+		groundTypeNeeded = configuration.groundTypeNeeded;
 		construction.plankNeeded = configuration.plankNeeded;
 		construction.stoneNeeded = configuration.stoneNeeded;
 		construction.flatteningNeeded = configuration.flatteningNeeded;
@@ -502,9 +505,6 @@ public class Workshop : Building
 			worker.SetupForBuilding( this );
 		}
 
-		if ( configuration.outputType == Item.Type.unknown )
-			return;
-
 		switch ( type )
 		{
 			case Type.farm:
@@ -598,6 +598,9 @@ public class Workshop : Building
 
 	void ProcessInput()
 	{
+		if ( configuration.outputType == Item.Type.unknown )
+			return;
+
 		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && UseInput() && worker.IsIdle( true ) )
 		{
 			soundSource.loop = true;

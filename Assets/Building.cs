@@ -20,6 +20,7 @@ abstract public class Building : Assert.Base
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
+	public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
 
 	[System.Serializable]
 	public class Construction
@@ -40,7 +41,6 @@ abstract public class Building : Assert.Base
 		public bool flatteningNeeded;
 		public int flatteningCorner;
 		public int flatteningCounter;
-		public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
 
 		static public void Initialize()
 		{
@@ -215,7 +215,7 @@ abstract public class Building : Assert.Base
 				}
 			}
 		}
-		if ( node.type != construction.groundTypeNeeded )
+		if ( node.type != groundTypeNeeded )
 		{
 			Debug.Log( "Node has different type" );
 			Destroy( gameObject );

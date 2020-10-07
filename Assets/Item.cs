@@ -18,7 +18,7 @@ public class Item : Assert.Base
 	public Building destination;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
-	public Player.Watch watchRoadDelete;
+	public Player.Watch watchRoadDelete = new Player.Watch();
 
 	public enum Type
     {
@@ -118,8 +118,13 @@ public class Item : Assert.Base
 		if ( watchRoadDelete.Check() && path && !path.IsFinished() )
 		{
 			for ( int i = path.progress; i < path.roadPath.Count; i++ )
+			{
 				if ( path.roadPath[i] == null )
+				{
 					CancelTrip();
+					break;
+				}
+			}
 		}
 		if ( destination == null && worker == null && flag != null )
 			owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.high );
@@ -127,14 +132,17 @@ public class Item : Assert.Base
 
 	public bool SetTarget( Building building )
 	{
-		GroundNode current = origin.flag.node;
-		if ( flag )
+		assert.IsNull( worker );
+
+		GroundNode current = origin.flag.node;	// TODO What if the item is in the hands of a worker between two flags?
+		if ( flag )		// Isn't it always at a flag?
 			current = flag.node;
 
 		if ( current == building.flag.node )
 		{
 			destination = building;
 			building.ItemOnTheWay( this );
+			flag?.ReleaseItem( this );
 			Arrived();
 			return true;
 		}
@@ -230,7 +238,8 @@ public class Item : Assert.Base
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
-			assert.IsTrue( flag.roadsStartingHere.Contains( path.Road() ) );
+			if ( destination )
+				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road() ) );
 		}
 		if ( nextFlag )
 		{

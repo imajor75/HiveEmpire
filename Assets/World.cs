@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -96,9 +97,15 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
+		//{
+		//	var list = Resources.FindObjectsOfTypeAll<Item>();
+		//	foreach ( var o in list )
+		//	{
+		//		o.watchRoadDelete.Attach( o.owner.versionedRoadDelete );
+		//	}
+		//}
+
 		ground.FinishLayout();
-		players.Clear();
-		players.Add( mainPlayer = mainBuilding.owner );
 	}
 
 	public void Save( string fileName )

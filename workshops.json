@@ -67,12 +67,19 @@
   },
   {
     "type": "coalmine",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+	"groundTypeNeeded": "hill",
     "gatheredResource": "coal",
     "outputType": "coal",
     "commonInputs": true,
     "inputs": [
       {
         "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pork",
         "bufferSize": 2
       },
       {
@@ -83,6 +90,9 @@
   },
   {
     "type": "saltmine",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+	"groundTypeNeeded": "hill",
     "gatheredResource": "salt",
     "outputType": "salt",
     "commonInputs": true,
@@ -92,19 +102,26 @@
         "bufferSize": 2
       },
       {
-        "itemType": "pretzel",
+        "itemType": "pork",
         "bufferSize": 2
       }
     ]
   },
   {
     "type": "ironmine",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+	"groundTypeNeeded": "hill",
     "gatheredResource": "iron",
     "outputType": "iron",
     "commonInputs": true,
     "inputs": [
       {
         "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pork",
         "bufferSize": 2
       },
       {
@@ -115,12 +132,19 @@
   },
   {
     "type": "goldmine",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+	"groundTypeNeeded": "hill",
     "gatheredResource": "gold",
     "outputType": "gold",
     "commonInputs": true,
     "inputs": [
       {
         "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pork",
         "bufferSize": 2
       },
       {
@@ -131,12 +155,19 @@
   },
   {
     "type": "stonemine",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+	"groundTypeNeeded": "hill",
     "gatheredResource": "stone",
     "outputType": "stone",
     "commonInputs": true,
     "inputs": [
       {
         "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pork",
         "bufferSize": 2
       },
       {
@@ -221,7 +252,21 @@
   },
   {
     "type": "barrack",
-    "stoneNeeded": 2
+    "stoneNeeded": 2,
+    "inputs": [
+      {
+        "itemType": "beer"
+      },
+      {
+        "itemType": "weapon"
+      },
+      {
+        "itemType": "bow"
+      },
+      {
+        "itemType": "coin"
+      }
+	]
   },
   {
     "type": "coinmaker",
