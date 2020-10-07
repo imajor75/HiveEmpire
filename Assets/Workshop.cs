@@ -1,26 +1,19 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.PackageManager;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 public class Workshop : Building
 {
 	public int output;
-	public Item.Type outputType = Item.Type.unknown;
-	public int outputMax = 8;
 	public float progress;
 	public bool working;
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
-	public bool commonInputs = false;
 	GameObject body;
-	public int inputStep = 1;
-	public int outputStep = 1;
-	public float processSpeed = 0.0015f;
 	Transform millWheel;
 	public GroundNode resourcePlace;
 	public int itemsProduced;
@@ -29,22 +22,37 @@ public class Workshop : Building
 	static public MediaTable<AudioClip, Type> processingSounds;
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
+	public Configuration configuration;
+	public static Configuration[] configurations;
 
-	public static int woodcutterRange = 8;
-	public static int foresterRange = 8;
-	public static int hunterRange = 8;
-	public static int goldMineRange = 8;
-	public static int ironMineRange = 8;
-	public static int coalMineRange = 8;
-	public static int saltMineRange = 8;
-	public static int stoneMineRange = 8;
-	public static int stonemasonRange = 8;
-	public static int fisherRange = 8;
-	public static int geologistRange = 8;
-	public static int plantingTime = 100;
 	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
+
+	public class Configuration
+	{
+		public class Input
+		{
+			public Item.Type itemType;
+			public int bufferSize = 6;
+			public int stackSize = 1;
+		}
+		public Type type;
+		public int plankNeeded = 2;
+		public int stoneNeeded = 0;
+		public bool flatteningNeeded = true;
+
+		public Resource.Type gatheredResource;
+		public int gatheringRange = 8;
+
+		public Item.Type outputType = Item.Type.unknown;
+		public int outputStackSize = 1;
+		public float processSpeed = 0.0015f;
+		public int outputMax = 8;
+
+		public bool commonInputs = false;
+		public Input[] inputs;
+	}
 
 	public struct Productivity
 	{
@@ -80,6 +88,7 @@ public class Workshop : Building
 		public int size = 6;
 		public int stored;
 		public int onTheWay;
+		public int stackSize = 1;
 		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
 		public Item.Type itemType;
 	}
@@ -214,7 +223,7 @@ public class Workshop : Building
 			Resource.Create().Setup( node, resourceType );
 			done = true;
 			boss.assert.IsNotNull( node.resource );
-			waitTimer = plantingTime;
+			waitTimer = 100;
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
 			return false;
@@ -272,6 +281,13 @@ public class Workshop : Building
 
 	public static new void Initialize()
 	{
+		using ( var sw = new StreamReader( "workshops.json" ) )
+		using ( var reader = new JsonTextReader( sw ) )
+		{
+			var serializer = JsonSerializer.Create();
+			configurations = serializer.Deserialize<Configuration[]>( reader );
+		}
+
 		object[] looksData = {
 			"Medieval fantasy house/Medieva_fantasy_house",
 			"Medieval house/Medieval_house 1", 1.1f, Type.fishingHut, 
@@ -319,200 +335,23 @@ public class Workshop : Building
 	{
 		this.type = type;
 		buffers.Clear();
-		switch ( type )
+		foreach ( var c in configurations )
+			if ( c.type == type )
+				configuration = c;
+		assert.IsNotNull( configuration );
+		foreach ( var input in configuration.inputs )
 		{
-			case Type.woodcutter:
-			{
-				inputStep = 0;
-				outputType = Item.Type.log;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				break;
-			}
-			case Type.forester:
-			{
-				inputStep = 0;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				break;
-			}
-			case Type.stonemason:
-			{
-				inputStep = 0;
-				outputType = Item.Type.stone;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = true;
-				break;
-			}
-			case Type.sawmill:
-			{
-				AddInput( Item.Type.log );
-				outputType = Item.Type.plank;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = true;
-				break;
-			}
-			case Type.fishingHut:
-			{
-				inputStep = 0;
-				outputType = Item.Type.fish;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				break;
-			}
-			case Type.farm:
-			{
-				inputStep = 0;
-				outputType = Item.Type.grain;
-				construction.plankNeeded = 2;
-				construction.stoneNeeded = 2;
-				construction.flatteningNeeded = true;
-				break;
-			}
-			case Type.mill:
-			{
-				AddInput( Item.Type.grain );
-				outputType = Item.Type.flour;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				break;
-			}
-			case Type.bakery:
-			{
-				AddInput( Item.Type.salt );
-				AddInput( Item.Type.flour );
-				outputType = Item.Type.pretzel;
-				construction.plankNeeded = 2;
-				construction.stoneNeeded = 2;
-				construction.flatteningNeeded = false;
-				break;
-			}
-			case Type.hunter:
-			{
-				inputStep = 0;
-				outputType = Item.Type.hide;
-				construction.plankNeeded = 1;
-				construction.flatteningNeeded = false;
-				break;
-			}
-			case Type.coalmine:
-			{
-				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
-				AddInputGroup( types );
-				outputType = Item.Type.coal;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				construction.groundTypeNeeded = GroundNode.Type.hill;
-				break;
-			}
-			case Type.stonemine:
-			{
-				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
-				AddInputGroup( types );
-				outputType = Item.Type.stone;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				construction.groundTypeNeeded = GroundNode.Type.hill;
-				break;
-			}
-			case Type.ironmine:
-			{
-				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
-				AddInputGroup( types );
-				outputType = Item.Type.iron;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				construction.groundTypeNeeded = GroundNode.Type.hill;
-				break;
-			}
-			case Type.goldmine:
-			{
-				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
-				AddInputGroup( types );
-				outputType = Item.Type.gold;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				construction.groundTypeNeeded = GroundNode.Type.hill;
-				break;
-			}
-			case Type.saltmine:
-			{
-				Item.Type[] types = { Item.Type.fish, Item.Type.pretzel };
-				AddInputGroup( types );
-				outputType = Item.Type.salt;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				construction.groundTypeNeeded = GroundNode.Type.hill;
-				break;
-			}
-			case Type.geologist:
-			{
-				inputStep = 0;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = false;
-				break;
-			}
-			case Type.bowmaker:
-			{
-				AddInput( Item.Type.plank );
-				AddInput( Item.Type.hide );
-				outputType = Item.Type.bow;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = true;
-				height = 1.7f;
-				break;
-			}
-			case Type.smelter:
-			{
-				AddInput( Item.Type.coal );
-				AddInput( Item.Type.iron );
-				outputType = Item.Type.steel;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = true;
-				height = 2f;
-				break;
-			}
-			case Type.weaponmaker:
-			{
-				AddInput( Item.Type.coal );
-				AddInput( Item.Type.steel );
-				outputType = Item.Type.weapon;
-				construction.plankNeeded = 2;
-				construction.flatteningNeeded = true;
-				height = 1.7f;
-				break;
-			}
-			case Type.well:
-			{
-				inputStep = 0;
-				outputType = Item.Type.water;
-				construction.plankNeeded = 1;
-				construction.stoneNeeded = 1;
-				construction.flatteningNeeded = false;
-				break;
-			}
+			Buffer b = new Buffer();
+			b.itemType = input.itemType;
+			b.size = input.bufferSize;
+			b.stackSize = input.stackSize;
+			buffers.Add( b );
+
 		}
 		if ( Setup( ground, node, owner ) == null )
 			return null;
 
 		return this;
-	}
-
-	void AddInput( Item.Type itemType, int size = 6 )
-	{
-		assert.IsFalse( commonInputs );
-		Buffer b = new Buffer();
-		b.itemType = itemType;
-		b.size = size;
-		buffers.Add( b );
-	}
-
-	void AddInputGroup( Item.Type[] itemTypes, int size = 2 )
-	{
-		assert.AreEqual( buffers.Count, 0 );
-		foreach ( var itemType in itemTypes )
-			AddInput( itemType, size );
-		commonInputs = true;
 	}
 
 	public bool IsWorking()
@@ -559,7 +398,7 @@ public class Workshop : Building
 				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, b.priority );
 		}
 		if ( output > 0 && flag.FreeSpace() > 0 && worker.IsIdle( true ) )
-			owner.itemDispatcher.RegisterOffer( this, outputType, output, ItemDispatcher.Priority.high );
+			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, ItemDispatcher.Priority.high );
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
@@ -568,7 +407,7 @@ public class Workshop : Building
 
 	public override Item SendItem( Item.Type itemType, Building destination )
 	{
-		assert.AreEqual( outputType, itemType );
+		assert.AreEqual( configuration.outputType, itemType );
 		assert.IsTrue( output > 0 );
 		Item item = base.SendItem( itemType, destination );
 		if ( item != null )
@@ -639,149 +478,55 @@ public class Workshop : Building
 			worker.SetupForBuilding( this );
 		}
 
-		switch ( type )
+		if ( type == Type.farm )
 		{
-			case Type.woodcutter:
+			if ( worker.IsIdle( true ) )
 			{
-				if ( worker.IsIdle( true ) )
-					CollectResource( Resource.Type.tree, woodcutterRange );
-				break;
-			}
-			case Type.stonemason:
-			{
-				if ( worker.IsIdle( true ) )
-					CollectResource( Resource.Type.rock, stonemasonRange );
-				break;
-			}
-			case Type.sawmill:
-			{
-				ProcessInput();
-				break;
-			}
-			case Type.fishingHut:
-			{
-				if ( worker.IsIdle( true ) )
-					CollectResource( Resource.Type.fish, fisherRange );
-				break;
-			}
-			case Type.farm:
-			{
-				if ( worker.IsIdle( true ) )
+				foreach ( var o in Ground.areas[3] )
 				{
-					foreach ( var o in Ground.areas[3] )
-					{
-						GroundNode place = node.Add( o );
-						if ( place.building || place.flag || place.road || place.fixedHeight )
-							continue;
-						Resource cornfield = place.resource;
-						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || !cornfield.IsReadyToBeHarvested() )
-							continue;
-						CollectResourceFromNode( place, Resource.Type.cornfield );
-						return;
-					}
-					foreach ( var o in Ground.areas[3] )
-					{
-						GroundNode place = node.Add( o );
-						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
-							continue;
-						PlantAt( place, Resource.Type.cornfield );
-						return;
-					}
+					GroundNode place = node.Add( o );
+					if ( place.building || place.flag || place.road || place.fixedHeight )
+						continue;
+					Resource cornfield = place.resource;
+					if ( cornfield == null || cornfield.type != Resource.Type.cornfield || !cornfield.IsReadyToBeHarvested() )
+						continue;
+					CollectResourceFromNode( place, Resource.Type.cornfield );
+					return;
 				}
-				break;
-			}
-			case Type.forester:
-			{
-				if ( worker.IsIdle( true ) )
+				foreach ( var o in Ground.areas[3] )
 				{
-					var o = Ground.areas[foresterRange];
-					for ( int i = 0; i < o.Count; i++ )
-					{
-						int randomOffset = World.rnd.Next( o.Count );
-						int x = (i + randomOffset) % o.Count;
-						GroundNode place = node.Add( o[x] );
-						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
-							continue;
-						PlantAt( place, Resource.Type.tree );
-						return;
-					}
+					GroundNode place = node.Add( o );
+					if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
+						continue;
+					PlantAt( place, Resource.Type.cornfield );
+					return;
 				}
-				break;
-			}
-			case Type.mill:
-			{
-				ProcessInput();
-				if ( working )
-					millWheel?.Rotate( 0, 0, 1 );
-				break;
-			}
-			case Type.bakery:
-			{
-				ProcessInput();
-				break;
-			}
-			case Type.hunter:
-			{
-				CollectResource( Resource.Type.pasturingAnimal, hunterRange );
-				break;
-			}
-			case Type.goldmine:
-			{
-				CollectResource( Resource.Type.gold, goldMineRange );
-				break;
-			}
-			case Type.ironmine:
-			{
-				CollectResource( Resource.Type.iron, ironMineRange );
-				break;
-			}
-			case Type.coalmine:
-			{
-				CollectResource( Resource.Type.coal, coalMineRange );
-				break;
-			}
-			case Type.saltmine:
-			{
-				CollectResource( Resource.Type.salt, saltMineRange );
-				break;
-			}
-			case Type.stonemine:
-			{
-				CollectResource( Resource.Type.stone, stoneMineRange );
-				break;
-			}
-			case Type.geologist:
-			{
-				CollectResource( Resource.Type.expose, geologistRange );
-				break;
-			}
-			case Type.bowmaker:
-			{
-				ProcessInput();
-				break;
-			}
-			case Type.smelter:
-			{
-				ProcessInput();
-				break;
-			}
-			case Type.weaponmaker:
-			{
-				ProcessInput();
-				break;
-			}
-			case Type.well:
-			{
-				ProcessInput();
-				break;
 			}
 		}
+		if ( type == Type.forester )
+		{
+			if ( worker.IsIdle( true ) )
+			{
+				var o = Ground.areas[configuration.gatheringRange];
+				for ( int i = 0; i < o.Count; i++ )
+				{
+					int randomOffset = World.rnd.Next( o.Count );
+					int x = (i + randomOffset) % o.Count;
+					GroundNode place = node.Add( o[x] );
+					if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
+						continue;
+					PlantAt( place, Resource.Type.tree );
+					return;
+				}
+			}
+		}
+		if ( type == Type.mill && working )
+			millWheel?.Rotate( 0, 0, 1 );
 	}
 
-	bool UseInput( int count = 0 )
+	bool UseInput( int count = 1 )
 	{
-		if ( count == 0 )
-			count = inputStep;
+		bool common = configuration.commonInputs;
 		if ( count == 0 )
 			return true;
 
@@ -794,12 +539,12 @@ public class Workshop : Building
 			if ( min > b.stored )
 				min = b.stored;
 		}
-		if ( (commonInputs && sum < count) || (!commonInputs && min < count) )
+		if ( (common && sum < count) || (common && min < count) )
 			return false;
 
 		foreach ( var b in buffers )
 		{
-			if ( commonInputs )
+			if ( common )
 			{
 				int used = Math.Min( b.stored, count );
 				count -= used;
@@ -813,7 +558,7 @@ public class Workshop : Building
 
 	void ProcessInput()
 	{
-		if ( !working && output + outputStep <= outputMax && UseInput() && worker.IsIdle( true ) )
+		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && UseInput() && worker.IsIdle( true ) )
 		{
 			soundSource.loop = true;
 			soundSource.clip = processingSounds.GetMediaData( type );
@@ -823,13 +568,13 @@ public class Workshop : Building
 		}
 		if ( working )
 		{
-			progress += processSpeed * ground.world.speedModifier;
+			progress += configuration.processSpeed * ground.world.speedModifier;
 			if ( progress > 1 )
 			{
-				output += outputStep;
+				output += configuration.outputStackSize;
 				working = false;
 				soundSource.Stop();
-				itemsProduced += outputStep;
+				itemsProduced += configuration.outputStackSize;
 			}
 		}
 	}
@@ -838,7 +583,7 @@ public class Workshop : Building
 	{
 		if ( !worker.IsIdle( true ) )
 			return;
-		if ( outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
+		if ( configuration.outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;
 
 		resourcePlace = null;
@@ -892,9 +637,9 @@ public class Workshop : Building
 			return;
 
 		Item item = null;
-		if ( outputType != Item.Type.unknown )
+		if ( configuration.outputType != Item.Type.unknown )
 		{
-			item = Item.Create().Setup( outputType, this );
+			item = Item.Create().Setup( configuration.outputType, this );
 			flag.ReserveItem( item );
 			item.worker = worker;
 			worker.reservation = flag;

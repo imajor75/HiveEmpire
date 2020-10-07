@@ -96,39 +96,6 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
-		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Item>();
-		//	foreach ( var o in list )
-		//	{
-		//		Worker w = o.worker;
-		//		if ( w == null )
-		//			continue;
-		//		GroundNode n = w.node;
-		//		for ( int i = 0; i < w.taskQueue.Count; i++ )
-		//		{
-		//			var d = w.taskQueue[i] as Worker.DeliverItem;
-		//			if ( d != null )
-		//				break;
-
-		//			var p = w.taskQueue[i] as Worker.WalkToRoadPoint;
-		//			if ( p != null )
-		//				n = w.road.nodes[p.targetPoint];
-
-		//			var k = w.taskQueue[i] as Worker.WalkToNode;
-		//			if ( k != null )
-		//				n = k.target;
-
-		//			var v = w.taskQueue[i] as Worker.WalkToNeighbour;
-		//			if ( v != null )
-		//				n = v.target;
-
-		//			Assert.global.IsTrue( i != w.taskQueue.Count - 1 );
-		//		}
-		//		if ( o.destination == null || n != o.destination.node )
-		//			n.flag.ReserveItem( o );
-		//	}
-		//}
-
 		ground.FinishLayout();
 		players.Clear();
 		players.Add( mainPlayer = mainBuilding.owner );

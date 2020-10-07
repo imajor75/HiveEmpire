@@ -1,0 +1,196 @@
+[
+  {
+    "type": "woodcutter",
+    "flatteningNeeded": false,
+    "gatheredResource": "tree",
+    "outputType": "log"
+  },
+  {
+    "type": "sawmill",
+    "outputType": "plank",
+    "inputs": [
+      {
+        "itemType": "log"
+      }
+    ]
+  },
+  {
+    "type": "forester",
+    "flatteningNeeded": false
+  },
+  {
+    "type": "stonemason",
+    "gatheredResource": "stone",
+    "outputType": "stone"
+  },
+  {
+    "type": "fishingHut",
+	"flatteningNeeded": false,
+    "gatheredResource": "fish",
+    "outputType": "fish",
+  },
+  {
+    "type": "farm",
+    "stoneNeeded": 2,
+    "outputType": "grain",
+  },
+  {
+    "type": "mill",
+    "flatteningNeeded": false,
+    "outputType": "flour",
+    "inputs": [
+      {
+        "itemType": "grain"
+      }
+    ]
+  },
+  {
+    "type": "bakery",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+    "outputType": "pretzel",
+    "inputs": [
+      {
+        "itemType": "salt"
+      },
+      {
+        "itemType": "flour"
+      }
+    ]
+  },
+  {
+    "type": "hunter",
+    "plankNeeded": 1,
+    "flatteningNeeded": false,
+    "gatheredResource": "pasturingAnimal",
+    "outputType": "hide"
+  },
+  {
+    "type": "coalmine",
+    "gatheredResource": "coal",
+    "outputType": "coal",
+    "commonInputs": true,
+    "inputs": [
+      {
+        "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pretzel",
+        "bufferSize": 2
+      }
+    ]
+  },
+  {
+    "type": "saltmine",
+    "gatheredResource": "salt",
+    "outputType": "salt",
+    "commonInputs": true,
+    "inputs": [
+      {
+        "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pretzel",
+        "bufferSize": 2
+      }
+    ]
+  },
+  {
+    "type": "ironmine",
+    "gatheredResource": "iron",
+    "outputType": "iron",
+    "commonInputs": true,
+    "inputs": [
+      {
+        "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pretzel",
+        "bufferSize": 2
+      }
+    ]
+  },
+  {
+    "type": "goldmine",
+    "gatheredResource": "gold",
+    "outputType": "gold",
+    "commonInputs": true,
+    "inputs": [
+      {
+        "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pretzel",
+        "bufferSize": 2
+      }
+    ]
+  },
+  {
+    "type": "stonemine",
+    "gatheredResource": "stone",
+    "outputType": "stone",
+    "commonInputs": true,
+    "inputs": [
+      {
+        "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pretzel",
+        "bufferSize": 2
+      }
+    ]
+  },
+  {
+    "type": "geologist",
+    "flatteningNeeded": false,
+    "gatheredResource": "expose",
+  },
+  {
+    "type": "bowmaker",
+    "outputType": "bow",
+    "inputs": [
+      {
+        "itemType": "plank"
+      },
+      {
+        "itemType": "hide"
+      }
+    ]
+  },
+  {
+    "type": "smelter",
+    "outputType": "steel",
+    "inputs": [
+      {
+        "itemType": "coal"
+      },
+      {
+        "itemType": "iron"
+      }
+    ]
+  },
+  {
+    "type": "weaponmaker",
+    "outputType": "weapon",
+    "inputs": [
+      {
+        "itemType": "coal"
+      },
+      {
+        "itemType": "steel"
+      }
+    ]
+  },
+  {
+    "type": "well",
+    "outputType": "water",
+    "plankNeeded": 1,
+    "stoneNeeded": 1,
+    "flatteningNeeded": false
+ },
+]

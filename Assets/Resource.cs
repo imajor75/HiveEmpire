@@ -40,7 +40,8 @@ public class Resource : Assert.Base
 		gold,
 		stone,
 		expose,
-		total
+		total,
+		unknown = -1
 	}
 
 	public static void Initialize()
