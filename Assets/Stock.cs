@@ -29,6 +29,7 @@ public class Stock : Building
 	{
 		construction.plankNeeded = 3;
 		construction.stoneNeeded = 3;
+		construction.flatteningNeeded = true;
 		height = 2;
 
 		while ( content.Count < (int)Item.Type.total )
@@ -42,7 +43,8 @@ public class Stock : Building
 	public Stock SetupMain( Ground ground, GroundNode node, Player owner )
 	{
 		node.owner = owner;
-		ground.GetNode( node.x + 1, node.y - 1 ).owner = owner;
+		foreach ( var o in Ground.areas[1] )
+			node.Add( o ).owner = owner;
 		if ( !Setup( ground, node, owner ) )
 			return null;
 
@@ -50,6 +52,12 @@ public class Stock : Building
 		construction = new Construction();
 		construction.boss = this;
 		construction.done = true;
+		if ( construction.flatteningNeeded )
+		{
+			foreach ( var o in Ground.areas[1] )
+				node.Add( o ).SetHeight( node.height );
+			construction.flatteningNeeded = false;
+		}
 		content[(int)Item.Type.plank] = 10;
 		content[(int)Item.Type.fish] = 10;
 		worker = Worker.Create();

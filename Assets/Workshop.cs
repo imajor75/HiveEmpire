@@ -104,6 +104,7 @@ public class Workshop : Building
 		bowmaker,
 		smelter,
 		weaponmaker,
+		well,
 		total,
 		unknown = -1
 	}
@@ -289,7 +290,8 @@ public class Workshop : Building
 			"Ores/geologist_final", 0.8f, Type.geologist,
 			"SAdK/smelter_final", 1.5f, Type.smelter,
 			"SAdK/weaponmaker_final", 1.5f, Type.weaponmaker,
-			"SAdK/bowmaker_final", 1.5f, Type.bowmaker };
+			"SAdK/bowmaker_final", 1.5f, Type.bowmaker,
+			"Stylized Well/Well/Prefab", 1f, Type.well };
 		looks.Fill( looksData );
 		object[] sounds = {
 			"handsaw", Type.sawmill,
@@ -477,7 +479,16 @@ public class Workshop : Building
 				outputType = Item.Type.weapon;
 				construction.plankNeeded = 2;
 				construction.flatteningNeeded = true;
-				height = 2f;
+				height = 1.7f;
+				break;
+			}
+			case Type.well:
+			{
+				inputStep = 0;
+				outputType = Item.Type.water;
+				construction.plankNeeded = 1;
+				construction.stoneNeeded = 1;
+				construction.flatteningNeeded = false;
 				break;
 			}
 		}
@@ -755,6 +766,11 @@ public class Workshop : Building
 				break;
 			}
 			case Type.weaponmaker:
+			{
+				ProcessInput();
+				break;
+			}
+			case Type.well:
 			{
 				ProcessInput();
 				break;
