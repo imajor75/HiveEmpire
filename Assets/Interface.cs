@@ -248,7 +248,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 				xs = iconSize;
 			if ( ys == 0 )
 				ys = iconSize;
-			Image( x - itemIconBorderSize, y - itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
+			Image( x - itemIconBorderSize, y + itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
 			ItemImage i = new GameObject().AddComponent<ItemImage>();
 			i.name = "ItemImage";
 			if ( type != Item.Type.unknown )
