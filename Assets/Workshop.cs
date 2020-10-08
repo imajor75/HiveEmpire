@@ -89,12 +89,18 @@ public class Workshop : Building
 	[System.Serializable]
 	public class Buffer
 	{
+		public Buffer() { }
+		public Buffer( Item.Type itemType = Item.Type.unknown, int size = 6 )
+		{
+			this.itemType = itemType;
+			this.size = size;
+		}
+		public Item.Type itemType;
 		public int size = 6;
-		public int stored;
-		public int onTheWay;
 		public int stackSize = 1;
 		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
-		public Item.Type itemType;
+		public int stored;
+		public int onTheWay;
 	}
 
 	public enum Type
@@ -348,6 +354,16 @@ public class Workshop : Building
 		this.type = type;
 		buffers.Clear();
 
+		SetupConfiguration();
+
+		if ( Setup( ground, node, owner ) == null )
+			return null;
+
+		return this;
+	}
+
+	void SetupConfiguration()
+	{
 		foreach ( var c in configurations )
 		{
 			if ( c.type == type )
@@ -363,22 +379,35 @@ public class Workshop : Building
 		construction.stoneNeeded = configuration.stoneNeeded;
 		construction.flatteningNeeded = configuration.flatteningNeeded;
 
-		if ( configuration.inputs != null )
+		if ( configuration.inputs == null )
 		{
-			foreach ( var input in configuration.inputs )
-			{
-				Buffer b = new Buffer();
-				b.itemType = input.itemType;
-				b.size = input.bufferSize;
-				b.stackSize = input.stackSize;
-				buffers.Add( b );
-
-			}
+			buffers.Clear();
+			return;
 		}
-		if ( Setup( ground, node, owner ) == null )
-			return null;
 
-		return this;
+		var newList = new List<Buffer>();
+		for ( int i = 0; i < configuration.inputs.Length; i++ )
+		{
+			var input = configuration.inputs[i];
+			int j = 0;
+			while ( j < buffers.Count )
+			{
+				var b = buffers[j];
+				if ( b.itemType == input.itemType )
+				{
+					b.itemType = input.itemType;
+					b.size = input.bufferSize;
+					b.stackSize = input.stackSize;
+					newList.Add( b );
+					break;
+				}
+				j++;
+			}
+			if ( j == buffers.Count )
+				newList.Add( new Buffer( input.itemType, input.bufferSize ) );
+		}
+		assert.AreEqual( newList.Count, configuration.inputs.Length );
+		buffers = newList;
 	}
 
 	public bool IsWorking()
@@ -409,6 +438,8 @@ public class Workshop : Building
 		mapIndicatorMaterial = mapIndicator.GetComponent<MeshRenderer>().material = new Material( World.defaultShader );
 		mapIndicator.transform.position = node.Position() + new Vector3( 0, 2, GroundNode.size * 0.5f );
 		mapIndicator.SetActive( false );
+
+		SetupConfiguration();
 	}
 
 	new void Update()
