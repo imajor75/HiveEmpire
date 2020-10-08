@@ -179,7 +179,7 @@ public class Workshop : Building
 			if ( resource && resourceType != Resource.Type.fish )
 			{
 				if ( resourceType != Resource.Type.expose )
-					boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting "+ resourceType.ToString()+" but was "+ resource.type.ToString() +")" );	// TODO Fired once (maybe fisherman met a tree?)
+					boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting " + resourceType.ToString() + " but was " + resource.type.ToString() + ")" );   // TODO Fired once (maybe fisherman met a tree?)
 				boss.assert.AreEqual( boss, resource.hunter );
 				if ( Resource.IsUnderGround( resourceType ) || node == boss.node )
 				{
@@ -304,11 +304,11 @@ public class Workshop : Building
 
 		object[] looksData = {
 			"Medieval fantasy house/Medieva_fantasy_house",
-			"Medieval house/Medieval_house 1", 1.1f, Type.fishingHut, 
+			"Medieval house/Medieval_house 1", 1.1f, Type.fishingHut,
 			"Baker House/Prefabs/Baker_house", 1.4f, Type.bakery, Type.hunter,
 			"Fantasy House/Prefab/Fantasy_House_6", 1.8f, Type.stonemason, Type.sawmill,
 			"WatchTower/Tower",
-			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", 1.5f, Type.farm, 
+			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", 1.5f, Type.farm,
 			"mill/melnica_mod", 2.0f, Type.mill,
 			"Mines/saltmine_final", 1.5f, Type.saltmine,
 			"Mines/coalmine_final", 1.1f, Type.coalmine,
@@ -412,7 +412,7 @@ public class Workshop : Building
 
 	public bool IsWorking()
 	{
-		return worker != null && !worker.IsIdle( true ); 
+		return worker != null && !worker.IsIdle( true );
 	}
 
 	new void Start()
@@ -634,7 +634,7 @@ public class Workshop : Building
 			if ( min > b.stored )
 				min = b.stored;
 		}
-		if ( (common && sum < count) || (!common && min < count) )
+		if ( ( common && sum < count ) || ( !common && min < count ) )
 			return false;
 
 		foreach ( var b in buffers )
@@ -731,7 +731,7 @@ public class Workshop : Building
 
 	void CollectResourceFromNode( GroundNode target, Resource.Type resourceType )
 	{
-		if ( !UseInput() )
+		if ( !UseInput() || flag.FreeSpace() == 0 )
 			return;
 
 		Item item = null;

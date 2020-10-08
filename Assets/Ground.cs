@@ -60,6 +60,10 @@ public class Ground : Assert.Base
 		public int x;
 		public int y;
 		public int d;
+		public static Offset operator -( Offset o )
+		{
+			return new Offset( -o.x, -o.y, o.d );
+		}
 	}
 
 	void Start()

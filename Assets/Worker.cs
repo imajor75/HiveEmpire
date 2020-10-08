@@ -655,6 +655,11 @@ public class Worker : Assert.Base
 		if ( road != null && atRoad )
 		{
 			int currentPoint = road.NodeIndex( node );
+			if ( currentPoint < 0 )
+			{
+				// There was a building at node, but it was already destroyed
+				currentPoint = road.NodeIndex( node.Add( -Building.flagOffset ) );
+			}
 			assert.AreEqual( road.workerAtNodes[currentPoint], this );
 			road.workerAtNodes[currentPoint] = null;
 			if ( exclusiveFlag )
