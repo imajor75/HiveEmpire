@@ -287,8 +287,6 @@ abstract public class Building : Assert.Base
 		Item item = Item.Create().Setup( itemType, this, destination );
 		if ( item != null )
 		{
-			assert.IsNull( worker.reservation );
-			worker.reservation = flag;
 			flag.ReserveItem( item );
 			worker.SchedulePickupItem( item );
 			worker.ScheduleWalkToNeighbour( flag.node );

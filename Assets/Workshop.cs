@@ -740,7 +740,6 @@ public class Workshop : Building
 			item = Item.Create().Setup( configuration.outputType, this );
 			flag.ReserveItem( item );
 			item.worker = worker;
-			worker.reservation = flag;
 		}
 		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );

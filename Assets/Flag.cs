@@ -104,12 +104,18 @@ public class Flag : Assert.Base
 	public bool ReleaseItem( Item item )
 	{
 		assert.AreEqual( item.flag, this );
+		CancelItem( item );
+		item.flag = null;
+		return true;
+	}
+
+	public bool CancelItem( Item item )
+	{
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == item )
 			{
 				items[i] = null;
-				item.flag = null;
 				UpdateBody();
 				return true;
 			}

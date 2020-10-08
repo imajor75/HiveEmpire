@@ -18,6 +18,7 @@ public class Worker : Assert.Base
 	public float walkProgress;
 	public GroundNode node;
 	public Item itemInHands;
+	[JsonIgnore]
 	public Flag reservation;
 	public int look;
 	public Resource origin;
@@ -172,7 +173,7 @@ public class Worker : Assert.Base
 			if ( road == null )
 			{
 				boss.Reset();
-				return false;
+				return true;
 			}
 
 			if ( currentPoint == -1 )
@@ -340,6 +341,12 @@ public class Worker : Assert.Base
 			if ( ( pickupTimer -= (int)World.instance.speedModifier ) > 0 )
 				return false;
 
+			if ( item.path == null && boss.type == Type.haluer )	// Item lost destination while hauler was approaching
+			{
+				boss.Reset();
+				return true;
+			}
+
 			if ( item.flag != null )
 				item.flag.ReleaseItem( item );
 			boss.itemInHands = item;
@@ -361,6 +368,15 @@ public class Worker : Assert.Base
 		{
 			base.Setup( boss );
 			this.item = item;
+		}
+		public override void Cancel()
+		{
+			if ( item != null && item.nextFlag != null )
+			{
+				item.nextFlag.CancelItem( item );
+				item.nextFlag = null;
+			}
+			base.Cancel();
 		}
 		public override bool ExecuteFrame()
 		{
@@ -602,6 +618,9 @@ public class Worker : Assert.Base
 				walkProgress -= 1;
 			}
 		}
+		if ( itemInHands && itemInHands.nextFlag == null && itemInHands.destination == null )   // Item trip was cancelled during the haluer trying to finish the path into a building
+			Reset();
+
 		if ( walkTo == null )
 		{
 			if ( taskQueue.Count > 0 )
@@ -652,6 +671,12 @@ public class Worker : Assert.Base
 	{
 		assert.IsNotSelected();
 		Reset();
+		if ( origin != null )
+		{
+			assert.AreEqual( type, Type.wildAnimal );
+			assert.AreEqual( origin.type, Resource.Type.animalSpawner );
+			origin.animals.Remove( this );
+		}
 		if ( road != null && atRoad )
 		{
 			int currentPoint = road.NodeIndex( node );
@@ -704,6 +729,25 @@ public class Worker : Assert.Base
 				ScheduleWalkToRoadNode( road, road.CenterNode(), false );
 				ScheduleStartWorkingOnRoad( road );
 				return;
+			}
+			if ( itemInHands )
+			{
+				for ( int i = 0; i < 2; i++ )
+				{
+					Flag flag = road.GetEnd( i );
+					if ( flag.FreeSpace() == 0 )
+						continue;
+
+					flag.ReserveItem( itemInHands );
+					if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building
+						ScheduleWalkToNeighbour( node.Add( Building.flagOffset ) );	// It is possible, that the building is not there anymore
+					ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
+					ScheduleDeliverItem( itemInHands );
+					return;
+				}
+				itemInHands.Remove();
+				animator.SetTrigger( putdownID );
+				itemInHands = null;
 			}
 			Item bestItem = null;
 			float bestScore = 0;
@@ -917,8 +961,6 @@ public class Worker : Assert.Base
 		{
 			assert.IsTrue( other.FreeSpace() > 0 );
 			other.ReserveItem( item );
-			assert.IsNull( reservation );
-			reservation = other;
 			ScheduleDeliverItem( item );
 		}
 		item.worker = this;
@@ -926,28 +968,9 @@ public class Worker : Assert.Base
 
 	public void Reset()
 	{
-		if ( origin != null )
-		{
-			assert.AreEqual( type, Type.wildAnimal );
-			assert.AreEqual( origin.type, Resource.Type.animalSpawner );
-			origin.animals.Remove( this );
-		}
-		if ( reservation )
-		{
-			assert.IsNotNull( itemInHands );
-			reservation.ReleaseItem( itemInHands );
-			reservation = null;
-		}
 		foreach ( var task in taskQueue )
 			task.Cancel();
 		taskQueue.Clear();
-
-		if ( itemInHands )
-		{
-			itemInHands.Remove();	// TODO Items should not be lost
-			animator.SetTrigger( putdownID );
-			itemInHands = null;
-		}
 	}
 
 	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
@@ -1048,11 +1071,18 @@ public class Worker : Assert.Base
 			int point = road.NodeIndex( node );
 			if ( point < 0 )
 			{
-				assert.IsNotNull( node.building );
-				point = road.NodeIndex( node.building.flag.node );
-				assert.IsTrue( point >= 0 );
+				if ( itemInHands )
+					assert.IsTrue( node.building || itemInHands.tripCancelled );	// It is possible, that the item destination was destroyed during the last step
+				else
+					assert.IsTrue( node.building );
+				if ( node.building )
+				{
+					point = road.NodeIndex( node.building.flag.node );
+					assert.IsTrue( point >= 0 );
+				}
 			}
-			assert.AreEqual( road.workerAtNodes[point], this );
+			if ( point >= 0 )
+				assert.AreEqual( road.workerAtNodes[point], this );
 		}
 		if ( itemInHands )
 		{
@@ -1067,13 +1097,6 @@ public class Worker : Assert.Base
 			assert.IsTrue( atRoad );
 			assert.IsNotNull( road );
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
-		}
-		if ( reservation != null )
-		{
-			if ( itemInHands != null )
-				assert.IsTrue( reservation.items.Contains( itemInHands ) );
-			if ( road != null )
-				assert.IsTrue( road.GetEnd( 0 ) == reservation || road.GetEnd( 1 ) == reservation );
 		}
 	}
 }	

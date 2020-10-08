@@ -19,6 +19,7 @@ public class Item : Assert.Base
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
 	public Player.Watch watchRoadDelete = new Player.Watch();
+	public bool tripCancelled;
 
 	public enum Type
     {
@@ -152,6 +153,7 @@ public class Item : Assert.Base
 		{
 			destination = building;
 			building.ItemOnTheWay( this );
+			tripCancelled = false;
 			return true;
 		}
 		return false;
@@ -162,6 +164,7 @@ public class Item : Assert.Base
 		path = null;
 		destination?.ItemOnTheWay( this, true );
 		destination = null;
+		tripCancelled = true;
 	}
 
 	public void ArrivedAt( Flag flag )
@@ -171,8 +174,6 @@ public class Item : Assert.Base
 		if ( destination )
 			assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
 
-		assert.IsNotNull( worker.reservation );
-		worker.reservation = null;
 		worker = null;
 		if ( destination != null && path.IsFinished() )
 		{
@@ -230,7 +231,7 @@ public class Item : Assert.Base
 		assert.IsTrue( flag != null || worker != null );
 		if ( worker )
 		{
-			if ( path == null || path.StepsLeft() > 1 ) 
+			if ( ( path == null || path.StepsLeft() > 1 ) && !tripCancelled ) 
 				assert.IsNotNull( nextFlag );
 			if ( worker.itemInHands )
 				assert.AreEqual( this, worker.itemInHands );
