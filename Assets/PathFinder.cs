@@ -176,9 +176,8 @@ public class PathFinder : ScriptableObject
 			{
 				Assert.global.IsTrue( path.Count == 0 && roadPath.Count > 0 );
 				Road last = roadPath[roadPath.Count - 1];
-				Assert.global.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
-				foreach ( var road in roadPath )
-					Assert.global.IsNotNull( road );
+				if ( last )
+					Assert.global.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
 			}
 			else
 			{
@@ -254,5 +253,8 @@ public class Path : PathFinder
 			Assert.global.IsTrue( progress <= roadPath.Count );
 		else
 			Assert.global.IsTrue( progress <= path.Count );
+		if ( ready && mode == Mode.onRoad )
+		for ( int i = progress; i < roadPath.Count; i++ )
+			Assert.global.IsNotNull( roadPath[i] );
 	}
 }

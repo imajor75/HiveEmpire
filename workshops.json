@@ -31,6 +31,7 @@
   },
   {
     "type": "farm",
+	"huge": true,
     "stoneNeeded": 2,
     "outputType": "grain",
   },
@@ -228,6 +229,7 @@
   },
   {
     "type": "butcher",
+	"huge": true,
     "stoneNeeded": 2,
     "outputType": "pork",
     "inputs": [

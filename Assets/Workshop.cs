@@ -45,6 +45,7 @@ public class Workshop : Building
 		public int plankNeeded = 2;
 		public int stoneNeeded = 0;
 		public bool flatteningNeeded = true;
+		public bool huge = false;
 
 		public Resource.Type gatheredResource = Resource.Type.unknown;
 		public int gatheringRange = 8;
@@ -375,6 +376,7 @@ public class Workshop : Building
 		assert.IsNotNull( configuration );
 
 		groundTypeNeeded = configuration.groundTypeNeeded;
+		huge = configuration.huge;
 		construction.plankNeeded = configuration.plankNeeded;
 		construction.stoneNeeded = configuration.stoneNeeded;
 		construction.flatteningNeeded = configuration.flatteningNeeded;

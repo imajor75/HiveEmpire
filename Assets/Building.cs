@@ -21,6 +21,9 @@ abstract public class Building : Assert.Base
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
 	public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
+	public bool huge;
+	public static List<Ground.Offset> singleArea = new List<Ground.Offset>();
+	public static List<Ground.Offset> hugeArea = new List<Ground.Offset>();
 
 	[System.Serializable]
 	public class Construction
@@ -41,6 +44,7 @@ abstract public class Building : Assert.Base
 		public bool flatteningNeeded;
 		public int flatteningCorner;
 		public int flatteningCounter;
+		public List<GroundNode> flatteningArea = new List<GroundNode>();
 
 		static public void Initialize()
 		{
@@ -54,8 +58,21 @@ abstract public class Building : Assert.Base
 			this.boss = boss;
 			if ( flatteningNeeded )
 			{
-				foreach ( var o in Ground.areas[1] )
-					boss.node.Add( o ).fixedHeight = true;
+				var area = boss.huge ? hugeArea : singleArea;
+				foreach ( var o in area )
+				{
+					GroundNode basis = boss.node.Add( o );
+					foreach ( var b in Ground.areas[1] )
+					{
+						GroundNode node = basis.Add( b );
+						if ( !flatteningArea.Contains( node ) )
+							flatteningArea.Add( node );
+					}
+				}
+				flatteningArea.Remove( boss.node );
+				boss.assert.IsTrue( flatteningArea.Count == 6 || flatteningArea.Count == 13, "Area has " + flatteningArea.Count + " nodes" );
+				foreach ( var node in flatteningArea )
+					node.fixedHeight = true;
 			}
 		}
 
@@ -89,13 +106,13 @@ abstract public class Building : Assert.Base
 			}
 			if ( worker == null || !worker.IsIdle( true ) )
 				return;
-			if ( flatteningNeeded && flatteningCorner < GroundNode.neighbourCount )
+			if ( flatteningNeeded && flatteningCorner < flatteningArea.Count )
 			{
 				flatteningCounter++;
 				if ( flatteningCounter > flatteningTime / 6 )
 				{
 					flatteningCounter = 0;
-					boss.node.Add( Ground.areas[1][flatteningCorner++] ).SetHeight( boss.node.height );
+					flatteningArea[flatteningCorner++].SetHeight( boss.node.height );
 				}
 				return;
 			}
@@ -184,40 +201,53 @@ abstract public class Building : Assert.Base
 
 	public static void Initialize()
 	{
+		singleArea.Add( new Ground.Offset( 0, 0, 0 ) );
+
+		hugeArea.Add( new Ground.Offset( 0, 0, 0 ) );
+		hugeArea.Add( new Ground.Offset( -1, 0, 1 ) );
+		hugeArea.Add( new Ground.Offset( -1, 1, 1 ) );
+		hugeArea.Add( new Ground.Offset( 0, 1, 1 ) );
+
 		Construction.Initialize();
 	}
 
 	public Building Setup( Ground ground, GroundNode node, Player owner )
 	{
-		if ( node.IsBlocking() )
+		var area = huge ? hugeArea : singleArea;
+
+		foreach ( var o in area )
 		{
-			Debug.Log( "Node is already occupied" );
-			Destroy( gameObject );
-			return null;
-		}
-		if ( node.owner != owner )
-		{
-			Debug.Log( "Node is outside of border" );
-			Destroy( gameObject );
-			return null;
-		}
-		if ( construction.flatteningNeeded )
-		{
-			foreach ( var o in Ground.areas[1] )
+			var basis = node.Add( o );
+			if ( basis.IsBlocking() )
 			{
-				if ( node.Add( o ).owner != owner )
+				Debug.Log( "Node is already occupied" );
+				Destroy( gameObject );
+				return null;
+			}
+			if ( basis.owner != owner )
+			{
+				Debug.Log( "Node is outside of border" );
+				Destroy( gameObject );
+				return null;
+			}
+			if ( construction.flatteningNeeded )
+			{
+				foreach ( var b in Ground.areas[1] )
 				{
-					Debug.Log( "Node perimeter is outside of border" );
-					Destroy( gameObject );
-					return null;
+					if ( basis.Add( b ).owner != owner )
+					{
+						Debug.Log( "Node perimeter is outside of border" );
+						Destroy( gameObject );
+						return null;
+					}
 				}
 			}
-		}
-		if ( node.type != groundTypeNeeded )
-		{
-			Debug.Log( "Node has different type" );
-			Destroy( gameObject );
-			return null;
+			if ( basis.type != groundTypeNeeded )
+			{
+				Debug.Log( "Node has different type" );
+				Destroy( gameObject );
+				return null;
+			}
 		}
 		var flagNode = node.Add( flagOffset );
 		Flag flag = flagNode.flag;
@@ -237,7 +267,11 @@ abstract public class Building : Assert.Base
 
 		this.node = node;
 		construction.Setup( this );
-		node.building = this;
+		foreach ( var o in area )
+		{
+			var basis = node.Add( o );
+			basis.building = this;
+		}
 
 		return this;
 	}
@@ -246,7 +280,11 @@ abstract public class Building : Assert.Base
 	{
 		name = "Building " + node.x + ", " + node.y;
 		transform.SetParent( ground.transform );
-		transform.localPosition = node.Position();
+		var area = huge ? hugeArea : singleArea;
+		Vector3 position = new Vector3();
+		foreach ( var o in area )
+			position += node.Add( o ).Position();
+		transform.localPosition = position / area.Count;
 		renderers = new List<MeshRenderer>();
 		ScanChildObject( transform );
 		foreach( var renderer in renderers )
@@ -345,12 +383,16 @@ abstract public class Building : Assert.Base
 			return false;
 		if ( worker != null && !worker.Remove() )
 			return false;
-		if ( construction.flatteningNeeded )
+
+		foreach ( var o in construction.flatteningArea )
+			o.fixedHeight = false;
+		var area = huge ? hugeArea : singleArea;
+		foreach ( var o in area )
 		{
-			foreach ( var o in Ground.areas[1] )
-				node.Add( o ).fixedHeight = false;
+			var basis = node.Add( o );
+			assert.AreEqual( basis.building, this );
+			basis.building = null;
 		}
-		node.building = null;
 		flag.building = null;
 		Destroy( gameObject );
 		return true;

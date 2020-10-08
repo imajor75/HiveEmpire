@@ -150,12 +150,12 @@ public class Flag : Assert.Base
 	{
 		if ( building && !building.Remove() )
 			return false;
-		node.flag = null;
 		foreach ( var road in roadsStartingHere )
 			road?.Remove();
 		foreach ( var item in items )
 			item?.Remove();
 
+		node.flag = null;
 		Destroy( gameObject );
 		return true;
 	}

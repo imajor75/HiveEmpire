@@ -305,7 +305,8 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
-			boss.Walk( target );
+			if ( boss.node.DirectionTo( target ) >= 0 ) // This is not true, when previous walk tasks are failed
+				boss.Walk( target );
 			return true;
 		}
 	}
@@ -396,8 +397,10 @@ public class Worker : Assert.Base
 			else
 			{
 				Flag flag = boss.node.flag;
-				boss.assert.IsNotNull( flag, "Trying to deliver an item at a location where there is no flag" );
-				item.ArrivedAt( flag );
+				if ( flag )
+					item.ArrivedAt( flag );
+				else
+					item.Remove();	// This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
 			boss.itemInHands = null;
 
@@ -683,7 +686,7 @@ public class Worker : Assert.Base
 			if ( currentPoint < 0 )
 			{
 				// There was a building at node, but it was already destroyed
-				currentPoint = road.NodeIndex( node.Add( -Building.flagOffset ) );
+				currentPoint = road.NodeIndex( node.Add( Building.flagOffset ) );
 			}
 			assert.AreEqual( road.workerAtNodes[currentPoint], this );
 			road.workerAtNodes[currentPoint] = null;
@@ -798,7 +801,7 @@ public class Worker : Assert.Base
 
 		if ( building != null && node != building.node )
 		{
-			if ( node.flag )
+			if ( node.flag )	// TODO Do something if the worker can't get home
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );

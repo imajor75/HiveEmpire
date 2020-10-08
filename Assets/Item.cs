@@ -1,8 +1,8 @@
-﻿using System.Linq;
-using TMPro;
+﻿using Newtonsoft.Json;
+using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 [SelectionBase]
 public class Item : Assert.Base
@@ -14,7 +14,6 @@ public class Item : Assert.Base
 	public Type type;
 	public Ground ground;
 	public Path path;
-	public Building origin;
 	public Building destination;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
@@ -92,10 +91,9 @@ public class Item : Assert.Base
 		owner = origin.owner;
 		watchRoadDelete.Attach( owner.versionedRoadDelete );
 		this.type = type;
-		this.origin = origin;
 		if ( destination )
 		{
-			if ( !SetTarget( destination ) )
+			if ( !SetTarget( destination, origin ) )
 			{
 				Destroy( gameObject );
 				return null;
@@ -116,14 +114,19 @@ public class Item : Assert.Base
 	void Update()
 	{
 		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
-		if ( watchRoadDelete.Check() && path && !path.IsFinished() )
+		if ( watchRoadDelete.Check() && path )
 		{
-			for ( int i = path.progress; i < path.roadPath.Count; i++ )
+			for ( int i = 0; i < path.roadPath.Count; i++ )
 			{
 				if ( path.roadPath[i] == null )
 				{
-					CancelTrip();
-					break;
+					if ( i < path.progress )
+						path.roadPath[i] = null;
+					else
+					{
+						CancelTrip();
+						break;
+					}
 				}
 			}
 		}
@@ -131,15 +134,14 @@ public class Item : Assert.Base
 			owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.high );
 	}
 
-	public bool SetTarget( Building building )
+	public bool SetTarget( Building building, Building origin = null )
 	{
 		assert.IsNull( worker );
 
-		GroundNode current = origin.flag.node;	// TODO What if the item is in the hands of a worker between two flags?
-		if ( flag )		// Isn't it always at a flag?
-			current = flag.node;
-
-		if ( current == building.flag.node )
+		Flag start = origin?.flag;
+		if ( flag )
+			start = flag;
+		if ( start == building.flag )
 		{
 			destination = building;
 			building.ItemOnTheWay( this );
@@ -148,7 +150,7 @@ public class Item : Assert.Base
 			return true;
 		}
 
-		path = Path.Between( current, building.flag.node, PathFinder.Mode.onRoad );
+		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad );
 		if ( path != null )
 		{
 			destination = building;

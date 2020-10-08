@@ -239,8 +239,6 @@ public class GroundNode : ScriptableObject
 		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal )
 			o++;
 		gizmo.assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
-		if ( building )
-			gizmo.assert.AreEqual( this, building.node );
 		if ( flag )
 			gizmo.assert.AreEqual( this, flag.node );
 		for ( int i = 0; i < 6; i++ )
@@ -252,7 +250,8 @@ public class GroundNode : ScriptableObject
 		}
 		if ( building )
 		{
-			gizmo.assert.AreEqual( this, building.node );
+			if ( !building.huge )
+				gizmo.assert.AreEqual( this, building.node );
 			building.Validate();
 		}
 		if ( road )
