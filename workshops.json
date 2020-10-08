@@ -47,6 +47,7 @@
   {
     "type": "bakery",
     "stoneNeeded": 2,
+	"outputStackSize": 2,
     "flatteningNeeded": false,
     "outputType": "pretzel",
     "inputs": [
@@ -100,10 +101,6 @@
       {
         "itemType": "fish",
         "bufferSize": 2
-      },
-      {
-        "itemType": "pork",
-        "bufferSize": 2
       }
     ]
   },
@@ -140,10 +137,6 @@
     "commonInputs": true,
     "inputs": [
       {
-        "itemType": "fish",
-        "bufferSize": 2
-      },
-      {
         "itemType": "pork",
         "bufferSize": 2
       },
@@ -164,10 +157,6 @@
     "inputs": [
       {
         "itemType": "fish",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pork",
         "bufferSize": 2
       },
       {
