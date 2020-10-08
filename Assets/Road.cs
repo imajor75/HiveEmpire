@@ -233,6 +233,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
 		Vector3 h = Vector3.up*GroundNode.size*height;
 		mesh.Clear();
+		mapMesh.Clear();
 		if ( nodes.Count == 1 )
 			return;
 
