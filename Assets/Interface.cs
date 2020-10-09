@@ -260,6 +260,8 @@ public class Interface : Assert.Base, IPointerClickHandler
 			i.name = "ItemImage";
 			if ( type != Item.Type.unknown )
 				i.sprite = Item.sprites[(int)type];
+			else
+				i.enabled = false;
 			Init( i.rectTransform, x, y, xs, ys, parent );
 			i.gameObject.AddComponent<Button>().onClick.AddListener( i.Track );
 			return i;
@@ -384,6 +386,16 @@ public class Interface : Assert.Base, IPointerClickHandler
 				Stock stock = item.destination as Stock;
 				if ( stock )
 					StockPanel.Create().Open( stock, true );
+			}
+			public void SetType( Item.Type itemType )
+			{
+				if ( itemType == Item.Type.unknown )
+				{
+					enabled = false;
+					return;
+				}
+				enabled = true;
+				sprite = Item.sprites[(int)itemType];
 			}
 		}
 	}
@@ -764,9 +776,13 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public class RoadPanel : Panel
 	{
 		public Road road;
+		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>();
+		public List<Text> leftNumbers = new List<Text>(), rightNumbers = new List<Text>();
 		public GroundNode node;
 		public Text jam;
 		public Text workers;
+
+		const int itemsDisplayed = 3;
 
 		public static RoadPanel Create()
 		{
@@ -778,7 +794,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			base.Open( node );
 			this.road = road;
 			this.node = node;
-			Frame( 0, 0, 210, 50, 10 );
+			Frame( 0, 0, 210, 140, 10 );
 			Button( 190, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			Button( 170, -10, 20, 20, iconHauler ).onClick.AddListener( Hauler );
 			Button( 150, -10, 20, 20, iconDestroy ).onClick.AddListener( Remove );
@@ -786,6 +802,15 @@ public class Interface : Assert.Base, IPointerClickHandler
 			jam = Text( 12, -4, 120, 20, "Jam" );
 			workers = Text( 12, -24, 120, 20, "Worker count" );
 			name = "Road panel";
+
+			for ( int i = 0; i < itemsDisplayed; i++ )
+			{
+				int row = i * (iconSize + 5 ) - 100;
+				leftItems.Add( ItemIcon( 15, row ) );
+				leftNumbers.Add( Text( 40, row, 30, 20, "0" ) );
+				rightNumbers.Add( Text( 150, row, 20, 20, "0" ) );
+				rightItems.Add( ItemIcon( 170, row ) );
+			}
 		}
 
 		void Remove()
@@ -811,6 +836,43 @@ public class Interface : Assert.Base, IPointerClickHandler
 			base.Update();
 			jam.text = "Items waiting: " + road.Jam();
 			workers.text = "Worker count: " + road.workers.Count;
+
+			for ( int i = 0; i < 2; i++ )
+			{
+				var itemImages = i == 0 ? leftItems : rightItems;
+				var itemTexts = i == 0 ? leftNumbers : rightNumbers;
+				int[] counts = new int[(int)Item.Type.total];
+				var items = road.GetEnd( i ).items;
+				foreach ( var item in items )
+				{
+					if ( item != null && item.path && item.path.Road() == road )
+						counts[(int)item.type]++;
+				}
+				for ( int j = itemsDisplayed - 1; j >= 0; j-- )
+				{
+					int best = 0, bestIndex = 0;
+					for ( int t = 0; t < counts.Length; t++ )
+					{
+						if ( counts[t] > best )
+						{
+							best = counts[t];
+							bestIndex = t;
+						}
+					}
+					if ( best > 0 )
+					{
+						itemImages[j].SetType( (Item.Type)bestIndex );
+						itemTexts[j].text = counts[bestIndex].ToString();
+						counts[bestIndex] = 0;
+					}
+					else
+					{
+						itemImages[j].SetType( Item.Type.unknown );
+						itemTexts[j].text = "-";
+					}
+				}
+
+			}
 		}
 	}
 	public class FlagPanel : Panel
