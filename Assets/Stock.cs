@@ -77,6 +77,8 @@ public class Stock : Building
 			name = "Headquarters";
 		else
 			name = "Stock " + node.x + ", " + node.y;
+		while ( content.Count < (int)Item.Type.total )
+			content.Add( 0 );
 	}
 
 	new public void Update()

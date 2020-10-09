@@ -669,14 +669,15 @@ public class Interface : Assert.Base, IPointerClickHandler
 		{
 			base.Open( stock );
 			this.stock = stock;
-			Frame( 0, 0, 200, 200 );
+			int height = 260;
+			Frame( 0, 0, 200, height );
 
 			int row = -25;
 			for ( int j = 0; j < (int)Item.Type.total; j += 2 )
 			{
 				Image( 16, row, iconSize, iconSize, Item.sprites[j] );
 				Button( 170, -10, 20, 20, iconExit ).onClick.AddListener( Close );
-				Button( 150, -150, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+				Button( 150, 40 - height, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 				counts[j] = Text( 40, row, 100, 20, "" );
 				if ( j + 1 < Item.sprites.Length )
 				{
@@ -914,6 +915,11 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 		public override void Update()
 		{
+			if ( worker == null )
+			{
+				Close();
+				return;
+			}
 			base.Update();
 			itemCount.text = "Items delivered: " + worker.itemsDelivered;
 			if ( worker.itemInHands != null )

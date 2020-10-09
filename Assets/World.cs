@@ -129,17 +129,6 @@ public class World : MonoBehaviour
 
 	public void Save( string fileName )
 	{
-
-		{
-			var list = Resources.FindObjectsOfTypeAll<GroundNode>();
-			foreach ( var o in list )
-			{
-				for ( int i = 0; i < o.borders.Length; i++ )
-					if ( o.borders[i] == null )
-						o.borders[i] = null;
-			}
-		}
-
 		JsonSerializerSettings jsonSettings = new JsonSerializerSettings();
 		jsonSettings.TypeNameHandling = TypeNameHandling.Auto;
 		jsonSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
