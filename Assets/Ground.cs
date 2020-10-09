@@ -77,7 +77,9 @@ public class Ground : Assert.Base
 
 		if ( nodes == null )
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
-		FinishLayout();
+		for ( int x = 0; x <= width; x++ )
+			for ( int y = 0; y <= height; y++ )
+				nodes[y * ( width + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
 		SetHeights();
 		return this;
     }
@@ -117,21 +119,6 @@ public class Ground : Assert.Base
 		}
 	}
 
-	public void FinishLayout()
-	{
-		for ( int x = 0; x <= width; x++ )
-		{
-			for ( int y = 0; y <= height; y++ )
-			{
-				if ( nodes[y * ( width + 1 ) + x] == null )
-					nodes[y * ( width + 1 ) + x] = ScriptableObject.CreateInstance<GroundNode>();
-			}
-		}
-		for ( int x = 0; x <= width; x++ )
-			for ( int y = 0; y <= height; y++ )
-				GetNode( x, y ).Initialize( this, x, y );
-	}
-
 	public void SetHeights()
 	{
 		heightMap = ScriptableObject.CreateInstance<HeightMap>();
@@ -162,7 +149,6 @@ public class Ground : Assert.Base
 				n.type = GroundNode.Type.mountain;
 			if ( d < World.waterLevel )
 				n.type = GroundNode.Type.underWater;
-			n.gizmo.transform.localPosition = n.Position();
 		}
 	}
 

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [System.Serializable]
-public class GroundNode : ScriptableObject
+public class GroundNode : Assert.Base
 {
     public static float size = 1;
     public static int neighbourCount = 6;
@@ -22,8 +22,6 @@ public class GroundNode : ScriptableObject
 	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
 	public bool fixedHeight;
 	public Type type;
-	[JsonIgnore]
-	public NodeGizmo gizmo;
 
 	public enum Type
 	{
@@ -33,38 +31,32 @@ public class GroundNode : ScriptableObject
 		underWater
 	}
 
-	public class NodeGizmo : Assert.Base
+	static public GroundNode Create()
 	{
-		public GroundNode node;
-
-		public static void CreateFor( GroundNode node )
-		{
-			var gizmo = new GameObject().AddComponent<NodeGizmo>();
-			gizmo.node = node;
-			gizmo.transform.SetParent( Interface.instance.debug.transform );
-			gizmo.name = "NodeGizmo";
-			node.gizmo = gizmo;
-			gizmo.transform.position = node.Position();
-		}
-
-		private void Start()
-		{
-			gameObject.hideFlags |= HideFlags.DontSave;
-		}
-
-		void OnDrawGizmos()
-		{
-			Vector3 position = node.Position();
-			if ( ( position - SceneView.lastActiveSceneView.camera.transform.position ).magnitude > 10 )
-				return;
-
-			Gizmos.color = Color.blue;
-			Gizmos.DrawCube( position, Vector3.one * 0.1f );
-			Handles.Label( position, node.x.ToString()+":"+node.y.ToString() );
-		}
+		return new GameObject().AddComponent<GroundNode>();
 	}
 
-    public Vector3 Position()
+	public GroundNode Setup( Ground ground, int x, int y )
+	{
+		this.ground = ground;
+		this.x = x;
+		this.y = y;
+
+		return this;
+	}
+
+	void OnDrawGizmos()
+	{
+		Vector3 position = Position();
+		if ( ( position - SceneView.lastActiveSceneView.camera.transform.position ).magnitude > 10 )
+			return;
+
+		Gizmos.color = Color.blue;
+		Gizmos.DrawCube( position, Vector3.one * 0.1f );
+		Handles.Label( position, x.ToString() + ":" + y.ToString() );
+	}
+
+	public Vector3 Position()
     {
         int rx = x-ground.width/2;
         int ry = y-ground.height/2;
@@ -90,7 +82,7 @@ public class GroundNode : ScriptableObject
 
 	public GroundNode Neighbour( int i )
 	{
-		gizmo.assert.IsTrue( i >= 0 && i < 6 );
+		assert.IsTrue( i >= 0 && i < 6 );
 		switch ( i )
 		{
 			case 0:
@@ -108,21 +100,6 @@ public class GroundNode : ScriptableObject
 		}
 		return null;
 	}
-
-    public void Initialize( Ground ground, int x, int y )
-    {
-        this.ground = ground;
-        this.x = x;
-        this.y = y;
-
-		//neighbours[0] = ground.GetNode( x + 0, y - 1 );
-		//neighbours[1] = ground.GetNode( x + 1, y - 1 );
-		//neighbours[2] = ground.GetNode( x + 1, y + 0 );
-		//neighbours[3] = ground.GetNode( x + 0, y + 1 );
-		//neighbours[4] = ground.GetNode( x - 1, y + 1 );
-		//neighbours[5] = ground.GetNode( x - 1, y + 0 );
-		NodeGizmo.CreateFor( this );
-    }
 
     public int DistanceFrom( GroundNode o )
     {
@@ -209,7 +186,7 @@ public class GroundNode : ScriptableObject
 		foreach ( var border in borders )
 			border?.UpdateBody();
 
-		gizmo.transform.localPosition = Position();
+		transform.localPosition = Position();
 	}
 
 	public bool CanBeFlattened()
@@ -238,27 +215,27 @@ public class GroundNode : ScriptableObject
 			o++;
 		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal )
 			o++;
-		gizmo.assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
+		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 		if ( flag )
-			gizmo.assert.AreEqual( this, flag.node );
+			assert.AreEqual( this, flag.node );
 		for ( int i = 0; i < 6; i++ )
-			gizmo.assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
+			assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
 		if ( flag )
 		{
-			gizmo.assert.AreEqual( this, flag.node );
+			assert.AreEqual( this, flag.node );
 			flag.Validate();
 		}
 		if ( building )
 		{
 			if ( !building.huge )
-				gizmo.assert.AreEqual( this, building.node );
+				assert.AreEqual( this, building.node );
 			building.Validate();
 		}
 		if ( road )
-			gizmo.assert.AreEqual( this, road.nodes[roadIndex] );
+			assert.AreEqual( this, road.nodes[roadIndex] );
 		if ( resource )
 		{
-			gizmo.assert.AreEqual( resource.node, this );
+			assert.AreEqual( resource.node, this );
 			resource.Validate();
 		}
 	}
