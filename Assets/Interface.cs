@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Interface : Assert.Base, IPointerClickHandler
+public class Interface : Assert.Base
 {
 	public List<Panel> panels = new List<Panel>();
 	public static int iconSize = 20;
@@ -31,6 +31,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public static Interface instance;
 	public bool heightStrips;
 	public Player mainPlayer;
+	public Tooltip tooltip;
 
 	public Interface()
 	{
@@ -123,6 +124,9 @@ public class Interface : Assert.Base, IPointerClickHandler
 		//{
 		//	world.NewGame( 117274283 );
 		//}
+
+		tooltip = Tooltip.Create();
+		tooltip.Open();
 	}
 
 	void Update()
@@ -178,11 +182,6 @@ public class Interface : Assert.Base, IPointerClickHandler
 			SetHeightStrips( !heightStrips );
 	}
 
-	public void OnPointerClick( PointerEventData eventData )
-	{
-		throw new System.NotImplementedException();
-	}
-
 	void SetHeightStrips( bool value )
 	{
 		this.heightStrips = value;
@@ -195,6 +194,48 @@ public class Interface : Assert.Base, IPointerClickHandler
 		world.Validate();
 	}
 
+	public class Tooltip : Panel
+	{
+		new Frame frame;
+		Text text;
+
+		public static Tooltip Create()
+		{
+			return new GameObject().AddComponent<Tooltip>();
+		}
+
+		public void Open()
+		{
+			base.Open();
+			name = "Tooltip";
+			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
+
+			frame = Frame( 0, 0, 200, 40, 10 );
+			text = Text( 20, -10, 150, 20 );
+			gameObject.SetActive( false );
+			FollowMouse();
+		}
+
+		public void SetText( string text = "" )
+		{
+			this.text.text = text;
+			gameObject.SetActive( text != "" );
+			FollowMouse();
+		}
+
+		public override void Update()
+		{
+			base.Update();
+			FollowMouse();
+			transform.SetAsLastSibling();
+		}
+
+		void FollowMouse()
+		{
+			var t = transform as RectTransform;
+			t.anchoredPosition = new Vector2( Input.mousePosition.x + 20, Input.mousePosition.y - Screen.height );
+		}
+	}
 	public class Panel : MonoBehaviour, IDragHandler, IPointerClickHandler
 	{
 		public GroundNode target;
@@ -356,9 +397,10 @@ public class Interface : Assert.Base, IPointerClickHandler
 
 		}
 
-		public class ItemImage : Image
+		public class ItemImage : Image, IPointerEnterHandler, IPointerExitHandler
 		{
 			public Item item;
+			public Item.Type itemType = Item.Type.unknown;
 			public bool trackDestination;
 
 			public void Track()
@@ -389,6 +431,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 			}
 			public void SetType( Item.Type itemType )
 			{
+				this.itemType = itemType;
 				if ( itemType == Item.Type.unknown )
 				{
 					enabled = false;
@@ -396,6 +439,19 @@ public class Interface : Assert.Base, IPointerClickHandler
 				}
 				enabled = true;
 				sprite = Item.sprites[(int)itemType];
+			}
+
+			public void OnPointerEnter( PointerEventData eventData )
+			{
+				if ( item != null )
+					Interface.instance.tooltip.SetText( item.type.ToString() );
+				else
+					Interface.instance.tooltip.SetText( itemType.ToString() );
+			}
+
+			public void OnPointerExit( PointerEventData eventData )
+			{
+				Interface.instance.tooltip.SetText( "" );
 			}
 		}
 	}
