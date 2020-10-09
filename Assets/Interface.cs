@@ -401,33 +401,13 @@ public class Interface : Assert.Base
 		{
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
-			public bool trackDestination;
 
 			public void Track()
 			{
 				if ( item == null )
 					return;
 
-				if ( !trackDestination )
-				{
-					if ( item.flag )
-						FlagPanel.Create().Open( item.flag, true );
-					else if ( item.worker )
-						WorkerPanel.Create().Open( item.worker );
-					return;
-				}
-
-				if ( !item.destination.construction.done )
-				{
-					ConstructionPanel.Create().Open( item.destination.construction, true );
-					return;
-				}
-				Workshop workshop = item.destination as Workshop;
-				if ( workshop )
-					WorkshopPanel.Create().Open( workshop, true );
-				Stock stock = item.destination as Stock;
-				if ( stock )
-					StockPanel.Create().Open( stock, true );
+				ItemPanel.Create().Open( item );
 			}
 			public void SetType( Item.Type itemType )
 			{
@@ -706,7 +686,6 @@ public class Interface : Assert.Base
 							while ( itemsOnTheWay[k].type != itemType )
 								k++;
 							items[i].item = itemsOnTheWay[k];
-							items[i].trackDestination = false;
 						}
 						else
 							items[i].color = new Color( 1, 1, 1, 0 );
@@ -995,15 +974,9 @@ public class Interface : Assert.Base
 					items[i].enabled = true;
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 					if ( flag.items[i].flag && flag.items[i].flag == flag )
-					{
 						items[i].color = new Color( 1, 1, 1, 1 );
-						items[i].trackDestination = true;
-					}
 					else
-					{
 						items[i].color = new Color( 1, 1, 1, 0.25f );
-						items[i].trackDestination = false;
-					}
 				}
 				items[i].item = flag.items[i];
 			}
@@ -1048,7 +1021,6 @@ public class Interface : Assert.Base
 			else
 				item.enabled = false;
 			item.item = worker.itemInHands;
-			item.trackDestination = true;
 			World.instance.eye.viewDistance = 2;
 			World.instance.eye.FocusOn( worker );
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
@@ -1119,6 +1091,98 @@ public class Interface : Assert.Base
 		{
 			if ( construction != null && construction.boss != null && construction.boss.Remove() )
 				Close();
+		}
+	}
+
+	public class ItemPanel : Panel
+	{
+		public Item item;
+		public List<Button> path = new List<Button>();
+		public bool followItem;
+
+		static public ItemPanel Create()
+		{
+			return new GameObject().AddComponent<ItemPanel>();
+		}
+
+		public void Open( Item item )
+		{
+			this.item = item;
+			followItem = true;
+
+			base.Open();
+			name = "Item panel";
+
+			Frame( 0, 0, 200, 300, 20 );
+			Button( 170, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Text( 15, -15, 100, 20, item.type.ToString() );
+			if ( item.origin )
+				Text( 15, -35, 170, 20, "Origin: " + item.origin.name );
+			Selection.activeGameObject = item.gameObject;
+		}
+
+		override public void Update()
+		{
+			base.Update();
+			if ( item == null )
+			{
+				Close();
+				return;
+			}
+
+			if ( item.path && item.path.roadPath.Count != path.Count )
+			{
+				foreach ( var o in path )
+					Destroy( o.gameObject );
+				path.Clear();
+
+				int row = -60;
+				for ( int i = 0; i < item.path.roadPath.Count; i++ )
+				{
+					Road r = item.path.roadPath[i];
+					int e = 1;
+					if ( i == item.path.roadPath.Count - 1 )
+					{
+						if ( r.GetEnd( 1 ) == item.destination.flag )
+							e = 0;
+					}
+					else
+					{
+						Road nr = item.path.roadPath[i + 1];
+						if ( r.GetEnd( 1 ) == nr.GetEnd( 0 ) || r.GetEnd( 1 ) == nr.GetEnd( 1 ) )
+							e = 0;
+					}
+					Flag flag = r.GetEnd( e );
+
+					Button b = Button( 15, row, 100, 20, "flag" );
+					b.onClick.AddListener( delegate	{ ShowFlag( flag ); } );
+					path.Add( b );
+					row -= 20;
+				}
+				Button( 15, row, 100, 20, item.destination.name ).onClick.AddListener( delegate { ShowFlag( item.destination.flag ); } );
+			}
+
+			if ( followItem )
+			{
+				World.instance.eye.viewDistance = 2;
+				if ( item.flag )
+					World.instance.eye.FocusOn( item.flag.node );
+				else
+					World.instance.eye.FocusOn( item.worker );
+			}
+		}
+
+		void ShowFlag( Flag flag )
+		{
+			followItem = false;
+			World.instance.eye.viewDistance = 5;
+			FlagPanel.Create().Open( flag, true );
+		}
+
+		new void OnDestroy()
+		{
+			base.OnDestroy();
+			World.instance.eye.viewDistance = 5;
 		}
 	}
 

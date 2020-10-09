@@ -118,10 +118,31 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<GroundNode>();
+		//	var list = Resources.FindObjectsOfTypeAll<Item>();
 		//	foreach ( var o in list )
 		//	{
-		//		o.transform.localPosition = o.Position();
+		//		o.watchBuildingDelete.Attach( players[0].versionedBuildingDelete );
+		//	}
+		//}
+
+		//{
+		//	var list = Resources.FindObjectsOfTypeAll<Building>();
+		//	foreach ( var o in list )
+		//	{
+		//		var w = o as Workshop;
+		//		if ( w )
+		//			o.title = w.type.ToString();
+		//		var s = o as Stock;
+		//		if ( s )
+		//		{
+		//			if ( s.main )
+		//				o.title = "headquarters";
+		//			else
+		//				o.title = "stock";
+		//		}
+		//		var g = o as GuardHouse;
+		//		if ( g )
+		//			o.title = "guardhouse";
 		//	}
 		//}
 

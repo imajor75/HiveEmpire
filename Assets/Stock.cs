@@ -24,6 +24,7 @@ public class Stock : Building
 
 	new public Stock Setup( Ground ground, GroundNode node, Player owner )
 	{
+		title = "stock";
 		construction.plankNeeded = 3;
 		construction.stoneNeeded = 3;
 		construction.flatteningNeeded = true;
@@ -45,6 +46,7 @@ public class Stock : Building
 		if ( !Setup( ground, node, owner ) )
 			return null;
 
+		title = "headquarter";
 		main = true;
 		construction = new Construction();
 		construction.boss = this;

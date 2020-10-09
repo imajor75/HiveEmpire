@@ -353,6 +353,7 @@ public class Workshop : Building
 	public Workshop Setup( Ground ground, GroundNode node, Player owner, Type type )
 	{
 		this.type = type;
+		title = type.ToString();
 		buffers.Clear();
 
 		SetupConfiguration();
