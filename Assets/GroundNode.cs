@@ -45,6 +45,12 @@ public class GroundNode : Assert.Base
 		return this;
 	}
 
+	void Start()
+	{
+		name = "GroundNode (" + x + ", " + y + ")";
+		transform.SetParent( World.nodes.transform );
+	}
+
 	void OnDrawGizmos()
 	{
 		Vector3 position = Position();

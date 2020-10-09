@@ -30,6 +30,7 @@ public class World : MonoBehaviour
 	static public GameObject water;
 	static public GameObject resources;
 	static public GameObject buoys;
+	static public GameObject nodes;
 
 	public static float forestChance = 0.004f;
 	public static float rocksChance = 0.002f;
@@ -117,10 +118,10 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Worker>();
+		//	var list = Resources.FindObjectsOfTypeAll<GroundNode>();
 		//	foreach ( var o in list )
 		//	{
-		//		o.owner = players[0];
+		//		o.transform.localPosition = o.Position();
 		//	}
 		//}
 
@@ -178,6 +179,10 @@ public class World : MonoBehaviour
 		buoys = new GameObject();
 		buoys.transform.SetParent( transform );
 		buoys.name = "Buoys";
+
+		nodes = new GameObject();
+		nodes.transform.SetParent( transform );
+		nodes.name = "Nodes";
 	}
 
 	public void Clear()

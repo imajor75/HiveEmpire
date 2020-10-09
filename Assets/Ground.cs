@@ -149,6 +149,7 @@ public class Ground : Assert.Base
 				n.type = GroundNode.Type.mountain;
 			if ( d < World.waterLevel )
 				n.type = GroundNode.Type.underWater;
+			n.transform.localPosition = n.Position();
 		}
 	}
 
