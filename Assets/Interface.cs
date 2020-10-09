@@ -30,6 +30,7 @@ public class Interface : Assert.Base, IPointerClickHandler
 	public GameObject debug;
 	public static Interface instance;
 	public bool heightStrips;
+	public Player mainPlayer;
 
 	public Interface()
 	{
@@ -114,10 +115,14 @@ public class Interface : Assert.Base, IPointerClickHandler
 		debug.transform.SetParent( transform );
 
 		world = World.Create().Setup();
-		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-		var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
-		world.Load( myFile.FullName );
-		//world.NewGame( 117274283 );
+		{
+			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
+			world.Load( myFile.FullName );
+		}
+		//{
+		//	world.NewGame( 117274283 );
+		//}
 	}
 
 	void Update()
@@ -153,11 +158,13 @@ public class Interface : Assert.Base, IPointerClickHandler
 			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
 			world.Load( myFile.FullName );
+			mainPlayer = world.players[0];
 			print( myFile.FullName + " is loaded" );
 		}
 		if ( Input.GetKeyDown( KeyCode.N ) )
 		{
 			world.NewGame( new System.Random().Next() );
+			mainPlayer = world.players[0];
 			print( "New game created" );
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )

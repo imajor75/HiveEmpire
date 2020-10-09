@@ -10,10 +10,8 @@ public class World : MonoBehaviour
 	public Ground ground;
 	[JsonIgnore]
 	public float speedModifier = 1;
-	public Stock mainBuilding;
 	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
-	public Player mainPlayer;
 	static public World instance;
 	public Eye eye;
 	static public int soundMaxDistance = 15;
@@ -23,6 +21,24 @@ public class World : MonoBehaviour
 	static public int layerIndexMapOnly;
 	[JsonIgnore]
 	static public Shader defaultShader;
+
+	public static float maxHeight = 20;
+	public static float waterLevel = 0.40f;
+	public static float hillLevel = 0.55f;
+	public static float mountainLevel = 0.6f;
+
+	static public GameObject water;
+	static public GameObject resources;
+	static public GameObject buoys;
+
+	public static float forestChance = 0.004f;
+	public static float rocksChance = 0.002f;
+	public static float animalSpawnerChance = 0.001f;
+	public static float ironChance = 0.04f;
+	public static float coalChance = 0.04f;
+	public static float stoneChance = 0.02f;
+	public static float saltChance = 0.02f;
+	public static float goldChance = 0.02f;
 
 	public static void Initialize()
 	{
@@ -71,8 +87,10 @@ public class World : MonoBehaviour
 		Prepare();
 
 		eye = Eye.Create().Setup( this );
-		players.Add( mainPlayer = Player.Create().Setup() );
 		ground = Ground.Create().Setup( this, seed );
+		GenerateResources();
+		players.Add( Player.Create().Setup() );
+		ground.RecalculateOwnership();
 	}
 
 	void Start()
@@ -99,16 +117,15 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Workshop>();
+		//	var list = Resources.FindObjectsOfTypeAll<Worker>();
 		//	foreach ( var o in list )
 		//	{
-		//		foreach ( var b in o.buffers )
-		//			if ( b.stored < 0 )
-		//				b.stored = 0;
+		//		o.owner = players[0];
 		//	}
 		//}
 
 		ground.FinishLayout();
+		ground.RecalculateOwnership();
 	}
 
 	public void Save( string fileName )
@@ -147,13 +164,26 @@ public class World : MonoBehaviour
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();
 		}
+
+		water = GameObject.CreatePrimitive( PrimitiveType.Plane );
+		water.transform.SetParent( transform );
+		water.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
+		water.name = "Water";
+		water.transform.localPosition = Vector3.up * waterLevel * maxHeight;
+		water.transform.localScale = Vector3.one * 1000 * GroundNode.size;
+
+		resources = new GameObject();
+		resources.transform.SetParent( transform );
+		resources.name = "Resources";
+
+		buoys = new GameObject();
+		buoys.transform.SetParent( transform );
+		buoys.name = "Buoys";
 	}
 
 	public void Clear()
 	{
 		players.Clear();
-		mainPlayer = null;
-		mainBuilding = null;
 		eye = null;
 		foreach ( Transform o in transform )
 		{
@@ -231,6 +261,30 @@ public class World : MonoBehaviour
 				standardShaderMaterial.EnableKeyword( "_ALPHAPREMULTIPLY_ON" );
 				standardShaderMaterial.renderQueue = 3000;
 				break;
+		}
+	}
+
+	public void GenerateResources()
+	{
+		foreach ( var node in ground.nodes )
+		{
+			var r = new System.Random( World.rnd.Next() );
+			if ( r.NextDouble() < forestChance )
+				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
+			if ( r.NextDouble() < rocksChance )
+				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
+			if ( r.NextDouble() < animalSpawnerChance )
+				node.AddResource( Resource.Type.animalSpawner );
+			if ( r.NextDouble() < ironChance )
+				node.AddResourcePatch( Resource.Type.iron, 5, 10 );
+			if ( r.NextDouble() < coalChance )
+				node.AddResourcePatch( Resource.Type.coal, 5, 10 );
+			if ( r.NextDouble() < stoneChance )
+				node.AddResourcePatch( Resource.Type.stone, 3, 10 );
+			if ( r.NextDouble() < saltChance )
+				node.AddResourcePatch( Resource.Type.salt, 3, 10 );
+			if ( r.NextDouble() < goldChance )
+				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
 		}
 	}
 

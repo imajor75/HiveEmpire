@@ -10,6 +10,7 @@ public class Worker : Assert.Base
 {
 	public Type type;
 	public Ground ground;
+	public Player owner;
 	public GroundNode walkFrom;
 	public GroundNode walkTo;
 	public Road walkBase;
@@ -485,9 +486,10 @@ public class Worker : Assert.Base
 	public Worker SetupForRoad( Road road )
 	{
 		type = Type.haluer;
+		owner = road.owner;
 		look = 2;
 		ground = road.ground;
-		Building main = road.ground.world.mainBuilding;
+		Building main = road.owner.mainBuilding;
 		node = main.node;
 		this.road = road;
 		atRoad = false;
@@ -522,8 +524,9 @@ public class Worker : Assert.Base
 	Worker SetupForBuildingSite( Building building )
 	{
 		ground = building.ground;
+		owner = building.owner;
 		this.building = building;
-		Building main = ground.world.mainBuilding;
+		Building main = owner.mainBuilding;
 		node = main.node;
 		if ( building != main )
 		{
@@ -809,23 +812,26 @@ public class Worker : Assert.Base
 			return;
 		}
 
+		if ( type == Type.soldier && building == null )
+			type = Type.unemployed;
+
 		if ( type == Type.unemployed )
 		{
-			if ( node == ground.world.mainBuilding.node )
+			if ( node == owner.mainBuilding.node )
 			{
 				if ( walkTo == null )
 					Destroy( gameObject );
 				return;
 			}
-			if ( node == ground.world.mainBuilding.flag.node )
+			if ( node == owner.mainBuilding.flag.node )
 			{
-				ScheduleWalkToNeighbour( ground.world.mainBuilding.node );
+				ScheduleWalkToNeighbour( owner.mainBuilding.node );
 				return;
 			}
 			if ( node.flag )
-				ScheduleWalkToFlag( ground.world.mainBuilding.flag );
+				ScheduleWalkToFlag( owner.mainBuilding.flag );
 			else
-				ScheduleWalkToNode( ground.world.mainBuilding.flag.node );
+				ScheduleWalkToNode( owner.mainBuilding.flag.node );
 		}
 	}
 

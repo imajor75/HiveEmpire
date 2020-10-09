@@ -31,6 +31,7 @@ public class Item : Assert.Base
 		salt,
 		pretzel,
 		hide,
+
 		iron,
 		coal,
 		gold,

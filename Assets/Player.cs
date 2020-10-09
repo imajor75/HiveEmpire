@@ -3,9 +3,11 @@ using UnityEngine;
 
 public class Player : ScriptableObject
 {
+	public Stock mainBuilding;
 	public List<float> itemHaulPriorities = new List<float>();
 	public ItemDispatcher itemDispatcher;
 	public Versioned versionedRoadDelete = new Versioned();
+	public List<Building> influencers = new List<Building>();
 
 	public int soldiersProduced = 0;
 	public int bowmansProduced = 0;
@@ -28,6 +30,7 @@ public class Player : ScriptableObject
 
 		itemDispatcher = ScriptableObject.CreateInstance<ItemDispatcher>();
 		itemDispatcher.Setup();
+		CreateMainBuilding();
 
 		return this;
 	}
@@ -76,4 +79,55 @@ public class Player : ScriptableObject
 			return false;
 		}
 	}
+
+	void CreateMainBuilding()
+	{
+		GroundNode center = World.instance.ground.GetCenter(), best = null;
+		float heightdDif = float.MaxValue;
+		foreach ( var o in Ground.areas[8] )
+		{
+			GroundNode node = center.Add( o );
+			if ( node.type != GroundNode.Type.grass || node.owner != null )
+				continue;
+			float min, max;
+			min = max = node.height;
+			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+			{
+				if ( node.Neighbour( i ).type != GroundNode.Type.grass )
+				{
+					max = float.MaxValue;
+					break;
+				}
+				float height = node.Neighbour( i ).height;
+				if ( height < min )
+					min = height;
+				if ( height > max )
+					max = height;
+			}
+			if ( max - min < heightdDif )
+			{
+				best = node;
+				heightdDif = max - min;
+			}
+		}
+
+		Assert.global.IsNull( mainBuilding );
+		mainBuilding = Stock.Create();
+		mainBuilding.SetupMain( World.instance.ground, best, this );
+		World.instance.eye.FocusOn( mainBuilding.node );
+	}
+
+	public void RegisterInfluence( Building building )
+	{
+		influencers.Add( building );
+		mainBuilding.ground.RecalculateOwnership();
+	}
+
+	public void UnregisterInfuence( Building building )
+	{
+		influencers.Remove( building );
+		mainBuilding.ground.RecalculateOwnership();
+	}
+
+
 }

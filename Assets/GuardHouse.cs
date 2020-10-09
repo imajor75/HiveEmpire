@@ -49,8 +49,13 @@ public class GuardHouse : Building
 		if ( !ready && soldiers.Count > 0 && soldiers[0].IsIdle( true ) )
 		{
 			ready = true;
-			ground.RegisterInfluence( this );
+			owner.RegisterInfluence( this );
 		}
+	}
+
+	void OnDestroy()
+	{
+		owner.UnregisterInfuence( this );
 	}
 
 	public override int Influence( GroundNode node )

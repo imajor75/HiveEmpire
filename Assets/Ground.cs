@@ -10,7 +10,6 @@ public class Ground : Assert.Base
 	public World world;
 	public int width = 50, height = 50;
 	public GroundNode[] nodes;
-	public List<Building> influencers = new List<Building>();
 	public int layoutVersion = 1;
 	public int meshVersion = 0;
 	[JsonIgnore]
@@ -18,26 +17,8 @@ public class Ground : Assert.Base
 	[JsonIgnore]
 	public new MeshCollider collider;
 	public static int maxArea = 10;
-	public static float maxHeight = 20;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
-	public static float waterLevel = 0.40f;
-	public static float hillLevel = 0.55f;
-	public static float mountainLevel = 0.6f;
-	[JsonIgnore]
-	public GameObject water;
-	[JsonIgnore]
-	public GameObject resources;
-	[JsonIgnore]
-	public GameObject buoys;
 
-	public static float forestChance = 0.004f;
-	public static float rocksChance = 0.002f;
-	public static float animalSpawnerChance = 0.001f;
-	public static float ironChance = 0.04f;	
-	public static float coalChance = 0.04f;
-	public static float stoneChance = 0.02f;
-	public static float saltChance = 0.02f;
-	public static float goldChance = 0.02f;
 	[JsonIgnore]
 	public Material material;
 
@@ -79,35 +60,6 @@ public class Ground : Assert.Base
 
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";
-
-		water = GameObject.CreatePrimitive( PrimitiveType.Plane );
-		water.transform.SetParent( transform );
-		water.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
-		water.name = "Water";
-		water.transform.localPosition = Vector3.up * waterLevel * maxHeight ;
-		water.transform.localScale = Vector3.one * Math.Max( width, height ) * GroundNode.size;
-	}
-
-	public GameObject ResourcesGameObject()
-	{
-		if ( resources == null )
-		{
-			resources = new GameObject();
-			resources.transform.SetParent( transform );
-			resources.name = "Resources";
-		}
-		return resources;
-	}
-
-	public GameObject BuoysGameObject()
-	{
-		if ( buoys == null )
-		{
-			buoys = new GameObject();
-			buoys.transform.SetParent( transform );
-			buoys.name = "Buoys";
-		}
-		return buoys;
 	}
 
 	static public void Initialize()
@@ -127,49 +79,8 @@ public class Ground : Assert.Base
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		FinishLayout();
 		SetHeights();
-		CreateMainBuilding();
-		GenerateResources();
 		return this;
     }
-
-	void CreateMainBuilding()
-	{
-		Player mainPlayer = world.mainPlayer;
-
-		GroundNode center = GetNode( width/2, height/2 ), best = null;
-		float heightdDif = float.MaxValue;
-		foreach ( var o in areas[8] )
-		{
-			GroundNode node = center.Add( o );
-			if ( node.type != GroundNode.Type.grass )
-				continue;
-			float min, max;
-			min = max = node.height;
-			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
-			{
-				if ( node.Neighbour( i ).type != GroundNode.Type.grass )
-				{
-					max = float.MaxValue;
-					break;
-				}
-				float height = node.Neighbour( i ).height;
-				if ( height < min )
-					min = height;
-				if ( height > max )
-					max = height;
-			}
-			if ( max - min < heightdDif )
-			{
-				best = node;
-				heightdDif = max - min;
-			}
-		}
-
-		assert.IsNull( world.mainBuilding );
-		world.mainBuilding = Stock.Create();
-		world.mainBuilding.SetupMain( this, best, mainPlayer );
-		world.eye.FocusOn( world.mainBuilding.node );
-	}
 
 	static void CreateAreas()
 	{
@@ -203,30 +114,6 @@ public class Ground : Assert.Base
 		{
 			Assert.global.AreEqual( areas[i].Count, nodeCount );
 			nodeCount += ( i + 1 ) * 6;
-		}
-	}
-
-	public void GenerateResources()
-	{
-		foreach ( var node in nodes )
-		{
-			var r = new System.Random( World.rnd.Next() );
-			if ( r.NextDouble() < forestChance )
-				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
-			if ( r.NextDouble() < rocksChance )
-				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
-			if ( r.NextDouble() < animalSpawnerChance )
-				node.AddResource( Resource.Type.animalSpawner );
-			if ( r.NextDouble() < ironChance )
-				node.AddResourcePatch( Resource.Type.iron, 5, 10 );
-			if ( r.NextDouble() < coalChance )
-				node.AddResourcePatch( Resource.Type.coal, 5, 10 );
-			if ( r.NextDouble() < stoneChance )
-				node.AddResourcePatch( Resource.Type.stone, 3, 10 );
-			if ( r.NextDouble() < saltChance )
-				node.AddResourcePatch( Resource.Type.salt, 3, 10 );
-			if ( r.NextDouble() < goldChance )
-				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
 		}
 	}
 
@@ -268,12 +155,12 @@ public class Ground : Assert.Base
 		foreach ( var n in nodes )
 		{
 			float d = (float)heightMap.data[n.x, n.y];
-			n.height = d*maxHeight;
-			if ( d > hillLevel )
+			n.height = d*World.maxHeight;
+			if ( d > World.hillLevel )
 				n.type = GroundNode.Type.hill;
-			if ( d > mountainLevel )
+			if ( d > World.mountainLevel )
 				n.type = GroundNode.Type.mountain;
-			if ( d < waterLevel )
+			if ( d < World.waterLevel )
 				n.type = GroundNode.Type.underWater;
 			n.gizmo.transform.localPosition = n.Position();
 		}
@@ -383,19 +270,12 @@ public class Ground : Assert.Base
 		int newValue;
 	}
 
-	public void RegisterInfluence( Building building )
+	public GroundNode GetCenter()
 	{
-		influencers.Add( building );
-		RecalculateOwnership();
+		return GetNode( width / 2, height / 2 );
 	}
 
-	public void UnregisterInfuence( Building building )
-	{
-		influencers.Remove( building );
-		RecalculateOwnership();
-	}
-
-	void RecalculateOwnership()
+	public void RecalculateOwnership()
 	{
 		foreach ( var n in nodes )
 		{
@@ -403,27 +283,30 @@ public class Ground : Assert.Base
 			n.influence = 0;
 		}
 
-		foreach ( var building in influencers )
+		foreach ( var player in World.instance.players )
 		{
-			List<GroundNode> touched = new List<GroundNode>();
-			touched.Add( building.node );
-			for ( int i = 0; i < touched.Count; i++ )
+			foreach ( var building in player.influencers )
 			{
-				int influence = building.Influence( touched[i] );
-				if ( influence <= 0 )
-					continue;
-				if ( touched[i].influence < influence )
+				List<GroundNode> touched = new List<GroundNode>();
+				touched.Add( building.node );
+				for ( int i = 0; i < touched.Count; i++ )
 				{
-					touched[i].influence = influence;
-					touched[i].owner = building.owner;
-				}
-				for ( int j = 0; j < GroundNode.neighbourCount; j++ )
-				{
-					GroundNode neighbour = touched[i].Neighbour( j );
-					if ( neighbour.index >= 0 && neighbour.index < touched.Count && touched[neighbour.index] == neighbour )
+					int influence = building.Influence( touched[i] );
+					if ( influence <= 0 )
 						continue;
-					neighbour.index = touched.Count;
-					touched.Add( neighbour );
+					if ( touched[i].influence < influence )
+					{
+						touched[i].influence = influence;
+						touched[i].owner = building.owner;
+					}
+					for ( int j = 0; j < GroundNode.neighbourCount; j++ )
+					{
+						GroundNode neighbour = touched[i].Neighbour( j );
+						if ( neighbour.index >= 0 && neighbour.index < touched.Count && touched[neighbour.index] == neighbour )
+							continue;
+						neighbour.index = touched.Count;
+						touched.Add( neighbour );
+					}
 				}
 			}
 		}

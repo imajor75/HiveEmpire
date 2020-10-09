@@ -51,8 +51,8 @@ public class Eye : MonoBehaviour
 		if ( world.ground.collider.Raycast( ray, out hit, GroundNode.size * 100 ) )
 		{
 			Vector3 position = hit.point;
-			if ( position.y < Ground.waterLevel * Ground.maxHeight )
-				position.y = Ground.waterLevel * Ground.maxHeight;
+			if ( position.y < World.waterLevel * World.maxHeight )
+				position.y = World.waterLevel * World.maxHeight;
 			ear.position = position;
 			Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
 			transform.position = position - viewer;

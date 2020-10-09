@@ -59,7 +59,7 @@ public class Stock : Building
 		content[(int)Item.Type.fish] = 10;
 		worker = Worker.Create();
 		worker.SetupForBuilding( this );
-		ground.RegisterInfluence( this );
+		owner.RegisterInfluence( this );
 		return this;
 	}
 

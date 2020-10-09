@@ -131,7 +131,7 @@ public class Resource : Assert.Base
     // Start is called before the first frame update
     void Start()
     {
-		transform.SetParent( node.ground.ResourcesGameObject().transform );
+		transform.SetParent( World.resources.transform );
 		transform.localPosition = node.Position();
 
 		name = type.ToString();

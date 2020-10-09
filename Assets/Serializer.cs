@@ -122,7 +122,7 @@ public class Serializer : JsonSerializer
 			return;
 		}
 		FieldInfo i = type.GetField( name );
-		Assert.global.IsNotNull( i, "No field with the name " + name + " found" );
+		Assert.global.IsNotNull( i, "No field with the name " + name + " found in " + type.Name );
 		reader.Read();
 		i.SetValue( Object(), ProcessFieldValue( i.FieldType ) );
 	}
