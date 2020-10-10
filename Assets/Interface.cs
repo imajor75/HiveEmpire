@@ -926,6 +926,7 @@ public class Interface : Assert.Base
 	{
 		public Flag flag;
 		public ItemImage[] items = new ItemImage[Flag.maxItems];
+		public Image[] itemTimers = new Image[Flag.maxItems];
 
 		public static FlagPanel Create()
 		{
@@ -938,14 +939,15 @@ public class Interface : Assert.Base
 			base.Open( flag.node );
 			this.flag = flag;
 			int col = 16;
-			Frame( 0, 0, 250, 70, 10 );
+			Frame( 0, 0, 250, 75, 10 );
 			Button( 230, 0, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 210, -40, 20, 20, iconDestroy ).onClick.AddListener( Remove );
-			Button( 20, -40, 20, 20, iconPath ).onClick.AddListener( StartRoad );
+			Button( 210, -45, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			Button( 20, -45, 20, 20, iconPath ).onClick.AddListener( StartRoad );
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
-				items[i] = ItemIcon( col, -8, iconSize, iconSize, Item.Type.unknown );
+				itemTimers[i] = Image( col, -8, iconSize, 3 );
+				items[i] = ItemIcon( col, -13, iconSize, iconSize, Item.Type.unknown );
 				int j = i;
 				items[i].name = "item " + i;
 				col += iconSize+5;
@@ -986,9 +988,17 @@ public class Interface : Assert.Base
 					items[i].enabled = true;
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 					if ( flag.items[i].flag && flag.items[i].flag == flag )
+					{
 						items[i].color = new Color( 1, 1, 1, 1 );
+						int timeAtFlag = World.instance.time - flag.items[i].flagTime;
+						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / 3000 ), 3 );
+						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / 30000f );
+					}
 					else
+					{
 						items[i].color = new Color( 1, 1, 1, 0.25f );
+						itemTimers[i].rectTransform.sizeDelta = new Vector2( 0, 3 );
+					}
 				}
 				items[i].item = flag.items[i];
 			}
