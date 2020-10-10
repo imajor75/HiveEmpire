@@ -13,7 +13,9 @@ public class Flag : Assert.Base
 	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
 	public Building building;
 	static GameObject template;
+	public Versioned itemsStored;
 	MeshRenderer itemTable;
+
 
 	static public void Initialize()
 	{
@@ -106,6 +108,7 @@ public class Flag : Assert.Base
 		assert.AreEqual( item.flag, this );
 		CancelItem( item );
 		item.flag = null;
+		itemsStored.Trigger();
 		return true;
 	}
 

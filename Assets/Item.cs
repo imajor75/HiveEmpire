@@ -19,8 +19,8 @@ public class Item : Assert.Base
 	public int age;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
-	public Player.Watch watchRoadDelete = new Player.Watch();
-	public Player.Watch watchBuildingDelete = new Player.Watch();
+	public Watch watchRoadDelete = new Watch();
+	public Watch watchBuildingDelete = new Watch();
 	public bool tripCancelled;
 
 	public enum Type
@@ -205,6 +205,7 @@ public class Item : Assert.Base
 		if ( destination == null )
 			CancelTrip();
 
+		flag.itemsStored.Trigger();
 		this.flag = flag;
 		nextFlag = null;
 	}

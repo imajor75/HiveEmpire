@@ -873,7 +873,7 @@ public class Interface : Assert.Base
 		public override void Update()
 		{
 			base.Update();
-			jam.text = "Items waiting: " + road.Jam();
+			jam.text = "Items waiting: " + road.Jam;
 			workers.text = "Worker count: " + road.workers.Count;
 
 			bool reversed = false;
