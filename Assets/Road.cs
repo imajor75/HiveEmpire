@@ -24,6 +24,7 @@ public class Road : Assert.Base, Interface.InputHandler
 	public static float height = 1.0f/20;
 	public float cost = 0;
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
+	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	[JsonIgnore]
 	Material mapMaterial;
 	[JsonIgnore]
@@ -203,7 +204,7 @@ public class Road : Assert.Base, Interface.InputHandler
 
 	void Update()
 	{
-		int jam = Jam();
+		int jam = Jam;
 		mapMaterial.color = new Color( 1, 0, 0, Math.Max( 0, ( jam - 2 ) * 0.15f ) );
 
 		if ( decorationOnly )
@@ -381,24 +382,31 @@ public class Road : Assert.Base, Interface.InputHandler
 		return null;
 	}
 
-	public int Jam()
+	int cachedJam;
+	[JsonIgnore]
+	public int Jam
 	{
-		// TODO Recalculate this only if necessary
-		if ( !ready )
-			return 0;
-
-		int itemCount = 0;
-		for ( int e = 0; e < 2; e++ )
+		get
 		{
-			Flag flag = GetEnd( e );
-			for ( int i = 0; i < Flag.maxItems; i++ )
+			if ( !ready )
+				return 0;
+
+			if ( watchStartFlag.Check() || watchEndFlag.Check() )
 			{
-				Item t = flag.items[i];
-				if ( t != null && t.path != null && t.path.Road() == this )
-					itemCount++;
-			};
+				cachedJam = 0;
+				for ( int e = 0; e < 2; e++ )
+				{
+					Flag flag = GetEnd( e );
+					for ( int i = 0; i < Flag.maxItems; i++ )
+					{
+						Item t = flag.items[i];
+						if ( t != null && t.path != null && t.path.Road() == this )
+							cachedJam++;
+					}
+				}
+			}
+			return cachedJam;
 		}
-		return itemCount;
 	}
 
 	public void CreateNewWorker()
@@ -419,6 +427,8 @@ public class Road : Assert.Base, Interface.InputHandler
 		transform.localPosition = nodes[nodes.Count / 2].Position();
 		CreateCurves();
 		RebuildMesh();
+		watchStartFlag.Attach( nodes[0].flag.itemsStored );
+		watchEndFlag.Attach( nodes[nodes.Count - 1].flag.itemsStored );
 	}
 
 	public void CreateCurves()

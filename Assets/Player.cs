@@ -48,39 +48,6 @@ public class Player : ScriptableObject
 		itemDispatcher.LateUpdate();
 	}
 
-	[System.Serializable]
-	public class Versioned
-	{
-		public int version;
-
-		public void Trigger()
-		{
-			version++;
-		}
-	}
-
-	[System.Serializable]
-	public class Watch
-	{
-		public Versioned source;
-		public int localVersion;
-
-		public void Attach( Versioned source )
-		{
-			this.source = source;
-			localVersion = source.version;
-		}
-		public bool Check()
-		{
-			if ( localVersion != source.version )
-			{
-				localVersion = source.version;
-				return true;
-			}
-			return false;
-		}
-	}
-
 	void CreateMainBuilding()
 	{
 		GroundNode center = World.instance.ground.GetCenter(), best = null;
@@ -129,6 +96,38 @@ public class Player : ScriptableObject
 		influencers.Remove( building );
 		mainBuilding.ground.RecalculateOwnership();
 	}
-
-
 }
+
+[System.Serializable]
+public class Versioned
+{
+	public int version;
+
+	public void Trigger()
+	{
+		version++;
+	}
+}
+
+[System.Serializable]
+public class Watch
+{
+	public Versioned source;
+	public int localVersion;
+
+	public void Attach( Versioned source )
+	{
+		this.source = source;
+		localVersion = source.version;
+	}
+	public bool Check()
+	{
+		if ( localVersion != source.version )
+		{
+			localVersion = source.version;
+			return true;
+		}
+		return false;
+	}
+}
+
