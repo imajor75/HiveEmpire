@@ -873,10 +873,18 @@ public class Interface : Assert.Base
 			jam.text = "Items waiting: " + road.Jam();
 			workers.text = "Worker count: " + road.workers.Count;
 
+			bool reversed = false;
+			var camera = World.instance.eye.camera;
+			float x0 = camera.WorldToScreenPoint( road.GetEnd( 0 ).node.Position() ).x;
+			float x1 = camera.WorldToScreenPoint( road.GetEnd( 1 ).node.Position() ).x;
+			if ( x1 < x0 )
+				reversed = true;
+
 			for ( int i = 0; i < 2; i++ )
 			{
-				var itemImages = i == 0 ? leftItems : rightItems;
-				var itemTexts = i == 0 ? leftNumbers : rightNumbers;
+				bool side = reversed ? i == 1 : i == 0;
+				var itemImages = side ? leftItems : rightItems;
+				var itemTexts = side ? leftNumbers : rightNumbers;
 				int[] counts = new int[(int)Item.Type.total];
 				var items = road.GetEnd( i ).items;
 				foreach ( var item in items )
