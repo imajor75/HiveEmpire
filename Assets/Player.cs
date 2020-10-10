@@ -7,6 +7,7 @@ public class Player : ScriptableObject
 	public List<float> itemHaulPriorities = new List<float>();
 	public ItemDispatcher itemDispatcher;
 	public Versioned versionedRoadDelete = new Versioned();
+	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
 
 	public int soldiersProduced = 0;

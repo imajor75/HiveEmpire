@@ -6,6 +6,7 @@ using UnityEngine.Assertions;
 [SelectionBase]
 abstract public class Building : Assert.Base
 {
+	public string title;
 	public Player owner;
 	public Worker worker;
 	public Flag flag;
@@ -372,6 +373,11 @@ abstract public class Building : Assert.Base
 		foreach ( var r in renderers )
 			foreach ( var m in r.materials )
 				m.SetFloat( Construction.sliceLevelID, level );
+	}
+
+	void OnDestroy()
+	{
+		owner.versionedBuildingDelete.Trigger();
 	}
 
 	public virtual bool Remove()

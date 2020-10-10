@@ -21,6 +21,8 @@ public class World : MonoBehaviour
 	static public int layerIndexMapOnly;
 	[JsonIgnore]
 	static public Shader defaultShader;
+	static public Shader defaultColorShader;
+	public bool gameInProgress;
 
 	public static float maxHeight = 20;
 	public static float waterLevel = 0.40f;
@@ -47,6 +49,7 @@ public class World : MonoBehaviour
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );
+		defaultColorShader = Shader.Find( "Unlit/Color" );
 	}
 
 	World()
@@ -92,6 +95,7 @@ public class World : MonoBehaviour
 		GenerateResources();
 		players.Add( Player.Create().Setup() );
 		ground.RecalculateOwnership();
+		gameInProgress = true;
 	}
 
 	void Start()
@@ -118,14 +122,34 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<GroundNode>();
+		//	var list = Resources.FindObjectsOfTypeAll<Item>();
 		//	foreach ( var o in list )
 		//	{
-		//		o.transform.localPosition = o.Position();
+		//		o.watchBuildingDelete.Attach( players[0].versionedBuildingDelete );
 		//	}
 		//}
 
-		ground.RecalculateOwnership();
+		//{
+		//	var list = Resources.FindObjectsOfTypeAll<Building>();
+		//	foreach ( var o in list )
+		//	{
+		//		var w = o as Workshop;
+		//		if ( w )
+		//			o.title = w.type.ToString();
+		//		var s = o as Stock;
+		//		if ( s )
+		//		{
+		//			if ( s.main )
+		//				o.title = "headquarters";
+		//			else
+		//				o.title = "stock";
+		//		}
+		//		var g = o as GuardHouse;
+		//		if ( g )
+		//			o.title = "guardhouse";
+		//	}
+		//}
+		gameInProgress = true;
 	}
 
 	public void Save( string fileName )
@@ -187,6 +211,7 @@ public class World : MonoBehaviour
 
 	public void Clear()
 	{
+		gameInProgress = false;
 		players.Clear();
 		eye = null;
 		foreach ( Transform o in transform )

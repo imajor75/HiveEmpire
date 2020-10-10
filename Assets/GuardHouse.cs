@@ -22,6 +22,7 @@ public class GuardHouse : Building
 	public new GuardHouse Setup( Ground ground, GroundNode node, Player owner )
 	{
 		construction.plankNeeded = 2;
+		title = "guardhouse";
 		height = 2;
 		if ( base.Setup( ground, node, owner ) == null )
 			return null;

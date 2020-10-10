@@ -15,9 +15,12 @@ public class Item : Assert.Base
 	public Ground ground;
 	public Path path;
 	public Building destination;
+	public Building origin;
+	public int age;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
 	public Player.Watch watchRoadDelete = new Player.Watch();
+	public Player.Watch watchBuildingDelete = new Player.Watch();
 	public bool tripCancelled;
 
 	public enum Type
@@ -88,9 +91,11 @@ public class Item : Assert.Base
 
 	public Item Setup( Type type, Building origin, Building destination = null )
 	{
+		this.origin = origin;
 		ground = origin.ground;
 		owner = origin.owner;
 		watchRoadDelete.Attach( owner.versionedRoadDelete );
+		watchBuildingDelete.Attach( owner.versionedBuildingDelete );
 		this.type = type;
 		if ( destination )
 		{
@@ -112,6 +117,11 @@ public class Item : Assert.Base
 		UpdateLook();
 	}
 
+	void FixedUpdate()
+	{
+		age++;
+	}
+
 	void Update()
 	{
 		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
@@ -130,6 +140,13 @@ public class Item : Assert.Base
 					}
 				}
 			}
+		}
+		if ( watchBuildingDelete.Check() )
+		{
+			if ( destination == null && path )
+				CancelTrip();
+			if ( origin == null )
+				origin = null;	// Releasing the reference when the building was removed
 		}
 		if ( destination == null && worker == null && flag != null )
 			owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.high );

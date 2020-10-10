@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.Design.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,22 +9,26 @@ public class Map : Interface.Panel
 	static public float zoom = 6f;
 	const float zoomMin = 1;
 	const float zoomMax = 20;
-
+	public bool fullScreen;
 
 	static public Map Create()
 	{
 		return new GameObject().AddComponent<Map>();
 	}
 
-	public void Open()
+	public void Open( bool fullScreen = false )
 	{
+		Transform dialog = new GameObject().transform;
+		dialog.transform.SetParent( transform );
+		this.fullScreen = fullScreen;
 		base.Open();
 		name = "Map";
-		Frame( 0, 0, 316, 316 );
+		Frame( 0, 0, 316, 316, 30, dialog );
 		content = MapImage.Create();
-		content.Setup();
-		Init( content.rawImage.rectTransform, 30, -30, 256, 256 );
-		Button( 290, -10, 20, 20, Interface.iconExit ).onClick.AddListener( Close );
+		content.Setup( fullScreen );
+		Init( content.rawImage.rectTransform, 30, -30, 256, 256, dialog );
+		Button( 290, -10, 20, 20, Interface.iconExit, dialog ).onClick.AddListener( Close );
+		dialog.gameObject.SetActive( !fullScreen );
 	}
 
 	new void Update()
@@ -38,6 +43,11 @@ public class Map : Interface.Panel
 			zoom = zoomMin;
 		if ( zoom > zoomMax )
 			zoom = zoomMax;
+		if ( Input.GetKeyDown( KeyCode.Return ) )
+		{
+			fullScreen = !fullScreen;
+			content.Setup( fullScreen );
+		}
 
 		float rotation = World.instance.eye.direction / (float)Math.PI * 180f;
 		content.SetTarget( new Vector2( World.instance.eye.x, World.instance.eye.y ), zoom, rotation );
@@ -54,9 +64,12 @@ public class Map : Interface.Panel
 			return new GameObject().AddComponent<MapImage>();
 		}
 
-		public void Setup()
+		public void Setup( bool fullScreen )
 		{
-			renderTexture = new RenderTexture( 256, 256, 24 );
+			if ( !fullScreen )
+				renderTexture = new RenderTexture( 256, 256, 24 );
+			else
+				renderTexture = null;
 
 			rawImage = gameObject.AddComponent<RawImage>();
 			name = "MapImage";
@@ -67,6 +80,7 @@ public class Map : Interface.Panel
 			camera.transform.SetParent( World.instance.ground.transform );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
+				World.instance.eye.SetRendering( !fullScreen );
 		}
 
 		public void SetTarget( Vector2 position, float zoom, float rotation )
@@ -80,6 +94,7 @@ public class Map : Interface.Panel
 		void OnDestroy()
 		{
 			Destroy( camera.gameObject );
+			World.instance.eye.SetRendering( true );
 		}
 	}
 }

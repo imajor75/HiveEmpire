@@ -115,18 +115,19 @@ public class Interface : Assert.Base
 		debug.name = "Debug";
 		debug.transform.SetParent( transform );
 
-		world = World.Create().Setup();
-		{
-			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
-			world.Load( myFile.FullName );
-		}
-		//{
-		//	world.NewGame( 117274283 );
-		//}
-
 		tooltip = Tooltip.Create();
 		tooltip.Open();
+
+		world = World.Create().Setup();
+		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+		if ( directory.Exists )
+		{
+			var myFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+			if ( myFiles.Count() > 0 )
+				world.Load( myFiles.First().FullName );
+		}
+		if ( !world.gameInProgress )
+			world.NewGame( 117274283 );
 	}
 
 	void Update()
@@ -177,7 +178,7 @@ public class Interface : Assert.Base
 				panels[panels.Count - 1].Close();
 		}
 		if ( Input.GetKeyDown( KeyCode.M ) )
-			Map.Create().Open();
+			Map.Create().Open( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) );
 		if ( Input.GetKeyDown( KeyCode.Alpha9 ) )
 			SetHeightStrips( !heightStrips );
 	}
@@ -401,33 +402,13 @@ public class Interface : Assert.Base
 		{
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
-			public bool trackDestination;
 
 			public void Track()
 			{
 				if ( item == null )
 					return;
 
-				if ( !trackDestination )
-				{
-					if ( item.flag )
-						FlagPanel.Create().Open( item.flag, true );
-					else if ( item.worker )
-						WorkerPanel.Create().Open( item.worker );
-					return;
-				}
-
-				if ( !item.destination.construction.done )
-				{
-					ConstructionPanel.Create().Open( item.destination.construction, true );
-					return;
-				}
-				Workshop workshop = item.destination as Workshop;
-				if ( workshop )
-					WorkshopPanel.Create().Open( workshop, true );
-				Stock stock = item.destination as Stock;
-				if ( stock )
-					StockPanel.Create().Open( stock, true );
+				ItemPanel.Create().Open( item );
 			}
 			public void SetType( Item.Type itemType )
 			{
@@ -706,7 +687,6 @@ public class Interface : Assert.Base
 							while ( itemsOnTheWay[k].type != itemType )
 								k++;
 							items[i].item = itemsOnTheWay[k];
-							items[i].trackDestination = false;
 						}
 						else
 							items[i].color = new Color( 1, 1, 1, 0 );
@@ -995,22 +975,16 @@ public class Interface : Assert.Base
 					items[i].enabled = true;
 					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 					if ( flag.items[i].flag && flag.items[i].flag == flag )
-					{
 						items[i].color = new Color( 1, 1, 1, 1 );
-						items[i].trackDestination = true;
-					}
 					else
-					{
 						items[i].color = new Color( 1, 1, 1, 0.25f );
-						items[i].trackDestination = false;
-					}
 				}
 				items[i].item = flag.items[i];
 			}
 		}
 	}
 
-	public class WorkerPanel : Panel
+	public class WorkerPanel : Panel, Eye.IDirector
 	{
 		public Worker worker;
 		Text itemCount;
@@ -1029,6 +1003,12 @@ public class Interface : Assert.Base
 			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
 			itemCount = Text( 20, -44, 120, 20, "Items" );
+			World.instance.eye.GrabFocus( this );
+		}
+
+		public void SetCameraTarget( Eye eye )
+		{
+			eye.FocusOn( worker );
 		}
 
 		public override void Update()
@@ -1048,16 +1028,13 @@ public class Interface : Assert.Base
 			else
 				item.enabled = false;
 			item.item = worker.itemInHands;
-			item.trackDestination = true;
-			World.instance.eye.viewDistance = 2;
-			World.instance.eye.FocusOn( worker );
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
 		}
 
 		new void OnDestroy()
 		{
 			base.OnDestroy();
-			World.instance.eye.viewDistance = 5;
+			World.instance.eye.ReleaseFocus( this );
 		}
 	}
 
@@ -1119,6 +1096,143 @@ public class Interface : Assert.Base
 		{
 			if ( construction != null && construction.boss != null && construction.boss.Remove() )
 				Close();
+		}
+	}
+
+	public class ItemPanel : Panel, Eye.IDirector
+	{
+		public Item item;
+		public List<Button> path = new List<Button>();
+		public Mesh route;
+		GameObject mapIcon;
+
+		static public ItemPanel Create()
+		{
+			return new GameObject().AddComponent<ItemPanel>();
+		}
+
+		public void Open( Item item )
+		{
+			this.item = item;
+			
+			base.Open();
+			name = "Item panel";
+
+			Frame( 0, 0, 200, 300, 20 );
+			Button( 170, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Text( 15, -15, 100, 20, item.type.ToString() );
+			if ( item.origin )
+				Text( 15, -35, 170, 20, "Origin: " + item.origin.name );
+			mapIcon = new GameObject();
+			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
+			mapIcon.AddComponent<SpriteRenderer>().sprite = Item.sprites[(int)item.type];
+			mapIcon.transform.SetParent( transform );
+			mapIcon.name = "Map icon";
+			mapIcon.transform.Rotate( 90, 0, 0 );
+			mapIcon.transform.localScale = Vector3.one * 0.5f;
+			Selection.activeGameObject = item.gameObject;
+			World.instance.eye.GrabFocus( this );
+		}
+
+		override public void Update()
+		{
+			base.Update();
+			if ( item == null )
+			{
+				Close();
+				return;
+			}
+
+			if ( item.path && item.path.roadPath.Count != path.Count )
+			{
+				foreach ( var o in path )
+					Destroy( o.gameObject );
+				path.Clear();
+
+				int row = -60;
+				for ( int i = 0; i < item.path.roadPath.Count; i++ )
+				{
+					Road r = item.path.roadPath[i];
+					int e = 1;
+					if ( i == item.path.roadPath.Count - 1 )
+					{
+						if ( r.GetEnd( 1 ) == item.destination.flag )
+							e = 0;
+					}
+					else
+					{
+						Road nr = item.path.roadPath[i + 1];
+						if ( r.GetEnd( 1 ) == nr.GetEnd( 0 ) || r.GetEnd( 1 ) == nr.GetEnd( 1 ) )
+							e = 0;
+					}
+					Flag flag = r.GetEnd( e );
+
+					Button b = Button( 15, row, 100, 20, "flag" );
+					b.onClick.AddListener( delegate { ShowFlag( flag ); } );
+					path.Add( b );
+					row -= 20;
+				}
+				Button( 15, row, 100, 20, item.destination.name ).onClick.AddListener( delegate { ShowFlag( item.destination.flag ); } );
+
+				Destroy( route );
+				GameObject routeOnMap = new GameObject();
+				World.SetLayerRecursive( routeOnMap, World.layerIndexMapOnly );
+				routeOnMap.transform.SetParent( transform );
+				routeOnMap.name = "Route on map";
+				routeOnMap.AddComponent<MeshRenderer>().material = new Material( World.defaultColorShader );
+				route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
+
+				List<Vector3> vertices = new List<Vector3>();
+				List<int> triangles = new List<int>();
+				foreach ( var road in item.path.roadPath )
+				{
+					for ( int i = 0; i < road.nodes.Count - 1; i++ )
+					{
+						Vector3 start = road.nodes[i].Position() + Vector3.up * 3;
+						Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 3;
+						Vector3 side = (end - start) * 0.1f;
+						side = new Vector3( -side.z, side.y, side.x );
+
+						triangles.Add( vertices.Count + 0 );
+						triangles.Add( vertices.Count + 1 );
+						triangles.Add( vertices.Count + 2 );
+						triangles.Add( vertices.Count + 1 );
+						triangles.Add( vertices.Count + 3 );
+						triangles.Add( vertices.Count + 2 );
+
+						vertices.Add( start - side );
+						vertices.Add( start + side );
+						vertices.Add( end - side );
+						vertices.Add( end + side );
+					}
+				}
+				route.vertices = vertices.ToArray();
+				route.triangles = triangles.ToArray();
+			}
+			if ( item.flag )
+				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
+			else
+				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
+		}
+
+		public void SetCameraTarget( Eye eye )
+		{
+			if ( item.flag )
+				World.instance.eye.FocusOn( item.flag.node );
+			else
+				World.instance.eye.FocusOn( item.worker );
+		}
+
+		void ShowFlag( Flag flag )
+		{
+			World.instance.eye.ReleaseFocus( this );
+			FlagPanel.Create().Open( flag, true );
+		}
+
+		new void OnDestroy()
+		{
+			base.OnDestroy();
+			World.instance.eye.ReleaseFocus( this );
 		}
 	}
 
