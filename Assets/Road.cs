@@ -383,6 +383,7 @@ public class Road : Assert.Base, Interface.InputHandler
 	}
 
 	int cachedJam;
+	[JsonIgnore]
 	public int Jam
 	{
 		get

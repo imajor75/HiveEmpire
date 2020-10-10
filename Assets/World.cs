@@ -122,31 +122,18 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Item>();
+		//	var list = Resources.FindObjectsOfTypeAll<Flag>();
 		//	foreach ( var o in list )
 		//	{
-		//		o.watchBuildingDelete.Attach( players[0].versionedBuildingDelete );
+		//		o.itemsStored = new Versioned();
 		//	}
 		//}
-
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Building>();
+		//	var list = Resources.FindObjectsOfTypeAll<Road>();
 		//	foreach ( var o in list )
 		//	{
-		//		var w = o as Workshop;
-		//		if ( w )
-		//			o.title = w.type.ToString();
-		//		var s = o as Stock;
-		//		if ( s )
-		//		{
-		//			if ( s.main )
-		//				o.title = "headquarters";
-		//			else
-		//				o.title = "stock";
-		//		}
-		//		var g = o as GuardHouse;
-		//		if ( g )
-		//			o.title = "guardhouse";
+		//		o.watchStartFlag.Attach( o.nodes[0].flag.itemsStored );
+		//		o.watchEndFlag.Attach( o.nodes[o.nodes.Count - 1].flag.itemsStored );
 		//	}
 		//}
 		gameInProgress = true;

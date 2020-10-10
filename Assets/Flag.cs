@@ -13,7 +13,7 @@ public class Flag : Assert.Base
 	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
 	public Building building;
 	static GameObject template;
-	public Versioned itemsStored;
+	public Versioned itemsStored = new Versioned();
 	MeshRenderer itemTable;
 
 
