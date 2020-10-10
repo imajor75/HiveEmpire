@@ -178,14 +178,7 @@ public class Interface : Assert.Base
 				panels[panels.Count - 1].Close();
 		}
 		if ( Input.GetKeyDown( KeyCode.M ) )
-		{
-			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
-			{
-				world.eye.SetActive( false );
-			}
-			else
-				Map.Create().Open();
-		}
+			Map.Create().Open( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) );
 		if ( Input.GetKeyDown( KeyCode.Alpha9 ) )
 			SetHeightStrips( !heightStrips );
 	}
