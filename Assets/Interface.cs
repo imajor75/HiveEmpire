@@ -1104,6 +1104,7 @@ public class Interface : Assert.Base
 		public Item item;
 		public List<Button> path = new List<Button>();
 		public Mesh route;
+		GameObject mapIcon;
 
 		static public ItemPanel Create()
 		{
@@ -1122,6 +1123,13 @@ public class Interface : Assert.Base
 			Text( 15, -15, 100, 20, item.type.ToString() );
 			if ( item.origin )
 				Text( 15, -35, 170, 20, "Origin: " + item.origin.name );
+			mapIcon = new GameObject();
+			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
+			mapIcon.AddComponent<SpriteRenderer>().sprite = Item.sprites[(int)item.type];
+			mapIcon.transform.SetParent( transform );
+			mapIcon.name = "Map icon";
+			mapIcon.transform.Rotate( 90, 0, 0 );
+			mapIcon.transform.localScale = Vector3.one * 0.5f;
 			Selection.activeGameObject = item.gameObject;
 			World.instance.eye.GrabFocus( this );
 		}
@@ -1171,7 +1179,7 @@ public class Interface : Assert.Base
 				World.SetLayerRecursive( routeOnMap, World.layerIndexMapOnly );
 				routeOnMap.transform.SetParent( transform );
 				routeOnMap.name = "Route on map";
-				routeOnMap.AddComponent<MeshRenderer>().material = new Material( World.defaultShader );
+				routeOnMap.AddComponent<MeshRenderer>().material = new Material( World.defaultColorShader );
 				route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
 
 				List<Vector3> vertices = new List<Vector3>();
@@ -1201,6 +1209,10 @@ public class Interface : Assert.Base
 				route.vertices = vertices.ToArray();
 				route.triangles = triangles.ToArray();
 			}
+			if ( item.flag )
+				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
+			else
+				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
 		}
 
 		public void SetCameraTarget( Eye eye )

@@ -21,6 +21,7 @@ public class World : MonoBehaviour
 	static public int layerIndexMapOnly;
 	[JsonIgnore]
 	static public Shader defaultShader;
+	static public Shader defaultColorShader;
 	public bool gameInProgress;
 
 	public static float maxHeight = 20;
@@ -48,6 +49,7 @@ public class World : MonoBehaviour
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );
+		defaultColorShader = Shader.Find( "Unlit/Color" );
 	}
 
 	World()
