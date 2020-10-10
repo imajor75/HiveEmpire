@@ -18,15 +18,17 @@ public class Map : Interface.Panel
 
 	public void Open( bool fullScreen = false )
 	{
+		Transform dialog = new GameObject().transform;
+		dialog.transform.SetParent( transform );
 		this.fullScreen = fullScreen;
 		base.Open();
 		name = "Map";
-		Frame( 0, 0, 316, 316 );
+		Frame( 0, 0, 316, 316, 30, dialog );
 		content = MapImage.Create();
 		content.Setup( fullScreen );
-		if ( content.rawImage )
-			Init( content.rawImage.rectTransform, 30, -30, 256, 256 );
-		Button( 290, -10, 20, 20, Interface.iconExit ).onClick.AddListener( Close );
+		Init( content.rawImage.rectTransform, 30, -30, 256, 256, dialog );
+		Button( 290, -10, 20, 20, Interface.iconExit, dialog ).onClick.AddListener( Close );
+		dialog.gameObject.SetActive( !fullScreen );
 	}
 
 	new void Update()
@@ -65,25 +67,20 @@ public class Map : Interface.Panel
 		public void Setup( bool fullScreen )
 		{
 			if ( !fullScreen )
-			{
 				renderTexture = new RenderTexture( 256, 256, 24 );
-
-				rawImage = gameObject.AddComponent<RawImage>();
-				name = "MapImage";
-				rawImage.texture = renderTexture;
-			}
 			else
 				renderTexture = null;
+
+			rawImage = gameObject.AddComponent<RawImage>();
+			name = "MapImage";
+			rawImage.texture = renderTexture;
 
 			camera = new GameObject().AddComponent<Camera>();
 			camera.name = "MapCamera";
 			camera.transform.SetParent( World.instance.ground.transform );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
-			if ( fullScreen )
-				World.instance.eye.gameObject.SetActive( false );
-			else
-				World.instance.eye.gameObject.SetActive( true );
+				World.instance.eye.SetRendering( !fullScreen );
 		}
 
 		public void SetTarget( Vector2 position, float zoom, float rotation )
@@ -97,7 +94,7 @@ public class Map : Interface.Panel
 		void OnDestroy()
 		{
 			Destroy( camera.gameObject );
-			World.instance.eye.gameObject.SetActive( true );
+			World.instance.eye.SetRendering( true );
 		}
 	}
 }

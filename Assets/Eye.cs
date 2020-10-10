@@ -99,6 +99,11 @@ public class Eye : MonoBehaviour
 		director = null;
 	}
 
+	public void SetRendering( bool on )
+	{
+		camera.enabled = on;
+	}
+
 	void FixedUpdate()
 	{
 		Vector3 movement = new Vector3();
