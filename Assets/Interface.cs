@@ -115,18 +115,19 @@ public class Interface : Assert.Base
 		debug.name = "Debug";
 		debug.transform.SetParent( transform );
 
-		world = World.Create().Setup();
-		{
-			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
-			world.Load( myFile.FullName );
-		}
-		//{
-		//	world.NewGame( 117274283 );
-		//}
-
 		tooltip = Tooltip.Create();
 		tooltip.Open();
+
+		world = World.Create().Setup();
+		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+		if ( directory.Exists )
+		{
+			var myFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+			if ( myFiles.Count() > 0 )
+				world.Load( myFiles.First().FullName );
+		}
+		if ( !world.gameInProgress )
+			world.NewGame( 117274283 );
 	}
 
 	void Update()
@@ -983,7 +984,7 @@ public class Interface : Assert.Base
 		}
 	}
 
-	public class WorkerPanel : Panel
+	public class WorkerPanel : Panel, Eye.IDirector
 	{
 		public Worker worker;
 		Text itemCount;
@@ -1002,6 +1003,12 @@ public class Interface : Assert.Base
 			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
 			itemCount = Text( 20, -44, 120, 20, "Items" );
+			World.instance.eye.GrabFocus( this );
+		}
+
+		public void SetCameraTarget( Eye eye )
+		{
+			eye.FocusOn( worker );
 		}
 
 		public override void Update()
@@ -1021,15 +1028,13 @@ public class Interface : Assert.Base
 			else
 				item.enabled = false;
 			item.item = worker.itemInHands;
-			World.instance.eye.viewDistance = 2;
-			World.instance.eye.FocusOn( worker );
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
 		}
 
 		new void OnDestroy()
 		{
 			base.OnDestroy();
-			World.instance.eye.viewDistance = 5;
+			World.instance.eye.ReleaseFocus( this );
 		}
 	}
 
@@ -1094,11 +1099,10 @@ public class Interface : Assert.Base
 		}
 	}
 
-	public class ItemPanel : Panel
+	public class ItemPanel : Panel, Eye.IDirector
 	{
 		public Item item;
 		public List<Button> path = new List<Button>();
-		public bool followItem;
 
 		static public ItemPanel Create()
 		{
@@ -1108,8 +1112,7 @@ public class Interface : Assert.Base
 		public void Open( Item item )
 		{
 			this.item = item;
-			followItem = true;
-
+			
 			base.Open();
 			name = "Item panel";
 
@@ -1119,6 +1122,7 @@ public class Interface : Assert.Base
 			if ( item.origin )
 				Text( 15, -35, 170, 20, "Origin: " + item.origin.name );
 			Selection.activeGameObject = item.gameObject;
+			World.instance.eye.GrabFocus( this );
 		}
 
 		override public void Update()
@@ -1155,34 +1159,32 @@ public class Interface : Assert.Base
 					Flag flag = r.GetEnd( e );
 
 					Button b = Button( 15, row, 100, 20, "flag" );
-					b.onClick.AddListener( delegate	{ ShowFlag( flag ); } );
+					b.onClick.AddListener( delegate { ShowFlag( flag ); } );
 					path.Add( b );
 					row -= 20;
 				}
 				Button( 15, row, 100, 20, item.destination.name ).onClick.AddListener( delegate { ShowFlag( item.destination.flag ); } );
 			}
+		}
 
-			if ( followItem )
-			{
-				World.instance.eye.viewDistance = 2;
-				if ( item.flag )
-					World.instance.eye.FocusOn( item.flag.node );
-				else
-					World.instance.eye.FocusOn( item.worker );
-			}
+		public void SetCameraTarget( Eye eye )
+		{
+			if ( item.flag )
+				World.instance.eye.FocusOn( item.flag.node );
+			else
+				World.instance.eye.FocusOn( item.worker );
 		}
 
 		void ShowFlag( Flag flag )
 		{
-			followItem = false;
-			World.instance.eye.viewDistance = 5;
+			World.instance.eye.ReleaseFocus( this );
 			FlagPanel.Create().Open( flag, true );
 		}
 
 		new void OnDestroy()
 		{
 			base.OnDestroy();
-			World.instance.eye.viewDistance = 5;
+			World.instance.eye.ReleaseFocus( this );
 		}
 	}
 

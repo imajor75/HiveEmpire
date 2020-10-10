@@ -15,6 +15,7 @@ public class Eye : MonoBehaviour
 	public float x, y;
 	public float direction;
 	public new Camera camera;
+	public IDirector director;
 	Transform ear;
 
 	public static Eye Create()
@@ -58,6 +59,29 @@ public class Eye : MonoBehaviour
 			transform.position = position - viewer;
 			transform.LookAt( ear );
 		}
+		if ( director == null )
+		{
+			director = null;
+			viewDistance = 5;
+		}
+		else
+		{
+			viewDistance = 2;
+			IDirector director = this.director;
+			director.SetCameraTarget( this );
+			this.director = director;
+		}
+	}
+
+	public void GrabFocus( IDirector director )
+	{
+		this.director = director;
+	}
+
+	public void ReleaseFocus( IDirector director )
+	{
+		if ( this.director == director )
+			this.director = null;
 	}
 
 	public void FocusOn( GroundNode node )
@@ -65,12 +89,14 @@ public class Eye : MonoBehaviour
 		var p = node.Position();
 		x = p.x;
 		y = p.z;
+		director = null;
 	}
 
 	public void FocusOn( Component component )
 	{
 		x = component.transform.position.x;
 		y = component.transform.position.z;
+		director = null;
 	}
 
 	void FixedUpdate()
@@ -122,5 +148,10 @@ public class Eye : MonoBehaviour
 
 		Vector3 localPosition = world.ground.transform.InverseTransformPoint( hit.point );
 		return GroundNode.FromPosition( localPosition, world.ground );
+	}
+
+	public interface IDirector
+	{
+		void SetCameraTarget( Eye eye );
 	}
 }

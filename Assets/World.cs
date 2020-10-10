@@ -21,6 +21,7 @@ public class World : MonoBehaviour
 	static public int layerIndexMapOnly;
 	[JsonIgnore]
 	static public Shader defaultShader;
+	public bool gameInProgress;
 
 	public static float maxHeight = 20;
 	public static float waterLevel = 0.40f;
@@ -92,6 +93,7 @@ public class World : MonoBehaviour
 		GenerateResources();
 		players.Add( Player.Create().Setup() );
 		ground.RecalculateOwnership();
+		gameInProgress = true;
 	}
 
 	void Start()
@@ -145,8 +147,7 @@ public class World : MonoBehaviour
 		//			o.title = "guardhouse";
 		//	}
 		//}
-
-		ground.RecalculateOwnership();
+		gameInProgress = true;
 	}
 
 	public void Save( string fileName )
@@ -208,6 +209,7 @@ public class World : MonoBehaviour
 
 	public void Clear()
 	{
+		gameInProgress = false;
 		players.Clear();
 		eye = null;
 		foreach ( Transform o in transform )
