@@ -23,6 +23,7 @@ public class World : MonoBehaviour
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
 	public bool gameInProgress;
+	public int time;
 
 	public static float maxHeight = 20;
 	public static float waterLevel = 0.40f;
@@ -76,6 +77,11 @@ public class World : MonoBehaviour
 		soundSource.minDistance = 1;
 		soundSource.maxDistance = GroundNode.size * World.soundMaxDistance;
 		return soundSource;
+	}
+
+	void FixedUpdate()
+	{
+		time++;
 	}
 
 	public void LateUpdate()

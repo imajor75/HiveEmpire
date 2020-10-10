@@ -16,12 +16,15 @@ public class Item : Assert.Base
 	public Path path;
 	public Building destination;
 	public Building origin;
+	[JsonIgnore]
 	public int age;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
 	public Watch watchRoadDelete = new Watch();
 	public Watch watchBuildingDelete = new Watch();
 	public bool tripCancelled;
+	public int born;
+	public int flagTime;
 
 	public enum Type
     {
@@ -92,6 +95,7 @@ public class Item : Assert.Base
 	public Item Setup( Type type, Building origin, Building destination = null )
 	{
 		this.origin = origin;
+		born = World.instance.time;
 		ground = origin.ground;
 		owner = origin.owner;
 		watchRoadDelete.Attach( owner.versionedRoadDelete );
@@ -115,11 +119,6 @@ public class Item : Assert.Base
 		transform.localScale *= 0.05f;
 		name = type.ToString();
 		UpdateLook();
-	}
-
-	void FixedUpdate()
-	{
-		age++;
 	}
 
 	void Update()
@@ -206,6 +205,7 @@ public class Item : Assert.Base
 			CancelTrip();
 
 		flag.itemsStored.Trigger();
+		flagTime = World.instance.time;
 		this.flag = flag;
 		nextFlag = null;
 	}

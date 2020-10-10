@@ -1113,8 +1113,9 @@ public class Interface : Assert.Base
 	public class ItemPanel : Panel, Eye.IDirector
 	{
 		public Item item;
-		public List<Button> path = new List<Button>();
 		public GameObject route;
+		public Text stats;
+		public Text destination;
 		GameObject mapIcon;
 
 		static public ItemPanel Create()
@@ -1129,11 +1130,17 @@ public class Interface : Assert.Base
 			base.Open();
 			name = "Item panel";
 
-			Frame( 0, 0, 200, 300, 20 );
-			Button( 170, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Frame( 0, 0, 300, 150, 20 );
+			Button( 270, -10, 20, 20, iconExit ).onClick.AddListener( Close );
 			Text( 15, -15, 100, 20, item.type.ToString() );
+			stats = Text( 15, -35, 250, 20 );
 			if ( item.origin )
-				Text( 15, -35, 170, 20, "Origin: " + item.origin.name );
+				Text( 15, -55, 170, 20, "Origin: " + item.origin.name );
+			else
+				Text( 15, -55, 170, 20, "Unknown origin" );
+			destination = Text( 15, -75, 170, 20 );
+			destination.gameObject.AddComponent<Button>().onClick.AddListener( ShowDestination );
+
 			mapIcon = new GameObject();
 			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
 			mapIcon.AddComponent<SpriteRenderer>().sprite = Item.sprites[(int)item.type];
@@ -1154,40 +1161,17 @@ public class Interface : Assert.Base
 				return;
 			}
 
-			if ( item.path && item.path.roadPath.Count != path.Count )
+			stats.text = "Age: " + ( World.instance.time - item.age ) / 50 + " secs, at flag for " + ( World.instance.time - item.flagTime ) / 50 + " secs";
+
+			if ( item.destination )
 			{
-				foreach ( var o in path )
-					Destroy( o.gameObject );
-				path.Clear();
+				destination.text = item.destination.name;
 
-				int row = -60;
-				for ( int i = 0; i < item.path.roadPath.Count; i++ )
+				if ( route == null )
 				{
-					Road r = item.path.roadPath[i];
-					int e = 1;
-					if ( i == item.path.roadPath.Count - 1 )
-					{
-						if ( r.GetEnd( 1 ) == item.destination.flag )
-							e = 0;
-					}
-					else
-					{
-						Road nr = item.path.roadPath[i + 1];
-						if ( r.GetEnd( 1 ) == nr.GetEnd( 0 ) || r.GetEnd( 1 ) == nr.GetEnd( 1 ) )
-							e = 0;
-					}
-					Flag flag = r.GetEnd( e );
-
-					Button b = Button( 15, row, 100, 20, "flag" );
-					b.onClick.AddListener( delegate { ShowFlag( flag ); } );
-					path.Add( b );
-					row -= 20;
+					route = CreatePathOnMap( item.path );
+					route.transform.SetParent( transform );
 				}
-				Button( 15, row, 100, 20, item.destination.name ).onClick.AddListener( delegate { ShowFlag( item.destination.flag ); } );
-
-				Destroy( route );
-				route = CreatePathOnMap( item.path );
-				route.transform.SetParent( transform );
 			}
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
@@ -1241,10 +1225,15 @@ public class Interface : Assert.Base
 				World.instance.eye.FocusOn( item.worker );
 		}
 
-		void ShowFlag( Flag flag )
+		void ShowDestination()
 		{
 			World.instance.eye.ReleaseFocus( this );
-			FlagPanel.Create().Open( flag, true );
+			Workshop workshop = item.destination as Workshop;
+			if ( workshop )
+				WorkshopPanel.Create().Open( workshop );
+			Stock stock = item.destination as Stock;
+			if ( stock )
+				StockPanel.Create().Open( stock );
 		}
 
 		new void OnDestroy()
