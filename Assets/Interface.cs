@@ -197,7 +197,7 @@ public class Interface : Assert.Base
 
 	public class Tooltip : Panel
 	{
-		new Frame frame;
+		GameObject objectToShow;
 		Text text;
 
 		public static Tooltip Create()
@@ -211,15 +211,18 @@ public class Interface : Assert.Base
 			name = "Tooltip";
 			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
 
-			frame = Frame( 0, 0, 200, 40, 10 );
+			Frame( 0, 0, 200, 40, 10 );
 			text = Text( 20, -10, 150, 20 );
 			gameObject.SetActive( false );
 			FollowMouse();
 		}
 
-		public void SetText( string text = "" )
+		public void SetText( string text = "", GameObject objectToShow = null )
 		{
 			this.text.text = text;
+			if ( this.objectToShow != null && this.objectToShow != objectToShow )
+				Destroy( this.objectToShow );
+			this.objectToShow = objectToShow;
 			gameObject.SetActive( text != "" );
 			FollowMouse();
 		}
@@ -425,7 +428,7 @@ public class Interface : Assert.Base
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					Interface.instance.tooltip.SetText( item.type.ToString() );
+					Interface.instance.tooltip.SetText( item.type.ToString(), ItemPanel.CreatePathOnMap( item.path ) );
 				else
 					Interface.instance.tooltip.SetText( itemType.ToString() );
 			}
@@ -1111,7 +1114,7 @@ public class Interface : Assert.Base
 	{
 		public Item item;
 		public List<Button> path = new List<Button>();
-		public Mesh route;
+		public GameObject route;
 		GameObject mapIcon;
 
 		static public ItemPanel Create()
@@ -1183,44 +1186,51 @@ public class Interface : Assert.Base
 				Button( 15, row, 100, 20, item.destination.name ).onClick.AddListener( delegate { ShowFlag( item.destination.flag ); } );
 
 				Destroy( route );
-				GameObject routeOnMap = new GameObject();
-				World.SetLayerRecursive( routeOnMap, World.layerIndexMapOnly );
-				routeOnMap.transform.SetParent( transform );
-				routeOnMap.name = "Route on map";
-				routeOnMap.AddComponent<MeshRenderer>().material = new Material( World.defaultColorShader );
-				route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
-
-				List<Vector3> vertices = new List<Vector3>();
-				List<int> triangles = new List<int>();
-				foreach ( var road in item.path.roadPath )
-				{
-					for ( int i = 0; i < road.nodes.Count - 1; i++ )
-					{
-						Vector3 start = road.nodes[i].Position() + Vector3.up * 3;
-						Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 3;
-						Vector3 side = (end - start) * 0.1f;
-						side = new Vector3( -side.z, side.y, side.x );
-
-						triangles.Add( vertices.Count + 0 );
-						triangles.Add( vertices.Count + 1 );
-						triangles.Add( vertices.Count + 2 );
-						triangles.Add( vertices.Count + 1 );
-						triangles.Add( vertices.Count + 3 );
-						triangles.Add( vertices.Count + 2 );
-
-						vertices.Add( start - side );
-						vertices.Add( start + side );
-						vertices.Add( end - side );
-						vertices.Add( end + side );
-					}
-				}
-				route.vertices = vertices.ToArray();
-				route.triangles = triangles.ToArray();
+				route = CreatePathOnMap( item.path );
+				route.transform.SetParent( transform );
 			}
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
 			else
 				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
+		}
+
+		public static GameObject CreatePathOnMap( Path path )
+		{
+			GameObject routeOnMap = new GameObject();
+			World.SetLayerRecursive( routeOnMap, World.layerIndexMapOnly );
+			routeOnMap.name = "Path on map";
+			routeOnMap.AddComponent<MeshRenderer>().material = new Material( World.defaultColorShader );
+			var route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
+
+			List<Vector3> vertices = new List<Vector3>();
+			List<int> triangles = new List<int>();
+			foreach ( var road in path.roadPath )
+			{
+				for ( int i = 0; i < road.nodes.Count - 1; i++ )
+				{
+					Vector3 start = road.nodes[i].Position() + Vector3.up * 3;
+					Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 3;
+					Vector3 side = (end - start) * 0.06f;
+					side = new Vector3( -side.z, side.y, side.x );
+
+					triangles.Add( vertices.Count + 0 );
+					triangles.Add( vertices.Count + 1 );
+					triangles.Add( vertices.Count + 2 );
+					triangles.Add( vertices.Count + 1 );
+					triangles.Add( vertices.Count + 3 );
+					triangles.Add( vertices.Count + 2 );
+
+					vertices.Add( start - side );
+					vertices.Add( start + side );
+					vertices.Add( end - side );
+					vertices.Add( end + side );
+				}
+			}
+
+			route.vertices = vertices.ToArray();
+			route.triangles = triangles.ToArray();
+			return routeOnMap;
 		}
 
 		public void SetCameraTarget( Eye eye )

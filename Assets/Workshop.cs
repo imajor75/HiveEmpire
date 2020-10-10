@@ -317,7 +317,7 @@ public class Workshop : Building
 			"Mines/goldmine_final", 1.5f, Type.goldmine,
 			"Mines/stonemine_final", 1.5f, Type.stonemine,
 			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
-			"Forest/forester_final", 1.1f, Type.forester,
+			"Forest/forester_final", 1.33f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"SAdK/weaponmaker_final", 1.7f, Type.weaponmaker,
