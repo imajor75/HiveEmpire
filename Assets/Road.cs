@@ -31,6 +31,7 @@ public class Road : Assert.Base, Interface.InputHandler
 	Material mapMaterial;
 	[JsonIgnore]
 	Mesh mapMesh;
+	public bool invalid;	
 
 	public static void Initialize()
 	{
@@ -429,6 +430,11 @@ public class Road : Assert.Base, Interface.InputHandler
 		transform.localPosition = nodes[nodes.Count / 2].Position();
 		CreateCurves();
 		RebuildMesh();
+		AttachWatches();
+	}
+
+	void AttachWatches()
+	{
 		watchStartFlag.Attach( nodes[0].flag.itemsStored );
 		watchEndFlag.Attach( nodes[nodes.Count - 1].flag.itemsStored );
 	}
@@ -519,12 +525,15 @@ public class Road : Assert.Base, Interface.InputHandler
 		flag.node.road = null;
 		first.RegisterOnGround();
 		second.RegisterOnGround();
+		first.AttachWatches();
+		second.AttachWatches();
 
 		if ( first.workers.Count == 0 )
 			first.CreateNewWorker();
 		if ( second.workers.Count == 0 )
 			second.CreateNewWorker();
 
+		invalid = true;
 		Destroy( gameObject );
 	}
 
@@ -565,6 +574,7 @@ public class Road : Assert.Base, Interface.InputHandler
 			if ( node.road == this )
 				node.road = null;
 		}
+		invalid = true;
 		Destroy( gameObject );
 		return true;
 	}

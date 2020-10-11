@@ -289,7 +289,7 @@ public class Item : Assert.Base
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
-			if ( destination )
+			if ( destination && !path.Road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}
 		if ( nextFlag )

@@ -335,6 +335,7 @@ public class Worker : Assert.Base
 		}
 		public override bool ExecuteFrame()
 		{
+			boss.assert.AreEqual( item.worker, boss );
 			if ( pickupTimer == pickupTimeStart )
 			{
 				boss.animator.ResetTrigger( putdownID );
