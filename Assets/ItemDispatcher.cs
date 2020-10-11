@@ -6,6 +6,7 @@ public class ItemDispatcher : ScriptableObject
 	public enum Priority
 	{
 		stop,
+		stock,
 		low,
 		high
 	};
@@ -90,10 +91,7 @@ public class ItemDispatcher : ScriptableObject
 			r.building = building;
 			r.quantity = quantity;
 			r.priority = priority;
-			if ( priority == Priority.low )
-				requests.Add( r );
-			else
-				requests.Insert( 0, r );
+			requests.Add( r );
 		}
 
 		public void RegisterOffer( Building building, int quantity, Priority priority )
@@ -103,10 +101,7 @@ public class ItemDispatcher : ScriptableObject
 			o.quantity = quantity;
 			o.priority = priority;
 			o.location = building.node;
-			if ( priority == Priority.low )
-				offers.Add( o );
-			else
-				offers.Insert( 0, o );
+			offers.Add( o );
 		}
 
 		public void RegisterOffer( Item item, Priority priority )
@@ -120,26 +115,29 @@ public class ItemDispatcher : ScriptableObject
 			else
 				o.location = item.nextFlag.node;
 
-			if ( priority == Priority.low )
-				offers.Add( o );
-			else
-				offers.Insert( 0, o );
+			offers.Add( o );
 		}
 
 		public void LateUpdate()
 		{
-			foreach ( var request in requests )
+			Priority[] priorities = { Priority.high, Priority.low };
+			foreach ( var priority in priorities )
 			{
-				if ( request.priority < Priority.high )
-					break;
-				while ( request.quantity > 0 && FindOfferFor( request ) );
-			}
+				foreach ( var request in requests )
+				{
+					if ( request.priority != priority )
+						continue;
+					while ( request.quantity > 0 && FindOfferFor( request ) )
+						;
+				}
 
-			foreach ( var offer in offers )
-			{
-				if ( offer.priority < Priority.high )
-					break;
-				while ( offer.quantity > 0 && FindRequestFor( offer ) );
+				foreach ( var offer in offers )
+				{
+					if ( offer.priority != priority )
+						continue;
+					while ( offer.quantity > 0 && FindRequestFor( offer ) )
+						;
+				}
 			}
 
 			requests.Clear();
@@ -153,11 +151,9 @@ public class ItemDispatcher : ScriptableObject
 
 			foreach ( var offer in offers )
 			{
-				if ( request.priority == Priority.low && offer.priority == Priority.low )
-					break;  // No point in searching further
 				if ( offer.quantity == 0 )
 					continue;
-				float score = 1f / offer.location.DistanceFrom( request.building.node );
+				float score = (int)offer.priority * 1000 + 1f / offer.location.DistanceFrom( request.building.node );
 				if ( score > bestScore )
 				{
 					bestScore = score;
@@ -177,11 +173,9 @@ public class ItemDispatcher : ScriptableObject
 
 			foreach ( var request in requests )
 			{
-				if ( request.priority == Priority.low && offer.priority == Priority.low )
-					break;  // No point in searching further
 				if ( request.quantity == 0 )
 					continue;
-				float score = 1f / offer.location.DistanceFrom( request.building.node );
+				float score = (int)offer.priority * 1f / offer.location.DistanceFrom( request.building.node );
 				if ( score > bestScore )
 				{
 					bestScore = score;
