@@ -920,10 +920,11 @@ public class Interface : Assert.Base
 				var itemImages = side ? leftItems : rightItems;
 				var itemTexts = side ? leftNumbers : rightNumbers;
 				int[] counts = new int[(int)Item.Type.total];
-				var items = road.GetEnd( i ).items;
+				var flag = road.GetEnd( i );
+				var items = flag.items;
 				foreach ( var item in items )
 				{
-					if ( item != null && item.path && item.path.Road == road )
+					if ( item != null && item.path && item.path.Road == road && item.flag == flag )
 						counts[(int)item.type]++;
 				}
 				for ( int j = itemsDisplayed - 1; j >= 0; j-- )
