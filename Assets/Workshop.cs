@@ -661,7 +661,7 @@ public class Workshop : Building
 		if ( configuration.outputType == Item.Type.unknown )
 			return;
 
-		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && UseInput() && worker.IsIdle( true ) )
+		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && worker.IsIdle( true ) && UseInput() )
 		{
 			soundSource.loop = true;
 			soundSource.clip = processingSounds.GetMediaData( type );

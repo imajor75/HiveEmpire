@@ -147,23 +147,48 @@ public class Item : Assert.Base
 			if ( origin == null )
 				origin = null;	// Releasing the reference when the building was removed
 		}
-		if ( destination == null && worker == null && flag != null )
-			owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.high );
+
+		// If the item is just being gathered, it should not be offered yet
+		if ( flag == null && worker.type != Worker.Type.haluer )
+			return;
+
+		// If there is no flag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the haluer will not be
+		// able to skip entering the building, as it is scheduled already.
+		if ( !flag && !nextFlag )
+			return;
+
+		var priority = ItemDispatcher.Priority.stop;
+		if ( destination == null )
+			priority = ItemDispatcher.Priority.high;
+		else if ( destination as Stock )
+			priority = ItemDispatcher.Priority.low;
+
+		if ( destination && flag == destination.flag && worker == null )
+		{
+			flag.ReleaseItem( this );
+			Arrived();
+			return;
+		}
+
+		if ( priority > ItemDispatcher.Priority.stop )
+			owner.itemDispatcher.RegisterOffer( this, priority );
 	}
 
 	public bool SetTarget( Building building, Building origin = null )
 	{
-		assert.IsNull( worker );
+		CancelTrip();
 
 		Flag start = origin?.flag;
+		if ( nextFlag )
+			start = nextFlag;
 		if ( flag )
 			start = flag;
-		if ( start == building.flag )
+
+		if ( start == building.flag && worker == null )
 		{
 			destination = building;
 			building.ItemOnTheWay( this );
-			flag?.ReleaseItem( this );
-			Arrived();
+			tripCancelled = false;
 			return true;
 		}
 
@@ -181,7 +206,11 @@ public class Item : Assert.Base
 	public void CancelTrip()
 	{
 		path = null;
-		destination?.ItemOnTheWay( this, true );
+
+		if ( destination == null )
+			return;
+
+		destination.ItemOnTheWay( this, true );
 		destination = null;
 		tripCancelled = true;
 	}
@@ -191,7 +220,7 @@ public class Item : Assert.Base
 		assert.IsNull( this.flag );
 		assert.AreEqual( flag, nextFlag );
 		if ( destination )
-			assert.IsTrue( flag == path.Road().GetEnd( 0 ) || flag == path.Road().GetEnd( 1 ) );
+			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ) );
 
 		worker = null;
 		if ( destination != null && path.IsFinished() )
@@ -202,7 +231,7 @@ public class Item : Assert.Base
 		}
 
 		if ( destination == null )
-			CancelTrip();
+			CancelTrip();	// Why is this needed?
 
 		flag.itemsStored.Trigger();
 		flagTime = World.instance.time;
@@ -260,8 +289,8 @@ public class Item : Assert.Base
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
-			if ( destination )
-				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road() ) );
+			if ( destination && !path.Road.invalid )
+				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}
 		if ( nextFlag )
 		{

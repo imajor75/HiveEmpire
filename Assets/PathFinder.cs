@@ -209,9 +209,13 @@ public class Path : PathFinder
 		return null;
 	}
 
-	public Road Road()
+	[JsonIgnore]
+	public Road Road
 	{
-		return roadPath[progress];
+		get
+		{
+			return roadPath[progress];
+		}
 	}
 
 	public Road NextRoad()
@@ -219,9 +223,13 @@ public class Path : PathFinder
 		return roadPath[progress++];
 	}
 
-	public GroundNode Node()
+	[JsonIgnore]
+	public GroundNode Node
 	{
-		return path[progress];
+		get
+		{
+			return path[progress];
+		}
 	}
 
 	public GroundNode NextNode()

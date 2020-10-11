@@ -377,7 +377,7 @@ abstract public class Building : Assert.Base
 
 	void OnDestroy()
 	{
-		owner.versionedBuildingDelete.Trigger();
+		owner?.versionedBuildingDelete.Trigger();
 	}
 
 	public virtual bool Remove()

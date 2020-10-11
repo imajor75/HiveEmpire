@@ -892,7 +892,7 @@ public class Interface : Assert.Base
 				var items = road.GetEnd( i ).items;
 				foreach ( var item in items )
 				{
-					if ( item != null && item.path && item.path.Road() == road )
+					if ( item != null && item.path && item.path.Road == road )
 						counts[(int)item.type]++;
 				}
 				for ( int j = itemsDisplayed - 1; j >= 0; j-- )
