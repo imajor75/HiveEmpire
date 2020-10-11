@@ -413,6 +413,7 @@ public class Interface : Assert.Base
 
 				ItemPanel.Create().Open( item );
 			}
+
 			public void SetType( Item.Type itemType )
 			{
 				this.itemType = itemType;
@@ -423,6 +424,15 @@ public class Interface : Assert.Base
 				}
 				enabled = true;
 				sprite = Item.sprites[(int)itemType];
+			}
+
+			public void SetItem( Item item )
+			{
+				this.item = item;
+				if ( item )
+					SetType( item.type );
+				else
+					SetType( Item.Type.unknown );
 			}
 
 			public void OnPointerEnter( PointerEventData eventData )
@@ -815,8 +825,8 @@ public class Interface : Assert.Base
 	public class RoadPanel : Panel
 	{
 		public Road road;
-		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>();
-		public List<Text> leftNumbers = new List<Text>(), rightNumbers = new List<Text>();
+		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>(), centerItems = new List<ItemImage>();
+		public List<Text> leftNumbers = new List<Text>(), rightNumbers = new List<Text>(), centerDirections = new List<Text>();
 		public GroundNode node;
 		public Text jam;
 		public Text workers;
@@ -849,6 +859,8 @@ public class Interface : Assert.Base
 				leftNumbers.Add( Text( 40, row, 30, 20, "0" ) );
 				rightNumbers.Add( Text( 150, row, 20, 20, "0" ) );
 				rightItems.Add( ItemIcon( 170, row ) );
+				centerItems.Add( ItemIcon( 90, row ) );
+				centerDirections.Add( Text( 80, row, 60, 20, "" ) );
 			}
 		}
 
@@ -882,6 +894,25 @@ public class Interface : Assert.Base
 			float x1 = camera.WorldToScreenPoint( road.GetEnd( 1 ).node.Position() ).x;
 			if ( x1 < x0 )
 				reversed = true;
+
+			for ( int j = 0; j < itemsDisplayed; j++ )
+			{
+				Item item = null;
+				int i = itemsDisplayed - 1 - j;
+				if ( j < road.workers.Count )
+					item = road.workers[j].itemInHands;
+
+				centerItems[i].SetItem( item );
+				if ( item )
+				{
+					if ( item.nextFlag == road.GetEnd( reversed ? 1 : 0 ) )
+						centerDirections[i].text = "<";
+					else
+						centerDirections[i].text = "        >";
+				}
+				else
+					centerDirections[i].text = "";
+			}
 
 			for ( int i = 0; i < 2; i++ )
 			{
@@ -981,12 +1012,9 @@ public class Interface : Assert.Base
 			// TODO Skip empty slots
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
-				if ( flag.items[i] == null )
-					items[i].enabled = false;
-				else
+				items[i].SetItem( flag.items[i] );
+				if ( flag.items[i] )
 				{
-					items[i].enabled = true;
-					items[i].sprite = Item.sprites[(int)flag.items[i].type];
 					if ( flag.items[i].flag && flag.items[i].flag == flag )
 					{
 						items[i].color = new Color( 1, 1, 1, 1 );
@@ -1000,7 +1028,6 @@ public class Interface : Assert.Base
 						itemTimers[i].rectTransform.sizeDelta = new Vector2( 0, 3 );
 					}
 				}
-				items[i].item = flag.items[i];
 			}
 		}
 	}
@@ -1041,14 +1068,7 @@ public class Interface : Assert.Base
 			}
 			base.Update();
 			itemCount.text = "Items delivered: " + worker.itemsDelivered;
-			if ( worker.itemInHands != null )
-			{
-				item.sprite = Item.sprites[(int)worker.itemInHands.type];
-				item.enabled = true;
-			}
-			else
-				item.enabled = false;
-			item.item = worker.itemInHands;
+			item.SetItem( worker.itemInHands );
 			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
 		}
 
