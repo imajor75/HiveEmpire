@@ -402,7 +402,7 @@ public class Road : Assert.Base, Interface.InputHandler
 					for ( int i = 0; i < Flag.maxItems; i++ )
 					{
 						Item t = flag.items[i];
-						if ( t != null && t.path != null && t.path.Road() == this )
+						if ( t != null && t.path != null && t.path.Road == this )
 							cachedJam++;
 					}
 				}
@@ -574,6 +574,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		return nodes[nodes.Count / 2];
 	}
 
+	[JsonIgnore]
 	public float Cost
 	{
 		get

@@ -75,6 +75,12 @@ public class Worker : Assert.Base
 				boss.taskQueue.Add( newTask );
 		}
 
+		public bool ResetBoss()
+		{
+			boss.Reset();
+			return true;
+		}
+
 		public virtual void Validate()
 		{
 			boss.assert.IsTrue( boss.taskQueue.Contains( this ) );
@@ -108,8 +114,8 @@ public class Worker : Assert.Base
 				}
 			}
 			int point = 0;
-			if ( boss.node.flag == path.Road().GetEnd( 0 ) )
-				point = path.Road().nodes.Count - 1;
+			if ( boss.node.flag == path.Road.GetEnd( 0 ) )
+				point = path.Road.nodes.Count - 1;
 			boss.ScheduleWalkToRoadPoint( path.NextRoad(), point, false, true );
 			return false;
 		}
@@ -172,10 +178,7 @@ public class Worker : Assert.Base
 		public override bool ExecuteFrame()
 		{
 			if ( road == null )
-			{
-				boss.Reset();
-				return true;
-			}
+				return ResetBoss();
 
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
@@ -343,14 +346,10 @@ public class Worker : Assert.Base
 			if ( ( pickupTimer -= (int)World.instance.speedModifier ) > 0 )
 				return false;
 
-			if ( item.path == null && boss.type == Type.haluer )	// Item lost destination while hauler was approaching
-			{
-				boss.Reset();
-				return true;
-			}
+			if ( boss.type == Type.haluer && (item.path == null || item.path.Road != boss.road) )  // Item lost destination while hauler was approaching
+				return ResetBoss();
 
-			if ( item.flag != null )
-				item.flag.ReleaseItem( item );
+			item.flag?.ReleaseItem( item );
 			boss.itemInHands = item;
 			boss.assert.IsTrue( item.worker == boss || item.worker == null );
 			item.worker = boss;
@@ -428,7 +427,7 @@ public class Worker : Assert.Base
 			}
 			int i = road.NodeIndex( boss.node );
 			if ( i < 0 || boss.node.flag != null )
-				return true;
+				return true;	// Task failed
 			boss.assert.IsFalse( boss.atRoad );
 			if ( road.workerAtNodes[i] == null )
 			{
@@ -732,7 +731,7 @@ public class Worker : Assert.Base
 		{
 			if ( !atRoad )
 			{
-				ScheduleWalkToRoadNode( road, road.CenterNode(), false );
+				ScheduleWalkToNode( road.CenterNode(), false );
 				ScheduleStartWorkingOnRoad( road );
 				return;
 			}
@@ -840,7 +839,7 @@ public class Worker : Assert.Base
 		if ( item.worker || item.destination == null )
 			return 0;
 
-		if ( item.path == null || item.path.Road() != road )
+		if ( item.path == null || item.path.Road != road )
 			return 0;
 
 		Flag target = road.GetEnd( 0 );
@@ -949,7 +948,7 @@ public class Worker : Assert.Base
 	public void CarryItem( Item item )
 	{
 		assert.IsNotNull( road );
-		assert.AreEqual( road, item.path.Road() );
+		assert.AreEqual( road, item.path.Road );
 		int itemPoint = road.NodeIndex( item.flag.node ), otherPoint = 0;
 		if ( itemPoint == 0 )
 			otherPoint = road.nodes.Count - 1;
@@ -1108,4 +1107,4 @@ public class Worker : Assert.Base
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
 		}
 	}
-}	
+}

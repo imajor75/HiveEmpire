@@ -111,12 +111,15 @@ public class ItemDispatcher : ScriptableObject
 
 		public void RegisterOffer( Item item, Priority priority )
 		{
-			Assert.global.IsNotNull( item.flag );
 			var o = new Offer();
 			o.item = item;
 			o.quantity = 1;
 			o.priority = priority;
-			o.location = item.flag.node;
+			if ( item.flag )
+				o.location = item.flag.node;
+			else
+				o.location = item.nextFlag.node;
+
 			if ( priority == Priority.low )
 				offers.Add( o );
 			else
