@@ -102,6 +102,7 @@ public class Workshop : Building
 		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
 		public int stored;
 		public int onTheWay;
+		public int important = 3;
 	}
 
 	public enum Type
@@ -455,8 +456,9 @@ public class Workshop : Building
 		foreach ( Buffer b in buffers )
 		{
 			int missing = b.size-b.stored-b.onTheWay;
+			var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
 			if ( missing > 0 )
-				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, b.priority );
+				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority );
 		}
 		if ( output > 0 && flag.FreeSpace() > 0 && worker.IsIdle( true ) )
 			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, ItemDispatcher.Priority.high );
