@@ -22,7 +22,9 @@ public class Road : Assert.Base, Interface.InputHandler
 	public static Road newRoad;
 	public bool decorationOnly;
 	public static float height = 1.0f/20;
+	[JsonIgnore]
 	public float cost = 0;
+	public float cachedCost = 0;
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	[JsonIgnore]
@@ -572,14 +574,26 @@ public class Road : Assert.Base, Interface.InputHandler
 		return nodes[nodes.Count / 2];
 	}
 
-	public float Cost()
+	public float Cost
 	{
-		if ( cost == 0 )
+		get
 		{
-			for ( int i = 0; i < nodes.Count - 1; i++ )
-				cost += 0.01f/Worker.SpeedBetween( nodes[i], nodes[i + 1] );
+			if ( cachedCost == 0 )
+			{
+				for ( int i = 0; i < nodes.Count - 1; i++ )
+					cachedCost += 0.01f / Worker.SpeedBetween( nodes[i], nodes[i + 1] );
+			}
+
+			// This gives:
+			// 0 => 1
+			// 4 => 1.25
+			// 8 => 2
+			// 12 => 3.25
+			// 16 => 5
+			float jamBase = Jam/8f;
+			float jamMultiplier = 1 + (jamBase * jamBase);
+			return cachedCost * jamMultiplier;
 		}
-		return cost;
 	}
 
 	public void Validate()

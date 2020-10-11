@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 public class Flag : Assert.Base
 {
 	public Player owner;
-	public static int maxItems = 8;
+	public const int maxItems = 8;
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
 	public Worker user;
