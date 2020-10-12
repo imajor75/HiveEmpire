@@ -36,16 +36,23 @@ public class PathFinder : ScriptableObject
 
     public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false )
     {
-		Assert.global.AreNotEqual( start, end );
-        ready = false;
         target = end;
 		this.ignoreFinalObstacle = ignoreFinalObstacle;
+		this.mode = mode;
+		if ( start == end )
+		{
+			path.Clear();
+			roadPath.Clear();
+			ready = true;
+			return true;
+		}
+		ready = false;
+
 		if ( mode == PathFinder.Mode.onRoad )
 		{
 			Assert.global.IsNotNull( start.flag, "Trying to find a road path not starting at a flag" );
 			Assert.global.IsNotNull( end.flag );
 		}
-		this.mode = mode;
         visited.Clear();
         openNodes = 0;
         AddNode( start, 0, null );
@@ -237,20 +244,26 @@ public class Path : PathFinder
 		return path[progress++];
 	}
 
-	public bool IsFinished()
+	public bool IsFinished
 	{
-		if ( mode == Mode.onRoad )
-			return progress >= roadPath.Count;
+		get
+		{
+			if ( mode == Mode.onRoad )
+				return progress >= roadPath.Count;
 
-		return progress >= path.Count;
+			return progress >= path.Count;
+		}
 	}
 
-	public int StepsLeft()
+	public int StepsLeft
 	{
-		if ( mode == Mode.onRoad )
-			return roadPath.Count - progress;
+		get
+		{
+			if ( mode == Mode.onRoad )
+				return roadPath.Count - progress;
 
-		return path.Count - progress;
+			return path.Count - progress;
+		}
 	}
 
 	public override void Validate()

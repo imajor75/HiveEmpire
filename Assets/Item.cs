@@ -191,14 +191,6 @@ public class Item : Assert.Base
 		if ( flag )
 			start = flag;
 
-		if ( start == building.flag && worker == null )
-		{
-			destination = building;
-			building.ItemOnTheWay( this );
-			tripCancelled = false;
-			return true;
-		}
-
 		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad );
 		if ( path != null )
 		{
@@ -232,12 +224,7 @@ public class Item : Assert.Base
 			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ) );
 
 		worker = null;
-		if ( destination != null && path.IsFinished() )
-		{
-			assert.AreEqual( destination.flag, flag );
-			Arrived();
-			return;
-		}
+		assert.IsTrue( destination == null || !path.IsFinished );
 
 		if ( destination == null )
 			CancelTrip();	// Why is this needed?
@@ -294,7 +281,7 @@ public class Item : Assert.Base
 			// If the item has a worker, but no nextFlag, that means that the item must be in the hand of the worker,
 			// its previous destination was replaced with a new one, and the reservation at the previous nextFlag was 
 			// cancelled. The worker has been not yet decided what to do with the item, so the list of tasks must be empty
-			if ( ( path == null || path.StepsLeft() > 1 ) && worker.taskQueue.Count > 0 ) 
+			if ( ( path == null || path.StepsLeft > 1 ) && worker.taskQueue.Count > 0 ) 
 				assert.IsNotNull( nextFlag, "No nextFlag for " + type + " but has a worker" );
 			if ( worker.itemInHands )
 				assert.AreEqual( this, worker.itemInHands );
@@ -303,11 +290,8 @@ public class Item : Assert.Base
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
 			if ( destination )
-			{
 				assert.IsNotNull( path );
-				assert.IsNotNull( path.Road );
-			}
-			if ( destination && !path.Road.invalid )
+			if ( destination && !path.Road.invalid && path.IsFinished )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}
 		if ( nextFlag )

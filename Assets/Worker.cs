@@ -840,13 +840,16 @@ public class Worker : Assert.Base
 		if ( item.worker || item.destination == null )
 			return 0;
 
-		if ( item.path == null || item.path.Road != road )
+		if ( item.path == null )
+			return 0;
+
+		if ( !item.path.IsFinished && item.path.Road != road )
 			return 0;
 
 		Flag target = road.GetEnd( 0 );
 		if ( target == item.flag )
 			target = road.GetEnd( 1 );
-		if ( target.FreeSpace() == 0 && item.path.StepsLeft() != 1 )
+		if ( target.FreeSpace() == 0 && item.path.StepsLeft != 1 )
 			return 0;
 
 		float value = road.owner.itemHaulPriorities[(int)item.type];
@@ -958,9 +961,10 @@ public class Worker : Assert.Base
 
 		ScheduleWalkToRoadPoint( road, itemPoint );
 		SchedulePickupItem( item );
-		ScheduleWalkToRoadPoint( road, otherPoint );
+		if ( item.path.StepsLeft != 0 )
+			ScheduleWalkToRoadPoint( road, otherPoint );
 
-		if ( item.path.StepsLeft() == 1 )
+		if ( item.path.StepsLeft <= 1 )
 		{
 			var destination = item.destination;
 			ScheduleWalkToNeighbour( destination.node );
