@@ -377,6 +377,7 @@ public class Worker : Assert.Base
 			{
 				item.nextFlag.CancelItem( item );
 				item.nextFlag = null;
+				item.assert.IsNotSelected();
 			}
 			base.Cancel();
 		}
@@ -675,7 +676,6 @@ public class Worker : Assert.Base
 
 	public bool Remove( bool returnToMainBuilding = true )
 	{
-		assert.IsNotSelected();
 		Reset();
 		if ( origin != null )
 		{
@@ -948,6 +948,7 @@ public class Worker : Assert.Base
 
 	public void CarryItem( Item item )
 	{
+		item.assert.IsNotSelected();
 		assert.IsNotNull( road );
 		assert.AreEqual( road, item.path.Road );
 		int itemPoint = road.NodeIndex( item.flag.node ), otherPoint = 0;

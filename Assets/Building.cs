@@ -127,7 +127,6 @@ abstract public class Building : Assert.Base
 
 			done = true;
 			worker.Remove();
-			worker.ScheduleWalkToNeighbour( boss.flag.node );
 		}
 		public bool ItemOnTheWay( Item item, bool cancel = false )
 		{

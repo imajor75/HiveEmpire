@@ -152,16 +152,16 @@ public class Item : Assert.Base
 		if ( flag == null && worker.type != Worker.Type.haluer )
 			return;
 
-		// If there is no flag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the haluer will not be
+		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the haluer will not be
 		// able to skip entering the building, as it is scheduled already.
-		if ( !flag && !nextFlag )
+		if ( worker && !nextFlag )
 			return;
 
 		var priority = ItemDispatcher.Priority.stop;
 		if ( destination == null )
 			priority = ItemDispatcher.Priority.high;
 		else if ( destination as Stock )
-			priority = ItemDispatcher.Priority.low;
+			priority = ItemDispatcher.Priority.stock;
 
 		if ( destination && flag == destination.flag && worker == null )
 		{
@@ -170,12 +170,19 @@ public class Item : Assert.Base
 			return;
 		}
 
-		if ( priority > ItemDispatcher.Priority.stop )
-			owner.itemDispatcher.RegisterOffer( this, priority );
+		if ( priority == ItemDispatcher.Priority.stop )
+			return;
+
+		assert.IsNotSelected();
+		owner.itemDispatcher.RegisterOffer( this, priority );
 	}
 
 	public bool SetTarget( Building building, Building origin = null )
 	{
+		assert.IsNotSelected();
+		assert.AreNotEqual( building, destination );
+
+		var oldDestination = destination;
 		CancelTrip();
 
 		Flag start = origin?.flag;
@@ -198,6 +205,8 @@ public class Item : Assert.Base
 			destination = building;
 			building.ItemOnTheWay( this );
 			tripCancelled = false;
+			if ( oldDestination && oldDestination != building )
+				print( "Item reroute (" + type + " to " + destination.title + ")" );
 			return true;
 		}
 		return false;
@@ -237,6 +246,7 @@ public class Item : Assert.Base
 		flagTime = World.instance.time;
 		this.flag = flag;
 		nextFlag = null;
+		assert.IsNotSelected();
 	}
 
 	public void Arrived()
@@ -281,14 +291,22 @@ public class Item : Assert.Base
 		assert.IsTrue( flag != null || worker != null );
 		if ( worker )
 		{
-			if ( ( path == null || path.StepsLeft() > 1 ) && !tripCancelled ) 
-				assert.IsNotNull( nextFlag );
+			// If the item has a worker, but no nextFlag, that means that the item must be in the hand of the worker,
+			// its previous destination was replaced with a new one, and the reservation at the previous nextFlag was 
+			// cancelled. The worker has been not yet decided what to do with the item, so the list of tasks must be empty
+			if ( ( path == null || path.StepsLeft() > 1 ) && worker.taskQueue.Count > 0 ) 
+				assert.IsNotNull( nextFlag, "No nextFlag for " + type + " but has a worker" );
 			if ( worker.itemInHands )
 				assert.AreEqual( this, worker.itemInHands );
 		}
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
+			if ( destination )
+			{
+				assert.IsNotNull( path );
+				assert.IsNotNull( path.Road );
+			}
 			if ( destination && !path.Road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}

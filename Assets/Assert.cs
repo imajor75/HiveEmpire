@@ -132,7 +132,7 @@ public class Assert
 	public void IsNotSelected()
 	{
 		if ( Selection.Contains( boss.gameObject ) )
-			UnityEngine.Debug.Log( "Code on selected" );
+			UnityEngine.Debug.Log( Caller( 2 ) + " on selected" );
 	}
 
 	void Failed( string message )
@@ -140,7 +140,7 @@ public class Assert
 		var stackTrace = new StackTrace();
 		var stackFrame = stackTrace.GetFrame( 2 );
 		var method = stackFrame.GetMethod();
-		message = method.DeclaringType.Name + "." + method.Name + " " + ": " + message;
+		message = Caller( 3 ) + " : " + message;
 		if ( message != "" )
 			UnityEngine.Debug.LogAssertion( message );
 
@@ -152,6 +152,14 @@ public class Assert
 
 		EditorApplication.isPaused = true;
 		throw new System.Exception();
+	}
+
+	string Caller( int depth )
+	{
+		var stackTrace = new StackTrace();
+		var stackFrame = stackTrace.GetFrame( depth );
+		var method = stackFrame.GetMethod();
+		return method.DeclaringType.Name + "." + method.Name;
 	}
 
 	public class Base : MonoBehaviour

@@ -822,6 +822,7 @@ public class Interface : Assert.Base
 				Close();
 		}
 	}
+
 	public class RoadPanel : Panel
 	{
 		public Road road;
@@ -897,21 +898,25 @@ public class Interface : Assert.Base
 
 			for ( int j = 0; j < itemsDisplayed; j++ )
 			{
-				Item item = null;
 				int i = itemsDisplayed - 1 - j;
-				if ( j < road.workers.Count )
-					item = road.workers[j].itemInHands;
-
-				centerItems[i].SetItem( item );
-				if ( item )
+				Worker worker;
+				if ( j < road.workers.Count && (worker = road.workers[j]) && worker.taskQueue.Count > 0 )
 				{
-					if ( item.nextFlag == road.GetEnd( reversed ? 1 : 0 ) )
-						centerDirections[i].text = "<";
+					Item item = worker.itemInHands;
+					centerItems[i].SetItem( item );
+					if ( item )
+					{
+						Flag flag = item.nextFlag;
+						if ( flag == null )
+							flag = item.destination.flag;
+						if ( flag == road.GetEnd( reversed ? 1 : 0 ) )
+							centerDirections[i].text = "<";
+						else
+							centerDirections[i].text = "        >";
+					}
 					else
-						centerDirections[i].text = "        >";
+						centerDirections[i].text = "";
 				}
-				else
-					centerDirections[i].text = "";
 			}
 
 			for ( int i = 0; i < 2; i++ )
