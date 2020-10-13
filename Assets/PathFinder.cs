@@ -188,20 +188,16 @@ public class PathFinder : ScriptableObject
 	{
 		if ( ready )
 		{
-			if ( roadPathReversed.Count > 0 )
-				Assert.global.AreEqual( roadPath.Count, roadPathReversed.Count );
+			Assert.global.AreEqual( roadPath.Count, roadPathReversed.Count );
 			if ( mode == Mode.onRoad )
 			{
-				if ( roadPathReversed.Count > 0 )
-				{
-					for ( int i = 0; i < roadPath.Count - 1; i++ )
-						Assert.global.AreEqual( roadPath[i].GetEnd( roadPathReversed[i] ? 0 : 1 ), roadPath[i + 1].GetEnd( roadPathReversed[i + 1] ? 1 : 0 ) );
-				}
+				for ( int i = 0; i < roadPath.Count - 1; i++ )
+					Assert.global.AreEqual( roadPath[i].GetEnd( roadPathReversed[i] ? 0 : 1 ), roadPath[i + 1].GetEnd( roadPathReversed[i + 1] ? 1 : 0 ) );
 				Assert.global.IsTrue( path.Count == 0 );
 				if ( roadPath.Count > 0 )
 				{
 					Road last = roadPath[roadPath.Count - 1];
-					if ( last && roadPathReversed.Count > 0 )
+					if ( last )
 						Assert.global.IsTrue( last.GetEnd( roadPathReversed[roadPath.Count - 1] ? 0 : 1 ).node == target );
 				}
 			}
