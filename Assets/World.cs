@@ -134,15 +134,7 @@ public class World : MonoBehaviour
 		//	var list = Resources.FindObjectsOfTypeAll<Flag>();
 		//	foreach ( var o in list )
 		//	{
-		//		o.itemsStored = new Versioned();
-		//	}
-		//}
-		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Road>();
-		//	foreach ( var o in list )
-		//	{
-		//		o.watchStartFlag.Attach( o.nodes[0].flag.itemsStored );
-		//		o.watchEndFlag.Attach( o.nodes[o.nodes.Count - 1].flag.itemsStored );
+		//		o.itemsStored.Trigger();
 		//	}
 		//}
 		gameInProgress = true;

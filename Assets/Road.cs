@@ -385,7 +385,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		return null;
 	}
 
-	int cachedJam;
+	public int cachedJam;
 	[JsonIgnore]
 	public int Jam
 	{
@@ -396,6 +396,7 @@ public class Road : Assert.Base, Interface.InputHandler
 
 			if ( watchStartFlag.Check() || watchEndFlag.Check() )
 			{
+				assert.IsNotSelected();
 				cachedJam = 0;
 				for ( int e = 0; e < 2; e++ )
 				{
@@ -403,7 +404,7 @@ public class Road : Assert.Base, Interface.InputHandler
 					for ( int i = 0; i < Flag.maxItems; i++ )
 					{
 						Item t = flag.items[i];
-						if ( t != null && t.Road == this )
+						if ( t != null && t.flag == flag && t.Road == this )
 							cachedJam++;
 					}
 				}
@@ -644,6 +645,18 @@ public class Road : Assert.Base, Interface.InputHandler
 			assert.AreEqual( GetEnd( 0 ).user, workerAtNodes[0] );
 		if ( workerAtNodes[nodes.Count - 1] != null )
 			assert.AreEqual( GetEnd( 1 ).user, workerAtNodes[nodes.Count - 1] );
+		int realJam = 0;
+		for ( int e = 0; e < 2; e++ )
+		{
+			Flag flag = GetEnd( e );
+			for ( int i = 0; i < Flag.maxItems; i++ )
+			{
+				Item t = flag.items[i];
+				if ( t != null && t.flag == flag && t.Road == this )
+					realJam++;
+			}
+		}
+		assert.AreEqual( realJam, Jam );
 	}
 
 	public bool OnMovingOverNode( GroundNode node )

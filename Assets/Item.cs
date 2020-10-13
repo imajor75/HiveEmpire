@@ -194,6 +194,7 @@ public class Item : Assert.Base
 		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad );
 		if ( path != null )
 		{
+			flag?.itemsStored.Trigger();
 			destination = building;
 			building.ItemOnTheWay( this );
 			tripCancelled = false;
@@ -233,9 +234,9 @@ public class Item : Assert.Base
 		if ( destination == null )
 			CancelTrip();	// Why is this needed?
 
-		flag.itemsStored.Trigger();
 		flagTime = World.instance.time;
 		this.flag = flag;
+		flag.itemsStored.Trigger();
 		nextFlag = null;
 		assert.IsNotSelected();
 	}
