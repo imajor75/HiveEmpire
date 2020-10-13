@@ -10,7 +10,7 @@ public class Flag : Assert.Base
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
 	public Worker user;
-	public Road[] roadsStartingHere = new Road[GroundNode.	neighbourCount];
+	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
 	public Building building;
 	static GameObject template;
 	public Versioned itemsStored = new Versioned();
@@ -35,7 +35,7 @@ public class Flag : Assert.Base
     {
 		if ( node.IsBlocking() && node.road == null )
 		{
-			Debug.Log( "That block is already occupied" );
+			Debug.Log( "That node is already occupied" );
 			Destroy( gameObject );
 			return null;
 		}

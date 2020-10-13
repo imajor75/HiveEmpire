@@ -57,7 +57,7 @@ public class Player : ScriptableObject
 			GroundNode node = center.Add( o );
 			if ( node.type != GroundNode.Type.grass || node.owner != null )
 				continue;
-			if ( node.IsBlocking() )
+			if ( node.IsBlocking() || node.Add( Building.flagOffset ).IsBlocking() )
 				continue;
 			float min, max;
 			min = max = node.height;
