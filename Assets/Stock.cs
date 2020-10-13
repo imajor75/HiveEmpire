@@ -92,7 +92,7 @@ public class Stock : Building
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 0 )
+			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.stock );
 			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.stock );
 		}

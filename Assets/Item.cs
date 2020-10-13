@@ -25,6 +25,7 @@ public class Item : Assert.Base
 	public bool tripCancelled;
 	public int born;
 	public int flagTime;
+	const int timeoutAtFlag = 9000;
 
 	public enum Type
     {
@@ -157,24 +158,37 @@ public class Item : Assert.Base
 		if ( worker && !nextFlag )
 			return;
 
+		// Anti-jam action. This can happen if :
+		// 1. item is waiting too much at a flag
+		// 2. flag is in front of a stock
+		// 3. item is not yet routing to this building
+		// 4. worker not yet started coming
+		if ( flag && flag.building as Stock && destination != flag.building && worker == null && timeAtFlag > timeoutAtFlag )
+		{
+			SetTarget( flag.building );
+			return;
+		}
+
 		var priority = ItemDispatcher.Priority.stop;
 		if ( destination == null )
 			priority = ItemDispatcher.Priority.high;
 		else if ( destination as Stock )
 			priority = ItemDispatcher.Priority.stock;
 
-		if ( destination && flag == destination.flag && worker == null )
-		{
-			flag.ReleaseItem( this );
-			Arrived();
-			return;
-		}
-
 		if ( priority == ItemDispatcher.Priority.stop )
 			return;
 
 		assert.IsNotSelected();
 		owner.itemDispatcher.RegisterOffer( this, priority );
+	}
+
+	[JsonIgnore]
+	public int timeAtFlag
+	{
+		get
+		{
+			return World.instance.time - flagTime;
+		}
 	}
 
 	public bool SetTarget( Building building, Building origin = null )
