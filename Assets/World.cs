@@ -8,7 +8,6 @@ using UnityEngine.EventSystems;
 public class World : MonoBehaviour
 {
 	public Ground ground;
-	[JsonIgnore]
 	public float timeFactor = 1;
 	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
@@ -22,6 +21,7 @@ public class World : MonoBehaviour
 	[JsonIgnore]
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
+	static public Shader defaultTextureShader;
 	public bool gameInProgress;
 	public int time;
 
@@ -51,6 +51,7 @@ public class World : MonoBehaviour
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
+		defaultTextureShader = Shader.Find( "Unlit/Transparent" );
 	}
 
 	World()
@@ -131,10 +132,27 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Flag>();
+		//	var list = Resources.FindObjectsOfTypeAll<Path>();
 		//	foreach ( var o in list )
 		//	{
-		//		o.itemsStored.Trigger();
+		//		if ( !o.ready || o.mode != PathFinder.Mode.onRoad )
+		//			continue;
+		//		o.roadPathReversed.Clear();
+		//		for ( int i = 0; i < o.roadPath.Count; i++ )
+		//		{
+		//			if ( o.roadPath[i] == null )
+		//			{
+		//				o.roadPathReversed.Add( false );
+		//				continue;
+		//			}
+
+		//			bool r = false;
+		//			if ( i == o.roadPath.Count - 1 )
+		//				r = o.roadPath[i].nodes[0] == o.target;
+		//			else
+		//				r = o.roadPath[i + 1].GetEnd( 0 ) == o.roadPath[i].GetEnd( 0 ) || o.roadPath[i + 1].GetEnd( 1 ) == o.roadPath[i].GetEnd( 0 );
+		//			o.roadPathReversed.Add( r );
+		//		}
 		//	}
 		//}
 		gameInProgress = true;

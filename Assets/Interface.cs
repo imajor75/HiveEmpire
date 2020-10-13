@@ -50,6 +50,15 @@ public class Interface : Assert.Base
 		Validate();
 	}
 
+	void FixedUpdate()
+	{
+		var o = ItemPanel.materialUIPath.mainTextureOffset;
+		o.y -= 0.015f;
+		if ( o.y < 0 )
+			o.y += 1;
+		ItemPanel.materialUIPath.mainTextureOffset = o;
+	}
+
 	static Sprite LoadSprite( string fileName )
 	{
 		Texture2D tex = Resources.Load<Texture2D>( fileName );
@@ -94,6 +103,7 @@ public class Interface : Assert.Base
 		Workshop.Initialize();
 		Stock.Initialize();
 		GuardHouse.Initialize();
+		ItemPanel.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 			
@@ -440,7 +450,7 @@ public class Interface : Assert.Base
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					Interface.instance.tooltip.SetText( item.type.ToString(), ItemPanel.CreatePathOnMap( item.path ) );
+					Interface.instance.tooltip.SetText( item.type.ToString(), ItemPanel.CreateUIPath( item.path ) );
 				else
 					Interface.instance.tooltip.SetText( itemType.ToString() );
 			}
@@ -1155,6 +1165,15 @@ public class Interface : Assert.Base
 		public Text stats;
 		public Text destination;
 		GameObject mapIcon;
+		public static Material materialUIPath;
+
+		public static void Initialize()
+		{
+			// TODO Why isn't it transparent?
+			materialUIPath = new Material( World.defaultTextureShader );
+			materialUIPath.mainTexture = Resources.Load<Texture2D>( "uipath" );
+			World.SetRenderMode( materialUIPath, World.BlendMode.Transparent );
+		}
 
 		static public ItemPanel Create()
 		{
@@ -1207,7 +1226,7 @@ public class Interface : Assert.Base
 
 				if ( route == null )
 				{
-					route = CreatePathOnMap( item.path );
+					route = CreateUIPath( item.path );
 					route.transform.SetParent( transform );
 				}
 			}
@@ -1217,23 +1236,25 @@ public class Interface : Assert.Base
 				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
 		}
 
-		public static GameObject CreatePathOnMap( Path path )
+		public static GameObject CreateUIPath( Path path )
 		{
 			GameObject routeOnMap = new GameObject();
-			World.SetLayerRecursive( routeOnMap, World.layerIndexMapOnly );
 			routeOnMap.name = "Path on map";
-			routeOnMap.AddComponent<MeshRenderer>().material = new Material( World.defaultColorShader );
+			routeOnMap.AddComponent<MeshRenderer>().material = materialUIPath;
 			var route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
 
 			List<Vector3> vertices = new List<Vector3>();
+			List<Vector2> uvs = new List<Vector2>();
 			List<int> triangles = new List<int>();
-			foreach ( var road in path.roadPath )
+			for ( int j = 0; j < path.roadPath.Count; j++ )
 			{
+				Road road = path.roadPath[j];
+				float uvDir = path.roadPathReversed[j] ? 1f : 0f;
 				for ( int i = 0; i < road.nodes.Count - 1; i++ )
 				{
-					Vector3 start = road.nodes[i].Position() + Vector3.up * 3;
-					Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 3;
-					Vector3 side = (end - start) * 0.06f;
+					Vector3 start = road.nodes[i].Position() + Vector3.up * 0.1f;
+					Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 0.1f;
+					Vector3 side = (end - start) * 0.1f;
 					side = new Vector3( -side.z, side.y, side.x );
 
 					triangles.Add( vertices.Count + 0 );
@@ -1247,11 +1268,17 @@ public class Interface : Assert.Base
 					vertices.Add( start + side );
 					vertices.Add( end - side );
 					vertices.Add( end + side );
+
+					uvs.Add( new Vector2( 0, 6 * uvDir ) );
+					uvs.Add( new Vector2( 1, 6 * uvDir ) );
+					uvs.Add( new Vector2( 0, 6 * (1 - uvDir) ) );
+					uvs.Add( new Vector2( 1, 6 * (1 - uvDir) ) );
 				}
 			}
 
 			route.vertices = vertices.ToArray();
 			route.triangles = triangles.ToArray();
+			route.uv = uvs.ToArray();
 			return routeOnMap;
 		}
 
