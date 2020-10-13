@@ -52,6 +52,7 @@ public class Serializer : JsonSerializer
 		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
 		{
 			var m = type.GetMethod( "Create" );
+			Assert.global.IsNotNull( m, "No Create method in " + type.FullName );
 			Assert.global.AreEqual( m.IsStatic, true );
 			object[] empty = new object[0];
 			return m.Invoke( null, empty );

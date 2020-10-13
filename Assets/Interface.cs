@@ -1058,7 +1058,7 @@ public class Interface : Assert.Base
 			Frame( 0, 0, 200, 80 );
 			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
-			itemCount = Text( 20, -44, 120, 20, "Items" );
+			itemCount = Text( 20, -44, 160, 20, "Items" );
 			World.instance.eye.GrabFocus( this );
 		}
 

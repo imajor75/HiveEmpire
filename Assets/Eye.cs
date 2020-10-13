@@ -15,6 +15,7 @@ public class Eye : MonoBehaviour
 	public float x, y;
 	public float direction;
 	public new Camera camera;
+	[JsonIgnore]
 	public IDirector director;
 	Transform ear;
 
