@@ -8,7 +8,6 @@ using UnityEngine.EventSystems;
 public class World : MonoBehaviour
 {
 	public Ground ground;
-	[JsonIgnore]
 	public float timeFactor = 1;
 	static public System.Random rnd;
 	public List<Player> players = new List<Player>();

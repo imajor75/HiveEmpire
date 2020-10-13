@@ -440,7 +440,7 @@ public class Interface : Assert.Base
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					Interface.instance.tooltip.SetText( item.type.ToString(), ItemPanel.CreatePathOnMap( item.path ) );
+					Interface.instance.tooltip.SetText( item.type.ToString(), ItemPanel.CreateUIPath( item.path ) );
 				else
 					Interface.instance.tooltip.SetText( itemType.ToString() );
 			}
@@ -1207,7 +1207,7 @@ public class Interface : Assert.Base
 
 				if ( route == null )
 				{
-					route = CreatePathOnMap( item.path );
+					route = CreateUIPath( item.path );
 					route.transform.SetParent( transform );
 				}
 			}
@@ -1217,10 +1217,9 @@ public class Interface : Assert.Base
 				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
 		}
 
-		public static GameObject CreatePathOnMap( Path path )
+		public static GameObject CreateUIPath( Path path )
 		{
 			GameObject routeOnMap = new GameObject();
-			World.SetLayerRecursive( routeOnMap, World.layerIndexMapOnly );
 			routeOnMap.name = "Path on map";
 			routeOnMap.AddComponent<MeshRenderer>().material = new Material( World.defaultColorShader );
 			var route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
@@ -1231,9 +1230,9 @@ public class Interface : Assert.Base
 			{
 				for ( int i = 0; i < road.nodes.Count - 1; i++ )
 				{
-					Vector3 start = road.nodes[i].Position() + Vector3.up * 3;
-					Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 3;
-					Vector3 side = (end - start) * 0.06f;
+					Vector3 start = road.nodes[i].Position() + Vector3.up * 0.1f;
+					Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 0.1f;
+					Vector3 side = (end - start) * 0.1f;
 					side = new Vector3( -side.z, side.y, side.x );
 
 					triangles.Add( vertices.Count + 0 );

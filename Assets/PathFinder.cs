@@ -10,6 +10,7 @@ public class PathFinder : ScriptableObject
 	public List<Reached> visited = new List<Reached>();
 	public List<GroundNode> path = new List<GroundNode>();
 	public List<Road> roadPath = new List<Road>();
+	public List<bool> roadPathReversed = new List<bool>();
 	public bool ready = false;
 	public int openNodes;
 	public Mode mode;
@@ -24,6 +25,7 @@ public class PathFinder : ScriptableObject
         public Reached from;
         public bool processed = false;
 		public Road road;
+		public bool reversed;
     }
 
 	public enum Mode
@@ -43,6 +45,7 @@ public class PathFinder : ScriptableObject
 		{
 			path.Clear();
 			roadPath.Clear();
+			roadPathReversed.Clear();
 			ready = true;
 			return true;
 		}
@@ -61,7 +64,7 @@ public class PathFinder : ScriptableObject
         return ready;
     }
 
-    void VisitNode( GroundNode node, float cost, Reached from, Road road = null )
+    void VisitNode( GroundNode node, float cost, Reached from, Road road = null, bool reversed = false )
     {
 		if ( !ignoreFinalObstacle || node != target )
 		{
@@ -83,13 +86,14 @@ public class PathFinder : ScriptableObject
                 visited[i].costG = cost;
                 visited[i].from = from;
 				visited[i].road = road;
+				visited[i].reversed = reversed;
             }
             return;
         }
-        AddNode( node, cost, from, road );
+        AddNode( node, cost, from, road, reversed );
     }
 
-    void AddNode( GroundNode node, float cost, Reached from, Road road = null )
+	void AddNode( GroundNode node, float cost, Reached from, Road road = null, bool reversed = false )
     {
         var n = new Reached();
         n.node = node;
@@ -98,6 +102,7 @@ public class PathFinder : ScriptableObject
         n.costF = n.costG + n.costH;
         n.from = from;
 		n.road = road;
+		n.reversed = reversed;
         node.index = visited.Count;
         visited.Add( n );
         openNodes++;
@@ -135,12 +140,11 @@ public class PathFinder : ScriptableObject
 					continue;
 				int index = road.NodeIndex( r.node );
 				if ( index == 0 )
-					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.Cost, r, road );
+					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.Cost, r, road, false );
 				else
 				{
 					Assert.global.AreEqual( index, road.nodes.Count - 1 );
-					// TODO Calculate the additional cost better based on traffic jam
-					VisitNode( road.nodes[0], r.costG + road.Cost, r, road );
+					VisitNode( road.nodes[0], r.costG + road.Cost, r, road, true );
 				}
 			}
 		}
@@ -158,13 +162,17 @@ public class PathFinder : ScriptableObject
     {
         path.Clear();
 		roadPath.Clear();
+		roadPathReversed.Clear();
         var r = goal;
         do
         {
 			if ( mode == Mode.onRoad )
 			{
 				if ( r.road != null )
+				{
 					roadPath.Insert( 0, r.road );
+					roadPathReversed.Insert( 0, r.reversed );
+				}
 			}
 			else
 				path.Insert( 0, r.node );
@@ -175,18 +183,26 @@ public class PathFinder : ScriptableObject
         ready = true;
         return;
     }
+
 	virtual public void Validate()
 	{
 		if ( ready )
 		{
+			if ( roadPathReversed.Count > 0 )
+				Assert.global.AreEqual( roadPath.Count, roadPathReversed.Count );
 			if ( mode == Mode.onRoad )
 			{
+				if ( roadPathReversed.Count > 0 )
+				{
+					for ( int i = 0; i < roadPath.Count - 1; i++ )
+						Assert.global.AreEqual( roadPath[i].GetEnd( roadPathReversed[i] ? 0 : 1 ), roadPath[i + 1].GetEnd( roadPathReversed[i + 1] ? 1 : 0 ) );
+				}
 				Assert.global.IsTrue( path.Count == 0 );
 				if ( roadPath.Count > 0 )
 				{
 					Road last = roadPath[roadPath.Count - 1];
-					if ( last )
-						Assert.global.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
+					if ( last && roadPathReversed.Count > 0 )
+						Assert.global.IsTrue( last.GetEnd( roadPathReversed[roadPath.Count - 1] ? 0 : 1 ).node == target );
 				}
 			}
 			else
