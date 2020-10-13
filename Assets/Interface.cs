@@ -1004,6 +1004,7 @@ public class Interface : Assert.Base
 			name = "Flag Panel";
 			if ( show )
 				Root.world.eye.FocusOn( flag );
+			Update();
 		}
 
 		void Remove()
@@ -1031,20 +1032,19 @@ public class Interface : Assert.Base
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
 				items[i].SetItem( flag.items[i] );
+				itemTimers[i].enabled = false;
 				if ( flag.items[i] )
 				{
 					if ( flag.items[i].flag && flag.items[i].flag == flag )
 					{
+						itemTimers[i].enabled = true;
 						items[i].color = new Color( 1, 1, 1, 1 );
 						int timeAtFlag = World.instance.time - flag.items[i].flagTime;
 						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / 3000 ), 3 );
 						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / 30000f );
 					}
 					else
-					{
 						items[i].color = new Color( 1, 1, 1, 0.25f );
-						itemTimers[i].rectTransform.sizeDelta = new Vector2( 0, 3 );
-					}
 				}
 			}
 		}
