@@ -346,7 +346,7 @@ public class Worker : Assert.Base
 					boss.itemTable.material = Item.materials[(int)item.type];
 				boss.box?.SetActive( true );
 			}
-			if ( ( pickupTimer -= (int)World.instance.speedModifier ) > 0 )
+			if ( ( pickupTimer -= (int)World.instance.timeFactor ) > 0 )
 				return false;
 
 			if ( destnation != item.destination )
@@ -398,7 +398,7 @@ public class Worker : Assert.Base
 				boss.animator.ResetTrigger( pickupID );
 				boss.animator.SetTrigger( putdownID );
 			}
-			if ( ( putdownTimer -= (int)World.instance.speedModifier ) > 0 )
+			if ( ( putdownTimer -= (int)World.instance.timeFactor ) > 0 )
 				return false;
 
 			boss.itemsDelivered++;
@@ -627,7 +627,7 @@ public class Worker : Assert.Base
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
-			walkProgress += currentSpeed * ground.world.speedModifier; // TODO Speed should depend on the steepness of the road
+			walkProgress += currentSpeed * ground.world.timeFactor; // TODO Speed should depend on the steepness of the road
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;

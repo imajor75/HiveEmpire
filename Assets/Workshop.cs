@@ -70,9 +70,9 @@ public class Workshop : Building
 		}
 		public void FixedUpdate( Workshop boss )
 		{
-			counter += (int)World.instance.speedModifier;
+			counter += (int)World.instance.timeFactor;
 			if ( boss.IsWorking() )
-				workCounter += (int)World.instance.speedModifier;
+				workCounter += (int)World.instance.timeFactor;
 			if ( counter >= timinglength )
 			{
 				float p = (float)workCounter/counter;
@@ -671,7 +671,7 @@ public class Workshop : Building
 		}
 		if ( working )
 		{
-			progress += configuration.processSpeed * ground.world.speedModifier;
+			progress += configuration.processSpeed * ground.world.timeFactor;
 			if ( progress > 1 )
 			{
 				output += configuration.outputStackSize;

@@ -169,9 +169,9 @@ public class Resource : Assert.Base
 
 	void FixedUpdate()
 	{
-		growth += (int)node.ground.world.speedModifier;
-		keepAwayTimer -= (int)node.ground.world.speedModifier;
-		exposed -= (int)node.ground.world.speedModifier;
+		growth += (int)node.ground.world.timeFactor;
+		keepAwayTimer -= (int)node.ground.world.timeFactor;
+		exposed -= (int)node.ground.world.timeFactor;
 		if ( underGround )
 			body?.SetActive( exposed > 0 );
 		if ( type == Type.animalSpawner && spawnTimer-- <= 0 )

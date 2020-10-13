@@ -134,19 +134,19 @@ public class Interface : Assert.Base
 	{
 		GroundNode node = world.eye.FindNodeAt( Input.mousePosition );
 
-		if ( world.speedModifier != 0 )
+		if ( world.timeFactor != 0 )
 		{
 			if ( Input.GetKey( KeyCode.Space ) )
-				world.speedModifier = 5;
+				world.SetTimeFactor( 5 );
 			else
-				world.speedModifier = 1;
+				world.SetTimeFactor( 1 ); 
 		}
 		if ( Input.GetKeyDown( KeyCode.Pause ) )
 		{
-			if ( world.speedModifier > 0 )
-				world.speedModifier = 0;
+			if ( world.timeFactor > 0 )
+				world.SetTimeFactor( 0 );
 			else
-				world.speedModifier = 1;
+				world.SetTimeFactor( 1 );
 		}
 		if ( Input.GetKeyDown( KeyCode.P ) )
 		{

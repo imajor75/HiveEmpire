@@ -9,7 +9,7 @@ public class World : MonoBehaviour
 {
 	public Ground ground;
 	[JsonIgnore]
-	public float speedModifier = 1;
+	public float timeFactor = 1;
 	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
 	static public World instance;
@@ -303,6 +303,14 @@ public class World : MonoBehaviour
 			if ( r.NextDouble() < goldChance )
 				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
 		}
+	}
+
+	public void SetTimeFactor( float factor )
+	{
+		timeFactor = factor;
+		var list = Resources.FindObjectsOfTypeAll<Animator>();
+		foreach ( var o in list )
+			o.speed = factor;
 	}
 
 	public void Validate()

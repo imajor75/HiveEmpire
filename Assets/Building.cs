@@ -121,7 +121,7 @@ abstract public class Building : Assert.Base
 				}
 				return;
 			}
-			progress += 0.001f*boss.ground.world.speedModifier;	// TODO This should be different for each building type
+			progress += 0.001f*boss.ground.world.timeFactor;	// TODO This should be different for each building type
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
 				progress = maxProgress;
