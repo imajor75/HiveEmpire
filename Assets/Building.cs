@@ -77,6 +77,11 @@ abstract public class Building : Assert.Base
 			}
 		}
 
+		public void Remove()
+		{
+			worker?.Remove();
+		}
+
 		public void Update( Building building )
 		{
 			if ( done )
@@ -381,6 +386,8 @@ abstract public class Building : Assert.Base
 
 	public virtual bool Remove()
 	{
+		construction.Remove();
+
 		var list = itemsOnTheWay.GetRange( 0, itemsOnTheWay.Count );
 		foreach ( var item in list )
 			item.CancelTrip();

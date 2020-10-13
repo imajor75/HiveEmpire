@@ -319,11 +319,13 @@ public class Worker : Assert.Base
 	{
 		static public int pickupTimeStart = 100;
 		public Item item;
+		public Building destnation;
 		public int pickupTimer = pickupTimeStart;
 
 		public void Setup( Worker boss, Item item )
 		{
 			base.Setup( boss );
+			destnation = item.destination;
 			this.item = item;
 
 		}
@@ -347,15 +349,23 @@ public class Worker : Assert.Base
 			if ( ( pickupTimer -= (int)World.instance.speedModifier ) > 0 )
 				return false;
 
-			if ( boss.type == Type.haluer && (item.path == null || item.path.Road != boss.road) )  // Item lost destination while hauler was approaching
+			if ( destnation != item.destination )
+			{
+				boss.assert.AreEqual( boss.type, Type.haluer );
 				return ResetBoss();
+			}
 
 			item.flag?.ReleaseItem( item );
 			boss.itemInHands = item;
 			boss.assert.IsTrue( item.worker == boss || item.worker == null );
 			item.worker = boss;
 			if ( item.worker.type == Type.haluer )
-				item.path.NextRoad();
+			{
+				if ( item.path.IsFinished )
+					boss.assert.AreEqual( item.destination.flag.node, boss.node );
+				else
+					item.path.NextRoad();
+			}
 			return true;
 		}
 	}
@@ -953,7 +963,8 @@ public class Worker : Assert.Base
 	{
 		item.assert.IsNotSelected();
 		assert.IsNotNull( road );
-		assert.AreEqual( road, item.path.Road );
+		if ( !item.path.IsFinished )
+			assert.AreEqual( road, item.path.Road );
 		int itemPoint = road.NodeIndex( item.flag.node ), otherPoint = 0;
 		if ( itemPoint == 0 )
 			otherPoint = road.nodes.Count - 1;
@@ -961,7 +972,7 @@ public class Worker : Assert.Base
 
 		ScheduleWalkToRoadPoint( road, itemPoint );
 		SchedulePickupItem( item );
-		if ( item.path.StepsLeft != 0 )
+		if ( !item.path.IsFinished )
 			ScheduleWalkToRoadPoint( road, otherPoint );
 
 		if ( item.path.StepsLeft <= 1 )

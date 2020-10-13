@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class ItemDispatcher : ScriptableObject
 {
@@ -120,6 +121,7 @@ public class ItemDispatcher : ScriptableObject
 
 		public void LateUpdate()
 		{
+			Profiler.BeginSample( "Market" );
 			Priority[] priorities = { Priority.high, Priority.low };
 			foreach ( var priority in priorities )
 			{
@@ -142,6 +144,7 @@ public class ItemDispatcher : ScriptableObject
 
 			requests.Clear();
 			offers.Clear();
+			Profiler.EndSample();
 		}
 
 		bool FindOfferFor( Request request )
@@ -194,7 +197,10 @@ public class ItemDispatcher : ScriptableObject
 			if ( offer.building != null )
 				success = offer.building.SendItem( (Item.Type)itemType, request.building );
 			else if ( offer.item != null )
+			{
+				Assert.global.AreEqual( offer.item.type, itemType );
 				success = offer.item.SetTarget( request.building );
+			}
 
 			if ( !success )
 				return false;

@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Profiling;
 using UnityEngine.UI;
 
 public class Interface : Assert.Base
@@ -46,7 +47,6 @@ public class Interface : Assert.Base
 
 	void LateUpdate()
 	{
-		world.LateUpdate();
 		Validate();
 	}
 
@@ -192,7 +192,9 @@ public class Interface : Assert.Base
 	[Conditional( "DEBUG" )]
 	void Validate()
 	{
+		Profiler.BeginSample( "Validate" );
 		world.Validate();
+		Profiler.EndSample();
 	}
 
 	public class Tooltip : Panel

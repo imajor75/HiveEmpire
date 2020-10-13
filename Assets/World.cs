@@ -102,6 +102,9 @@ public class World : MonoBehaviour
 		players.Add( Player.Create().Setup() );
 		ground.RecalculateOwnership();
 		gameInProgress = true;
+
+		foreach ( var player in players )
+			player.Start();
 	}
 
 	void Start()

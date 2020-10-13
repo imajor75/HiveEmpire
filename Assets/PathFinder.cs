@@ -181,10 +181,13 @@ public class PathFinder : ScriptableObject
 		{
 			if ( mode == Mode.onRoad )
 			{
-				Assert.global.IsTrue( path.Count == 0 && roadPath.Count > 0 );
-				Road last = roadPath[roadPath.Count - 1];
-				if ( last )
-					Assert.global.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
+				Assert.global.IsTrue( path.Count == 0 );
+				if ( roadPath.Count > 0 )
+				{
+					Road last = roadPath[roadPath.Count - 1];
+					if ( last )
+						Assert.global.IsTrue( last.GetEnd( 0 ).node == target || last.GetEnd( 1 ).node == target );
+				}
 			}
 			else
 			{
@@ -244,6 +247,7 @@ public class Path : PathFinder
 		return path[progress++];
 	}
 
+	[JsonIgnore]
 	public bool IsFinished
 	{
 		get
@@ -255,6 +259,7 @@ public class Path : PathFinder
 		}
 	}
 
+	[JsonIgnore]
 	public int StepsLeft
 	{
 		get

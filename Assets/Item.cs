@@ -220,11 +220,15 @@ public class Item : Assert.Base
 	{
 		assert.IsNull( this.flag );
 		assert.AreEqual( flag, nextFlag );
+
 		if ( destination )
-			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ) );
+		{
+			// path.progess is zero if the item was rerouting while in the hands of the hauler
+			assert.IsTrue( path.progress == 0 || flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Arrived at unknown flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
+		}
 
 		worker = null;
-		assert.IsTrue( destination == null || !path.IsFinished );
+		assert.IsTrue( destination == null || !path.IsFinished || destination.flag == flag );
 
 		if ( destination == null )
 			CancelTrip();	// Why is this needed?
@@ -266,6 +270,19 @@ public class Item : Assert.Base
 		}
 	}
 
+	[JsonIgnore]
+	public Road Road
+	{
+		get
+		{
+			if ( path == null )
+				return null;
+			if ( path.IsFinished )
+				return null;
+			return path.Road;
+		}
+	}
+
 	public bool Remove()
 	{
 		CancelTrip();
@@ -291,7 +308,7 @@ public class Item : Assert.Base
 			assert.IsTrue( flag.items.Contains( this ) );
 			if ( destination )
 				assert.IsNotNull( path );
-			if ( destination && !path.Road.invalid && path.IsFinished )
+			if ( destination && !path.IsFinished && !path.Road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}
 		if ( nextFlag )
