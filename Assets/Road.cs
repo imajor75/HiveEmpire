@@ -109,7 +109,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		int direction = last.DirectionTo( node );
 		if ( direction < 0 )
 		{
-			Flag.Create().Setup( node.ground, node, owner );
+			Flag.Create().Setup( node, owner );
 			if ( node.flag )
 			{
 				// Find a path to the flag, and finish the road based on it
@@ -689,6 +689,7 @@ public class Road : Assert.Base, Interface.InputHandler
 
 	public bool OnMovingOverNode( GroundNode node )
 	{
+		Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.road );
 		return true;
 	}
 

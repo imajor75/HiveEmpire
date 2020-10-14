@@ -812,26 +812,26 @@ public class Interface : Assert.Base
 
 		void AddFlag()
 		{
-			if ( Flag.Create().Setup( node.ground, node, node.owner ) != null )
+			if ( Flag.Create().Setup( node, Root.mainPlayer ) != null )
 				Close();
 		}
 
 		void AddStock()
 		{
-			if ( Stock.Create().Setup( node.ground, node, node.owner ) != null )
+			if ( Stock.Create().Setup( node, Root.mainPlayer ) != null )
 				Close();
 		}
 
 		void AddGuardHouse()
 		{
-			if ( GuardHouse.Create().Setup( node.ground, node, node.owner ) != null )
+			if ( GuardHouse.Create().Setup( node, Root.mainPlayer ) != null )
 				Close();
 		}
 
 
 		public void BuildWorkshop( Workshop.Type type )
 		{
-			if ( Workshop.Create().Setup( node.ground, node, node.owner, type ) != null )
+			if ( Workshop.Create().Setup( node, Root.mainPlayer, type ) != null )
 				Close();
 		}
 	}
@@ -892,7 +892,7 @@ public class Interface : Assert.Base
 
 		void Split()
 		{
-			if ( Flag.Create().Setup( node.ground, node, node.owner ) != null )
+			if ( Flag.Create().Setup( node, node.owner ) != null )
 				Close();
 			World.instance.Validate();
 		}
@@ -1319,9 +1319,10 @@ public class Interface : Assert.Base
 		GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
 		GameObject cursorFlag;
 		GameObject cursorBuilding;
-		enum CursorType
+		public enum CursorType
 		{
 			nothing,
+			road,
 			flag,
 			building,
 			total
@@ -1360,6 +1361,8 @@ public class Interface : Assert.Base
 			if ( !mouseOver )
 				return;
 			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
+			if ( cursor )
+				cursor.transform.localPosition = node.Position();
 			if ( !inputHandler.OnMovingOverNode( node ) )
 				inputHandler = this;
 		}
@@ -1382,7 +1385,6 @@ public class Interface : Assert.Base
 				if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
 					t = CursorType.building;
 				SetCursorType( t );
-				cursor.transform.localPosition = node.Position();
 			}
 			return true;
 		}
@@ -1399,8 +1401,7 @@ public class Interface : Assert.Base
 					Assert.global.IsNotNull( cursorTypes[i] );
 				}
 			}
-			cursor.transform.localPosition = node.Position();
-
+			
 			for ( int i = 0; i < cursorTypes.Length; i++ )
 				cursorTypes[i].SetActive( i == (int)cursortype );
 		}

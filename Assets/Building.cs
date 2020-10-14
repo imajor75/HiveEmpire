@@ -26,6 +26,17 @@ abstract public class Building : Assert.Base
 	public static List<Ground.Offset> hugeArea = new List<Ground.Offset>();
 
 	[System.Serializable]
+	public class Configuration
+	{
+		public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
+
+		public int plankNeeded = 2;
+		public int stoneNeeded = 0;
+		public bool flatteningNeeded = true;
+		public bool huge = false;
+	}
+
+	[System.Serializable]
 	public class Construction
 	{
 		public Building boss;
@@ -215,48 +226,42 @@ abstract public class Building : Assert.Base
 		Construction.Initialize();
 	}
 
-	public Building Setup( Ground ground, GroundNode node, Player owner )
+	static public bool IsItGood( GroundNode placeToBuild, Player owner, Configuration configuration )
 	{
-		var area = huge ? hugeArea : singleArea;
+		var area = configuration.huge ? hugeArea : singleArea;
 
 		foreach ( var o in area )
 		{
-			var basis = node.Add( o );
+			var basis = placeToBuild.Add( o );
 			if ( basis.IsBlocking() )
-			{
-				Debug.Log( "Node is already occupied" );
-				Destroy( gameObject );
-				return null;
-			}
+				return false;
 			if ( basis.owner != owner )
-			{
-				Debug.Log( "Node is outside of border" );
-				Destroy( gameObject );
-				return null;
-			}
-			if ( construction.flatteningNeeded )
+				return false;
+			if ( configuration.flatteningNeeded )
 			{
 				foreach ( var b in Ground.areas[1] )
 				{
 					if ( basis.Add( b ).owner != owner )
-					{
-						Debug.Log( "Node perimeter is outside of border" );
-						Destroy( gameObject );
-						return null;
-					}
+						return false;
 				}
 			}
-			if ( basis.type != groundTypeNeeded )
-			{
-				Debug.Log( "Node has different type" );
-				Destroy( gameObject );
-				return null;
-			}
+			if ( basis.type != configuration.groundTypeNeeded )
+				return false;
+		}
+		return Flag.IsItGood( placeToBuild.Add( flagOffset ), owner );
+	}
+
+	public Building Setup( GroundNode node, Player owner, Configuration configuration )
+	{
+		if ( !IsItGood( node, owner, configuration ) )
+		{
+			Destroy( this );
+			return null;
 		}
 		var flagNode = node.Add( flagOffset );
 		Flag flag = flagNode.flag;
 		if ( flag == null )
-			flag = Flag.Create().Setup( ground, flagNode, owner );
+			flag = Flag.Create().Setup( flagNode, owner );
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
@@ -264,13 +269,14 @@ abstract public class Building : Assert.Base
 			return null;
 		}
 
-		this.ground = ground;
+		ground = node.ground;
 		this.flag = flag;
 		this.owner = owner;
 		flag.building = this;
 
 		this.node = node;
 		construction.Setup( this );
+		var area = configuration.huge ? hugeArea : singleArea;
 		foreach ( var o in area )
 		{
 			var basis = node.Add( o );
@@ -424,5 +430,10 @@ abstract public class Building : Assert.Base
 		construction?.Validate();
 		foreach ( var item in itemsOnTheWay )
 			assert.AreEqual( item.destination, this );
+	}
+
+	public bool IsItGood( GroundNode placeToBuildOn, Player owner )
+	{
+		throw new System.NotImplementedException();
 	}
 }

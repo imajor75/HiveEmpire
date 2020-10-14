@@ -8,10 +8,14 @@ public class Stock : Building
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template;
+	static Configuration configuration = new Configuration();
 
 	public static new void Initialize()
 	{
 		template = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
+		configuration.plankNeeded = 2;
+		configuration.stoneNeeded = 2;
+		configuration.flatteningNeeded = true;
 	}
 
 	public static Stock Create()
@@ -22,7 +26,7 @@ public class Stock : Building
 		return buildingObject.AddComponent<Stock>();
 	}
 
-	new public Stock Setup( Ground ground, GroundNode node, Player owner )
+	public Stock Setup( GroundNode node, Player owner )
 	{
 		title = "stock";
 		construction.plankNeeded = 3;
@@ -32,18 +36,18 @@ public class Stock : Building
 
 		while ( content.Count < (int)Item.Type.total )
 			content.Add( 0 );
-		if ( base.Setup( ground, node, owner ) == null )
+		if ( base.Setup( node, owner, configuration ) == null )
 			return null;
 
 		return this;
 	}
 
-	public Stock SetupMain( Ground ground, GroundNode node, Player owner )
+	public Stock SetupMain( GroundNode node, Player owner )
 	{
 		node.owner = owner;
 		foreach ( var o in Ground.areas[1] )
 			node.Add( o ).owner = owner;
-		if ( !Setup( ground, node, owner ) )
+		if ( !Setup( node, owner ) )
 			return null;
 
 		title = "headquarter";
