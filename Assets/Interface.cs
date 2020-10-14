@@ -1368,18 +1368,6 @@ public class Interface : Assert.Base
 		{
 			if ( node != null )
 			{
-				if ( cursor == null )
-				{
-					cursor = GameObject.Instantiate( Resources.Load<GameObject>( "cursor" ) );
-					cursor.transform.SetParent( World.instance.ground.transform );
-					for ( int i = 0; i < cursorTypes.Length; i++ )
-					{
-						cursorTypes[i] = World.FindChildRecursive( cursor.transform, ( (CursorType)i ).ToString() ).gameObject;
-						Assert.global.IsNotNull( cursorTypes[i] );
-					}
-				}
-				cursor.transform.localPosition = node.Position();
-
 				CursorType t = CursorType.nothing;
 				GroundNode flagNode = node.Add( Building.flagOffset );
 				bool hasFlagAround = false, hasFlagAroundFlag = false;
@@ -1393,10 +1381,28 @@ public class Interface : Assert.Base
 					t = CursorType.flag;
 				if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
 					t = CursorType.building;
-				for ( int i = 0; i < cursorTypes.Length; i++ )
-					cursorTypes[i].SetActive( i == (int)t );
+				SetCursorType( t );
+				cursor.transform.localPosition = node.Position();
 			}
 			return true;
+		}
+
+		public void SetCursorType( CursorType cursortype )
+		{
+			if ( cursor == null )
+			{
+				cursor = GameObject.Instantiate( Resources.Load<GameObject>( "cursor" ) );
+				cursor.transform.SetParent( World.instance.ground.transform );
+				for ( int i = 0; i < cursorTypes.Length; i++ )
+				{
+					cursorTypes[i] = World.FindChildRecursive( cursor.transform, ( (CursorType)i ).ToString() ).gameObject;
+					Assert.global.IsNotNull( cursorTypes[i] );
+				}
+			}
+			cursor.transform.localPosition = node.Position();
+
+			for ( int i = 0; i < cursorTypes.Length; i++ )
+				cursorTypes[i].SetActive( i == (int)cursortype );
 		}
 
 		public bool OnNodeClicked( GroundNode node )
