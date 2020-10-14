@@ -699,6 +699,7 @@ public class Interface : Assert.Base
 				int k = 0;
 				for ( int i = 0; i < items.Length; i++ )
 				{
+					items[i].SetType( itemType );
 					if ( i < inStock )
 					{
 						items[i].color = Color.white;
@@ -875,6 +876,7 @@ public class Interface : Assert.Base
 				centerItems.Add( ItemIcon( 90, row ) );
 				centerDirections.Add( Text( 80, row, 60, 20, "" ) );
 			}
+			Selection.activeGameObject = road.gameObject;
 		}
 
 		void Remove()
@@ -941,7 +943,7 @@ public class Interface : Assert.Base
 				var items = flag.items;
 				foreach ( var item in items )
 				{
-					if ( item != null && item.path && item.path.Road == road && item.flag == flag )
+					if ( item != null && item.Road == road && item.flag == flag )
 						counts[(int)item.type]++;
 				}
 				for ( int j = itemsDisplayed - 1; j >= 0; j-- )
@@ -1070,6 +1072,7 @@ public class Interface : Assert.Base
 			item = ItemIcon( 20, -20 );
 			itemCount = Text( 20, -44, 160, 20, "Items" );
 			World.instance.eye.GrabFocus( this );
+			Selection.activeGameObject = worker.gameObject;
 		}
 
 		public void SetCameraTarget( Eye eye )

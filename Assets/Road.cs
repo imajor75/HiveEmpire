@@ -523,6 +523,11 @@ public class Road : Assert.Base, Interface.InputHandler
 		foreach ( var worker in workers )
         {
 			int workerPoint = NodeIndex( worker.node );
+			if ( workerPoint == -1 )
+			{
+				GroundNode flagNode = worker.node.Add( Building.flagOffset );
+				workerPoint = NodeIndex( flagNode );
+			}
 			if ( workerPoint == -1 && worker.atRoad )
 			{
 				assert.AreEqual( flag.node, worker.node );

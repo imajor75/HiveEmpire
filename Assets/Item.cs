@@ -236,10 +236,11 @@ public class Item : Assert.Base
 		assert.IsNull( this.flag );
 		assert.AreEqual( flag, nextFlag );
 
-		if ( destination )
+		if ( destination && path.progress != 0 )
 		{
 			// path.progess is zero if the item was rerouting while in the hands of the hauler
-			assert.IsTrue( path.progress == 0 || flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Arrived at unknown flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
+			assert.IsFalse( path.IsFinished );
+			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Arrived at unknown flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
 		}
 
 		worker = null;

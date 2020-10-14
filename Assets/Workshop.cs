@@ -600,7 +600,7 @@ public class Workshop : Building
 				{
 					buffers[0].stored--;
 					buffers[2].stored--;
-					owner.soldiersProduced++;
+					owner.bowmansProduced++;
 					print( "Bowman produced" );
 				}
 				while ( buffers[3].stored > 0 )
