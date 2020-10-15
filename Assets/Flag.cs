@@ -183,7 +183,7 @@ public class Flag : Assert.Base
 
 	static public bool IsItGood( GroundNode placeToBuildOn, Player owner )
 	{
-		if ( placeToBuildOn.IsBlocking() )
+		if ( placeToBuildOn.IsBlocking( false ) || placeToBuildOn.flag )
 			return false;
 
 		foreach ( var o in Ground.areas[1] )

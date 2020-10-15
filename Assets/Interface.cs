@@ -1322,6 +1322,7 @@ public class Interface : Assert.Base
 		public enum CursorType
 		{
 			nothing,
+			remove,
 			road,
 			flag,
 			building,
@@ -1361,7 +1362,7 @@ public class Interface : Assert.Base
 			if ( !mouseOver )
 				return;
 			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
-			if ( cursor )
+			if ( cursor && node )
 				cursor.transform.localPosition = node.Position();
 			if ( !inputHandler.OnMovingOverNode( node ) )
 				inputHandler = this;
