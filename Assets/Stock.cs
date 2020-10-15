@@ -26,6 +26,11 @@ public class Stock : Building
 		return buildingObject.AddComponent<Stock>();
 	}
 
+	public static bool IsItGood( GroundNode placeToBuild, Player owner )
+	{
+		return Building.IsItGood( placeToBuild, owner, configuration );
+	}
+
 	public Stock Setup( GroundNode node, Player owner )
 	{
 		title = "stock";

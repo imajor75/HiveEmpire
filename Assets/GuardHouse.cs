@@ -18,6 +18,11 @@ public class GuardHouse : Building
 		configuration.flatteningNeeded = false;
 	}
 
+	public static bool IsItGood( GroundNode placeToBuild, Player owner )
+	{
+		return Building.IsItGood( placeToBuild, owner, configuration );
+	}
+
 	public static GuardHouse Create()
 	{
 		return new GameObject().AddComponent<GuardHouse>();

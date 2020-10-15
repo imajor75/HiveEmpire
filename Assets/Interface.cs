@@ -134,10 +134,17 @@ public class Interface : Assert.Base
 		{
 			var myFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
 			if ( myFiles.Count() > 0 )
-				world.Load( myFiles.First().FullName );
+				Load( myFiles.First().FullName );
 		}
 		if ( !world.gameInProgress )
 			world.NewGame( 117274283 );
+	}
+
+	void Load( string file )
+	{
+		world.Load( file );
+		mainPlayer = world.players[0];
+		print( file + " is loaded" );
 	}
 
 	void Update()
@@ -172,9 +179,7 @@ public class Interface : Assert.Base
 				panel.Close();
 			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
-			world.Load( myFile.FullName );
-			mainPlayer = world.players[0];
-			print( myFile.FullName + " is loaded" );
+			Load( myFile.FullName );
 		}
 		if ( Input.GetKeyDown( KeyCode.N ) )
 		{
@@ -792,6 +797,7 @@ public class Interface : Assert.Base
 		{
 			base.Open( node );
 			this.node = node;
+			name = "Node panel";
 
 			Frame( 0, 0, 400, 550, 30 );
 			Button( 360, -20, 20, 20, iconExit ).onClick.AddListener( Close );
@@ -800,14 +806,26 @@ public class Interface : Assert.Base
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				var type = (Workshop.Type)i;
-				Button( 160, row, 200, 20, ( type.ToString() ) ).onClick.AddListener( delegate { BuildWorkshop( type ); } );
+				BuildButton( 160, row, type.ToString(), Workshop.IsItGood( node, Root.mainPlayer, Workshop.GetConfiguration( type ) ), delegate { BuildWorkshop( type ); } );
 				row -= 20;
 			}
-			Button( 20, -220, 140, 20, "Flag" ).onClick.AddListener( AddFlag );
-			Button( 20, -240, 140, 20, "Stock" ).onClick.AddListener( AddStock );
-			Button( 20, -260, 140, 20, "Guardhouse" ).onClick.AddListener( AddGuardHouse );
+			BuildButton( 20, -220, "Flag", Flag.IsItGood( node, Root.mainPlayer ), AddFlag );
+			BuildButton( 20, -240, "Stock", Stock.IsItGood( node, Root.mainPlayer ), AddStock );
+			BuildButton( 20, -260, "Guardhouse", GuardHouse.IsItGood( node, Root.mainPlayer ), AddGuardHouse );
 			if ( node.resource && ( !node.resource.underGround || node.resource.exposed > 0 ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
+		}
+
+		void BuildButton( int x, int y, string title, bool enabled, UnityEngine.Events.UnityAction action )
+		{
+			Button button = Button( x, y, 160, 20, title );
+			button.onClick.AddListener( action );
+			if ( !enabled )
+			{
+				Text text = button.gameObject.GetComponentInChildren<Text>();
+				if ( text )
+					text.color = Color.red;
+			}
 		}
 
 		void AddFlag()
@@ -1003,7 +1021,7 @@ public class Interface : Assert.Base
 				items[i].name = "item " + i;
 				col += iconSize+5;
 			}
-			name = "Flag Panel";
+			name = "Flag panel";
 			if ( show )
 				Root.world.eye.FocusOn( flag );
 			Update();

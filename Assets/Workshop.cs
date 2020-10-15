@@ -359,16 +359,19 @@ public class Workshop : Building
 		return this;
 	}
 
-	void SetupConfiguration()
+	static public Workshop.Configuration GetConfiguration( Type type )
 	{
 		foreach ( var c in configurations )
 		{
 			if ( c.type == type )
-			{
-				configuration = c;
-				break;
-			}
+				return c;
 		}
+		return null;
+	}
+
+	void SetupConfiguration()
+	{
+		configuration = GetConfiguration( type );
 		assert.IsNotNull( configuration );
 
 		groundTypeNeeded = configuration.groundTypeNeeded;

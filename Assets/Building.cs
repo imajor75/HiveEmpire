@@ -431,9 +431,4 @@ abstract public class Building : Assert.Base
 		foreach ( var item in itemsOnTheWay )
 			assert.AreEqual( item.destination, this );
 	}
-
-	public bool IsItGood( GroundNode placeToBuildOn, Player owner )
-	{
-		throw new System.NotImplementedException();
-	}
 }
