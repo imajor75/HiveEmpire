@@ -422,6 +422,7 @@ public class Interface : Assert.Base
 		{
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
+			static GameObject path;
 
 			public void Track()
 			{
@@ -433,6 +434,12 @@ public class Interface : Assert.Base
 
 			public void SetType( Item.Type itemType )
 			{
+				if ( this.itemType == itemType )
+					return;
+
+				Destroy( path );
+				path = null;
+
 				this.itemType = itemType;
 				if ( itemType == Item.Type.unknown )
 				{
@@ -455,7 +462,7 @@ public class Interface : Assert.Base
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					Interface.instance.tooltip.SetText( item.type.ToString(), ItemPanel.CreateUIPath( item.path ) );
+					Interface.instance.tooltip.SetText( item.type.ToString(), path = ItemPanel.CreateUIPath( item.path ) );
 				else
 					Interface.instance.tooltip.SetText( itemType.ToString() );
 			}
@@ -891,8 +898,8 @@ public class Interface : Assert.Base
 				leftNumbers.Add( Text( 40, row, 30, 20, "0" ) );
 				rightNumbers.Add( Text( 150, row, 20, 20, "0" ) );
 				rightItems.Add( ItemIcon( 170, row ) );
-				centerItems.Add( ItemIcon( 90, row ) );
 				centerDirections.Add( Text( 80, row, 60, 20, "" ) );
+				centerItems.Add( ItemIcon( 90, row ) );
 			}
 			Selection.activeGameObject = road.gameObject;
 		}
