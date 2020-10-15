@@ -248,7 +248,8 @@ abstract public class Building : Assert.Base
 			if ( basis.type != configuration.groundTypeNeeded )
 				return false;
 		}
-		return Flag.IsItGood( placeToBuild.Add( flagOffset ), owner );
+		GroundNode flagLocation = placeToBuild.Add( flagOffset );
+		return flagLocation.flag || Flag.IsItGood( flagLocation, owner );
 	}
 
 	public Building Setup( GroundNode node, Player owner, Configuration configuration )

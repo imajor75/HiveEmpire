@@ -131,7 +131,7 @@ public class Item : Assert.Base
 			{
 				if ( path.roadPath[i] == null )
 				{
-					if ( i < path.progress )
+					if ( i < path.progress - 1 )
 						path.roadPath[i] = null;
 					else
 					{
@@ -228,6 +228,7 @@ public class Item : Assert.Base
 
 		destination.ItemOnTheWay( this, true );
 		destination = null;
+		flag?.itemsStored.Trigger();
 		tripCancelled = true;
 	}
 

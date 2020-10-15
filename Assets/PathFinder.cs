@@ -192,7 +192,11 @@ public class PathFinder : ScriptableObject
 			if ( mode == Mode.onRoad )
 			{
 				for ( int i = 0; i < roadPath.Count - 1; i++ )
+				{
+					if ( roadPath[i] == null || roadPath[i + 1] == null )
+						continue;
 					Assert.global.AreEqual( roadPath[i].GetEnd( roadPathReversed[i] ? 0 : 1 ), roadPath[i + 1].GetEnd( roadPathReversed[i + 1] ? 1 : 0 ) );
+				}
 				Assert.global.IsTrue( path.Count == 0 );
 				if ( roadPath.Count > 0 )
 				{

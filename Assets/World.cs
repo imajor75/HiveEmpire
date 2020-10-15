@@ -169,7 +169,7 @@ public class World : MonoBehaviour
 		using ( var sw = new StreamWriter( fileName ) )
 		using ( JsonTextWriter writer = new JsonTextWriter( sw ) )
 		{
-			writer.Formatting = Formatting.Indented;
+			//writer.Formatting = Formatting.Indented;
 			serializer.Serialize( writer, this );
 		}
 	}

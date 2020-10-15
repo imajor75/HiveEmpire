@@ -532,19 +532,22 @@ public class Road : Assert.Base, Interface.InputHandler
 		foreach ( var worker in workers )
         {
 			int workerPoint = NodeIndex( worker.node );
+			if ( flag.node == worker.node )
+			{
+				assert.AreEqual( workerPoint, -1 );
+				workerPoint = splitPoint;
+			}
 			if ( workerPoint == -1 )
 			{
 				GroundNode flagNode = worker.node.Add( Building.flagOffset );
 				workerPoint = NodeIndex( flagNode );
+				assert.AreNotEqual( workerPoint, -1 );
 			}
-			if ( workerPoint == -1 && worker.atRoad )
+			if ( worker.atRoad && splitPoint == workerPoint )
 			{
-				assert.AreEqual( flag.node, worker.node );
-				workerPoint = splitPoint;
 				flag.user = worker;
 				worker.exclusiveFlag = flag;
 			}
-
 			if ( workerPoint <= splitPoint )
 			{
 				first.workers.Add( worker );

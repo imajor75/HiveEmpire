@@ -451,6 +451,22 @@ public class Worker : Assert.Base
 		}
 	}
 
+	public class Wait : Task
+	{
+		public int time;
+
+		public void Setup( Worker boss, int time )
+		{
+			base.Setup( boss );
+			this.time = time;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			return time-- > 0;
+		}
+	}
+
 	public enum Type
 	{
 		haluer,
@@ -875,80 +891,63 @@ public class Worker : Assert.Base
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNeighbour>();
 		instance.Setup( this, target );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
 		instance.Setup( this, target, ignoreFinalObstacle );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWalkToFlag( Flag target, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToFlag>();
 		instance.Setup( this, target );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWalkToRoadPoint( Road road, int target, bool exclusive = true, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
 		instance.Setup( this, road, target, exclusive );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWalkToRoadNode( Road road, GroundNode target, bool exclusive = true, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
 		instance.Setup( this, road, road.NodeIndex( target ), exclusive );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
 	}
 
 	public void SchedulePickupItem( Item item, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<PickupItem>();
 		instance.Setup( this, item );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleDeliverItem( Item item = null, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<DeliverItem>();
 		instance.Setup( this, item );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleStartWorkingOnRoad( Road road, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<StartWorkingOnRoad>();
 		instance.Setup( this, road );
-		if ( first )
-			taskQueue.Insert( 0, instance );
-		else
-			taskQueue.Add( instance );
+		ScheduleTask( instance, first );
+	}
+
+	public void ScheduleWait( int time, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<Wait>();
+		instance.Setup( this, time );
+		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleTask( Task task, bool first = false )

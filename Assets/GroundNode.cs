@@ -166,10 +166,13 @@ public class GroundNode : Assert.Base
 	{
 		if ( building )
 			return true;
-		if ( resource && !resource.underGround )
+		if ( resource && !resource.underGround && resource.type != Resource.Type.cornfield )
 			return true;
 		if ( !roadsBlocking )
 			return false;
+
+		if ( resource && resource.type == Resource.Type.cornfield )
+			return true;
 
 		return flag || road;
 	}

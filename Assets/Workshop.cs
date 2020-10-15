@@ -558,11 +558,12 @@ public class Workshop : Building
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
-						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
+						if ( place.IsBlocking( true ) || place.fixedHeight || place.type != GroundNode.Type.grass )
 							continue;
 						PlantAt( place, Resource.Type.cornfield );
 						return;
 					}
+					worker.ScheduleWait( 300 );
 				}
 				break;
 			}
@@ -576,11 +577,22 @@ public class Workshop : Building
 						int randomOffset = World.rnd.Next( o.Count );
 						int x = (i + randomOffset) % o.Count;
 						GroundNode place = node.Add( o[x] );
-						if ( place.building || place.flag || place.road || place.fixedHeight || place.resource || place.type != GroundNode.Type.grass )
-							continue;
+						{
+							if ( place.IsBlocking( true ) || place.type != GroundNode.Type.grass || place.fixedHeight )
+								continue;
+							int blockedAdjacentNodes = 0;
+							foreach ( var j in Ground.areas[1] )
+							{
+								if ( place.Add( j ).IsBlocking() )
+									blockedAdjacentNodes++;
+							}
+							if ( blockedAdjacentNodes >= 3 )
+								continue;
+						}
 						PlantAt( place, Resource.Type.tree );
 						return;
 					}
+					worker.ScheduleWait( 300 );
 				}
 				break;
 			}
