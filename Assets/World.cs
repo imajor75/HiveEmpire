@@ -51,7 +51,7 @@ public class World : MonoBehaviour
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
-		defaultTextureShader = Shader.Find( "Unlit/Transparent" );
+		defaultTextureShader = Shader.Find( "Unlit/Texture" );
 	}
 
 	World()

@@ -422,7 +422,7 @@ public class Interface : Assert.Base
 		{
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
-			static GameObject path;
+			GameObject path;
 
 			public void Track()
 			{
@@ -448,6 +448,13 @@ public class Interface : Assert.Base
 				}
 				enabled = true;
 				sprite = Item.sprites[(int)itemType];
+			}
+
+			new void OnDestroy()
+			{
+				base.OnDestroy();
+				Destroy( path );
+				path = null;
 			}
 
 			public void SetItem( Item item )
@@ -593,7 +600,9 @@ public class Interface : Assert.Base
 		public Building building;
 		public void Open( Building building )
 		{
+#if DEBUG
 			Selection.activeGameObject = building.gameObject;
+#endif
 			base.Open( building.node );
 			this.building = building;
 		}
@@ -901,7 +910,9 @@ public class Interface : Assert.Base
 				centerDirections.Add( Text( 80, row, 60, 20, "" ) );
 				centerItems.Add( ItemIcon( 90, row ) );
 			}
+#if DEBUG
 			Selection.activeGameObject = road.gameObject;
+#endif
 		}
 
 		void Remove()
@@ -1011,7 +1022,9 @@ public class Interface : Assert.Base
 
 		public void Open( Flag flag, bool show = false )
 		{
+#if DEBUG
 			Selection.activeGameObject = flag.gameObject;
+#endif
 			base.Open( flag.node );
 			this.flag = flag;
 			int col = 16;
@@ -1097,7 +1110,9 @@ public class Interface : Assert.Base
 			item = ItemIcon( 20, -20 );
 			itemCount = Text( 20, -44, 160, 20, "Items" );
 			World.instance.eye.GrabFocus( this );
+#if DEBUG
 			Selection.activeGameObject = worker.gameObject;
+#endif
 		}
 
 		public void SetCameraTarget( Eye eye )
@@ -1233,7 +1248,9 @@ public class Interface : Assert.Base
 			mapIcon.name = "Map icon";
 			mapIcon.transform.Rotate( 90, 0, 0 );
 			mapIcon.transform.localScale = Vector3.one * 0.5f;
+#if DEBUG
 			Selection.activeGameObject = item.gameObject;
+#endif
 			World.instance.eye.GrabFocus( this );
 		}
 

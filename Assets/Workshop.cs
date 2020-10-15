@@ -291,7 +291,7 @@ public class Workshop : Building
 
 	public static new void Initialize()
 	{
-		using ( var sw = new StreamReader( "workshops.json" ) )
+		using ( var sw = new StreamReader( "Assets/StreamingAssets/workshops.json" ) )
 		using ( var reader = new JsonTextReader( sw ) )
 		{
 			var serializer = JsonSerializer.Create();
@@ -803,11 +803,13 @@ public class Workshop : Building
 
 	void OnDrawGizmos()
 	{
+#if DEBUG
 		if ( Selection.Contains( gameObject ) && resourcePlace != null )
 		{
 			Gizmos.color = Color.red;
 			Gizmos.DrawLine( node.Position() + Vector3.up * GroundNode.size, resourcePlace.Position() );
 		}
+#endif
 	}
 
 	public override void Validate()

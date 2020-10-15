@@ -53,6 +53,7 @@ public class GroundNode : Assert.Base
 
 	void OnDrawGizmos()
 	{
+#if DEBUG
 		Vector3 position = Position();
 		if ( ( position - SceneView.lastActiveSceneView.camera.transform.position ).magnitude > 10 )
 			return;
@@ -60,6 +61,7 @@ public class GroundNode : Assert.Base
 		Gizmos.color = Color.blue;
 		Gizmos.DrawCube( position, Vector3.one * 0.1f );
 		Handles.Label( position, x.ToString() + ":" + y.ToString() );
+#endif
 	}
 
 	public Vector3 Position()

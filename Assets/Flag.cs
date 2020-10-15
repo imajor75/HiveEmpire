@@ -183,6 +183,9 @@ public class Flag : Assert.Base
 
 	static public bool IsItGood( GroundNode placeToBuildOn, Player owner )
 	{
+		if ( placeToBuildOn.type == GroundNode.Type.underWater )
+			return false;
+
 		if ( placeToBuildOn.IsBlocking( false ) || placeToBuildOn.flag )
 			return false;
 

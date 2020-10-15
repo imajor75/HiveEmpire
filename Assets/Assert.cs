@@ -132,8 +132,10 @@ public class Assert
 	[Conditional( "DEBUG" )]
 	public void IsNotSelected()
 	{
+#if DEBUG
 		if ( Selection.Contains( boss.gameObject ) )
 			UnityEngine.Debug.Log( Caller( 2 ) + " on selected" );
+#endif
 	}
 
 	void Failed( string message )
@@ -145,6 +147,7 @@ public class Assert
 		if ( message != "" )
 			UnityEngine.Debug.LogAssertion( message );
 
+#if DEBUG
 		if ( boss != null && !problemSelected )
 		{
 			Selection.activeGameObject = boss.gameObject;
@@ -152,6 +155,7 @@ public class Assert
 		}
 
 		EditorApplication.isPaused = true;
+#endif
 		throw new System.Exception();
 	}
 

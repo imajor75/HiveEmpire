@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 [SelectionBase]
 public class Worker : Assert.Base
@@ -183,7 +184,7 @@ public class Worker : Assert.Base
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
 			if ( currentPoint == -1 )
-				return true;	// Task failed
+				return true;    // Task failed
 			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.nodes.Count );
 			if ( currentPoint == targetPoint )
 				return true;
@@ -412,7 +413,7 @@ public class Worker : Assert.Base
 				if ( flag )
 					item.ArrivedAt( flag );
 				else
-					item.Remove();	// This happens when the previous walk tasks failed, and the worker couldn't reach the target
+					item.Remove();  // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
 			boss.itemInHands = null;
 
@@ -439,7 +440,7 @@ public class Worker : Assert.Base
 			}
 			int i = road.NodeIndex( boss.node );
 			if ( i < 0 || boss.node.flag != null )
-				return true;	// Task failed
+				return true;    // Task failed
 			boss.assert.IsFalse( boss.atRoad );
 			if ( road.workerAtNodes[i] == null )
 			{
@@ -622,10 +623,11 @@ public class Worker : Assert.Base
 		mapObject.GetComponent<MeshRenderer>().material = mapMaterial = new Material( World.defaultShader );
 	}
 
+	// Distance the worker is taking in a single frame (0.02 sec)
 	public static float SpeedBetween( GroundNode a, GroundNode b )
 	{
 		float heightDifference = Math.Abs( a.height - b.height );
-		float time = 2f + heightDifference * 4f;
+		float time = 2f + heightDifference * 4f;	// Number of seconds it takes for the worker to reach the other node
 		return 1 / time / 50;
 	}
 
@@ -656,6 +658,7 @@ public class Worker : Assert.Base
 
 		if ( walkTo == null )
 		{
+			Profiler.BeginSample( "Tasks" );
 			if ( taskQueue.Count > 0 )
 			{
 				// We need to remember the task, because during the call to ExecuteFrame the task might be removed from the queue
@@ -663,9 +666,14 @@ public class Worker : Assert.Base
 				if ( task.ExecuteFrame() )
 					taskQueue.Remove( task );
 			}
+			Profiler.EndSample();
 		}
 		if ( IsIdle() )
+		{
+			Profiler.BeginSample( "FindTask" );
 			FindTask();
+			Profiler.EndSample();
+		}
 		UpdateBody();
 		UpdateOnMap();
 	}
@@ -756,6 +764,7 @@ public class Worker : Assert.Base
 		assert.IsTrue( IsIdle() );
 		if ( road != null )
 		{
+			Profiler.BeginSample( "Road" );
 			if ( !atRoad )
 			{
 				ScheduleWalkToNode( road.CenterNode(), false );
@@ -818,7 +827,7 @@ public class Worker : Assert.Base
 			for ( int i = 0; i < d.Count; i++ )
 			{
 				GroundNode t = node.Add( d[(i+r)%d.Count] );
-				if ( t.building || t.resource )
+				if ( t.building || t.resource || t.type == GroundNode.Type.underWater )
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
