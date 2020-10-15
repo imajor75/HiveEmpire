@@ -630,6 +630,7 @@ public class Interface : Assert.Base
 			int height = 150+workshop.buffers.Count * iconSize * 3 / 2;
 			Frame( 0, 0, 240, height );
 			Button( 210, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 170, 30 - height, 20, 20, iconHauler ).onClick.AddListener( ShowWorker );
 			Button( 190, 30 - height, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
@@ -668,6 +669,11 @@ public class Interface : Assert.Base
 		{
 			if ( workshop && workshop.Remove() )
 				Close();
+		}
+
+		void ShowWorker()
+		{
+			WorkerPanel.Create().Open( workshop.worker );
 		}
 
 		public override void Update()

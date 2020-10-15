@@ -464,7 +464,8 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
-			return time-- > 0;
+			time -= (int)World.instance.timeFactor;
+			return time < 0;
 		}
 	}
 
@@ -839,6 +840,7 @@ public class Worker : Assert.Base
 
 		if ( building != null && node != building.node )
 		{
+			ScheduleWait( 300 );
 			if ( node.flag )	// TODO Do something if the worker can't get home
 				ScheduleWalkToFlag( building.flag );
 			else
