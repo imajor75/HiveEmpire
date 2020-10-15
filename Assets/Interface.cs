@@ -189,8 +189,13 @@ public class Interface : Assert.Base
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )
 		{
-			if ( panels.Count > 0 )
+			for ( int i = panels.Count - 1; i >= 0; i-- )
+			{
+				if ( !panels[i].escCloses )
+					continue;
 				panels[panels.Count - 1].Close();
+				break;
+			}
 		}
 		if ( Input.GetKeyDown( KeyCode.M ) )
 			Map.Create().Open( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) );
@@ -225,6 +230,7 @@ public class Interface : Assert.Base
 		public void Open()
 		{
 			base.Open();
+			escCloses = false;
 			name = "Tooltip";
 			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
 
@@ -263,6 +269,7 @@ public class Interface : Assert.Base
 		public bool followTarget = true;
 		public Image frame;
 		public Interface cachedRoot;
+		public bool escCloses = true;
 
 		public static int itemIconBorderSize = 2;
 

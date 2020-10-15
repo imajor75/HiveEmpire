@@ -409,11 +409,10 @@ public class Worker : Assert.Base
 				item.Arrived();
 			else
 			{
-				Flag flag = boss.node.flag;
-				if ( flag )
-					item.ArrivedAt( flag );
+				if ( boss.node.flag == item.nextFlag )
+					item.ArrivedAt( item.nextFlag );
 				else
-					item.Remove();  // This happens when the previous walk tasks failed, and the worker couldn't reach the target
+					return ResetBoss(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
 			boss.itemInHands = null;
 
@@ -845,7 +844,20 @@ public class Worker : Assert.Base
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
-			ScheduleWalkToNeighbour( building.node );
+			bool failedDelivery = false;
+			if ( itemInHands )
+			{
+				if ( building.flag.FreeSpace() > 0 )
+				{
+					building.flag.ReserveItem( itemInHands );
+					ScheduleDeliverItem( itemInHands );
+				}
+				else
+					failedDelivery = true;
+				if ( !failedDelivery )
+					ScheduleWalkToNeighbour( building.node );
+			}
+
 			return;
 		}
 
