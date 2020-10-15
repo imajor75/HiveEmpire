@@ -30,7 +30,7 @@ public class Workshop : Building
 	public static int mineOreRestTime = 6000;
 
 	[System.Serializable]
-	public class Configuration
+	public new class Configuration : Building.Configuration
 	{
 		[System.Serializable]
 		public class Input
@@ -40,12 +40,6 @@ public class Workshop : Building
 			public int stackSize = 1;
 		}
 		public Type type;
-		public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
-
-		public int plankNeeded = 2;
-		public int stoneNeeded = 0;
-		public bool flatteningNeeded = true;
-		public bool huge = false;
 
 		public Resource.Type gatheredResource = Resource.Type.unknown;
 		public int gatheringRange = 8;
@@ -351,7 +345,7 @@ public class Workshop : Building
 		return buildingObject.AddComponent<Workshop>();
 	}
 
-	public Workshop Setup( Ground ground, GroundNode node, Player owner, Type type )
+	public Workshop Setup( GroundNode node, Player owner, Type type )
 	{
 		this.type = type;
 		title = type.ToString();
@@ -359,7 +353,7 @@ public class Workshop : Building
 
 		SetupConfiguration();
 
-		if ( Setup( ground, node, owner ) == null )
+		if ( Setup( node, owner, configuration ) == null )
 			return null;
 
 		return this;

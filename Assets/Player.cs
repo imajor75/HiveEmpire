@@ -83,7 +83,7 @@ public class Player : ScriptableObject
 
 		Assert.global.IsNull( mainBuilding );
 		mainBuilding = Stock.Create();
-		mainBuilding.SetupMain( World.instance.ground, best, this );
+		mainBuilding.SetupMain( best, this );
 		World.instance.eye.FocusOn( mainBuilding.node );
 	}
 

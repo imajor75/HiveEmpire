@@ -8,10 +8,14 @@ public class GuardHouse : Building
 	public bool ready;
 	public int influence = 8;
 	public static GameObject template;
+	static Configuration configuration = new Configuration();
 
 	public static new void Initialize()
 	{
 		template = (GameObject)Resources.Load( "WatchTower/Tower" );
+		configuration.plankNeeded = 2;
+		configuration.stoneNeeded = 2;
+		configuration.flatteningNeeded = false;
 	}
 
 	public static GuardHouse Create()
@@ -19,12 +23,12 @@ public class GuardHouse : Building
 		return new GameObject().AddComponent<GuardHouse>();
 	}
 
-	public new GuardHouse Setup( Ground ground, GroundNode node, Player owner )
+	public GuardHouse Setup( GroundNode node, Player owner )
 	{
 		construction.plankNeeded = 2;
 		title = "guardhouse";
 		height = 2;
-		if ( base.Setup( ground, node, owner ) == null )
+		if ( base.Setup( node, owner, configuration ) == null )
 			return null;
 
 		return this;

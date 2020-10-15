@@ -16,7 +16,6 @@ public class Flag : Assert.Base
 	public Versioned itemsStored = new Versioned();
 	MeshRenderer itemTable;
 
-
 	static public void Initialize()
 	{
 		template = (GameObject)Resources.Load( "Tresure_box/tresure_box_flag" );
@@ -31,32 +30,14 @@ public class Flag : Assert.Base
 		return flagObject.AddComponent<Flag>();
 	}
 
-	public Flag Setup( Ground ground, GroundNode node, Player owner )
+	public Flag Setup( GroundNode node, Player owner )
     {
-		if ( node.IsBlocking() && node.road == null )
+		if ( !IsItGood( node, owner ) )
 		{
-			Debug.Log( "That node is already occupied" );
-			Destroy( gameObject );
+			Destroy( this );
 			return null;
 		}
-		if ( node.owner != owner )
-		{
-			Debug.Log( "Node is outside of border" );
-			Destroy( gameObject );
-			return null;
-		}
-        bool hasAdjacentFlag = false;
-		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
-		{
-			if ( node.Neighbour( i ).flag )
-				hasAdjacentFlag = true;
-		}
-        if ( hasAdjacentFlag )
-        {
-            Debug.Log("Another flag is too close");
-			Destroy( gameObject );
-			return null;
-        }
+
 		node.flag = this;
         this.node = node;
 		this.owner = owner;
@@ -198,6 +179,21 @@ public class Flag : Assert.Base
 			assert.IsTrue( user.atRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}
+	}
+
+	static public bool IsItGood( GroundNode placeToBuildOn, Player owner )
+	{
+		if ( placeToBuildOn.IsBlocking( false ) || placeToBuildOn.flag )
+			return false;
+
+		foreach ( var o in Ground.areas[1] )
+			if ( placeToBuildOn.Add( o ).flag )
+				return false;
+
+		if ( placeToBuildOn.owner != owner )
+			return false;
+
+		return true;
 	}
 }
  

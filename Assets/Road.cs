@@ -5,6 +5,8 @@ using UnityEngine.Assertions;
 using System;
 using Newtonsoft.Json;
 using JetBrains.Annotations;
+using UnityEngine.VR;
+using UnityEngine.XR;
 
 [SelectionBase]
 public class Road : Assert.Base, Interface.InputHandler
@@ -109,7 +111,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		int direction = last.DirectionTo( node );
 		if ( direction < 0 )
 		{
-			Flag.Create().Setup( node.ground, node, owner );
+			Flag.Create().Setup( node, owner );
 			if ( node.flag )
 			{
 				// Find a path to the flag, and finish the road based on it
@@ -159,7 +161,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		if ( node.flag )
 		{
 			nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
-			node.flag.roadsStartingHere[node.DirectionTo( nodes[nodes.Count - 2] )] = this;
+			node.flag.roadsStartingHere[node.DirectionTo( GetNodeFromEnd( 1 ) )] = this;
 			ready = true;
 			return true;
 		}
@@ -169,11 +171,16 @@ public class Road : Assert.Base, Interface.InputHandler
 		return false;
 	}
 
+	GroundNode GetNodeFromEnd( int index )
+	{
+		return nodes[nodes.Count - 1 - index];
+	}
+
 	public Flag GetEnd( int side )
 	{
 		if ( side == 0 )
 			return nodes[0].flag;
-		return nodes[nodes.Count - 1].flag;
+		return GetNodeFromEnd( 0 ).flag;
 	}
 
 	public static void CancelNew()
@@ -378,7 +385,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		{
 			if ( nodes[0] == node )
 				return 0;
-			if ( nodes[nodes.Count - 1] == node )
+			if ( GetNodeFromEnd( 0 ) == node )
 				return nodes.Count - 1;
 			return -1;
 		}
@@ -460,7 +467,7 @@ public class Road : Assert.Base, Interface.InputHandler
 	void AttachWatches()
 	{
 		watchStartFlag.Attach( nodes[0].flag.itemsStored );
-		watchEndFlag.Attach( nodes[nodes.Count - 1].flag.itemsStored );
+		watchEndFlag.Attach( GetNodeFromEnd( 0 ).flag.itemsStored );
 	}
 
 	public void CreateCurves()
@@ -569,7 +576,7 @@ public class Road : Assert.Base, Interface.InputHandler
 	void RegisterOnGround()
 	{
 		nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
-		nodes[nodes.Count - 1].flag.roadsStartingHere[nodes[nodes.Count - 1].DirectionTo( nodes[nodes.Count - 2] )] = this;
+		nodes[nodes.Count - 1].flag.roadsStartingHere[GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) )] = this;
 		for ( int i = 1; i < nodes.Count - 1; i++ )
 		{
 			nodes[i].road = this;
@@ -688,7 +695,33 @@ public class Road : Assert.Base, Interface.InputHandler
 	}
 
 	public bool OnMovingOverNode( GroundNode node )
-	{
+ 	{
+		GroundNode last = newRoad.GetNodeFromEnd( 0 );
+		if ( node == last )
+		{
+			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
+			return true;
+		}
+
+		if ( node.flag )
+		{
+			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			return true;
+		}
+
+		if ( node.DistanceFrom( last ) == 1 )
+		{
+			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.road );
+			return true;
+		}
+
+		if ( Flag.IsItGood( node, owner ) )
+		{
+			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			return true;
+		}
+
+		Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.nothing );
 		return true;
 	}
 
