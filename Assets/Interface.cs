@@ -756,7 +756,7 @@ public class Interface : Assert.Base
 					{
 						if ( i < inStock + onTheWay )
 						{
-							items[i].color = new Color( 1, 1, 1, 0.25f );
+							items[i].color = new Color( 1, 1, 1, 0.4f );
 							while ( itemsOnTheWay[k].type != itemType )
 								k++;
 							items[i].item = itemsOnTheWay[k++];
@@ -1123,7 +1123,7 @@ public class Interface : Assert.Base
 						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / 30000f );
 					}
 					else
-						items[i].color = new Color( 1, 1, 1, 0.25f );
+						items[i].color = new Color( 1, 1, 1, 0.4f );
 				}
 			}
 		}

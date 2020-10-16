@@ -880,9 +880,9 @@ public class Worker : Assert.Base
 				}
 				else
 					failedDelivery = true;
-				if ( !failedDelivery )
-					ScheduleWalkToNeighbour( building.node );
 			}
+			if ( !failedDelivery )
+				ScheduleWalkToNeighbour( building.node );
 
 			return;
 		}
