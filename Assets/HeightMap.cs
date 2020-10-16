@@ -155,6 +155,7 @@ public class HeightMap : ScriptableObject
 		value = value * ( 1 - weight ) + randomValue * weight;
 	}
 
+	[JsonIgnore]
 	public Texture2D mapTexture;
 	void OnValidate()
 	{

@@ -80,7 +80,17 @@ public class Serializer : JsonSerializer
 	object Object()
 	{
 		if ( instance == null )
-			instance = CreateObject( type );
+		{
+			try
+			{
+				instance = CreateObject( type );
+			}
+			catch ( SystemException exception )
+			{
+				Assert.global.IsTrue( false, "Error creating object of type " + type.FullName + " (line " + ( (JsonTextReader)reader ).LineNumber + " of " + reader.Path + ")" );
+				throw exception;
+			}
+		}
 
 		if ( index > 0 )
 		{
