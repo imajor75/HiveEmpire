@@ -224,7 +224,7 @@ public class Worker : Assert.Base
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
-					if ( other.atRoad && other.road != road && other.road.workers.Count > 1 && other.IsIdle() )
+					if ( other.atRoad && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
 						other.Remove();
 					else
 						return false;

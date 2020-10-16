@@ -759,7 +759,7 @@ public class Interface : Assert.Base
 							items[i].color = new Color( 1, 1, 1, 0.25f );
 							while ( itemsOnTheWay[k].type != itemType )
 								k++;
-							items[i].item = itemsOnTheWay[k];
+							items[i].item = itemsOnTheWay[k++];
 						}
 						else
 							items[i].color = new Color( 1, 1, 1, 0 );

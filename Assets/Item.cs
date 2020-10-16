@@ -172,7 +172,7 @@ public class Item : Assert.Base
 		var priority = ItemDispatcher.Priority.stop;
 		if ( destination == null )
 			priority = ItemDispatcher.Priority.high;
-		else if ( destination as Stock )
+		else if ( destination as Stock && destination.construction.done )
 			priority = ItemDispatcher.Priority.stock;
 
 		if ( priority == ItemDispatcher.Priority.stop )

@@ -728,6 +728,19 @@ public class Road : Assert.Base, Interface.InputHandler
 		return true;
 	}
 
+	[JsonIgnore]
+	public int ActiveWorkerCount
+	{
+		get
+		{
+			int activeWorkers = 0;
+			foreach ( var worker in workers )
+				if ( worker.atRoad )
+					activeWorkers++;
+			return activeWorkers;
+		}
+	}
+
 	public bool OnNodeClicked( GroundNode node )
 	{
 		return AddNodeToNew( node.ground, node, owner );
