@@ -176,7 +176,7 @@ abstract public class Building : Assert.Base
 				}
 				return true;			}
 
-			boss.assert.IsTrue( false );
+			boss.assert.IsTrue( false, "Item is not expected (" + item.type + ")" );
 			return false;
 		}
 

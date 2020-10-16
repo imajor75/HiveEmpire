@@ -163,7 +163,7 @@ public class Item : Assert.Base
 		// 2. flag is in front of a stock
 		// 3. item is not yet routing to this building
 		// 4. worker not yet started coming
-		if ( flag && flag.building as Stock && destination != flag.building && worker == null && timeAtFlag > timeoutAtFlag )
+		if ( flag && flag.building as Stock && flag.building.construction.done && destination != flag.building && worker == null && timeAtFlag > timeoutAtFlag )
 		{
 			SetTarget( flag.building );
 			return;
