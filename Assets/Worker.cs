@@ -347,7 +347,7 @@ public class Worker : Assert.Base
 					boss.itemTable.material = Item.materials[(int)item.type];
 				boss.box?.SetActive( true );
 			}
-			if ( ( pickupTimer -= (int)World.instance.timeFactor ) > 0 )
+			if ( ( pickupTimer -= World.TimeStack ) > 0 )
 				return false;
 
 			if ( destnation != item.destination )
@@ -399,7 +399,7 @@ public class Worker : Assert.Base
 				boss.animator.ResetTrigger( pickupID );
 				boss.animator.SetTrigger( putdownID );
 			}
-			if ( ( putdownTimer -= (int)World.instance.timeFactor ) > 0 )
+			if ( ( putdownTimer -= World.TimeStack ) > 0 )
 				return false;
 
 			boss.itemsDelivered++;
@@ -409,11 +409,10 @@ public class Worker : Assert.Base
 				item.Arrived();
 			else
 			{
-				Flag flag = boss.node.flag;
-				if ( flag )
-					item.ArrivedAt( flag );
+				if ( boss.node.flag == item.nextFlag )
+					item.ArrivedAt( item.nextFlag );
 				else
-					item.Remove();  // This happens when the previous walk tasks failed, and the worker couldn't reach the target
+					return ResetBoss(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
 			boss.itemInHands = null;
 
@@ -464,7 +463,7 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
-			time -= (int)World.instance.timeFactor;
+			time -= World.TimeStack;
 			return time < 0;
 		}
 	}
@@ -845,7 +844,20 @@ public class Worker : Assert.Base
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
-			ScheduleWalkToNeighbour( building.node );
+			bool failedDelivery = false;
+			if ( itemInHands )
+			{
+				if ( building.flag.FreeSpace() > 0 )
+				{
+					building.flag.ReserveItem( itemInHands );
+					ScheduleDeliverItem( itemInHands );
+				}
+				else
+					failedDelivery = true;
+				if ( !failedDelivery )
+					ScheduleWalkToNeighbour( building.node );
+			}
+
 			return;
 		}
 

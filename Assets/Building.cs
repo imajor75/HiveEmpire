@@ -385,11 +385,6 @@ abstract public class Building : Assert.Base
 				m.SetFloat( Construction.sliceLevelID, level );
 	}
 
-	void OnDestroy()
-	{
-		owner?.versionedBuildingDelete.Trigger();
-	}
-
 	public virtual bool Remove()
 	{
 		construction.Remove();
@@ -412,6 +407,7 @@ abstract public class Building : Assert.Base
 			basis.building = null;
 		}
 		flag.building = null;
+		owner?.versionedBuildingDelete.Trigger();
 		Destroy( gameObject );
 		return true;
 	}

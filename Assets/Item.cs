@@ -312,11 +312,6 @@ public class Item : Assert.Base
 		assert.IsTrue( flag != null || worker != null );
 		if ( worker )
 		{
-			// If the item has a worker, but no nextFlag, that means that the item must be in the hand of the worker,
-			// its previous destination was replaced with a new one, and the reservation at the previous nextFlag was 
-			// cancelled. The worker has been not yet decided what to do with the item, so the list of tasks must be empty
-			if ( ( path == null || path.StepsLeft > 1 ) && worker.taskQueue.Count > 0 ) 
-				assert.IsNotNull( nextFlag, "No nextFlag for " + type + " but has a worker" );
 			if ( worker.itemInHands )
 				assert.AreEqual( this, worker.itemInHands );
 		}

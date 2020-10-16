@@ -64,9 +64,9 @@ public class Workshop : Building
 		}
 		public void FixedUpdate( Workshop boss )
 		{
-			counter += (int)World.instance.timeFactor;
+			counter += World.TimeStack;
 			if ( boss.IsWorking() )
-				workCounter += (int)World.instance.timeFactor;
+				workCounter += World.TimeStack;
 			if ( counter >= timinglength )
 			{
 				float p = (float)workCounter/counter;
@@ -167,7 +167,7 @@ public class Workshop : Building
 				boss.soundSource.Play();
 			}
 
-			if ( waitTimer++ < resourceCutTime[(int)resourceType] )    // TODO Working on the resource
+			if ( (waitTimer += World.TimeStack) < resourceCutTime[(int)resourceType] )    // TODO Working on the resource
 				return false;
 
 			boss.soundSource.Stop();

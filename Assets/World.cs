@@ -331,6 +331,14 @@ public class World : MonoBehaviour
 			o.speed = factor;
 	}
 
+	static public int TimeStack
+	{
+		get
+		{
+			return (int)instance.timeFactor;
+		}
+	}
+
 	public void Validate()
 	{
 		ground.Validate();
