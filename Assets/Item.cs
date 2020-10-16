@@ -26,6 +26,7 @@ public class Item : Assert.Base
 	public int born;
 	public int flagTime;
 	const int timeoutAtFlag = 9000;
+	public Item buddy;
 
 	public enum Type
     {
@@ -232,7 +233,7 @@ public class Item : Assert.Base
 		tripCancelled = true;
 	}
 
-	public void ArrivedAt( Flag flag )
+	public Item ArrivedAt( Flag flag )
 	{
 		assert.IsNull( this.flag );
 		assert.AreEqual( flag, nextFlag );
@@ -251,10 +252,7 @@ public class Item : Assert.Base
 			CancelTrip();	// Why is this needed?
 
 		flagTime = World.instance.time;
-		this.flag = flag;
-		flag.itemsStored.Trigger();
-		nextFlag = null;
-		assert.IsNotSelected();
+		return flag.FinalizeItem( this );
 	}
 
 	public void Arrived()
@@ -313,7 +311,7 @@ public class Item : Assert.Base
 		if ( worker )
 		{
 			if ( worker.itemInHands )
-				assert.AreEqual( this, worker.itemInHands );
+				assert.IsTrue( worker.itemInHands == this || worker.itemInHands == buddy );
 		}
 		if ( flag )
 		{
@@ -326,7 +324,7 @@ public class Item : Assert.Base
 		if ( nextFlag )
 		{
 			assert.IsNotNull( worker );
-			assert.IsTrue( nextFlag.items.Contains( this ) );
+			assert.IsTrue( nextFlag.items.Contains( this ) || nextFlag.items.Contains( buddy ) );
 		}
 		if ( path != null )
 			path.Validate();
@@ -335,5 +333,7 @@ public class Item : Assert.Base
 			assert.IsNotNull( path );
 			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
 		}
+		if ( buddy )
+			assert.AreEqual( buddy.buddy, this );
 	}
 }

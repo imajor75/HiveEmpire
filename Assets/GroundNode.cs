@@ -6,8 +6,8 @@ using UnityEngine.Assertions;
 [System.Serializable]
 public class GroundNode : Assert.Base
 {
-    public static float size = 1;
-    public static int neighbourCount = 6;
+    public const float size = 1;
+    public const int neighbourCount = 6;
     public int x, y;
     public Building building;
     public Flag flag;

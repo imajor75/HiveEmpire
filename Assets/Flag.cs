@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -86,8 +87,26 @@ public class Flag : Assert.Base
 
 	public bool ReleaseItem( Item item )
 	{
-		assert.AreEqual( item.flag, this );
-		CancelItem( item );
+		if ( item.buddy )
+		{
+			assert.AreEqual( item.buddy.nextFlag, this );
+			int i = 0;
+			while ( i < maxItems )
+			{
+				if ( items[i] == item )
+				{
+					items[i] = item.buddy;
+					break;
+				}
+				i++;
+			}
+			assert.IsTrue( i < maxItems );
+		}
+		else
+		{
+			assert.AreEqual( item.flag, this );
+			CancelItem( item );
+		}
 		item.flag = null;
 		itemsStored.Trigger();
 		return true;
@@ -108,14 +127,19 @@ public class Flag : Assert.Base
 		return false;
 	}
 
-	public bool ReserveItem( Item item )
+	public bool ReserveItem( Item item, Item replace = null )
 	{
 		assert.IsNull( item.nextFlag, "Item already has a flag" );
+		if ( replace )
+			assert.AreEqual( replace.flag, this );
 		for ( int i = 0; i < items.Length; i++ )
 		{
-			if ( items[i] == null )
+			if ( items[i] == replace )
 			{
-				items[i] = item;
+				if ( items[i] )
+					items[i].buddy = item;
+				else
+					items[i] = item;
 				item.nextFlag = this;
 				UpdateBody();
 				return true;
@@ -123,6 +147,30 @@ public class Flag : Assert.Base
 		}
 		assert.IsTrue( false );
 		return false;
+	}
+
+	public Item FinalizeItem( Item item )
+	{
+		assert.AreEqual( item.nextFlag, this );
+		itemsStored.Trigger();
+
+		item.flag = this;
+		item.nextFlag = null;
+
+		for ( int i = 0; i < maxItems; i++ )
+		{
+			if ( items[i]?.buddy == item )
+			{
+				Item oldItem = items[i];
+				items[i] = item;
+				oldItem.buddy = null;
+				oldItem.flag = null;
+				item.buddy = null;
+				return oldItem;
+			}
+		}
+		assert.IsTrue( items.Contains( item ) );
+		return null;
 	}
 
 	public void OnClicked()
@@ -158,7 +206,7 @@ public class Flag : Assert.Base
 		if ( building )
 			assert.AreEqual( building.flag, this );
         assert.AreEqual( this, node.flag );
-        for ( int i = 0; i < 6; i++ )
+        for ( int i = 0; i < GroundNode.neighbourCount; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( FreeSpace() >= 0 );
 		foreach ( var i in items )
@@ -169,7 +217,7 @@ public class Flag : Assert.Base
 				i.Validate();
 			}
 		}
-		for ( int j = 0; j < 6; j++ )
+		for ( int j = 0; j < GroundNode.neighbourCount; j++ )
 			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node )
 				roadsStartingHere[j].Validate();
 		if ( user )

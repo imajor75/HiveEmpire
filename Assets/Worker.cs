@@ -408,15 +408,17 @@ public class Worker : Assert.Base
 			boss.box?.SetActive( false );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
+			{
 				item.Arrived();
+				boss.itemInHands = null;
+			}
 			else
 			{
 				if ( boss.node.flag == item.nextFlag )
-					item.ArrivedAt( item.nextFlag );
+					boss.itemInHands = item.ArrivedAt( item.nextFlag );
 				else
 					return ResetBoss(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
-			boss.itemInHands = null;
 
 			return true;
 		}
@@ -816,28 +818,9 @@ public class Worker : Assert.Base
 				animator.SetTrigger( putdownID );
 				itemInHands = null;
 			}
-			Item bestItem = null;
-			float bestScore = 0;
-			for ( int c = 0; c < 2; c++ )
-			{
-				Flag flag = road.GetEnd( c );
-				foreach ( var item in flag.items )
-				{
-					if ( item == null || item.flag == null )	// It can be nextFlag as well
-						continue;
-					float score = CheckItem( item );
-					if ( score > bestScore )
-					{
-						bestScore = score;
-						bestItem = item;
-					}
-				}
-			}
-			if ( bestItem != null )
-			{
-				CarryItem( bestItem );
+
+			if ( FindItemToCarry() )
 				return;
-			}
 
 			if ( node != road.CenterNode() && road.workers.Count == 1 )
 			{
@@ -910,30 +893,90 @@ public class Worker : Assert.Base
 		}
 	}
 
-	public float CheckItem( Item item )
+	bool FindItemToCarry()
 	{
-		if ( item.worker || item.destination == null )
-			return 0;
+		Item bestItem = null;
+		Item[] bestItemOnSide = { null, null };
+		float bestScore = 0;
+		float[] bestScoreOnSide = { 0, 0 };
+		for ( int c = 0; c < 2; c++ )
+		{
+			Flag flag = road.GetEnd( c );
+			foreach ( var item in flag.items )
+			{
+				if ( item == null || item.flag == null )	// It can be nextFlag as well
+					continue;
+				var score = CheckItem( item );
+				if ( score.Item2 )
+				{
+					if ( score.Item1 > bestScoreOnSide[c] )
+					{
+						bestScoreOnSide[c] = score.Item1;
+						bestItemOnSide[c] = item;
+					}
+				}
+				else
+				{
+					if ( score.Item1 > bestScore )
+					{
+						bestScore = score.Item1;
+						bestItem = item;
+					}
+				}
+			}
+		}
 
-		if ( item.path == null )
-			return 0;
+		if ( bestItem != null )
+		{
+			CarryItem( bestItem );
+			return true;
+		}
+		else
+		{
+			if ( bestItemOnSide[0] && bestItemOnSide[1] )
+			{
+				if ( bestScoreOnSide[0] > bestScoreOnSide[1] )
+					CarryItem( bestItemOnSide[0], bestItemOnSide[1] );
+				else
+					CarryItem( bestItemOnSide[1], bestItemOnSide[0] );
+				return true;
+			}
+		}
+		return false;
+	}
 
-		if ( !item.path.IsFinished && item.path.Road != road )
-			return 0;
-
-		Flag target = road.GetEnd( 0 );
-		if ( target == item.flag )
-			target = road.GetEnd( 1 );
-		if ( target.FreeSpace() == 0 && item.path.StepsLeft != 1 )
-			return 0;
-
+	public Tuple<float, bool> CheckItem( Item item )
+	{
 		float value = road.owner.itemHaulPriorities[(int)item.type];
 
 		// TODO Better prioritization of items
 		if ( item.flag.node == node )
 			value *= 2;
 
-		return value;
+		if ( item.worker || item.destination == null )
+			return Tuple.Create( 0f, false );
+
+		if ( item.buddy )
+			return Tuple.Create( 0f, false );
+
+		if ( item.path == null )
+			return Tuple.Create( 0f, false );
+
+		if ( !item.path.IsFinished && item.path.Road != road )
+			return Tuple.Create( 0f, false );
+		
+		Flag target = road.GetEnd( 0 );
+		if ( target == item.flag )
+			target = road.GetEnd( 1 );
+
+		if ( target.FreeSpace() == 0 && item.path.StepsLeft != 1 )
+		{
+			if ( item.path.StepsLeft <= 1 )
+				return Tuple.Create( 0f, false );
+			return Tuple.Create( value, true );
+		}
+
+		return Tuple.Create( value, false );
 	}
 
 	public void ScheduleWalkToNeighbour( GroundNode target, bool first = false )
@@ -1007,7 +1050,7 @@ public class Worker : Assert.Base
 			taskQueue.Add( task );
 	}
 
-	public void CarryItem( Item item )
+	public void CarryItem( Item item, Item replace = null )
 	{
 		item.assert.IsNotSelected();
 		assert.IsNotNull( road );
@@ -1018,6 +1061,9 @@ public class Worker : Assert.Base
 			otherPoint = road.nodes.Count - 1;
 		Flag other = road.GetEnd( otherPoint );
 
+		if ( replace )
+			assert.AreEqual( replace.flag, other );
+
 		ScheduleWalkToRoadPoint( road, itemPoint );
 		SchedulePickupItem( item );
 		if ( !item.path.IsFinished )
@@ -1025,6 +1071,7 @@ public class Worker : Assert.Base
 
 		if ( item.path.StepsLeft <= 1 )
 		{
+			assert.IsNull( replace );
 			var destination = item.destination;
 			ScheduleWalkToNeighbour( destination.node );
 			ScheduleDeliverItem( item );
@@ -1032,9 +1079,12 @@ public class Worker : Assert.Base
 		}
 		else
 		{
-			assert.IsTrue( other.FreeSpace() > 0 );
-			other.ReserveItem( item );
+			if ( replace == null )
+				assert.IsTrue( other.FreeSpace() > 0 );
+			other.ReserveItem( item, replace );
 			ScheduleDeliverItem( item );
+			if ( replace && item.buddy == null )
+				CarryItem( replace, item );
 		}
 		item.worker = this;
 	}
