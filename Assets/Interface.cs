@@ -220,6 +220,7 @@ public class Interface : Assert.Base
 	public class Tooltip : Panel
 	{
 		GameObject objectToShow;
+		Component origin;
 		Text text;
 
 		public static Tooltip Create()
@@ -240,8 +241,9 @@ public class Interface : Assert.Base
 			FollowMouse();
 		}
 
-		public void SetText( string text = "", GameObject objectToShow = null )
+		public void SetText( Component origin, string text = "", GameObject objectToShow = null )
 		{
+			this.origin = origin;
 			this.text.text = text;
 			if ( this.objectToShow != null && this.objectToShow != objectToShow )
 				Destroy( this.objectToShow );
@@ -252,6 +254,11 @@ public class Interface : Assert.Base
 
 		public override void Update()
 		{
+			if ( origin == null )
+			{
+				gameObject.SetActive( false );
+				return;
+			}
 			base.Update();
 			FollowMouse();
 			transform.SetAsLastSibling();
@@ -476,14 +483,14 @@ public class Interface : Assert.Base
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					Interface.instance.tooltip.SetText( item.type.ToString(), path = ItemPanel.CreateUIPath( item.path ) );
+					Interface.instance.tooltip.SetText( this, item.type.ToString(), path = ItemPanel.CreateUIPath( item.path ) );
 				else
-					Interface.instance.tooltip.SetText( itemType.ToString() );
+					Interface.instance.tooltip.SetText( this, itemType.ToString() );
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				Interface.instance.tooltip.SetText( "" );
+				Interface.instance.tooltip.SetText( this, "" );
 			}
 		}
 	}
@@ -659,12 +666,15 @@ public class Interface : Assert.Base
 			if ( workshop.configuration.commonInputs )
 				row -= iconSize * 3 / 2;
 
-			row -= iconSize / 2;
-			outputs = new Buffer();
-			outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
+			if ( workshop.buffers.Count > 0 )
+			{
+				row -= iconSize / 2;
+				outputs = new Buffer();
+				outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
 
-			row -= (int)((float)iconSize * 1.5f);
-			progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+				row -= (int)( (float)iconSize * 1.5f );
+				progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+			}
 
 			itemsProduced = Text( 20, row - 24, 200, 20 );
 
@@ -689,15 +699,18 @@ public class Interface : Assert.Base
 			foreach ( var buffer in buffers )
 				buffer.Update();
 
-			outputs.Update( workshop.output, 0 );
-
-			if ( workshop.working )
+			if ( workshop.buffers.Count > 0 )
 			{
-				progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
-				progressBar.color = Color.white;
+				outputs.Update( workshop.output, 0 );
+
+				if ( workshop.working )
+				{
+					progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
+					progressBar.color = Color.white;
+				}
+				else
+					progressBar.color = Color.red;
 			}
-			else
-				progressBar.color = Color.red;
 			productivity.text = ( (int)(workshop.productivity.current * 100) ).ToString() + "%";
 			itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 		}
@@ -841,6 +854,10 @@ public class Interface : Assert.Base
 			BuildButton( 20, -220, "Flag", Flag.IsItGood( node, Root.mainPlayer ), AddFlag );
 			BuildButton( 20, -240, "Stock", Stock.IsItGood( node, Root.mainPlayer ), AddStock );
 			BuildButton( 20, -260, "Guardhouse", GuardHouse.IsItGood( node, Root.mainPlayer ), AddGuardHouse );
+#if DEBUG
+			BuildButton( 20, -280, "Tree", !node.IsBlocking( true ), AddTree );
+			BuildButton( 20, -260, "Remove", node.IsBlocking( true ), Remove );
+#endif
 			if ( node.resource && ( !node.resource.underGround || node.resource.exposed > 0 ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
 		}
@@ -875,6 +892,15 @@ public class Interface : Assert.Base
 				Close();
 		}
 
+		void AddTree()
+		{
+			Resource.Create().Setup( node, Resource.Type.tree ).growth = Resource.treeGrowthMax;
+		}
+
+		void Remove()
+		{
+			node.resource?.Remove();
+		}
 
 		public void BuildWorkshop( Workshop.Type type )
 		{

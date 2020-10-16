@@ -347,7 +347,7 @@ public class Worker : Assert.Base
 					boss.itemTable.material = Item.materials[(int)item.type];
 				boss.box?.SetActive( true );
 			}
-			if ( ( pickupTimer -= (int)World.instance.timeFactor ) > 0 )
+			if ( ( pickupTimer -= World.TimeStack ) > 0 )
 				return false;
 
 			if ( destnation != item.destination )
@@ -399,7 +399,7 @@ public class Worker : Assert.Base
 				boss.animator.ResetTrigger( pickupID );
 				boss.animator.SetTrigger( putdownID );
 			}
-			if ( ( putdownTimer -= (int)World.instance.timeFactor ) > 0 )
+			if ( ( putdownTimer -= World.TimeStack ) > 0 )
 				return false;
 
 			boss.itemsDelivered++;
@@ -463,7 +463,7 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
-			time -= (int)World.instance.timeFactor;
+			time -= World.TimeStack;
 			return time < 0;
 		}
 	}

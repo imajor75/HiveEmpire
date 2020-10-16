@@ -63,9 +63,10 @@ public class GuardHouse : Building
 		}
 	}
 
-	void OnDestroy()
+	override public bool Remove()
 	{
 		owner.UnregisterInfuence( this );
+		return base.Remove();
 	}
 
 	public override int Influence( GroundNode node )
