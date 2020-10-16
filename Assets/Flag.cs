@@ -174,7 +174,7 @@ public class Flag : Assert.Base
 				roadsStartingHere[j].Validate();
 		if ( user )
 		{
-			assert.AreEqual( user.type, Worker.Type.haluer );
+			assert.AreEqual( user.type, Worker.Type.hauler );
 			assert.IsNotNull( user.road );
 			assert.IsTrue( user.atRoad );
 			assert.AreEqual( user.exclusiveFlag, this );

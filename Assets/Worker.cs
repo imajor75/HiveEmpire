@@ -33,6 +33,7 @@ public class Worker : Assert.Base
 	[JsonIgnore]
 	public GameObject mapObject;
 	Material mapMaterial;
+	Material shirtMaterial;
 
 	public Road road;
 	public bool atRoad;
@@ -353,7 +354,7 @@ public class Worker : Assert.Base
 
 			if ( destnation != item.destination )
 			{
-				boss.assert.AreEqual( boss.type, Type.haluer );
+				boss.assert.AreEqual( boss.type, Type.hauler );
 				return ResetBoss();
 			}
 
@@ -361,7 +362,7 @@ public class Worker : Assert.Base
 			boss.itemInHands = item;
 			boss.assert.IsTrue( item.worker == boss || item.worker == null );
 			item.worker = boss;
-			if ( item.worker.type == Type.haluer )
+			if ( item.worker.type == Type.hauler )
 			{
 				if ( item.path.IsFinished )
 					boss.assert.AreEqual( item.destination.flag.node, boss.node );
@@ -446,6 +447,8 @@ public class Worker : Assert.Base
 			{
 				road.workerAtNodes[i] = boss;
 				boss.atRoad = true;
+				if ( boss.shirtMaterial )
+					boss.shirtMaterial.color = Color.yellow;
 				return true;
 			}
 			return false;
@@ -471,7 +474,7 @@ public class Worker : Assert.Base
 
 	public enum Type
 	{
-		haluer,
+		hauler,
 		tinkerer,
 		constructor,
 		soldier,
@@ -514,7 +517,7 @@ public class Worker : Assert.Base
 
 	public Worker SetupForRoad( Road road )
 	{
-		type = Type.haluer;
+		type = Type.hauler;
 		owner = road.owner;
 		look = 2;
 		ground = road.ground;
@@ -589,13 +592,33 @@ public class Worker : Assert.Base
 		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
 		if ( hand != null )
 		{
-			if ( type == Type.haluer )
+			if ( type == Type.hauler )
 				box = (GameObject)GameObject.Instantiate( boxTemplateBoy, hand );
 			else
 				box = (GameObject)GameObject.Instantiate( boxTemplateMan, hand );
 			box.SetActive( false );
 			itemTable = World.FindChildRecursive( box.transform, "ItemTable" ).GetComponent<MeshRenderer>();
 			assert.IsNotNull( itemTable );
+		}
+		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
+		if ( shirt )
+		{
+			var skinnedMeshRenderer = shirt.GetComponent<SkinnedMeshRenderer>();
+			if ( skinnedMeshRenderer )
+			{
+				Material[] materials = skinnedMeshRenderer.materials;
+				materials[0] = shirtMaterial = new Material( World.defaultShader );
+				skinnedMeshRenderer.materials = materials;
+				if ( type == Type.hauler )
+				{
+					if ( atRoad )
+						shirtMaterial.color = Color.yellow;
+					else
+						shirtMaterial.color = Color.grey;
+				}
+				else
+					shirtMaterial.color = Color.black;
+			}
 		}
 		animator = body.GetComponent<Animator>();
 		animator.runtimeAnimatorController = animationController;
@@ -654,7 +677,7 @@ public class Worker : Assert.Base
 				walkProgress -= 1;
 			}
 		}
-		if ( itemInHands && itemInHands.nextFlag == null && itemInHands.destination == null )   // Item trip was cancelled during the haluer trying to finish the path into a building
+		if ( itemInHands && itemInHands.nextFlag == null && itemInHands.destination == null )   // Item trip was cancelled during the hauler trying to finish the path into a building
 			Reset();
 
 		if ( walkTo == null )
@@ -695,7 +718,7 @@ public class Worker : Assert.Base
 			case Type.tinkerer:
 				mapMaterial.color = Color.cyan;
 				break;
-			case Type.haluer:
+			case Type.hauler:
 				if ( !atRoad )
 				{
 					mapMaterial.color = Color.grey;
@@ -755,6 +778,8 @@ public class Worker : Assert.Base
 
 		road = null;
 		building = null;
+		if ( shirtMaterial )
+			shirtMaterial.color = Color.black;
 		type = Type.unemployed;
 		return true;
 	}
@@ -1141,7 +1166,7 @@ public class Worker : Assert.Base
 			task.Validate();
 		if ( exclusiveFlag )
 		{
-			assert.AreEqual( type, Type.haluer );
+			assert.AreEqual( type, Type.hauler );
 			assert.IsTrue( atRoad );
 			assert.IsNotNull( road );
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );

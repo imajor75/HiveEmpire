@@ -150,10 +150,10 @@ public class Item : Assert.Base
 		}
 
 		// If the item is just being gathered, it should not be offered yet
-		if ( flag == null && worker.type != Worker.Type.haluer )
+		if ( flag == null && worker.type != Worker.Type.hauler )
 			return;
 
-		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the haluer will not be
+		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the hauler will not be
 		// able to skip entering the building, as it is scheduled already.
 		if ( worker && !nextFlag )
 			return;
