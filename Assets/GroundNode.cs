@@ -190,12 +190,11 @@ public class GroundNode : Assert.Base
 				road?.RebuildMesh( true );
 			flag?.building?.exit.RebuildMesh( true );
 		}
-		if ( road )
-			road.RebuildMesh( true );
-		if ( resource )
-			resource.UpdateBody();
+		road?.RebuildMesh( true );
+		resource?.UpdateBody();
 		foreach ( var border in borders )
 			border?.UpdateBody();
+		building?.UpdateBody();
 
 		transform.localPosition = Position();
 	}

@@ -857,6 +857,8 @@ public class Interface : Assert.Base
 #if DEBUG
 			BuildButton( 20, -280, "Tree", !node.IsBlocking( true ), AddTree );
 			BuildButton( 20, -300, "Remove", node.IsBlocking( true ), Remove );
+			BuildButton( 20, -320, "Raise", true, delegate { AlignHeight( 0.1f ); } );
+			BuildButton( 20, -340, "Lower", true, delegate { AlignHeight( -0.1f ); } );
 #endif
 			if ( node.resource && ( !node.resource.underGround || node.resource.exposed > 0 ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
@@ -900,6 +902,11 @@ public class Interface : Assert.Base
 		void Remove()
 		{
 			node.resource?.Remove();
+		}
+
+		void AlignHeight( float change )
+		{
+			node.SetHeight( node.height + change );
 		}
 
 		public void BuildWorkshop( Workshop.Type type )
@@ -1450,6 +1457,12 @@ public class Interface : Assert.Base
 				cursor.transform.localPosition = node.Position();
 			if ( !inputHandler.OnMovingOverNode( node ) )
 				inputHandler = this;
+#if DEBUG
+			if ( Input.GetKeyDown( KeyCode.PageUp ) && node )
+				node.SetHeight( node.height + 0.05f );
+			if ( Input.GetKeyDown( KeyCode.PageDown ) && node )
+				node.SetHeight( node.height - 0.05f );
+#endif
 		}
 
 		public bool OnMovingOverNode( GroundNode node )

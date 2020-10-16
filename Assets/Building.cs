@@ -291,11 +291,7 @@ abstract public class Building : Assert.Base
 	{
 		name = "Building " + node.x + ", " + node.y;
 		transform.SetParent( ground.transform );
-		var area = huge ? hugeArea : singleArea;
-		Vector3 position = new Vector3();
-		foreach ( var o in area )
-			position += node.Add( o ).Position();
-		transform.localPosition = position / area.Count;
+		UpdateBody();
 		renderers = new List<MeshRenderer>();
 		ScanChildObject( transform );
 		foreach( var renderer in renderers )
@@ -415,7 +411,16 @@ abstract public class Building : Assert.Base
 	public virtual int Influence( GroundNode node )
 	{
 		return 0;
-	}	
+	}
+
+	public void UpdateBody()
+	{
+		var area = huge ? hugeArea : singleArea;
+		Vector3 position = new Vector3();
+		foreach ( var o in area )
+			position += node.Add( o ).Position();
+		transform.localPosition = position / area.Count;
+	}
 
 	virtual public void Validate()
 	{
