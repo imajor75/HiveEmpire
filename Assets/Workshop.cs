@@ -334,6 +334,8 @@ public class Workshop : Building
 		{
 			if ( Resource.IsUnderGround( (Resource.Type)i ) )
 				resourceCutTime[i] = 1000;
+			else if ( i == (int)Resource.Type.cornfield )
+				resourceCutTime[i] = 100;
 			else
 				resourceCutTime[i] = 500;
 		}

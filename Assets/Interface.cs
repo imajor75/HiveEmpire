@@ -856,7 +856,7 @@ public class Interface : Assert.Base
 			BuildButton( 20, -260, "Guardhouse", GuardHouse.IsItGood( node, Root.mainPlayer ), AddGuardHouse );
 #if DEBUG
 			BuildButton( 20, -280, "Tree", !node.IsBlocking( true ), AddTree );
-			BuildButton( 20, -260, "Remove", node.IsBlocking( true ), Remove );
+			BuildButton( 20, -300, "Remove", node.IsBlocking( true ), Remove );
 #endif
 			if ( node.resource && ( !node.resource.underGround || node.resource.exposed > 0 ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
@@ -1322,6 +1322,9 @@ public class Interface : Assert.Base
 
 		public static GameObject CreateUIPath( Path path )
 		{
+			if ( path == null )
+				return null;
+
 			GameObject routeOnMap = new GameObject();
 			routeOnMap.name = "Path on map";
 			routeOnMap.AddComponent<MeshRenderer>().material = materialUIPath;

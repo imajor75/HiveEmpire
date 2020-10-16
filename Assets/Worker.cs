@@ -60,6 +60,7 @@ public class Worker : Assert.Base
 			this.boss = boss;
 			return this;
 		}
+		public virtual void Prepare() { }
 		public virtual bool ExecuteFrame() { return false; }
 		public virtual void Cancel() { }
 		public void ReplaceThisWith( Task another )
@@ -318,7 +319,7 @@ public class Worker : Assert.Base
 
 	public class PickupItem : Task
 	{
-		static public int pickupTimeStart = 100;
+		static public int pickupTimeStart = 60;
 		public Item item;
 		public Building destnation;
 		public int pickupTimer = pickupTimeStart;
@@ -373,7 +374,7 @@ public class Worker : Assert.Base
 
 	public class DeliverItem : Task
 	{
-		static public int putdownTimeStart = 100;
+		static public int putdownTimeStart = 60;
 		public Item item;
 		public int putdownTimer = putdownTimeStart;
 

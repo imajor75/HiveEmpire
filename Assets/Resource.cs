@@ -156,6 +156,8 @@ public class Resource : Assert.Base
 		if ( type == Type.cornfield )
 		{
 			float growth = (float)this.growth / cornfieldGrowthMax;
+			if ( growth > 1 )
+				growth = 1;
 			transform.localScale = new Vector3( 1, growth, 1 );
 		}
 		if ( type == Type.tree )
