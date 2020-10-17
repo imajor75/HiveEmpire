@@ -88,7 +88,7 @@ public class Flag : Assert.Base
 	public bool ReleaseItem( Item item )
 	{
 		assert.AreEqual( item.flag, this );
-		RemoveItem( item );
+		RemoveItem( item, item.buddy );
 
 		item.flag = null;
 		itemsStored.Trigger();
@@ -111,13 +111,13 @@ public class Flag : Assert.Base
 		return RemoveItem( item );
 	}
 
-	bool RemoveItem( Item item )
+	bool RemoveItem( Item item, Item replace = null )
 	{
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == item )
 			{
-				items[i] = null;
+				items[i] = replace;
 				UpdateBody();
 				return true;
 			}
