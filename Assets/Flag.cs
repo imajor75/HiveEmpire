@@ -16,6 +16,8 @@ public class Flag : Assert.Base
 	static GameObject template;
 	public Versioned itemsStored = new Versioned();
 	MeshRenderer itemTable;
+	[JsonIgnore]
+	public bool debugSpawnPlank;
 
 	static public void Initialize()
 	{
@@ -54,6 +56,20 @@ public class Flag : Assert.Base
 		itemTable = World.FindChildRecursive( transform, "ItemTable" ).gameObject.GetComponent<MeshRenderer>();
 		assert.IsNotNull( itemTable );
 		UpdateBody();
+	}
+
+	void Update()
+	{
+		if ( debugSpawnPlank )
+		{
+			if ( FreeSpace() > 0 )
+			{
+				Item item = Item.Create().Setup( Item.Type.plank, owner.mainBuilding );
+				ReserveItem( item );
+				FinalizeItem( item );
+			}
+			debugSpawnPlank = false;
+		}
 	}
 
 	public void UpdateBody()
