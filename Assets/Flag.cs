@@ -87,26 +87,9 @@ public class Flag : Assert.Base
 
 	public bool ReleaseItem( Item item )
 	{
-		if ( item.buddy )
-		{
-			assert.AreEqual( item.buddy.nextFlag, this );
-			int i = 0;
-			while ( i < maxItems )
-			{
-				if ( items[i] == item )
-				{
-					items[i] = item.buddy;
-					break;
-				}
-				i++;
-			}
-			assert.IsTrue( i < maxItems );
-		}
-		else
-		{
-			assert.AreEqual( item.flag, this );
-			CancelItem( item );
-		}
+		assert.AreEqual( item.flag, this );
+		CancelItem( item );
+
 		item.flag = null;
 		itemsStored.Trigger();
 		return true;
@@ -118,8 +101,13 @@ public class Flag : Assert.Base
 		{
 			if ( items[i] == item )
 			{
-				items[i] = null;
+				items[i] = item.buddy;
 				UpdateBody();
+				return true;
+			}
+			if ( items[i]?.buddy == item )
+			{
+				items[i].buddy = item.buddy = null;
 				return true;
 			}
 		}

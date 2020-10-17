@@ -34,6 +34,8 @@ public class Worker : Assert.Base
 	public GameObject mapObject;
 	Material mapMaterial;
 	Material shirtMaterial;
+	[JsonIgnore]
+	public bool debugReset;
 
 	public Road road;
 	public bool atRoad;
@@ -341,6 +343,7 @@ public class Worker : Assert.Base
 		public override bool ExecuteFrame()
 		{
 			boss.assert.AreEqual( item.worker, boss );
+			boss.assert.IsNull( boss.itemInHands );
 			if ( pickupTimer == pickupTimeStart )
 			{
 				boss.animator.ResetTrigger( putdownID );
@@ -668,6 +671,12 @@ public class Worker : Assert.Base
 	// Update is called once per frame
 	void FixedUpdate()
 	{
+		if ( debugReset )
+		{
+			Reset();
+			debugReset = false;
+			return;
+		}
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
@@ -1064,8 +1073,12 @@ public class Worker : Assert.Base
 		if ( replace )
 			assert.AreEqual( replace.flag, other );
 
-		ScheduleWalkToRoadPoint( road, itemPoint );
-		SchedulePickupItem( item );
+		if ( item.buddy == null )
+		{
+			ScheduleWalkToRoadPoint( road, itemPoint );
+			SchedulePickupItem( item );
+		}
+
 		if ( !item.path.IsFinished )
 			ScheduleWalkToRoadPoint( road, otherPoint );
 

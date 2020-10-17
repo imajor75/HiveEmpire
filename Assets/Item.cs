@@ -28,6 +28,9 @@ public class Item : Assert.Base
 	const int timeoutAtFlag = 9000;
 	public Item buddy;
 
+	[JsonIgnore]
+	public bool debugCancelTrip;
+
 	public enum Type
     {
         log,
@@ -125,6 +128,12 @@ public class Item : Assert.Base
 
 	void Update()
 	{
+		if ( debugCancelTrip )
+		{
+			CancelTrip();
+			debugCancelTrip = false;
+			return;
+		}
 		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
 		if ( watchRoadDelete.Check() && path )
 		{
@@ -334,6 +343,9 @@ public class Item : Assert.Base
 			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
 		}
 		if ( buddy )
+		{
 			assert.AreEqual( buddy.buddy, this );
+			assert.IsNotNull( worker );
+		}
 	}
 }
