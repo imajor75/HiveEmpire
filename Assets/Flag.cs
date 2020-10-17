@@ -107,21 +107,19 @@ public class Flag : Assert.Base
 		RemoveItem( item, item.buddy );
 
 		item.flag = null;
+		if ( item.buddy )
+			item.buddy.buddy = null;
 		itemsStored.Trigger();
 		return true;
 	}
 
 	public bool CancelItem( Item item )
 	{
+		assert.AreEqual( item.nextFlag, this );
+		item.nextFlag = null;
 		if ( item.buddy )
 		{
-			// If there is a buddy, both items will be cancelled at their nextFlag by DeliverItem.Cancel
-			// The connection between the two items needs to be broken only at the second call.
-			if ( item.buddy.nextFlag == null )
-			{
-				item.buddy.buddy = null;
-				item.buddy = null;
-			}
+			item.buddy = null;
 			return true;
 		}
 		return RemoveItem( item );
@@ -172,16 +170,19 @@ public class Flag : Assert.Base
 		item.flag = this;
 		item.nextFlag = null;
 
-		for ( int i = 0; i < maxItems; i++ )
+		if ( item.buddy )
 		{
-			if ( items[i]?.buddy == item )
+			for ( int i = 0; i < maxItems; i++ )
 			{
-				Item oldItem = items[i];
-				items[i] = item;
-				oldItem.buddy = null;
-				oldItem.flag = null;
-				item.buddy = null;
-				return oldItem;
+				if ( items[i] == item.buddy )
+				{
+					Item oldItem = items[i];
+					items[i] = item;
+					assert.IsNull( oldItem.buddy );
+					oldItem.flag = null;
+					item.buddy = null;
+					return oldItem;
+				}
 			}
 		}
 		assert.IsTrue( items.Contains( item ) );
@@ -224,11 +225,12 @@ public class Flag : Assert.Base
         for ( int i = 0; i < GroundNode.neighbourCount; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( FreeSpace() >= 0 );
-		foreach ( var i in items )
+		for ( int j = 0; j < maxItems; j++ )
 		{
+			Item i = items[j];
 			if ( i )
 			{
-				assert.IsTrue( i.flag == this || i.nextFlag == this, "Item is here, but both flag and nextFlag pointers are referencing elsewhere" );
+				assert.IsTrue( i.flag == this || i.nextFlag == this, "Item is here, but both flag and nextFlag pointers are referencing elsewhere (index: " + j + ")" );
 				i.Validate();
 			}
 		}

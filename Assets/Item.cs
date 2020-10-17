@@ -26,7 +26,7 @@ public class Item : Assert.Base
 	public int born;
 	public int flagTime;
 	const int timeoutAtFlag = 9000;
-	public Item buddy;
+	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 
 	[JsonIgnore]
 	public bool debugCancelTrip;
@@ -320,7 +320,7 @@ public class Item : Assert.Base
 		if ( worker )
 		{
 			if ( worker.itemInHands )
-				assert.IsTrue( worker.itemInHands == this || worker.itemInHands == buddy );
+				assert.IsTrue( worker.itemInHands == this || worker.itemInHands.buddy == this );
 		}
 		if ( flag )
 		{
@@ -344,7 +344,8 @@ public class Item : Assert.Base
 		}
 		if ( buddy )
 		{
-			assert.AreEqual( buddy.buddy, this );
+			if ( buddy.buddy )
+				assert.AreEqual( buddy.buddy, this );
 			assert.IsNotNull( worker );
 		}
 	}

@@ -398,8 +398,12 @@ public class Worker : Assert.Base
 		{
 			if ( item != null && item.nextFlag != null )
 			{
+				if ( item.buddy )
+				{
+					boss.assert.AreEqual( item.buddy.worker, boss );
+					item.buddy.worker = null;
+				}
 				item.nextFlag.CancelItem( item );
-				item.nextFlag = null;
 				item.assert.IsNotSelected();
 			}
 			base.Cancel();
