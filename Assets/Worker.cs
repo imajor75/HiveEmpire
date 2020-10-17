@@ -338,12 +338,20 @@ public class Worker : Assert.Base
 		{
 			boss.assert.AreEqual( boss, item.worker );
 			item.worker = null;
+			if ( item.buddy )
+			{
+				boss.assert.AreEqual( boss, item.buddy.worker );
+				item.buddy.worker = null;
+			}
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
 		{
 			boss.assert.AreEqual( item.worker, boss );
-			boss.assert.IsNull( boss.itemInHands );
+			if ( item.buddy )
+				boss.assert.AreEqual( item.buddy.worker, boss );
+			if ( boss.type == Type.hauler )
+				boss.assert.IsNull( boss.itemInHands );
 			if ( pickupTimer == pickupTimeStart )
 			{
 				boss.animator.ResetTrigger( putdownID );
@@ -364,7 +372,6 @@ public class Worker : Assert.Base
 			item.flag?.ReleaseItem( item );
 			boss.itemInHands = item;
 			boss.assert.IsTrue( item.worker == boss || item.worker == null );
-			item.worker = boss;
 			if ( item.worker.type == Type.hauler )
 			{
 				if ( item.path.IsFinished )
@@ -401,14 +408,23 @@ public class Worker : Assert.Base
 		{
 			if ( putdownTimer == putdownTimeStart )
 			{
-				boss.animator.ResetTrigger( pickupID );
-				boss.animator.SetTrigger( putdownID );
+				if ( item.buddy )
+				{
+					if ( boss.itemTable )
+						boss.itemTable.material = Item.materials[(int)item.buddy.type];
+					putdownTimer -= 30;
+				}
+				else
+				{
+					boss.animator.ResetTrigger( pickupID );
+					boss.animator.SetTrigger( putdownID );
+				}
 			}
 			if ( ( putdownTimer -= World.TimeStack ) > 0 )
 				return false;
 
 			boss.itemsDelivered++;
-			boss.box?.SetActive( false );
+			boss.box?.SetActive( item.buddy != null );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 			{
@@ -418,7 +434,10 @@ public class Worker : Assert.Base
 			else
 			{
 				if ( boss.node.flag == item.nextFlag )
+				{
 					boss.itemInHands = item.ArrivedAt( item.nextFlag );
+					boss.itemInHands?.path?.NextRoad();
+				}
 				else
 					return ResetBoss(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}

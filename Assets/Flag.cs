@@ -88,7 +88,7 @@ public class Flag : Assert.Base
 	public bool ReleaseItem( Item item )
 	{
 		assert.AreEqual( item.flag, this );
-		CancelItem( item );
+		RemoveItem( item );
 
 		item.flag = null;
 		itemsStored.Trigger();
@@ -97,21 +97,32 @@ public class Flag : Assert.Base
 
 	public bool CancelItem( Item item )
 	{
+		if ( item.buddy )
+		{
+			// If there is a buddy, both items will be cancelled at their nextFlag by DeliverItem.Cancel
+			// The connection between the two items needs to be broken only at the second call.
+			if ( item.buddy.nextFlag == null )
+			{
+				item.buddy.buddy = null;
+				item.buddy = null;
+			}
+			return true;
+		}
+		return RemoveItem( item );
+	}
+
+	bool RemoveItem( Item item )
+	{
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == item )
 			{
-				items[i] = item.buddy;
+				items[i] = null;
 				UpdateBody();
 				return true;
 			}
-			if ( items[i]?.buddy == item )
-			{
-				items[i].buddy = item.buddy = null;
-				return true;
-			}
 		}
-		assert.IsTrue( false );
+		item.assert.IsTrue( false, "Item not found at flag" );
 		return false;
 	}
 
@@ -201,7 +212,7 @@ public class Flag : Assert.Base
 		{
 			if ( i )
 			{
-				assert.IsTrue( i.flag == this || i.nextFlag == this );
+				assert.IsTrue( i.flag == this || i.nextFlag == this, "Item is here, but both flag and nextFlag pointers are referencing elsewhere" );
 				i.Validate();
 			}
 		}

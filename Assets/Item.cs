@@ -251,7 +251,7 @@ public class Item : Assert.Base
 		{
 			// path.progess is zero if the item was rerouting while in the hands of the hauler
 			assert.IsFalse( path.IsFinished );
-			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Arrived at unknown flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
+			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Patn is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
 		}
 
 		worker = null;
