@@ -49,7 +49,6 @@ public class Eye : MonoBehaviour
 	{
 		Ray ray = new Ray( new Vector3( x, GroundNode.size * 50, y ), Vector3.down );
 		RaycastHit hit;
-		var size = GroundNode.size;
 		if ( world.ground.collider.Raycast( ray, out hit, GroundNode.size * 100 ) )
 		{
 			Vector3 position = hit.point;

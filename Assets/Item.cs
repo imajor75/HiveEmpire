@@ -26,6 +26,10 @@ public class Item : Assert.Base
 	public int born;
 	public int flagTime;
 	const int timeoutAtFlag = 9000;
+	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
+
+	[JsonIgnore]
+	public bool debugCancelTrip;
 
 	public enum Type
     {
@@ -124,6 +128,12 @@ public class Item : Assert.Base
 
 	void Update()
 	{
+		if ( debugCancelTrip )
+		{
+			CancelTrip();
+			debugCancelTrip = false;
+			return;
+		}
 		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
 		if ( watchRoadDelete.Check() && path )
 		{
@@ -232,7 +242,7 @@ public class Item : Assert.Base
 		tripCancelled = true;
 	}
 
-	public void ArrivedAt( Flag flag )
+	public Item ArrivedAt( Flag flag )
 	{
 		assert.IsNull( this.flag );
 		assert.AreEqual( flag, nextFlag );
@@ -241,7 +251,7 @@ public class Item : Assert.Base
 		{
 			// path.progess is zero if the item was rerouting while in the hands of the hauler
 			assert.IsFalse( path.IsFinished );
-			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Arrived at unknown flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
+			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Patn is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
 		}
 
 		worker = null;
@@ -251,10 +261,7 @@ public class Item : Assert.Base
 			CancelTrip();	// Why is this needed?
 
 		flagTime = World.instance.time;
-		this.flag = flag;
-		flag.itemsStored.Trigger();
-		nextFlag = null;
-		assert.IsNotSelected();
+		return flag.FinalizeItem( this );
 	}
 
 	public void Arrived()
@@ -313,7 +320,7 @@ public class Item : Assert.Base
 		if ( worker )
 		{
 			if ( worker.itemInHands )
-				assert.AreEqual( this, worker.itemInHands );
+				assert.IsTrue( worker.itemInHands == this || worker.itemInHands.buddy == this );
 		}
 		if ( flag )
 		{
@@ -326,7 +333,7 @@ public class Item : Assert.Base
 		if ( nextFlag )
 		{
 			assert.IsNotNull( worker );
-			assert.IsTrue( nextFlag.items.Contains( this ) );
+			assert.IsTrue( nextFlag.items.Contains( this ) || nextFlag.items.Contains( buddy ) );
 		}
 		if ( path != null )
 			path.Validate();
@@ -334,6 +341,12 @@ public class Item : Assert.Base
 		{
 			assert.IsNotNull( path );
 			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
+		}
+		if ( buddy )
+		{
+			if ( buddy.buddy )
+				assert.AreEqual( buddy.buddy, this );
+			assert.IsNotNull( worker );
 		}
 	}
 }

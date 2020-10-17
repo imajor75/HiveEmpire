@@ -137,7 +137,13 @@ public class Interface : Assert.Base
 				Load( myFiles.First().FullName );
 		}
 		if ( !world.gameInProgress )
-			world.NewGame( 117274283 );
+			NewGame( 117274283 );
+	}
+
+	void NewGame( int seed )
+	{
+		world.NewGame( seed );
+		mainPlayer = world.players[0];
 	}
 
 	void Load( string file )
@@ -183,8 +189,7 @@ public class Interface : Assert.Base
 		}
 		if ( Input.GetKeyDown( KeyCode.N ) )
 		{
-			world.NewGame( new System.Random().Next() );
-			mainPlayer = world.players[0];
+			NewGame( new System.Random().Next() );
 			print( "New game created" );
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )

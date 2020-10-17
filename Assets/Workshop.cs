@@ -500,7 +500,7 @@ public class Workshop : Building
 				return;
 			}
 		}
-		assert.IsTrue( false );
+		assert.IsTrue( false, "Item has wrong type (" + item.type + ")" );
 	}
 
 	public override void ItemArrived( Item item )

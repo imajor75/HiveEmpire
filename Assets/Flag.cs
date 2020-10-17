@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -15,6 +16,8 @@ public class Flag : Assert.Base
 	static GameObject template;
 	public Versioned itemsStored = new Versioned();
 	MeshRenderer itemTable;
+	[JsonIgnore]
+	public bool debugSpawnPlank;
 
 	static public void Initialize()
 	{
@@ -55,6 +58,20 @@ public class Flag : Assert.Base
 		UpdateBody();
 	}
 
+	void Update()
+	{
+		if ( debugSpawnPlank )
+		{
+			if ( FreeSpace() > 0 )
+			{
+				Item item = Item.Create().Setup( Item.Type.plank, owner.mainBuilding );
+				ReserveItem( item );
+				FinalizeItem( item );
+			}
+			debugSpawnPlank = false;
+		}
+	}
+
 	public void UpdateBody()
 	{
 		int[] l = new int[(int)Item.Type.total];
@@ -87,35 +104,55 @@ public class Flag : Assert.Base
 	public bool ReleaseItem( Item item )
 	{
 		assert.AreEqual( item.flag, this );
-		CancelItem( item );
+		RemoveItem( item, item.buddy );
+
 		item.flag = null;
+		if ( item.buddy )
+			item.buddy.buddy = null;
 		itemsStored.Trigger();
 		return true;
 	}
 
 	public bool CancelItem( Item item )
 	{
+		assert.AreEqual( item.nextFlag, this );
+		item.nextFlag = null;
+		if ( item.buddy )
+		{
+			item.buddy = null;
+			return true;
+		}
+		return RemoveItem( item );
+	}
+
+	bool RemoveItem( Item item, Item replace = null )
+	{
 		for ( int i = 0; i < items.Length; i++ )
 		{
 			if ( items[i] == item )
 			{
-				items[i] = null;
+				items[i] = replace;
 				UpdateBody();
 				return true;
 			}
 		}
-		assert.IsTrue( false );
+		item.assert.IsTrue( false, "Item not found at flag" );
 		return false;
 	}
 
-	public bool ReserveItem( Item item )
+	public bool ReserveItem( Item item, Item replace = null )
 	{
 		assert.IsNull( item.nextFlag, "Item already has a flag" );
+		if ( replace )
+			assert.AreEqual( replace.flag, this );
 		for ( int i = 0; i < items.Length; i++ )
 		{
-			if ( items[i] == null )
+			if ( items[i] == replace )
 			{
-				items[i] = item;
+				if ( items[i] )
+					items[i].buddy = item;
+				else
+					items[i] = item;
 				item.nextFlag = this;
 				UpdateBody();
 				return true;
@@ -123,6 +160,33 @@ public class Flag : Assert.Base
 		}
 		assert.IsTrue( false );
 		return false;
+	}
+
+	public Item FinalizeItem( Item item )
+	{
+		assert.AreEqual( item.nextFlag, this );
+		itemsStored.Trigger();
+
+		item.flag = this;
+		item.nextFlag = null;
+
+		if ( item.buddy )
+		{
+			for ( int i = 0; i < maxItems; i++ )
+			{
+				if ( items[i] == item.buddy )
+				{
+					Item oldItem = items[i];
+					items[i] = item;
+					assert.IsNull( oldItem.buddy );
+					oldItem.flag = null;
+					item.buddy = null;
+					return oldItem;
+				}
+			}
+		}
+		assert.IsTrue( items.Contains( item ) );
+		return null;
 	}
 
 	public void OnClicked()
@@ -158,18 +222,19 @@ public class Flag : Assert.Base
 		if ( building )
 			assert.AreEqual( building.flag, this );
         assert.AreEqual( this, node.flag );
-        for ( int i = 0; i < 6; i++ )
+        for ( int i = 0; i < GroundNode.neighbourCount; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( FreeSpace() >= 0 );
-		foreach ( var i in items )
+		for ( int j = 0; j < maxItems; j++ )
 		{
+			Item i = items[j];
 			if ( i )
 			{
-				assert.IsTrue( i.flag == this || i.nextFlag == this );
+				assert.IsTrue( i.flag == this || i.nextFlag == this, "Item is here, but both flag and nextFlag pointers are referencing elsewhere (index: " + j + ")" );
 				i.Validate();
 			}
 		}
-		for ( int j = 0; j < 6; j++ )
+		for ( int j = 0; j < GroundNode.neighbourCount; j++ )
 			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node )
 				roadsStartingHere[j].Validate();
 		if ( user )

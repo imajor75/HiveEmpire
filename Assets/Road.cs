@@ -219,27 +219,6 @@ public class Road : Assert.Base, Interface.InputHandler
 		int jam = Jam;
 		mapMaterial.color = new Color( 1, 0, 0, Math.Max( 0, ( jam - 2 ) * 0.15f ) );
 
-		if ( jam == 2 * Flag.maxItems )
-		{
-			print( "Maximum jam at road, swapping two items" );
-			Flag A = GetEnd( 0 ), B = GetEnd( 1 );
-			Item itemA = A.items[0], itemB = B.items[0];
-			assert.IsNull( itemA.worker );
-			assert.IsNull( itemB.worker );
-			assert.IsTrue( itemA.path != null && itemA.path.Road == this );
-			assert.IsTrue( itemB.path != null && itemB.path.Road == this );
-			A.ReleaseItem( itemA );
-			B.ReleaseItem( itemB );
-			itemA.path.NextRoad();
-			itemB.path.NextRoad();
-			B.ReserveItem( itemA );
-			A.ReserveItem( itemB );
-			itemA.flag = B;
-			itemB.flag = A;
-			itemA.nextFlag = itemB.nextFlag = null;
-			jam -= 2;
-		}
-
 		if ( decorationOnly )
 			return;
 		if ( timeSinceWorkerAdded < secBetweenWorkersAdded * 50 )
