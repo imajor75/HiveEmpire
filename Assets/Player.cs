@@ -14,6 +14,10 @@ public class Player : ScriptableObject
 	public int bowmansProduced = 0;
 	public int coinsProduced = 0;
 
+	public List<Stock> stocks;
+	public List<Item> items;
+	public int firstPossibleEmptyItemSlot = 0;
+
 	public static Player Create()
 	{
 		return ScriptableObject.CreateInstance<Player>();
@@ -98,9 +102,34 @@ public class Player : ScriptableObject
 		influencers.Remove( building );
 		mainBuilding.ground.RecalculateOwnership();
 	}
-}
 
-[System.Serializable]
+	public void RegisterStock( Stock stock )
+	{
+		stock.assert.AreEqual( stock.owner, this );
+		stocks.Add( stock );
+	}
+
+	public void UnregisterStock( Stock stock )
+	{
+		stock.assert.AreEqual( stock.owner, this );
+		stocks.Remove( stock );
+	}
+
+	public void RegisterItem( Item item )
+	{
+		item.assert.AreEqual( item.owner, this );
+		items.Add( item );
+	}
+
+	public void UnregisterItem( Item item )
+	{
+		item.assert.AreEqual( item.owner, this );
+		items.Remove( item );
+	}
+
+
+
+	[System.Serializable]
 public class Versioned
 {
 	public int version;
