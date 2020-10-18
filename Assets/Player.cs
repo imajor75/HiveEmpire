@@ -117,10 +117,17 @@ public class Player : ScriptableObject
 
 	public void RegisterItem( Item item )
 	{
+		item.assert.AreEqual( item.owner, this );
 		int slotIndex = firstPossibleEmptyItemSlot;
 		while ( slotIndex < items.Count && items[slotIndex] != null )
-		item.assert.AreEqual( item.owner, this );
-		items.Add( item );
+			slotIndex++;
+
+		if ( slotIndex < items.Count )
+			items[slotIndex] = item;
+		else
+			items.Add( item );
+		item.index = slotIndex;
+		firstPossibleEmptyItemSlot = slotIndex + 1;
 	}
 
 	public void UnregisterItem( Item item )
