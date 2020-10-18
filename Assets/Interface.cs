@@ -192,6 +192,10 @@ public class Interface : Assert.Base
 			NewGame( new System.Random().Next() );
 			print( "New game created" );
 		}
+		if ( Input.GetKeyDown( KeyCode.I ) )
+		{
+			ItemListPanel.Create().Open();
+		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )
 		{
 			for ( int i = panels.Count - 1; i >= 0; i-- )
