@@ -1531,6 +1531,23 @@ public class Interface : Assert.Base
 		}
 	}
 
+	public class ItemListPanel : Panel
+	{
+		public static ItemListPanel Create()
+		{
+			return new GameObject().AddComponent<ItemListPanel>();
+		}
+
+		public void Open()
+		{
+			base.Open();
+			name = "Item list panel";
+
+			Frame( 0, 0, 200, 200 );
+
+		}
+	}
+
 	public interface InputHandler
 	{
 		bool OnMovingOverNode( GroundNode node );

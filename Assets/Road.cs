@@ -111,7 +111,8 @@ public class Road : Assert.Base, Interface.InputHandler
 		int direction = last.DirectionTo( node );
 		if ( direction < 0 )
 		{
-			Flag.Create().Setup( node, owner );
+			if ( node.flag == null )
+				Flag.Create().Setup( node, owner );
 			if ( node.flag )
 			{
 				// Find a path to the flag, and finish the road based on it

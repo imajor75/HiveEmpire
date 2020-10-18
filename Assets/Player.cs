@@ -14,8 +14,8 @@ public class Player : ScriptableObject
 	public int bowmansProduced = 0;
 	public int coinsProduced = 0;
 
-	public List<Stock> stocks;
-	public List<Item> items;
+	public List<Stock> stocks = new List<Stock>();
+	public List<Item> items = new List<Item>();
 	public int firstPossibleEmptyItemSlot = 0;
 
 	public static Player Create()
