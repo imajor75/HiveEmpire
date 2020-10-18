@@ -332,8 +332,8 @@ public class Interface : Assert.Base
 			f.borderWidth = borderWidth;
 			Init( f.rectTransform, x, y, xs, ys, parent );
 			return f;
-		}
 
+		}
 		public ItemImage ItemIcon( int x, int y, int xs = 0, int ys = 0, Item.Type type = Item.Type.unknown, Component parent = null )
 		{
 			if ( xs == 0 )
@@ -507,6 +507,7 @@ public class Interface : Assert.Base
 	public class Frame : Image
 	{
 		public int borderWidth = 30;
+		public GameObject inner;
 
 		static Sprite[] pieces = new Sprite[9];
 		public static void Initialize()
@@ -528,8 +529,11 @@ public class Interface : Assert.Base
 			}
 		}
 
-		new void Start()
+		new public void Start()
 		{
+			if ( inner )
+				return;
+
 			int w = borderWidth;
 			int a = 0;
 			base.Start();
@@ -615,6 +619,11 @@ public class Interface : Assert.Base
 			i33.name = "Frame piece";
 
 			enabled = false;
+
+			inner = i22.gameObject;
+			var scroll = inner.AddComponent<ScrollRect>();
+			scroll.vertical = true;
+			inner.AddComponent<RectMask2D>();
 		}
 	}
 
@@ -1547,7 +1556,9 @@ public class Interface : Assert.Base
 			base.Open();
 			name = "Item list panel";
 
-			Frame( 0, 0, 200, 200 );
+			var frame = Frame( 0, 0, 200, 200 );
+			frame.Start();
+			Image( 0, 0, 300, 300, iconHauler, frame.inner.transform );
 
 		}
 	}

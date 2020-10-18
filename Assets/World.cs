@@ -132,27 +132,11 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Path>();
+		//	var list = Resources.FindObjectsOfTypeAll<Item>();
 		//	foreach ( var o in list )
 		//	{
-		//		if ( !o.ready || o.mode != PathFinder.Mode.onRoad )
-		//			continue;
-		//		o.roadPathReversed.Clear();
-		//		for ( int i = 0; i < o.roadPath.Count; i++ )
-		//		{
-		//			if ( o.roadPath[i] == null )
-		//			{
-		//				o.roadPathReversed.Add( false );
-		//				continue;
-		//			}
-
-		//			bool r = false;
-		//			if ( i == o.roadPath.Count - 1 )
-		//				r = o.roadPath[i].nodes[0] == o.target;
-		//			else
-		//				r = o.roadPath[i + 1].GetEnd( 0 ) == o.roadPath[i].GetEnd( 0 ) || o.roadPath[i + 1].GetEnd( 1 ) == o.roadPath[i].GetEnd( 0 );
-		//			o.roadPathReversed.Add( r );
-		//		}
+		//		if ( o.index < 0 )
+		//			o.owner.RegisterItem( o );
 		//	}
 		//}
 		gameInProgress = true;
