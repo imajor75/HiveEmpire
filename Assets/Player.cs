@@ -124,12 +124,24 @@ public class Player : ScriptableObject
 	public void UnregisterItem( Item item )
 	{
 		item.assert.AreEqual( item.owner, this );
-		items.Remove( item );
+		item.assert.AreEqual( items[item.index], item );
+		items[item.index] = null;
+		if ( item.index < firstPossibleEmptyItemSlot )
+			firstPossibleEmptyItemSlot = item.index;
 	}
 
+	public void Validate()
+	{
+		Assert.global.IsNotNull( mainBuilding );
+		foreach ( var building in influencers )
+			Assert.global.IsNotNull( building );
+		foreach ( var stock in stocks )
+			Assert.global.IsNotNull( stock );
+		Assert.global.AreEqual( itemHaulPriorities.Count, (int)Item.Type.total );
+	}
+}
 
-
-	[System.Serializable]
+[System.Serializable]
 public class Versioned
 {
 	public int version;

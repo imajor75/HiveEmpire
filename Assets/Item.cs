@@ -116,6 +116,7 @@ public class Item : Assert.Base
 			}
 		}
 		UpdateLook();
+		owner.RegisterItem( this );
 		return this;
 	}
 
@@ -310,6 +311,7 @@ public class Item : Assert.Base
 
 	public bool Remove()
 	{
+		owner.UnregisterItem( this );
 		CancelTrip();
 		Destroy( gameObject );
 		return true;
@@ -350,5 +352,6 @@ public class Item : Assert.Base
 			assert.IsNotNull( worker );
 		}
 		assert.AreNotEqual( index, -1 );
+		assert.AreEqual( owner.items[index], this );
 	}
 }

@@ -342,5 +342,7 @@ public class World : MonoBehaviour
 	public void Validate()
 	{
 		ground.Validate();
+		foreach ( var player in players )
+			player.Validate();
 	}
 }
