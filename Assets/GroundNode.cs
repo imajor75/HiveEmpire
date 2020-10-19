@@ -214,6 +214,14 @@ public class GroundNode : Assert.Base
 		Interface.NodePanel.Create().Open( this );
 	}
 
+	public int Id
+	{
+		get
+		{
+			return x + y * ground.width;
+		}
+	}
+
 	public void Validate()
 	{
 		int o = 0;

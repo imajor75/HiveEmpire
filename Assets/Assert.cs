@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -175,6 +176,25 @@ public class Assert
 		public Base()
 		{
 			assert = new Assert( this );
+		}
+
+		static public string Nice( string raw )
+		{
+			string nice = "";
+			bool capitalize = true;
+			foreach ( var c in raw )
+			{
+				char current = c;
+				if ( Char.IsUpper( c ) )
+					nice += " ";
+				if ( capitalize )
+				{
+					current = Char.ToUpper( c );
+					capitalize = false;
+				}
+				nice += current;
+			}
+			return nice;
 		}
 	}
 }

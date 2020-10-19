@@ -14,6 +14,10 @@ public class Player : ScriptableObject
 	public int bowmansProduced = 0;
 	public int coinsProduced = 0;
 
+	public List<Stock> stocks = new List<Stock>();
+	public List<Item> items = new List<Item>();
+	public int firstPossibleEmptyItemSlot = 0;
+
 	public static Player Create()
 	{
 		return ScriptableObject.CreateInstance<Player>();
@@ -97,6 +101,52 @@ public class Player : ScriptableObject
 	{
 		influencers.Remove( building );
 		mainBuilding.ground.RecalculateOwnership();
+	}
+
+	public void RegisterStock( Stock stock )
+	{
+		stock.assert.AreEqual( stock.owner, this );
+		stocks.Add( stock );
+	}
+
+	public void UnregisterStock( Stock stock )
+	{
+		stock.assert.AreEqual( stock.owner, this );
+		stocks.Remove( stock );
+	}
+
+	public void RegisterItem( Item item )
+	{
+		item.assert.AreEqual( item.owner, this );
+		int slotIndex = firstPossibleEmptyItemSlot;
+		while ( slotIndex < items.Count && items[slotIndex] != null )
+			slotIndex++;
+
+		if ( slotIndex < items.Count )
+			items[slotIndex] = item;
+		else
+			items.Add( item );
+		item.index = slotIndex;
+		firstPossibleEmptyItemSlot = slotIndex + 1;
+	}
+
+	public void UnregisterItem( Item item )
+	{
+		item.assert.AreEqual( item.owner, this );
+		item.assert.AreEqual( items[item.index], item );
+		items[item.index] = null;
+		if ( item.index < firstPossibleEmptyItemSlot )
+			firstPossibleEmptyItemSlot = item.index;
+	}
+
+	public void Validate()
+	{
+		Assert.global.IsNotNull( mainBuilding );
+		foreach ( var building in influencers )
+			Assert.global.IsNotNull( building );
+		foreach ( var stock in stocks )
+			Assert.global.IsNotNull( stock );
+		Assert.global.AreEqual( itemHaulPriorities.Count, (int)Item.Type.total );
 	}
 }
 

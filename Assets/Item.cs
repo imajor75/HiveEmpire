@@ -16,8 +16,6 @@ public class Item : Assert.Base
 	public Path path;
 	public Building destination;
 	public Building origin;
-	[JsonIgnore]
-	public int age;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
 	public Watch watchRoadDelete = new Watch();
@@ -27,6 +25,7 @@ public class Item : Assert.Base
 	public int flagTime;
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
+	public int index = -1;
 
 	[JsonIgnore]
 	public bool debugCancelTrip;
@@ -115,6 +114,7 @@ public class Item : Assert.Base
 			}
 		}
 		UpdateLook();
+		owner.RegisterItem( this );
 		return this;
 	}
 
@@ -309,6 +309,7 @@ public class Item : Assert.Base
 
 	public bool Remove()
 	{
+		owner.UnregisterItem( this );
 		CancelTrip();
 		Destroy( gameObject );
 		return true;
@@ -348,5 +349,7 @@ public class Item : Assert.Base
 				assert.AreEqual( buddy.buddy, this );
 			assert.IsNotNull( worker );
 		}
+		assert.AreNotEqual( index, -1 );
+		assert.AreEqual( owner.items[index], this );
 	}
 }

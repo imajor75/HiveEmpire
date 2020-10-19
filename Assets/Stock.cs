@@ -44,6 +44,7 @@ public class Stock : Building
 		if ( base.Setup( node, owner, configuration ) == null )
 			return null;
 
+		owner.RegisterStock( this );
 		return this;
 	}
 
@@ -78,6 +79,7 @@ public class Stock : Building
 	{
 		if ( main )
 			return false;
+		owner.UnregisterStock( this );
 		return base.Remove();
 	}
 
