@@ -194,7 +194,7 @@ public class Interface : Assert.Base
 		}
 		if ( Input.GetKeyDown( KeyCode.I ) )
 		{
-			ItemListPanel.Create().Open();
+			ItemListPanel.Create().Open( mainPlayer );
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )
 		{
@@ -301,6 +301,11 @@ public class Interface : Assert.Base
 
 		public void Open( GroundNode target = null, int x = 0, int y = 0 )
 		{
+			if ( target == null && x == 0 && y == 0 )
+			{
+				x = Screen.width / 2 - 50;
+				y = -Screen.height / 2 - 50;
+			}
 			Root.panels.Add( this );
 			name = "Panel";
 			frame = gameObject.AddComponent<Image>();
@@ -334,22 +339,64 @@ public class Interface : Assert.Base
 			return f;
 
 		}
+
+		public ScrollRect ScrollRect( int x, int y, int xs, int ys, bool vertical = true, bool horizontal = false, Component parent = null )
+		{
+			var scroll = new GameObject().AddComponent<ScrollRect>();
+			scroll.name = "Scroll view";
+			var mask = scroll.gameObject.AddComponent<RectMask2D>();
+			Init( mask.rectTransform, x, y, xs, ys, parent );
+			scroll.vertical = vertical;
+			scroll.horizontal = horizontal;
+
+			var content = new GameObject().AddComponent<Image>();
+			content.name = "Content";
+			content.transform.SetParent( scroll.transform, false );
+			scroll.content = content.rectTransform;
+			content.enabled = false;
+			return scroll;
+		}
+
 		public ItemImage ItemIcon( int x, int y, int xs = 0, int ys = 0, Item.Type type = Item.Type.unknown, Component parent = null )
 		{
 			if ( xs == 0 )
 				xs = iconSize;
 			if ( ys == 0 )
 				ys = iconSize;
-			Image( x - itemIconBorderSize, y + itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
+			var frame = Image( x - itemIconBorderSize, y + itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
 			ItemImage i = new GameObject().AddComponent<ItemImage>();
 			i.name = "ItemImage";
 			if ( type != Item.Type.unknown )
 				i.sprite = Item.sprites[(int)type];
 			else
 				i.enabled = false;
-			Init( i.rectTransform, x, y, xs, ys, parent );
+			i.transform.SetParent( frame.transform );
+			i.rectTransform.anchorMin = Vector2.zero;
+			i.rectTransform.anchorMax = Vector2.one;
+			i.rectTransform.offsetMax = -( i.rectTransform.offsetMin = new Vector2( itemIconBorderSize, itemIconBorderSize ) );
+			Init( frame.rectTransform, x - itemIconBorderSize, y + itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, parent );
 			i.gameObject.AddComponent<Button>().onClick.AddListener( i.Track );
 			return i;
+		}
+
+		public Component BuildingIcon( int x, int y, Building building, Component parent = null )
+		{
+			if ( building == null )
+				return null;
+
+			var text = Text( x, y, 150, 20, building.title, parent );
+			text.gameObject.AddComponent<Button>().onClick.AddListener( delegate { SelectBuilding( building ); } );
+			return text;
+		}
+
+		void SelectBuilding( Building building )
+		{
+			var workshop = building as Workshop;
+			if ( workshop )
+				WorkshopPanel.Create().Open( workshop, true );
+			var stock = building as Stock;
+			if ( stock )
+				StockPanel.Create().Open( stock, true );
 		}
 
 		public Button Button( int x, int y, int xs, int ys, Sprite picture, Component parent = null )
@@ -507,7 +554,6 @@ public class Interface : Assert.Base
 	public class Frame : Image
 	{
 		public int borderWidth = 30;
-		public GameObject inner;
 
 		static Sprite[] pieces = new Sprite[9];
 		public static void Initialize()
@@ -531,9 +577,6 @@ public class Interface : Assert.Base
 
 		new public void Start()
 		{
-			if ( inner )
-				return;
-
 			int w = borderWidth;
 			int a = 0;
 			base.Start();
@@ -619,11 +662,6 @@ public class Interface : Assert.Base
 			i33.name = "Frame piece";
 
 			enabled = false;
-
-			inner = i22.gameObject;
-			var scroll = inner.AddComponent<ScrollRect>();
-			scroll.vertical = true;
-			inner.AddComponent<RectMask2D>();
 		}
 	}
 
@@ -1327,7 +1365,7 @@ public class Interface : Assert.Base
 				return;
 			}
 
-			stats.text = "Age: " + ( World.instance.time - item.age ) / 50 + " secs, at flag for " + ( World.instance.time - item.flagTime ) / 50 + " secs";
+			stats.text = "Age: " + ( World.instance.time - item.born ) / 50 + " secs, at flag for " + ( World.instance.time - item.flagTime ) / 50 + " secs";
 
 			if ( item.destination )
 			{
@@ -1546,20 +1584,111 @@ public class Interface : Assert.Base
 
 	public class ItemListPanel : Panel
 	{
+		ScrollRect scroll;
+		Player player;
+
 		public static ItemListPanel Create()
 		{
 			return new GameObject().AddComponent<ItemListPanel>();
 		}
 
-		public void Open()
+		public void Open( Player player )
 		{
 			base.Open();
 			name = "Item list panel";
+			this.player = player;
+			World.instance.SetTimeFactor( 0 );
 
-			var frame = Frame( 0, 0, 200, 200 );
-			frame.Start();
-			Image( 0, 0, 300, 300, iconHauler, frame.inner.transform );
+			Frame( 0, 0, 340, 320 );
+			Button( 310, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Text( 50, -20, 100, 20, "Origin" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByOrigin ); } );
+			Text( 150, -20, 100, 20, "Destination" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByDestination ); } );
+			Text( 250, -20, 100, 20, "Age" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByAge ); } );
+			Text( 300, -20, 100, 20, "Road length" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByPathLength ); } );
 
+			scroll = ScrollRect( 20, -40, 320, 260 );
+			Fill( CompareByAge );
+		}
+
+		void OnDestroy()
+		{
+			World.instance.SetTimeFactor( 1 );
+		}
+
+		void Fill( Comparison<Item> comparison )
+		{
+			int row = 0;
+			foreach ( Transform child in scroll.content )
+				Destroy( child.gameObject );
+
+			List<Item> sortedItems = new List<Item>();
+			foreach ( var item in player.items )
+			{
+				if ( item )
+					sortedItems.Add( item );
+			}
+			sortedItems.Sort( comparison );
+
+			foreach ( var item in sortedItems )
+			{
+				var i = ItemIcon( 0, row, 0, 0, Item.Type.unknown, scroll.content );
+				i.SetItem( item );
+
+				BuildingIcon( 30, row, item.origin, scroll.content );
+				BuildingIcon( 130, row, item.destination, scroll.content );
+				Text( 230, row, 50, 20, ( ( World.instance.time - item.born ) / 50 ).ToString(), scroll.content );
+				if ( item.path )
+					Text( 280, row, 30, 20, item.path.roadPath.Count.ToString(), scroll.content );
+				row -= iconSize + 5;
+			}
+			( scroll.content.transform as RectTransform ).sizeDelta = new Vector2( 320, sortedItems.Count * ( iconSize + 5 ) );
+			scroll.verticalNormalizedPosition = 1;
+		}
+
+		static public int CompareByAge( Item itemA, Item itemB )
+		{
+			if ( itemA.born == itemB.born )
+				return 0;
+			if ( itemA.born < itemB.born )
+				return -1;
+			return 1;
+		}
+		static public int CompareByPathLength( Item itemA, Item itemB )
+		{
+			int lA = 0, lB = 0;
+			if ( itemA.path )
+				lA = itemA.path.roadPath.Count;
+			if ( itemB.path )
+				lB = itemB.path.roadPath.Count;
+
+			if ( lA == lB )
+				return 0;
+			if ( lA > lB )
+				return -1;
+			return 1;
+		}
+		static public int CompareByOrigin( Item itemA, Item itemB )
+		{
+			return CompareBuildings( itemA.origin, itemB.origin );
+		}
+		static public int CompareByDestination( Item itemA, Item itemB )
+		{
+			return CompareBuildings( itemA.destination, itemB.destination );
+		}
+		static int CompareBuildings( Building A, Building B )
+		{
+			if ( A == null && B == null )
+				return 0;
+			if ( A == null )
+				return 1;
+			if ( B == null )
+				return -1;
+
+			if ( A.node.Id == B.node.Id )
+				return 0;
+			if ( A.node.Id < B.node.Id )
+				return 1;
+			return -1;
 		}
 	}
 

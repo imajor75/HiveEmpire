@@ -16,8 +16,6 @@ public class Item : Assert.Base
 	public Path path;
 	public Building destination;
 	public Building origin;
-	[JsonIgnore]
-	public int age;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static public Material[] materials = new Material[(int)Type.total];
 	public Watch watchRoadDelete = new Watch();
