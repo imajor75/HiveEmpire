@@ -493,27 +493,61 @@ public class Road : Assert.Base, Interface.InputHandler
 
 	public void Split( Flag flag )
 	{
+		bool external = false;
+		int forget = 0;
+		int splitPoint = 0;
 		assert.IsNull( flag.user );
-		assert.AreEqual( flag.node.road, this );
+		if ( flag.node.road == this )
+		{
+			while ( splitPoint < nodes.Count && nodes[splitPoint] != flag.node )
+				splitPoint++;
+			assert.AreEqual( nodes[splitPoint], flag.node );
+		}
+		else
+		{
+			int start = 0;
+			while ( start < nodes.Count - 1 && nodes[start].DistanceFrom( flag.node ) > 1 )
+				start++;
+			int end = start + 1;
+			while ( end < nodes.Count - 1 && nodes[end].DistanceFrom( flag.node ) == 1 )
+				end++;
+			if ( end - start == 1 )
+				return;
+
+			external = true;
+			splitPoint = end - 2;
+			forget = end - 2 - start;
+		}
+
+		for ( int i = splitPoint; i > splitPoint - forget; i-- )
+		{
+			if ( workerAtNodes[i] )
+				workerAtNodes[i].atRoad = false;
+			nodes[i].road = null;
+		}
+
 		Road first = Create(), second = Create();
 		first.owner = second.owner = owner;	
 		first.ready = second.ready = true;
 		first.ground = second.ground = ground;
-		int splitPoint = 0;
-			while ( splitPoint < nodes.Count && nodes[splitPoint] != flag.node )
-				splitPoint++;
-		assert.AreEqual( nodes[splitPoint], flag.node );
-		first.nodes = nodes.GetRange( 0, splitPoint + 1 );
-		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 );
+		first.nodes = nodes.GetRange( 0, splitPoint + 1 - forget );
+		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 - forget );
 		second.nodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
 		second.workerAtNodes = workerAtNodes.GetRange( splitPoint, workerAtNodes.Count - splitPoint );
 		second.workerAtNodes[0] = null;
+		if ( external )
+		{
+			first.nodes.Add( flag.node );
+			first.workerAtNodes.Add( null );
+			second.nodes[0] = flag.node;
+		}
 
 		foreach ( var worker in workers )
         {
 			int workerPoint = NodeIndex( worker.node );
 			if ( flag.node == worker.node )
 			{
+				assert.IsFalse( external );
 				assert.AreEqual( workerPoint, -1 );
 				workerPoint = splitPoint;
 			}
@@ -521,9 +555,10 @@ public class Road : Assert.Base, Interface.InputHandler
 			{
 				GroundNode flagNode = worker.node.Add( Building.flagOffset );
 				workerPoint = NodeIndex( flagNode );
-				assert.AreNotEqual( workerPoint, -1 );
+				if ( !external )
+					assert.AreNotEqual( workerPoint, -1 );
 			}
-			if ( worker.atRoad && splitPoint == workerPoint )
+			if ( worker.atRoad && splitPoint == workerPoint && !external )
 			{
 				flag.user = worker;
 				worker.exclusiveFlag = flag;
@@ -554,6 +589,10 @@ public class Road : Assert.Base, Interface.InputHandler
 
 		invalid = true;
 		Destroy( gameObject );
+
+		first.Validate();
+		second.Validate();
+		flag.Validate();
 	}
 
 	void RegisterOnGround()
@@ -675,6 +714,8 @@ public class Road : Assert.Base, Interface.InputHandler
 			}
 		}
 		assert.AreEqual( realJam, Jam );
+		for ( int i = 0; i < nodes.Count - 1; i++ )
+			assert.AreEqual( nodes[i].DistanceFrom( nodes[i + 1] ), 1 );
 	}
 
 	public bool OnMovingOverNode( GroundNode node )

@@ -133,7 +133,6 @@ public class Item : Assert.Base
 			debugCancelTrip = false;
 			return;
 		}
-		transform.LookAt( World.instance.eye.transform.position, -Vector3.up );
 		if ( watchRoadDelete.Check() && path )
 		{
 			for ( int i = 0; i < path.roadPath.Count; i++ )
@@ -221,8 +220,6 @@ public class Item : Assert.Base
 			destination = building;
 			building.ItemOnTheWay( this );
 			tripCancelled = false;
-			if ( oldDestination && oldDestination != building )
-				print( "Item reroute (" + type + " to " + destination.title + ")" );
 			return true;
 		}
 		return false;
@@ -268,6 +265,7 @@ public class Item : Assert.Base
 		if ( flag != null )
 			assert.AreEqual( destination.flag, flag );
 		destination.ItemArrived( this );
+		owner.UnregisterItem( this );
 		Destroy( gameObject );
 	}
 
@@ -308,8 +306,8 @@ public class Item : Assert.Base
 
 	public bool Remove()
 	{
-		owner.UnregisterItem( this );
 		CancelTrip();
+		owner.UnregisterItem( this );
 		Destroy( gameObject );
 		return true;
 	}
@@ -330,6 +328,8 @@ public class Item : Assert.Base
 			if ( destination && !path.IsFinished && !path.Road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}
+		else
+			assert.IsNotNull( worker );
 		if ( nextFlag )
 		{
 			assert.IsNotNull( worker );

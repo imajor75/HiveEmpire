@@ -27,6 +27,7 @@ public class Interface : Assert.Base
 	public static Sprite iconPath;
 	public static Sprite iconButton;
 	public static Sprite iconBox;
+	public static Sprite iconMagnet;
 	public static Sprite templateSmallFrame;
 	public GameObject debug;
 	public static Interface instance;
@@ -77,6 +78,7 @@ public class Interface : Assert.Base
 		iconPath = LoadSprite( "road" );
 		iconButton = LoadSprite( "simple UI & icons/button/button_login" );
 		iconBox = LoadSprite( "box" );
+		iconMagnet = LoadSprite( "magnet" );
 		templateSmallFrame = LoadSprite( "simple UI & icons/box/smallFrame" );
 		Frame.Initialize();
 		print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
@@ -1138,6 +1140,7 @@ public class Interface : Assert.Base
 			Button( 230, 0, 20, 20, iconExit ).onClick.AddListener( Close );
 			Button( 210, -45, 20, 20, iconDestroy ).onClick.AddListener( Remove );
 			Button( 20, -45, 20, 20, iconPath ).onClick.AddListener( StartRoad );
+			Button( 45, -45, 20, 20, iconMagnet ).onClick.AddListener( CaptureRoads );
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
@@ -1168,6 +1171,21 @@ public class Interface : Assert.Base
 					Root.viewport.inputHandler = Road.newRoad;
 			}
 			Close();
+		}
+
+		void CaptureRoads()
+		{
+			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+			{
+				GroundNode A = flag.node.Neighbour( i ), B = flag.node.Neighbour( ( i + 1 ) % GroundNode.neighbourCount );
+				if ( A.road && A.road == B.road )
+				{
+					if ( A.road.GetEnd( 0 ) == flag || A.road.GetEnd( 1 ) == flag )
+						continue;
+					A.road.Split( flag );
+					return;
+				}
+			}
 		}
 
 		public override void Update()

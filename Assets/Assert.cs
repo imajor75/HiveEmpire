@@ -10,7 +10,7 @@ public class Assert
 {
 	Component boss;
 	public static Assert global = new Assert( null );
-	static bool problemSelected = false;
+	public static bool problemSelected = false;
 
 	public Assert() { }
 
@@ -135,7 +135,7 @@ public class Assert
 	{
 #if DEBUG
 		if ( Selection.Contains( boss.gameObject ) )
-			UnityEngine.Debug.Log( Caller( 2 ) + " on selected" );
+			UnityEngine.Debug.Break();
 #endif
 	}
 

@@ -234,6 +234,7 @@ public class Worker : Assert.Base
 			}
 
 			wishedPoint = -1;
+			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.workerAtNodes.Count );	// TODO Triggered
 			if ( road.workerAtNodes[currentPoint] == boss ) // it is possible that the other worker already took the place, so it must be checked
 				road.workerAtNodes[currentPoint] = null;
 
@@ -694,6 +695,7 @@ public class Worker : Assert.Base
 	// Update is called once per frame
 	void FixedUpdate()
 	{
+		assert.IsNotSelected();
 		if ( debugReset )
 		{
 			Reset();
@@ -711,8 +713,6 @@ public class Worker : Assert.Base
 				walkProgress -= 1;
 			}
 		}
-		if ( itemInHands && itemInHands.nextFlag == null && itemInHands.destination == null )   // Item trip was cancelled during the hauler trying to finish the path into a building
-			Reset();
 
 		if ( walkTo == null )
 		{
@@ -844,11 +844,14 @@ public class Worker : Assert.Base
 						ScheduleWalkToNeighbour( node.Add( Building.flagOffset ) );	// It is possible, that the building is not there anymore
 					ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
 					ScheduleDeliverItem( itemInHands );
+
+					// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has space
+					// By calling CancelTrip, this expectation is eliminated, and won't cause an assert fail.
+					itemInHands.CancelTrip();
 					return;
 				}
-				itemInHands.Remove();
-				animator.SetTrigger( putdownID );
-				itemInHands = null;
+				ScheduleWait( 50 );
+				return;
 			}
 
 			if ( FindItemToCarry() )

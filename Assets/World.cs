@@ -133,13 +133,28 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
+		//foreach ( var player in players )
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Stock>();
-		//	foreach ( var o in list )
+		//	for ( int i = 0; i < player.items.Count; i++ )
 		//	{
-		//		o.owner.RegisterStock( o );
+		//		Item o = player.items[i];
+		//		if ( o && o.destination && !o.destination.itemsOnTheWay.Contains( o ) )
+		//		{
+		//			Destroy( o );
+		//			player.items[i] = null;
+		//		}
 		//	}
 		//}
+		{
+			var list = Resources.FindObjectsOfTypeAll<Item>();
+			foreach ( var o in list )
+				o.Validate();
+		}
+		{
+			var list = Resources.FindObjectsOfTypeAll<Road>();
+			foreach ( var o in list )
+				o.Validate();
+		}
 		gameInProgress = true;
 	}	
 

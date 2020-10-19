@@ -347,7 +347,7 @@ abstract public class Building : Assert.Base
 	{
 		if ( cancel )
 		{
-			assert.IsTrue( itemsOnTheWay.Contains( item ) );
+			item.assert.IsTrue( itemsOnTheWay.Contains( item ) );
 			itemsOnTheWay.Remove( item );
 		}
 		else
@@ -357,7 +357,7 @@ abstract public class Building : Assert.Base
 
 	public virtual void ItemArrived( Item item )
 	{
-		assert.IsTrue( itemsOnTheWay.Contains( item ) );
+		item.assert.IsTrue( itemsOnTheWay.Contains( item ) );
 		itemsOnTheWay.Remove( item );
 		construction.ItemArrived( item );
 	}
