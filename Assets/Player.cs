@@ -9,6 +9,9 @@ public class Player : ScriptableObject
 	public Versioned versionedRoadDelete = new Versioned();
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
+	const int efficiencyUpdateTime = 3000;
+	const float efficiencyUpdateFactor = 0.3f;
+	int lastEfficiencyUpdate;
 
 	public int soldiersProduced = 0;
 	public int bowmansProduced = 0;
@@ -17,6 +20,30 @@ public class Player : ScriptableObject
 	public List<Stock> stocks = new List<Stock>();
 	public List<Item> items = new List<Item>();
 	public int firstPossibleEmptyItemSlot = 0;
+	public int[] production = new int[(int)Item.Type.total];
+	public float[] efficiency = new float[(int)Item.Type.total];
+	public static readonly float[] efficiencyFactors = {
+		/*log*/1,
+		/*stone*/0,
+		/*plank*/1,
+		/*fish*/1,
+		/*grain*/0.4f,
+		/*flour*/2,
+		/*salt*/2,
+		/*pretzel*/1,
+		/*hide*/1,
+		/*iron*/1,
+		/*coal*/0.33f,
+		/*gold*/1,
+		/*bow*/1, 
+		/*steel*/1,
+		/*weapon*/1, 
+		/*water*/1,
+		/*beer*/0.4f,
+		/*pork*/1,
+		/*coin*/0.5f
+	};
+
 
 	public static Player Create()
 	{
@@ -42,9 +69,23 @@ public class Player : ScriptableObject
 
 	public void Start()
 	{
+		Assert.global.AreEqual( efficiencyFactors.Length, (int)Item.Type.total );
 		while ( itemHaulPriorities.Count < (int)Item.Type.total )
 			itemHaulPriorities.Add( 1 );
 		itemDispatcher.Start();
+	}
+
+	public void FixedUpdate()
+	{
+		if ( World.instance.time - lastEfficiencyUpdate < efficiencyUpdateTime )
+			return;
+
+		lastEfficiencyUpdate = World.instance.time;
+		for ( int i = 0; i < efficiency.Length; i++ )
+		{
+			efficiency[i] = ( 1 - efficiencyFactors[i] ) * efficiency[i] + efficiencyFactors[i] * production[i];
+			production[i] = 0;
+		}
 	}
 
 	public void LateUpdate()
@@ -137,6 +178,11 @@ public class Player : ScriptableObject
 		items[item.index] = null;
 		if ( item.index < firstPossibleEmptyItemSlot )
 			firstPossibleEmptyItemSlot = item.index;
+	}
+
+	public void ItemProduced( Item.Type itemType, int quantity = 1 )
+	{
+		production[(int)itemType] += quantity;
 	}
 
 	public void Validate()

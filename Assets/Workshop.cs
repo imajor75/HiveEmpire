@@ -689,6 +689,7 @@ public class Workshop : Building
 				working = false;
 				soundSource.Stop();
 				itemsProduced += configuration.outputStackSize;
+				owner.ItemProduced( configuration.outputType, configuration.outputStackSize );
 			}
 		}
 	}
@@ -753,6 +754,7 @@ public class Workshop : Building
 		Item item = null;
 		if ( configuration.outputType != Item.Type.unknown )
 		{
+			owner.ItemProduced( configuration.outputType );	// TODO It would be better to report the item once the worker brought it back to flag
 			item = Item.Create().Setup( configuration.outputType, this );
 			flag.ReserveItem( item );
 			item.worker = worker;

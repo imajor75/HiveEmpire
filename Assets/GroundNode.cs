@@ -214,6 +214,7 @@ public class GroundNode : Assert.Base
 		Interface.NodePanel.Create().Open( this );
 	}
 
+	[JsonIgnore]
 	public int Id
 	{
 		get

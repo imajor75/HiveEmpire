@@ -194,7 +194,11 @@ public class Interface : Assert.Base
 		}
 		if ( Input.GetKeyDown( KeyCode.I ) )
 		{
-			ItemListPanel.Create().Open( mainPlayer );
+			ItemList.Create().Open( mainPlayer );
+		}
+		if ( Input.GetKeyDown( KeyCode.J ) )
+		{
+			ItemStats.Create().Open( mainPlayer );
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )
 		{
@@ -1582,14 +1586,14 @@ public class Interface : Assert.Base
 		}
 	}
 
-	public class ItemListPanel : Panel
+	public class ItemList : Panel
 	{
 		ScrollRect scroll;
 		Player player;
 
-		public static ItemListPanel Create()
+		public static ItemList Create()
 		{
-			return new GameObject().AddComponent<ItemListPanel>();
+			return new GameObject().AddComponent<ItemList>();
 		}
 
 		public void Open( Player player )
@@ -1610,8 +1614,9 @@ public class Interface : Assert.Base
 			Fill( CompareByAge );
 		}
 
-		void OnDestroy()
+		new void OnDestroy()
 		{
+			base.OnDestroy();
 			World.instance.SetTimeFactor( 1 );
 		}
 
@@ -1689,6 +1694,79 @@ public class Interface : Assert.Base
 			if ( A.node.Id < B.node.Id )
 				return 1;
 			return -1;
+		}
+	}
+
+	public class ItemStats : Panel
+	{
+		ScrollRect scroll;
+		Player player;
+		Text finalEfficiency;
+		Text[] inStock = new Text[(int)Item.Type.total];
+		Text[] onWay = new Text[(int)Item.Type.total];
+		Text[] production = new Text[(int)Item.Type.total];
+		Text[] efficiency = new Text[(int)Item.Type.total];
+
+		public static ItemStats Create()
+		{
+			return new GameObject().AddComponent<ItemStats>();
+		}
+
+		public void Open( Player player )
+		{
+			base.Open();
+			this.player = player;
+			Frame( 0, 0, 300, 300 );
+			scroll = ScrollRect( 20, -20, 260, 230 );
+			Button( 270, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			finalEfficiency = Text( 100, -260, 100, 30 );
+			finalEfficiency.fontSize = 16;
+
+			for ( int i = 0; i < inStock.Length; i++ )
+			{
+				int row = i * - ( iconSize + 5 );
+				ItemIcon( 0, row, 0, 0, (Item.Type)i, scroll.content );
+				inStock[i] = Text( 30, row, 40, iconSize, "0", scroll.content );
+				onWay[i] = Text( 70, row, 40, iconSize, "0", scroll.content );
+				production[i] = Text( 110, row, 40, iconSize, "0", scroll.content );
+				efficiency[i] = Text( 150, row, 40, iconSize, "0", scroll.content );
+			}
+
+			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 230, player.efficiency.Length * ( iconSize + 5 ) );
+		}
+
+		new void Update()
+		{
+			base.Update();
+			int[] inStockCount = new int[(int)Item.Type.total];
+			foreach ( var stock in player.stocks )
+			{
+				for ( int i = 0; i < inStock.Length; i++ )
+					inStockCount[i] += stock.content[i];
+			}
+
+			int[] onWayCount = new int[(int)Item.Type.total];
+			foreach ( var item in player.items )
+			{
+				if ( item == null )
+					continue;
+				onWayCount[(int)item.type]++;
+			}
+
+			float maxEfficiency = float.MaxValue;
+			for ( int i = 0; i < inStock.Length; i++ )
+			{
+				int row = i * - ( iconSize + 5 );
+				inStock[i].text = inStockCount[i].ToString();
+				onWay[i].text = onWayCount[i].ToString();
+				production[i].text = player.efficiency[i].ToString();
+				float itemEfficiency = Player.efficiencyFactors[i] * player.efficiency[i];
+				efficiency[i].text = itemEfficiency.ToString();
+				if ( itemEfficiency < maxEfficiency )
+					maxEfficiency = itemEfficiency;
+			}
+
+			finalEfficiency.text = maxEfficiency.ToString();
 		}
 	}
 

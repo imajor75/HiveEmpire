@@ -218,6 +218,7 @@
     "type": "brewery",
     "stoneNeeded": 2,
     "outputType": "beer",
+	"outputStackSize": 2,
     "inputs": [
       {
         "itemType": "water"
@@ -265,7 +266,7 @@
     "outputType": "coin",
     "inputs": [
       {
-        "itemType": "coal"
+        "itemType": "log"
       },
       {
         "itemType": "gold"

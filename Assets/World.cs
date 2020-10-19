@@ -83,6 +83,8 @@ public class World : MonoBehaviour
 	void FixedUpdate()
 	{
 		time++;
+		foreach ( var player in players )
+			player.FixedUpdate();
 	}
 
 	public void LateUpdate()
@@ -132,15 +134,14 @@ public class World : MonoBehaviour
 			player.Start();
 
 		//{
-		//	var list = Resources.FindObjectsOfTypeAll<Item>();
+		//	var list = Resources.FindObjectsOfTypeAll<Stock>();
 		//	foreach ( var o in list )
 		//	{
-		//		if ( o.index < 0 )
-		//			o.owner.RegisterItem( o );
+		//		o.owner.RegisterStock( o );
 		//	}
 		//}
 		gameInProgress = true;
-	}
+	}	
 
 	public void Save( string fileName )
 	{
