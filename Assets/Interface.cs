@@ -358,11 +358,41 @@ public class Interface : Assert.Base
 			scroll.vertical = vertical;
 			scroll.horizontal = horizontal;
 
+			if ( horizontal )
+			{
+				var scrollBarObject = GameObject.Instantiate( Resources.Load<GameObject>( "scrollbar" ) );
+				var scrollBar = scrollBarObject.GetComponent<Scrollbar>();	// TODO Would be better to do this from script
+				scrollBar.name = "Horizontal scroll bar";
+				scrollBar.direction = Scrollbar.Direction.LeftToRight;
+				scroll.horizontalScrollbar = scrollBar;
+				scrollBar.transform.SetParent( scroll.transform );
+				var t = scrollBar.transform as RectTransform;
+				t.anchorMin = new Vector2( 1, 0 );
+				t.anchorMax = Vector2.one;
+				t.offsetMin = new Vector2( -20, 0 );
+				t.offsetMax = new Vector2( 0, vertical ? -20 : 0 );
+			}
+
+			if ( vertical )
+			{
+				var scrollBarObject = GameObject.Instantiate( Resources.Load<GameObject>( "scrollbar" ) );
+				var scrollBar = scrollBarObject.GetComponent<Scrollbar>();
+				scrollBar.name = "Vertical scroll bar";
+				scrollBar.direction = Scrollbar.Direction.BottomToTop;
+				scroll.verticalScrollbar = scrollBar;
+				scrollBar.transform.SetParent( scroll.transform );
+				var t = scrollBar.transform as RectTransform;
+				t.anchorMin = new Vector2( 1, 0 );
+				t.anchorMax = Vector2.one;
+				t.offsetMin = new Vector2( -20, 0 );
+				t.offsetMax = new Vector2( 0, horizontal ? -20 : 0 );
+			}
 			var content = new GameObject().AddComponent<Image>();
 			content.name = "Content";
 			content.transform.SetParent( scroll.transform, false );
 			scroll.content = content.rectTransform;
 			content.enabled = false;
+			content.rectTransform.sizeDelta = new Vector2( xs - ( vertical ? 20 : 0 ), ys - ( horizontal ? 20 : 0 ) );
 			return scroll;
 		}
 
@@ -1641,14 +1671,14 @@ public class Interface : Assert.Base
 			this.player = player;
 			World.instance.SetTimeFactor( 0 );
 
-			Frame( 0, 0, 340, 320 );
-			Button( 310, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Frame( 0, 0, 400, 320 );
+			Button( 370, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 50, -20, 100, 20, "Origin" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByOrigin ); } );
 			Text( 150, -20, 100, 20, "Destination" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByDestination ); } );
 			Text( 250, -20, 100, 20, "Age" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByAge ); } );
-			Text( 300, -20, 100, 20, "Road length" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByPathLength ); } );
+			Text( 300, -20, 100, 20, "Route" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByPathLength ); } );
 
-			scroll = ScrollRect( 20, -40, 320, 260 );
+			scroll = ScrollRect( 20, -40, 360, 260 );
 			Fill( CompareByAge );
 		}
 
@@ -1684,7 +1714,8 @@ public class Interface : Assert.Base
 					Text( 280, row, 30, 20, item.path.roadPath.Count.ToString(), scroll.content );
 				row -= iconSize + 5;
 			}
-			( scroll.content.transform as RectTransform ).sizeDelta = new Vector2( 320, sortedItems.Count * ( iconSize + 5 ) );
+			var t = scroll.content.transform as RectTransform;
+			t.sizeDelta = new Vector2( t.sizeDelta.x, sortedItems.Count * ( iconSize + 5 ) );
 			scroll.verticalNormalizedPosition = 1;
 		}
 
@@ -1754,9 +1785,13 @@ public class Interface : Assert.Base
 		{
 			base.Open();
 			this.player = player;
-			Frame( 0, 0, 300, 300 );
-			scroll = ScrollRect( 20, -20, 260, 230 );
-			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Frame( 0, 0, 320, 300 );
+			Text( 70, -20, 50, 20, "In stock" ).fontSize = 10;
+			Text( 120, -20, 50, 20, "On Road" ).fontSize = 10;
+			Text( 170, -20, 50, 20, "Per minute" ).fontSize = 10;
+			Text( 220, -20, 50, 20, "Efficiency" ).fontSize = 10;
+			scroll = ScrollRect( 20, -45, 280, 205 );
+			Button( 290, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			finalEfficiency = Text( 100, -260, 100, 30 );
 			finalEfficiency.fontSize = 16;
 
@@ -1765,9 +1800,9 @@ public class Interface : Assert.Base
 				int row = i * - ( iconSize + 5 );
 				ItemIcon( 0, row, 0, 0, (Item.Type)i, scroll.content );
 				inStock[i] = Text( 30, row, 40, iconSize, "0", scroll.content );
-				onWay[i] = Text( 70, row, 40, iconSize, "0", scroll.content );
-				production[i] = Text( 110, row, 40, iconSize, "0", scroll.content );
-				efficiency[i] = Text( 150, row, 40, iconSize, "0", scroll.content );
+				onWay[i] = Text( 80, row, 40, iconSize, "0", scroll.content );
+				production[i] = Text( 130, row, 40, iconSize, "0", scroll.content );
+				efficiency[i] = Text( 180, row, 40, iconSize, "0", scroll.content );
 			}
 
 			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 230, player.efficiency.Length * ( iconSize + 5 ) );
