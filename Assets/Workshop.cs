@@ -59,24 +59,27 @@ public class Workshop : Building
 		public Productivity( float current )
 		{
 			this.current = current;
-			counter = workCounter = 0;
+			workCounter = 0;
 			weight = 0.5f;
 			timinglength = 3000;
+			timer.reference = 0;
 		}
 		public void FixedUpdate( Workshop boss )
 		{
-			counter += World.TimeStack;
+			if ( timer.Empty )
+				timer.Start();
 			if ( boss.IsWorking() )
-				workCounter += World.TimeStack;
-			if ( counter >= timinglength )
+				workCounter += (int)World.instance.timeFactor;
+			if ( timer.Age >= timinglength )
 			{
-				float p = (float)workCounter/counter;
+				float p = (float)workCounter/timer.Age;
 				current = current * ( 1 - weight ) + p * weight;
-				counter = workCounter = 0;
+				workCounter = 0;
+				timer.Start();
 			}
 		}
 		public float current;
-		public int counter;
+		public World.Timer timer;
 		public int workCounter;
 		public float weight;
 		public int timinglength;
@@ -133,7 +136,7 @@ public class Workshop : Building
 	{
 		public GroundNode node;
 		public Resource.Type resourceType;
-		public int waitTimer = 0;
+		public World.Timer timer;
 		public Item item;
 
 		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType, Item item )
@@ -161,6 +164,9 @@ public class Workshop : Building
 		}
 		public override bool ExecuteFrame()
 		{
+			if ( timer.Empty )
+				timer.Start( resourceCutTime[(int)resourceType] );
+
 			if ( !boss.soundSource.isPlaying )
 			{
 				boss.soundSource.clip = Worker.resourceGetSounds.GetMediaData( resourceType );
@@ -168,7 +174,7 @@ public class Workshop : Building
 				boss.soundSource.Play();
 			}
 
-			if ( (waitTimer += World.TimeStack) < resourceCutTime[(int)resourceType] )    // TODO Working on the resource
+			if ( !timer.Done )    // TODO Working on the resource
 				return false;
 
 			boss.soundSource.Stop();

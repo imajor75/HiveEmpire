@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,7 +10,7 @@ public class Resource : Assert.Base
 	public GroundNode node;
 	public bool underGround;
 	public Type type;
-	public int growth = 0;
+	public World.Timer life;
 	public int exposed = 0;
 	public int charges = 1;
 	GameObject body;
@@ -155,14 +156,14 @@ public class Resource : Assert.Base
 	{
 		if ( type == Type.cornfield )
 		{
-			float growth = (float)this.growth / cornfieldGrowthMax;
+			float growth = (float)this.life.Age / cornfieldGrowthMax;
 			if ( growth > 1 )
 				growth = 1;
 			transform.localScale = new Vector3( 1, growth, 1 );
 		}
 		if ( type == Type.tree )
 		{
-			float size = (float)growth/treeGrowthMax;
+			float size = (float)life.Age/treeGrowthMax;
 			size = Math.Max( size, 0.1f );
 			size = Math.Min( size, 1 );
 			transform.localScale = Vector3.one * size;
@@ -171,7 +172,6 @@ public class Resource : Assert.Base
 
 	void FixedUpdate()
 	{
-		growth += (int)node.ground.world.timeFactor;
 		keepAwayTimer -= (int)node.ground.world.timeFactor;
 		exposed -= (int)node.ground.world.timeFactor;
 		if ( underGround )
@@ -267,9 +267,9 @@ public class Resource : Assert.Base
 		if ( keepAwayTimer > 0 )
 			return false;
 		if ( type == Type.tree )
-			return growth > treeGrowthMax;
+			return life.Age > treeGrowthMax;
 		if ( type == Type.cornfield )
-			return growth > cornfieldGrowthMax;
+			return life.Age > cornfieldGrowthMax;
 		return true;
 	}
 

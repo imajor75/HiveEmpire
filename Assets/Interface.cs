@@ -1002,7 +1002,7 @@ public class Interface : Assert.Base
 
 		void AddTree()
 		{
-			Resource.Create().Setup( node, Resource.Type.tree ).growth = Resource.treeGrowthMax;
+			Resource.Create().Setup( node, Resource.Type.tree ).life.Start( -Resource.treeGrowthMax );
 		}
 
 		void Remove()

@@ -326,7 +326,7 @@ public class Worker : Assert.Base
 		static public int pickupTimeStart = 60;
 		public Item item;
 		public Path path;
-		public int pickupTimer = pickupTimeStart;
+		public World.Timer timer;
 
 		public void Setup( Worker boss, Item item )
 		{
@@ -353,15 +353,16 @@ public class Worker : Assert.Base
 				boss.assert.AreEqual( item.buddy.worker, boss );
 			if ( boss.type == Type.hauler )
 				boss.assert.IsNull( boss.itemInHands );
-			if ( pickupTimer == pickupTimeStart )
+			if ( timer.Empty )
 			{
+				timer.Start( pickupTimeStart );
 				boss.animator.ResetTrigger( putdownID );
 				boss.animator.SetTrigger( pickupID );
 				if ( boss.itemTable )
 					boss.itemTable.material = Item.materials[(int)item.type];
 				boss.box?.SetActive( true );
 			}
-			if ( ( pickupTimer -= World.TimeStack ) > 0 )
+			if ( !timer.Done )
 				return false;
 
 			if ( path != item.path )
@@ -389,7 +390,8 @@ public class Worker : Assert.Base
 	{
 		static public int putdownTimeStart = 60;
 		public Item item;
-		public int putdownTimer = putdownTimeStart;
+		public 
+			World.Timer timer;
 
 		public void Setup( Worker boss, Item item )
 		{
@@ -411,13 +413,14 @@ public class Worker : Assert.Base
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( putdownTimer == putdownTimeStart )
+			if ( timer.Empty )
 			{
+				timer.Start( putdownTimeStart );
 				if ( item.buddy )
 				{
 					if ( boss.itemTable )
 						boss.itemTable.material = Item.materials[(int)item.buddy.type];
-					putdownTimer -= 30;
+					timer.reference -= 30;
 				}
 				else
 				{
@@ -425,7 +428,7 @@ public class Worker : Assert.Base
 					boss.animator.SetTrigger( putdownID );
 				}
 			}
-			if ( ( putdownTimer -= World.TimeStack ) > 0 )
+			if ( !timer.Done )
 				return false;
 
 			boss.itemsDelivered++;
@@ -487,6 +490,7 @@ public class Worker : Assert.Base
 	public class Wait : Task
 	{
 		public int time;
+		public World.Timer timer;
 
 		public void Setup( Worker boss, int time )
 		{
@@ -496,8 +500,10 @@ public class Worker : Assert.Base
 
 		public override bool ExecuteFrame()
 		{
-			time -= World.TimeStack;
-			return time < 0;
+			if ( timer.Empty )
+				timer.Start( time );
+
+			return !timer.Done;
 		}
 	}
 

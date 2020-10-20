@@ -1,13 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class World : MonoBehaviour
 {
 	public Ground ground;
+	
+	[JsonProperty]
 	public float timeFactor = 1;
 	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
@@ -82,7 +83,7 @@ public class World : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		time++;
+		time += (int)timeFactor;
 		foreach ( var player in players )
 			player.FixedUpdate();
 	}
@@ -319,18 +320,32 @@ public class World : MonoBehaviour
 			o.speed = factor;
 	}
 
-	static public int TimeStack
-	{
-		get
-		{
-			return (int)instance.timeFactor;
-		}
-	}
-
 	public void Validate()
 	{
 		ground.Validate();
 		foreach ( var player in players )
 			player.Validate();
+	}
+
+	public struct Timer
+	{
+		public int reference;
+
+		public void Start( int delta = 0 )
+		{
+			reference = instance.time + delta;
+		}
+		[JsonIgnore]
+		public int Age
+		{
+			get
+			{
+				return instance.time - reference;
+			}
+		}
+		[JsonIgnore]
+		public bool Done { get { return Age >= 0; } }
+		[JsonIgnore]
+		public bool Empty { get { return reference == 0; } }
 	}
 }

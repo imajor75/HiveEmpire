@@ -135,7 +135,16 @@ public class Serializer : JsonSerializer
 		FieldInfo i = type.GetField( name );
 		Assert.global.IsNotNull( i, "No field with the name " + name + " found in " + type.Name );
 		reader.Read();
-		i.SetValue( Object(), ProcessFieldValue( i.FieldType ) );
+
+		try
+		{
+			i.SetValue( Object(), ProcessFieldValue( i.FieldType ) );
+		}
+		catch ( System.Exception exception )
+		{
+			Debug.Log( exception.Message );
+			Assert.global.IsTrue( false, "Field type mismatch with " + type.Name + "." + i.Name );
+		}
 	}
 
 	object ProcessFieldValue( Type type )
