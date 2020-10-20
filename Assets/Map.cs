@@ -27,7 +27,7 @@ public class Map : Interface.Panel
 		content = MapImage.Create();
 		content.Setup( fullScreen );
 		Init( content.rawImage.rectTransform, 30, -30, 256, 256, dialog );
-		Button( 290, -10, 20, 20, Interface.iconExit, dialog ).onClick.AddListener( Close );
+		Button( 290, -10, 20, 20, Interface.iconTable.GetMediaData( Interface.Icon.exit ), dialog ).onClick.AddListener( Close );
 		dialog.gameObject.SetActive( !fullScreen );
 	}
 

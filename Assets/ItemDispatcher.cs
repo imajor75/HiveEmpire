@@ -28,9 +28,11 @@ public class ItemDispatcher : ScriptableObject
 	}
 
 	public Market[] markets;
+	public Player player;
 
-	public void Setup()
+	public void Setup( Player player )
 	{
+		this.player = player;
 	}
 
 	public void Start()
@@ -41,7 +43,7 @@ public class ItemDispatcher : ScriptableObject
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				markets[i] = ScriptableObject.CreateInstance<Market>();
-				markets[i].Setup( (Item.Type)i );
+				markets[i].Setup( this, (Item.Type)i );
 			}
 		}
 	}
@@ -80,9 +82,11 @@ public class ItemDispatcher : ScriptableObject
 		public Item.Type itemType;
 		public List<Offer> offers = new List<Offer>();
 		public List<Request> requests = new List<Request>();
+		public ItemDispatcher boss;
 
-		public void Setup( Item.Type itemType )
+		public void Setup( ItemDispatcher boss,  Item.Type itemType )
 		{
+			this.boss = boss;
 			this.itemType = itemType;
 		}
 
@@ -141,6 +145,10 @@ public class ItemDispatcher : ScriptableObject
 						;
 				}
 			}
+			int surplus = 0;
+			foreach ( var offer in offers )
+				surplus += offer.quantity;
+			boss.player.surplus[(int)itemType] = surplus;			
 
 			requests.Clear();
 			offers.Clear();

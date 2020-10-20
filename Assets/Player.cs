@@ -22,6 +22,7 @@ public class Player : ScriptableObject
 	public int firstPossibleEmptyItemSlot = 0;
 	public int[] production = new int[(int)Item.Type.total];
 	public float[] efficiency = new float[(int)Item.Type.total];
+	public int[] surplus = new int[(int)Item.Type.total];
 	public static readonly float[] efficiencyFactors = {
 		/*log*/1,
 		/*stone*/0,
@@ -61,7 +62,7 @@ public class Player : ScriptableObject
 		}
 
 		itemDispatcher = ScriptableObject.CreateInstance<ItemDispatcher>();
-		itemDispatcher.Setup();
+		itemDispatcher.Setup( this );
 		CreateMainBuilding();
 
 		return this;

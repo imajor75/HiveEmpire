@@ -19,21 +19,27 @@ public class Interface : Assert.Base
 	public GroundNode selectedNode;
 	public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	public Viewport viewport;
-	public static Sprite templateFrame;
-	public static Sprite templateProgress;
-	public static Sprite iconExit;
-	public static Sprite iconDestroy;
-	public static Sprite iconHauler;
-	public static Sprite iconPath;
-	public static Sprite iconButton;
-	public static Sprite iconBox;
-	public static Sprite iconMagnet;
-	public static Sprite templateSmallFrame;
+	static public MediaTable<Sprite, Icon> iconTable;
 	public GameObject debug;
 	public static Interface instance;
 	public bool heightStrips;
 	public Player mainPlayer;
 	public Tooltip tooltip;
+
+	public enum Icon
+	{
+		exit,
+		button,
+		progress,
+		frame,
+		smallFrame,
+		hauler,
+		box,
+		destroy,
+		path,
+		magnet,
+		dynamite
+	}
 
 	public Interface()
 	{
@@ -70,16 +76,13 @@ public class Interface : Assert.Base
 	{
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.global.IsNotNull( font );
-		templateFrame = LoadSprite( "simple UI & icons/box/box_event1" );
-		templateProgress = LoadSprite( "simple UI & icons/button/board" );
-		iconExit = LoadSprite( "simple UI & icons/button/button_exit" );
-		iconDestroy = LoadSprite( "destroy" );
-		iconHauler = LoadSprite( "hauler" );
-		iconPath = LoadSprite( "road" );
-		iconButton = LoadSprite( "simple UI & icons/button/button_login" );
-		iconBox = LoadSprite( "box" );
-		iconMagnet = LoadSprite( "magnet" );
-		templateSmallFrame = LoadSprite( "simple UI & icons/box/smallFrame" );
+		object[] table = {
+		"simple UI & icons/box/box_event1", Icon.frame,
+		"simple UI & icons/button/board", Icon.progress,
+		"simple UI & icons/button/button_exit", Icon.exit,
+		"simple UI & icons/button/button_login", Icon.button,
+		"simple UI & icons/box/smallFrame", Icon.smallFrame };
+		iconTable.Fill( table );
 		Frame.Initialize();
 		print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
 #if DEVELOPMENT_BUILD
@@ -369,13 +372,14 @@ public class Interface : Assert.Base
 				xs = iconSize;
 			if ( ys == 0 )
 				ys = iconSize;
-			var frame = Image( x - itemIconBorderSize, y + itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, templateSmallFrame );
+			var frame = Image( x - itemIconBorderSize, y + itemIconBorderSize, xs + 2 * itemIconBorderSize, ys + 2 * itemIconBorderSize, iconTable.GetMediaData( Icon.smallFrame ) );
 			ItemImage i = new GameObject().AddComponent<ItemImage>();
 			i.name = "ItemImage";
 			if ( type != Item.Type.unknown )
 				i.sprite = Item.sprites[(int)type];
 			else
 				i.enabled = false;
+			i.itemType = type;
 			i.transform.SetParent( frame.transform );
 			i.rectTransform.anchorMin = Vector2.zero;
 			i.rectTransform.anchorMax = Vector2.one;
@@ -688,6 +692,7 @@ public class Interface : Assert.Base
 	{
 		public Workshop workshop;
 		public Image progressBar;
+		public Image overdriveImage;
 		public Text productivity;
 		public Text itemsProduced;
 
@@ -705,9 +710,12 @@ public class Interface : Assert.Base
 			this.workshop = workshop;
 			int height = 150+workshop.buffers.Count * iconSize * 3 / 2;
 			Frame( 0, 0, 240, height );
-			Button( 210, -10, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 170, 30 - height, 20, 20, iconHauler ).onClick.AddListener( ShowWorker );
-			Button( 190, 30 - height, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			Button( 210, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Button( 190, 30 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			Button( 170, 30 - height, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( ShowWorker );
+			var overdriveButton = Button( 150, 30 - height, 20, 20, iconTable.GetMediaData( Icon.dynamite ) );
+			overdriveButton.onClick.AddListener( Overdrive );
+			overdriveImage = overdriveButton.gameObject.GetComponent<Image>();
 
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
 			productivity = Text( 180, -20, 30, 20 );
@@ -735,7 +743,7 @@ public class Interface : Assert.Base
 				outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
 
 				row -= (int)( (float)iconSize * 1.5f );
-				progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+				progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
 			}
 
 			itemsProduced = Text( 20, row - 24, 200, 20 );
@@ -775,6 +783,12 @@ public class Interface : Assert.Base
 			}
 			productivity.text = ( (int)(workshop.productivity.current * 100) ).ToString() + "%";
 			itemsProduced.text = "Items produced: " + workshop.itemsProduced;
+			overdriveImage.color = new Color( 1, 1, 1, workshop.outputPriority == ItemDispatcher.Priority.high ? 1 : 0.4f );
+		}
+
+		void Overdrive()
+		{
+			workshop.outputPriority = workshop.outputPriority == ItemDispatcher.Priority.high ? ItemDispatcher.Priority.low : ItemDispatcher.Priority.high;
 		}
 
 		public class Buffer
@@ -852,22 +866,22 @@ public class Interface : Assert.Base
 		{
 			base.Open( stock );
 			this.stock = stock;
-			int height = 260;
+			int height = 290;
 			Frame( 0, 0, 200, height );
+			Button( 170, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Button( 150, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 
 			int row = -25;
 			for ( int j = 0; j < (int)Item.Type.total; j += 2 )
 			{
-				Image( 16, row, iconSize, iconSize, Item.sprites[j] );
-				Button( 170, -10, 20, 20, iconExit ).onClick.AddListener( Close );
-				Button( 150, 40 - height, 20, 20, iconDestroy ).onClick.AddListener( Remove );
-				counts[j] = Text( 40, row, 100, 20, "" );
+				ItemIcon( 20, row, iconSize, iconSize, (Item.Type)j );
+				counts[j] = Text( 44, row, 100, 20, "" );
 				if ( j + 1 < Item.sprites.Length )
 				{
-					Image( 100, row, iconSize, iconSize, Item.sprites[j + 1] );
-					counts[j + 1] = Text( 124, row, 100, 20, "" );
+					ItemIcon( 110, row, iconSize, iconSize, (Item.Type)j + 1 );
+					counts[j + 1] = Text( 134, row, 100, 20, "" );
 				};
-				row -= iconSize;
+				row -= iconSize + 5;
 			}
 
 			if ( show )
@@ -904,7 +918,7 @@ public class Interface : Assert.Base
 			name = "Node panel";
 
 			Frame( 0, 0, 400, 550, 30 );
-			Button( 360, -20, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 360, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 			int row = -20;
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
@@ -1000,10 +1014,10 @@ public class Interface : Assert.Base
 			this.road = road;
 			this.node = node;
 			Frame( 0, 0, 210, 140, 10 );
-			Button( 190, 0, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 170, -10, 20, 20, iconHauler ).onClick.AddListener( Hauler );
-			Button( 150, -10, 20, 20, iconDestroy ).onClick.AddListener( Remove );
-			Button( 130, -10, 20, 20, iconBox ).onClick.AddListener( Split );
+			Button( 190, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Button( 170, -10, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( Hauler );
+			Button( 150, -10, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			Button( 130, -10, 20, 20, iconTable.GetMediaData( Icon.box ) ).onClick.AddListener( Split );
 			jam = Text( 12, -4, 120, 20, "Jam" );
 			workers = Text( 12, -24, 120, 20, "Worker count" );
 			name = "Road panel";
@@ -1137,10 +1151,10 @@ public class Interface : Assert.Base
 			this.flag = flag;
 			int col = 16;
 			Frame( 0, 0, 250, 75, 10 );
-			Button( 230, 0, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 210, -45, 20, 20, iconDestroy ).onClick.AddListener( Remove );
-			Button( 20, -45, 20, 20, iconPath ).onClick.AddListener( StartRoad );
-			Button( 45, -45, 20, 20, iconMagnet ).onClick.AddListener( CaptureRoads );
+			Button( 230, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Button( 210, -45, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			Button( 20, -45, 20, 20, iconTable.GetMediaData( Icon.path ) ).onClick.AddListener( StartRoad );
+			Button( 45, -45, 20, 20, iconTable.GetMediaData( Icon.magnet ) ).onClick.AddListener( CaptureRoads );
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
@@ -1230,7 +1244,7 @@ public class Interface : Assert.Base
 			base.Open( worker.node );
 			this.worker = worker;
 			Frame( 0, 0, 200, 80 );
-			Button( 170, 0, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 170, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
 			itemCount = Text( 20, -44, 160, 20, "Items" );
 			World.instance.eye.GrabFocus( this );
@@ -1281,8 +1295,8 @@ public class Interface : Assert.Base
 			base.Open( construction.boss );
 			this.construction = construction;
 			Frame( 0, 0, 240, 200 );
-			Button( 200, -10, 20, 20, iconExit ).onClick.AddListener( Close );
-			Button( 190, -150, 20, 20, iconDestroy ).onClick.AddListener( Remove );
+			Button( 200, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Button( 190, -150, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 
 			Workshop workshop = construction.boss as Workshop;
 			if ( workshop )
@@ -1293,7 +1307,7 @@ public class Interface : Assert.Base
 			stones = new WorkshopPanel.Buffer();
 			stones.Setup( this, Item.Type.stone, construction.stoneNeeded, 20, -64, iconSize + 5 );
 
-			progressBar = Image( 20, -90, ( iconSize + 5 ) * 8, iconSize, templateProgress );
+			progressBar = Image( 20, -90, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
 
 			if ( show )
 				Root.world.eye.FocusOn( workshop );
@@ -1355,7 +1369,7 @@ public class Interface : Assert.Base
 			name = "Item panel";
 
 			Frame( 0, 0, 300, 150, 20 );
-			Button( 270, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 15, -15, 100, 20, item.type.ToString() );
 			stats = Text( 15, -35, 250, 20 );
 			if ( item.origin )
@@ -1628,7 +1642,7 @@ public class Interface : Assert.Base
 			World.instance.SetTimeFactor( 0 );
 
 			Frame( 0, 0, 340, 320 );
-			Button( 310, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 310, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 50, -20, 100, 20, "Origin" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByOrigin ); } );
 			Text( 150, -20, 100, 20, "Destination" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByDestination ); } );
 			Text( 250, -20, 100, 20, "Age" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByAge ); } );
@@ -1742,7 +1756,7 @@ public class Interface : Assert.Base
 			this.player = player;
 			Frame( 0, 0, 300, 300 );
 			scroll = ScrollRect( 20, -20, 260, 230 );
-			Button( 270, -10, 20, 20, iconExit ).onClick.AddListener( Close );
+			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			finalEfficiency = Text( 100, -260, 100, 30 );
 			finalEfficiency.fontSize = 16;
 

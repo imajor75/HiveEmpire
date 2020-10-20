@@ -9,6 +9,7 @@ using UnityEngine;
 public class Workshop : Building
 {
 	public int output;
+	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
 	public float progress;
 	public bool working;
 	public Type type = Type.unknown;
@@ -460,7 +461,7 @@ public class Workshop : Building
 				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority );
 		}
 		if ( output > 0 && flag.FreeSpace() > 0 && worker.IsIdle( true ) )
-			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, ItemDispatcher.Priority.high );
+			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, outputPriority );
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
@@ -546,6 +547,9 @@ public class Workshop : Building
 			{
 				if ( worker.IsIdle( true ) )
 				{
+					if ( outputPriority != ItemDispatcher.Priority.high && owner.surplus[(int)configuration.outputType] > 0 )
+						break;
+
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
@@ -696,6 +700,8 @@ public class Workshop : Building
 	void CollectResource( Resource.Type resourceType, int range )
 	{
 		if ( !worker.IsIdle( true ) )
+			return;
+		if ( outputPriority != ItemDispatcher.Priority.high && configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 )
 			return;
 		if ( configuration.outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;

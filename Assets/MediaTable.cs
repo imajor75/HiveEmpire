@@ -12,6 +12,24 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		public int intData;
 		public bool boolData;
 		public List<Key> keys = new List<Key>();
+
+		public void Load( string file = "" )
+		{
+			if ( file == "" )
+				file = this.file;
+			if ( typeof( MediaType ) == typeof( Sprite ) )
+			{
+				var texture = Resources.Load<Texture2D>( file );
+				data = Sprite.Create( texture, new Rect( 0.0f, 0.0f, texture.width, texture.height ), Vector2.zero ) as MediaType;
+			}
+			else
+				data = Resources.Load<MediaType>( file );
+			if ( data == null )
+			{
+				Debug.Log( "Resource " + file + " not found" );
+				return;
+			}
+		}
 	}
 
 	List<Media> table;
@@ -38,14 +56,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				table[table.Count - 1].boolData = (bool)g;
 		}
 		foreach ( var l in table )
-		{
-			l.data = Resources.Load<MediaType>( l.file );
-			if ( l.data == null )
-			{
-				Debug.Log( "Resource " + l.file + " not found" );
-				continue;
-			}
-		}
+			l.Load();
 	}
 
 	public Media GetMedia( Key key )
@@ -56,9 +67,16 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				candidates.Add( media );
 
 		if ( candidates.Count == 0 )
-			return null;
+		{
+			Media media = new Media();
+			media.Load( key.ToString() );
+			media.keys.Add( key );
+			table.Add( media );
+			return media;
+		}
 		if ( candidates.Count == 1 )
 			return candidates[0];
+		
 		return candidates[World.rnd.Next( candidates.Count )];
 	}
 
