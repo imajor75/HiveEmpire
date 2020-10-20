@@ -638,7 +638,6 @@ public class Workshop : Building
 
 	bool UseInput( int count = 1 )
 	{
-		assert.IsNotSelected();
 		bool common = configuration.commonInputs;
 		if ( count == 0 || buffers.Count == 0 )
 			return true;

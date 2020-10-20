@@ -430,7 +430,7 @@ public class Interface : Assert.Base
 			return t;
 		}
 
-		public void Close()
+		public virtual void Close()
 		{
 			Destroy( gameObject );
 		}
@@ -1396,13 +1396,19 @@ public class Interface : Assert.Base
 				if ( route == null )
 				{
 					route = CreateUIPath( item.path );
-					route.transform.SetParent( transform );
+					route.transform.SetParent( Root.transform );
 				}
 			}
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
 			else
 				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
+		}
+
+		public override void Close()
+		{
+			base.Close();
+			Destroy( route );
 		}
 
 		public static GameObject CreateUIPath( Path path )

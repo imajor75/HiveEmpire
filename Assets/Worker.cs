@@ -325,13 +325,13 @@ public class Worker : Assert.Base
 	{
 		static public int pickupTimeStart = 60;
 		public Item item;
-		public Building destnation;
+		public Path path;
 		public int pickupTimer = pickupTimeStart;
 
 		public void Setup( Worker boss, Item item )
 		{
 			base.Setup( boss );
-			destnation = item.destination;
+			path = item.path;
 			this.item = item;
 
 		}
@@ -364,9 +364,10 @@ public class Worker : Assert.Base
 			if ( ( pickupTimer -= World.TimeStack ) > 0 )
 				return false;
 
-			if ( destnation != item.destination )
+			if ( path != item.path )
 			{
 				boss.assert.AreEqual( boss.type, Type.hauler );
+				boss.assert.AreEqual( boss.road, path.Road );
 				return ResetBoss();
 			}
 
@@ -405,7 +406,6 @@ public class Worker : Assert.Base
 					item.buddy.worker = null;
 				}
 				item.nextFlag.CancelItem( item );
-				item.assert.IsNotSelected();
 			}
 			base.Cancel();
 		}
@@ -438,7 +438,7 @@ public class Worker : Assert.Base
 			}
 			else
 			{
-				if ( boss.node.flag == item.nextFlag )
+				if ( item.nextFlag && boss.node.flag == item.nextFlag )
 				{
 					boss.itemInHands = item.ArrivedAt( item.nextFlag );
 					boss.itemInHands?.path?.NextRoad();
@@ -695,7 +695,6 @@ public class Worker : Assert.Base
 	// Update is called once per frame
 	void FixedUpdate()
 	{
-		assert.IsNotSelected();
 		if ( debugReset )
 		{
 			Reset();
@@ -820,7 +819,6 @@ public class Worker : Assert.Base
 
 	public void FindTask()
 	{
-		assert.IsNotSelected();
 		assert.IsTrue( IsIdle() );
 		if ( road != null )
 		{
@@ -1087,7 +1085,6 @@ public class Worker : Assert.Base
 
 	public void CarryItem( Item item, Item replace = null )
 	{
-		item.assert.IsNotSelected();
 		assert.IsNotNull( road );
 		if ( !item.path.IsFinished )
 			assert.AreEqual( road, item.path.Road );

@@ -186,7 +186,6 @@ public class Item : Assert.Base
 		if ( priority == ItemDispatcher.Priority.stop )
 			return;
 
-		assert.IsNotSelected();
 		owner.itemDispatcher.RegisterOffer( this, priority );
 	}
 
@@ -201,7 +200,6 @@ public class Item : Assert.Base
 
 	public bool SetTarget( Building building, Building origin = null )
 	{
-		assert.IsNotSelected();
 		assert.AreNotEqual( building, destination );
 
 		var oldDestination = destination;
@@ -247,7 +245,7 @@ public class Item : Assert.Base
 		{
 			// path.progess is zero if the item was rerouting while in the hands of the hauler
 			assert.IsFalse( path.IsFinished );
-			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Patn is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" );
+			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Path is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" ); // TODO Triggered
 		}
 
 		worker = null;

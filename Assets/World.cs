@@ -133,18 +133,6 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
-		//foreach ( var player in players )
-		//{
-		//	for ( int i = 0; i < player.items.Count; i++ )
-		//	{
-		//		Item o = player.items[i];
-		//		if ( o && o.destination && !o.destination.itemsOnTheWay.Contains( o ) )
-		//		{
-		//			Destroy( o );
-		//			player.items[i] = null;
-		//		}
-		//	}
-		//}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Item>();
 			foreach ( var o in list )

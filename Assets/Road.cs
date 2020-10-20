@@ -406,7 +406,6 @@ public class Road : Assert.Base, Interface.InputHandler
 
 			if ( watchStartFlag.Check() || watchEndFlag.Check() )
 			{
-				assert.IsNotSelected();
 				cachedJam = 0;
 				for ( int e = 0; e < 2; e++ )
 				{
