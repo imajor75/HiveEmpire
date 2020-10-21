@@ -187,7 +187,7 @@ public class Workshop : Building
 				if ( Resource.IsUnderGround( resourceType ) || node == boss.node )
 				{
 					if ( resourceType == Resource.Type.expose )
-						resource.exposed = Resource.exposeMax;
+						resource.exposed.Start( Resource.exposeMax );
 					else
 					{
 						if ( --resource.charges == 0 )
@@ -195,12 +195,12 @@ public class Workshop : Building
 						else
 						{
 							if ( resource.underGround )
-								resource.keepAwayTimer = mineOreRestTime;
+								resource.keepAway.Start( mineOreRestTime );
 						}
 					}
 				}
 				else
-					resource.keepAwayTimer = 500;   // TODO Settings
+					resource.keepAway.Start( 500 );   // TODO Settings
 				boss.assert.AreEqual( resource.hunter, boss );
 				resource.hunter = null;
 			}
@@ -234,7 +234,7 @@ public class Workshop : Building
 				return true;
 			if ( boss.node != node )
 				return true;
-			if ( node.building || node.flag || node.road || node.fixedHeight || node.resource || node.type != GroundNode.Type.grass )
+			if ( node.building || node.flag || node.road || node.fixedHeight || node.resource || !node.CheckType( GroundNode.Type.land ) )
 				return true;
 
 			Resource.Create().Setup( node, resourceType );
@@ -570,7 +570,7 @@ public class Workshop : Building
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
-						if ( place.IsBlocking( true ) || place.fixedHeight || place.type != GroundNode.Type.grass )
+						if ( place.IsBlocking( true ) || place.fixedHeight || !place.CheckType( GroundNode.Type.land ) )
 							continue;
 						PlantAt( place, Resource.Type.cornfield );
 						return;
@@ -590,7 +590,7 @@ public class Workshop : Building
 						int x = (i + randomOffset) % o.Count;
 						GroundNode place = node.Add( o[x] );
 						{
-							if ( place.IsBlocking( true ) || place.type != GroundNode.Type.grass || place.fixedHeight )
+							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.land ) || place.fixedHeight )
 								continue;
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
@@ -743,7 +743,7 @@ public class Workshop : Building
 				continue;
 			if ( resourceType == Resource.Type.expose )
 			{
-				if ( resource.underGround && resource.exposed < 0 )
+				if ( resource.underGround && resource.exposed.Done )
 				{
 					CollectResourceFromNode( target, resourceType );
 					return;

@@ -50,6 +50,11 @@ public class Interface : Assert.Base
 	{
 		foreach ( Transform d in debug.transform )
 			Destroy( d.gameObject );
+		foreach ( var panel in panels )
+		{
+			if ( panel != tooltip )
+				panel.Close();
+		}
 	}
 
 	void LateUpdate()
@@ -142,13 +147,16 @@ public class Interface : Assert.Base
 				Load( myFiles.First().FullName );
 		}
 		if ( !world.gameInProgress )
-			NewGame( 117274283 );
+			NewGame( 1299783286 );
 	}
 
 	void NewGame( int seed )
 	{
 		world.NewGame( seed );
-		mainPlayer = world.players[0];
+		if ( world.players.Count > 0 )
+			mainPlayer = world.players[0];
+		else
+			mainPlayer = null;
 	}
 
 	void Load( string file )
@@ -966,7 +974,7 @@ public class Interface : Assert.Base
 			BuildButton( 20, -320, "Raise", true, delegate { AlignHeight( 0.1f ); } );
 			BuildButton( 20, -340, "Lower", true, delegate { AlignHeight( -0.1f ); } );
 #endif
-			if ( node.resource && ( !node.resource.underGround || node.resource.exposed > 0 ) )
+			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.Done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
 		}
 
@@ -1002,7 +1010,7 @@ public class Interface : Assert.Base
 
 		void AddTree()
 		{
-			Resource.Create().Setup( node, Resource.Type.tree ).life.Start( -Resource.treeGrowthMax );
+			Resource.Create().Setup( node, Resource.Type.tree ).life.Start( -2 * Resource.treeGrowthMax );
 		}
 
 		void Remove()
@@ -1826,7 +1834,6 @@ public class Interface : Assert.Base
 				onWayCount[(int)item.type]++;
 			}
 
-			float maxEfficiency = float.MaxValue;
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				int row = i * - ( iconSize + 5 );
@@ -1835,11 +1842,9 @@ public class Interface : Assert.Base
 				production[i].text = player.efficiency[i].ToString();
 				float itemEfficiency = Player.efficiencyFactors[i] * player.efficiency[i];
 				efficiency[i].text = itemEfficiency.ToString();
-				if ( itemEfficiency < maxEfficiency )
-					maxEfficiency = itemEfficiency;
-			}
+			};
 
-			finalEfficiency.text = maxEfficiency.ToString();
+			finalEfficiency.text = player.totalEfficiency.ToString();
 		}
 	}
 

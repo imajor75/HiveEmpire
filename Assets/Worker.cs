@@ -367,8 +367,9 @@ public class Worker : Assert.Base
 
 			if ( path != item.path )
 			{
-				boss.assert.AreEqual( boss.type, Type.hauler );
-				boss.assert.AreEqual( boss.road, path.Road );
+				// This block can run for tinkerers too, if the item lost destination before the tinkerer would pick it up
+				if ( boss.type == Type.hauler );		
+					boss.assert.AreEqual( boss.road, path.Road );
 				return ResetBoss();
 			}
 

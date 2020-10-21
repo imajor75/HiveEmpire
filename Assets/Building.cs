@@ -20,7 +20,7 @@ abstract public class Building : Assert.Base
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
-	public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
+	public GroundNode.Type groundTypeNeeded = GroundNode.Type.land;
 	public bool huge;
 	public static List<Ground.Offset> singleArea = new List<Ground.Offset>();
 	public static List<Ground.Offset> hugeArea = new List<Ground.Offset>();
@@ -28,7 +28,7 @@ abstract public class Building : Assert.Base
 	[System.Serializable]
 	public class Configuration
 	{
-		public GroundNode.Type groundTypeNeeded = GroundNode.Type.grass;
+		public GroundNode.Type groundTypeNeeded = GroundNode.Type.land;
 
 		public int plankNeeded = 2;
 		public int stoneNeeded = 0;
@@ -245,7 +245,7 @@ abstract public class Building : Assert.Base
 						return false;
 				}
 			}
-			if ( basis.type != configuration.groundTypeNeeded )
+			if ( !basis.CheckType( configuration.groundTypeNeeded ) )
 				return false;
 		}
 		GroundNode flagLocation = placeToBuild.Add( flagOffset );
@@ -256,7 +256,7 @@ abstract public class Building : Assert.Base
 	{
 		if ( !IsItGood( node, owner, configuration ) )
 		{
-			Destroy( this );
+			Destroy( gameObject );
 			return null;
 		}
 		var flagNode = node.Add( flagOffset );

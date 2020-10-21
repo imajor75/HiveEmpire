@@ -26,17 +26,18 @@ public class World : MonoBehaviour
 	public bool gameInProgress;
 	public int time;
 
-	public static float maxHeight = 20;
-	public static float waterLevel = 0.40f;
-	public static float hillLevel = 0.55f;
-	public static float mountainLevel = 0.6f;
+	public float maxHeight = 8;
+	public float waterLevel = 0.3f;
+	public float hillLevel = 0.6f;
+	public float mountainLevel = 0.8f;
+	public float forestGroundChance = 0.45f;
 
 	static public GameObject water;
 	static public GameObject resources;
 	static public GameObject buoys;
 	static public GameObject nodes;
 
-	public static float forestChance = 0.004f;
+	public static float forestChance = 0.006f;
 	public static float rocksChance = 0.002f;
 	public static float animalSpawnerChance = 0.001f;
 	public static float ironChance = 0.04f;
@@ -97,13 +98,17 @@ public class World : MonoBehaviour
 	public void NewGame( int seed )
 	{
 		Debug.Log( "Starting new game with seed " + seed );
+		rnd = new System.Random( seed );
+
 		Clear();
 		Prepare();
 
 		eye = Eye.Create().Setup( this );
 		ground = Ground.Create().Setup( this, seed );
 		GenerateResources();
-		players.Add( Player.Create().Setup() );
+		var mainPlayer = Player.Create().Setup();
+		if ( mainPlayer )
+			players.Add( mainPlayer );
 		ground.RecalculateOwnership();
 		gameInProgress = true;
 
@@ -294,7 +299,7 @@ public class World : MonoBehaviour
 		{
 			var r = new System.Random( World.rnd.Next() );
 			if ( r.NextDouble() < forestChance )
-				node.AddResourcePatch( Resource.Type.tree, 7, 0.5f );
+				node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
 			if ( r.NextDouble() < rocksChance )
 				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
 			if ( r.NextDouble() < animalSpawnerChance )

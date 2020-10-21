@@ -8,7 +8,7 @@ using UnityEngine;
 public class Ground : Assert.Base
 {
 	public World world;
-	public int width = 50, height = 50;
+	public int width = 64, height = 64;
 	public GroundNode[] nodes;
 	public int layoutVersion = 1;
 	public int meshVersion = 0;
@@ -21,8 +21,6 @@ public class Ground : Assert.Base
 
 	[JsonIgnore]
 	public Material material;
-
-	public HeightMap heightMap;
 
 	public static Ground Create()
 	{
@@ -67,20 +65,19 @@ public class Ground : Assert.Base
 		CreateAreas();
 	}
 
-	public Ground Setup( World world, int seed )
+	public Ground Setup( World world, int seed, int width = 64, int height = 64 )
 	{
 		this.world = world;
-		World.rnd = new System.Random( seed );
 		gameObject.name = "Ground";
-		width = 50;
-		height = 50;
+		this.width = width;
+		this.height = height;
 
 		if ( nodes == null )
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		for ( int x = 0; x <= width; x++ )
 			for ( int y = 0; y <= height; y++ )
 				nodes[y * ( width + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
-		SetHeights();
+		GenerateHeights();
 		return this;
     }
 
@@ -119,38 +116,54 @@ public class Ground : Assert.Base
 		}
 	}
 
-	public void SetHeights()
+	public void GenerateHeights()
 	{
-		heightMap = ScriptableObject.CreateInstance<HeightMap>();
-		heightMap.Setup( 6, World.rnd.Next() );
-		heightMap.Fill();
+		bool reuse = true;
+		var heightMapObject = GameObject.Find( "heightmap" );
+		var heightMap = heightMapObject?.GetComponent<HeightMap>();
 
+		if ( heightMap == null )
 		{
-			var mapTexture = new Texture2D( 64, 64 );
-			for ( int x = 0; x < 64; x++ )
-			{
-				for ( int y = 0; y < 64; y++ )
-				{
-					float h = heightMap.data[x, y];
-					mapTexture.SetPixel( x, y, new Color( h, h, h ) );
-				}
-			}
+			heightMap = HeightMap.Create();
+			heightMap.Setup( 6, World.rnd.Next(), false, true );
+			heightMap.randomness = 2;
+			heightMap.adjustment = -0.3f;
+			heightMap.Fill();
+			reuse = false;
+		};
 
-			mapTexture.Apply();
-		}
+		var forestMap = HeightMap.Create();
+		forestMap.Setup( heightMap.size, World.rnd.Next() );
+		forestMap.Fill();
+
+		float xf = (float)( heightMap.sizeX - 1 ) / width;
+		float yf = (float)( heightMap.sizeY - 1 ) / height;
 
 		foreach ( var n in nodes )
 		{
-			float d = (float)heightMap.data[n.x, n.y];
-			n.height = d*World.maxHeight;
-			if ( d > World.hillLevel )
+			float d = heightMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
+			n.height = d * World.instance.maxHeight;
+			n.type = GroundNode.Type.grass;
+			float forestData = forestMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
+			forestData = forestData - forestMap.averageValue + 0.5f;
+			if ( forestData < World.instance.forestGroundChance )
+				n.type = GroundNode.Type.forest;
+			if ( d > World.instance.hillLevel )
 				n.type = GroundNode.Type.hill;
-			if ( d > World.mountainLevel )
+			if ( d > World.instance.mountainLevel )
 				n.type = GroundNode.Type.mountain;
-			if ( d < World.waterLevel )
+			if ( d < World.instance.waterLevel )
 				n.type = GroundNode.Type.underWater;
 			n.transform.localPosition = n.Position();
 		}
+
+#if DEBUG
+		forestMap.SavePNG( "forest.png" );
+#endif
+
+		if ( !reuse )
+			Destroy( heightMap.gameObject );
+		Destroy( forestMap.gameObject );
 	}
 
 	void Update()
@@ -204,17 +217,22 @@ public class Ground : Assert.Base
 					case GroundNode.Type.grass:
 					case GroundNode.Type.underWater:
 					{
-						colors[i] = Color.red;
+						colors[i] = new Color( 1, 0, 0, 0 );
 						break;
 					}
 					case GroundNode.Type.hill:
 					{
-						colors[i] = Color.green;
+						colors[i] = new Color( 0, 1, 0, 0 );
 						break;
 					}
 					case GroundNode.Type.mountain:
 					{
-						colors[i] = Color.blue;
+						colors[i] = new Color( 0, 0, 1, 0 );
+						break;
+					}
+					case GroundNode.Type.forest:
+					{
+						colors[i] = new Color( 0, 0, 0, 1 );
 						break;
 					}
 				}
@@ -318,12 +336,6 @@ public class Ground : Assert.Base
 				}
 			}
 		}
-	}
-
-	void OnGUI()
-	{
-		if ( heightMap?.mapTexture != null )
-			GUI.DrawTexture( new Rect( 0, 0, 512, 512 ), heightMap.mapTexture );
 	}
 
 	public void Validate()
