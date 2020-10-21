@@ -11,6 +11,7 @@ public class Player : ScriptableObject
 	public List<Building> influencers = new List<Building>();
 	const int efficiencyUpdateTime = 3000;
 	const float efficiencyUpdateFactor = 0.3f;
+	public float totalEfficiency;
 	int lastEfficiencyUpdate;
 
 	public int soldiersProduced = 0;
@@ -85,10 +86,13 @@ public class Player : ScriptableObject
 			return;
 
 		lastEfficiencyUpdate = World.instance.time;
+		totalEfficiency = float.MaxValue;
 		for ( int i = 0; i < efficiency.Length; i++ )
 		{
-			efficiency[i] = ( 1 - efficiencyFactors[i] ) * efficiency[i] + efficiencyFactors[i] * production[i];
+			efficiency[i] = ( 1 - efficiencyUpdateFactor ) * efficiency[i] + efficiencyUpdateFactor * production[i];
 			production[i] = 0;
+			if ( efficiencyFactors[i] > 0 && efficiency[i] * efficiencyFactors[i] < totalEfficiency )
+				totalEfficiency = efficiency[i] * efficiencyFactors[i];
 		}
 	}
 

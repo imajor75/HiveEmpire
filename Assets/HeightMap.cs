@@ -6,30 +6,27 @@ public class HeightMap : MonoBehaviour
 {
 	public int sizeX = 513, sizeY = 513, size = 9;
 	public bool tileable = false;
-	[Range(-2.0f, 2.0f)]    
-	public float deepnessExp = 0;
-	[Range(0.0f, 5.0f)]
-	public float deepnessStart = 1;
-	[Range(-1.0f, 1.0f)]
-	public float deepnessOffset = 0;
 	public bool island = false;
+	float borderLevel = -0.5f;
+
+	[Range(0.0f, 2.0f)]
+	public float randomness = 1;
+	[Range(0.0f, 2.0f)]
+	public float noise = 1;
+
+	public bool normalize = true;
+	[Range(-1.0f, 1.0f)]
+	public float adjustment = 0;
+
 	[Range(0.5f, 1.5f)]
 	public float squareDiamondRatio = 1;
-	[Range(0.0f, 1.0f)]
-	public float randomness = 0.5f;
+
 	public System.Random random;
 	[JsonIgnore]
 	public float[,] data;
 	[Range(0, 10000)]
 	public int seed;
-	public bool deepnessAffectsMagnitude = true;
-	public bool deepnessAffectsRandomness = true;
-	public bool normalize = true;
-	[Range(-1.0f, 1.0f)]
-	public float adjustLow = 0, adjustHigh = 0;
 	public float averageValue;
-	int count;
-	float borderLevel = 0;
 
 	public static HeightMap Create()
 	{
@@ -38,30 +35,27 @@ public class HeightMap : MonoBehaviour
 		return map;
 	}
 
-	public void Setup( int size, int seed, bool tileable = false, bool island = false, float deepnessExp = 0 )
+	public void Setup( int size, int seed, bool tileable = false, bool island = false )
 	{
 		this.size = size;
 		sizeX = sizeY = ( 1 << size ) + 1;
 		this.tileable = tileable;
 		this.island = island;
 		this.seed = seed;
-		this.deepnessExp = deepnessExp;
 	}
 
 	public void Fill()
 	{
 		random = new System.Random( seed );
-		count = 0;
 		averageValue = 0;
 		data = new float[sizeX, sizeY];
-		Randomize( ref data[0, 0], deepnessStart, 1 );
-		Randomize( ref data[sizeX - 1, 0], deepnessStart, 1 );
-		Randomize( ref data[0, sizeY - 1], deepnessStart, 1 );
-		Randomize( ref data[sizeX - 1, sizeY - 1], deepnessStart, 1 );
+		Randomize( ref data[0, 0], 1 );
+		Randomize( ref data[sizeX - 1, 0], 1 );
+		Randomize( ref data[0, sizeY - 1], 1 );
+		Randomize( ref data[sizeX - 1, sizeY - 1], 1 );
+		float randomWeight = randomness;
 		int i = sizeX - 1;
 		float step = 0;
-		float c = deepnessStart, a = deepnessExp;
-		float b = - a - c;
 		while ( i > 1 )
 		{
 			if ( island )
@@ -75,14 +69,13 @@ public class HeightMap : MonoBehaviour
 					data[sizeX - 1, j] = borderLevel;
 				}
 			}
-			ProcessLevel( i, a * step * step + b * step + c );
+			ProcessLevel( i, Math.Min( randomWeight, 1 ) );
 
 			i /= 2;
 			step += 1f/size;
+			randomWeight /= 2;
+			randomWeight *= noise;
 		}
-
-		Assert.global.AreEqual( count, sizeX * sizeY );
-		averageValue /= count;
 
 		PostProcess();
 	}
@@ -90,8 +83,7 @@ public class HeightMap : MonoBehaviour
 	void PostProcess()
 	{
 		averageValue = 0;
-		float powerLow = (float)Math.Pow( 5, adjustLow );
-		float powerHigh = (float)Math.Pow( 5, adjustHigh );
+		float power = (float)Math.Pow( 0.25f, adjustment );
 		float min = 1, max = 0;
 		for ( int x = 0; x < sizeX; x++ )
 		{
@@ -109,10 +101,7 @@ public class HeightMap : MonoBehaviour
 				float value = data[x, y];
 				if ( normalize )
 					value = ( value - min ) * normalizer;
-				if ( value < 0.5 )
-					value = (float)( 0.5 * Math.Pow( value * 2, powerLow ) );
-				else
-					value = (float)( 1 - 0.5 * Math.Pow( ( 1 - value ) * 2, powerHigh ) );
+				value = (float)Math.Pow( value, power );
 				data[x, y] = value;
 				averageValue += value;
 			}
@@ -142,8 +131,7 @@ public class HeightMap : MonoBehaviour
 		average += data[x - s, y + s];
 		average += data[x + s, y + s];
 		average /= 4;
-		float r = randomness * squareDiamondRatio;
-		Randomize( ref average, m, r );
+		Randomize( ref average, m * squareDiamondRatio );
 		data[x, y] = average;
 	}
 
@@ -209,17 +197,10 @@ public class HeightMap : MonoBehaviour
 		data[x, y] = average;
 	}
 
-	void Randomize( ref float value, float deepness, float weight = -1 )
+	void Randomize( ref float value, float weight )
 	{
-		if ( weight < 0 )
-			weight = randomness;
-		if ( deepnessAffectsMagnitude )
-			weight *= deepness;
 		float randomValue = (float)random.NextDouble();
-		if ( deepnessAffectsRandomness )
-			randomValue = deepnessOffset + ( randomValue - 0.5f ) * deepness + 0.5f;
 		value = value * ( 1 - weight ) + randomValue * weight;
-		count++;
 	}
 
 	Texture2D AsTexture()

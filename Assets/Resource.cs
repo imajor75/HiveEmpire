@@ -157,6 +157,8 @@ public class Resource : Assert.Base
 		if ( type == Type.cornfield )
 		{
 			float growth = (float)this.life.Age / cornfieldGrowthMax;
+			if ( node.type != GroundNode.Type.grass )
+				growth /= 2;
 			if ( growth > 1 )
 				growth = 1;
 			transform.localScale = new Vector3( 1, growth, 1 );
@@ -164,6 +166,8 @@ public class Resource : Assert.Base
 		if ( type == Type.tree )
 		{
 			float size = (float)life.Age/treeGrowthMax;
+			if ( node.type != GroundNode.Type.forest )
+				size /= 2;
 			size = Math.Max( size, 0.1f );
 			size = Math.Min( size, 1 );
 			transform.localScale = Vector3.one * size;
@@ -264,9 +268,17 @@ public class Resource : Assert.Base
 		if ( !keepAway.Done )
 			return false;
 		if ( type == Type.tree )
-			return life.Age > treeGrowthMax;
+		{
+			if ( node.type == GroundNode.Type.forest )
+				return life.Age > treeGrowthMax;
+			return life.Age > treeGrowthMax * 2;
+		}
 		if ( type == Type.cornfield )
-			return life.Age > cornfieldGrowthMax;
+		{
+			if ( node.type == GroundNode.Type.grass )
+				return life.Age > cornfieldGrowthMax;
+			return life.Age > cornfieldGrowthMax * 2;
+		}
 		return true;
 	}
 

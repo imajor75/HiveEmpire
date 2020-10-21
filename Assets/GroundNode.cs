@@ -159,7 +159,7 @@ public class GroundNode : Assert.Base
 		}
 		Resource resource = Resource.Create().Setup( this, type );
 		if ( resource && type == Resource.Type.tree )
-			resource.life.Start( -Resource.treeGrowthMax );
+			resource.life.Start( -2 * Resource.treeGrowthMax );
 	}
 
 	public GroundNode Add( Ground.Offset o )

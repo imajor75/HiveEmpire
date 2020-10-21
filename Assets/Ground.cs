@@ -8,7 +8,7 @@ using UnityEngine;
 public class Ground : Assert.Base
 {
 	public World world;
-	public int width = 50, height = 50;
+	public int width = 64, height = 64;
 	public GroundNode[] nodes;
 	public int layoutVersion = 1;
 	public int meshVersion = 0;
@@ -65,20 +65,19 @@ public class Ground : Assert.Base
 		CreateAreas();
 	}
 
-	public Ground Setup( World world, int seed )
+	public Ground Setup( World world, int seed, int width = 64, int height = 64 )
 	{
 		this.world = world;
-		World.rnd = new System.Random( seed );
 		gameObject.name = "Ground";
-		width = 50;
-		height = 50;
+		this.width = width;
+		this.height = height;
 
 		if ( nodes == null )
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 		for ( int x = 0; x <= width; x++ )
 			for ( int y = 0; y <= height; y++ )
 				nodes[y * ( width + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
-		SetHeights();
+		GenerateHeights();
 		return this;
     }
 
@@ -117,7 +116,7 @@ public class Ground : Assert.Base
 		}
 	}
 
-	public void SetHeights()
+	public void GenerateHeights()
 	{
 		bool reuse = true;
 		var heightMapObject = GameObject.Find( "heightmap" );
@@ -127,19 +126,14 @@ public class Ground : Assert.Base
 		{
 			heightMap = HeightMap.Create();
 			heightMap.Setup( 6, World.rnd.Next(), false, true );
-			heightMap.deepnessExp = 1.1f;
-			heightMap.randomness = 0.3f;
-			heightMap.adjustLow = 0.3f;
-			heightMap.adjustHigh = 0.6f;
+			heightMap.randomness = 2;
+			heightMap.adjustment = -0.3f;
 			heightMap.Fill();
 			reuse = false;
 		};
 
 		var forestMap = HeightMap.Create();
 		forestMap.Setup( heightMap.size, World.rnd.Next() );
-		forestMap.adjustLow = forestMap.adjustHigh = 0;
-		forestMap.deepnessExp = 2;
-		forestMap.deepnessStart = 2;
 		forestMap.Fill();
 
 		float xf = (float)( heightMap.sizeX - 1 ) / width;
