@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -357,7 +358,7 @@ public class Worker : Assert.Base
 			{
 				timer.Start( pickupTimeStart );
 				boss.animator.ResetTrigger( putdownID );
-				boss.animator.SetTrigger( pickupID );
+				boss.animator.SetTrigger( pickupID );	// TODO Animation phase is not saved in file
 				if ( boss.itemTable )
 					boss.itemTable.material = Item.materials[(int)item.type];
 				boss.box?.SetActive( true );
@@ -540,7 +541,7 @@ public class Worker : Assert.Base
 		object[] sounds = {
 			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
 			"Forest/treecut", Resource.Type.tree,
-			"Mines/pickaxe", Resource.Type.stone };
+			"Mines/pickaxe", Resource.Type.rock };
 		resourceGetSounds.Fill( sounds );
 	}
 
@@ -886,7 +887,7 @@ public class Worker : Assert.Base
 			}
 		}
 
-		if ( building != null && node != building.node )
+		if ( type != Type.unemployed && building != null && node != building.node )
 		{
 			ScheduleWait( 300 );
 			if ( node.flag )	// TODO Do something if the worker can't get home

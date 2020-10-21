@@ -36,9 +36,9 @@ public class Map : Interface.Panel
 		base.Update();
 
 		if ( Input.GetKey( KeyCode.Equals ) )
-			zoom *= 0.99f;
+			zoom *= 0.98f;
 		if ( Input.GetKey( KeyCode.Minus ) )
-			zoom *= 1.01f;
+			zoom *= 1.02f;
 		if ( zoom < zoomMin )
 			zoom = zoomMin;
 		if ( zoom > zoomMax )

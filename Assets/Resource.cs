@@ -20,7 +20,7 @@ public class Resource : Assert.Base
 	public List<Worker> animals = new List<Worker>();
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 6000;
-	public static int exposeMax = 39000;
+	public static int exposeMax = 50000;
 	public World.Timer silence;
 	AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;
@@ -117,6 +117,7 @@ public class Resource : Assert.Base
 		this.type = type;
 		this.charges = charges;
 		this.node = node;
+		life.Start();
 		return this;
 	}
 
