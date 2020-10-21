@@ -63,8 +63,11 @@ public class Player : ScriptableObject
 
 		itemDispatcher = ScriptableObject.CreateInstance<ItemDispatcher>();
 		itemDispatcher.Setup( this );
-		CreateMainBuilding();
-
+		if ( !CreateMainBuilding() )
+		{
+			Destroy( this );
+			return null;
+		}
 		return this;
 	}
 
@@ -94,14 +97,14 @@ public class Player : ScriptableObject
 		itemDispatcher.LateUpdate();
 	}
 
-	void CreateMainBuilding()
+	bool CreateMainBuilding()
 	{
 		GroundNode center = World.instance.ground.GetCenter(), best = null;
 		float heightdDif = float.MaxValue;
 		foreach ( var o in Ground.areas[8] )
 		{
 			GroundNode node = center.Add( o );
-			if ( node.type != GroundNode.Type.grass || node.owner != null )
+			if ( !node.CheckType( GroundNode.Type.land ) || node.owner != null )
 				continue;
 			if ( node.IsBlocking() || node.Add( Building.flagOffset ).IsBlocking() )
 				continue;
@@ -109,7 +112,7 @@ public class Player : ScriptableObject
 			min = max = node.height;
 			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
 			{
-				if ( node.Neighbour( i ).type != GroundNode.Type.grass )
+				if ( !node.Neighbour( i ).CheckType( GroundNode.Type.land ) )
 				{
 					max = float.MaxValue;
 					break;
@@ -127,10 +130,14 @@ public class Player : ScriptableObject
 			}
 		}
 
+		if ( best == null )
+			return false;
+
 		Assert.global.IsNull( mainBuilding );
 		mainBuilding = Stock.Create();
 		mainBuilding.SetupMain( best, this );
 		World.instance.eye.FocusOn( mainBuilding.node );
+		return true;
 	}
 
 	public void RegisterInfluence( Building building )

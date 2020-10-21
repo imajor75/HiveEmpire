@@ -11,17 +11,17 @@ public class Resource : Assert.Base
 	public bool underGround;
 	public Type type;
 	public World.Timer life;
-	public int exposed = 0;
+	public World.Timer exposed;
 	public int charges = 1;
 	GameObject body;
-	public int keepAwayTimer = 0;
-	public int spawnTimer = 0;
+	public World.Timer keepAway;
+	public World.Timer spawn;
 	public Worker hunter;
 	public List<Worker> animals = new List<Worker>();
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 6000;
 	public static int exposeMax = 39000;
-	public int silenceTimer;
+	public World.Timer silence;
 	AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
@@ -101,7 +101,7 @@ public class Resource : Assert.Base
 				charges = 1;
 		}
 
-		if ( ( underGround && node.type != GroundNode.Type.hill ) || ( !underGround && node.type != GroundNode.Type.grass ) )
+		if ( ( underGround && node.type != GroundNode.Type.hill ) || ( !underGround && !node.CheckType( GroundNode.Type.land ) ) )
 		{
 			Destroy( gameObject );
 			return null;
@@ -172,11 +172,9 @@ public class Resource : Assert.Base
 
 	void FixedUpdate()
 	{
-		keepAwayTimer -= (int)node.ground.world.timeFactor;
-		exposed -= (int)node.ground.world.timeFactor;
 		if ( underGround )
-			body?.SetActive( exposed > 0 );
-		if ( type == Type.animalSpawner && spawnTimer-- <= 0 )
+			body?.SetActive( !exposed.Done );
+		if ( type == Type.animalSpawner && spawn.Done )
 		{
 			foreach ( var o in Ground.areas[1] )
 			{
@@ -194,10 +192,9 @@ public class Resource : Assert.Base
 				else
 					assert.IsTrue( false );
 			}
-			spawnTimer = 1000;
+			spawn.Start( 1000 );
 		}
-		silenceTimer--;
-		if ( silenceTimer < 0 )
+		if ( silence.Done )
 		{
 			if ( nextSound )
 			{
@@ -210,10 +207,10 @@ public class Resource : Assert.Base
 			{
 				var m = ambientSounds.GetMedia( type );
 				if ( m == null )
-					silenceTimer = 1500;
+					silence.Start( 1500 );
 				else
 				{
-					silenceTimer = (int)( World.rnd.NextDouble() * m.intData * 50 );
+					silence.Start( (int)( World.rnd.NextDouble() * m.intData * 50 ) );
 					nextSound = m.data;
 				}
 			}
@@ -264,7 +261,7 @@ public class Resource : Assert.Base
 
 	public bool IsReadyToBeHarvested()
 	{
-		if ( keepAwayTimer > 0 )
+		if ( !keepAway.Done )
 			return false;
 		if ( type == Type.tree )
 			return life.Age > treeGrowthMax;

@@ -25,10 +25,13 @@ public class GroundNode : Assert.Base
 
 	public enum Type
 	{
-		grass,
-		hill,
-		mountain,
-		underWater
+		grass = 1,
+		hill = 2,
+		mountain = 4,
+		forest = 8,
+		underWater = 16,
+		land = grass + forest,
+		high = hill + mountain
 	}
 
 	static public GroundNode Create()
@@ -221,6 +224,14 @@ public class GroundNode : Assert.Base
 		{
 			return x + y * ground.width;
 		}
+	}
+
+	public bool CheckType( GroundNode.Type type )
+	{
+		if ( ( this.type & type ) > 0 )
+			return true;
+
+		return false;
 	}
 
 	public void Validate()

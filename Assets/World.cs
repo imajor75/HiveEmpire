@@ -26,10 +26,11 @@ public class World : MonoBehaviour
 	public bool gameInProgress;
 	public int time;
 
-	public static float maxHeight = 20;
-	public static float waterLevel = 0.40f;
-	public static float hillLevel = 0.55f;
-	public static float mountainLevel = 0.6f;
+	public float maxHeight = 10;
+	public float waterLevel = 0.3f;
+	public float hillLevel = 0.6f;
+	public float mountainLevel = 0.8f;
+	public float forestGroundChance = 0.45f;
 
 	static public GameObject water;
 	static public GameObject resources;
@@ -103,7 +104,9 @@ public class World : MonoBehaviour
 		eye = Eye.Create().Setup( this );
 		ground = Ground.Create().Setup( this, seed );
 		GenerateResources();
-		players.Add( Player.Create().Setup() );
+		var mainPlayer = Player.Create().Setup();
+		if ( mainPlayer )
+			players.Add( mainPlayer );
 		ground.RecalculateOwnership();
 		gameInProgress = true;
 
@@ -134,6 +137,30 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
+		//var forestMap = HeightMap.Create();
+		//forestMap.Setup( 8, World.rnd.Next() );
+		//forestMap.adjust = 0;
+		//forestMap.deepnessExp = 1.5f;
+		//forestMap.Fill();
+
+		//float xf = (float)( forestMap.sizeX - 1 ) / ground.width;
+		//float yf = (float)( forestMap.sizeY - 1 ) / ground.height;
+		//{
+		//	var list = Resources.FindObjectsOfTypeAll<GroundNode>();
+		//	foreach ( var n in list )
+		//	{
+		//		float d = n.height/20;
+		//		n.type = GroundNode.Type.grass;
+		//		if ( forestMap.data[(int)( xf * n.x ), (int)( yf * n.y )] < World.instance.forestGroundChance )
+		//			n.type = GroundNode.Type.forest;
+		//		if ( d > World.instance.hillLevel )
+		//			n.type = GroundNode.Type.hill;
+		//		if ( d > World.instance.mountainLevel )
+		//			n.type = GroundNode.Type.mountain;
+		//		if ( d < World.instance.waterLevel )
+		//			n.type = GroundNode.Type.underWater;
+		//	}
+		//}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Item>();
 			foreach ( var o in list )

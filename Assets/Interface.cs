@@ -50,6 +50,8 @@ public class Interface : Assert.Base
 	{
 		foreach ( Transform d in debug.transform )
 			Destroy( d.gameObject );
+		foreach ( var panel in panels )
+			panel.Close();
 	}
 
 	void LateUpdate()
@@ -134,13 +136,13 @@ public class Interface : Assert.Base
 		tooltip.Open();
 
 		world = World.Create().Setup();
-		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-		if ( directory.Exists )
-		{
-			var myFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
-			if ( myFiles.Count() > 0 )
-				Load( myFiles.First().FullName );
-		}
+		//var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+		//if ( directory.Exists )
+		//{
+		//	var myFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+		//	if ( myFiles.Count() > 0 )
+		//		Load( myFiles.First().FullName );
+		//}
 		if ( !world.gameInProgress )
 			NewGame( 117274283 );
 	}
@@ -148,7 +150,10 @@ public class Interface : Assert.Base
 	void NewGame( int seed )
 	{
 		world.NewGame( seed );
-		mainPlayer = world.players[0];
+		if ( world.players.Count > 0 )
+			mainPlayer = world.players[0];
+		else
+			mainPlayer = null;
 	}
 
 	void Load( string file )
@@ -966,7 +971,7 @@ public class Interface : Assert.Base
 			BuildButton( 20, -320, "Raise", true, delegate { AlignHeight( 0.1f ); } );
 			BuildButton( 20, -340, "Lower", true, delegate { AlignHeight( -0.1f ); } );
 #endif
-			if ( node.resource && ( !node.resource.underGround || node.resource.exposed > 0 ) )
+			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.Done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
 		}
 

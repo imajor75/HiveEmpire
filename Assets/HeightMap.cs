@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
+using System;
 using UnityEngine;
 
-public class HeightMap : ScriptableObject
+public class HeightMap : MonoBehaviour
 {
-	int sizeX = 513, sizeY = 513, size = 9;
-	public bool tileable = true;
+	public int sizeX = 513, sizeY = 513, size = 9;
+	public bool tileable = false;
 	[Range(-2.0f, 2.0f)]    
 	public float deepnessExp = 0;
 	[Range(0.0f, 5.0f)]
@@ -19,9 +20,23 @@ public class HeightMap : ScriptableObject
 	public System.Random random;
 	[JsonIgnore]
 	public float[,] data;
+	[Range(0, 10000)]
 	public int seed;
 	public bool deepnessAffectsMagnitude = true;
 	public bool deepnessAffectsRandomness = true;
+	public bool normalize = true;
+	[Range(-1.0f, 1.0f)]
+	public float adjustLow = 0, adjustHigh = 0;
+	public float averageValue;
+	int count;
+	float borderLevel = 0;
+
+	public static HeightMap Create()
+	{
+		var map = new GameObject().AddComponent<HeightMap>();
+		map.name = "Height map";
+		return map;
+	}
 
 	public void Setup( int size, int seed, bool tileable = false, bool island = false, float deepnessExp = 0 )
 	{
@@ -36,22 +51,73 @@ public class HeightMap : ScriptableObject
 	public void Fill()
 	{
 		random = new System.Random( seed );
+		count = 0;
+		averageValue = 0;
 		data = new float[sizeX, sizeY];
-		float w = island ? 0 : 1;
-		Randomize( ref data[0, 0], deepnessStart, w );
-		Randomize( ref data[sizeX - 1, 0], deepnessStart, w );
-		Randomize( ref data[0, sizeY - 1], deepnessStart, w );
-		Randomize( ref data[sizeX - 1, sizeY - 1], deepnessStart, w );
+		Randomize( ref data[0, 0], deepnessStart, 1 );
+		Randomize( ref data[sizeX - 1, 0], deepnessStart, 1 );
+		Randomize( ref data[0, sizeY - 1], deepnessStart, 1 );
+		Randomize( ref data[sizeX - 1, sizeY - 1], deepnessStart, 1 );
 		int i = sizeX - 1;
 		float step = 0;
 		float c = deepnessStart, a = deepnessExp;
 		float b = - a - c;
 		while ( i > 1 )
 		{
+			if ( island )
+			{
+				Assert.global.AreEqual( sizeX, sizeY );
+				for ( int j = 0; j < sizeX; j++ )
+				{
+					data[j, 0] = borderLevel;
+					data[j, sizeY - 1] = borderLevel;
+					data[0, j] = borderLevel;
+					data[sizeX - 1, j] = borderLevel;
+				}
+			}
 			ProcessLevel( i, a * step * step + b * step + c );
+
 			i /= 2;
 			step += 1f/size;
 		}
+
+		Assert.global.AreEqual( count, sizeX * sizeY );
+		averageValue /= count;
+
+		PostProcess();
+	}
+
+	void PostProcess()
+	{
+		averageValue = 0;
+		float powerLow = (float)Math.Pow( 5, adjustLow );
+		float powerHigh = (float)Math.Pow( 5, adjustHigh );
+		float min = 1, max = 0;
+		for ( int x = 0; x < sizeX; x++ )
+		{
+			for ( int y = 0; y < sizeY; y++ )
+			{
+				min = Math.Min( min, data[x, y] );
+				max = Math.Max( max, data[x, y] );
+			}
+		}
+		float normalizer = 1 / ( max - min );
+		for ( int x = 0; x < sizeX; x++ )
+		{
+			for ( int y = 0; y < sizeY; y++ )
+			{
+				float value = data[x, y];
+				if ( normalize )
+					value = ( value - min ) * normalizer;
+				if ( value < 0.5 )
+					value = (float)( 0.5 * Math.Pow( value * 2, powerLow ) );
+				else
+					value = (float)( 1 - 0.5 * Math.Pow( ( 1 - value ) * 2, powerHigh ) );
+				data[x, y] = value;
+				averageValue += value;
+			}
+		}
+		averageValue /= sizeX * sizeY;
 	}
 
 	void ProcessLevel( int i, float m )
@@ -153,27 +219,43 @@ public class HeightMap : ScriptableObject
 		if ( deepnessAffectsRandomness )
 			randomValue = deepnessOffset + ( randomValue - 0.5f ) * deepness + 0.5f;
 		value = value * ( 1 - weight ) + randomValue * weight;
+		count++;
 	}
 
-	[JsonIgnore]
-	public Texture2D mapTexture;
-	void OnValidate()
+	Texture2D AsTexture()
 	{
-		Fill();
 		int w = 1 << size;
-		if ( mapTexture == null )
-			mapTexture = new Texture2D( w, w );
+		var texture = new Texture2D( w, w );
 
 		for ( int x = 0; x < w; x++ )
 		{
 			for ( int y = 0; y < w; y++ )
 			{
 				float h = data[x, y];
-				mapTexture.SetPixel( x, y, new Color( h, h, h ) );
+				texture.SetPixel( x, y, new Color( h, h, h ) );
 			}
 		}
-		mapTexture.Apply();
-		Color c = mapTexture.GetPixel( 0, 0 );
+		texture.Apply();
+		return texture;
+	}
+
+	public void SavePNG( string file )
+	{
+		System.IO.File.WriteAllBytes( file, AsTexture().EncodeToPNG() );
+	}
+
+	Texture2D mapTexture;
+	void OnValidate()
+	{
+		sizeX = sizeY = ( 1 << size ) + 1;
+		Fill();
+		mapTexture = AsTexture();
+	}
+
+	void OnGUI()
+	{
+		if ( mapTexture != null )
+			GUI.DrawTexture( new Rect( 140, 140, 512, 512 ), mapTexture );
 	}
 }
-		
+
