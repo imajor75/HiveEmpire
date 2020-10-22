@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-using JetBrains.Annotations;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -369,7 +367,7 @@ public class Worker : Assert.Base
 			if ( path != item.path )
 			{
 				// This block can run for tinkerers too, if the item lost destination before the tinkerer would pick it up
-				if ( boss.type == Type.hauler );		
+				if ( boss.type == Type.hauler )
 					boss.assert.AreEqual( boss.road, path.Road );
 				return ResetBoss();
 			}
@@ -445,8 +443,14 @@ public class Worker : Assert.Base
 			{
 				if ( item.nextFlag && boss.node.flag == item.nextFlag )
 				{
-					boss.itemInHands = item.ArrivedAt( item.nextFlag );
-					boss.itemInHands?.path?.NextRoad();
+					Item change = boss.itemInHands = item.ArrivedAt( item.nextFlag );
+					if ( change )
+					{
+						if ( boss.road && change.Road == boss.road )
+							change.path.NextRoad();
+						else
+							change.CancelTrip();
+					}
 				}
 				else
 					return ResetBoss(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
@@ -1253,7 +1257,7 @@ public class Worker : Assert.Base
 		}
 		if ( itemInHands )
 		{
-			assert.AreEqual( itemInHands.worker, this );	
+			assert.AreEqual( itemInHands.worker, this, "Unknown worker " + itemInHands.worker );	
 			itemInHands.Validate();
 		}
 		foreach ( Task task in taskQueue )
