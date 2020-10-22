@@ -741,7 +741,7 @@ public class Interface : Assert.Base
 		{
 			return new GameObject().AddComponent<WorkshopPanel>();
 		}
-		
+
 		public void Open( Workshop workshop, bool show = false )
 		{
 			base.Open( workshop );
@@ -756,7 +756,6 @@ public class Interface : Assert.Base
 			overdriveImage = overdriveButton.gameObject.GetComponent<Image>();
 
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
-			productivity = Text( 180, -20, 30, 20 );
 
 			int row = -40;
 			int col = 20;
@@ -774,18 +773,20 @@ public class Interface : Assert.Base
 			if ( workshop.configuration.commonInputs )
 				row -= iconSize * 3 / 2;
 
-			if ( workshop.buffers.Count > 0 )
+			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
 			{
-				row -= iconSize / 2;
-				outputs = new Buffer();
-				outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
-
+				if ( workshop.configuration.gatheredResource == Resource.Type.unknown )
+				{
+					row -= iconSize / 2;
+					outputs = new Buffer();
+					outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
+				}
 				row -= (int)( (float)iconSize * 1.5f );
 				progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
+
+				itemsProduced = Text( 20, row - 24, 200, 20 );
+				productivity = Text( 180, -20, 30, 20 );
 			}
-
-			itemsProduced = Text( 20, row - 24, 200, 20 );
-
 			if ( show )
 				Root.world.eye.FocusOn( workshop );
 		}
@@ -807,20 +808,25 @@ public class Interface : Assert.Base
 			foreach ( var buffer in buffers )
 				buffer.Update();
 
-			if ( workshop.buffers.Count > 0 )
-			{
-				outputs.Update( workshop.output, 0 );
+			outputs?.Update( workshop.output, 0 );
 
+			if ( progressBar )
+			{
 				if ( workshop.working )
 				{
 					progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
 					progressBar.color = Color.white;
 				}
 				else
-					progressBar.color = Color.red;
+				{
+					if ( workshop.configuration.gatheredResource != Resource.Type.unknown && !workshop.worker.IsIdle() )
+						progressBar.color = Color.green;
+					else
+						progressBar.color = Color.red;
+				}
+				productivity.text = ( (int)( workshop.productivity.current * 100 ) ).ToString() + "%";
+				itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 			}
-			productivity.text = ( (int)(workshop.productivity.current * 100) ).ToString() + "%";
-			itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 			overdriveImage.color = new Color( 1, 1, 1, workshop.outputPriority == ItemDispatcher.Priority.high ? 1 : 0.4f );
 		}
 
