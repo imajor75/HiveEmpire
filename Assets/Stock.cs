@@ -116,7 +116,7 @@ public class Stock : Building
 			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.stock );
 			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.stock );
-			int missing = target[itemType] - content[itemType] + onWay[itemType];
+			int missing = target[itemType] - content[itemType] - onWay[itemType];
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high );
 		}
@@ -171,6 +171,8 @@ public class Stock : Building
 	{
 		base.ItemArrived( item );
 
+		assert.IsTrue( onWay[(int)item.type] > 0 );
+		onWay[(int)item.type]--;
 		if ( !construction.done )
 			return;
 
@@ -182,5 +184,10 @@ public class Stock : Building
 	public override void Validate()
 	{
 		base.Validate();
+		int[] onWayCounted = new int[(int)Item.Type.total];
+		foreach ( var item in itemsOnTheWay )
+			onWayCounted[(int)item.type]++;
+		for ( int i = 0; i < onWayCounted.Length; i++ )
+			assert.AreEqual( onWay[i], onWayCounted[i] );
 	}
 }

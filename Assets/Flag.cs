@@ -21,16 +21,13 @@ public class Flag : Assert.Base
 
 	static public void Initialize()
 	{
-		template = (GameObject)Resources.Load( "Tresure_box/tresure_box_flag" );
-		template.transform.localScale = Vector3.one;
-		template.transform.rotation = Quaternion.AngleAxis( 135, Vector3.up );
+		template = (GameObject)Resources.Load( "Bizulka/Witchs_house/Prefabs/Pointer" );
 		Assert.global.IsNotNull( template );
 	}
 
 	public static Flag Create()
 	{
-		GameObject flagObject = GameObject.Instantiate( template );
-		return flagObject.AddComponent<Flag>();
+		return new GameObject().AddComponent<Flag>();
 	}
 
 	public Flag Setup( GroundNode node, Player owner )
@@ -53,8 +50,10 @@ public class Flag : Assert.Base
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
-		itemTable = World.FindChildRecursive( transform, "ItemTable" ).gameObject.GetComponent<MeshRenderer>();
-		assert.IsNotNull( itemTable );
+		transform.localPosition = node.Position();
+		var body = GameObject.Instantiate( template );
+		body.transform.SetParent( transform, false );
+		itemTable = World.FindChildRecursive( transform, "ItemTable" )?.gameObject.GetComponent<MeshRenderer>();
 		UpdateBody();
 	}
 

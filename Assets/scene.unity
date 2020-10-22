@@ -161,6 +161,7 @@ MonoBehaviour:
   heightStrips: 0
   mainPlayer: {fileID: 0}
   tooltip: {fileID: 0}
+  autoSave: 15000
 --- !u!4 &1680099500
 Transform:
   m_ObjectHideFlags: 0

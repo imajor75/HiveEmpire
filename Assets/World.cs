@@ -123,7 +123,6 @@ public class World : MonoBehaviour
 			player.Start();
 	}
 
-
 	public void Load( string fileName )
 	{
 		Clear();

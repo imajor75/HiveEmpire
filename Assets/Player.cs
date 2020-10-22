@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : ScriptableObject
@@ -12,7 +13,7 @@ public class Player : ScriptableObject
 	const int efficiencyUpdateTime = 3000;
 	const float efficiencyUpdateFactor = 0.3f;
 	public float totalEfficiency;
-	int lastEfficiencyUpdate;
+	public World.Timer efficiencyTimer;
 
 	public int soldiersProduced = 0;
 	public int bowmansProduced = 0;
@@ -70,6 +71,7 @@ public class Player : ScriptableObject
 			Destroy( this );
 			return null;
 		}
+		efficiencyTimer.Start( efficiencyUpdateTime );
 		return this;
 	}
 
@@ -83,10 +85,10 @@ public class Player : ScriptableObject
 
 	public void FixedUpdate()
 	{
-		if ( World.instance.time - lastEfficiencyUpdate < efficiencyUpdateTime )
+		if ( !efficiencyTimer.Done )
 			return;
+		efficiencyTimer.Start( efficiencyUpdateTime );
 
-		lastEfficiencyUpdate = World.instance.time;
 		totalEfficiency = float.MaxValue;
 		for ( int i = 0; i < efficiency.Length; i++ )
 		{

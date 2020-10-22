@@ -22,8 +22,8 @@ public class Item : Assert.Base
 	public Watch watchRoadDelete = new Watch();
 	public Watch watchBuildingDelete = new Watch();
 	public bool tripCancelled;
-	public int born;
-	public int flagTime;
+	public World.Timer life;
+	public World.Timer atFlag;
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 	public int index = -1;
@@ -99,7 +99,7 @@ public class Item : Assert.Base
 	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Priority priority = ItemDispatcher.Priority.stop )
 	{
 		this.origin = origin;
-		born = World.instance.time;
+		life.Start();
 		ground = origin.ground;
 		owner = origin.owner;
 		watchRoadDelete.Attach( owner.versionedRoadDelete );
@@ -172,7 +172,7 @@ public class Item : Assert.Base
 		// 2. flag is in front of a stock
 		// 3. item is not yet routing to this building
 		// 4. worker not yet started coming
-		if ( flag && flag.building as Stock && flag.building.construction.done && destination != flag.building && worker == null && timeAtFlag > timeoutAtFlag )
+		if ( flag && flag.building as Stock && flag.building.construction.done && destination != flag.building && worker == null && atFlag.Age > timeoutAtFlag )
 		{
 			SetTarget( flag.building, ItemDispatcher.Priority.high );
 			return;
@@ -184,20 +184,10 @@ public class Item : Assert.Base
 		owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.stock );
 	}
 
-	[JsonIgnore]
-	public int timeAtFlag
-	{
-		get
-		{
-			return World.instance.time - flagTime;
-		}
-	}
-
 	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )
 	{
-		assert.AreNotEqual( building, destination );
+		assert.IsTrue( building != destination || priority != currentOrderPriority );
 
-		var oldDestination = destination;
 		CancelTrip();
 
 		Flag start = origin?.flag;
@@ -251,10 +241,7 @@ public class Item : Assert.Base
 		worker = null;
 		assert.IsTrue( destination == null || !path.IsFinished || destination.flag == flag );
 
-		if ( destination == null )
-			CancelTrip();	// Why is this needed?
-
-		flagTime = World.instance.time;
+		atFlag.Start();
 		return flag.FinalizeItem( this );
 	}
 

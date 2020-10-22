@@ -25,6 +25,8 @@ public class Interface : Assert.Base
 	public bool heightStrips;
 	public Player mainPlayer;
 	public Tooltip tooltip;
+	public int autoSave = autoSaveInterval;
+	const int autoSaveInterval = 15000;
 
 	public enum Icon
 	{
@@ -64,6 +66,12 @@ public class Interface : Assert.Base
 
 	void FixedUpdate()
 	{
+		autoSave--;
+		if ( autoSave < 0 )
+		{
+			Save();
+			autoSave = autoSaveInterval;
+		}
 		var o = ItemPanel.materialUIPath.mainTextureOffset;
 		o.y -= 0.015f;
 		if ( o.y < 0 )
@@ -159,11 +167,19 @@ public class Interface : Assert.Base
 			mainPlayer = null;
 	}
 
-	void Load( string file )
+	void Load( string fileName )
 	{
-		world.Load( file );
+		world.Load( fileName );
 		mainPlayer = world.players[0];
-		print( file + " is loaded" );
+		print( fileName + " is loaded" );
+	}
+
+	void Save( string fileName = "" )
+	{
+		if ( fileName == "" )
+			fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
+		world.Save( fileName );
+		print( fileName + " is saved" );
 	}
 
 	void Update()
@@ -186,7 +202,6 @@ public class Interface : Assert.Base
 		}
 		if ( Input.GetKeyDown( KeyCode.P ) )
 		{
-
 			string fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
 			world.Save( fileName );
 			print( fileName + " is saved" );
@@ -940,6 +955,11 @@ public class Interface : Assert.Base
 
 		void ChangeTarget( int itemType )
 		{
+			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
+			{
+				stock.content[itemType] = 0;
+				return;
+			}
 			int increment = 1;
 			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
 				increment *= -1;
@@ -965,7 +985,7 @@ public class Interface : Assert.Base
 					counts[i].color = Color.red;
 				if ( stock.content[i] > stock.target[i] )
 					counts[i].color = Color.green;
-				counts[i].text = stock.content[i].ToString() + " (" + stock.target[i].ToString() + ")";
+				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ") =>" + stock.target[i];
 			}
 		}
 	}
@@ -1285,7 +1305,7 @@ public class Interface : Assert.Base
 					{
 						itemTimers[i].enabled = true;
 						items[i].color = new Color( 1, 1, 1, 1 );
-						int timeAtFlag = World.instance.time - flag.items[i].flagTime;
+						int timeAtFlag = flag.items[i].atFlag.Age;
 						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / 3000 ), 3 );
 						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / 30000f );
 					}
@@ -1466,7 +1486,7 @@ public class Interface : Assert.Base
 				return;
 			}
 
-			stats.text = "Age: " + ( World.instance.time - item.born ) / 50 + " secs, at flag for " + ( World.instance.time - item.flagTime ) / 50 + " secs";
+			stats.text = "Age: " + item.life.Age / 50 + " secs, at flag for " + item.atFlag.Age / 50 + " secs";
 
 			if ( item.destination && route == null )
 			{
@@ -1728,7 +1748,7 @@ public class Interface : Assert.Base
 
 				BuildingIcon( 30, row, item.origin, scroll.content );
 				BuildingIcon( 130, row, item.destination, scroll.content );
-				Text( 230, row, 50, 20, ( ( World.instance.time - item.born ) / 50 ).ToString(), scroll.content );
+				Text( 230, row, 50, 20, ( item.life.Age / 50 ).ToString(), scroll.content );
 				if ( item.path )
 					Text( 280, row, 30, 20, item.path.roadPath.Count.ToString(), scroll.content );
 				row -= iconSize + 5;
@@ -1740,9 +1760,9 @@ public class Interface : Assert.Base
 
 		static public int CompareByAge( Item itemA, Item itemB )
 		{
-			if ( itemA.born == itemB.born )
+			if ( itemA.life.Age == itemB.life.Age )
 				return 0;
-			if ( itemA.born < itemB.born )
+			if ( itemA.life.Age < itemB.life.Age )
 				return -1;
 			return 1;
 		}
@@ -1856,12 +1876,12 @@ public class Interface : Assert.Base
 
 				inStock[i].text = inStockCount[i].ToString();
 				onWay[i].text = onWayCount[i].ToString();
-				production[i].text = player.efficiency[i].ToString();
+				production[i].text = player.efficiency[i].ToString( "n2" );
 				float itemEfficiency = Player.efficiencyFactors[i] * player.efficiency[i];
-				efficiency[i].text = itemEfficiency.ToString();
+				efficiency[i].text = itemEfficiency.ToString( "n2" );
 			};
 
-			finalEfficiency.text = player.totalEfficiency.ToString();
+			finalEfficiency.text = player.totalEfficiency.ToString( "n2" );
 		}
 	}
 
