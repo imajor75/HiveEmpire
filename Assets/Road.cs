@@ -719,6 +719,9 @@ public class Road : Assert.Base, Interface.InputHandler
 
 	public bool OnMovingOverNode( GroundNode node )
  	{
+		if ( node == null )
+			return true;
+
 		GroundNode last = newRoad.GetNodeFromEnd( 0 );
 		if ( node == last )
 		{

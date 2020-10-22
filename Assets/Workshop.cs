@@ -159,7 +159,7 @@ public class Workshop : Building
 				boss.assert.AreEqual( boss, node.resource.hunter );
 				node.resource.hunter = null;
 			}
-			item.Remove();
+			item?.Remove();
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
