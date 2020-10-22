@@ -472,11 +472,11 @@ public class Workshop : Building
 		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.green, productivity.current );
 	}
 
-	public override Item SendItem( Item.Type itemType, Building destination )
+	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
 		assert.AreEqual( configuration.outputType, itemType );
 		assert.IsTrue( output > 0 );
-		Item item = base.SendItem( itemType, destination );
+		Item item = base.SendItem( itemType, destination, priority );
 		if ( item != null )
 			output--;
 		return item;

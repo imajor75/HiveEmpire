@@ -5,6 +5,8 @@ public class Stock : Building
 {
 	public bool main = false;
 	public List<int> content = new List<int>();
+	public List<int> target = new List<int>();
+	public List<int> onWay = new List<int>();
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template;
@@ -40,7 +42,11 @@ public class Stock : Building
 		height = 2;
 
 		while ( content.Count < (int)Item.Type.total )
+		{
 			content.Add( 0 );
+			target.Add( 0 );
+			onWay.Add( 0 );
+		}
 		if ( base.Setup( node, owner, configuration ) == null )
 			return null;
 
@@ -92,6 +98,10 @@ public class Stock : Building
 			name = "Stock " + node.x + ", " + node.y;
 		while ( content.Count < (int)Item.Type.total )
 			content.Add( 0 );
+		while ( target.Count < (int)Item.Type.total )
+			target.Add( 0 );
+		while ( onWay.Count < (int)Item.Type.total )
+			onWay.Add( 0 );
 	}
 
 	new public void Update()
@@ -103,9 +113,12 @@ public class Stock : Building
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
+			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.stock );
 			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.stock );
-			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.stock );
+			int missing = target[itemType] - content[itemType] + onWay[itemType];
+			if ( missing > 0 )
+				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high );
 		}
     }
 
@@ -135,10 +148,10 @@ public class Stock : Building
 			Interface.ConstructionPanel.Create().Open( construction );
 	}
 
-	public override Item SendItem( Item.Type itemType, Building destination )
+	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
 		assert.IsTrue( content[(int)itemType] > 0 );
-		Item item = base.SendItem( itemType, destination );
+		Item item = base.SendItem( itemType, destination, priority );
 		if ( item != null )
 			content[(int)itemType]--;
 
@@ -147,6 +160,10 @@ public class Stock : Building
 
 	public override void ItemOnTheWay( Item item, bool cancel = false )
 	{
+		if ( cancel )
+			onWay[(int)item.type]--;
+		else
+			onWay[(int)item.type]++;
 		base.ItemOnTheWay( item, cancel );
 	}
 

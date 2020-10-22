@@ -324,13 +324,13 @@ abstract public class Building : Assert.Base
 		UpdateLook();
 	}
 
-	public virtual Item SendItem( Item.Type itemType, Building destination )
+	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
 		if ( worker == null || !worker.IsIdle( true ) || flag.FreeSpace() == 0 )
 			return null;
 
 		// TODO Don't create the item, if there is no path between this and destination
-		Item item = Item.Create().Setup( itemType, this, destination );
+		Item item = Item.Create().Setup( itemType, this, destination, priority );
 		if ( item != null )
 		{
 			flag.ReserveItem( item );

@@ -911,8 +911,8 @@ public class Interface : Assert.Base
 			base.Open( stock );
 			this.stock = stock;
 			int height = 290;
-			Frame( 0, 0, 200, height );
-			Button( 170, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Frame( 0, 0, 300, height );
+			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 150, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 
 			int row = -25;
@@ -922,14 +922,30 @@ public class Interface : Assert.Base
 				counts[j] = Text( 44, row, 100, 20, "" );
 				if ( j + 1 < Item.sprites.Length )
 				{
-					ItemIcon( 110, row, iconSize, iconSize, (Item.Type)j + 1 );
-					counts[j + 1] = Text( 134, row, 100, 20, "" );
+					ItemIcon( 160, row, iconSize, iconSize, (Item.Type)j + 1 );
+					counts[j + 1] = Text( 184, row, 100, 20, "" );
 				};
 				row -= iconSize + 5;
 			}
 
+			for ( int i = 0; i < counts.Length; i++ )
+			{
+				int j = i;
+				counts[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeTarget( j ); } );
+			}
+
 			if ( show )
 				Root.world.eye.FocusOn( stock );
+		}
+
+		void ChangeTarget( int itemType )
+		{
+			int increment = 1;
+			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+				increment *= -1;
+			stock.target[itemType] += increment;
+			if ( stock.target[itemType] < 0 )
+				stock.target[itemType] = 0;
 		}
 
 		void Remove()
@@ -942,7 +958,15 @@ public class Interface : Assert.Base
 		{
 			base.Update();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
-				counts[i].text = stock.content[i].ToString();
+			{
+				if ( stock.content[i] == stock.target[i] )
+					counts[i].color = Color.yellow;
+				if ( stock.content[i] < stock.target[i] )
+					counts[i].color = Color.red;
+				if ( stock.content[i] > stock.target[i] )
+					counts[i].color = Color.green;
+				counts[i].text = stock.content[i].ToString() + " (" + stock.target[i].ToString() + ")";
+			}
 		}
 	}
 

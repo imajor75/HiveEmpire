@@ -14,6 +14,7 @@ public class Item : Assert.Base
 	public Type type;
 	public Ground ground;
 	public Path path;
+	public ItemDispatcher.Priority currentOrderPriority;
 	public Building destination;
 	public Building origin;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
@@ -95,7 +96,7 @@ public class Item : Assert.Base
 		return itemBody.AddComponent<Item>();
 	}
 
-	public Item Setup( Type type, Building origin, Building destination = null )
+	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Priority priority = ItemDispatcher.Priority.stop )
 	{
 		this.origin = origin;
 		born = World.instance.time;
@@ -106,7 +107,7 @@ public class Item : Assert.Base
 		this.type = type;
 		if ( destination )
 		{
-			if ( !SetTarget( destination, origin ) )
+			if ( !SetTarget( destination, priority, origin ) )
 			{
 				Destroy( gameObject );
 				return null;
@@ -173,20 +174,14 @@ public class Item : Assert.Base
 		// 4. worker not yet started coming
 		if ( flag && flag.building as Stock && flag.building.construction.done && destination != flag.building && worker == null && timeAtFlag > timeoutAtFlag )
 		{
-			SetTarget( flag.building );
+			SetTarget( flag.building, ItemDispatcher.Priority.high );
 			return;
 		}
 
-		var priority = ItemDispatcher.Priority.stop;
-		if ( destination == null )
-			priority = ItemDispatcher.Priority.high;
-		else if ( destination as Stock && destination.construction.done )
-			priority = ItemDispatcher.Priority.stock;
-
-		if ( priority == ItemDispatcher.Priority.stop )
+		if ( currentOrderPriority > ItemDispatcher.Priority.stock )
 			return;
 
-		owner.itemDispatcher.RegisterOffer( this, priority );
+		owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.stock );
 	}
 
 	[JsonIgnore]
@@ -198,7 +193,7 @@ public class Item : Assert.Base
 		}
 	}
 
-	public bool SetTarget( Building building, Building origin = null )
+	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )
 	{
 		assert.AreNotEqual( building, destination );
 
@@ -217,6 +212,7 @@ public class Item : Assert.Base
 			flag?.itemsStored.Trigger();
 			destination = building;
 			building.ItemOnTheWay( this );
+			currentOrderPriority = priority;
 			tripCancelled = false;
 			return true;
 		}
@@ -232,6 +228,7 @@ public class Item : Assert.Base
 
 		destination.ItemOnTheWay( this, true );
 		destination = null;
+		currentOrderPriority = ItemDispatcher.Priority.stop;
 		flag?.itemsStored.Trigger();
 		tripCancelled = true;
 	}

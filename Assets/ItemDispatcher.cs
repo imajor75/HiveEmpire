@@ -223,11 +223,11 @@ public class ItemDispatcher : ScriptableObject
 
 			bool success = false;
 			if ( first.building != null )
-				success = first.building.SendItem( (Item.Type)itemType, second.building );
+				success = first.building.SendItem( (Item.Type)itemType, second.building, second.priority );
 			else if ( first.item != null )
 			{
 				Assert.global.AreEqual( first.item.type, itemType );
-				success = first.item.SetTarget( second.building );
+				success = first.item.SetTarget( second.building, second.priority );
 			}
 
 			if ( !success )
