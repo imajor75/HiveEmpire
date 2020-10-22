@@ -12,19 +12,20 @@ public class ItemDispatcher : ScriptableObject
 		high
 	};
 
-	public class Request
+	public class Potential
 	{
-		public Building building;
-		public int quantity;
-		public Priority priority;
-	}
-	public class Offer
-	{
-		public Building building;
+		public enum Type
+		{
+			offer,
+			request
+		}
+
 		public Item item;
 		public GroundNode location;
-		public int quantity;
+		public Building building;
 		public Priority priority;
+		public int quantity;
+		public Type type;
 	}
 
 	public Market[] markets;
@@ -80,8 +81,8 @@ public class ItemDispatcher : ScriptableObject
 	public class Market : ScriptableObject
 	{
 		public Item.Type itemType;
-		public List<Offer> offers = new List<Offer>();
-		public List<Request> requests = new List<Request>();
+		public List<Potential> offers = new List<Potential>();
+		public List<Potential> requests = new List<Potential>();
 		public ItemDispatcher boss;
 
 		public void Setup( ItemDispatcher boss,  Item.Type itemType )
@@ -92,26 +93,29 @@ public class ItemDispatcher : ScriptableObject
 
 		public void RegisterRequest( Building building, int quantity, Priority priority )
 		{
-			var r = new Request();
+			var r = new Potential();
 			r.building = building;
 			r.quantity = quantity;
 			r.priority = priority;
+			r.location = building.flag.node;
+			r.type = Potential.Type.request;
 			requests.Add( r );
 		}
 
 		public void RegisterOffer( Building building, int quantity, Priority priority )
 		{
-			var o = new Offer();
+			var o = new Potential();
 			o.building = building;
 			o.quantity = quantity;
 			o.priority = priority;
-			o.location = building.node;
+			o.location = building.flag.node;
+			o.type = Potential.Type.offer;
 			offers.Add( o );
 		}
 
 		public void RegisterOffer( Item item, Priority priority )
 		{
-			var o = new Offer();
+			var o = new Potential();
 			o.item = item;
 			o.quantity = 1;
 			o.priority = priority;
@@ -119,31 +123,57 @@ public class ItemDispatcher : ScriptableObject
 				o.location = item.flag.node;
 			else
 				o.location = item.nextFlag.node;
+			o.type = Potential.Type.offer;
 
 			offers.Add( o );
 		}
 
+		static int ComparePotentials( Potential first, Potential second )
+		{
+			if ( first.priority == second.priority )
+				return 0;
+			if ( first.priority > second.priority )
+				return -1;
+
+			return 1;
+		}
+
 		public void LateUpdate()
 		{
+			offers.Sort( ComparePotentials );
+			requests.Sort( ComparePotentials );
+
 			Profiler.BeginSample( "Market" );
 			Priority[] priorities = { Priority.high, Priority.low };
 			foreach ( var priority in priorities )
 			{
-				foreach ( var request in requests )
+				bool success;
+				do
 				{
-					if ( request.priority != priority )
-						continue;
-					while ( request.quantity > 0 && FindOfferFor( request ) )
-						;
-				}
+					while ( offers.Count > 0 && offers[0].quantity == 0 )
+						offers.RemoveAt( 0 );
+					while ( requests.Count > 0 && requests[0].quantity == 0 )
+						requests.RemoveAt( 0 );
 
-				foreach ( var offer in offers )
-				{
-					if ( offer.priority != priority )
-						continue;
-					while ( offer.quantity > 0 && FindRequestFor( offer ) )
-						;
+					int offerCount = 0, requestCount = 0;
+					foreach ( var offer in offers )
+					{
+						if ( offer.priority == priority && offer.quantity > 0 )
+							offerCount++;
+					}
+					foreach ( var request in requests )
+					{
+						if ( request.priority != priority && request.quantity > 0 )
+							requestCount++;
+					}
+
+					success = false;
+					if ( offerCount < requestCount && offerCount > 0 )
+						success = FindPotentialFor( offers[0], requests );
+					else if ( requestCount > 0 )
+						success = FindPotentialFor( requests[0], offers );
 				}
+				while ( success );
 			}
 			int surplus = 0;
 			foreach ( var offer in offers )
@@ -152,69 +182,59 @@ public class ItemDispatcher : ScriptableObject
 
 			requests.Clear();
 			offers.Clear();
+
 			Profiler.EndSample();
 		}
 
-		bool FindOfferFor( Request request )
+		bool FindPotentialFor( Potential potential, List<Potential> list )
 		{
-			Offer bestOffer = null;
+			Potential best = null;
 			float bestScore = 0;
 
-			foreach ( var offer in offers )
+			foreach ( var other in list )
 			{
-				if ( offer.quantity == 0 )
+				if ( other.quantity == 0 )
 					continue;
-				float score = (int)offer.priority * 1000 + 1f / offer.location.DistanceFrom( request.building.node );
+				if ( potential.priority == Priority.stock && other.priority == Priority.stock )
+					continue;
+				float score = (int)other.priority * 1000 + 1f / other.location.DistanceFrom( potential.location );
 				if ( score > bestScore )
 				{
 					bestScore = score;
-					bestOffer = offer;
+					best = other;
 				}
 			}
-			if ( bestOffer != null )
-				return Attach( bestOffer, request );    // TODO If this fails, the second best should be used
+			if ( best != null )
+				return Attach( best, potential );    // TODO If this fails, the second best should be used
 
 			return false;
 		}
 
-		bool FindRequestFor( Offer offer )
+		public bool Attach( Potential first, Potential second )
 		{
-			Request bestRequest = null;
-			float bestScore = 0;
-
-			foreach ( var request in requests )
+			if ( first.type == Potential.Type.request )
 			{
-				if ( request.quantity == 0 )
-					continue;
-				float score = (int)offer.priority * 1f / offer.location.DistanceFrom( request.building.node );
-				if ( score > bestScore )
-				{
-					bestScore = score;
-					bestRequest = request;
-				}
+				var temp = first;
+				first = second;
+				second = temp;
 			}
-			if ( bestRequest != null )
-				return Attach( offer, bestRequest );    // TODO If this fails, the second best should be used
+			Assert.global.AreEqual( first.type, Potential.Type.offer, "Potential types: " + first.type + ", " + second.type );
+			Assert.global.AreEqual( second.type, Potential.Type.request, "Potential types: " + first.type + ", " + second.type );
 
-			return false;
-		}
-
-		public bool Attach( Offer offer, Request request )
-		{
 			bool success = false;
-			if ( offer.building != null )
-				success = offer.building.SendItem( (Item.Type)itemType, request.building );
-			else if ( offer.item != null )
+			if ( first.building != null )
+				success = first.building.SendItem( (Item.Type)itemType, second.building );
+			else if ( first.item != null )
 			{
-				Assert.global.AreEqual( offer.item.type, itemType );
-				success = offer.item.SetTarget( request.building );
+				Assert.global.AreEqual( first.item.type, itemType );
+				success = first.item.SetTarget( second.building );
 			}
 
 			if ( !success )
 				return false;
 
-			request.quantity--;
-			offer.quantity--;
+			first.quantity--;
+			second.quantity--;
 
 			return true;
 		}
