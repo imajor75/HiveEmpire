@@ -150,6 +150,7 @@ public class World : MonoBehaviour
 				o.Validate();
 		}
 		gameInProgress = true;
+		SetTimeFactor( timeFactor );	// Just for the animators
 	}	
 
 	public void Save( string fileName )
@@ -332,6 +333,7 @@ public class World : MonoBehaviour
 			player.Validate();
 	}
 
+	[System.Serializable]
 	public struct Timer
 	{
 		public int reference;

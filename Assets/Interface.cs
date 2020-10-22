@@ -1382,7 +1382,6 @@ public class Interface : Assert.Base
 		public Item item;
 		public GameObject route;
 		public Text stats;
-		public Text destination;
 		GameObject mapIcon;
 		public static Material materialUIPath;
 
@@ -1410,12 +1409,10 @@ public class Interface : Assert.Base
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 15, -15, 100, 20, item.type.ToString() );
 			stats = Text( 15, -35, 250, 20 );
-			if ( item.origin )
-				Text( 15, -55, 170, 20, "Origin: " + item.origin.name );
-			else
-				Text( 15, -55, 170, 20, "Unknown origin" );
-			destination = Text( 15, -75, 170, 20 );
-			destination.gameObject.AddComponent<Button>().onClick.AddListener( ShowDestination );
+			Text( 15, -55, 170, 20, "Origin:" );
+			BuildingIcon( 100, -55, item.origin );
+			Text( 15, -75, 170, 20, "Destination:" );
+			BuildingIcon( 100, -75, item.destination );
 
 			mapIcon = new GameObject();
 			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
@@ -1441,15 +1438,10 @@ public class Interface : Assert.Base
 
 			stats.text = "Age: " + ( World.instance.time - item.born ) / 50 + " secs, at flag for " + ( World.instance.time - item.flagTime ) / 50 + " secs";
 
-			if ( item.destination )
+			if ( item.destination && route == null )
 			{
-				destination.text = item.destination.name;
-
-				if ( route == null )
-				{
-					route = CreateUIPath( item.path );
-					route.transform.SetParent( Root.transform );
-				}
+				route = CreateUIPath( item.path );
+				route.transform.SetParent( Root.transform );
 			}
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
@@ -1518,17 +1510,6 @@ public class Interface : Assert.Base
 				World.instance.eye.FocusOn( item.flag.node );
 			else
 				World.instance.eye.FocusOn( item.worker );
-		}
-
-		void ShowDestination()
-		{
-			World.instance.eye.ReleaseFocus( this );
-			Workshop workshop = item.destination as Workshop;
-			if ( workshop )
-				WorkshopPanel.Create().Open( workshop );
-			Stock stock = item.destination as Stock;
-			if ( stock )
-				StockPanel.Create().Open( stock );
 		}
 
 		new void OnDestroy()

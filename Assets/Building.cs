@@ -141,7 +141,8 @@ abstract public class Building : Assert.Base
 				return;
 
 			done = true;
-			worker.Remove();
+			worker.ScheduleWalkToNeighbour( boss.flag.node );
+			worker.type = Worker.Type.unemployed;
 		}
 		public bool ItemOnTheWay( Item item, bool cancel = false )
 		{

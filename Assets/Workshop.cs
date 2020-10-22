@@ -212,7 +212,8 @@ public class Workshop : Building
 	public class Plant : Worker.Task
 	{
 		public GroundNode node;
-		public int waitTimer = 0;
+		public World.Timer wait;
+		//public int waitTimer = 0;
 		public bool done;
 		public Resource.Type resourceType;
 
@@ -224,11 +225,8 @@ public class Workshop : Building
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( waitTimer > 0 )
-			{
-				waitTimer--;
+			if ( !wait.Done )
 				return false;
-			}
 
 			if ( done )
 				return true;
@@ -240,7 +238,7 @@ public class Workshop : Building
 			Resource.Create().Setup( node, resourceType );
 			done = true;
 			boss.assert.IsNotNull( node.resource );
-			waitTimer = 100;
+			wait.Start( 100 );
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
 			return false;
@@ -570,7 +568,7 @@ public class Workshop : Building
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
-						if ( place.IsBlocking( true ) || place.fixedHeight || !place.CheckType( GroundNode.Type.land ) )
+						if ( place.IsBlocking( true ) || place.fixedHeight || !place.CheckType( GroundNode.Type.grass ) )
 							continue;
 						PlantAt( place, Resource.Type.cornfield );
 						return;
@@ -590,7 +588,7 @@ public class Workshop : Building
 						int x = (i + randomOffset) % o.Count;
 						GroundNode place = node.Add( o[x] );
 						{
-							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.land ) || place.fixedHeight )
+							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.forest ) || place.fixedHeight )
 								continue;
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
