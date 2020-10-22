@@ -24,6 +24,7 @@ public class Player : ScriptableObject
 	public int[] production = new int[(int)Item.Type.total];
 	public float[] efficiency = new float[(int)Item.Type.total];
 	public int[] surplus = new int[(int)Item.Type.total];
+	public Item.Type worseItemType;
 	public static readonly float[] efficiencyFactors = {
 		/*log*/1,
 		/*stone*/0,
@@ -89,10 +90,14 @@ public class Player : ScriptableObject
 		totalEfficiency = float.MaxValue;
 		for ( int i = 0; i < efficiency.Length; i++ )
 		{
+			Assert.global.IsTrue( production[i] >= 0 );
 			efficiency[i] = ( 1 - efficiencyUpdateFactor ) * efficiency[i] + efficiencyUpdateFactor * production[i];
 			production[i] = 0;
 			if ( efficiencyFactors[i] > 0 && efficiency[i] * efficiencyFactors[i] < totalEfficiency )
+			{
+				worseItemType = (Item.Type)i;
 				totalEfficiency = efficiency[i] * efficiencyFactors[i];
+			}
 		}
 	}
 
@@ -194,6 +199,7 @@ public class Player : ScriptableObject
 
 	public void ItemProduced( Item.Type itemType, int quantity = 1 )
 	{
+		Assert.global.IsTrue( quantity > 0 );
 		production[(int)itemType] += quantity;
 	}
 

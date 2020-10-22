@@ -1836,7 +1836,13 @@ public class Interface : Assert.Base
 
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
-				int row = i * - ( iconSize + 5 );
+				Color textColor = Color.yellow;
+				if ( Player.efficiencyFactors[i] != 0 )
+					textColor = Color.green;
+				if ( (int)player.worseItemType == i )
+					textColor = Color.red;
+				inStock[i].color = onWay[i].color = production[i].color = efficiency[i].color = textColor;
+
 				inStock[i].text = inStockCount[i].ToString();
 				onWay[i].text = onWayCount[i].ToString();
 				production[i].text = player.efficiency[i].ToString();
