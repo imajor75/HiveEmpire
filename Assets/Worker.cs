@@ -37,7 +37,7 @@ public class Worker : Assert.Base
 	static MediaTable<GameObject, Type> looks;
 
 	public Road road;
-	public bool atRoad;
+	public bool onRoad;
 
 	public Building building;
 
@@ -95,11 +95,13 @@ public class Worker : Assert.Base
 	{
 		public Flag target;
 		public Path path;
+		public bool exclusive;
 
-		public void Setup( Worker boss, Flag target )
+		public void Setup( Worker boss, Flag target, bool exclusive = false )
 		{
 			base.Setup( boss );
 			this.target = target;
+			this.exclusive = exclusive;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -120,7 +122,14 @@ public class Worker : Assert.Base
 			int point = 0;
 			if ( boss.node.flag == path.Road.GetEnd( 0 ) )
 				point = path.Road.nodes.Count - 1;
-			boss.ScheduleWalkToRoadPoint( path.NextRoad(), point, false, true );
+			Road road = path.NextRoad();
+			if ( exclusive )
+			{
+				boss.assert.AreEqual( boss.node.flag.user, boss );
+				road.workerAtNodes[road.NodeIndex( boss.node )] = boss;
+				boss.road = road;
+			}
+			boss.ScheduleWalkToRoadPoint( road, point, exclusive, true );
 			return false;
 		}
 
@@ -225,7 +234,7 @@ public class Worker : Assert.Base
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
-					if ( other.atRoad && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
+					if ( other.onRoad && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
 						other.Remove();
 					else
 						return false;
@@ -480,11 +489,11 @@ public class Worker : Assert.Base
 			int i = road.NodeIndex( boss.node );
 			if ( i < 0 || boss.node.flag != null )
 				return true;    // Task failed
-			boss.assert.IsFalse( boss.atRoad );
+			boss.assert.IsFalse( boss.onRoad );
 			if ( road.workerAtNodes[i] == null )
 			{
 				road.workerAtNodes[i] = boss;
-				boss.atRoad = true;
+				boss.onRoad = true;
 				if ( boss.shirtMaterial )
 					boss.shirtMaterial.color = Color.yellow;
 				return true;
@@ -520,8 +529,8 @@ public class Worker : Assert.Base
 		constructor,
 		soldier,
 		wildAnimal,
-		cart,
-		unemployed
+		unemployed,
+		cart
 	}
 
 	public static void Initialize()
@@ -564,12 +573,13 @@ public class Worker : Assert.Base
 	public Worker SetupForRoad( Road road )
 	{
 		look = type = Type.hauler;
+		name = "Hauler";
 		owner = road.owner;
 		ground = road.ground;
 		Building main = road.owner.mainBuilding;
 		node = main.node;
 		this.road = road;
-		atRoad = false;
+		onRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
 		ScheduleWalkToRoadNode( road, road.CenterNode(), false );
@@ -580,18 +590,21 @@ public class Worker : Assert.Base
 	public Worker SetupForBuilding( Building building )
 	{
 		look = type = Type.tinkerer;
+		name = "Tinkerer";
 		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupForConstruction( Building building )
 	{
 		look = type = Type.constructor;
+		name = "Builder";
 		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupAsSoldier( Building building )
 	{
 		look = type = Type.soldier;
+		name = "Soldier";
 		return SetupForBuildingSite( building );
 	}
 
@@ -638,14 +651,14 @@ public class Worker : Assert.Base
 		if ( node != null )
 			transform.SetParent( node.ground.transform );
 
-		body = (GameObject)GameObject.Instantiate( looks.GetMediaData( look ), transform );
+		body = Instantiate( looks.GetMediaData( look ), transform );
 		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
 		if ( hand != null )
 		{
 			if ( type == Type.hauler )
-				box = (GameObject)GameObject.Instantiate( boxTemplateBoy, hand );
+				box = Instantiate( boxTemplateBoy, hand );
 			else
-				box = (GameObject)GameObject.Instantiate( boxTemplateMan, hand );
+				box = Instantiate( boxTemplateMan, hand );
 			box.SetActive( false );
 			itemTable = World.FindChildRecursive( box.transform, "ItemTable" ).GetComponent<MeshRenderer>();
 			assert.IsNotNull( itemTable );
@@ -661,7 +674,7 @@ public class Worker : Assert.Base
 				skinnedMeshRenderer.materials = materials;
 				if ( type == Type.hauler )
 				{
-					if ( atRoad )
+					if ( onRoad )
 						shirtMaterial.color = Color.yellow;
 					else
 						shirtMaterial.color = Color.grey;
@@ -676,6 +689,7 @@ public class Worker : Assert.Base
 			animator.runtimeAnimatorController = animationController;
 			animator.applyRootMotion = false;
 		}
+			
 		UpdateBody();
 		switch ( type )
 		{
@@ -684,6 +698,15 @@ public class Worker : Assert.Base
 				break;
 			case Type.wildAnimal:
 				name = "Bunny";
+				break;
+			case Type.hauler:
+				name = "Hauler";
+				break;
+			case Type.constructor:
+				name = "Builder";
+				break;
+			case Type.tinkerer:
+				name = "Tinkerer";
 				break;
 			default:
 				name = "Worker";
@@ -776,7 +799,7 @@ public class Worker : Assert.Base
 				mapMaterial.color = Color.cyan;
 				break;
 			case Type.hauler:
-				if ( !atRoad )
+				if ( !onRoad )
 				{
 					mapMaterial.color = Color.grey;
 					break;
@@ -798,7 +821,7 @@ public class Worker : Assert.Base
 			assert.AreEqual( origin.type, Resource.Type.animalSpawner );
 			origin.animals.Remove( this );
 		}
-		if ( road != null && atRoad )
+		if ( road != null && onRoad )
 		{
 			int currentPoint = road.NodeIndex( node );
 			if ( currentPoint < 0 )
@@ -813,7 +836,7 @@ public class Worker : Assert.Base
 				assert.AreEqual( exclusiveFlag.user, this );
 				exclusiveFlag.user = null;
 			}
-			atRoad = false;
+			onRoad = false;
 		}
 		if ( road != null )
 		{
@@ -847,7 +870,7 @@ public class Worker : Assert.Base
 		if ( road != null )
 		{
 			Profiler.BeginSample( "Road" );
-			if ( !atRoad )
+			if ( !onRoad )
 			{
 				ScheduleWalkToNode( road.CenterNode(), false );
 				ScheduleStartWorkingOnRoad( road );
@@ -1050,10 +1073,10 @@ public class Worker : Assert.Base
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleWalkToFlag( Flag target, bool first = false )
+	public void ScheduleWalkToFlag( Flag target, bool exclusive = false, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToFlag>();
-		instance.Setup( this, target );
+		instance.Setup( this, target, exclusive );
 		ScheduleTask( instance, first );
 	}
 
@@ -1218,7 +1241,7 @@ public class Worker : Assert.Base
 
 	public bool Call( Road road, int point )
 	{
-		if ( this.road != road || !atRoad )
+		if ( this.road != road || !onRoad )
 			return false;
 		if ( IsIdle() )
 		{
@@ -1250,9 +1273,10 @@ public class Worker : Assert.Base
 		else
 			assert.IsNull( origin );
 		assert.IsTrue( road == null || building == null );
-		if ( road )
+		if ( road && onRoad )
 		{
-			assert.IsTrue( road.workers.Contains( this ) );
+			if ( type == Type.hauler )
+				assert.IsTrue( road.workers.Contains( this ) );
 			int point = road.NodeIndex( node );
 			if ( point < 0 )
 			{
@@ -1278,8 +1302,8 @@ public class Worker : Assert.Base
 			task.Validate();
 		if ( exclusiveFlag )
 		{
-			assert.AreEqual( type, Type.hauler );
-			assert.IsTrue( atRoad );
+			assert.IsTrue( type == Type.hauler || type == Type.cart );
+			assert.IsTrue( onRoad );
 			assert.IsNotNull( road );
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
 		}

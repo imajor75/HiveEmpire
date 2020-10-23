@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Stock : Building
@@ -7,11 +8,56 @@ public class Stock : Building
 	public List<int> content = new List<int>();
 	public List<int> target = new List<int>();
 	public List<int> onWay = new List<int>();
+	public Stock[] destinations = new Stock[(int)Item.Type.total];
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template;
 	static Configuration configuration = new Configuration();
-	public Worker cart;
+	public Cart cart;
+	const int cartCapacity = 16;
+
+	public class Cart : Worker
+	{
+		new public static Cart Create()
+		{
+			return new GameObject().AddComponent<Cart>();
+		}
+
+		public Item.Type itemType;
+		public int itemQuantity;
+	}
+
+	class DeliverStackTask : Worker.Task
+	{
+		Stock stock;
+
+		public void Setup( Worker boss, Stock stock )
+		{
+			base.Setup( boss );
+			this.stock = stock;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			if ( stock == null )
+				return ResetBoss();
+
+			Cart cart = boss as Cart;
+			boss.assert.IsNotNull( cart );
+			if ( cart.itemQuantity > 0 )
+			{
+				stock.content[(int)cart.itemType] += cart.itemQuantity;
+				cart.itemQuantity = 0;
+			}
+
+			if ( stock.flag.user )
+				return false;
+
+			stock.flag.user = cart;
+			cart.exclusiveFlag = stock.flag;
+			return true;
+		}
+	}
 
 	public static new void Initialize()
 	{
@@ -53,7 +99,7 @@ public class Stock : Building
 
 		owner.RegisterStock( this );
 
-		cart = Worker.Create().SetupAsCart( this );
+		cart = Cart.Create().SetupAsCart( this ) as Cart;
 
 		return this;
 	}
@@ -106,6 +152,7 @@ public class Stock : Building
 			target.Add( 0 );
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
+		Array.Resize( ref destinations, (int)Item.Type.total );
 	}
 
 	new public void Update()
@@ -123,6 +170,29 @@ public class Stock : Building
 			int missing = target[itemType] - content[itemType] - onWay[itemType];
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high );
+
+			if ( destinations[itemType] && content[itemType] >= cartCapacity && flag.user == null )
+			{
+				var target = destinations[itemType];
+				cart.itemQuantity = cartCapacity;
+				cart.itemType = (Item.Type)itemType;
+
+				cart.ScheduleWalkToNeighbour( flag.node );
+				cart.ScheduleWalkToFlag( target.flag, true );
+				cart.ScheduleWalkToNeighbour( target.node );
+
+				var task = ScriptableObject.CreateInstance<DeliverStackTask>();
+				task.Setup( cart, target );
+				cart.ScheduleTask( task );
+
+				cart.ScheduleWalkToNeighbour( target.flag.node );
+				cart.ScheduleWalkToFlag( flag, true );
+				cart.ScheduleWalkToNeighbour( node );
+
+				flag.user = cart;
+				cart.exclusiveFlag = flag;
+				cart.onRoad = true;
+			}
 		}
     }
 

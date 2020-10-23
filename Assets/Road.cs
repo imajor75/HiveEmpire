@@ -521,7 +521,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		for ( int i = splitPoint; i > splitPoint - forget; i-- )
 		{
 			if ( workerAtNodes[i] )
-				workerAtNodes[i].atRoad = false;
+				workerAtNodes[i].onRoad = false;
 			nodes[i].road = null;
 		}
 
@@ -557,7 +557,7 @@ public class Road : Assert.Base, Interface.InputHandler
 				if ( !external )
 					assert.AreNotEqual( workerPoint, -1 );
 			}
-			if ( worker.atRoad && splitPoint == workerPoint && !external )
+			if ( worker.onRoad && splitPoint == workerPoint && !external )
 			{
 				flag.user = worker;
 				worker.exclusiveFlag = flag;
@@ -688,7 +688,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		foreach ( var worker in workers )
 		{
 			assert.IsValid( worker );
-			if ( !worker.atRoad )
+			if ( !worker.onRoad )
 				continue;
 			int i = 0;
 			foreach ( var w in workerAtNodes )
@@ -758,7 +758,7 @@ public class Road : Assert.Base, Interface.InputHandler
 		{
 			int activeWorkers = 0;
 			foreach ( var worker in workers )
-				if ( worker.atRoad )
+				if ( worker.onRoad )
 					activeWorkers++;
 			return activeWorkers;
 		}
