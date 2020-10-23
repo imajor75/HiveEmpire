@@ -526,11 +526,15 @@ public class Worker : Assert.Base
 
 	public static void Initialize()
 	{
-		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a" ) );
-		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a" ) );
-		templates.Add( (GameObject)Resources.Load( "Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a" ) );
-		templates.Add( (GameObject)Resources.Load( "FootmanPBRHPPolyart/Prefabs/footman_Blue_HP" ) );
-		templates.Add( (GameObject)Resources.Load( "Rabbits/Prefabs/Rabbit 1" ) );
+		object[] lookData = {
+		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a", Type.constructor,
+		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a", Type.tinkerer,
+		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a", Type.hauler,
+		"FootmanPBRHPPolyart/Prefabs/footman_Blue_HP", Type.soldier,
+		"Rabbits/Prefabs/Rabbit 1", Type.wildAnimal,
+		"Medieval village/Cart/PREFABs/cart_4w", Type.cart };
+
+		looks.Fill( lookData );
 
 		boxTemplateBoy = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands_boy" );
 		Assert.global.IsNotNull( boxTemplateBoy );
@@ -667,8 +671,11 @@ public class Worker : Assert.Base
 			}
 		}
 		animator = body.GetComponent<Animator>();
-		animator.runtimeAnimatorController = animationController;
-		animator.applyRootMotion = false;
+		if ( animator )
+		{
+			animator.runtimeAnimatorController = animationController;
+			animator.applyRootMotion = false;
+		}
 		UpdateBody();
 		switch ( type )
 		{
@@ -1154,7 +1161,8 @@ public class Worker : Assert.Base
 	{
 		if ( walkTo == null )
 		{
-			animator?.SetBool( walkingID, false );
+			if ( animator )
+				animator.SetBool( walkingID, false );
 			transform.localPosition = node.Position();
 			if ( taskQueue.Count > 0 )
 			{
@@ -1168,7 +1176,8 @@ public class Worker : Assert.Base
 			}
 			return;
 		}
-		animator.SetBool( walkingID, true );
+		if ( animator )
+			animator.SetBool( walkingID, true );
 
 		if ( itemInHands )
 			itemInHands.UpdateLook();

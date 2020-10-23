@@ -140,11 +140,6 @@ public class World : MonoBehaviour
 			player.Start();
 
 		{
-			var list = Resources.FindObjectsOfTypeAll<Worker>();
-			foreach ( var o in list )
-				o.look = o.type;
-		}
-		{
 			var list = Resources.FindObjectsOfTypeAll<Item>();
 			foreach ( var o in list )
 				o.Validate();
