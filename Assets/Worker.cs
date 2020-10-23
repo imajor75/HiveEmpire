@@ -19,9 +19,7 @@ public class Worker : Assert.Base
 	public float walkProgress;
 	public GroundNode node;
 	public Item itemInHands;
-	[JsonIgnore]
-	public Flag reservation;
-	public int look;
+	public Type look;
 	public Resource origin;
 	public float currentSpeed;
 	public Flag exclusiveFlag;
@@ -35,6 +33,8 @@ public class Worker : Assert.Base
 	Material shirtMaterial;
 	[JsonIgnore]
 	public bool debugReset;
+
+	static MediaTable<GameObject, Type> looks;
 
 	public Road road;
 	public bool atRoad;
@@ -520,6 +520,7 @@ public class Worker : Assert.Base
 		constructor,
 		soldier,
 		wildAnimal,
+		cart,
 		unemployed
 	}
 
@@ -558,9 +559,8 @@ public class Worker : Assert.Base
 
 	public Worker SetupForRoad( Road road )
 	{
-		type = Type.hauler;
+		look = type = Type.hauler;
 		owner = road.owner;
-		look = 2;
 		ground = road.ground;
 		Building main = road.owner.mainBuilding;
 		node = main.node;
@@ -575,22 +575,19 @@ public class Worker : Assert.Base
 
 	public Worker SetupForBuilding( Building building )
 	{
-		type = Type.tinkerer;
-		look = 1;
+		look = type = Type.tinkerer;
 		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupForConstruction( Building building )
 	{
-		type = Type.constructor;
-		look = 0;
+		look = type = Type.constructor;
 		return SetupForBuildingSite( building );
 	}
 
 	public Worker SetupAsSoldier( Building building )
 	{
-		type = Type.soldier;
-		look = 3;
+		look = type = Type.soldier;
 		return SetupForBuildingSite( building );
 	}
 
@@ -612,11 +609,19 @@ public class Worker : Assert.Base
 
 	public Worker SetupAsAnimal( Resource origin, GroundNode node )
 	{
-		type = Type.wildAnimal;
-		look = 4;
+		look = type = Type.wildAnimal;
 		this.node = node;
 		this.origin = origin;
 		this.ground = node.ground;
+		return this;
+	}
+
+	public Worker SetupAsCart( Stock stock )
+	{
+		look = type = Type.cart;
+		building = stock;
+		this.node = stock.node;
+		this.ground = stock.ground;
 		return this;
 	}
 
@@ -629,7 +634,7 @@ public class Worker : Assert.Base
 		if ( node != null )
 			transform.SetParent( node.ground.transform );
 
-		body = (GameObject)GameObject.Instantiate( templates[look], transform );
+		body = (GameObject)GameObject.Instantiate( looks.GetMediaData( look ), transform );
 		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
 		if ( hand != null )
 		{

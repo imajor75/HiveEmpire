@@ -11,6 +11,7 @@ public class Stock : Building
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template;
 	static Configuration configuration = new Configuration();
+	public Worker cart;
 
 	public static new void Initialize()
 	{
@@ -51,6 +52,9 @@ public class Stock : Building
 			return null;
 
 		owner.RegisterStock( this );
+
+		cart = Worker.Create().SetupAsCart( this );
+
 		return this;
 	}
 
