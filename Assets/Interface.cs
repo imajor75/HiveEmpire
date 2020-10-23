@@ -40,7 +40,8 @@ public class Interface : Assert.Base
 		destroy,
 		path,
 		magnet,
-		dynamite
+		dynamite,
+		rightArrow
 	}
 
 	public Interface()
@@ -91,6 +92,7 @@ public class Interface : Assert.Base
 		Assert.global.IsNotNull( font );
 		object[] table = {
 		"simple UI & icons/box/box_event1", Icon.frame,
+		"simple UI & icons/button/button_triangle_right", Icon.rightArrow,
 		"simple UI & icons/button/board", Icon.progress,
 		"simple UI & icons/button/button_exit", Icon.exit,
 		"simple UI & icons/button/button_login", Icon.button,
@@ -452,7 +454,7 @@ public class Interface : Assert.Base
 			return text;
 		}
 
-		void SelectBuilding( Building building )
+		public static void SelectBuilding( Building building )
 		{
 			var workshop = building as Workshop;
 			if ( workshop )
@@ -911,10 +913,11 @@ public class Interface : Assert.Base
 
 	}
 
-	public class StockPanel : BuildingPanel
+	public class StockPanel : BuildingPanel, InputHandler
 	{
 		public Stock stock;
 		public Text[] counts = new Text[(int)Item.Type.total];
+		public Item.Type itemTypeForRetarget;
 
 		public static StockPanel Create()
 		{
@@ -928,19 +931,23 @@ public class Interface : Assert.Base
 			int height = 290;
 			Frame( 0, 0, 300, height );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
-			Button( 150, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			Button( 250, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 
 			int row = -25;
-			for ( int j = 0; j < (int)Item.Type.total; j += 2 )
+			for ( int j = 0; j < (int)Item.Type.total; j++ )
 			{
-				ItemIcon( 20, row, iconSize, iconSize, (Item.Type)j );
-				counts[j] = Text( 44, row, 100, 20, "" );
-				if ( j + 1 < Item.sprites.Length )
+				int offset = j % 2 > 0 ? 140 : 0;
+				var t = (Item.Type)j;
+				var i = ItemIcon( 20 + offset, row, iconSize, iconSize, (Item.Type)j );
+				if ( stock.destinations[j] )
 				{
-					ItemIcon( 160, row, iconSize, iconSize, (Item.Type)j + 1 );
-					counts[j + 1] = Text( 184, row, 100, 20, "" );
-				};
-				row -= iconSize + 5;
+					Image( 35 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
+					offset += 10;
+				}
+				i.gameObject.GetComponent<Button>().onClick.AddListener( delegate { SetItemTargetStock( t ); } );
+				counts[j] = Text( 44 + offset, row, 100, 20, "" );
+				if ( j % 2 > 0 )
+					row -= iconSize + 5;
 			}
 
 			for ( int i = 0; i < counts.Length; i++ )
@@ -951,6 +958,17 @@ public class Interface : Assert.Base
 
 			if ( show )
 				Root.world.eye.FocusOn( stock );
+		}
+
+		void SetItemTargetStock( Item.Type itemType )
+		{
+			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+			{
+				SelectBuilding( stock.destinations[(int)itemType] );
+				return;
+			}
+			itemTypeForRetarget = itemType;
+			Root.viewport.inputHandler = this;
 		}
 
 		void ChangeTarget( int itemType )
@@ -987,6 +1005,21 @@ public class Interface : Assert.Base
 					counts[i].color = Color.green;
 				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ") =>" + stock.target[i];
 			}
+		}
+
+		public bool OnMovingOverNode( GroundNode node )
+		{
+			return true;
+		}
+
+		public bool OnNodeClicked( GroundNode node )
+		{
+			var target = node.building as Stock;
+			if ( target == null )
+				return true;
+
+			stock.destinations[(int)itemTypeForRetarget] = target;
+			return false;
 		}
 	}
 

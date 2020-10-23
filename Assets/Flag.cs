@@ -239,7 +239,8 @@ public class Flag : Assert.Base
 		if ( user )
 		{
 			assert.IsTrue( user.type == Worker.Type.hauler || user.type == Worker.Type.cart );
-			assert.IsNotNull( user.road );
+			if ( user.type == Worker.Type.hauler )
+				assert.IsNotNull( user.road );
 			assert.IsTrue( user.onRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 public class Stock : Building
@@ -27,14 +28,22 @@ public class Stock : Building
 		public int itemQuantity;
 	}
 
-	class DeliverStackTask : Worker.Task
+	public class DeliverStackTask : Worker.Task
 	{
-		Stock stock;
+		public Stock stock;
 
 		public void Setup( Worker boss, Stock stock )
 		{
 			base.Setup( boss );
 			this.stock = stock;
+		}
+
+		public override void Cancel()
+		{
+			Cart cart = boss as Cart;
+			if ( stock )
+				stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
+			base.Cancel();
 		}
 
 		public override bool ExecuteFrame()
@@ -44,17 +53,22 @@ public class Stock : Building
 
 			Cart cart = boss as Cart;
 			boss.assert.IsNotNull( cart );
+			Stock cartStock = cart.building as Stock;
 			if ( cart.itemQuantity > 0 )
 			{
 				stock.content[(int)cart.itemType] += cart.itemQuantity;
+				if ( stock != cartStock )
+					stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
 				cart.itemQuantity = 0;
 			}
-
-			if ( stock.flag.user )
-				return false;
-
-			stock.flag.user = cart;
-			cart.exclusiveFlag = stock.flag;
+			if ( stock == cartStock )
+			{
+				if ( cart.exclusiveFlag )
+				{
+					cart.exclusiveFlag.user = null;
+					cart.exclusiveFlag = null;
+				}
+			}
 			return true;
 		}
 	}
@@ -171,11 +185,12 @@ public class Stock : Building
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high );
 
-			if ( destinations[itemType] && content[itemType] >= cartCapacity && flag.user == null )
+			if ( destinations[itemType] && content[itemType] >= cartCapacity && cart.IsIdle( true ) && flag.user == null )
 			{
 				var target = destinations[itemType];
 				cart.itemQuantity = cartCapacity;
 				cart.itemType = (Item.Type)itemType;
+				target.onWay[itemType] += cart.itemQuantity;
 
 				cart.ScheduleWalkToNeighbour( flag.node );
 				cart.ScheduleWalkToFlag( target.flag, true );
@@ -262,6 +277,6 @@ public class Stock : Building
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.AreEqual( onWay[i], onWayCounted[i] );
+			assert.IsTrue( ( onWay[i] - onWayCounted[i] ) % Stock.cartCapacity == 0 );
 	}
 }

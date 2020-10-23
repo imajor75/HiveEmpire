@@ -25,6 +25,7 @@ public class Worker : Assert.Base
 	public Flag exclusiveFlag;
 	public int itemsDelivered;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
+	static public MediaTable<AudioClip, Type> walkSounds;
 	[JsonIgnore]
 	public AudioSource soundSource;
 	[JsonIgnore]
@@ -49,6 +50,7 @@ public class Worker : Assert.Base
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
 	GameObject box;
+	GameObject[] wheels = new GameObject[2];
 	MeshRenderer itemTable;
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
@@ -125,6 +127,13 @@ public class Worker : Assert.Base
 			Road road = path.NextRoad();
 			if ( exclusive )
 			{
+				if ( boss.road )
+				{
+					int index = boss.road.NodeIndex( boss.node );
+					boss.assert.IsTrue( index >= 0 );
+					boss.assert.AreEqual( boss.road.workerAtNodes[index], boss );
+					boss.road.workerAtNodes[index] = null;
+				}
 				boss.assert.AreEqual( boss.node.flag.user, boss );
 				road.workerAtNodes[road.NodeIndex( boss.node )] = boss;
 				boss.road = road;
@@ -234,7 +243,7 @@ public class Worker : Assert.Base
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
-					if ( other.onRoad && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
+					if ( other.onRoad && other.type == Type.hauler && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
 						other.Remove();
 					else
 						return false;
@@ -364,8 +373,8 @@ public class Worker : Assert.Base
 			if ( timer.Empty )
 			{
 				timer.Start( pickupTimeStart );
-				boss.animator.ResetTrigger( putdownID );
-				boss.animator.SetTrigger( pickupID );	// TODO Animation phase is not saved in file
+				boss.animator?.ResetTrigger( putdownID );
+				boss.animator?.SetTrigger( pickupID );   // TODO Animation phase is not saved in file
 				if ( boss.itemTable )
 					boss.itemTable.material = Item.materials[(int)item.type];
 				boss.box?.SetActive( true );
@@ -433,8 +442,8 @@ public class Worker : Assert.Base
 				}
 				else
 				{
-					boss.animator.ResetTrigger( pickupID );
-					boss.animator.SetTrigger( putdownID );
+					boss.animator?.ResetTrigger( pickupID );
+					boss.animator?.SetTrigger( putdownID );
 				}
 			}
 			if ( !timer.Done )
@@ -561,6 +570,9 @@ public class Worker : Assert.Base
 			"Forest/treecut", Resource.Type.tree,
 			"Mines/pickaxe", Resource.Type.rock };
 		resourceGetSounds.Fill( sounds );
+		object[] walk = {
+			"cart", Type.cart };
+		walkSounds.Fill( walk );
 	}
 
 	static public Worker Create()
@@ -689,7 +701,11 @@ public class Worker : Assert.Base
 			animator.runtimeAnimatorController = animationController;
 			animator.applyRootMotion = false;
 		}
-			
+		else
+			animator = null;
+		wheels[0] = World.FindChildRecursive( body.transform, "cart_wheels_front" )?.gameObject;
+		wheels[1] = World.FindChildRecursive( body.transform, "cart_wheels_back" )?.gameObject;
+
 		UpdateBody();
 		switch ( type )
 		{
@@ -751,7 +767,7 @@ public class Worker : Assert.Base
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
-			walkProgress += currentSpeed * ground.world.timeFactor; // TODO Speed should depend on the steepness of the road
+			walkProgress += currentSpeed * ground.world.timeFactor;
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;
@@ -867,7 +883,7 @@ public class Worker : Assert.Base
 	public void FindTask()
 	{
 		assert.IsTrue( IsIdle() );
-		if ( road != null )
+		if ( type == Type.hauler )
 		{
 			Profiler.BeginSample( "Road" );
 			if ( !onRoad )
@@ -924,6 +940,44 @@ public class Worker : Assert.Base
 				Walk( t );
 				return;
 			}
+		}
+
+		if ( type == Type.cart )
+		{
+			var stock = building as Stock;
+			if ( stock == null )
+			{
+				type = Type.unemployed;
+				return;
+			}
+			if ( exclusiveFlag )
+			{
+				exclusiveFlag.user = null;
+				exclusiveFlag = null;
+			}
+			if ( road )
+			{
+				int index = road.NodeIndex( node );
+				if ( index < 0 )
+					index = road.NodeIndex( node.Add( Building.flagOffset ) );
+				assert.AreEqual( road.workerAtNodes[index], this );
+				road.workerAtNodes[index] = null;
+				road = null;
+			}
+
+			if ( node == stock.node )
+				return;
+
+			assert.IsNotNull( stock );
+			if ( node.flag )
+				ScheduleWalkToFlag( building.flag );
+			else
+				ScheduleWalkToNode( building.flag.node );
+			ScheduleWalkToNeighbour( building.node );
+			var task = ScriptableObject.CreateInstance<Stock.DeliverStackTask>();
+			task.Setup( this, stock );
+			ScheduleTask( task );
+			return;
 		}
 
 		if ( type != Type.unemployed && building != null && node != building.node )
@@ -1184,8 +1238,8 @@ public class Worker : Assert.Base
 	{
 		if ( walkTo == null )
 		{
-			if ( animator )
-				animator.SetBool( walkingID, false );
+			animator?.SetBool( walkingID, false );
+			soundSource?.Stop();
 			transform.localPosition = node.Position();
 			if ( taskQueue.Count > 0 )
 			{
@@ -1199,8 +1253,7 @@ public class Worker : Assert.Base
 			}
 			return;
 		}
-		if ( animator )
-			animator.SetBool( walkingID, true );
+		animator?.SetBool( walkingID, true );
 
 		if ( itemInHands )
 			itemInHands.UpdateLook();
@@ -1223,6 +1276,25 @@ public class Worker : Assert.Base
 			int direction = walkFrom.DirectionTo( walkTo );
 			assert.IsTrue( direction >= 0 );
 			transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+		}
+
+		if ( walkTo )
+		{
+			if ( soundSource && !soundSource.isPlaying )
+			{
+				soundSource.clip = walkSounds.GetMediaData( type );
+				soundSource.Play();
+			}
+			if ( type == Type.cart )
+			{
+				foreach ( var g in wheels )
+				{
+					if ( g == null )
+						continue;
+					g.transform.Rotate( 0, World.instance.timeFactor * currentSpeed * 300, 0 );
+				}
+				transform.Rotate( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
+			}
 		}
 	}
 
@@ -1272,13 +1344,14 @@ public class Worker : Assert.Base
 		}
 		else
 			assert.IsNull( origin );
-		assert.IsTrue( road == null || building == null );
+		if ( type == Type.hauler )
+			assert.IsTrue( road == null || building == null );
 		if ( road && onRoad )
 		{
 			if ( type == Type.hauler )
 				assert.IsTrue( road.workers.Contains( this ) );
 			int point = road.NodeIndex( node );
-			if ( point < 0 )
+			if ( point < 0 && type == Type.hauler )
 			{
 				if ( itemInHands )
 					assert.IsTrue( node.building || itemInHands.tripCancelled );	// It is possible, that the item destination was destroyed during the last step
@@ -1306,6 +1379,17 @@ public class Worker : Assert.Base
 			assert.IsTrue( onRoad );
 			assert.IsNotNull( road );
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
+		}
+		if ( type == Type.cart )
+		{
+			if ( road )
+			{
+				int index = road.NodeIndex( node );
+				if ( index < 0 )
+					index = road.NodeIndex( node.Add( Building.flagOffset ) );
+				assert.IsTrue( index >= 0 );
+				assert.AreEqual( road.workerAtNodes[index], this );
+			}
 		}
 	}
 }
