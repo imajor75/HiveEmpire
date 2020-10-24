@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,7 @@ abstract public class Building : Assert.Base
 	public bool huge;
 	public static List<Ground.Offset> singleArea = new List<Ground.Offset>();
 	public static List<Ground.Offset> hugeArea = new List<Ground.Offset>();
+	GameObject highlight;
 
 	[System.Serializable]
 	public class Configuration
@@ -98,9 +100,9 @@ abstract public class Building : Assert.Base
 				return;
 
 			int plankMissing = plankNeeded - plankOnTheWay - plankArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global );
 			int stoneMissing = stoneNeeded - stoneOnTheWay - stoneArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global );
 		}
 
 		public void FixedUpdate()
@@ -302,6 +304,8 @@ abstract public class Building : Assert.Base
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this );
+		highlight = Instantiate( Resources.Load<GameObject>( "Fantasy_Kingdom_Pack_Lite/Perfabs/Main Structures/Decoration/Vane01_a01" ) );
+		highlight.transform.localScale = Vector3.one * 0.6f;
 	}
 
 	void ScanChildObject( Transform transform )
@@ -380,6 +384,15 @@ abstract public class Building : Assert.Base
 		foreach ( var r in renderers )
 			foreach ( var m in r.materials )
 				m.SetFloat( Construction.sliceLevelID, level );
+
+		if ( Interface.instance.highlight != null && Interface.instance.highlight.IsInside( node ) )
+		{
+			highlight.transform.localPosition = node.Position() + Vector3.up * ( ( float )( 1.5f + 0.3f * Math.Sin( 2 * Time.time ) ) );
+			highlight.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
+			highlight.SetActive( true );
+		}
+		else
+			highlight.SetActive( false );
 	}
 
 	public virtual bool Remove()

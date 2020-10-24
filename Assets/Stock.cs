@@ -16,6 +16,8 @@ public class Stock : Building
 	static Configuration configuration = new Configuration();
 	public Cart cart;
 	const int cartCapacity = 16;
+	public Ground.Area inputArea = new Ground.Area();
+	public Ground.Area outputArea = new Ground.Area();
 
 	public class Cart : Worker
 	{
@@ -178,12 +180,12 @@ public class Stock : Building
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.stock );
+			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.stock, inputArea );
 			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
-				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.stock );
+				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.stock, outputArea );
 			int missing = target[itemType] - content[itemType] - onWay[itemType];
 			if ( missing > 0 )
-				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high );
+				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high, inputArea );
 
 			if ( destinations[itemType] && content[itemType] >= cartCapacity && cart.IsIdle( true ) && flag.user == null )
 			{
@@ -277,6 +279,6 @@ public class Stock : Building
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.IsTrue( ( onWay[i] - onWayCounted[i] ) % Stock.cartCapacity == 0 );
+			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % cartCapacity,		0 );
 	}
 }

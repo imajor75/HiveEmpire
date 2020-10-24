@@ -35,6 +35,7 @@ public class Worker : Assert.Base
 	[JsonIgnore]
 	public bool debugReset;
 
+
 	static MediaTable<GameObject, Type> looks;
 
 	public Road road;

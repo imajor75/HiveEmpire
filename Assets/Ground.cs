@@ -338,6 +338,31 @@ public class Ground : Assert.Base
 		}
 	}
 
+	public class Area
+	{
+		public GroundNode center;
+		public int radius = 8;
+		public static Area global = new Area();
+
+		public Area()
+		{
+		}
+
+		public Area( GroundNode center, int radius )
+		{
+			this.center = center;
+			this.radius = radius;
+		}
+
+		public bool IsInside( GroundNode node )
+		{
+			if ( center == null )
+				return true;
+
+			return center.DistanceFrom( node ) <= radius;
+		}
+	}
+
 	public void Validate()
  	{
         assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );

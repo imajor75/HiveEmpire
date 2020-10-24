@@ -135,7 +135,7 @@ public class Assert
 	{
 #if DEBUG
 		if ( Selection.Contains( boss.gameObject ) )
-			UnityEngine.Debug.Break();
+			UnityEngine.Debug.Log( "code on selected from " + Caller( 2 ) );
 #endif
 	}
 
