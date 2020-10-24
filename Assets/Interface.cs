@@ -583,11 +583,18 @@ public class Interface : Assert.Base
 
 			public bool OnNodeClicked( GroundNode node )
 			{
+				if ( instance.highlight == area )
+					instance.highlight = null;
 				return false;
 			}
 
 			public void OnPointerClick( PointerEventData eventData )
 			{
+				if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+				{
+					area.center = null;
+					return;
+				}
 				instance.highlight = area;
 				instance.viewport.inputHandler = this;
 			}

@@ -6,7 +6,7 @@ public class ItemDispatcher : ScriptableObject
 {
 	public enum Priority
 	{
-		stop,
+		zero,
 		stock,
 		low,
 		high
@@ -101,7 +101,7 @@ public class ItemDispatcher : ScriptableObject
 			r.building = building;
 			r.quantity = quantity;
 			r.priority = priority;
-			r.location = building.flag.node;
+			r.location = building.node;
 			r.type = Potential.Type.request;
 			r.area = area;
 			requests.Add( r );
@@ -113,7 +113,7 @@ public class ItemDispatcher : ScriptableObject
 			o.building = building;
 			o.quantity = quantity;
 			o.priority = priority;
-			o.location = building.flag.node;
+			o.location = building.node;
 			o.type = Potential.Type.offer;
 			o.area = area;
 			offers.Add( o );

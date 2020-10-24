@@ -14,7 +14,7 @@ public class Item : Assert.Base
 	public Type type;
 	public Ground ground;
 	public Path path;
-	public ItemDispatcher.Priority currentOrderPriority;
+	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;
 	public Building destination;
 	public Building origin;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
@@ -96,7 +96,7 @@ public class Item : Assert.Base
 		return itemBody.AddComponent<Item>();
 	}
 
-	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Priority priority = ItemDispatcher.Priority.stop )
+	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Priority priority = ItemDispatcher.Priority.zero )
 	{
 		this.origin = origin;
 		life.Start();
@@ -178,14 +178,19 @@ public class Item : Assert.Base
 			return;
 		}
 
-		if ( currentOrderPriority > ItemDispatcher.Priority.stock )
+		var offerPriority = ItemDispatcher.Priority.zero;
+		if ( currentOrderPriority == ItemDispatcher.Priority.zero )
+			offerPriority = ItemDispatcher.Priority.high;
+		if ( currentOrderPriority == ItemDispatcher.Priority.stock )
+			offerPriority = ItemDispatcher.Priority.stock;
+
+		if ( offerPriority == ItemDispatcher.Priority.zero )
 			return;
 
 		var area = ( origin as Workshop )?.outputArea;
 		if ( area == null )
 			area = new Ground.Area( flag?.node ?? worker.node, 8 );
-		assert.IsNotSelected();
-		owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.stock, area );
+		owner.itemDispatcher.RegisterOffer( this, offerPriority, area );
 	}
 
 	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )
@@ -223,7 +228,7 @@ public class Item : Assert.Base
 
 		destination.ItemOnTheWay( this, true );
 		destination = null;
-		currentOrderPriority = ItemDispatcher.Priority.stop;
+		currentOrderPriority = ItemDispatcher.Priority.zero;
 		flag?.itemsStored.Trigger();
 		tripCancelled = true;
 	}
@@ -331,7 +336,10 @@ public class Item : Assert.Base
 		{
 			assert.IsNotNull( path );
 			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
+			assert.IsTrue( currentOrderPriority > ItemDispatcher.Priority.zero );
 		}
+		else
+			assert.IsTrue( currentOrderPriority == ItemDispatcher.Priority.zero );
 		if ( buddy )
 		{
 			if ( buddy.buddy )
