@@ -181,8 +181,10 @@ public class Item : Assert.Base
 		if ( currentOrderPriority > ItemDispatcher.Priority.stock )
 			return;
 
-		var position = flag?.node ?? worker.node;
-		owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.stock, new Ground.Area( position, 8 ) );
+		var area = ( origin as Workshop )?.outputArea;
+		if ( area == null )
+			area = new Ground.Area( flag?.node ?? worker.node, 8 );
+		owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.stock, area );
 	}
 
 	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )

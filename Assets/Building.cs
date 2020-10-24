@@ -305,6 +305,7 @@ abstract public class Building : Assert.Base
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this );
 		highlight = Instantiate( Resources.Load<GameObject>( "Fantasy_Kingdom_Pack_Lite/Perfabs/Main Structures/Decoration/Vane01_a01" ) );
+		highlight.transform.localScale = Vector3.one * 0.6f;
 	}
 
 	void ScanChildObject( Transform transform )
@@ -386,7 +387,8 @@ abstract public class Building : Assert.Base
 
 		if ( Interface.instance.highlight != null && Interface.instance.highlight.IsInside( node ) )
 		{
-			highlight.transform.localPosition = node.Position() + Vector3.up * ( ( float )( 1 + Math.Sin( System.DateTime.Now.Millisecond ) ) );
+			highlight.transform.localPosition = node.Position() + Vector3.up * ( ( float )( 1.5f + 0.3f * Math.Sin( 2 * Time.time ) ) );
+			highlight.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
 			highlight.SetActive( true );
 		}
 		else

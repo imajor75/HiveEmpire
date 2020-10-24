@@ -567,10 +567,12 @@ public class Interface : Assert.Base
 		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, InputHandler
 		{
 			public Ground.Area area;
+			public Image image;
 
 			public void Setup( Ground.Area area )
 			{
 				this.area = area;
+				image = gameObject.GetComponent<Image>();
 			}
 
 			public bool OnMovingOverNode( GroundNode node )
@@ -597,7 +599,13 @@ public class Interface : Assert.Base
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				instance.highlight = null;
+				if ( instance.viewport.inputHandler != this as InputHandler && instance.highlight == area )
+					instance.highlight = null;
+			}
+
+			void Update()
+			{
+				image.color = area.center != null ? Color.green : Color.grey;
 			}
 		}
 
@@ -844,10 +852,11 @@ public class Interface : Assert.Base
 				{
 					row -= iconSize / 2;
 					outputs = new Buffer();
-					outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5, workshop.outputArea );
+					outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
 				}
 				row -= (int)( (float)iconSize * 1.5f );
-				progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
+				progressBar = Image( 20, row, ( iconSize + 5 ) * 7, iconSize, iconTable.GetMediaData( Icon.progress ) );
+				AreaIcon( 200, row, workshop.outputArea );
 
 				itemsProduced = Text( 20, row - 24, 200, 20 );
 				productivity = Text( 180, -20, 30, 20 );
@@ -879,7 +888,7 @@ public class Interface : Assert.Base
 			{
 				if ( workshop.working )
 				{
-					progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 8 * workshop.progress, iconSize );
+					progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 7 * workshop.progress, iconSize );
 					progressBar.color = Color.white;
 				}
 				else
@@ -978,14 +987,14 @@ public class Interface : Assert.Base
 		{
 			base.Open( stock );
 			this.stock = stock;
-			int height = 310;
+			int height = 320;
 			Frame( 0, 0, 300, height );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 250, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			AreaIcon( 30, -30, stock.inputArea );
 			AreaIcon( 250, -30, stock.outputArea );
 
-			int row = -25;
+			int row = -55;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
 			{
 				int offset = j % 2 > 0 ? 140 : 0;
