@@ -197,6 +197,8 @@ public class ItemDispatcher : ScriptableObject
 					continue;
 				if ( potential.priority == Priority.stock && other.priority == Priority.stock )
 					continue;
+				if ( potential.building == other.building )
+					continue;
 				float score = (int)other.priority * 1000 + 1f / other.location.DistanceFrom( potential.location );
 				if ( score > bestScore )
 				{
