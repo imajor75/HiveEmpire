@@ -16,8 +16,8 @@ public class Stock : Building
 	static Configuration configuration = new Configuration();
 	public Cart cart;
 	const int cartCapacity = 16;
-	public Ground.Area inputArea;
-	public Ground.Area outputArea;
+	public Ground.Area inputArea = new Ground.Area();
+	public Ground.Area outputArea = new Ground.Area();
 
 	public class Cart : Worker
 	{
@@ -279,6 +279,6 @@ public class Stock : Building
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.IsTrue( ( onWay[i] - onWayCounted[i] ) % Stock.cartCapacity == 0 );
+			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % cartCapacity,		0 );
 	}
 }

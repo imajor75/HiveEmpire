@@ -341,11 +341,14 @@ public class Ground : Assert.Base
 	public class Area
 	{
 		public GroundNode center;
-		public int radius;
+		public int radius = 8;
 		public static Area global = new Area();
 
+		public Area()
+		{
+		}
 
-		public Area( GroundNode center = null, int radius = 8 )
+		public Area( GroundNode center, int radius )
 		{
 			this.center = center;
 			this.radius = radius;

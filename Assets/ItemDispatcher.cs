@@ -52,6 +52,7 @@ public class ItemDispatcher : ScriptableObject
 
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area )
 	{
+		Assert.global.IsNotNull( area );
 		if ( quantity == 0 )
 			return;
 
@@ -61,6 +62,7 @@ public class ItemDispatcher : ScriptableObject
 
 	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area )
 	{
+		Assert.global.IsNotNull( area );
 		if ( quantity == 0 )
 			return;
 
@@ -70,6 +72,7 @@ public class ItemDispatcher : ScriptableObject
 
 	public void RegisterOffer( Item item, Priority priority, Ground.Area area )
 	{
+		Assert.global.IsNotNull( area );
 		markets[(int)item.type].RegisterOffer( item, priority, area );
 	}
 

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,7 @@ abstract public class Building : Assert.Base
 	public bool huge;
 	public static List<Ground.Offset> singleArea = new List<Ground.Offset>();
 	public static List<Ground.Offset> hugeArea = new List<Ground.Offset>();
+	GameObject highlight;
 
 	[System.Serializable]
 	public class Configuration
@@ -302,6 +304,7 @@ abstract public class Building : Assert.Base
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this );
+		highlight = Instantiate( Resources.Load<GameObject>( "Fantasy_Kingdom_Pack_Lite/Perfabs/Main Structures/Decoration/Vane01_a01" ) );
 	}
 
 	void ScanChildObject( Transform transform )
@@ -380,6 +383,14 @@ abstract public class Building : Assert.Base
 		foreach ( var r in renderers )
 			foreach ( var m in r.materials )
 				m.SetFloat( Construction.sliceLevelID, level );
+
+		if ( Interface.instance.highlight != null && Interface.instance.highlight.IsInside( node ) )
+		{
+			highlight.transform.localPosition = node.Position() + Vector3.up * ( ( float )( 1 + Math.Sin( System.DateTime.Now.Millisecond ) ) );
+			highlight.SetActive( true );
+		}
+		else
+			highlight.SetActive( false );
 	}
 
 	public virtual bool Remove()
@@ -421,15 +432,6 @@ abstract public class Building : Assert.Base
 		foreach ( var o in area )
 			position += node.Add( o ).Position();
 		transform.localPosition = position / area.Count;
-	}
-
-	void OnGUI()
-	{
-		var area = Interface.instance.highlight;
-		if ( area == null || !area.IsInside( node ) )
-			return;
-
-		GUI.DrawTexture(
 	}
 
 	virtual public void Validate()

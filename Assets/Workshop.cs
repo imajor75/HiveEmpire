@@ -9,7 +9,7 @@ using UnityEngine;
 public class Workshop : Building
 {
 	public int output;
-	public Ground.Area outputArea;
+	public Ground.Area outputArea = new Ground.Area();
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
 	public float progress;
 	public bool working;
@@ -102,7 +102,7 @@ public class Workshop : Building
 		public int stored;
 		public int onTheWay;
 		public int important = 3;
-		public Ground.Area area;
+		public Ground.Area area = new Ground.Area();
 	}
 
 	public enum Type

@@ -450,7 +450,9 @@ public class Interface : Assert.Base
 		{
 			Image( x - itemIconBorderSize, y + itemIconBorderSize, iconSize + 2 * itemIconBorderSize, iconSize + 2 * itemIconBorderSize, iconTable.GetMediaData( Icon.smallFrame ), parent );
 			var i = Image( x, y, iconSize, iconSize, iconTable.GetMediaData( Icon.crosshair ), parent );
-			return i.gameObject.AddComponent<AreaControl>().Setup( area );
+			var a= i.gameObject.AddComponent<AreaControl>();
+			a.Setup( area );
+			return a;
 		}
 
 		public Component BuildingIcon( int x, int y, Building building, Component parent = null )
