@@ -98,9 +98,9 @@ abstract public class Building : Assert.Base
 				return;
 
 			int plankMissing = plankNeeded - plankOnTheWay - plankArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global );
 			int stoneMissing = stoneNeeded - stoneOnTheWay - stoneArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global );
 		}
 
 		public void FixedUpdate()
@@ -421,6 +421,15 @@ abstract public class Building : Assert.Base
 		foreach ( var o in area )
 			position += node.Add( o ).Position();
 		transform.localPosition = position / area.Count;
+	}
+
+	void OnGUI()
+	{
+		var area = Interface.instance.highlight;
+		if ( area == null || !area.IsInside( node ) )
+			return;
+
+		GUI.DrawTexture(
 	}
 
 	virtual public void Validate()

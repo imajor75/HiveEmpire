@@ -9,6 +9,7 @@ using UnityEngine;
 public class Workshop : Building
 {
 	public int output;
+	public Ground.Area outputArea;
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
 	public float progress;
 	public bool working;
@@ -48,7 +49,7 @@ public class Workshop : Building
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
 		public float processSpeed = 0.0015f;
-		public int outputMax = 8;
+		public int outputMax = 6;
 
 		public bool commonInputs = false;
 		public Input[] inputs;
@@ -101,6 +102,7 @@ public class Workshop : Building
 		public int stored;
 		public int onTheWay;
 		public int important = 3;
+		public Ground.Area area;
 	}
 
 	public enum Type
@@ -462,10 +464,10 @@ public class Workshop : Building
 			int missing = b.size-b.stored-b.onTheWay;
 			var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
 			if ( missing > 0 )
-				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority );
+				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area );
 		}
 		if ( output > 0 && flag.FreeSpace() > 0 && worker.IsIdle( true ) )
-			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, outputPriority );
+			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, outputPriority, outputArea );
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );

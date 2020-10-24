@@ -181,7 +181,7 @@ public class Item : Assert.Base
 		if ( currentOrderPriority > ItemDispatcher.Priority.stock )
 			return;
 
-		owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.stock );
+		owner.itemDispatcher.RegisterOffer( this, ItemDispatcher.Priority.stock, new Ground.Area( flag.node, 8 ) );
 	}
 
 	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )

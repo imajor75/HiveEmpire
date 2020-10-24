@@ -27,6 +27,7 @@ public class Interface : Assert.Base
 	public Tooltip tooltip;
 	public int autoSave = autoSaveInterval;
 	const int autoSaveInterval = 15000;
+	public Ground.Area highlight;
 
 	public enum Icon
 	{
@@ -41,7 +42,8 @@ public class Interface : Assert.Base
 		path,
 		magnet,
 		dynamite,
-		rightArrow
+		rightArrow,
+		crosshair
 	}
 
 	public Interface()
@@ -444,6 +446,13 @@ public class Interface : Assert.Base
 			return i;
 		}
 
+		public AreaControl AreaIcon( int x, int y, Ground.Area area, Component parent = null )
+		{
+			Image( x - itemIconBorderSize, y + itemIconBorderSize, iconSize + 2 * itemIconBorderSize, iconSize + 2 * itemIconBorderSize, iconTable.GetMediaData( Icon.smallFrame ), parent );
+			var i = Image( x, y, iconSize, iconSize, iconTable.GetMediaData( Icon.crosshair ), parent );
+			return i.gameObject.AddComponent<AreaControl>().Setup( area );
+		}
+
 		public Component BuildingIcon( int x, int y, Building building, Component parent = null )
 		{
 			if ( building == null )
@@ -551,6 +560,43 @@ public class Interface : Assert.Base
 				followTarget = true;
 			};
 
+		}
+
+		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, InputHandler
+		{
+			public Ground.Area area;
+
+			public void Setup( Ground.Area area )
+			{
+				this.area = area;
+			}
+
+			public bool OnMovingOverNode( GroundNode node )
+			{
+				area.center = node;
+				return true;
+			}
+
+			public bool OnNodeClicked( GroundNode node )
+			{
+				return false;
+			}
+
+			public void OnPointerClick( PointerEventData eventData )
+			{
+				instance.highlight = area;
+				instance.viewport.inputHandler = this;
+			}
+
+			public void OnPointerEnter( PointerEventData eventData )
+			{
+				instance.highlight = area;
+			}
+
+			public void OnPointerExit( PointerEventData eventData )
+			{
+				instance.highlight = null;
+			}
 		}
 
 		public class ItemImage : Image, IPointerEnterHandler, IPointerExitHandler
@@ -796,7 +842,7 @@ public class Interface : Assert.Base
 				{
 					row -= iconSize / 2;
 					outputs = new Buffer();
-					outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
+					outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5, workshop.outputArea );
 				}
 				row -= (int)( (float)iconSize * 1.5f );
 				progressBar = Image( 20, row, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
@@ -859,7 +905,7 @@ public class Interface : Assert.Base
 			public Item.Type itemType;
 			Workshop.Buffer buffer;
 
-			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi )
+			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null )
 			{
 				items = new ItemImage[itemCount];
 				this.boss = boss;
@@ -869,12 +915,14 @@ public class Interface : Assert.Base
 					items[i] = boss.ItemIcon( x, y, iconSize, iconSize, itemType );
 					x += xi;
 				}
+				if ( area != null )
+					boss.AreaIcon( x, y, area );
 			}
 
 			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int x, int y, int xi )
 			{
 				this.buffer = buffer;
-				Setup( boss, buffer.itemType, buffer.size, x, y, xi );
+				Setup( boss, buffer.itemType, buffer.size, x, y, xi, buffer.area );
 			}
 
 			public void Update( int inStock, int onTheWay )
@@ -928,10 +976,12 @@ public class Interface : Assert.Base
 		{
 			base.Open( stock );
 			this.stock = stock;
-			int height = 290;
+			int height = 310;
 			Frame( 0, 0, 300, height );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 250, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			AreaIcon( 30, -30, stock.inputArea );
+			AreaIcon( 250, -30, stock.outputArea );
 
 			int row = -25;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
