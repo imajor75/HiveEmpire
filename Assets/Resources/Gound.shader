@@ -65,7 +65,7 @@
             fixed4 rocky = tex2D (_RockyTex, IN.uv_GrassTex);
             fixed4 snowy = tex2D (_SnowyTex, IN.uv_GrassTex);
 			fixed4 grass = tex2D(_GrassTex, IN.uv_GrassTex);
-			fixed4 forest = tex2D(_ForestTex, IN.uv_GrassTex);
+			fixed4 forest = tex2D(_ForestTex, IN.uv_GrassTex / 5);
 			float4 w = IN.weights;
 			o.Albedo = snowy.rgb * w.b + rocky.rgb * w.g + grass.rgb * w.r + forest.rgb * w.a;
 			if ( _HeightStrips )
