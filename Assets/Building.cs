@@ -25,7 +25,10 @@ abstract public class Building : Assert.Base
 	public bool huge;
 	public static List<Ground.Offset> singleArea = new List<Ground.Offset>();
 	public static List<Ground.Offset> hugeArea = new List<Ground.Offset>();
-	GameObject highlight;
+	GameObject highlightArrow;
+	bool currentHighlight;
+	float currentLevel;
+	static int highlightID;
 
 	[System.Serializable]
 	public class Configuration
@@ -226,6 +229,7 @@ abstract public class Building : Assert.Base
 		hugeArea.Add( new Ground.Offset( -1, 1, 1 ) );
 		hugeArea.Add( new Ground.Offset( 0, 1, 1 ) );
 
+		highlightID = Shader.PropertyToID( "_StencilRef" );
 		Construction.Initialize();
 	}
 
@@ -304,8 +308,9 @@ abstract public class Building : Assert.Base
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this );
-		highlight = Instantiate( Resources.Load<GameObject>( "Fantasy_Kingdom_Pack_Lite/Perfabs/Main Structures/Decoration/Vane01_a01" ) );
-		highlight.transform.localScale = Vector3.one * 0.6f;
+		highlightArrow = Instantiate( Resources.Load<GameObject>( "Fantasy_Kingdom_Pack_Lite/Perfabs/Main Structures/Decoration/Vane01_a01" ) );
+		highlightArrow.transform.SetParent( transform );
+		highlightArrow.transform.localScale = Vector3.one * 0.6f;
 	}
 
 	void ScanChildObject( Transform transform )
@@ -381,18 +386,30 @@ abstract public class Building : Assert.Base
 		if ( !construction.done )
 			level = lowerLimit+(upperLimit-lowerLimit)*construction.progress;
 
-		foreach ( var r in renderers )
-			foreach ( var m in r.materials )
-				m.SetFloat( Construction.sliceLevelID, level );
+		bool highlight = Interface.instance.highlightType == Interface.HighlightType.stocks && this as Stock;
 
-		if ( Interface.instance.highlight != null && Interface.instance.highlight.IsInside( node ) )
+		if ( currentHighlight != highlight || currentLevel != level )
 		{
-			highlight.transform.localPosition = node.Position() + Vector3.up * ( ( float )( 1.5f + 0.3f * Math.Sin( 2 * Time.time ) ) );
-			highlight.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
-			highlight.SetActive( true );
+			currentLevel = level;
+			currentHighlight = highlight;
+			foreach ( var r in renderers )
+			{
+				foreach ( var m in r.materials )
+				{
+					m.SetFloat( Construction.sliceLevelID, level );
+					m.SetInt( highlightID, highlight ? 1 : 0 );
+				}
+			}
+		}
+
+		if ( Interface.instance.highlightType == Interface.HighlightType.area && Interface.instance.highlightArea != null && Interface.instance.highlightArea.IsInside( node ) )
+		{
+			highlightArrow.transform.localPosition = Vector3.up * ( ( float )( 1.5f + 0.3f * Math.Sin( 2 * Time.time ) ) );
+			highlightArrow.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
+			highlightArrow.SetActive( true );
 		}
 		else
-			highlight.SetActive( false );
+			highlightArrow.SetActive( false );
 	}
 
 	public virtual bool Remove()

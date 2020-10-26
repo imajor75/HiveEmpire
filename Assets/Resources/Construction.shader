@@ -8,12 +8,19 @@
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
+		[IntRange] _StencilRef("Stencil Reference Value", Range(0,255)) = 0
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
         LOD 200
 		AlphaTest Greater 0
+		Stencil 
+		{
+			Ref [_StencilRef]
+			Comp Always
+			Pass Replace
+		}
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types

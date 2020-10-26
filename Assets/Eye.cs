@@ -18,6 +18,7 @@ public class Eye : MonoBehaviour
 	[JsonIgnore]
 	public IDirector director;
 	Transform ear;
+	GameObject highlightPlane;
 
 	public static Eye Create()
 	{
@@ -43,6 +44,13 @@ public class Eye : MonoBehaviour
 		ear.gameObject.AddComponent<AudioListener>();
 		ear.name = "Ear";
 		ear.transform.SetParent( World.instance.transform );
+
+		var p = highlightPlane = GameObject.CreatePrimitive( PrimitiveType.Plane );
+		p.transform.SetParent( transform );
+		p.transform.localPosition = new Vector3( 0, 0, 1.0f );
+		p.transform.rotation = Quaternion.Euler( -90, 0, 0 );
+		p.GetComponent<MeshRenderer>().material = new Material( Resources.Load<Shader>( "highlight" ) );
+		p.name = "Highlight Plane";
 	}
 
 	private void Update()
@@ -71,6 +79,8 @@ public class Eye : MonoBehaviour
 			director.SetCameraTarget( this );
 			this.director = director;
 		}
+
+		highlightPlane.SetActive( Interface.instance.highlightType != Interface.HighlightType.none );
 	}
 
 	public void GrabFocus( IDirector director )

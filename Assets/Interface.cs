@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
@@ -16,7 +18,6 @@ public class Interface : Assert.Base
 	public static Font font;
 	public World world;
 	Canvas canvas;
-	public GroundNode selectedNode;
 	public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	public Viewport viewport;
 	static public MediaTable<Sprite, Icon> iconTable;
@@ -27,7 +28,21 @@ public class Interface : Assert.Base
 	public Tooltip tooltip;
 	public int autoSave = autoSaveInterval;
 	const int autoSaveInterval = 15000;
-	public Ground.Area highlight;
+	public HighlightType highlightType;
+	public Ground.Area highlightArea;
+	GameObject highlightVolume;
+	GroundNode highlightVolumeCenter;
+	int highlightVolumeRadius;
+	static Material highlightMaterial;
+	public GameObject highlightOwner;
+
+	public enum HighlightType
+	{
+		none,
+		stocks,
+		volume,
+		area
+	}
 
 	public enum Icon
 	{
@@ -92,8 +107,8 @@ public class Interface : Assert.Base
 	{
 		//{
 		//	Color o = Color.white;
-		//	Color g = new Color( 105/255f, 118/255f, 25/255f );
-		//	var t = Resources.Load<Texture2D>( "treeleaf2" );
+		//	Color g = Color.grey;
+		//	var t = Resources.Load<Texture2D>( "path" );
 		//	var d = new Texture2D( t.width, t.height );
 		//	for ( int x = 0; x < t.width; x++ )
 		//	{
@@ -115,6 +130,9 @@ public class Interface : Assert.Base
 		//	d.Apply();
 		//	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
 		//}
+		var highlightShader = Resources.Load<Shader>( "HighlightVolume" );
+		highlightMaterial = new Material( highlightShader );
+
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.global.IsNotNull( font );
 		object[] table = {
@@ -153,7 +171,7 @@ public class Interface : Assert.Base
 		ItemPanel.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
-			
+
 		canvas = gameObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 		gameObject.AddComponent<GraphicRaycaster>();
@@ -206,7 +224,7 @@ public class Interface : Assert.Base
 	void Save( string fileName = "" )
 	{
 		if ( fileName == "" )
-			fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
+			fileName = Application.persistentDataPath + "/Saves/" + World.rnd.Next() + ".json";
 		world.Save( fileName );
 		print( fileName + " is saved" );
 	}
@@ -220,7 +238,7 @@ public class Interface : Assert.Base
 			if ( Input.GetKey( KeyCode.Space ) )
 				world.SetTimeFactor( 5 );
 			else
-				world.SetTimeFactor( 1 ); 
+				world.SetTimeFactor( 1 );
 		}
 		if ( Input.GetKeyDown( KeyCode.Pause ) )
 		{
@@ -271,12 +289,80 @@ public class Interface : Assert.Base
 			Map.Create().Open( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) );
 		if ( Input.GetKeyDown( KeyCode.Alpha9 ) )
 			SetHeightStrips( !heightStrips );
+
+		UpdateHighligh();
+	}
+
+	void UpdateHighligh()
+	{
+		if ( highlightOwner == null )
+			highlightType = HighlightType.none;
+		if ( highlightType != HighlightType.area || highlightArea.center == null )
+		{
+			Destroy( highlightVolume );
+			highlightVolume = null;
+			return;
+		}
+
+		if ( highlightVolume && highlightVolumeCenter == highlightArea.center && highlightVolumeRadius == highlightArea.radius )
+			return;
+
+		highlightVolumeCenter = highlightArea.center;
+		highlightVolumeRadius = highlightArea.radius;
+
+		Mesh m = null;
+		if ( highlightVolume == null )
+		{
+			highlightVolume = new GameObject();
+			highlightVolume.name = "Highlight Volume";
+			highlightVolume.transform.SetParent( World.instance.transform );
+			var f = highlightVolume.AddComponent<MeshFilter>();
+			var r = highlightVolume.AddComponent<MeshRenderer>();
+			r.material = highlightMaterial;
+			m = f.mesh = new Mesh();
+		}
+		else
+		{
+			m = highlightVolume.GetComponent<MeshFilter>().mesh;
+		}
+
+		var vertices = new Vector3[GroundNode.neighbourCount * 2];
+		float cx = highlightVolumeCenter.Position().x;
+		float cy = highlightVolumeCenter.Position().z;
+		var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
+		float d = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
+		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+		{
+			float x = cx + corners[i, 0] * d - corners[i, 1] * d / 2;
+			float y = cy + corners[i, 1] * d;
+			vertices[i * 2 + 0] = new Vector3( x, -100, y );
+			vertices[i * 2 + 1] = new Vector3( x, +100, y );
+		}
+		m.vertices = vertices;
+
+		var triangles = new int[GroundNode.neighbourCount * 2 * 3];
+		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+		{
+			int a = i * 2;
+			int b = i * 2 + 2;
+			if ( b == GroundNode.neighbourCount * 2 )
+				b = 0;
+
+			triangles[i * 2 * 3 + 0] = a + 0;
+			triangles[i * 2 * 3 + 1] = a + 1;
+			triangles[i * 2 * 3 + 2] = b + 0;
+
+			triangles[i * 2 * 3 + 3] = a + 1;
+			triangles[i * 2 * 3 + 4] = b + 1;
+			triangles[i * 2 * 3 + 5] = b + 0;
+		}
+		m.triangles = triangles;
 	}
 
 	void SetHeightStrips( bool value )
 	{
 		this.heightStrips = value;
-		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 ); 
+		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -284,6 +370,13 @@ public class Interface : Assert.Base
 	{
 		Profiler.BeginSample( "Validate" );
 		world.Validate();
+		if ( highlightType == HighlightType.volume )
+			Assert.global.IsNotNull( highlightVolume );
+		if ( highlightType == HighlightType.area )
+		{
+			Assert.global.IsNotNull( highlightArea );
+			Assert.global.IsNotNull( highlightArea.center );
+		}
 		Profiler.EndSample();
 	}
 
@@ -608,8 +701,8 @@ public class Interface : Assert.Base
 
 			public bool OnNodeClicked( GroundNode node )
 			{
-				if ( instance.highlight == area )
-					instance.highlight = null;
+				if ( instance.highlightArea == area )
+					instance.highlightType = HighlightType.none;
 				return false;
 			}
 
@@ -620,19 +713,28 @@ public class Interface : Assert.Base
 					area.center = null;
 					return;
 				}
-				instance.highlight = area;
+				area.center = World.instance.ground.nodes[0];
+				area.radius = 4;
+				instance.highlightType = HighlightType.area;
+				instance.highlightArea = area;
+				instance.highlightOwner = gameObject;
 				instance.viewport.inputHandler = this;
 			}
 
 			public void OnPointerEnter( PointerEventData eventData )
 			{
-				instance.highlight = area;
+				if ( area.center == null )
+					return;
+
+				instance.highlightType = HighlightType.area;
+				instance.highlightOwner = gameObject;
+				instance.highlightArea = area;
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( instance.viewport.inputHandler != this as InputHandler && instance.highlight == area )
-					instance.highlight = null;
+				if ( instance.viewport.inputHandler != this as InputHandler && instance.highlightArea == area )
+					instance.highlightType = HighlightType.none;
 			}
 
 			void Update()
@@ -1061,7 +1163,9 @@ public class Interface : Assert.Base
 				return;
 			}
 			itemTypeForRetarget = itemType;
+			Root.highlightOwner = gameObject;
 			Root.viewport.inputHandler = this;
+			Root.highlightType = HighlightType.stocks;
 		}
 
 		void ChangeTarget( int itemType )
@@ -1112,6 +1216,7 @@ public class Interface : Assert.Base
 				return true;
 
 			stock.destinations[(int)itemTypeForRetarget] = target;
+			Root.highlightType = HighlightType.none;
 			return false;
 		}
 	}
@@ -1743,6 +1848,8 @@ public class Interface : Assert.Base
 
 		void Update()
 		{
+			if ( inputHandler == null || inputHandler.Equals( null ) )
+				inputHandler = this;
 			if ( !mouseOver )
 				return;
 			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
