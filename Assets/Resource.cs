@@ -48,11 +48,10 @@ public class Resource : Assert.Base
 	public static void Initialize()
 	{
 		object[] meshes = {
-		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 05", Type.tree,
-		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 02", Type.tree,
-		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type3 05", Type.tree,
-		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type5 04", Type.tree,
-		"BrokenVector/LowPolyTreePack/Prefabs/Tree Type0 02", Type.tree,
+		"Tree/Tree 1", Type.tree,
+		"Tree/Tree 2", Type.tree,
+		"Tree/Tree 3", Type.tree,
+		"Tree/Tree 4", Type.tree,
 
 		"LowPoly Rocks/Prefabs/Rock1", Type.rock,
 		"LowPoly Rocks/Prefabs/Rock3", Type.rock,

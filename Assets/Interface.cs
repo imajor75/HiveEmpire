@@ -90,6 +90,31 @@ public class Interface : Assert.Base
 
 	static void Initialize()
 	{
+		//{
+		//	Color o = Color.white;
+		//	Color g = new Color( 105/255f, 118/255f, 25/255f );
+		//	var t = Resources.Load<Texture2D>( "treeleaf2" );
+		//	var d = new Texture2D( t.width, t.height );
+		//	for ( int x = 0; x < t.width; x++ )
+		//	{
+		//		for ( int y = 0; y < t.height; y++ )
+		//		{
+		//			var c = t.GetPixel( x, y );
+		//			float a = c.a;
+		//			if ( a < 0.0001f )
+		//			{
+		//				o = c;
+		//				c = g;
+		//			}
+		//			else
+		//				c = Color.Lerp( g, c - ( o * ( a - 1 ) ), a );
+		//			c.a = a;
+		//			d.SetPixel( x, y, c );
+		//		};
+		//	}
+		//	d.Apply();
+		//	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
+		//}
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.global.IsNotNull( font );
 		object[] table = {
