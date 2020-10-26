@@ -2047,6 +2047,7 @@ public class Interface : Assert.Base
 		Text[] onWay = new Text[(int)Item.Type.total];
 		Text[] production = new Text[(int)Item.Type.total];
 		Text[] efficiency = new Text[(int)Item.Type.total];
+		Button[] stockButtons = new Button[(int)Item.Type.total];
 
 		public static ItemStats Create()
 		{
@@ -2072,6 +2073,7 @@ public class Interface : Assert.Base
 				int row = i * - ( iconSize + 5 );
 				ItemIcon( 0, row, 0, 0, (Item.Type)i, scroll.content );
 				inStock[i] = Text( 30, row, 40, iconSize, "0", scroll.content );
+				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
 				onWay[i] = Text( 80, row, 40, iconSize, "0", scroll.content );
 				production[i] = Text( 130, row, 40, iconSize, "0", scroll.content );
 				efficiency[i] = Text( 180, row, 40, iconSize, "0", scroll.content );
@@ -2084,10 +2086,19 @@ public class Interface : Assert.Base
 		{
 			base.Update();
 			int[] inStockCount = new int[(int)Item.Type.total];
+			int[] maxStockCount = new int[(int)Item.Type.total];
+			Stock[] richestStock = new Stock[(int)Item.Type.total];
 			foreach ( var stock in player.stocks )
 			{
 				for ( int i = 0; i < inStock.Length; i++ )
+				{
+					if ( stock.content[i] > maxStockCount[i] )
+					{
+						maxStockCount[i] = stock.content[i];
+						richestStock[i] = stock;
+					}
 					inStockCount[i] += stock.content[i];
+				}
 			}
 
 			int[] onWayCount = new int[(int)Item.Type.total];
@@ -2108,6 +2119,9 @@ public class Interface : Assert.Base
 				inStock[i].color = onWay[i].color = production[i].color = efficiency[i].color = textColor;
 
 				inStock[i].text = inStockCount[i].ToString();
+				stockButtons[i].onClick.RemoveAllListeners();
+				Stock stock = richestStock[i];
+				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
 				onWay[i].text = onWayCount[i].ToString();
 				production[i].text = player.efficiency[i].ToString( "n2" );
 				float itemEfficiency = Player.efficiencyFactors[i] * player.efficiency[i];
