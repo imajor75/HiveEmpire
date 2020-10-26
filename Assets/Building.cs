@@ -451,6 +451,7 @@ abstract public class Building : Assert.Base
 		foreach ( var o in area )
 			position += node.Add( o ).Position();
 		transform.localPosition = position / area.Count;
+		exit?.RebuildMesh( true );
 	}
 
 	virtual public void Validate()
