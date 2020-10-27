@@ -1122,6 +1122,35 @@ public class Interface : Assert.Base
 		{
 			base.Open( stock );
 			this.stock = stock;
+			RecreateControls();
+			if ( show )
+				Root.world.eye.FocusOn( stock );
+		}
+
+		void SetItemTargetStock( Item.Type itemType )
+		{
+			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+			{
+				SelectBuilding( stock.destinations[(int)itemType] );
+				return;
+			}
+			if ( Input.GetKey( KeyCode.LeftControl ) || Input.GetKey( KeyCode.RightControl ) )
+			{
+				stock.destinations[(int)itemType] = null;
+				RecreateControls();
+				return;
+			}
+				itemTypeForRetarget = itemType;
+			Root.highlightOwner = gameObject;
+			Root.viewport.inputHandler = this;
+			Root.highlightType = HighlightType.stocks;
+		}
+
+		void RecreateControls()
+		{
+			foreach ( Transform t in transform )
+				Destroy( t.gameObject );
+
 			int height = 340;
 			Frame( 0, 0, 300, height );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
@@ -1153,22 +1182,6 @@ public class Interface : Assert.Base
 				int j = i;
 				counts[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeTarget( j ); } );
 			}
-
-			if ( show )
-				Root.world.eye.FocusOn( stock );
-		}
-
-		void SetItemTargetStock( Item.Type itemType )
-		{
-			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
-			{
-				SelectBuilding( stock.destinations[(int)itemType] );
-				return;
-			}
-			itemTypeForRetarget = itemType;
-			Root.highlightOwner = gameObject;
-			Root.viewport.inputHandler = this;
-			Root.highlightType = HighlightType.stocks;
 		}
 
 		void ChangeTarget( int itemType )
@@ -1221,6 +1234,7 @@ public class Interface : Assert.Base
 
 			stock.destinations[(int)itemTypeForRetarget] = target;
 			Root.highlightType = HighlightType.none;
+			RecreateControls();
 			return false;
 		}
 	}
