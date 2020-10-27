@@ -35,6 +35,7 @@ public class Interface : Assert.Base
 	int highlightVolumeRadius;
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
+	public static Material materialUIPath;
 
 	public enum HighlightType
 	{
@@ -90,11 +91,11 @@ public class Interface : Assert.Base
 			Save();
 			autoSave = autoSaveInterval;
 		}
-		var o = ItemPanel.materialUIPath.mainTextureOffset;
+		var o = materialUIPath.mainTextureOffset;
 		o.y -= 0.015f;
 		if ( o.y < 0 )
 			o.y += 1;
-		ItemPanel.materialUIPath.mainTextureOffset = o;
+		materialUIPath.mainTextureOffset = o;
 	}
 
 	static Sprite LoadSprite( string fileName )
@@ -152,6 +153,9 @@ public class Interface : Assert.Base
 		print( "DEBUG" );
 #endif
 
+		materialUIPath = new Material( World.defaultMapShader );
+		materialUIPath.mainTexture = Resources.Load<Texture2D>( "uipath" );
+		materialUIPath.renderQueue = 4001;
 	}
 
 	void Start()
@@ -168,7 +172,6 @@ public class Interface : Assert.Base
 		Workshop.Initialize();
 		Stock.Initialize();
 		GuardHouse.Initialize();
-		ItemPanel.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 
@@ -357,6 +360,57 @@ public class Interface : Assert.Base
 			triangles[i * 2 * 3 + 5] = b + 0;
 		}
 		m.triangles = triangles;
+	}
+
+	public static GameObject CreateUIPath( Path path )
+	{
+		if ( path == null )
+			return null;
+
+		GameObject routeOnMap = new GameObject();
+		routeOnMap.name = "Path on map";
+		var renderer = routeOnMap.AddComponent<MeshRenderer>();
+		renderer.material = materialUIPath;
+		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		var route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
+
+		List<Vector3> vertices = new List<Vector3>();
+		List<Vector2> uvs = new List<Vector2>();
+		List<int> triangles = new List<int>();
+		for ( int j = 0; j < path.roadPath.Count; j++ )
+		{
+			Road road = path.roadPath[j];
+			float uvDir = path.roadPathReversed[j] ? 1f : 0f;
+			for ( int i = 0; i < road.nodes.Count - 1; i++ )
+			{
+				Vector3 start = road.nodes[i].Position() + Vector3.up * 0.1f;
+				Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 0.1f;
+				Vector3 side = (end - start) * 0.1f;
+				side = new Vector3( -side.z, side.y, side.x );
+
+				triangles.Add( vertices.Count + 0 );
+				triangles.Add( vertices.Count + 1 );
+				triangles.Add( vertices.Count + 2 );
+				triangles.Add( vertices.Count + 1 );
+				triangles.Add( vertices.Count + 3 );
+				triangles.Add( vertices.Count + 2 );
+
+				vertices.Add( start - side );
+				vertices.Add( start + side );
+				vertices.Add( end - side );
+				vertices.Add( end + side );
+
+				uvs.Add( new Vector2( 0, 6 * uvDir ) );
+				uvs.Add( new Vector2( 1, 6 * uvDir ) );
+				uvs.Add( new Vector2( 0, 6 * ( 1 - uvDir ) ) );
+				uvs.Add( new Vector2( 1, 6 * ( 1 - uvDir ) ) );
+			}
+		}
+
+		route.vertices = vertices.ToArray();
+		route.triangles = triangles.ToArray();
+		route.uv = uvs.ToArray();
+		return routeOnMap;
 	}
 
 	void SetHeightStrips( bool value )
@@ -649,7 +703,7 @@ public class Interface : Assert.Base
 
 		public void MoveTo( Vector3 position )
 		{
-			Vector3 screenPosition = World.instance.eye.camera.WorldToScreenPoint( position );
+			Vector3 screenPosition = instance.viewport.camera.WorldToScreenPoint( position );
 			if ( screenPosition.y > Screen.height )
 				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
@@ -799,9 +853,9 @@ public class Interface : Assert.Base
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					Interface.instance.tooltip.SetText( this, item.type.ToString(), path = ItemPanel.CreateUIPath( item.path ) );
+					instance.tooltip.SetText( this, item.type.ToString(), path = CreateUIPath( item.path ) );
 				else
-					Interface.instance.tooltip.SetText( this, itemType.ToString() );
+					instance.tooltip.SetText( this, itemType.ToString() );
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
@@ -1012,7 +1066,7 @@ public class Interface : Assert.Base
 
 		void ShowWorker()
 		{
-			WorkerPanel.Create().Open( workshop.worker );
+			WorkerPanel.Create().Open( workshop.worker, true );
 		}
 
 		public override void Update()
@@ -1387,7 +1441,7 @@ public class Interface : Assert.Base
 
 		void Hauler()
 		{
-			WorkerPanel.Create().Open( road.workers[0] ); // TODO Make it possibe to view additional workers
+			WorkerPanel.Create().Open( road.workers[0], true ); // TODO Make it possibe to view additional workers
 		}
 
 		void Split()
@@ -1575,24 +1629,43 @@ public class Interface : Assert.Base
 		public Worker worker;
 		Text itemCount;
 		ItemImage item;
+		Text itemsInCart;
+		public Stock cartDestination;
+		Component destinationBuilding;
+		GameObject cartPath;
 
 		public static WorkerPanel Create()
 		{
 			return new GameObject().AddComponent<WorkerPanel>();
 		}
 
-		public void Open( Worker worker )
+		public void Open( Worker worker, bool show )
 		{
 			base.Open( worker.node );
 			this.worker = worker;
-			Frame( 0, 0, 200, 80 );
+			var cart = worker as Stock.Cart;
+			Frame( 0, 0, 200, cart ? 140 : 80 );
 			Button( 170, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
+			itemsInCart = Text( 45, -20, 150, 20 );
 			itemCount = Text( 20, -44, 160, 20, "Items" );
-			World.instance.eye.GrabFocus( this );
+			if ( cart )
+			{
+				Text( 20, -70, 50, 20, "From:" );
+				BuildingIcon( 70, -70, cart.building );
+				Text( 20, -95, 50, 20, "To:" );
+			}
+
+			if ( show )
+				World.instance.eye.GrabFocus( this );
 #if DEBUG
 			Selection.activeGameObject = worker.gameObject;
 #endif
+		}
+
+		public override void OnDoubleClick()
+		{
+			World.instance.eye.GrabFocus( this );
 		}
 
 		public void SetCameraTarget( Eye eye )
@@ -1608,15 +1681,34 @@ public class Interface : Assert.Base
 				return;
 			}
 			base.Update();
+			var cart = worker as Stock.Cart;
+			if ( cart )
+			{
+				item.SetType( cart.itemType );
+				itemsInCart.text = "x" + cart.itemQuantity;
+				if ( cart.destination != cartDestination )
+				{
+					cartDestination = cart.destination;
+					Destroy( destinationBuilding );
+					if ( cart.destination )
+						destinationBuilding = BuildingIcon( 70, -95, cart.destination );
+					var path = cart.FindTask<Worker.WalkToFlag>()?.path;
+					Destroy( cartPath );
+					cartPath = CreateUIPath( path );
+				}
+			}
+			else
+				item.SetItem( worker.itemInHands );
 			itemCount.text = "Items delivered: " + worker.itemsDelivered;
-			item.SetItem( worker.itemInHands );
-			MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
+			if ( followTarget )
+				MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
 		}
 
 		new void OnDestroy()
 		{
 			base.OnDestroy();
 			World.instance.eye.ReleaseFocus( this );
+			Destroy( cartPath );
 		}
 	}
 
@@ -1687,15 +1779,6 @@ public class Interface : Assert.Base
 		public GameObject route;
 		public Text stats;
 		GameObject mapIcon;
-		public static Material materialUIPath;
-
-		public static void Initialize()
-		{
-			// TODO Why isn't it transparent?
-			materialUIPath = new Material( World.defaultTextureShader );
-			materialUIPath.mainTexture = Resources.Load<Texture2D>( "uipath" );
-			World.SetRenderMode( materialUIPath, World.BlendMode.Transparent );
-		}
 
 		static public ItemPanel Create()
 		{
@@ -1761,57 +1844,6 @@ public class Interface : Assert.Base
 		{
 			base.Close();
 			Destroy( route );
-		}
-
-		public static GameObject CreateUIPath( Path path )
-		{
-			if ( path == null )
-				return null;
-
-			GameObject routeOnMap = new GameObject();
-			routeOnMap.name = "Path on map";
-			var renderer = routeOnMap.AddComponent<MeshRenderer>();
-			renderer.material = materialUIPath;
-			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			var route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
-
-			List<Vector3> vertices = new List<Vector3>();
-			List<Vector2> uvs = new List<Vector2>();
-			List<int> triangles = new List<int>();
-			for ( int j = 0; j < path.roadPath.Count; j++ )
-			{
-				Road road = path.roadPath[j];
-				float uvDir = path.roadPathReversed[j] ? 1f : 0f;
-				for ( int i = 0; i < road.nodes.Count - 1; i++ )
-				{
-					Vector3 start = road.nodes[i].Position() + Vector3.up * 0.1f;
-					Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 0.1f;
-					Vector3 side = (end - start) * 0.1f;
-					side = new Vector3( -side.z, side.y, side.x );
-
-					triangles.Add( vertices.Count + 0 );
-					triangles.Add( vertices.Count + 1 );
-					triangles.Add( vertices.Count + 2 );
-					triangles.Add( vertices.Count + 1 );
-					triangles.Add( vertices.Count + 3 );
-					triangles.Add( vertices.Count + 2 );
-
-					vertices.Add( start - side );
-					vertices.Add( start + side );
-					vertices.Add( end - side );
-					vertices.Add( end + side );
-
-					uvs.Add( new Vector2( 0, 6 * uvDir ) );
-					uvs.Add( new Vector2( 1, 6 * uvDir ) );
-					uvs.Add( new Vector2( 0, 6 * (1 - uvDir) ) );
-					uvs.Add( new Vector2( 1, 6 * (1 - uvDir) ) );
-				}
-			}
-
-			route.vertices = vertices.ToArray();
-			route.triangles = triangles.ToArray();
-			route.uv = uvs.ToArray();
-			return routeOnMap;
 		}
 
 		public void SetCameraTarget( Eye eye )
@@ -1974,7 +2006,11 @@ public class Interface : Assert.Base
 			}
 			if ( node.road )
 			{
-				node.road.OnClicked( node );
+				var worker = node.road.workerAtNodes[node.road.NodeIndex( node )];
+				if ( worker && worker.type == Worker.Type.cart )
+					worker.OnClicked();
+				else
+					node.road.OnClicked( node );
 				return true;
 			}
 			node.OnClicked();

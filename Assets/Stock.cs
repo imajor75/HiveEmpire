@@ -31,6 +31,7 @@ public class Stock : Building
 
 		public Item.Type itemType;
 		public int itemQuantity;
+		public Stock destination;
 	}
 
 	public class DeliverStackTask : Worker.Task
@@ -61,6 +62,7 @@ public class Stock : Building
 			Stock cartStock = cart.building as Stock;
 			if ( cart.itemQuantity > 0 )
 			{
+				cart.itemsDelivered += cart.itemQuantity;
 				stock.content[(int)cart.itemType] += cart.itemQuantity;
 				if ( stock != cartStock )
 					stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
@@ -206,6 +208,7 @@ public class Stock : Building
 				var target = destinations[itemType];
 				cart.itemQuantity = cartCapacity;
 				cart.itemType = (Item.Type)itemType;
+				cart.destination = target;
 				target.onWay[itemType] += cart.itemQuantity;
 
 				cart.ScheduleWalkToNeighbour( flag.node );

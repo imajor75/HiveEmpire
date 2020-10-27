@@ -743,6 +743,7 @@ public class Worker : Assert.Base
 		mapObject.transform.localPosition = Vector3.up * 2;
 		mapObject.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
 		mapObject.GetComponent<MeshRenderer>().material = mapMaterial = new Material( World.defaultShader );
+		mapMaterial.renderQueue = 4002;
 
 		arrowObject = new GameObject();
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
@@ -1363,6 +1364,22 @@ public class Worker : Assert.Base
 
 		currentTask.NextStep( true );
 		return true;			
+	}
+
+	public void OnClicked()
+	{
+		Interface.WorkerPanel.Create().Open( this, false );
+	}
+
+	public T FindTask<T>() where T : class
+	{
+		foreach ( var task in taskQueue )
+		{
+			T result = task as T;
+			if ( result != null )
+				return result;
+		}
+		return null;
 	}
 
 	public void Validate()

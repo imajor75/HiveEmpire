@@ -206,9 +206,11 @@ public class Road : Assert.Base, Interface.InputHandler
 		mesh = filter.mesh = new Mesh();
 
 		GameObject mapObject = new GameObject();
+		mapObject.name = "Map";
 		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new Mesh();
 		var r = mapObject.AddComponent<MeshRenderer>();
-		mapMaterial = r.material = new Material( World.defaultShader );
+		mapMaterial = r.material = new Material( World.defaultMapShader );
+		mapMaterial.renderQueue = 4000;
 		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapObject.transform.SetParent( transform, false );
 		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );

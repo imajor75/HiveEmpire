@@ -22,6 +22,7 @@ public class World : MonoBehaviour
 	[JsonIgnore]
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
+	static public Shader defaultMapShader;
 	static public Shader defaultTextureShader;
 	public bool gameInProgress;
 	public int time;
@@ -54,6 +55,7 @@ public class World : MonoBehaviour
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
 		defaultTextureShader = Shader.Find( "Unlit/Texture" );
+		defaultMapShader = Resources.Load<Shader>( "Map" );
 	}
 
 	World()
