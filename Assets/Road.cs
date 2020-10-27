@@ -228,7 +228,7 @@ public class Road : Assert.Base, Interface.InputHandler
 			return;
 		if ( timeSinceWorkerAdded < secBetweenWorkersAdded * 50 )
 			return;
-		if ( workers.Count > nodes.Count / 2 )
+		if ( workers.Count >= nodes.Count - 2 )
 			return;
 
 		// TODO Refine when a new worker should be added

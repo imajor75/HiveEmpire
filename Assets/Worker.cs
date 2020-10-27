@@ -36,6 +36,7 @@ public class Worker : Assert.Base
 	Material shirtMaterial;
 	[JsonIgnore]
 	public bool debugReset;
+	static public int stuckTimeout = 3000;
 
 
 	static MediaTable<GameObject, Type> looks;
@@ -190,6 +191,7 @@ public class Worker : Assert.Base
 		public int targetPoint;
 		public int wishedPoint = -1;
 		public bool exclusive;
+		public World.Timer stuck;
 
 		public void Setup( Worker boss, Road road, int point, bool exclusive )
 		{
@@ -205,6 +207,11 @@ public class Worker : Assert.Base
 			if ( road == null )
 				return ResetBoss();
 
+			if ( stuck.Done && road.ActiveWorkerCount > 1 )
+			{
+				boss.Remove();
+				return true;
+			}
 			if ( currentPoint == -1 )
 				currentPoint = road.NodeIndex( boss.node );
 			if ( currentPoint == -1 )
@@ -243,13 +250,18 @@ public class Worker : Assert.Base
 					boss.assert.IsTrue( other == null || other == flag.user );
 					other = flag.user;
 				}
+				other?.assert?.IsNotSelected();
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
 					if ( other.onRoad && other.type == Type.hauler && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
 						other.Remove();
 					else
+					{
+						if ( stuck.Empty )
+							stuck.Start( stuckTimeout );
 						return false;
+					}
 				}
 			}
 
@@ -290,6 +302,7 @@ public class Worker : Assert.Base
 					boss.exclusiveFlag = null;
 				}
 			}
+			stuck.Reset();	
 			return true;
 		}
 
@@ -359,11 +372,6 @@ public class Worker : Assert.Base
 		{
 			boss.assert.AreEqual( boss, item.worker );
 			item.worker = null;
-			if ( item.buddy )
-			{
-				boss.assert.AreEqual( boss, item.buddy.worker );
-				item.buddy.worker = null;
-			}
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
@@ -423,8 +431,10 @@ public class Worker : Assert.Base
 		{
 			if ( item != null && item.nextFlag != null )
 			{
-				if ( item.buddy )
+				if ( item.buddy?.worker )
 				{
+					// If two items are swapped, the second one has no assigned PickupItem task, the DeliverItem task will handle
+					// the pickup related tasks. So the cancel of this DeliverItem task needs to cancel the same things the PickupTask.Cancel would do.
 					boss.assert.AreEqual( item.buddy.worker, boss );
 					item.buddy.worker = null;
 				}
@@ -876,12 +886,13 @@ public class Worker : Assert.Base
 			}
 			assert.AreEqual( road.workerAtNodes[currentPoint], this );
 			road.workerAtNodes[currentPoint] = null;
-			if ( exclusiveFlag )
-			{
-				assert.AreEqual( exclusiveFlag.user, this );
-				exclusiveFlag.user = null;
-			}
 			onRoad = false;
+		}
+		if ( exclusiveFlag )
+		{
+			assert.AreEqual( exclusiveFlag.user, this );
+			exclusiveFlag.user = null;
+			exclusiveFlag = null;
 		}
 		if ( road != null )
 		{
@@ -947,7 +958,7 @@ public class Worker : Assert.Base
 			if ( FindItemToCarry() )
 				return;
 
-			if ( node != road.CenterNode() && road.workers.Count == 1 )
+			if ( node != road.CenterNode() && road.ActiveWorkerCount == 1 )
 			{
 				ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
 				return;

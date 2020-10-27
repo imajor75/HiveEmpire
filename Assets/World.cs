@@ -351,6 +351,10 @@ public class World : MonoBehaviour
 		{
 			reference = instance.time + delta;
 		}
+		public void Reset()
+		{
+			reference = 0;
+		}
 		[JsonIgnore]
 		public int Age
 		{
