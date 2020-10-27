@@ -18,6 +18,9 @@ public class Stock : Building
 	const int cartCapacity = 16;
 	public Ground.Area inputArea = new Ground.Area();
 	public Ground.Area outputArea = new Ground.Area();
+	public int total;
+	public int totalTarget;
+	static public int maxItems = 100;
 
 	public class Cart : Worker
 	{
@@ -178,12 +181,23 @@ public class Stock : Building
 		if ( !construction.done )
 			return;
 
+		total = totalTarget = 0;
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, int.MaxValue, ItemDispatcher.Priority.stock, inputArea );
+			int count = content[itemType] + onWay[itemType];
+			total += count;
+			totalTarget += Math.Max( count, target[itemType] );
+		}
+
+		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
+		{
+			if ( maxItems > total )
+				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, maxItems - total, ItemDispatcher.Priority.stock, inputArea ); // TODO Should not order more than what fits
 			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.stock, outputArea );
 			int missing = target[itemType] - content[itemType] - onWay[itemType];
+			if ( missing > maxItems - totalTarget )
+				missing = maxItems - totalTarget;
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high, inputArea );
 

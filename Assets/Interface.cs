@@ -1110,6 +1110,7 @@ public class Interface : Assert.Base
 	{
 		public Stock stock;
 		public Text[] counts = new Text[(int)Item.Type.total];
+		public Text total;
 		public Item.Type itemTypeForRetarget;
 
 		public static StockPanel Create()
@@ -1121,12 +1122,14 @@ public class Interface : Assert.Base
 		{
 			base.Open( stock );
 			this.stock = stock;
-			int height = 320;
+			int height = 340;
 			Frame( 0, 0, 300, height );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 250, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			AreaIcon( 30, -30, stock.inputArea );
 			AreaIcon( 250, -30, stock.outputArea );
+			total = Text( 50, 40 - height, 100, 20 );
+			total.fontSize = 16;
 
 			int row = -55;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
@@ -1202,6 +1205,7 @@ public class Interface : Assert.Base
 					counts[i].color = Color.green;
 				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ") =>" + stock.target[i];
 			}
+			total.text = stock.total + " => " + stock.totalTarget;
 		}
 
 		public bool OnMovingOverNode( GroundNode node )
