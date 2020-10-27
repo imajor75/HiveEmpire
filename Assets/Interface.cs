@@ -105,31 +105,31 @@ public class Interface : Assert.Base
 
 	static void Initialize()
 	{
-		{
-			//Color o = Color.white;
-			//Color g = Color.grey;
-			//var t = Resources.Load<Texture2D>( "crossbow" );
-			//var d = new Texture2D( t.width, t.height );
-			//for ( int x = 0; x < t.width; x++ )
-			//{
-			//	for ( int y = 0; y < t.height; y++ )
-			//	{
-			//		var c = t.GetPixel( x, y );
-			//		float a = c.a;
-			//		if ( a < 0.0001f )
-			//		{
-			//			o = c;
-			//			c = g;
-			//		}
-			//		else
-			//			c = Color.Lerp( g, c - ( o * ( a - 1 ) ), a );
-			//		c.a = a;
-			//		d.SetPixel( x, y, c );
-			//	};
-			//}
-			//d.Apply();
-			//System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
-		}
+		//{
+		//	Color o = Color.white;
+		//	Color g = Color.black;
+		//	var t = Resources.Load<Texture2D>( "arrow" );
+		//	var d = new Texture2D( t.width, t.height );
+		//	for ( int x = 0; x < t.width; x++ )
+		//	{
+		//		for ( int y = 0; y < t.height; y++ )
+		//		{
+		//			var c = t.GetPixel( x, y );
+		//			float a = c.a;
+		//			if ( a < 0.0001f )
+		//			{
+		//				o = c;
+		//				c = g;
+		//			}
+		//			else
+		//				c = Color.Lerp( g, c - ( o * ( a - 1 ) ), a );
+		//			c.a = a;
+		//			d.SetPixel( x, y, c );
+		//		};
+		//	}
+		//	d.Apply();
+		//	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
+		//}
 		var highlightShader = Resources.Load<Shader>( "HighlightVolume" );
 		highlightMaterial = new Material( highlightShader );
 
@@ -231,7 +231,7 @@ public class Interface : Assert.Base
 
 	void Update()
 	{
-		GroundNode node = world.eye.FindNodeAt( Input.mousePosition );
+		GroundNode node = viewport.FindNodeAt( Input.mousePosition );
 
 		if ( world.timeFactor != 0 )
 		{
@@ -1770,7 +1770,9 @@ public class Interface : Assert.Base
 
 			GameObject routeOnMap = new GameObject();
 			routeOnMap.name = "Path on map";
-			routeOnMap.AddComponent<MeshRenderer>().material = materialUIPath;
+			var renderer = routeOnMap.AddComponent<MeshRenderer>();
+			renderer.material = materialUIPath;
+			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			var route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
 
 			List<Vector3> vertices = new List<Vector3>();
@@ -1835,6 +1837,7 @@ public class Interface : Assert.Base
 		GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
 		GameObject cursorFlag;
 		GameObject cursorBuilding;
+		public new Camera camera;
 		public enum CursorType
 		{
 			nothing,
@@ -1845,9 +1848,35 @@ public class Interface : Assert.Base
 			total
 		}
 
+		public void SetCamera( Camera camera )
+		{
+			this.camera = camera;
+			if ( camera )
+				World.instance.eye.camera.enabled = false;
+			else
+			{
+				camera = World.instance.eye.camera;
+				camera.enabled = true;
+			}
+		}
+
+		public GroundNode FindNodeAt( Vector3 screenPosition )
+		{
+			if ( camera == null )
+				camera = World.instance.eye.camera;
+			Ray ray = camera.ScreenPointToRay( screenPosition );
+			RaycastHit hit;
+			if ( !World.instance.ground.collider.Raycast( ray, out hit, 1000 ) ) // TODO How long the ray should really be?
+				return null;
+
+			var ground = World.instance.ground;
+			Vector3 localPosition = ground.transform.InverseTransformPoint( hit.point );
+			return GroundNode.FromPosition( localPosition, ground );
+		}
+
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
+			GroundNode node = FindNodeAt( Input.mousePosition );
 			if ( !inputHandler.OnNodeClicked( node ) )
 				inputHandler = this;
 		}
@@ -1879,7 +1908,7 @@ public class Interface : Assert.Base
 				inputHandler = this;
 			if ( !mouseOver )
 				return;
-			GroundNode node = World.instance.eye.FindNodeAt( Input.mousePosition );
+			GroundNode node = FindNodeAt( Input.mousePosition );
 			if ( cursor && node )
 				cursor.transform.localPosition = node.Position();
 			if ( !inputHandler.OnMovingOverNode( node ) )

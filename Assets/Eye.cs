@@ -109,11 +109,6 @@ public class Eye : MonoBehaviour
 		director = null;
 	}
 
-	public void SetRendering( bool on )
-	{
-		camera.enabled = on;
-	}
-
 	void FixedUpdate()
 	{
 		Vector3 movement = new Vector3();
@@ -164,17 +159,6 @@ public class Eye : MonoBehaviour
 
 
 		altitude += ( targetAltitude - altitude ) * 0.1f;
-	}
-
-	public GroundNode FindNodeAt( Vector3 screenPosition )
-	{
-		Ray ray = camera.ScreenPointToRay( screenPosition );
-		RaycastHit hit;
-		if ( !world.ground.collider.Raycast( ray, out hit, 1000 ) )	// TODO How long the ray should really be?
-			return null;
-
-		Vector3 localPosition = world.ground.transform.InverseTransformPoint( hit.point );
-		return GroundNode.FromPosition( localPosition, world.ground );
 	}
 
 	public interface IDirector

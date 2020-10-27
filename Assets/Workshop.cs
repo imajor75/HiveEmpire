@@ -598,7 +598,7 @@ public class Workshop : Building
 								if ( place.Add( j ).IsBlocking() )
 									blockedAdjacentNodes++;
 							}
-							if ( blockedAdjacentNodes >= 3 )
+							if ( blockedAdjacentNodes >= 2 )
 								continue;
 						}
 						PlantAt( place, Resource.Type.tree );

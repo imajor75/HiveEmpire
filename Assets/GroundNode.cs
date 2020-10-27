@@ -52,6 +52,7 @@ public class GroundNode : Assert.Base
 	{
 		name = "GroundNode (" + x + ", " + y + ")";
 		transform.SetParent( World.nodes.transform );
+		transform.localPosition = Position();
 	}
 
 	void OnDrawGizmos()

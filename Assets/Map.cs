@@ -36,9 +36,9 @@ public class Map : Interface.Panel
 		base.Update();
 
 		if ( Input.GetKey( KeyCode.Equals ) )
-			zoom *= 0.98f;
+			zoom *= 0.97f;
 		if ( Input.GetKey( KeyCode.Minus ) )
-			zoom *= 1.02f;
+			zoom *= 1.03f;
 		if ( zoom < zoomMin )
 			zoom = zoomMin;
 		if ( zoom > zoomMax )
@@ -80,7 +80,8 @@ public class Map : Interface.Panel
 			camera.transform.SetParent( World.instance.ground.transform );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
-				World.instance.eye.SetRendering( !fullScreen );
+			if ( fullScreen )
+				Interface.instance.viewport.SetCamera( camera );
 		}
 
 		public void SetTarget( Vector2 position, float zoom, float rotation )
@@ -94,7 +95,7 @@ public class Map : Interface.Panel
 		void OnDestroy()
 		{
 			Destroy( camera.gameObject );
-			World.instance.eye.SetRendering( true );
+			Interface.instance.viewport.SetCamera( null );
 		}
 	}
 }

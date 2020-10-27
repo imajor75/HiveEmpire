@@ -31,6 +31,8 @@ public class Worker : Assert.Base
 	[JsonIgnore]
 	public GameObject mapObject;
 	Material mapMaterial;
+	GameObject arrowObject;
+	static Sprite arrowSprite;
 	Material shirtMaterial;
 	[JsonIgnore]
 	public bool debugReset;
@@ -574,6 +576,9 @@ public class Worker : Assert.Base
 		object[] walk = {
 			"cart", Type.cart };
 		walkSounds.Fill( walk );
+
+		var tex = Resources.Load<Texture2D>( "arrow" );
+		arrowSprite = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 	}
 
 	static public Worker Create()
@@ -736,8 +741,14 @@ public class Worker : Assert.Base
 		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
 		mapObject.transform.SetParent( transform );
 		mapObject.transform.localPosition = Vector3.up * 2;
-		mapObject.transform.localScale = Vector3.one * 0.3f;
+		mapObject.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
 		mapObject.GetComponent<MeshRenderer>().material = mapMaterial = new Material( World.defaultShader );
+
+		arrowObject = new GameObject();
+		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
+		arrowObject.transform.SetParent( transform, false );
+		arrowObject.AddComponent<SpriteRenderer>().sprite = arrowSprite;
+		arrowObject.transform.localScale = Vector3.one * 0.4f;
 	}
 
 	// Distance the worker is taking in a single frame (0.02 sec)
@@ -801,6 +812,7 @@ public class Worker : Assert.Base
 
 	void UpdateOnMap()
 	{
+		arrowObject.SetActive( false );
 		switch ( type )
 		{
 			case Type.unemployed:
@@ -816,6 +828,7 @@ public class Worker : Assert.Base
 				mapMaterial.color = Color.cyan;
 				break;
 			case Type.hauler:
+			case Type.cart:
 				if ( !onRoad )
 				{
 					mapMaterial.color = Color.grey;
@@ -824,7 +837,21 @@ public class Worker : Assert.Base
 				if ( IsIdle() )
 					mapMaterial.color = Color.green;
 				else
+				{
 					mapMaterial.color = Color.white;
+					if ( taskQueue.Count > 0 )
+					{
+						var t = taskQueue[0] as WalkToRoadPoint;
+						if ( t && t.wishedPoint >= 0 )
+						{
+							var wp = t.road.nodes[t.wishedPoint].Position();
+							arrowObject.SetActive( true );
+							var dir = wp - node.Position();
+							arrowObject.transform.rotation = Quaternion.LookRotation( dir ) * Quaternion.Euler( 0, -90, 0 ) * Quaternion.Euler( 90, 0, 0 );
+							arrowObject.transform.position = node.Position() + Vector3.up * 4 + 0.5f * dir;
+						}
+					}
+				}
 				break;
 		}
 	}
@@ -1297,6 +1324,8 @@ public class Worker : Assert.Base
 				transform.Rotate( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
 			}
 		}
+
+
 	}
 
 	public bool IsIdle( bool inBuilding = false )

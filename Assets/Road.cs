@@ -207,7 +207,9 @@ public class Road : Assert.Base, Interface.InputHandler
 
 		GameObject mapObject = new GameObject();
 		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new Mesh();
-		mapMaterial = mapObject.AddComponent<MeshRenderer>().material = new Material( World.defaultShader );
+		var r = mapObject.AddComponent<MeshRenderer>();
+		mapMaterial = r.material = new Material( World.defaultShader );
+		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapObject.transform.SetParent( transform, false );
 		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
 		World.SetRenderMode( mapMaterial, World.BlendMode.Transparent );
@@ -218,7 +220,7 @@ public class Road : Assert.Base, Interface.InputHandler
 	void Update()
 	{
 		int jam = Jam;
-		mapMaterial.color = new Color( 1, 0, 0, Math.Max( 0, ( jam - 2 ) * 0.15f ) );
+		mapMaterial.color = Color.Lerp( Color.green, Color.red, Math.Max( 0, ( jam - 2 ) * 0.15f ) );
 
 		if ( decorationOnly )
 			return;
