@@ -118,13 +118,25 @@ public class Eye : MonoBehaviour
 	{
 		Vector3 movement = new Vector3();
 		if ( Input.GetKey( KeyCode.A ) )
+		{
 			movement += transform.right * -0.1f * altitude / 6;
+			director = null;
+		}
 		if ( Input.GetKey( KeyCode.D ) )
+		{
 			movement += transform.right * 0.1f * altitude / 6;
+			director = null;
+		}
 		if ( Input.GetKey( KeyCode.W ) )
+		{
 			movement += transform.forward * 0.13f * altitude / 6;
+			director = null;
+		}
 		if ( Input.GetKey( KeyCode.S ) )
+		{
 			movement += transform.forward * -0.13f * altitude / 6;
+			director = null;
+		}
 		x += movement.x;
 		y += movement.z;
 

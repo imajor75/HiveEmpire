@@ -674,12 +674,17 @@ public class Interface : Assert.Base
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			if ( eventData.clickCount == 2 && target != null )
-			{
-				World.instance.eye.FocusOn( target );
-				followTarget = true;
-			};
+			if ( eventData.clickCount == 2 )
+				OnDoubleClick();
+		}
 
+		public virtual void OnDoubleClick()
+		{
+			if ( target == null )
+				return;
+
+			World.instance.eye.FocusOn( target );
+			followTarget = true;
 		}
 
 		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, InputHandler
@@ -1723,6 +1728,10 @@ public class Interface : Assert.Base
 #if DEBUG
 			Selection.activeGameObject = item.gameObject;
 #endif
+		}
+
+		public override void OnDoubleClick()
+		{
 			World.instance.eye.GrabFocus( this );
 		}
 
