@@ -57,10 +57,11 @@
 			// Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
-			if ( _SliceLevel > IN.worldPos.y )
-				o.Alpha = c.a;
-			else
-				o.Alpha = 0;
+			o.Alpha = 1;
+			//if ( _SliceLevel > IN.worldPos.y )
+			//	o.Alpha = c.a;
+			//else
+			//	o.Alpha = 0;
         }
         ENDCG
     }

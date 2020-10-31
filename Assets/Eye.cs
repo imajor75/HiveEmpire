@@ -47,44 +47,71 @@ public class Eye : MonoBehaviour
 
 	public Material mat;
 	public Texture2D tex;
+	public bool debug = true;
 	void OnRenderImage( RenderTexture src, RenderTexture dst )
 	{
+		if ( !debug )
+		{
+			Graphics.Blit( src, dst );
+			return;
+		}
+		debug = false;
+
 		if ( !mat )
 		{
-			//mat = new Material( Resources.Load<Shader>( "Highlight" ) );
-			mat = new Material( Shader.Find( "Unlit/Texture" ) );
-			tex = Resources.Load<Texture2D>( "coins" );
+			mat = new Material( Resources.Load<Shader>( "Highlight" ) );
+			//mat = new Material( Shader.Find( "Unlit/Texture" ) );
+			tex = Resources.Load<Texture2D>( "coin" );
 		}
 
-		//ManualBlit( tex, mat );
+		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
+
 		SaveRT( src, "src.png" );
 		SaveRT( null, "null.png" );
 		SaveRT( RenderTexture.active, "active.png" );
+
+		ManualBlit( tex, src, mat );
+		SaveRT( src, "src_prep.png" );
+
+		Graphics.SetRenderTarget( tempRT.colorBuffer, src.depthBuffer );
+		ManualBlit( src, tempRT, mat );
+		//Graphics.Blit( src, tempRT, mat );
+
+		SaveRT( src, "src_after.png" );
+		SaveRT( null, "null_after.png" );
+		SaveRT( RenderTexture.active, "active_after.png" );
+		SaveRT( tempRT, "temp.png" );
 
 		//Graphics.SetRenderTarget( temp.colorBuffer, src.depthBuffer );
 		//Graphics.Blit( src, temp, mat );
 		//Graphics.Blit( temp, dst );
 		//RenderTexture.ReleaseTemporary( temp );
 
-		Application.Quit();
+		RenderTexture.ReleaseTemporary( tempRT );
 	}
 
-	void ManualBlit( Texture texture, Material material )
+	void ManualBlit( Texture source, RenderTexture target, Material material )
 	{
-		material.mainTexture = texture;
+		//var prevRT = RenderTexture.active;
+		//RenderTexture.active = target;
+		Graphics.SetRenderTarget( target );
+		material.mainTexture = source;
 
 		GL.PushMatrix();
 		GL.LoadOrtho();
 
 		// activate the first shader pass (in this case we know it is the only pass)
-		material.SetPass( 0 );
+		bool b = material.SetPass( 0 );
+		print( "SetPass: " + b );
 		// draw a quad over whole screen
 		GL.Begin( GL.QUADS );
-		GL.Vertex3( 0, 0, 0 );
-		GL.Vertex3( 1, 0, 0 );
-		GL.Vertex3( 1, 1, 0 );
-		GL.Vertex3( 0, 1, 0 );
+		GL.TexCoord2( 0f, 0f ); GL.Vertex3( 0f, 0f, 0f );
+		GL.TexCoord2( 0f, 1f ); GL.Vertex3( 0f, 1f, 0f );
+		GL.TexCoord2( 1f, 1f ); GL.Vertex3( 1f, 1f, 0f );
+		GL.TexCoord2( 1f, 0f );	GL.Vertex3( 1f, 0f, 0f );
 		GL.End();
+		GL.PopMatrix();
+		//RenderTexture.active = prevRT;
 	}
 
 	static public void SaveRT( RenderTexture texture, string fileName = "test.png" )

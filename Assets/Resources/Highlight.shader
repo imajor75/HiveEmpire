@@ -9,12 +9,14 @@
     {
 		LOD 100
 		ZTest Always
+		ZWrite Off
+		Cull Off
 
-		Stencil
-		{
-			Ref 0
-			Comp Equal
-		}
+		//Stencil
+		//{
+		//	Ref 0
+		//	Comp Equal
+		//}
 
         Pass
         {
@@ -52,8 +54,7 @@
 			{
 				fixed4 col = tex2D(_MainTex, i.uv);
 				fixed3 luminance = dot(col.rgb, fixed3(0.299, 0.587, 0.114) );
-				fixed4 greyscale = fixed4(luminance.xxx, 1);
-                return greyscale;
+                return fixed4(luminance.xxx, 1);
             }
             ENDCG
         }
