@@ -18,7 +18,6 @@ public class Eye : MonoBehaviour
 	[JsonIgnore]
 	public IDirector director;
 	Transform ear;
-	GameObject highlightPlane;
 
 	public static Eye Create()
 	{
@@ -44,13 +43,64 @@ public class Eye : MonoBehaviour
 		ear.gameObject.AddComponent<AudioListener>();
 		ear.name = "Ear";
 		ear.transform.SetParent( World.instance.transform );
+	}
 
-		var p = highlightPlane = GameObject.CreatePrimitive( PrimitiveType.Plane );
-		p.transform.SetParent( transform );
-		p.transform.localPosition = new Vector3( 0, 0, 1.0f );
-		p.transform.rotation = Quaternion.Euler( -90, 0, 0 );
-		p.GetComponent<MeshRenderer>().material = new Material( Resources.Load<Shader>( "highlight" ) );
-		p.name = "Highlight Plane";
+	public Material mat;
+	public Texture2D tex;
+	void OnRenderImage( RenderTexture src, RenderTexture dst )
+	{
+		if ( !mat )
+		{
+			//mat = new Material( Resources.Load<Shader>( "Highlight" ) );
+			mat = new Material( Shader.Find( "Unlit/Texture" ) );
+			tex = Resources.Load<Texture2D>( "coins" );
+		}
+
+		//ManualBlit( tex, mat );
+		SaveRT( src, "src.png" );
+		SaveRT( null, "null.png" );
+		SaveRT( RenderTexture.active, "active.png" );
+
+		//Graphics.SetRenderTarget( temp.colorBuffer, src.depthBuffer );
+		//Graphics.Blit( src, temp, mat );
+		//Graphics.Blit( temp, dst );
+		//RenderTexture.ReleaseTemporary( temp );
+
+		Application.Quit();
+	}
+
+	void ManualBlit( Texture texture, Material material )
+	{
+		material.mainTexture = texture;
+
+		GL.PushMatrix();
+		GL.LoadOrtho();
+
+		// activate the first shader pass (in this case we know it is the only pass)
+		material.SetPass( 0 );
+		// draw a quad over whole screen
+		GL.Begin( GL.QUADS );
+		GL.Vertex3( 0, 0, 0 );
+		GL.Vertex3( 1, 0, 0 );
+		GL.Vertex3( 1, 1, 0 );
+		GL.Vertex3( 0, 1, 0 );
+		GL.End();
+	}
+
+	static public void SaveRT( RenderTexture texture, string fileName = "test.png" )
+	{
+		var prevRT = RenderTexture.active;
+		RenderTexture.active = texture;
+		int x = Screen.width, y = Screen.height;
+		if ( texture != null )
+		{
+			x = texture.width;
+			y = texture.height;
+		}
+		Texture2D texture2D = new Texture2D( x, y );
+		texture2D.ReadPixels( new Rect( 0, 0, x, y ), 0, 0 );
+		System.IO.File.WriteAllBytes( fileName, texture2D.EncodeToPNG() );
+		RenderTexture.active = prevRT;
 	}
 
 	private void Update()
@@ -79,8 +129,6 @@ public class Eye : MonoBehaviour
 			director.SetCameraTarget( this );
 			this.director = director;
 		}
-
-		highlightPlane.SetActive( Interface.instance.highlightType != Interface.HighlightType.none );
 	}
 
 	public void GrabFocus( IDirector director )

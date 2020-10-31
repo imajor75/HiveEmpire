@@ -17,7 +17,7 @@
 		AlphaTest Greater 0
 		Stencil 
 		{
-			Ref [_StencilRef]
+			Ref 1/*_StencilRef]*/
 			Comp Always
 			Pass Replace
 		}

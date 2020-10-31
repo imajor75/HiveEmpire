@@ -87,7 +87,7 @@ public class Map : Interface.Panel
 		public void SetTarget( Vector2 position, float zoom, float rotation )
 		{
 			camera.orthographic = true;
-			camera.transform.position = new Vector3( position.x, 20, position.y );
+			camera.transform.position = new Vector3( position.x, 50, position.y );
 			camera.orthographicSize = zoom;
 			camera.transform.rotation = Quaternion.Euler( 90, rotation, 0 );
 		}
