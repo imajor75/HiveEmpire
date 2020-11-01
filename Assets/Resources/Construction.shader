@@ -14,12 +14,12 @@
     {
         Tags { "RenderType"="Opaque" }
         LOD 200
-		//Stencil 
-		//{
-		//	Ref 1/*_StencilRef]*/
-		//	Comp Always
-		//	Pass Replace
-		//}
+		Stencil 
+		{
+			Ref 1/*_StencilRef]*/
+			Comp Always
+			Pass Replace
+		}
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types

@@ -45,17 +45,18 @@ public class Eye : MonoBehaviour
 		ear.transform.SetParent( World.instance.transform );
 	}
 
-	public Material mat;
-	public Texture2D tex;
-	public bool debug = true;
+	Material mat;
+	Texture2D tex;
+	//[SerializeField]
+	//bool debug = true;
 	void OnRenderImage( RenderTexture src, RenderTexture dst )
 	{
-		if ( !debug )
-		{
-			Graphics.Blit( src, dst );
-			return;
-		}
-		debug = false;
+		//if ( !debug || Time.time == 0 )
+		//{
+		//	Graphics.Blit( src, dst );
+		//	return;
+		//}
+		//debug = false;
 
 		if ( !mat )
 		{
@@ -64,32 +65,38 @@ public class Eye : MonoBehaviour
 			tex = Resources.Load<Texture2D>( "coin" );
 		}
 
-		//var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
+		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
 
-		SaveRT( src, "src" );
+		//SaveRT( src, "src" );
 		/*
 		SaveRT( null, "null" );
-		SaveRT( RenderTexture.active, "active" );
+		SaveRT( RenderTexture.active, "active" );*/
 
-		ManualBlit( tex, src, mat );
-		SaveRT( src, "src_prep" );
+		//ManualBlit( tex, src, mat );
+		Graphics.Blit( src, tempRT );
+		Graphics.Blit( tempRT, src, mat );
+		Graphics.Blit( src, dst );
 
-		Graphics.SetRenderTarget( tempRT.colorBuffer, src.depthBuffer );
-		ManualBlit( src, tempRT, mat );
+		//SaveRT( src, "src_after" );
+		//SaveRT( dst, "dst" );
+		//SaveRT( tempRT, "temp" );
+
+		//Graphics.Blit( tex, tempRT, mat );		
+		//Graphics.SetRenderTarget( tempRT.colorBuffer, src.depthBuffer );
+		//ManualBlit( src, tempRT, mat );
 		//Graphics.Blit( src, tempRT, mat );
 
-		SaveRT( src, "src_after" );
-		SaveRT( null, "null_after" );
-		SaveRT( RenderTexture.active, "active_after" );
-		SaveRT( tempRT, "temp" );
+		//SaveRT( null, "null_after" );
+		//SaveRT( RenderTexture.active, "active_after" );
+		//SaveRT( tempRT, "temp" );
 
-		*/
+
 		//Graphics.SetRenderTarget( temp.colorBuffer, src.depthBuffer );
 		//Graphics.Blit( src, temp, mat );
 		//Graphics.Blit( temp, dst );
 		//RenderTexture.ReleaseTemporary( temp );
 
-		//RenderTexture.ReleaseTemporary( tempRT );
+		RenderTexture.ReleaseTemporary( tempRT );
 	}
 
 	void ManualBlit( Texture source, RenderTexture target, Material material )
@@ -107,10 +114,10 @@ public class Eye : MonoBehaviour
 		print( "SetPass: " + b );
 		// draw a quad over whole screen
 		GL.Begin( GL.QUADS );
-		GL.TexCoord2( 0f, 0f ); GL.Vertex3( 0f, 0f, 0f );
-		GL.TexCoord2( 0f, 1f ); GL.Vertex3( 0f, 1f, 0f );
-		GL.TexCoord2( 1f, 1f ); GL.Vertex3( 1f, 1f, 0f );
-		GL.TexCoord2( 1f, 0f );	GL.Vertex3( 1f, 0f, 0f );
+		GL.TexCoord2( 0f, 0f ); GL.Vertex3( 0.2f, 0.2f, 0f );
+		GL.TexCoord2( 0f, 1f ); GL.Vertex3( 0.2f, 0.8f, 0f );
+		GL.TexCoord2( 1f, 1f ); GL.Vertex3( 0.8f, 0.8f, 0f );
+		GL.TexCoord2( 1f, 0f );	GL.Vertex3( 0.8f, 0.2f, 0f );
 		GL.End();
 		GL.PopMatrix();
 		//RenderTexture.active = prevRT;

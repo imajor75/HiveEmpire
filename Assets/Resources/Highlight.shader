@@ -12,11 +12,11 @@
 		ZWrite Off
 		Cull Off
 
-		//Stencil
-		//{
-		//	Ref 0
-		//	Comp Equal
-		//}
+		Stencil
+		{
+			Ref 0
+			Comp Equal
+		}
 
         Pass
         {
@@ -41,6 +41,7 @@
 			};
 
 			sampler _MainTex;
+			float offset = 0.03f;
 
             v2f vert (appdata v)
             {
@@ -52,9 +53,12 @@
 
 			fixed4 frag(v2f i) : SV_Target
 			{
-				fixed4 col = tex2D(_MainTex, i.uv);
-				fixed3 luminance = dot(col.rgb, fixed3(0.299, 0.587, 0.114) );
-                return fixed4(luminance.xxx, 1);
+				float4 col = tex2D(_MainTex, i.uv);
+				col += tex2D(_MainTex, i.uv + float2(0, -offset));
+				col += tex2D(_MainTex, i.uv + float2(0, offset));
+				col += tex2D(_MainTex, i.uv + float2(-offset, 0));
+				col += tex2D(_MainTex, i.uv + float2(offset, 0));
+				return col * 0.2f;
             }
             ENDCG
         }
