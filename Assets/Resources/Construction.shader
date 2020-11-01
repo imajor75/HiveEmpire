@@ -16,7 +16,7 @@
         LOD 200
 		Stencil 
 		{
-			Ref 1/*_StencilRef]*/
+			Ref [_StencilRef]
 			Comp Always
 			Pass Replace
 		}

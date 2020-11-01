@@ -172,6 +172,7 @@ public class Interface : Assert.Base
 		Workshop.Initialize();
 		Stock.Initialize();
 		GuardHouse.Initialize();
+		Eye.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 
@@ -321,7 +322,7 @@ public class Interface : Assert.Base
 			highlightVolume.transform.SetParent( World.instance.transform );
 			var f = highlightVolume.AddComponent<MeshFilter>();
 			var r = highlightVolume.AddComponent<MeshRenderer>();
-			//r.material = highlightMaterial;
+			r.material = highlightMaterial;
 			m = f.mesh = new Mesh();
 		}
 		else
@@ -1967,8 +1968,6 @@ public class Interface : Assert.Base
 			image.color = new Color( 1, 1, 1, 0 );
 
 			inputHandler = this;
-			
-			highlightMaterial = new Material( Resources.Load<Shader>( "highlight" ) );
 		}
 
 		void Update()

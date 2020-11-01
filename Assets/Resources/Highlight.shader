@@ -41,7 +41,7 @@
 			};
 
 			sampler _MainTex;
-			float offset = 0.03f;
+			static float offset = 0.007f;
 
             v2f vert (appdata v)
             {
@@ -58,7 +58,7 @@
 				col += tex2D(_MainTex, i.uv + float2(0, offset));
 				col += tex2D(_MainTex, i.uv + float2(-offset, 0));
 				col += tex2D(_MainTex, i.uv + float2(offset, 0));
-				return col * 0.2f;
+				return col * 0.15f;
             }
             ENDCG
         }

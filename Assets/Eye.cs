@@ -18,12 +18,20 @@ public class Eye : MonoBehaviour
 	[JsonIgnore]
 	public IDirector director;
 	Transform ear;
+	static Material highlightMaterial;
+	static Material smoothMaterial;
 
 	public static Eye Create()
 	{
 		var eyeObject = new GameObject();
 		Eye eye = eyeObject.AddComponent<Eye>();
 		return eye;
+	}
+
+	public static void Initialize()
+	{
+		highlightMaterial = new Material( Resources.Load<Shader>( "Highlight" ) );
+		smoothMaterial = new Material( Resources.Load<Shader>( "Smooth" ) );
 	}
 
 	public Eye Setup( World world )
@@ -45,12 +53,16 @@ public class Eye : MonoBehaviour
 		ear.transform.SetParent( World.instance.transform );
 	}
 
-	Material mat;
-	Texture2D tex;
+	//Texture2D tex;
 	//[SerializeField]
 	//bool debug = true;
 	void OnRenderImage( RenderTexture src, RenderTexture dst )
 	{
+		if ( Interface.instance.highlightType == Interface.HighlightType.none )
+		{
+			Graphics.Blit( src, dst );
+			return;
+		}
 		//if ( !debug || Time.time == 0 )
 		//{
 		//	Graphics.Blit( src, dst );
@@ -58,12 +70,12 @@ public class Eye : MonoBehaviour
 		//}
 		//debug = false;
 
-		if ( !mat )
-		{
-			mat = new Material( Resources.Load<Shader>( "Highlight" ) );
-			//mat = new Material( Shader.Find( "Unlit/Texture" ) );
-			tex = Resources.Load<Texture2D>( "coin" );
-		}
+		//if ( !mat )
+		//{
+		//	mat = new Material( Resources.Load<Shader>( "Highlight" ) );
+		//	//mat = new Material( Shader.Find( "Unlit/Texture" ) );
+		//	//tex = Resources.Load<Texture2D>( "coin" );
+		//}
 
 		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
 
@@ -73,8 +85,8 @@ public class Eye : MonoBehaviour
 		SaveRT( RenderTexture.active, "active" );*/
 
 		//ManualBlit( tex, src, mat );
-		Graphics.Blit( src, tempRT );
-		Graphics.Blit( tempRT, src, mat );
+		Graphics.Blit( src, tempRT, smoothMaterial );
+		Graphics.Blit( tempRT, src, highlightMaterial );
 		Graphics.Blit( src, dst );
 
 		//SaveRT( src, "src_after" );
