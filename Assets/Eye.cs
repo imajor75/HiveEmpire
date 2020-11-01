@@ -64,30 +64,32 @@ public class Eye : MonoBehaviour
 			tex = Resources.Load<Texture2D>( "coin" );
 		}
 
-		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
+		//var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
 
-		SaveRT( src, "src.png" );
-		SaveRT( null, "null.png" );
-		SaveRT( RenderTexture.active, "active.png" );
+		SaveRT( src, "src" );
+		/*
+		SaveRT( null, "null" );
+		SaveRT( RenderTexture.active, "active" );
 
 		ManualBlit( tex, src, mat );
-		SaveRT( src, "src_prep.png" );
+		SaveRT( src, "src_prep" );
 
 		Graphics.SetRenderTarget( tempRT.colorBuffer, src.depthBuffer );
 		ManualBlit( src, tempRT, mat );
 		//Graphics.Blit( src, tempRT, mat );
 
-		SaveRT( src, "src_after.png" );
-		SaveRT( null, "null_after.png" );
-		SaveRT( RenderTexture.active, "active_after.png" );
-		SaveRT( tempRT, "temp.png" );
+		SaveRT( src, "src_after" );
+		SaveRT( null, "null_after" );
+		SaveRT( RenderTexture.active, "active_after" );
+		SaveRT( tempRT, "temp" );
 
+		*/
 		//Graphics.SetRenderTarget( temp.colorBuffer, src.depthBuffer );
 		//Graphics.Blit( src, temp, mat );
 		//Graphics.Blit( temp, dst );
 		//RenderTexture.ReleaseTemporary( temp );
 
-		RenderTexture.ReleaseTemporary( tempRT );
+		//RenderTexture.ReleaseTemporary( tempRT );
 	}
 
 	void ManualBlit( Texture source, RenderTexture target, Material material )
@@ -114,7 +116,9 @@ public class Eye : MonoBehaviour
 		//RenderTexture.active = prevRT;
 	}
 
-	static public void SaveRT( RenderTexture texture, string fileName = "test.png" )
+	[JsonIgnore]
+	public Texture2D saveTexture;
+	public void SaveRT( RenderTexture texture, string fileName = "test" )
 	{
 		var prevRT = RenderTexture.active;
 		RenderTexture.active = texture;
@@ -124,9 +128,29 @@ public class Eye : MonoBehaviour
 			x = texture.width;
 			y = texture.height;
 		}
-		Texture2D texture2D = new Texture2D( x, y );
-		texture2D.ReadPixels( new Rect( 0, 0, x, y ), 0, 0 );
-		System.IO.File.WriteAllBytes( fileName, texture2D.EncodeToPNG() );
+		saveTexture = new Texture2D( x, y );
+		saveTexture.ReadPixels( new Rect( 0, 0, x, y ), 0, 0 );
+
+		//for ( int xx = 0; xx < saveTexture.width; xx++ )
+		//{
+		//	for ( int yy = 0; yy < saveTexture.height; yy++ )
+		//	{
+		//		var c = saveTexture.GetPixel( xx, yy );
+		//		if ( c.a != 1 )
+		//		{
+		//			int h = 7;
+		//		}
+		//		if ( xx < 300 )
+		//		{
+		//			c.a = 1;
+		//			saveTexture.SetPixel( xx, yy, c );
+		//		}
+		//	}
+		//}
+		//saveTexture.Apply();
+
+		System.IO.File.WriteAllBytes( fileName + ".png", saveTexture.EncodeToPNG() );
+		System.IO.File.WriteAllBytes( fileName + ".jpg", saveTexture.EncodeToJPG() );
 		RenderTexture.active = prevRT;
 	}
 

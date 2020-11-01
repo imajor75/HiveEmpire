@@ -154,7 +154,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panels: []
   world: {fileID: 0}
-  selectedNode: {fileID: 0}
   selectedWorkshopType: -1
   viewport: {fileID: 0}
   debug: {fileID: 0}
@@ -162,6 +161,8 @@ MonoBehaviour:
   mainPlayer: {fileID: 0}
   tooltip: {fileID: 0}
   autoSave: 15000
+  highlightType: 0
+  highlightOwner: {fileID: 0}
 --- !u!4 &1680099500
 Transform:
   m_ObjectHideFlags: 0

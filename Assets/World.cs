@@ -252,6 +252,21 @@ public class World : MonoBehaviour
 		foreach ( Transform child in gameObject.transform )
 			SetLayerRecursive( child.gameObject, layer );
 	}
+
+	public static void SetMaterialRecursive( GameObject gameObject, Material material )
+	{
+		var renderer = gameObject.GetComponent<MeshRenderer>();
+		if ( renderer )
+		{
+			Material[] materials = new Material[renderer.materials.Length];
+			for ( int i = 0; i < materials.Length; i++ )
+				materials[i] = material;
+			renderer.materials = materials;
+		}
+		foreach ( Transform child in gameObject.transform )
+			SetMaterialRecursive( child.gameObject, material );
+	}
+
 	public enum BlendMode
 	{
 		Opaque,

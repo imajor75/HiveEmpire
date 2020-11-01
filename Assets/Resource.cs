@@ -26,6 +26,7 @@ public class Resource : Assert.Base
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
+	static Material material;
 
 	public enum Type
 	{
@@ -75,6 +76,8 @@ public class Resource : Assert.Base
 			"bird3", 1000, Type.tree,
 			"bird4", 1000, Type.tree };
 		ambientSounds.Fill( sounds );
+
+		material = new Material( Resources.Load<Shader>( "Resource" ) );
 	}
 
 	static public Resource Create()
@@ -147,6 +150,7 @@ public class Resource : Assert.Base
 				body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
 			body.transform.SetParent( transform );
 			body.transform.localPosition = Vector3.zero;
+			//World.SetMaterialRecursive( body, material );
 		}
 
 		soundSource = World.CreateSoundSource( this );
