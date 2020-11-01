@@ -301,9 +301,19 @@ abstract public class Building : Assert.Base
 		UpdateBody();
 		renderers = new List<MeshRenderer>();
 		ScanChildObject( transform );
-		foreach( var renderer in renderers )
+		float lowerLimit = transform.position.y;
+		float upperLimit = lowerLimit + height;
+		float level = upperLimit;
+		if ( !construction.done )
+			level = lowerLimit + ( upperLimit - lowerLimit ) * construction.progress;
+		foreach ( var renderer in renderers )
+		{
 			foreach ( var m in renderer.materials )
+			{
 				m.shader = Construction.shader;
+				m.SetFloat( Construction.sliceLevelID, level );
+			}
+		}
 
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
