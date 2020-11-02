@@ -145,13 +145,13 @@ public class Interface : Assert.Base
 		"simple UI & icons/box/smallFrame", Icon.smallFrame };
 		iconTable.Fill( table );
 		Frame.Initialize();
-		print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
-#if DEVELOPMENT_BUILD
-		print( "DEVELOPMENT_BUILD" );
-#endif
-#if DEBUG
-		print( "DEBUG" );
-#endif
+//			print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
+//#if DEVELOPMENT_BUILD
+//		print( "DEVELOPMENT_BUILD" );
+//#endif
+//#if DEBUG
+//		print( "DEBUG" );
+//#endif
 
 		materialUIPath = new Material( World.defaultMapShader );
 		materialUIPath.mainTexture = Resources.Load<Texture2D>( "uipath" );
@@ -813,6 +813,8 @@ public class Interface : Assert.Base
 				if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
 				{
 					area.center = null;
+					if ( instance.highlightArea == area )
+						instance.highlightType = HighlightType.none;
 					return;
 				}
 				area.center = World.instance.ground.nodes[0];
@@ -835,13 +837,23 @@ public class Interface : Assert.Base
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( instance.viewport.inputHandler != this as InputHandler && instance.highlightArea == area )
+				if ( instance.viewport.inputHandler != this && instance.highlightArea == area )
 					instance.highlightType = HighlightType.none;
 			}
 
 			void Update()
 			{
 				image.color = area.center != null ? Color.green : Color.grey;
+				if ( Input.GetKeyDown( KeyCode.Comma ) )
+				{
+					if ( area.radius > 1 )
+						area.radius--;
+				}
+				if ( Input.GetKeyDown( KeyCode.Period ) )
+				{
+					if ( area.radius < 8 )
+						area.radius++;
+				}
 			}
 		}
 
@@ -1880,7 +1892,10 @@ public class Interface : Assert.Base
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
 			else
+			{
+				item.assert.IsNotNull( item.worker );
 				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
+			}
 		}
 
 		public override void Close()

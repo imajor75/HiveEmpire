@@ -151,7 +151,9 @@ public class World : MonoBehaviour
 		{
 			var list = Resources.FindObjectsOfTypeAll<Item>();
 			foreach ( var o in list )
+			{
 				o.Validate();
+			}
 		}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();

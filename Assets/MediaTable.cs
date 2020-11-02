@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
@@ -15,8 +16,12 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 
 		public void Load( string file = "" )
 		{
+			bool reportError = false;
 			if ( file == "" )
+			{
 				file = this.file;
+				reportError = true;
+			}
 			if ( typeof( MediaType ) == typeof( Sprite ) )
 			{
 				var texture = Resources.Load<Texture2D>( file );
@@ -24,11 +29,8 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			}
 			else
 				data = Resources.Load<MediaType>( file );
-			if ( data == null )
-			{
+			if ( data == null && reportError )
 				Debug.Log( "Resource " + file + " not found" );
-				return;
-			}
 		}
 	}
 

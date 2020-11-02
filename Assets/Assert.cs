@@ -36,14 +36,14 @@ public class Assert
 	[Conditional( "DEBUG" )]
 	public void IsNull<T>( T reference, string message = "" )
 	{
-		if ( reference != null )
+		if ( reference != null && !reference.Equals( null ) )
 			Failed( message );
 	}
 
 	[Conditional( "DEBUG" )]
 	public void IsNotNull<T>( T reference, string message = "" )
 	{
-		if ( reference == null )
+		if ( reference == null || reference.Equals( null ) )
 			Failed( message );
 	}
 
