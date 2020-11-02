@@ -53,124 +53,31 @@ public class Eye : MonoBehaviour
 		ear.transform.SetParent( World.instance.transform );
 	}
 
-	//Texture2D tex;
-	//[SerializeField]
-	//bool debug = true;
 	void OnRenderImage( RenderTexture src, RenderTexture dst )
 	{
+		// TODO Do the postprocess with less blit calls
+		// This should be possible theoretically with a single blit from src
+		// to dst using the stencil from src. But since the stencil values are
+		// from the destination, a mixed rendertarget is needed, where the color
+		// buffer is from dst, but the depth/stencil is from src. Theoretically
+		// Graphics.SetRenderTarget can use RenderBuffers from two different
+		// render textures, but Graphics.Blit will ruin this, so a manual blit
+		// needs to be used (using GL.Begin(GL.QUADS) etc..). Unfortunately the 
+		// practic shows that it is not working for unknown reasons. This needs 
+		// to be tested with future versions of unity.
 		if ( Interface.instance.highlightType == Interface.HighlightType.none )
 		{
 			Graphics.Blit( src, dst );
 			return;
 		}
-		//if ( !debug || Time.time == 0 )
-		//{
-		//	Graphics.Blit( src, dst );
-		//	return;
-		//}
-		//debug = false;
-
-		//if ( !mat )
-		//{
-		//	mat = new Material( Resources.Load<Shader>( "Highlight" ) );
-		//	//mat = new Material( Shader.Find( "Unlit/Texture" ) );
-		//	//tex = Resources.Load<Texture2D>( "coin" );
-		//}
 
 		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
 
-		//SaveRT( src, "src" );
-		/*
-		SaveRT( null, "null" );
-		SaveRT( RenderTexture.active, "active" );*/
-
-		//ManualBlit( tex, src, mat );
 		Graphics.Blit( src, tempRT, smoothMaterial );
 		Graphics.Blit( tempRT, src, highlightMaterial );
 		Graphics.Blit( src, dst );
 
-		//SaveRT( src, "src_after" );
-		//SaveRT( dst, "dst" );
-		//SaveRT( tempRT, "temp" );
-
-		//Graphics.Blit( tex, tempRT, mat );		
-		//Graphics.SetRenderTarget( tempRT.colorBuffer, src.depthBuffer );
-		//ManualBlit( src, tempRT, mat );
-		//Graphics.Blit( src, tempRT, mat );
-
-		//SaveRT( null, "null_after" );
-		//SaveRT( RenderTexture.active, "active_after" );
-		//SaveRT( tempRT, "temp" );
-
-
-		//Graphics.SetRenderTarget( temp.colorBuffer, src.depthBuffer );
-		//Graphics.Blit( src, temp, mat );
-		//Graphics.Blit( temp, dst );
-		//RenderTexture.ReleaseTemporary( temp );
-
 		RenderTexture.ReleaseTemporary( tempRT );
-	}
-
-	void ManualBlit( Texture source, RenderTexture target, Material material )
-	{
-		//var prevRT = RenderTexture.active;
-		//RenderTexture.active = target;
-		Graphics.SetRenderTarget( target );
-		material.mainTexture = source;
-
-		GL.PushMatrix();
-		GL.LoadOrtho();
-
-		// activate the first shader pass (in this case we know it is the only pass)
-		bool b = material.SetPass( 0 );
-		print( "SetPass: " + b );
-		// draw a quad over whole screen
-		GL.Begin( GL.QUADS );
-		GL.TexCoord2( 0f, 0f ); GL.Vertex3( 0.2f, 0.2f, 0f );
-		GL.TexCoord2( 0f, 1f ); GL.Vertex3( 0.2f, 0.8f, 0f );
-		GL.TexCoord2( 1f, 1f ); GL.Vertex3( 0.8f, 0.8f, 0f );
-		GL.TexCoord2( 1f, 0f );	GL.Vertex3( 0.8f, 0.2f, 0f );
-		GL.End();
-		GL.PopMatrix();
-		//RenderTexture.active = prevRT;
-	}
-
-	[JsonIgnore]
-	public Texture2D saveTexture;
-	public void SaveRT( RenderTexture texture, string fileName = "test" )
-	{
-		var prevRT = RenderTexture.active;
-		RenderTexture.active = texture;
-		int x = Screen.width, y = Screen.height;
-		if ( texture != null )
-		{
-			x = texture.width;
-			y = texture.height;
-		}
-		saveTexture = new Texture2D( x, y );
-		saveTexture.ReadPixels( new Rect( 0, 0, x, y ), 0, 0 );
-
-		//for ( int xx = 0; xx < saveTexture.width; xx++ )
-		//{
-		//	for ( int yy = 0; yy < saveTexture.height; yy++ )
-		//	{
-		//		var c = saveTexture.GetPixel( xx, yy );
-		//		if ( c.a != 1 )
-		//		{
-		//			int h = 7;
-		//		}
-		//		if ( xx < 300 )
-		//		{
-		//			c.a = 1;
-		//			saveTexture.SetPixel( xx, yy, c );
-		//		}
-		//	}
-		//}
-		//saveTexture.Apply();
-
-		System.IO.File.WriteAllBytes( fileName + ".png", saveTexture.EncodeToPNG() );
-		System.IO.File.WriteAllBytes( fileName + ".jpg", saveTexture.EncodeToJPG() );
-		RenderTexture.active = prevRT;
 	}
 
 	private void Update()
