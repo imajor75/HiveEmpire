@@ -80,6 +80,7 @@ public class Map : Interface.Panel
 			camera.transform.SetParent( World.instance.ground.transform );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
+			camera.gameObject.AddComponent<CameraHighlight>();
 			if ( fullScreen )
 				Interface.instance.viewport.SetCamera( camera );
 		}

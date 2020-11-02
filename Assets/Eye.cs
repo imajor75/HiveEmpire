@@ -18,20 +18,12 @@ public class Eye : MonoBehaviour
 	[JsonIgnore]
 	public IDirector director;
 	Transform ear;
-	static Material highlightMaterial;
-	static Material smoothMaterial;
 
 	public static Eye Create()
 	{
 		var eyeObject = new GameObject();
 		Eye eye = eyeObject.AddComponent<Eye>();
 		return eye;
-	}
-
-	public static void Initialize()
-	{
-		highlightMaterial = new Material( Resources.Load<Shader>( "Highlight" ) );
-		smoothMaterial = new Material( Resources.Load<Shader>( "Blur" ) );
 	}
 
 	public Eye Setup( World world )
@@ -46,38 +38,12 @@ public class Eye : MonoBehaviour
 		camera = GetComponent<Camera>();
 		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
 		transform.SetParent( World.instance.transform );
+		gameObject.AddComponent<CameraHighlight>();
 
 		ear = new GameObject().transform;
 		ear.gameObject.AddComponent<AudioListener>();
 		ear.name = "Ear";
 		ear.transform.SetParent( World.instance.transform );
-	}
-
-	void OnRenderImage( RenderTexture src, RenderTexture dst )
-	{
-		// TODO Do the postprocess with less blit calls
-		// This should be possible theoretically with a single blit from src
-		// to dst using the stencil from src. But since the stencil values are
-		// from the destination, a mixed rendertarget is needed, where the color
-		// buffer is from dst, but the depth/stencil is from src. Theoretically
-		// Graphics.SetRenderTarget can use RenderBuffers from two different
-		// render textures, but Graphics.Blit will ruin this, so a manual blit
-		// needs to be used (using GL.Begin(GL.QUADS) etc..). Unfortunately the 
-		// practic shows that it is not working for unknown reasons. This needs 
-		// to be tested with future versions of unity.
-		if ( Interface.instance.highlightType == Interface.HighlightType.none )
-		{
-			Graphics.Blit( src, dst );
-			return;
-		}
-
-		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
-
-		Graphics.Blit( src, tempRT, smoothMaterial );
-		Graphics.Blit( tempRT, src, highlightMaterial );
-		Graphics.Blit( src, dst );
-
-		RenderTexture.ReleaseTemporary( tempRT );
 	}
 
 	private void Update()
@@ -191,3 +157,43 @@ public class Eye : MonoBehaviour
 		void SetCameraTarget( Eye eye );
 	}
 }
+
+public class CameraHighlight : Assert.Base
+{
+	static Material highlightMaterial;
+	static Material blurMaterial;
+
+	public static void Initialize()
+	{
+		highlightMaterial = new Material( Resources.Load<Shader>( "Highlight" ) );
+		blurMaterial = new Material( Resources.Load<Shader>( "Blur" ) );
+	}
+
+	void OnRenderImage( RenderTexture src, RenderTexture dst )
+	{
+		// TODO Do the postprocess with less blit calls
+		// This should be possible theoretically with a single blit from src
+		// to dst using the stencil from src. But since the stencil values are
+		// from the destination, a mixed rendertarget is needed, where the color
+		// buffer is from dst, but the depth/stencil is from src. Theoretically
+		// Graphics.SetRenderTarget can use RenderBuffers from two different
+		// render textures, but Graphics.Blit will ruin this, so a manual blit
+		// needs to be used (using GL.Begin(GL.QUADS) etc..). Unfortunately the 
+		// practic shows that it is not working for unknown reasons. This needs 
+		// to be tested withmap future versions of unity.
+		if ( Interface.instance.highlightType == Interface.HighlightType.none )
+		{
+			Graphics.Blit( src, dst );
+			return;
+		}
+
+		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
+
+		Graphics.Blit( src, tempRT, blurMaterial );
+		Graphics.Blit( tempRT, src, highlightMaterial );
+		Graphics.Blit( src, dst );
+
+		RenderTexture.ReleaseTemporary( tempRT );
+	}
+}
+

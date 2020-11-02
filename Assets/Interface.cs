@@ -172,7 +172,7 @@ public class Interface : Assert.Base
 		Workshop.Initialize();
 		Stock.Initialize();
 		GuardHouse.Initialize();
-		Eye.Initialize();
+		CameraHighlight.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 
