@@ -3,10 +3,11 @@
 	Properties
 	{
 		_MainTex("Main Texture", 2D) = "white" {}
+		[IntRange] _StencilRef("Stencil Reference Value", Range(0,255)) = 0
 	}
-		
+
 	SubShader
-    {
+	{
 		LOD 100
 		ZTest Always
 		ZWrite Off
@@ -14,7 +15,7 @@
 
 		Stencil
 		{
-			Ref 0
+			Ref [_StencilRef]
 			Comp Equal
 		}
 

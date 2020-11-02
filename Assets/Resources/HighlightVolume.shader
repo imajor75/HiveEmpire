@@ -14,7 +14,7 @@
 			{
 				Ref 1
 				Comp Always
-				Pass IncrSat
+				Pass DecrWrap
 			}
 		}
 		Pass
@@ -25,7 +25,7 @@
 			{
 				Ref 1
 				Comp Always
-				Pass DecrSat
+				Pass IncrWrap
 			}
 		}
 	}

@@ -37,6 +37,8 @@ public class Eye : MonoBehaviour
 		name = "Eye";
 		camera = GetComponent<Camera>();
 		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
+		camera.farClipPlane = 50;
+		camera.nearClipPlane = 0.001f;
 		transform.SetParent( World.instance.transform );
 		gameObject.AddComponent<CameraHighlight>();
 
@@ -160,13 +162,30 @@ public class Eye : MonoBehaviour
 
 public class CameraHighlight : Assert.Base
 {
-	static Material highlightMaterial;
+	public static Material highlightMaterial;
 	static Material blurMaterial;
+	static int highLightStencilRef;
 
 	public static void Initialize()
 	{
 		highlightMaterial = new Material( Resources.Load<Shader>( "Highlight" ) );
 		blurMaterial = new Material( Resources.Load<Shader>( "Blur" ) );
+		highLightStencilRef = Shader.PropertyToID( "_StencilRef" );
+	}
+
+	void OnPreRender()
+	{
+		var volume = Interface.instance.highlightVolume;
+		if ( volume == null )
+			return;
+		var collider = volume.GetComponent<MeshCollider>();
+		var eye = transform.position;
+		var center = Interface.instance.highlightArea.center.Position();
+		eye = volume.transform.InverseTransformPoint( eye );
+		center = volume.transform.InverseTransformPoint( center );
+		var ray = new Ray( eye, center - eye );
+		bool outside = collider.Raycast( ray, out _, 100 );
+		highlightMaterial.SetInt( highLightStencilRef, outside ? 0 : 1 );
 	}
 
 	void OnRenderImage( RenderTexture src, RenderTexture dst )

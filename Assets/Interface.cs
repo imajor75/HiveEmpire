@@ -30,7 +30,7 @@ public class Interface : Assert.Base
 	const int autoSaveInterval = 15000;
 	public HighlightType highlightType;
 	public Ground.Area highlightArea;
-	GameObject highlightVolume;
+	public GameObject highlightVolume;
 	GroundNode highlightVolumeCenter;
 	int highlightVolumeRadius;
 	static Material highlightMaterial;
@@ -294,10 +294,10 @@ public class Interface : Assert.Base
 		if ( Input.GetKeyDown( KeyCode.Alpha9 ) )
 			SetHeightStrips( !heightStrips );
 
-		UpdateHighligh();
+		CheckHighlight();
 	}
 
-	void UpdateHighligh()
+	void CheckHighlight()
 	{
 		if ( highlightOwner == null )
 			highlightType = HighlightType.none;
@@ -308,13 +308,18 @@ public class Interface : Assert.Base
 			return;
 		}
 
+		UpdateHighligh();
+	}
+
+	void UpdateHighligh()
+	{
 		if ( highlightVolume && highlightVolumeCenter == highlightArea.center && highlightVolumeRadius == highlightArea.radius )
 			return;
 
 		highlightVolumeCenter = highlightArea.center;
 		highlightVolumeRadius = highlightArea.radius;
 
-		Mesh m = null;
+		Mesh m;
 		if ( highlightVolume == null )
 		{
 			highlightVolume = new GameObject();
@@ -324,11 +329,12 @@ public class Interface : Assert.Base
 			var r = highlightVolume.AddComponent<MeshRenderer>();
 			r.material = highlightMaterial;
 			m = f.mesh = new Mesh();
+			var c = highlightVolume.AddComponent<MeshCollider>();
+			c.convex = true;
+			c.sharedMesh = m;
 		}
 		else
-		{
 			m = highlightVolume.GetComponent<MeshFilter>().mesh;
-		}
 
 		var vertices = new Vector3[GroundNode.neighbourCount * 2];
 		float cx = highlightVolumeCenter.Position().x;
@@ -394,6 +400,8 @@ public class Interface : Assert.Base
 		triangles[cap++] = 5;
 		triangles[cap++] = 9;
 		m.triangles = triangles;
+
+		highlightVolume.GetComponent<MeshCollider>().sharedMesh = m;
 	}
 
 	public static GameObject CreateUIPath( Path path )
