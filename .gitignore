@@ -45,3 +45,5 @@ Corridor/Library/ShaderCache/
 Corridor/Library/metadata/
 /test.json
 windowsbuild
+/*.jpg
+/*.png

@@ -31,7 +31,7 @@ public class Eye : MonoBehaviour
 	public static void Initialize()
 	{
 		highlightMaterial = new Material( Resources.Load<Shader>( "Highlight" ) );
-		smoothMaterial = new Material( Resources.Load<Shader>( "Smooth" ) );
+		smoothMaterial = new Material( Resources.Load<Shader>( "Blur" ) );
 	}
 
 	public Eye Setup( World world )

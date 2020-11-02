@@ -1,4 +1,4 @@
-﻿Shader "Unlit/Smooth"
+﻿Shader "Unlit/Blur"
 {
 	Properties
 	{
