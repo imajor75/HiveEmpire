@@ -172,6 +172,7 @@ public class Interface : Assert.Base
 		Workshop.Initialize();
 		Stock.Initialize();
 		GuardHouse.Initialize();
+		Eye.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 
@@ -219,9 +220,9 @@ public class Interface : Assert.Base
 
 	void Load( string fileName )
 	{
+		print( "Loading " + fileName );
 		world.Load( fileName );
 		mainPlayer = world.players[0];
-		print( fileName + " is loaded" );
 	}
 
 	void Save( string fileName = "" )
@@ -338,12 +339,12 @@ public class Interface : Assert.Base
 		{
 			float x = cx + corners[i, 0] * d - corners[i, 1] * d / 2;
 			float y = cy + corners[i, 1] * d;
-			vertices[i * 2 + 0] = new Vector3( x, -100, y );
-			vertices[i * 2 + 1] = new Vector3( x, +100, y );
+			vertices[i * 2 + 0] = new Vector3( x, -20, y );
+			vertices[i * 2 + 1] = new Vector3( x, +20, y );
 		}
 		m.vertices = vertices;
 
-		var triangles = new int[GroundNode.neighbourCount * 2 * 3];
+		var triangles = new int[GroundNode.neighbourCount * 2 * 3 + 2 * 3 * (GroundNode.neighbourCount - 2)];
 		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
 		{
 			int a = i * 2;
@@ -359,6 +360,39 @@ public class Interface : Assert.Base
 			triangles[i * 2 * 3 + 4] = b + 1;
 			triangles[i * 2 * 3 + 5] = b + 0;
 		}
+		assert.AreEqual( GroundNode.neighbourCount, 6 );
+		int cap = GroundNode.neighbourCount * 6;
+		triangles[cap++] = 0;
+		triangles[cap++] = 2;
+		triangles[cap++] = 10;
+
+		triangles[cap++] = 10;
+		triangles[cap++] = 2;
+		triangles[cap++] = 8;
+
+		triangles[cap++] = 8;
+		triangles[cap++] = 2;
+		triangles[cap++] = 4;
+
+		triangles[cap++] = 8;
+		triangles[cap++] = 4;
+		triangles[cap++] = 6;
+
+		triangles[cap++] = 11;
+		triangles[cap++] = 3;
+		triangles[cap++] = 1;
+
+		triangles[cap++] = 9;
+		triangles[cap++] = 3;
+		triangles[cap++] = 11;
+
+		triangles[cap++] = 5;
+		triangles[cap++] = 3;
+		triangles[cap++] = 9;
+
+		triangles[cap++] = 7;
+		triangles[cap++] = 5;
+		triangles[cap++] = 9;
 		m.triangles = triangles;
 	}
 
@@ -754,7 +788,8 @@ public class Interface : Assert.Base
 
 			public bool OnMovingOverNode( GroundNode node )
 			{
-				area.center = node;
+				if ( node )
+					area.center = node;
 				return true;
 			}
 
@@ -1870,6 +1905,7 @@ public class Interface : Assert.Base
 		GameObject cursorFlag;
 		GameObject cursorBuilding;
 		public new Camera camera;
+
 		public enum CursorType
 		{
 			nothing,
@@ -2220,7 +2256,7 @@ public class Interface : Assert.Base
 				efficiency[i].text = itemEfficiency.ToString( "n2" );
 			};
 
-			finalEfficiency.text = player.totalEfficiency.ToString( "n2" );
+			finalEfficiency.text = player.averageEfficiency.ToString( "n2" );
 		}
 	}
 

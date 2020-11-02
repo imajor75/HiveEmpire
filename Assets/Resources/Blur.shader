@@ -1,4 +1,4 @@
-﻿Shader "Unlit/Highlight"
+﻿Shader "Unlit/Blur"
 {
 	Properties
 	{
@@ -11,12 +11,6 @@
 		ZTest Always
 		ZWrite Off
 		Cull Off
-
-		Stencil
-		{
-			Ref 0
-			Comp Equal
-		}
 
         Pass
         {
@@ -41,7 +35,7 @@
 			};
 
 			sampler _MainTex;
-			static float offset = 0.007f;
+			static float offset = 0.003f;
 
             v2f vert (appdata v)
             {
@@ -54,11 +48,11 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float4 col = tex2D(_MainTex, i.uv);
-				col += tex2D(_MainTex, i.uv + float2(0, -offset));
-				col += tex2D(_MainTex, i.uv + float2(0, offset));
-				col += tex2D(_MainTex, i.uv + float2(-offset, 0));
-				col += tex2D(_MainTex, i.uv + float2(offset, 0));
-				return col * 0.15f;
+				col += tex2D(_MainTex, i.uv + float2(offset, -offset));
+				col += tex2D(_MainTex, i.uv + float2(offset, offset));
+				col += tex2D(_MainTex, i.uv + float2(-offset, offset));
+				col += tex2D(_MainTex, i.uv + float2(-offset, -offset));
+				return col * 0.2f;
             }
             ENDCG
         }

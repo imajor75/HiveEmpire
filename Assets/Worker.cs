@@ -752,7 +752,9 @@ public class Worker : Assert.Base
 		mapObject.transform.SetParent( transform );
 		mapObject.transform.localPosition = Vector3.up * 2;
 		mapObject.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
-		mapObject.GetComponent<MeshRenderer>().material = mapMaterial = new Material( World.defaultShader );
+		var r = mapObject.GetComponent<MeshRenderer>();
+		r.material = mapMaterial = new Material( World.defaultShader );
+		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapMaterial.renderQueue = 4002;
 
 		arrowObject = new GameObject();

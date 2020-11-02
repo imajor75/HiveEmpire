@@ -13,6 +13,7 @@ public class Player : ScriptableObject
 	const int efficiencyUpdateTime = 3000;
 	const float efficiencyUpdateFactor = 0.3f;
 	public float totalEfficiency;
+	public float averageEfficiency;
 	public World.Timer efficiencyTimer;
 
 	public int soldiersProduced = 0;
@@ -90,17 +91,23 @@ public class Player : ScriptableObject
 		efficiencyTimer.Start( efficiencyUpdateTime );
 
 		totalEfficiency = float.MaxValue;
+		averageEfficiency = 0;
+		int count = 0;
 		for ( int i = 0; i < efficiency.Length; i++ )
 		{
 			Assert.global.IsTrue( production[i] >= 0 );
 			efficiency[i] = ( 1 - efficiencyUpdateFactor ) * efficiency[i] + efficiencyUpdateFactor * production[i];
 			production[i] = 0;
-			if ( efficiencyFactors[i] > 0 && efficiency[i] * efficiencyFactors[i] < totalEfficiency )
+			float efficiencyScore = efficiency[i] * efficiencyFactors[i];
+			averageEfficiency += efficiencyScore;
+			count++;
+			if ( efficiencyFactors[i] > 0 && efficiencyScore < totalEfficiency )
 			{
 				worseItemType = (Item.Type)i;
-				totalEfficiency = efficiency[i] * efficiencyFactors[i];
+				totalEfficiency = efficiencyScore;
 			}
 		}
+		averageEfficiency /= count;
 	}
 
 	public void LateUpdate()

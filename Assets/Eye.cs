@@ -18,13 +18,20 @@ public class Eye : MonoBehaviour
 	[JsonIgnore]
 	public IDirector director;
 	Transform ear;
-	GameObject highlightPlane;
+	static Material highlightMaterial;
+	static Material smoothMaterial;
 
 	public static Eye Create()
 	{
 		var eyeObject = new GameObject();
 		Eye eye = eyeObject.AddComponent<Eye>();
 		return eye;
+	}
+
+	public static void Initialize()
+	{
+		highlightMaterial = new Material( Resources.Load<Shader>( "Highlight" ) );
+		smoothMaterial = new Material( Resources.Load<Shader>( "Blur" ) );
 	}
 
 	public Eye Setup( World world )
@@ -44,13 +51,33 @@ public class Eye : MonoBehaviour
 		ear.gameObject.AddComponent<AudioListener>();
 		ear.name = "Ear";
 		ear.transform.SetParent( World.instance.transform );
+	}
 
-		var p = highlightPlane = GameObject.CreatePrimitive( PrimitiveType.Plane );
-		p.transform.SetParent( transform );
-		p.transform.localPosition = new Vector3( 0, 0, 1.0f );
-		p.transform.rotation = Quaternion.Euler( -90, 0, 0 );
-		p.GetComponent<MeshRenderer>().material = new Material( Resources.Load<Shader>( "highlight" ) );
-		p.name = "Highlight Plane";
+	void OnRenderImage( RenderTexture src, RenderTexture dst )
+	{
+		// TODO Do the postprocess with less blit calls
+		// This should be possible theoretically with a single blit from src
+		// to dst using the stencil from src. But since the stencil values are
+		// from the destination, a mixed rendertarget is needed, where the color
+		// buffer is from dst, but the depth/stencil is from src. Theoretically
+		// Graphics.SetRenderTarget can use RenderBuffers from two different
+		// render textures, but Graphics.Blit will ruin this, so a manual blit
+		// needs to be used (using GL.Begin(GL.QUADS) etc..). Unfortunately the 
+		// practic shows that it is not working for unknown reasons. This needs 
+		// to be tested with future versions of unity.
+		if ( Interface.instance.highlightType == Interface.HighlightType.none )
+		{
+			Graphics.Blit( src, dst );
+			return;
+		}
+
+		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
+
+		Graphics.Blit( src, tempRT, smoothMaterial );
+		Graphics.Blit( tempRT, src, highlightMaterial );
+		Graphics.Blit( src, dst );
+
+		RenderTexture.ReleaseTemporary( tempRT );
 	}
 
 	private void Update()
@@ -79,8 +106,6 @@ public class Eye : MonoBehaviour
 			director.SetCameraTarget( this );
 			this.director = director;
 		}
-
-		highlightPlane.SetActive( Interface.instance.highlightType != Interface.HighlightType.none );
 	}
 
 	public void GrabFocus( IDirector director )

@@ -18,6 +18,7 @@ public class Serializer : JsonSerializer
 	int index;
 	JsonReader reader;
 	static MethodInfo scriptableObjectCreator;
+	public string objectOwner;
 
 	public class SkipUnityContractResolver : DefaultContractResolver
 	{
@@ -80,17 +81,7 @@ public class Serializer : JsonSerializer
 	object Object()
 	{
 		if ( instance == null )
-		{
-			try
-			{
-				instance = CreateObject( type );
-			}
-			catch ( SystemException exception )
-			{
-				Assert.global.IsTrue( false, "Error creating object of type " + type.FullName + " (line " + ( (JsonTextReader)reader ).LineNumber + " of " + reader.Path + ")" );
-				throw exception;
-			}
-		}
+			instance = CreateObject( type );
 
 		if ( index > 0 )
 		{
@@ -138,7 +129,7 @@ public class Serializer : JsonSerializer
 
 		try
 		{
-			i.SetValue( Object(), ProcessFieldValue( i.FieldType ) );
+			i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
 		}
 		catch ( System.Exception exception )
 		{
@@ -147,7 +138,7 @@ public class Serializer : JsonSerializer
 		}
 	}
 
-	object ProcessFieldValue( Type type )
+	object ProcessFieldValue( Type type, string owner )
 	{
 		switch ( reader.TokenType )
 		{
@@ -162,7 +153,15 @@ public class Serializer : JsonSerializer
 			}
 			case JsonToken.StartObject:
 			{
-				return new Serializer( reader, boss ).Deserialize( type );
+				try
+				{
+					return new Serializer( reader, boss ).Deserialize( type );
+				}
+				catch ( SystemException exception )
+				{
+					Assert.global.IsTrue( false, "Error creating object of type " + type.FullName + " for " + owner );
+					throw exception;
+				}
 			}
 			case JsonToken.StartArray:
 			{
@@ -181,7 +180,7 @@ public class Serializer : JsonSerializer
 				{
 					if ( reader.TokenType != JsonToken.Comment )
 					{
-						object value = ProcessFieldValue( elementType );
+						object value = ProcessFieldValue( elementType, owner );
 						if ( value as IConvertible != null )
 							list.Add( Convert.ChangeType( value, elementType ) );
 						else
