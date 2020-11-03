@@ -13,8 +13,9 @@ public class Player : ScriptableObject
 	const int efficiencyUpdateTime = 3000;
 	const float efficiencyUpdateFactor = 0.3f;
 	public float totalEfficiency;
-	public float averageEfficiency;
 	public World.Timer efficiencyTimer;
+	public Chart averageEfficiencyHistory;
+	public List<Chart> itemEfficiencyHistory = new List<Chart>();
 
 	public int soldiersProduced = 0;
 	public int bowmansProduced = 0;
@@ -23,32 +24,79 @@ public class Player : ScriptableObject
 	public List<Stock> stocks = new List<Stock>();
 	public List<Item> items = new List<Item>();
 	public int firstPossibleEmptyItemSlot = 0;
-	public int[] production = new int[(int)Item.Type.total];
-	public float[] efficiency = new float[(int)Item.Type.total];
 	public int[] surplus = new int[(int)Item.Type.total];
 	public Item.Type worseItemType;
-	public static readonly float[] efficiencyFactors = {
-		/*log*/1,
-		/*stone*/0,
-		/*plank*/1,
-		/*fish*/1,
-		/*grain*/0.4f,
-		/*flour*/2,
-		/*salt*/2,
-		/*pretzel*/1,
-		/*hide*/1,
-		/*iron*/1,
-		/*coal*/0.33f,
-		/*gold*/1,
-		/*bow*/1, 
-		/*steel*/1,
-		/*weapon*/1, 
-		/*water*/1,
-		/*beer*/0.4f,
-		/*pork*/1,
-		/*coin*/0.5f
-	};
 
+	public class Chart : ScriptableObject
+	{
+		public List<float> data;
+		public float record;
+		public float current;
+		public int recordIndex;
+		public Item.Type itemType;
+		public float factor;
+		public int production;
+		public float weighted;
+		const float efficiencyUpdateFactor = 0.3f;
+
+		public static Chart Create()
+		{
+			return CreateInstance<Chart>();
+		}
+
+		public Chart Setup( Item.Type itemType )
+		{
+			this.itemType = itemType;
+			data = new List<float>();
+			switch ( itemType )
+			{
+				case Item.Type.stone:
+					factor = 0;
+					break;
+				case Item.Type.grain:
+				case Item.Type.beer:
+					factor = 0.4f;
+					break;
+				case Item.Type.flour:
+				case Item.Type.salt:
+					factor = 2;
+					break;
+				case Item.Type.coin:
+					factor = 0.5f;
+					break;
+				case Item.Type.coal:
+					factor = 0.33f;
+					break;
+				default:
+					factor = 1;
+					break;
+			}
+			record = current = weighted = 0;
+			recordIndex = production = 0;
+			return this;
+		}
+
+		public float Advance( float efficiency = 0 )
+		{
+			if ( data == null )
+				data = new List<float>();
+
+			if ( efficiency == 0 )
+				current = current * ( 1 - efficiencyUpdateFactor ) + production * efficiencyUpdateFactor;
+			else
+				current = efficiency;
+
+			if ( current > record )
+			{
+				record = current;
+				recordIndex = data.Count;
+			}
+
+			data.Add( current );
+			production = 0;
+			return weighted = factor * current;
+		}
+	}
 
 	public static Player Create()
 	{
@@ -78,9 +126,12 @@ public class Player : ScriptableObject
 
 	public void Start()
 	{
-		Assert.global.AreEqual( efficiencyFactors.Length, (int)Item.Type.total );
 		while ( itemHaulPriorities.Count < (int)Item.Type.total )
 			itemHaulPriorities.Add( 1 );
+		if ( averageEfficiencyHistory == null )
+			averageEfficiencyHistory = Chart.Create().Setup( Item.Type.total );
+		while ( itemEfficiencyHistory.Count <= (int)Item.Type.total )
+			itemEfficiencyHistory.Add( Chart.Create().Setup( (Item.Type)itemEfficiencyHistory.Count ) );
 		itemDispatcher.Start();
 	}
 
@@ -91,23 +142,23 @@ public class Player : ScriptableObject
 		efficiencyTimer.Start( efficiencyUpdateTime );
 
 		totalEfficiency = float.MaxValue;
-		averageEfficiency = 0;
+		float averageEfficiency = 0;
 		int count = 0;
-		for ( int i = 0; i < efficiency.Length; i++ )
+		for ( int i = 0; i < itemEfficiencyHistory.Count; i++ )
 		{
-			Assert.global.IsTrue( production[i] >= 0 );
-			efficiency[i] = ( 1 - efficiencyUpdateFactor ) * efficiency[i] + efficiencyUpdateFactor * production[i];
-			production[i] = 0;
-			float efficiencyScore = efficiency[i] * efficiencyFactors[i];
-			averageEfficiency += efficiencyScore;
+			var current = itemEfficiencyHistory[i].Advance();
+
+			averageEfficiency += current;
 			count++;
-			if ( efficiencyFactors[i] > 0 && efficiencyScore < totalEfficiency )
+
+			if ( itemEfficiencyHistory[i].factor > 0 && current < totalEfficiency )
 			{
 				worseItemType = (Item.Type)i;
-				totalEfficiency = efficiencyScore;
+				totalEfficiency = current;
 			}
 		}
 		averageEfficiency /= count;
+		averageEfficiencyHistory.Advance( averageEfficiency );
 	}
 
 	public void LateUpdate()
@@ -209,7 +260,7 @@ public class Player : ScriptableObject
 	public void ItemProduced( Item.Type itemType, int quantity = 1 )
 	{
 		Assert.global.IsTrue( quantity > 0 );
-		production[(int)itemType] += quantity;
+		itemEfficiencyHistory[(int)itemType].production += quantity;
 	}
 
 	public void Validate()

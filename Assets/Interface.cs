@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 using UnityEngine.EventSystems;
+using UnityEngine.PlayerLoop;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
 
@@ -59,7 +60,9 @@ public class Interface : Assert.Base
 		magnet,
 		dynamite,
 		rightArrow,
-		crosshair
+		crosshair,
+		summa,
+		tinyFrame
 	}
 
 	public Interface()
@@ -270,6 +273,10 @@ public class Interface : Assert.Base
 		{
 			NewGame( new System.Random().Next() );
 			print( "New game created" );
+		}
+		if ( Input.GetKeyDown( KeyCode.H ) )
+		{
+			History.Create().Open( mainPlayer );
 		}
 		if ( Input.GetKeyDown( KeyCode.I ) )
 		{
@@ -837,7 +844,7 @@ public class Interface : Assert.Base
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( instance.viewport.inputHandler != this && instance.highlightArea == area )
+				if ( instance.highlightArea == area )
 					instance.highlightType = HighlightType.none;
 			}
 
@@ -1086,10 +1093,10 @@ public class Interface : Assert.Base
 				var bui = new Buffer();
 				bui.Setup( this, b, col, row, iconSize + 5 );
 				buffers.Add( bui );
-				if ( !workshop.configuration.commonInputs )
+				//if ( !workshop.configuration.commonInputs )
 					row -= iconSize * 3 / 2;
-				else
-					col += b.size * ( iconSize + 5 ) + 10;
+				//else
+				//	col += b.size * ( iconSize + 5 ) + 20;
 			}
 			if ( workshop.configuration.commonInputs )
 				row -= iconSize * 3 / 2;
@@ -2230,7 +2237,7 @@ public class Interface : Assert.Base
 				efficiency[i] = Text( 180, row, 40, iconSize, "0", scroll.content );
 			}
 
-			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 230, player.efficiency.Length * ( iconSize + 5 ) );
+			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 230, (int)Item.Type.total * ( iconSize + 5 ) );
 		}
 
 		new void Update()
@@ -2263,7 +2270,7 @@ public class Interface : Assert.Base
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				Color textColor = Color.yellow;
-				if ( Player.efficiencyFactors[i] != 0 )
+				if ( player.itemEfficiencyHistory[i].factor != 0 )
 					textColor = Color.green;
 				if ( (int)player.worseItemType == i )
 					textColor = Color.red;
@@ -2274,12 +2281,82 @@ public class Interface : Assert.Base
 				Stock stock = richestStock[i];
 				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
 				onWay[i].text = onWayCount[i].ToString();
-				production[i].text = player.efficiency[i].ToString( "n2" );
-				float itemEfficiency = Player.efficiencyFactors[i] * player.efficiency[i];
+				production[i].text = player.itemEfficiencyHistory[i].production.ToString( "n2" );
+				float itemEfficiency = player.itemEfficiencyHistory[i].weighted;
 				efficiency[i].text = itemEfficiency.ToString( "n2" );
 			};
 
-			finalEfficiency.text = player.averageEfficiency.ToString( "n2" );
+			finalEfficiency.text = player.averageEfficiencyHistory.current.ToString( "n2" );
+		}
+	}
+
+	public class History : Panel
+	{
+		Item.Type selected;
+		Player player;
+		float lastAverageEfficiency;
+		Image chart, itemFrame;
+		Text record;
+
+		public static History Create()
+		{
+			return new GameObject().AddComponent<History>();
+		}
+
+		public void Open( Player player )
+		{
+			this.player = player;
+
+			base.Open();
+			Frame( 0, 0, 450, 300 );
+			Button( 420, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+			{
+				var t = (Item.Type)i;
+				var j = ItemIcon( 20 + i * iconSize, -20, 0, 0, (Item.Type)i );
+				j.GetComponent<Button>().onClick.AddListener( delegate { selected = t; lastAverageEfficiency = -1; } );
+			}
+			Button( 400, -20, 20, 20, iconTable.GetMediaData( Icon.summa ) ).onClick.AddListener( delegate { selected = Item.Type.total; lastAverageEfficiency = -1; } );
+			itemFrame = Image( 17, -17, 26, 26, iconTable.GetMediaData( Icon.tinyFrame ) );
+			chart = Image( 20, -40, 410, 240 );
+			record = Text( 25, -45, 150, 20 );
+			selected = Item.Type.total;
+			lastAverageEfficiency = -1;
+		}
+
+		new public void Update()
+		{
+			base.Update();
+			if ( lastAverageEfficiency == player.averageEfficiencyHistory.current )
+				return;
+
+			var t = new Texture2D( 400, 260 );
+			var a = player.averageEfficiencyHistory;
+			if ( selected < Item.Type.total )
+				a = player.itemEfficiencyHistory[(int)selected];
+			int row = 0;
+			for ( int x = t.width - 1; x >= 0; x-- )
+			{
+				int index = a.data.Count - t.width + x;
+				for ( int y = 0; y < t.height; y++ )
+					t.SetPixel( x, y, index == a.recordIndex ? Color.yellow : Color.black );
+				if ( 0 <= index )
+				{
+					int newRow = (int)Math.Min( (float)t.height - 1, 100 * a.data[index] );
+					var step = row < newRow ? 1 : -1;
+					while ( row != newRow )
+					{
+						t.SetPixel( x, row, new Color( 0, 128, 255 ) );
+						row += step;
+					}
+				}
+			}
+			t.Apply();
+			chart.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
+			Assert.global.IsNotNull( chart.sprite );
+			record.text = "Record: " + a.record;
+			itemFrame.rectTransform.anchoredPosition = new Vector2( 17 + iconSize * (int)selected, -17 );
+			lastAverageEfficiency = player.averageEfficiencyHistory.current;
 		}
 	}
 

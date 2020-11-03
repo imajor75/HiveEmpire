@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -70,10 +68,10 @@ public class Resource : Assert.Base
 		Resource.meshes.Fill( meshes );
 
 		object[] sounds = {
-			"bird1", 1000, Type.tree,
-			"bird2", 1000, Type.tree,
-			"bird3", 1000, Type.tree,
-			"bird4", 1000, Type.tree };
+			"bird1", 3000, Type.tree,
+			"bird2", 3000, Type.tree,
+			"bird3", 3000, Type.tree,
+			"bird4", 3000, Type.tree };
 		ambientSounds.Fill( sounds );
 	}
 
