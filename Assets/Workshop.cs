@@ -30,6 +30,7 @@ public class Workshop : Building
 	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
+	ParticleSystem smoke;
 
 	[System.Serializable]
 	public new class Configuration : Building.Configuration
@@ -368,7 +369,7 @@ public class Workshop : Building
 		return this;
 	}
 
-	static public Workshop.Configuration GetConfiguration( Type type )
+	static public Configuration GetConfiguration( Type type )
 	{
 		foreach ( var c in configurations )
 		{
@@ -428,7 +429,7 @@ public class Workshop : Building
 	new void Start()
 	{
 		var m = looks.GetMedia( type );
-		body = (GameObject)GameObject.Instantiate( m.data, transform );
+		body = Instantiate( m.data, transform );
 		height = m.floatData;
 		assert.IsNotNull( body );
 		if ( type == Type.mill )
@@ -450,6 +451,8 @@ public class Workshop : Building
 		mapIndicator.SetActive( false );
 
 		SetupConfiguration();
+
+		smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
 	}
 
 	new void Update()
@@ -683,6 +686,7 @@ public class Workshop : Building
 
 		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && worker.IsIdle( true ) && UseInput() )
 		{
+			smoke?.Play();
 			soundSource.loop = true;
 			soundSource.clip = processingSounds.GetMediaData( type );
 			soundSource.Play();
@@ -697,6 +701,7 @@ public class Workshop : Building
 				output += configuration.outputStackSize;
 				working = false;
 				soundSource.Stop();
+				smoke?.Stop();
 				itemsProduced += configuration.outputStackSize;
 				owner.ItemProduced( configuration.outputType, configuration.outputStackSize );
 			}
@@ -706,12 +711,17 @@ public class Workshop : Building
 	void CollectResource( Resource.Type resourceType, int range )
 	{
 		if ( !worker.IsIdle( true ) )
+		{
+			smoke?.Play();
 			return;
+		}
+		smoke?.Stop();
 		if ( outputPriority != ItemDispatcher.Priority.high && configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 )
 			return;
 		if ( configuration.outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;
 
+		smoke?.Play();
 		resourcePlace = null;
 		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( range < Ground.areas.Length );

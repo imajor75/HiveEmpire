@@ -2334,7 +2334,7 @@ public class Interface : Assert.Base
 			var a = player.averageEfficiencyHistory;
 			if ( selected < Item.Type.total )
 				a = player.itemEfficiencyHistory[(int)selected];
-			int row = 0;
+			int row = -1;
 			for ( int x = t.width - 1; x >= 0; x-- )
 			{
 				int index = a.data.Count - t.width + x;
@@ -2343,7 +2343,11 @@ public class Interface : Assert.Base
 				if ( 0 <= index )
 				{
 					int newRow = (int)Math.Min( (float)t.height - 1, 100 * a.data[index] );
+					if ( row < 0 )
+						row = newRow;
 					var step = row < newRow ? 1 : -1;
+					if ( row == newRow )
+						step = 0;
 					while ( row != newRow )
 					{
 						t.SetPixel( x, row, new Color( 0, 128, 255 ) );
