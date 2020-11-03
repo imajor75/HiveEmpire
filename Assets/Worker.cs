@@ -116,7 +116,7 @@ public class Worker : Assert.Base
 
 			if ( path == null )
 			{
-				path = Path.Between( boss.node, target.node, PathFinder.Mode.onRoad );
+				path = Path.Between( boss.node, target.node, PathFinder.Mode.onRoad, boss );
 				if ( path == null )
 				{
 					var instance = ScriptableObject.CreateInstance<WalkToNode>();
@@ -171,7 +171,7 @@ public class Worker : Assert.Base
 
 			if ( path == null )
 			{
-				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, ignoreFinalObstacle );
+				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, boss, ignoreFinalObstacle );
 				if ( path == null )
 				{
 					Debug.Log( "Worker failed to go to " + target.x + ", " + target.y );

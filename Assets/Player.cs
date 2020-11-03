@@ -130,7 +130,7 @@ public class Player : ScriptableObject
 			itemHaulPriorities.Add( 1 );
 		if ( averageEfficiencyHistory == null )
 			averageEfficiencyHistory = Chart.Create().Setup( Item.Type.total );
-		while ( itemEfficiencyHistory.Count <= (int)Item.Type.total )
+		while ( itemEfficiencyHistory.Count < (int)Item.Type.total )
 			itemEfficiencyHistory.Add( Chart.Create().Setup( (Item.Type)itemEfficiencyHistory.Count ) );
 		itemDispatcher.Start();
 	}

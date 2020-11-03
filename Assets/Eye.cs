@@ -177,7 +177,10 @@ public class CameraHighlight : Assert.Base
 	{
 		var volume = Interface.instance.highlightVolume;
 		if ( volume == null )
+		{
+			highlightMaterial.SetInt( highLightStencilRef, 0 );
 			return;
+		}
 		var collider = volume.GetComponent<MeshCollider>();
 		var eye = transform.position;
 		var center = Interface.instance.highlightArea.center.Position();

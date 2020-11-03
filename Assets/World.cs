@@ -142,6 +142,13 @@ public class World : MonoBehaviour
 			player.Start();
 
 		{
+			var list = Resources.FindObjectsOfTypeAll<Path>();
+			foreach ( var o in list )
+			{
+				o.Validate();
+			}
+		}
+		{
 			var list = Resources.FindObjectsOfTypeAll<Worker>();
 			foreach ( var o in list )
 			{

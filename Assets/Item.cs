@@ -206,7 +206,7 @@ public class Item : Assert.Base
 		if ( flag )
 			start = flag;
 
-		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad );
+		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad, this );
 		if ( path != null )
 		{
 			flag?.itemsStored.Trigger();

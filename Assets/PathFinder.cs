@@ -222,10 +222,12 @@ public class PathFinder : ScriptableObject
 public class Path : PathFinder
 {
 	public int progress;
+	public Assert.Base owner;
 
-	public static Path Between( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false )
+	public static Path Between( GroundNode start, GroundNode end, Mode mode, Assert.Base owner, bool ignoreFinalObstacle = false )
 	{
-		var p = ScriptableObject.CreateInstance<Path>();
+		var p = CreateInstance<Path>();
+		p.owner = owner;
 		if ( p.FindPathBetween( start, end, mode, ignoreFinalObstacle ) )
 		{
 			if ( mode != Mode.onRoad )
@@ -290,13 +292,19 @@ public class Path : PathFinder
 	public override void Validate()
 	{
 		base.Validate();
-		Assert.global.IsTrue( progress >= 0 );
+		owner.assert.IsTrue( progress >= 0 );
 		if ( mode == Mode.onRoad )
-			Assert.global.IsTrue( progress <= roadPath.Count );
+			owner.assert.IsTrue( progress <= roadPath.Count );
 		else
-			Assert.global.IsTrue( progress <= path.Count );
+			owner.assert.IsTrue( progress <= path.Count );
 		if ( ready && mode == Mode.onRoad )
-		for ( int i = progress; i < roadPath.Count; i++ )
-			Assert.global.IsNotNull( roadPath[i] );
+		{
+			for ( int i = progress; i < roadPath.Count; i++ )
+			{	// TODO Triggered multiple times after deleting a road
+				// the road was close to the end of a path, but after deleting the road,
+				// the reference in the path become null
+				owner.assert.IsNotNull( roadPath[i] );
+			}
+		}
 	}
 }

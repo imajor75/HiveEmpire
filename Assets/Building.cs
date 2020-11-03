@@ -114,7 +114,7 @@ abstract public class Building : Assert.Base
 				return;
 
 			// TODO Try to find a path only if the road network has been changed
-			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad ) != null )
+			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
 				if ( timeSinceCreated > 50 )
 				{

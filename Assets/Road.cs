@@ -116,7 +116,7 @@ public class Road : Assert.Base, Interface.InputHandler
 			if ( node.flag )
 			{
 				// Find a path to the flag, and finish the road based on it
-				var p = Path.Between( last, node, PathFinder.Mode.avoidRoadsAndFlags, true );
+				var p = Path.Between( last, node, PathFinder.Mode.avoidRoadsAndFlags, newRoad, true );
 				if ( p )
 				{
 					for ( int i = 1; i < p.path.Count; i++ )
