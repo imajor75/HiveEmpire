@@ -134,6 +134,7 @@ public class Item : Assert.Base
 			debugCancelTrip = false;
 			return;
 		}
+
 		if ( watchRoadDelete.Check() && path )
 		{
 			for ( int i = 0; i < path.roadPath.Count; i++ )
@@ -150,6 +151,10 @@ public class Item : Assert.Base
 				}
 			}
 		}
+
+		if ( path && !path.IsFinished && path.Road == null )
+			CancelTrip();
+
 		if ( watchBuildingDelete.Check() )
 		{
 			if ( destination == null && path )
@@ -167,9 +172,9 @@ public class Item : Assert.Base
 		if ( worker && !nextFlag )
 			return;
 
-		// Anti-jam action. This can happen if :
+		// Anti-jam action. This can happen if all is met:
 		// 1. item is waiting too much at a flag
-		// 2. flag is in front of a stock
+		// 2. flag is in front of a stock which is already built
 		// 3. item is not yet routing to this building
 		// 4. worker not yet started coming
 		if ( flag && flag.building as Stock && flag.building.construction.done && destination != flag.building && worker == null && atFlag.Age > timeoutAtFlag )

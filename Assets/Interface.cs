@@ -29,18 +29,7 @@ public class Interface : Assert.Base
 	public Tooltip tooltip;
 	public int autoSave = autoSaveInterval;
 	const int autoSaveInterval = 15000;
-	public HighlightType _highlightType;
-	public HighlightType highlightType
-	{
-		get
-		{
-			return _highlightType;
-		}
-		set
-		{
-			_highlightType = value;
-		}
-	}
+	public HighlightType highlightType;
 	public Ground.Area highlightArea;
 	public GameObject highlightVolume;
 	GroundNode highlightVolumeCenter;
@@ -1085,7 +1074,14 @@ public class Interface : Assert.Base
 		{
 			base.Open( workshop );
 			this.workshop = workshop;
-			int height = 150+workshop.buffers.Count * iconSize * 3 / 2;
+			bool showOutputBuffer = false, showProgressBar = false;
+			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
+			{
+				showProgressBar = true;
+				showOutputBuffer = workshop.configuration.gatheredResource == Resource.Type.unknown;
+			}
+			int displayedBufferCount = workshop.buffers.Count + ( showOutputBuffer ? 1 : 0 );
+			int height = 80 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 );
 			Frame( 0, 0, 240, height );
 			Button( 210, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 190, 30 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
@@ -1109,18 +1105,17 @@ public class Interface : Assert.Base
 				//else
 				//	col += b.size * ( iconSize + 5 ) + 20;
 			}
-			if ( workshop.configuration.commonInputs )
-				row -= iconSize * 3 / 2;
+			//if ( workshop.configuration.commonInputs )
+			//	row -= iconSize * 3 / 2;
 
-			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
+			if ( showProgressBar )
 			{
-				if ( workshop.configuration.gatheredResource == Resource.Type.unknown )
+				if ( showOutputBuffer )
 				{
-					row -= iconSize / 2;
 					outputs = new Buffer();
 					outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
+					row -= iconSize * 3 / 2;
 				}
-				row -= (int)( (float)iconSize * 1.5f );
 				progressBar = Image( 20, row, ( iconSize + 5 ) * 7, iconSize, iconTable.GetMediaData( Icon.progress ) );
 				AreaIcon( 200, row, workshop.outputArea );
 
@@ -1765,7 +1760,7 @@ public class Interface : Assert.Base
 					Destroy( destinationBuilding );
 					if ( cart.destination )
 						destinationBuilding = BuildingIcon( 70, -95, cart.destination );
-					var path = cart.FindTask<Worker.WalkToFlag>()?.path;
+					var path = cart.FindTaskInQueue<Worker.WalkToFlag>()?.path;
 					Destroy( cartPath );
 					cartPath = CreateUIPath( path );
 				}

@@ -199,6 +199,9 @@ public class Road : Assert.Base, Interface.InputHandler
 		transform.SetParent( ground.transform, false );
 		if ( nodes.Count > 0 )	
 			transform.localPosition = nodes[nodes.Count / 2].Position();
+		if ( invalid )
+			return;
+
 		var renderer = gameObject.AddComponent<MeshRenderer>();
 		renderer.material = material;
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -244,6 +247,9 @@ public class Road : Assert.Base, Interface.InputHandler
 	static int blocksInSection = 8;
 	public void RebuildMesh( bool force = false )
 	{
+		if ( mesh == null )
+			return; // The road was already destroyed in the past, but a reference keeps the script alive
+
 		if ( force )
 			curves = new List<CubicCurve>[3];
 		CreateCurves();

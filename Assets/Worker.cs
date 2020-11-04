@@ -114,21 +114,21 @@ public class Worker : Assert.Base
 			if ( boss.node.flag == target )
 				return true;
 
-			if ( path == null )
+			if ( path == null || path.Road == null )
 			{
 				path = Path.Between( boss.node, target.node, PathFinder.Mode.onRoad, boss );
 				if ( path == null )
 				{
-					var instance = ScriptableObject.CreateInstance<WalkToNode>();
+					var instance = CreateInstance<WalkToNode>();
 					instance.Setup( boss, target.node );
 					ReplaceThisWith( instance );
 					return false;
 				}
 			}
 			int point = 0;
-			if ( boss.node.flag == path.Road.GetEnd( 0 ) )
-				point = path.Road.nodes.Count - 1;
 			Road road = path.NextRoad();
+			if ( boss.node.flag == road.GetEnd( 0 ) )
+				point = road.nodes.Count - 1;
 			if ( exclusive )
 			{
 				if ( boss.road )
@@ -1398,7 +1398,7 @@ public class Worker : Assert.Base
 		Interface.WorkerPanel.Create().Open( this, false );
 	}
 
-	public T FindTask<T>() where T : class
+	public T FindTaskInQueue<T>() where T : class
 	{
 		foreach ( var task in taskQueue )
 		{
