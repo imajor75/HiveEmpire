@@ -2209,6 +2209,7 @@ public class Interface : Assert.Base
 		Text finalEfficiency;
 		Text[] inStock = new Text[(int)Item.Type.total];
 		Text[] onWay = new Text[(int)Item.Type.total];
+		Text[] surplus = new Text[(int)Item.Type.total];
 		Text[] production = new Text[(int)Item.Type.total];
 		Text[] efficiency = new Text[(int)Item.Type.total];
 		Button[] stockButtons = new Button[(int)Item.Type.total];
@@ -2222,13 +2223,14 @@ public class Interface : Assert.Base
 		{
 			base.Open();
 			this.player = player;
-			Frame( 0, 0, 320, 300 );
+			Frame( 0, 0, 370, 300 );
 			Text( 70, -20, 50, 20, "In stock" ).fontSize = 10;
 			Text( 120, -20, 50, 20, "On Road" ).fontSize = 10;
-			Text( 170, -20, 50, 20, "Per minute" ).fontSize = 10;
-			Text( 220, -20, 50, 20, "Efficiency" ).fontSize = 10;
-			scroll = ScrollRect( 20, -45, 280, 205 );
-			Button( 290, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Text( 170, -20, 50, 20, "Surplus" ).fontSize = 10;
+			Text( 220, -20, 50, 20, "Per minute" ).fontSize = 10;
+			Text( 270, -20, 50, 20, "Efficiency" ).fontSize = 10;
+			scroll = ScrollRect( 20, -45, 330, 205 );
+			Button( 340, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			finalEfficiency = Text( 100, -260, 100, 30 );
 			finalEfficiency.fontSize = 16;
 
@@ -2239,11 +2241,12 @@ public class Interface : Assert.Base
 				inStock[i] = Text( 30, row, 40, iconSize, "0", scroll.content );
 				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
 				onWay[i] = Text( 80, row, 40, iconSize, "0", scroll.content );
-				production[i] = Text( 130, row, 40, iconSize, "0", scroll.content );
-				efficiency[i] = Text( 180, row, 40, iconSize, "0", scroll.content );
+				surplus[i] = Text( 130, row, 40, iconSize, "0", scroll.content );
+				production[i] = Text( 180, row, 40, iconSize, "0", scroll.content );
+				efficiency[i] = Text( 230, row, 40, iconSize, "0", scroll.content );
 			}
 
-			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 230, (int)Item.Type.total * ( iconSize + 5 ) );
+			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 280, (int)Item.Type.total * ( iconSize + 5 ) );
 		}
 
 		new void Update()
@@ -2287,6 +2290,7 @@ public class Interface : Assert.Base
 				Stock stock = richestStock[i];
 				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
 				onWay[i].text = onWayCount[i].ToString();
+				surplus[i].text = player.surplus[i].ToString();
 				production[i].text = player.itemEfficiencyHistory[i].production.ToString( "n2" );
 				float itemEfficiency = player.itemEfficiencyHistory[i].weighted;
 				efficiency[i].text = itemEfficiency.ToString( "n2" );
