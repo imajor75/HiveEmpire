@@ -550,15 +550,15 @@ public class Workshop : Building
 			worker.SetupForBuilding( this );
 		}
 
+		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority != ItemDispatcher.Priority.high )
+			return;
+
 		switch ( type )
 		{
 			case Type.farm:
 			{
 				if ( worker.IsIdle( true ) )
 				{
-					if ( outputPriority != ItemDispatcher.Priority.high && owner.surplus[(int)configuration.outputType] > 0 )
-						break;
-
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
@@ -716,8 +716,6 @@ public class Workshop : Building
 			return;
 		}
 		smoke?.Stop();
-		if ( outputPriority != ItemDispatcher.Priority.high && configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 )
-			return;
 		if ( configuration.outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;
 
