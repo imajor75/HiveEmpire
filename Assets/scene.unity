@@ -162,6 +162,7 @@ MonoBehaviour:
   tooltip: {fileID: 0}
   autoSave: 15000
   highlightType: 0
+  highlightVolume: {fileID: 0}
   highlightOwner: {fileID: 0}
 --- !u!4 &1680099500
 Transform:
