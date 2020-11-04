@@ -29,7 +29,18 @@ public class Interface : Assert.Base
 	public Tooltip tooltip;
 	public int autoSave = autoSaveInterval;
 	const int autoSaveInterval = 15000;
-	public HighlightType highlightType;
+	public HighlightType _highlightType;
+	public HighlightType highlightType
+	{
+		get
+		{
+			return _highlightType;
+		}
+		set
+		{
+			_highlightType = value;
+		}
+	}
 	public Ground.Area highlightArea;
 	public GameObject highlightVolume;
 	GroundNode highlightVolumeCenter;
@@ -844,7 +855,7 @@ public class Interface : Assert.Base
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( instance.highlightArea == area )
+				if ( instance.viewport.inputHandler != this as InputHandler && instance.highlightArea == area )
 					instance.highlightType = HighlightType.none;
 			}
 
