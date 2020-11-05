@@ -297,7 +297,7 @@ public class Path : PathFinder
 			owner.assert.IsTrue( progress <= roadPath.Count );
 		else
 			owner.assert.IsTrue( progress <= path.Count );
-		if ( ready && mode == Mode.onRoad )
+		/*if ( ready && mode == Mode.onRoad )
 		{
 			for ( int i = progress; i < roadPath.Count; i++ )
 			{	// TODO Triggered multiple times after deleting a road
@@ -305,6 +305,6 @@ public class Path : PathFinder
 				// the reference in the path become null
 				owner.assert.IsNotNull( roadPath[i] );
 			}
-		}
+		}*/
 	}
 }

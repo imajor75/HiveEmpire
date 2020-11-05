@@ -550,7 +550,7 @@ public class Workshop : Building
 			worker.SetupForBuilding( this );
 		}
 
-		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority != ItemDispatcher.Priority.high )
+		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority < ItemDispatcher.Priority.high )
 			return;
 
 		switch ( type )

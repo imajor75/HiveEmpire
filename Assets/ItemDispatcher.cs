@@ -48,6 +48,8 @@ public class ItemDispatcher : ScriptableObject
 				markets[i].Setup( this, (Item.Type)i );
 			}
 		}
+		foreach ( var market in markets )
+			market.Start();
 	}
 
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area )
@@ -87,12 +89,19 @@ public class ItemDispatcher : ScriptableObject
 		public Item.Type itemType;
 		public List<Potential> offers = new List<Potential>();
 		public List<Potential> requests = new List<Potential>();
+		public List<Potential> oldOffers;
+		public List<Potential> oldRequests;
 		public ItemDispatcher boss;
 
 		public void Setup( ItemDispatcher boss,  Item.Type itemType )
 		{
 			this.boss = boss;
 			this.itemType = itemType;
+		}
+
+		public void Start()
+		{
+			name = itemType + " market";
 		}
 
 		public void RegisterRequest( Building building, int quantity, Priority priority, Ground.Area area )
@@ -162,22 +171,16 @@ public class ItemDispatcher : ScriptableObject
 					while ( requests.Count > 0 && requests[0].quantity == 0 )
 						requests.RemoveAt( 0 );
 
-					int offerCount = 0, requestCount = 0;
+					int offerItemCount = 0, requestItemCount = 0;
 					foreach ( var offer in offers )
-					{
-						if ( offer.priority == priority && offer.quantity > 0 )
-							offerCount++;
-					}
+						offerItemCount += offer.quantity;
 					foreach ( var request in requests )
-					{
-						if ( request.priority != priority && request.quantity > 0 )
-							requestCount++;
-					}
+						requestItemCount += request.quantity;
 
 					success = false;
-					if ( offerCount < requestCount && offerCount > 0 )
+					if ( offerItemCount < requestItemCount && offers.Count > 0 )
 						success = FindPotentialFor( offers[0], requests );
-					else if ( requestCount > 0 )
+					else if ( requests.Count > 0 )
 						success = FindPotentialFor( requests[0], offers );
 				}
 				while ( success );
@@ -187,8 +190,10 @@ public class ItemDispatcher : ScriptableObject
 				surplus += offer.quantity;
 			boss.player.surplus[(int)itemType] = surplus;			
 
-			requests.Clear();
-			offers.Clear();
+			oldRequests = requests;
+			oldOffers = offers;
+			requests = new List<Potential>();
+			offers = new List<Potential>();
 
 			Profiler.EndSample();
 		}
