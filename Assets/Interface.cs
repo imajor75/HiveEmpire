@@ -81,6 +81,11 @@ public class Interface : Assert.Base
 		}
 	}
 
+	void OnApplicationQuit()
+	{
+		Save();
+	}
+
 	void LateUpdate()
 	{
 		Validate();

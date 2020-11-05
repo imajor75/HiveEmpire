@@ -354,9 +354,15 @@ public class World : MonoBehaviour
 	public void SetTimeFactor( float factor )
 	{
 		timeFactor = factor;
-		var list = Resources.FindObjectsOfTypeAll<Animator>();
-		foreach ( var o in list )
+		var list1 = Resources.FindObjectsOfTypeAll<Animator>();
+		foreach ( var o in list1)
 			o.speed = factor;
+		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
+		foreach ( var o in list2 )
+		{
+			var mainModule = o.main;
+			mainModule.simulationSpeed = factor;
+		}
 	}
 
 	public void Validate()

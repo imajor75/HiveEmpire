@@ -764,11 +764,6 @@ public class Worker : Assert.Base
 		arrowObject.transform.localScale = Vector3.one * 0.4f;
 	}
 
-	void OnDestroy()
-	{
-		assert.IsNull( itemInHands );
-	}
-
 	// Distance the worker is taking in a single frame (0.02 sec)
 	public static float SpeedBetween( GroundNode a, GroundNode b )
 	{
