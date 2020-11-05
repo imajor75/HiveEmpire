@@ -2353,8 +2353,9 @@ public class Interface : Assert.Base
 			for ( int x = t.width - 1; x >= 0; x-- )
 			{
 				int index = a.data.Count - t.width + x;
+				int recordRow = (int)(100 * a.record);
 				for ( int y = 0; y < t.height; y++ )
-					t.SetPixel( x, y, index == a.recordIndex ? Color.yellow : Color.black );
+					t.SetPixel( x, y, index == a.recordIndex ? Color.yellow : y == recordRow ? Color.grey : Color.black );
 				if ( 0 <= index )
 				{
 					int newRow = (int)Math.Min( (float)t.height - 1, 100 * a.data[index] );
