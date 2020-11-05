@@ -550,8 +550,11 @@ public class Workshop : Building
 			worker.SetupForBuilding( this );
 		}
 
-		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority < ItemDispatcher.Priority.high )
+		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority < ItemDispatcher.Priority.high && !working )
+		{
+			smoke?.Stop();
 			return;
+		}
 
 		switch ( type )
 		{
@@ -578,6 +581,7 @@ public class Workshop : Building
 						PlantAt( place, Resource.Type.cornfield );
 						return;
 					}
+					working = false;
 					worker.ScheduleWait( 300 );
 				}
 				break;
@@ -607,6 +611,7 @@ public class Workshop : Building
 						PlantAt( place, Resource.Type.tree );
 						return;
 					}
+					working = false;
 					worker.ScheduleWait( 300 );
 				}
 				break;
@@ -711,15 +716,11 @@ public class Workshop : Building
 	void CollectResource( Resource.Type resourceType, int range )
 	{
 		if ( !worker.IsIdle( true ) )
-		{
-			smoke?.Play();
 			return;
-		}
-		smoke?.Stop();
+		working = false;
 		if ( configuration.outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;
 
-		smoke?.Play();
 		resourcePlace = null;
 		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( range < Ground.areas.Length );
@@ -791,6 +792,8 @@ public class Workshop : Building
 		worker.ScheduleTask( task );
 		if ( target.resource )
 			target.resource.hunter = worker;
+		working = true;
+		smoke?.Play();
 	}
 
 	static void FinishJob( Worker worker, Item item )
@@ -814,6 +817,7 @@ public class Workshop : Building
 		var task = ScriptableObject.CreateInstance<Plant>();
 		task.Setup( worker, place, resourceType );
 		worker.ScheduleTask( task );
+		working = true;
 	}
 
 	public override void OnClicked()

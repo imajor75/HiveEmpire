@@ -561,8 +561,19 @@ public class Interface : Assert.Base
 			}
 		}
 
-		public void Open( GroundNode target = null, int x = 0, int y = 0 )
+		// Summary:
+		// Return true if the caller should give
+		public bool Open( GroundNode target = null, int x = 0, int y = 0 )
 		{
+			foreach ( var panel in Root.panels )
+			{
+				if ( IsTheSame( panel ) )
+				{
+					Destroy( gameObject );
+					return true;
+				}
+			}
+
 			if ( target == null && x == 0 && y == 0 )
 			{
 				x = Screen.width / 2 - 50;
@@ -575,11 +586,16 @@ public class Interface : Assert.Base
 			frame.enabled = false;
 			this.target = target;
 			UpdatePosition();
+			return false;
+		}
+
+		public virtual bool IsTheSame( object other )
+		{
+			return other.GetType() == GetType();
 		}
 
 		public void OnDestroy()
 		{
-			Assert.global.IsTrue( Root.panels.Contains( this ) );
 			Root.panels.Remove( this );
 		}
 
@@ -1049,13 +1065,13 @@ public class Interface : Assert.Base
 	public class BuildingPanel : Panel
 	{
 		public Building building;
-		public void Open( Building building )
+		public bool Open( Building building )
 		{
 #if DEBUG
 			Selection.activeGameObject = building.gameObject;
 #endif
-			base.Open( building.node );
 			this.building = building;
+			return base.Open( building.node );
 		}
 	}
 
@@ -1077,7 +1093,10 @@ public class Interface : Assert.Base
 
 		public void Open( Workshop workshop, bool show = false )
 		{
-			base.Open( workshop );
+			if ( base.Open( workshop ) )
+				return;
+
+			name = "Workshop panel";
 			this.workshop = workshop;
 			bool showOutputBuffer = false, showProgressBar = false;
 			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
@@ -1252,7 +1271,8 @@ public class Interface : Assert.Base
 
 		public void Open( Stock stock, bool show = false )
 		{
-			base.Open( stock );
+			if ( base.Open( stock ) )
+				return;
 			this.stock = stock;
 			RecreateControls();
 			if ( show )
@@ -1616,7 +1636,9 @@ public class Interface : Assert.Base
 #if DEBUG
 			Selection.activeGameObject = flag.gameObject;
 #endif
-			base.Open( flag.node );
+			if ( base.Open( flag.node ) )
+				return;
+
 			this.flag = flag;
 			int col = 16;
 			Frame( 0, 0, 250, 75, 10 );
@@ -1714,7 +1736,9 @@ public class Interface : Assert.Base
 
 		public void Open( Worker worker, bool show )
 		{
-			base.Open( worker.node );
+			if ( base.Open( worker.node ) )
+				return;
+			name = "Worker panel";
 			this.worker = worker;
 			var cart = worker as Stock.Cart;
 			Frame( 0, 0, 200, cart ? 140 : 80 );
@@ -1861,8 +1885,10 @@ public class Interface : Assert.Base
 		public void Open( Item item )
 		{
 			this.item = item;
-			
-			base.Open();
+
+			if ( base.Open() )
+				return;
+
 			name = "Item panel";
 
 			Frame( 0, 0, 300, 150, 20 );
@@ -2107,7 +2133,8 @@ public class Interface : Assert.Base
 
 		public void Open( Player player )
 		{
-			base.Open();
+			if ( base.Open() )
+				return;
 			name = "Item list panel";
 			this.player = player;
 			World.instance.SetTimeFactor( 0 );
@@ -2226,7 +2253,10 @@ public class Interface : Assert.Base
 
 		public void Open( Player player )
 		{
-			base.Open();
+			if ( base.Open() )
+				return;
+
+			name = "Item stats panel";
 			this.player = player;
 			Frame( 0, 0, 370, 300 );
 			Text( 70, -20, 50, 20, "In stock" ).fontSize = 10;
@@ -2322,7 +2352,10 @@ public class Interface : Assert.Base
 		{
 			this.player = player;
 
-			base.Open();
+			if ( base.Open() )
+				return;
+
+			name = "History panel";
 			Frame( 0, 0, 450, 300 );
 			Button( 420, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
