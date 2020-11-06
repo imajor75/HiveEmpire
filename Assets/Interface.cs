@@ -811,7 +811,7 @@ public class Interface : Assert.Base
 			followTarget = true;
 		}
 
-		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, InputHandler
+		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IInputHandler
 		{
 			public Ground.Area area;
 			public Image image;
@@ -865,7 +865,7 @@ public class Interface : Assert.Base
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( instance.viewport.inputHandler != this as InputHandler && instance.highlightArea == area )
+				if ( instance.viewport.inputHandler != this as IInputHandler && instance.highlightArea == area )
 					instance.highlightType = HighlightType.none;
 			}
 
@@ -1257,7 +1257,7 @@ public class Interface : Assert.Base
 
 	}
 
-	public class StockPanel : BuildingPanel, InputHandler
+	public class StockPanel : BuildingPanel, IInputHandler
 	{
 		public Stock stock;
 		public Text[] counts = new Text[(int)Item.Type.total];
@@ -1273,6 +1273,7 @@ public class Interface : Assert.Base
 		{
 			if ( base.Open( stock ) )
 				return;
+			name = "Stock panel";
 			this.stock = stock;
 			RecreateControls();
 			if ( show )
@@ -1963,11 +1964,11 @@ public class Interface : Assert.Base
 		}
 	}
 
-	public class Viewport : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, InputHandler
+	public class Viewport : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IInputHandler
 	{
 		public bool mouseOver;
 		public GameObject cursor;
-		public InputHandler inputHandler;
+		public IInputHandler inputHandler;
 		GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
 		GameObject cursorFlag;
 		GameObject cursorBuilding;
@@ -2413,7 +2414,7 @@ public class Interface : Assert.Base
 		}
 	}
 
-	public interface InputHandler
+	public interface IInputHandler
 	{
 		bool OnMovingOverNode( GroundNode node );
 		bool OnNodeClicked( GroundNode node );

@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-public class Workshop : Building
+public class Workshop : Building, Worker.Callback.IHandler
 {
 	public int output;
 	public Ground.Area outputArea = new Ground.Area();
@@ -244,6 +244,7 @@ public class Workshop : Building
 			wait.Start( 100 );
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
+			boss.ScheduleCall( boss.building as Workshop );
 			return false;
 		}
 	}
@@ -552,7 +553,7 @@ public class Workshop : Building
 
 		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority < ItemDispatcher.Priority.high && !working )
 		{
-			smoke?.Stop();
+			SetWorking( false );
 			return;
 		}
 
@@ -581,7 +582,6 @@ public class Workshop : Building
 						PlantAt( place, Resource.Type.cornfield );
 						return;
 					}
-					working = false;
 					worker.ScheduleWait( 300 );
 				}
 				break;
@@ -611,7 +611,6 @@ public class Workshop : Building
 						PlantAt( place, Resource.Type.tree );
 						return;
 					}
-					working = false;
 					worker.ScheduleWait( 300 );
 				}
 				break;
@@ -691,11 +690,7 @@ public class Workshop : Building
 
 		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && worker.IsIdle( true ) && UseInput() )
 		{
-			smoke?.Play();
-			soundSource.loop = true;
-			soundSource.clip = processingSounds.GetMediaData( type );
-			soundSource.Play();
-			working = true;
+			SetWorking( true );
 			progress = 0;
 		}
 		if ( working )
@@ -704,9 +699,7 @@ public class Workshop : Building
 			if ( progress > 1 )
 			{
 				output += configuration.outputStackSize;
-				working = false;
-				soundSource.Stop();
-				smoke?.Stop();
+				SetWorking( false );
 				itemsProduced += configuration.outputStackSize;
 				owner.ItemProduced( configuration.outputType, configuration.outputStackSize );
 			}
@@ -717,7 +710,6 @@ public class Workshop : Building
 	{
 		if ( !worker.IsIdle( true ) )
 			return;
-		working = false;
 		if ( configuration.outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
 			return;
 
@@ -792,8 +784,7 @@ public class Workshop : Building
 		worker.ScheduleTask( task );
 		if ( target.resource )
 			target.resource.hunter = worker;
-		working = true;
-		smoke?.Play();
+		SetWorking( true );
 	}
 
 	static void FinishJob( Worker worker, Item item )
@@ -807,6 +798,33 @@ public class Workshop : Building
 		if ( item != null )
 			worker.ScheduleDeliverItem( item );
 		worker.ScheduleWalkToNeighbour( worker.building.node );
+		worker.ScheduleCall( worker.building as Workshop );
+	}
+
+	public void SetWorking( bool working )
+	{
+		if ( this.working == working )
+			return;
+
+		this.working = working;
+		if ( working )
+		{
+			smoke?.Play();
+			soundSource.loop = true;
+			soundSource.clip = processingSounds.GetMediaData( type );
+			soundSource.Play();
+		}
+		else
+		{
+			smoke?.Stop();
+			soundSource.Stop();
+		}
+	}
+
+	public void Callback( Worker worker )
+	{
+		assert.AreEqual( worker, this.worker );
+		SetWorking( false );
 	}
 
 	void PlantAt( GroundNode place, Resource.Type resourceType )
@@ -817,7 +835,7 @@ public class Workshop : Building
 		var task = ScriptableObject.CreateInstance<Plant>();
 		task.Setup( worker, place, resourceType );
 		worker.ScheduleTask( task );
-		working = true;
+		SetWorking( true );
 	}
 
 	public override void OnClicked()

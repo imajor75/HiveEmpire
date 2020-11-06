@@ -9,7 +9,7 @@ using UnityEngine.VR;
 using UnityEngine.XR;
 
 [SelectionBase]
-public class Road : Assert.Base, Interface.InputHandler
+public class Road : Assert.Base, Interface.IInputHandler
 {
 	public Player owner;
 	public List<Worker> workers = new List<Worker>();

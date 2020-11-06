@@ -97,6 +97,27 @@ public class Worker : Assert.Base
 		}
 	}
 
+	public class Callback : Task
+	{
+		public interface IHandler
+		{
+			void Callback( Worker worker );
+		}
+		public IHandler handler;
+
+		public void Setup( Worker boss, IHandler handler )
+		{
+			base.Setup( boss );
+			this.handler = handler;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			handler.Callback( boss );
+			return true;
+		}
+	}
+
 	public class WalkToFlag : Task
 	{
 		public Flag target;
@@ -1162,6 +1183,14 @@ public class Worker : Assert.Base
 		}
 
 		return Tuple.Create( value, false );
+	}
+
+	public void ScheduleCall( Callback.IHandler handler )
+	{
+		assert.IsNotNull( handler );
+		var instance = ScriptableObject.CreateInstance<Callback>();
+		instance.Setup( this, handler );
+		ScheduleTask( instance );
 	}
 
 	public void ScheduleWalkToNeighbour( GroundNode target, bool first = false )
