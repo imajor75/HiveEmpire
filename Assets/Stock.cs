@@ -21,6 +21,7 @@ public class Stock : Building
 	public int total;
 	public int totalTarget;
 	static public int maxItems = 100;
+	GameObject body;
 
 	public class Cart : Worker
 	{
@@ -90,10 +91,7 @@ public class Stock : Building
 
 	public static Stock Create()
 	{
-		var buildingObject = (GameObject)GameObject.Instantiate( template );
-		buildingObject.transform.localScale = new Vector3( 0.12f, 0.12f, 0.12f );
-		buildingObject.transform.Rotate( Vector3.up * -55 );	
-		return buildingObject.AddComponent<Stock>();
+		return new GameObject().AddComponent<Stock>();
 	}
 
 	public static bool IsItGood( GroundNode placeToBuild, Player owner )
@@ -174,6 +172,8 @@ public class Stock : Building
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
 		Array.Resize( ref destinations, (int)Item.Type.total );
+		body = Instantiate( template );
+		body.transform.SetParent( transform, false );
 	}
 
 	new public void Update()
