@@ -200,7 +200,6 @@ public class Item : Assert.Base
 
 	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )
 	{
-		assert.IsNotSelected();
 		assert.IsTrue( building != destination || priority != currentOrderPriority );
 
 		CancelTrip();

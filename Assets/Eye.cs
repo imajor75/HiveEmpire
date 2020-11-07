@@ -173,9 +173,9 @@ public class CameraHighlight : Assert.Base
 		highLightStencilRef = Shader.PropertyToID( "_StencilRef" );
 	}
 
-	void OnPreRender()
+	void OnPostRender()
 	{
-		var volume = Interface.instance.highlightVolume;
+		var volume = Interface.root.highlightVolume;
 		if ( volume == null )
 		{
 			highlightMaterial.SetInt( highLightStencilRef, 0 );
@@ -183,11 +183,9 @@ public class CameraHighlight : Assert.Base
 		}
 		var collider = volume.GetComponent<MeshCollider>();
 		var eye = transform.position;
-		var center = Interface.instance.highlightArea.center.Position();
-		eye = volume.transform.InverseTransformPoint( eye );
-		center = volume.transform.InverseTransformPoint( center );
+		var center = Interface.root.highlightArea.center.Position();
 		var ray = new Ray( eye, center - eye );
-		bool outside = collider.Raycast( ray, out _, 100 );
+		var outside = collider.Raycast( ray, out _, 100 );
 		highlightMaterial.SetInt( highLightStencilRef, outside ? 0 : 1 );
 	}
 
@@ -203,7 +201,7 @@ public class CameraHighlight : Assert.Base
 		// needs to be used (using GL.Begin(GL.QUADS) etc..). Unfortunately the 
 		// practic shows that it is not working for unknown reasons. This needs 
 		// to be tested withmap future versions of unity.
-		if ( Interface.instance.highlightType == Interface.HighlightType.none )
+		if ( Interface.root.highlightType == Interface.HighlightType.none )
 		{
 			Graphics.Blit( src, dst );
 			return;

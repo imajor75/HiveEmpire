@@ -39,6 +39,7 @@ public class Resource : Assert.Base
 		gold,
 		stone,
 		expose,
+		soil,
 		total,
 		unknown = -1	
 	}

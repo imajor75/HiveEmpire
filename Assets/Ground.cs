@@ -338,6 +338,7 @@ public class Ground : Assert.Base
 		}
 	}
 
+	[System.Serializable]
 	public class Area
 	{
 		public GroundNode center;

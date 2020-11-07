@@ -245,7 +245,7 @@ public class World : MonoBehaviour
 			o.name += " - DESTROYED";
 			Destroy( o.gameObject );
 		}
-		Interface.instance.Clear();
+		Interface.root.Clear();
 	}
 
 	public static Transform FindChildRecursive( Transform parent, string substring )
@@ -281,6 +281,15 @@ public class World : MonoBehaviour
 		}
 		foreach ( Transform child in gameObject.transform )
 			SetMaterialRecursive( child.gameObject, material );
+	}
+
+	public static void CollectRenderersRecursive( GameObject gameObject, List<MeshRenderer> list )
+	{
+		var renderer = gameObject.GetComponent<MeshRenderer>();
+		if ( renderer != null )
+			list.Add( renderer );
+		foreach ( Transform child in gameObject.transform )
+			CollectRenderersRecursive( child.gameObject, list );
 	}
 
 	public enum BlendMode

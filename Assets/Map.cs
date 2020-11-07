@@ -82,7 +82,7 @@ public class Map : Interface.Panel
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
 			camera.gameObject.AddComponent<CameraHighlight>();
 			if ( fullScreen )
-				Interface.instance.viewport.SetCamera( camera );
+				Interface.root.viewport.SetCamera( camera );
 		}
 
 		public void SetTarget( Vector2 position, float zoom, float rotation )
@@ -96,7 +96,7 @@ public class Map : Interface.Panel
 		void OnDestroy()
 		{
 			Destroy( camera.gameObject );
-			Interface.instance.viewport.SetCamera( null );
+			Interface.root.viewport.SetCamera( null );
 		}
 	}
 }

@@ -300,7 +300,8 @@ abstract public class Building : Assert.Base
 		transform.SetParent( ground.transform );
 		UpdateBody();
 		renderers = new List<MeshRenderer>();
-		ScanChildObject( transform );
+
+		World.CollectRenderersRecursive( gameObject, renderers );
 		float lowerLimit = transform.position.y;
 		float upperLimit = lowerLimit + height;
 		float level = upperLimit;
@@ -321,15 +322,6 @@ abstract public class Building : Assert.Base
 		highlightArrow = Instantiate( Resources.Load<GameObject>( "Fantasy_Kingdom_Pack_Lite/Perfabs/Main Structures/Decoration/Vane01_a01" ) );
 		highlightArrow.transform.SetParent( transform );
 		highlightArrow.transform.localScale = Vector3.one * 0.6f;
-	}
-
-	void ScanChildObject( Transform transform )
-	{
-		var renderer = transform.GetComponent<MeshRenderer>();
-		if ( renderer != null )
-			renderers.Add( renderer );
-		for ( int i = 0; i < transform.childCount; i++ )
-			ScanChildObject( transform.GetChild( i ) );
 	}
 
 	public void FixedUpdate()
@@ -396,7 +388,7 @@ abstract public class Building : Assert.Base
 		if ( !construction.done )
 			level = lowerLimit+(upperLimit-lowerLimit)*construction.progress;
 
-		bool highlight = Interface.instance.highlightType == Interface.HighlightType.stocks && this as Stock;
+		bool highlight = Interface.root.highlightType == Interface.HighlightType.stocks && this as Stock;
 
 		if ( currentHighlight != highlight || currentLevel != level )
 		{
@@ -412,7 +404,7 @@ abstract public class Building : Assert.Base
 			}
 		}
 
-		if ( Interface.instance.highlightType == Interface.HighlightType.area && Interface.instance.highlightArea != null && Interface.instance.highlightArea.IsInside( node ) )
+		if ( Interface.root.highlightType == Interface.HighlightType.area && Interface.root.highlightArea != null && Interface.root.highlightArea.IsInside( node ) )
 		{
 			highlightArrow.transform.localPosition = Vector3.up * ( ( float )( 1.5f + 0.3f * Math.Sin( 2 * Time.time ) ) );
 			highlightArrow.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );

@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Xml;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using UnityEngine.EventSystems;
-using UnityEngine.PlayerLoop;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
 
@@ -23,10 +20,10 @@ public class Interface : Assert.Base
 	public Viewport viewport;
 	static public MediaTable<Sprite, Icon> iconTable;
 	public GameObject debug;
-	public static Interface instance;
+	public static Interface root;
 	public bool heightStrips;
 	public Player mainPlayer;
-	public Tooltip tooltip;
+	static Tooltip tooltip;
 	public int autoSave = autoSaveInterval;
 	const int autoSaveInterval = 15000;
 	public HighlightType highlightType;
@@ -67,7 +64,7 @@ public class Interface : Assert.Base
 
 	public Interface()
 	{
-		instance = this;
+		root = this;
 	}
 
 	public void Clear()
@@ -320,10 +317,10 @@ public class Interface : Assert.Base
 			return;
 		}
 
-		UpdateHighligh();
+		UpdateHighlight();
 	}
 
-	void UpdateHighligh()
+	void UpdateHighlight()
 	{
 		if ( highlightVolume && highlightVolumeCenter == highlightArea.center && highlightVolumeRadius == highlightArea.radius )
 			return;
@@ -344,21 +341,24 @@ public class Interface : Assert.Base
 			var c = highlightVolume.AddComponent<MeshCollider>();
 			c.convex = true;
 			c.sharedMesh = m;
+			CreateHighLightVolumeMesh( m );
 		}
-		else
-			m = highlightVolume.GetComponent<MeshFilter>().mesh;
 
+		highlightVolume.transform.localPosition = highlightVolumeCenter.Position();
+		float scale = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
+		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
+	}
+
+	void CreateHighLightVolumeMesh( Mesh m )
+	{
 		var vertices = new Vector3[GroundNode.neighbourCount * 2];
-		float cx = highlightVolumeCenter.Position().x;
-		float cy = highlightVolumeCenter.Position().z;
 		var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
-		float d = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
 		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
 		{
-			float x = cx + corners[i, 0] * d - corners[i, 1] * d / 2;
-			float y = cy + corners[i, 1] * d;
-			vertices[i * 2 + 0] = new Vector3( x, -20, y );
-			vertices[i * 2 + 1] = new Vector3( x, +20, y );
+			float x = corners[i, 0] - corners[i, 1] / 2f;
+			float y = corners[i, 1];
+			vertices[i * 2 + 0] = new Vector3( x, -1, y );
+			vertices[i * 2 + 1] = new Vector3( x, +1, y );
 		}
 		m.vertices = vertices;
 
@@ -773,7 +773,7 @@ public class Interface : Assert.Base
 
 		public void MoveTo( Vector3 position )
 		{
-			Vector3 screenPosition = instance.viewport.camera.WorldToScreenPoint( position );
+			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
 			if ( screenPosition.y > Screen.height )
 				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
@@ -831,8 +831,8 @@ public class Interface : Assert.Base
 
 			public bool OnNodeClicked( GroundNode node )
 			{
-				if ( instance.highlightArea == area )
-					instance.highlightType = HighlightType.none;
+				if ( root.highlightArea == area )
+					root.highlightType = HighlightType.none;
 				return false;
 			}
 
@@ -841,16 +841,16 @@ public class Interface : Assert.Base
 				if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
 				{
 					area.center = null;
-					if ( instance.highlightArea == area )
-						instance.highlightType = HighlightType.none;
+					if ( root.highlightArea == area )
+						root.highlightType = HighlightType.none;
 					return;
 				}
 				area.center = World.instance.ground.nodes[0];
 				area.radius = 4;
-				instance.highlightType = HighlightType.area;
-				instance.highlightArea = area;
-				instance.highlightOwner = gameObject;
-				instance.viewport.inputHandler = this;
+				root.highlightType = HighlightType.area;
+				root.highlightArea = area;
+				root.highlightOwner = gameObject;
+				root.viewport.inputHandler = this;
 			}
 
 			public void OnPointerEnter( PointerEventData eventData )
@@ -858,15 +858,15 @@ public class Interface : Assert.Base
 				if ( area.center == null )
 					return;
 
-				instance.highlightType = HighlightType.area;
-				instance.highlightOwner = gameObject;
-				instance.highlightArea = area;
+				root.highlightType = HighlightType.area;
+				root.highlightOwner = gameObject;
+				root.highlightArea = area;
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( instance.viewport.inputHandler != this as IInputHandler && instance.highlightArea == area )
-					instance.highlightType = HighlightType.none;
+				if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == area )
+					root.highlightType = HighlightType.none;
 			}
 
 			void Update()
@@ -936,14 +936,14 @@ public class Interface : Assert.Base
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					instance.tooltip.SetText( this, item.type.ToString(), path = CreateUIPath( item.path ) );
+					tooltip.SetText( this, item.type.ToString(), path = CreateUIPath( item.path ) );
 				else
-					instance.tooltip.SetText( this, itemType.ToString() );
+					tooltip.SetText( this, itemType.ToString() );
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				Interface.instance.tooltip.SetText( this, "" );
+				tooltip.SetText( this, "" );
 			}
 		}
 	}
@@ -1102,7 +1102,7 @@ public class Interface : Assert.Base
 			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
 			{
 				showProgressBar = true;
-				showOutputBuffer = workshop.configuration.gatheredResource == Resource.Type.unknown;
+				showOutputBuffer = !workshop.gatherer;
 			}
 			int displayedBufferCount = workshop.buffers.Count + ( showOutputBuffer ? 1 : 0 );
 			int height = 80 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 );
@@ -1178,7 +1178,7 @@ public class Interface : Assert.Base
 				}
 				else
 				{
-					if ( workshop.configuration.gatheredResource != Resource.Type.unknown && !workshop.worker.IsIdle() )
+					if ( workshop.gatherer && !workshop.working )
 						progressBar.color = Color.green;
 					else
 						progressBar.color = Color.red;

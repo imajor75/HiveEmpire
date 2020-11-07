@@ -535,6 +535,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		assert.IsTrue( false );
 	}
 
+	[JsonIgnore]
+	public bool gatherer { get { return configuration.gatheredResource != Resource.Type.unknown; } }
+
 	new void FixedUpdate()
 	{
 		productivity.FixedUpdate( this );
@@ -550,6 +553,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 			worker = Worker.Create();
 			worker.SetupForBuilding( this );
 		}
+
+		if ( gatherer && worker.IsIdle() && worker.node == node )
+			SetWorking( false );
 
 		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority < ItemDispatcher.Priority.high && !working )
 		{
@@ -641,7 +647,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			default:
 			{
-				if ( configuration.gatheredResource != Resource.Type.unknown )
+				if ( gatherer )
 					CollectResource( configuration.gatheredResource, configuration.gatheringRange );
 				else
 					ProcessInput();

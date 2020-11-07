@@ -187,7 +187,17 @@ public class ItemDispatcher : ScriptableObject
 			}
 			int surplus = 0;
 			foreach ( var offer in offers )
-				surplus += offer.quantity;
+			{
+				// If an item is not needed, it is on its way to a stock, it is not treated as surplus
+				if ( offer.item && offer.priority < Priority.high )
+					continue;
+				int quantity = offer.quantity;
+				Stock stock = offer.building as Stock;
+				if ( stock && stock.destinations[(int)itemType] )
+					quantity -= Stock.Cart.capacity;
+				if ( quantity >= 0 )
+					surplus += quantity;
+			}
 			boss.player.surplus[(int)itemType] = surplus;			
 
 			oldRequests = requests;

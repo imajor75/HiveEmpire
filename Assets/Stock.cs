@@ -15,7 +15,6 @@ public class Stock : Building
 	public static GameObject template;
 	static Configuration configuration = new Configuration();
 	public Cart cart;
-	const int cartCapacity = 16;
 	public Ground.Area inputArea = new Ground.Area();
 	public Ground.Area outputArea = new Ground.Area();
 	public int total;
@@ -30,6 +29,7 @@ public class Stock : Building
 			return new GameObject().AddComponent<Cart>();
 		}
 
+		public const int capacity = 16;
 		public Item.Type itemType;
 		public int itemQuantity;
 		public Stock destination;
@@ -160,6 +160,8 @@ public class Stock : Building
 
 	new void Start()
 	{
+		body = Instantiate( template );
+		body.transform.SetParent( transform, false );
 		base.Start();
 		if ( main )
 			name = "Headquarters";
@@ -172,8 +174,6 @@ public class Stock : Building
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
 		Array.Resize( ref destinations, (int)Item.Type.total );
-		body = Instantiate( template );
-		body.transform.SetParent( transform, false );
 	}
 
 	new public void Update()
@@ -203,10 +203,10 @@ public class Stock : Building
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high, inputArea );
 
-			if ( destinations[itemType] && content[itemType] >= cartCapacity && cart.IsIdle( true ) && flag.user == null )
+			if ( destinations[itemType] && content[itemType] >= Cart.capacity && cart.IsIdle( true ) && flag.user == null )
 			{
 				var target = destinations[itemType];
-				cart.itemQuantity = cartCapacity;
+				cart.itemQuantity = Cart.capacity;
 				cart.itemType = (Item.Type)itemType;
 				cart.destination = target;
 				target.onWay[itemType] += cart.itemQuantity;
@@ -296,6 +296,6 @@ public class Stock : Building
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % cartCapacity,		0 );
+			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % Cart.capacity,		0 );
 	}
 }

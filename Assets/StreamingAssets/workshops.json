@@ -16,6 +16,7 @@
   },
   {
     "type": "forester",
+	"gatheredResource": "soil",
     "flatteningNeeded": false
   },
   {

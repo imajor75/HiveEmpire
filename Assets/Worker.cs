@@ -287,7 +287,7 @@ public class Worker : Assert.Base
 			}
 
 			wishedPoint = -1;
-			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.workerAtNodes.Count );	// TODO Triggered
+			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.workerAtNodes.Count );	// TODO Triggered, happens when a road starts and ends at the same flag
 			if ( road.workerAtNodes[currentPoint] == boss ) // it is possible that the other worker already took the place, so it must be checked
 				road.workerAtNodes[currentPoint] = null;
 

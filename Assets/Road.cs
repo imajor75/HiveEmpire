@@ -735,29 +735,29 @@ public class Road : Assert.Base, Interface.IInputHandler
 		GroundNode last = newRoad.GetNodeFromEnd( 0 );
 		if ( node == last )
 		{
-			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
 			return true;
 		}
 
 		if ( node.flag )
 		{
-			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
 			return true;
 		}
 
 		if ( node.DistanceFrom( last ) == 1 )
 		{
-			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.road );
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.road );
 			return true;
 		}
 
 		if ( Flag.IsItGood( node, owner ) )
 		{
-			Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
 			return true;
 		}
 
-		Interface.instance.viewport.SetCursorType( Interface.Viewport.CursorType.nothing );
+		Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.nothing );
 		return true;
 	}
 
