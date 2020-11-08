@@ -292,11 +292,12 @@ public class Path : PathFinder
 	public override void Validate()
 	{
 		base.Validate();
-		owner.assert.IsTrue( progress >= 0 );
+		Assert owner = this.owner?.assert ?? Assert.global;
+		owner.IsTrue( progress >= 0 );
 		if ( mode == Mode.onRoad )
-			owner.assert.IsTrue( progress <= roadPath.Count );
+			owner.IsTrue( progress <= roadPath.Count );
 		else
-			owner.assert.IsTrue( progress <= path.Count );
+			owner.IsTrue( progress <= path.Count );
 		/*if ( ready && mode == Mode.onRoad )
 		{
 			for ( int i = progress; i < roadPath.Count; i++ )

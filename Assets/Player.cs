@@ -27,6 +27,13 @@ public class Player : ScriptableObject
 	public int[] surplus = new int[(int)Item.Type.total];
 	public Item.Type worseItemType;
 
+	[JsonIgnore]
+	public float averageEfficiency;
+	[JsonIgnore]
+	public List<float> production;
+	[JsonIgnore]
+	public List<float> efficiency;
+
 	public class Chart : ScriptableObject
 	{
 		public List<float> data;

@@ -154,7 +154,7 @@ public class Ground : Assert.Base
 				n.type = GroundNode.Type.mountain;
 			if ( d < World.instance.waterLevel )
 				n.type = GroundNode.Type.underWater;
-			n.transform.localPosition = n.Position();
+			n.transform.localPosition = n.Position;
 		}
 
 #if DEBUG
@@ -209,7 +209,7 @@ public class Ground : Assert.Base
 
 			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
 			{
-				var p = nodes[i].Position();
+				var p = nodes[i].Position;
 				vertices[i] = p;
 				uvs[i] = new Vector2( p.x, p.z );
 				switch ( nodes[i].type )
@@ -263,7 +263,7 @@ public class Ground : Assert.Base
 		{
 			var vertices = mesh.vertices;
 			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
-				vertices[i] = nodes[i].Position();
+				vertices[i] = nodes[i].Position;
 			mesh.vertices = vertices;
 			collider.sharedMesh = mesh;
 		}

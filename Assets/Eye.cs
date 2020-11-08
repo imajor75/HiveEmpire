@@ -89,7 +89,7 @@ public class Eye : MonoBehaviour
 
 	public void FocusOn( GroundNode node )
 	{
-		var p = node.Position();
+		var p = node.Position;
 		x = p.x;
 		y = p.z;
 		director = null;
@@ -173,7 +173,7 @@ public class CameraHighlight : Assert.Base
 		highLightStencilRef = Shader.PropertyToID( "_StencilRef" );
 	}
 
-	void OnPostRender()
+	void OnPreRender()
 	{
 		var volume = Interface.root.highlightVolume;
 		if ( volume == null )
@@ -183,7 +183,7 @@ public class CameraHighlight : Assert.Base
 		}
 		var collider = volume.GetComponent<MeshCollider>();
 		var eye = transform.position;
-		var center = Interface.root.highlightArea.center.Position();
+		var center = Interface.root.highlightArea.center.Position;
 		var ray = new Ray( eye, center - eye );
 		var outside = collider.Raycast( ray, out _, 100 );
 		highlightMaterial.SetInt( highLightStencilRef, outside ? 0 : 1 );

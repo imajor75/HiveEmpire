@@ -52,13 +52,13 @@ public class GroundNode : Assert.Base
 	{
 		name = "GroundNode (" + x + ", " + y + ")";
 		transform.SetParent( World.nodes.transform );
-		transform.localPosition = Position();
+		transform.localPosition = Position;
 	}
 
 	void OnDrawGizmos()
 	{
 #if DEBUG
-		Vector3 position = Position();
+		Vector3 position = Position;
 		if ( ( position - SceneView.lastActiveSceneView.camera.transform.position ).magnitude > 10 )
 			return;
 
@@ -68,12 +68,16 @@ public class GroundNode : Assert.Base
 #endif
 	}
 
-	public Vector3 Position()
+	[JsonIgnore]
+	public Vector3 Position
     {
-        int rx = x-ground.width/2;
-        int ry = y-ground.height/2;
-        Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
-        return position;
+		get
+		{
+			int rx = x-ground.width/2;
+			int ry = y-ground.height/2;
+			Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
+			return position;
+		}
     }
 
     public static GroundNode FromPosition( Vector3 position, Ground ground )
@@ -200,7 +204,7 @@ public class GroundNode : Assert.Base
 			border?.UpdateBody();
 		building?.UpdateBody();
 
-		transform.localPosition = Position();
+		transform.localPosition = Position;
 	}
 
 	public bool CanBeFlattened()

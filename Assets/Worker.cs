@@ -878,11 +878,11 @@ public class Worker : Assert.Base
 						var t = taskQueue[0] as WalkToRoadPoint;
 						if ( t && t.wishedPoint >= 0 )
 						{
-							var wp = t.road.nodes[t.wishedPoint].Position();
+							var wp = t.road.nodes[t.wishedPoint].Position;
 							arrowObject.SetActive( true );
-							var dir = wp - node.Position();
+							var dir = wp - node.Position;
 							arrowObject.transform.rotation = Quaternion.LookRotation( dir ) * Quaternion.Euler( 0, -90, 0 ) * Quaternion.Euler( 90, 0, 0 );
-							arrowObject.transform.position = node.Position() + Vector3.up * 4 + 0.5f * dir;
+							arrowObject.transform.position = node.Position + Vector3.up * 4 + 0.5f * dir;
 						}
 					}
 				}
@@ -1320,7 +1320,7 @@ public class Worker : Assert.Base
 		{
 			animator?.SetBool( walkingID, false );
 			soundSource?.Stop();
-			transform.localPosition = node.Position();
+			transform.localPosition = node.Position;
 			if ( taskQueue.Count > 0 )
 			{
 				WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;
@@ -1352,7 +1352,7 @@ public class Worker : Assert.Base
 		}
 		else
 		{
-			transform.localPosition = Vector3.Lerp( walkFrom.Position(), walkTo.Position(), walkProgress ) + Vector3.up * GroundNode.size * Road.height;
+			transform.localPosition = Vector3.Lerp( walkFrom.Position, walkTo.Position, walkProgress ) + Vector3.up * GroundNode.size * Road.height;
 			int direction = walkFrom.DirectionTo( walkTo );
 			assert.IsTrue( direction >= 0 );
 			transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );

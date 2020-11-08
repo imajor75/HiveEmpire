@@ -171,7 +171,7 @@ public class Serializer : JsonSerializer
 					elementType = type.GetElementType();
 				if ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( List<> ) )
 					elementType = type.GetGenericArguments()[0];
-				Assert.global.IsNotNull( elementType );
+				Assert.global.IsNotNull( elementType, "Unknown element type of " + type.ToString() );
 
 				Type listType = typeof( List<> ).MakeGenericType( new [] { elementType } );
 				IList list = (IList)Activator.CreateInstance( listType );

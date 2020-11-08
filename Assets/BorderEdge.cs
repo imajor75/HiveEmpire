@@ -37,7 +37,7 @@ public class BorderEdge : Assert.Base
 
 	public void UpdateBody()
 	{
-		Vector3 position = Vector3.Lerp( node.Position(), node.Neighbour( direction ).Position(), 0.4f );
+		Vector3 position = Vector3.Lerp( node.Position, node.Neighbour( direction ).Position, 0.4f );
 		if ( position.y < World.instance.waterLevel * World.instance.maxHeight )
 			position.y = World.instance.waterLevel * World.instance.maxHeight;
 		transform.localPosition = position;
