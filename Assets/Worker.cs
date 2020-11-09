@@ -32,6 +32,7 @@ public class Worker : Assert.Base
 	public GameObject mapObject;
 	Material mapMaterial;
 	GameObject arrowObject;
+	SpriteRenderer itemOnMap;
 	static Sprite arrowSprite;
 	Material shirtMaterial;
 	[JsonIgnore]
@@ -784,6 +785,16 @@ public class Worker : Assert.Base
 		arrowObject.transform.SetParent( transform, false );
 		arrowObject.AddComponent<SpriteRenderer>().sprite = arrowSprite;
 		arrowObject.transform.localScale = Vector3.one * 0.4f;
+
+		itemOnMap = new GameObject().AddComponent<SpriteRenderer>();
+		itemOnMap.name = "Item on map";
+		itemOnMap.transform.SetParent( transform, false );
+		itemOnMap.transform.localScale = Vector3.one * 0.15f;
+		itemOnMap.transform.localPosition = Vector3.up * 3;
+		itemOnMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+		itemOnMap.gameObject.layer = World.layerIndexMapOnly;
+		itemOnMap.material = Instantiate( itemOnMap.material );
+		itemOnMap.material.renderQueue = 4003;
 	}
 
 	// Distance the worker is taking in a single frame (0.02 sec)
@@ -888,6 +899,21 @@ public class Worker : Assert.Base
 					}
 				}
 				break;
+		}
+
+		{
+			var t = Item.Type.unknown;
+			if ( itemInHands )
+				t = itemInHands.type;
+			if ( this as Stock.Cart )
+				t = ( this as Stock.Cart ).itemType;
+			if ( t != Item.Type.unknown )
+			{
+				itemOnMap.sprite = Item.sprites[(int)t];
+				itemOnMap.enabled = true;
+			}
+			else
+				itemOnMap.enabled = false;
 		}
 	}
 
