@@ -132,7 +132,7 @@ public class Resource : Assert.Base
     void Start()
     {
 		transform.SetParent( World.resources.transform );
-		transform.localPosition = node.Position();
+		transform.localPosition = node.Position;
 
 		name = type.ToString();
 		GameObject prefab = meshes.GetMediaData( type );
@@ -283,7 +283,7 @@ public class Resource : Assert.Base
 
 	public void UpdateBody()
 	{
-		transform.localPosition = node.Position();
+		transform.localPosition = node.Position;
 	}
 
 	public void Validate()

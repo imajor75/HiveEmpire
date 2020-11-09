@@ -50,7 +50,7 @@ public class Flag : Assert.Base
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
-		transform.localPosition = node.Position();
+		transform.localPosition = node.Position;
 		var body = GameObject.Instantiate( template );
 		body.transform.SetParent( transform, false );
 		itemTable = World.FindChildRecursive( transform, "ItemTable" )?.gameObject.GetComponent<MeshRenderer>();
@@ -97,7 +97,7 @@ public class Flag : Assert.Base
 		}
 		else
 			itemTable.enabled = false;
-		transform.localPosition = node.Position() + Vector3.up * GroundNode.size * Road.height;
+		transform.localPosition = node.Position + Vector3.up * GroundNode.size * Road.height;
 	}
 
 	public bool ReleaseItem( Item item )

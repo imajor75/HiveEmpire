@@ -198,7 +198,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 	{
 		transform.SetParent( ground.transform, false );
 		if ( nodes.Count > 0 )	
-			transform.localPosition = nodes[nodes.Count / 2].Position();
+			transform.localPosition = nodes[nodes.Count / 2].Position;
 		if ( invalid )
 			return;
 
@@ -447,7 +447,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 		foreach ( var n in nodes )
 			workerAtNodes.Add( null );
 		CreateNewWorker();
-		transform.localPosition = nodes[nodes.Count / 2].Position();
+		transform.localPosition = nodes[nodes.Count / 2].Position;
 		CreateCurves();
 		RebuildMesh();
 		AttachWatches();
@@ -469,7 +469,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 		{
 			int p = Math.Max( j - 1, 0 );
 			int n = Math.Min( j + 1, nodes.Count - 1 );
-			directions.Add( ( nodes[n].Position() - nodes[p].Position() ).normalized );
+			directions.Add( ( nodes[n].Position - nodes[p].Position ).normalized );
 		}
 		for ( int i = 0; i < 3; i++ )
 		{
@@ -479,14 +479,14 @@ public class Road : Assert.Base, Interface.IInputHandler
 				if ( i == 1 )
 				{
 					curves[i].Add( CubicCurve.Create().SetupAsLinear(
-						nodes[j].Position()[i],
-						nodes[j + 1].Position()[i] ) );
+						nodes[j].Position[i],
+						nodes[j + 1].Position[i] ) );
 				}
 				else
 				{
 					curves[i].Add( CubicCurve.Create().Setup(
-						nodes[j].Position()[i],
-						nodes[j + 1].Position()[i],
+						nodes[j].Position[i],
+						nodes[j + 1].Position[i],
 						directions[j][i],
 						directions[j + 1][i] ) );
 				}

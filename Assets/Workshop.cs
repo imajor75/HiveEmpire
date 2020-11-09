@@ -448,7 +448,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		mapIndicator.transform.SetParent( transform, false );
 		World.SetLayerRecursive( mapIndicator, World.layerIndexMapOnly );
 		mapIndicatorMaterial = mapIndicator.GetComponent<MeshRenderer>().material = new Material( World.defaultShader );
-		mapIndicator.transform.position = node.Position() + new Vector3( 0, 2, GroundNode.size * 0.5f );
+		mapIndicator.transform.position = node.Position + new Vector3( 0, 2, GroundNode.size * 0.5f );
 		mapIndicator.SetActive( false );
 
 		SetupConfiguration();
@@ -858,7 +858,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( Selection.Contains( gameObject ) && resourcePlace != null )
 		{
 			Gizmos.color = Color.red;
-			Gizmos.DrawLine( node.Position() + Vector3.up * GroundNode.size, resourcePlace.Position() );
+			Gizmos.DrawLine( node.Position + Vector3.up * GroundNode.size, resourcePlace.Position );
 		}
 #endif
 	}

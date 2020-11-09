@@ -277,7 +277,7 @@ public class Item : Assert.Base
 				if ( flag.items[i] == this )
 				{
 					// TODO Arrange the items around the flag
-					transform.localPosition = flag.node.Position() + Vector3.up * GroundNode.size / 2 + Vector3.right * i * GroundNode.size / 10;
+					transform.localPosition = flag.node.Position + Vector3.up * GroundNode.size / 2 + Vector3.right * i * GroundNode.size / 10;
 					return;
 				}
 			}

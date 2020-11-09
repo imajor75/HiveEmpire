@@ -91,7 +91,7 @@ public class Eye : MonoBehaviour
 
 	public void FocusOn( GroundNode node )
 	{
-		var p = node.Position();
+		var p = node.Position;
 		x = p.x;
 		y = p.z;
 		director = null;

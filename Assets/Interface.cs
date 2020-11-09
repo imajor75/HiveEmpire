@@ -344,7 +344,7 @@ public class Interface : Assert.Base
 			CreateHighLightVolumeMesh( m );
 		}
 
-		highlightVolume.transform.localPosition = highlightVolumeCenter.Position();
+		highlightVolume.transform.localPosition = highlightVolumeCenter.Position;
 		float scale = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
 		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
 		Destroy( highlightVolume.GetComponent<MeshCollider>() );
@@ -439,8 +439,8 @@ public class Interface : Assert.Base
 			float uvDir = path.roadPathReversed[j] ? 1f : 0f;
 			for ( int i = 0; i < road.nodes.Count - 1; i++ )
 			{
-				Vector3 start = road.nodes[i].Position() + Vector3.up * 0.1f;
-				Vector3 end = road.nodes[i + 1].Position() + Vector3.up * 0.1f;
+				Vector3 start = road.nodes[i].Position + Vector3.up * 0.1f;
+				Vector3 end = road.nodes[i + 1].Position + Vector3.up * 0.1f;
 				Vector3 side = (end - start) * 0.1f;
 				side = new Vector3( -side.z, side.y, side.x );
 
@@ -770,14 +770,14 @@ public class Interface : Assert.Base
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.Position() + Vector3.up * GroundNode.size );
+			MoveTo( target.Position + Vector3.up * GroundNode.size );
 		}
 
 		public void MoveTo( Vector3 position )
 		{
 			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Position() - Vector3.up * GroundNode.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Position - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
 			Rect size = new Rect();
 			foreach ( RectTransform t in frame.rectTransform )
@@ -1555,8 +1555,8 @@ public class Interface : Assert.Base
 
 			bool reversed = false;
 			var camera = World.instance.eye.camera;
-			float x0 = camera.WorldToScreenPoint( road.GetEnd( 0 ).node.Position() ).x;
-			float x1 = camera.WorldToScreenPoint( road.GetEnd( 1 ).node.Position() ).x;
+			float x0 = camera.WorldToScreenPoint( road.GetEnd( 0 ).node.Position ).x;
+			float x1 = camera.WorldToScreenPoint( road.GetEnd( 1 ).node.Position ).x;
 			if ( x1 < x0 )
 				reversed = true;
 
@@ -1937,7 +1937,7 @@ public class Interface : Assert.Base
 				route.transform.SetParent( Root.transform );
 			}
 			if ( item.flag )
-				mapIcon.transform.position = item.flag.node.Position() + Vector3.up * 4;
+				mapIcon.transform.position = item.flag.node.Position + Vector3.up * 4;
 			else
 			{
 				item.assert.IsNotNull( item.worker );
@@ -2048,7 +2048,7 @@ public class Interface : Assert.Base
 				return;
 			GroundNode node = FindNodeAt( Input.mousePosition );
 			if ( cursor && node )
-				cursor.transform.localPosition = node.Position();
+				cursor.transform.localPosition = node.Position;
 			if ( !inputHandler.OnMovingOverNode( node ) )
 				inputHandler = this;
 #if DEBUG

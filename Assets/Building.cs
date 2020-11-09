@@ -451,7 +451,7 @@ abstract public class Building : Assert.Base
 		var area = huge ? hugeArea : singleArea;
 		Vector3 position = new Vector3();
 		foreach ( var o in area )
-			position += node.Add( o ).Position();
+			position += node.Add( o ).Position;
 		transform.localPosition = position / area.Count;
 		exit?.RebuildMesh( true );
 	}
