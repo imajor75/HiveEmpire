@@ -294,7 +294,7 @@ public class Stock : Building
 		base.Validate();
 		assert.IsNotNull( cart );
 		cart.Validate();
-		assert.AreEqual( cart.building, this );
+		assert.AreEqual( cart.building, this );		// TODO Fired
 		int[] onWayCounted = new int[(int)Item.Type.total];
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;

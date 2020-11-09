@@ -553,6 +553,13 @@ public class Interface : Assert.Base
 
 		public static int itemIconBorderSize = 2;
 
+		public enum CompareResult
+		{
+			different,
+			sameButDifferentTarget,
+			same
+		}
+
 		public Interface Root
 		{
 			get
@@ -569,7 +576,10 @@ public class Interface : Assert.Base
 		{
 			foreach ( var panel in Root.panels )
 			{
-				if ( IsTheSame( panel ) )
+				var r = IsTheSame( panel );
+				if ( r != CompareResult.different )
+					panel.Close();
+				if ( r == CompareResult.same )
 				{
 					Destroy( gameObject );
 					return true;
@@ -591,9 +601,12 @@ public class Interface : Assert.Base
 			return false;
 		}
 
-		public virtual bool IsTheSame( object other )
+		public virtual CompareResult IsTheSame( Panel other )
 		{
-			return other.GetType() == GetType();
+			if ( other.GetType() == GetType() )
+				return CompareResult.same;
+
+			return CompareResult.different;
 		}
 
 		public void OnDestroy()
@@ -1075,6 +1088,19 @@ public class Interface : Assert.Base
 			this.building = building;
 			return base.Open( building.node );
 		}
+		public override CompareResult IsTheSame( Panel other )
+		{
+			var p = other as BuildingPanel;
+			if ( p == null )
+				return CompareResult.different;
+
+			if ( p.building == this.building )
+				return CompareResult.same;
+
+			return CompareResult.sameButDifferentTarget;
+		}
+
+
 	}
 
 	public class WorkshopPanel : BuildingPanel
@@ -1273,10 +1299,10 @@ public class Interface : Assert.Base
 
 		public void Open( Stock stock, bool show = false )
 		{
+			this.stock = stock;
 			if ( base.Open( stock ) )
 				return;
 			name = "Stock panel";
-			this.stock = stock;
 			RecreateControls();
 			if ( show )
 				Root.world.eye.FocusOn( stock );

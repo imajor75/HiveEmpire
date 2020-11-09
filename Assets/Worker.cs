@@ -893,6 +893,7 @@ public class Worker : Assert.Base
 
 	public bool Remove( bool returnToMainBuilding = true )
 	{
+		assert.IsTrue( type != Type.cart || building == null );
 		Reset();
 		if ( origin != null )
 		{
