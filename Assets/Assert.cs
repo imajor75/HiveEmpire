@@ -196,5 +196,12 @@ public class Assert
 			}
 			return nice;
 		}
+
+		public static new void Destroy( UnityEngine.Object toDestroy )
+		{
+			if ( toDestroy == null )
+				return;
+			UnityEngine.Object.Destroy( toDestroy );
+		}
 	}
 }

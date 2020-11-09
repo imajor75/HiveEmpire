@@ -203,7 +203,7 @@ public class Stock : Building
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high, inputArea );
 
-			if ( destinations[itemType] && content[itemType] >= Cart.capacity && cart.IsIdle( true ) && flag.user == null )
+			if ( destinations[itemType] && content[itemType] >= Cart.capacity && cart.IsIdle( true ) && flag.user == null && destinations[itemType].total + Cart.capacity <= maxItems )
 			{
 				var target = destinations[itemType];
 				cart.itemQuantity = Cart.capacity;
@@ -292,6 +292,9 @@ public class Stock : Building
 	public override void Validate()
 	{
 		base.Validate();
+		assert.IsNotNull( cart );
+		cart.Validate();
+		assert.AreEqual( cart.building, this );
 		int[] onWayCounted = new int[(int)Item.Type.total];
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;

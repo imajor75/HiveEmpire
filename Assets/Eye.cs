@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Threading;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.GameCenter;
 
 [RequireComponent( typeof( Camera ) )]
 public class Eye : MonoBehaviour
@@ -173,24 +175,22 @@ public class CameraHighlight : Assert.Base
 		highLightStencilRef = Shader.PropertyToID( "_StencilRef" );
 	}
 
-	void OnPostRender()
-	{
-		var volume = Interface.root.highlightVolume;
-		if ( volume == null )
-		{
-			highlightMaterial.SetInt( highLightStencilRef, 0 );
-			return;
-		}
-		var collider = volume.GetComponent<MeshCollider>();
-		var eye = transform.position;
-		var center = Interface.root.highlightArea.center.Position();
-		var ray = new Ray( eye, center - eye );
-		var outside = collider.Raycast( ray, out _, 100 );
-		highlightMaterial.SetInt( highLightStencilRef, outside ? 0 : 1 );
-	}
-
 	void OnRenderImage( RenderTexture src, RenderTexture dst )
 	{
+		var volume = Interface.root.highlightVolume;
+		if ( volume )
+		{
+			var collider = volume.GetComponent<MeshCollider>();
+			collider.sharedMesh = volume.GetComponent<MeshFilter>().mesh;
+			var eye = transform.position;
+			var center = volume.transform.position;
+			var ray = new Ray( eye, center - eye );
+			var outside = collider.Raycast( ray, out _, 100 );
+			highlightMaterial.SetInt( highLightStencilRef, outside ? 0 : 1 );
+		}
+		else
+			highlightMaterial.SetInt( highLightStencilRef, 0 );
+
 		// TODO Do the postprocess with less blit calls
 		// This should be possible theoretically with a single blit from src
 		// to dst using the stencil from src. But since the stencil values are

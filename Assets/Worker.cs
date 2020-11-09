@@ -686,8 +686,9 @@ public class Worker : Assert.Base
 	{
 		look = type = Type.cart;
 		building = stock;
-		this.node = stock.node;
-		this.ground = stock.ground;
+		node = stock.node;
+		ground = stock.ground;
+		owner = stock.owner;
 		return this;
 	}
 
@@ -1007,6 +1008,7 @@ public class Worker : Assert.Base
 
 		if ( type == Type.cart )
 		{
+			assert.IsNotNull( owner );
 			var stock = building as Stock;
 			if ( stock == null )
 			{
@@ -1072,6 +1074,8 @@ public class Worker : Assert.Base
 
 		if ( type == Type.unemployed )
 		{
+			if ( this as Stock.Cart )
+				assert.IsNull( building as Stock );
 			if ( node == owner.mainBuilding.node )
 			{
 				if ( walkTo == null )
@@ -1376,17 +1380,14 @@ public class Worker : Assert.Base
 				transform.Rotate( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
 			}
 		}
-
-
 	}
 
 	public bool IsIdle( bool inBuilding = false )
 	{
 		if ( taskQueue.Count != 0 || walkTo != null )
 			return false;
-		if ( !inBuilding )
+		if ( !inBuilding || building as Workshop == null )
 			return true;
-		assert.IsNotNull( building );
 		Workshop workshop = building as Workshop;
 		if ( workshop && workshop.working )
 			return false;
@@ -1474,12 +1475,16 @@ public class Worker : Assert.Base
 		if ( exclusiveFlag )
 		{
 			assert.IsTrue( type == Type.hauler || type == Type.cart );
-			assert.IsTrue( onRoad );
-			assert.IsNotNull( road );
+			if ( type != Type.cart )
+			{
+				assert.IsTrue( onRoad );
+				assert.IsNotNull( road );
+			}
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
 		}
 		if ( type == Type.cart )
 		{
+			assert.IsNotNull( building as Stock );
 			if ( road )
 			{
 				int index = road.NodeIndex( node );

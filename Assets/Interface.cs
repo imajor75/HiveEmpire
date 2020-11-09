@@ -347,6 +347,8 @@ public class Interface : Assert.Base
 		highlightVolume.transform.localPosition = highlightVolumeCenter.Position();
 		float scale = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
 		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
+		Destroy( highlightVolume.GetComponent<MeshCollider>() );
+		highlightVolume.AddComponent<MeshCollider>();
 	}
 
 	void CreateHighLightVolumeMesh( Mesh m )

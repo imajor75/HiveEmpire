@@ -152,11 +152,13 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Worker>();
 			foreach ( var o in list )
 			{
+				if ( o.owner == null )
+					o.owner = players[0];
 				o.Validate();
 			}
 		}
 		{
-			var list = Resources.FindObjectsOfTypeAll<Workshop>();
+			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
 				o.Validate();
