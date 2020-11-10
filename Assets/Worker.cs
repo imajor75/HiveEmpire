@@ -1415,7 +1415,7 @@ public class Worker : Assert.Base
 		if ( !inBuilding || building as Workshop == null )
 			return true;
 		Workshop workshop = building as Workshop;
-		if ( workshop && workshop.working )
+		if ( workshop && workshop.working && !workshop.gatherer )
 			return false;
 		return node == building.node;
 	}

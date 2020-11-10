@@ -165,6 +165,10 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
+				var s = o as Workshop;
+				if ( s && s.working && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
+					s.working = false;
+
 				o.Validate();
 			}
 		}

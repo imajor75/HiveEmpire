@@ -217,7 +217,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		public GroundNode node;
 		public World.Timer wait;
-		//public int waitTimer = 0;
 		public bool done;
 		public Resource.Type resourceType;
 
@@ -234,10 +233,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 			if ( done )
 				return true;
-			if ( boss.node != node )
+			if ( boss.node != node || node.building || node.flag || node.road || node.fixedHeight || node.resource || !node.CheckType( GroundNode.Type.land ) )
+			{
+				(boss.building as Workshop).SetWorking( false );
 				return true;
-			if ( node.building || node.flag || node.road || node.fixedHeight || node.resource || !node.CheckType( GroundNode.Type.land ) )
-				return true;
+			}
 
 			Resource.Create().Setup( node, resourceType );
 			done = true;
@@ -868,7 +868,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public override void Validate()
 	{
-		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && configuration.gatheredResource != Resource.Type.unknown );
+		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && gatherer );
 		base.Validate();
 		int itemsOnTheWayCount = 0;
 		foreach ( Buffer b in buffers )
