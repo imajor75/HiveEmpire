@@ -60,6 +60,20 @@ public class Worker : Assert.Base
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
 
+	public Color cachedColor;
+	[JsonIgnore]
+	public Color Color
+	{
+		set
+		{
+			cachedColor = value;
+			if ( shirtMaterial )
+				shirtMaterial.color = value;
+			if ( mapMaterial )
+				mapMaterial.color = value;
+		}
+	}
+
 	public class Task : ScriptableObject
 	{
 		public Worker boss;
@@ -538,8 +552,7 @@ public class Worker : Assert.Base
 			{
 				road.workerAtNodes[i] = boss;
 				boss.onRoad = true;
-				if ( boss.shirtMaterial )
-					boss.shirtMaterial.color = Color.yellow;
+				boss.Color = Color.white;
 				return true;
 			}
 			return false;
@@ -626,6 +639,7 @@ public class Worker : Assert.Base
 		name = "Hauler";
 		owner = road.owner;
 		ground = road.ground;
+		cachedColor = Color.grey;
 		Building main = road.owner.mainBuilding;
 		node = main.node;
 		this.road = road;
@@ -640,6 +654,7 @@ public class Worker : Assert.Base
 	public Worker SetupForBuilding( Building building )
 	{
 		look = type = Type.tinkerer;
+		cachedColor = Color.cyan;
 		name = "Tinkerer";
 		return SetupForBuildingSite( building );
 	}
@@ -648,6 +663,7 @@ public class Worker : Assert.Base
 	{
 		look = type = Type.constructor;
 		name = "Builder";
+		cachedColor = Color.cyan;
 		return SetupForBuildingSite( building );
 	}
 
@@ -655,6 +671,7 @@ public class Worker : Assert.Base
 	{
 		look = type = Type.soldier;
 		name = "Soldier";
+		cachedColor = Color.red;
 		return SetupForBuildingSite( building );
 	}
 
@@ -690,6 +707,7 @@ public class Worker : Assert.Base
 		node = stock.node;
 		ground = stock.ground;
 		owner = stock.owner;
+		cachedColor = Color.white;
 		return this;
 	}
 
@@ -723,15 +741,6 @@ public class Worker : Assert.Base
 				Material[] materials = skinnedMeshRenderer.materials;
 				materials[0] = shirtMaterial = new Material( World.defaultShader );
 				skinnedMeshRenderer.materials = materials;
-				if ( type == Type.hauler )
-				{
-					if ( onRoad )
-						shirtMaterial.color = Color.yellow;
-					else
-						shirtMaterial.color = Color.grey;
-				}
-				else
-					shirtMaterial.color = Color.black;
 			}
 		}
 		animator = body.GetComponent<Animator>();
@@ -795,6 +804,8 @@ public class Worker : Assert.Base
 		itemOnMap.gameObject.layer = World.layerIndexMapOnly;
 		itemOnMap.material = Instantiate( itemOnMap.material );
 		itemOnMap.material.renderQueue = 4003;
+
+		Color = cachedColor;
 	}
 
 	// Distance the worker is taking in a single frame (0.02 sec)
@@ -859,46 +870,20 @@ public class Worker : Assert.Base
 	void UpdateOnMap()
 	{
 		arrowObject.SetActive( false );
-		switch ( type )
+		if ( type == Type.hauler || type == Type.cart )
 		{
-			case Type.unemployed:
-				mapMaterial.color = Color.yellow;
-				break;
-			case Type.soldier:
-				mapMaterial.color = Color.red;
-				break;
-			case Type.constructor:
-				mapMaterial.color = Color.blue;
-				break;
-			case Type.tinkerer:
-				mapMaterial.color = Color.cyan;
-				break;
-			case Type.hauler:
-			case Type.cart:
-				if ( !onRoad )
+			if ( taskQueue.Count > 0 )
+			{
+				var t = taskQueue[0] as WalkToRoadPoint;
+				if ( t && t.wishedPoint >= 0 )
 				{
-					mapMaterial.color = Color.grey;
-					break;
+					var wp = t.road.nodes[t.wishedPoint].Position;
+					arrowObject.SetActive( true );
+					var dir = wp - node.Position;
+					arrowObject.transform.rotation = Quaternion.LookRotation( dir ) * Quaternion.Euler( 0, -90, 0 ) * Quaternion.Euler( 90, 0, 0 );
+					arrowObject.transform.position = node.Position + Vector3.up * 4 + 0.5f * dir;
 				}
-				if ( IsIdle() )
-					mapMaterial.color = Color.green;
-				else
-				{
-					mapMaterial.color = Color.white;
-					if ( taskQueue.Count > 0 )
-					{
-						var t = taskQueue[0] as WalkToRoadPoint;
-						if ( t && t.wishedPoint >= 0 )
-						{
-							var wp = t.road.nodes[t.wishedPoint].Position;
-							arrowObject.SetActive( true );
-							var dir = wp - node.Position;
-							arrowObject.transform.rotation = Quaternion.LookRotation( dir ) * Quaternion.Euler( 0, -90, 0 ) * Quaternion.Euler( 90, 0, 0 );
-							arrowObject.transform.position = node.Position + Vector3.up * 4 + 0.5f * dir;
-						}
-					}
-				}
-				break;
+			}
 		}
 
 		{
@@ -967,8 +952,7 @@ public class Worker : Assert.Base
 
 		road = null;
 		building = null;
-		if ( shirtMaterial )
-			shirtMaterial.color = Color.black;
+		Color = Color.black;
 		type = Type.unemployed;
 		return true;
 	}
@@ -978,46 +962,10 @@ public class Worker : Assert.Base
 		assert.IsTrue( IsIdle() );
 		if ( type == Type.hauler )
 		{
-			Profiler.BeginSample( "Road" );
-			if ( !onRoad )
-			{
-				Profiler.BeginSample( "BackToRoad" );
-				ScheduleWalkToNode( road.CenterNode(), false );
-				ScheduleStartWorkingOnRoad( road );
-				Profiler.EndSample();
-				return;
-			}
-			if ( itemInHands )
-			{
-				for ( int i = 0; i < 2; i++ )
-				{
-					Flag flag = road.GetEnd( i );
-					if ( flag.FreeSpace() == 0 )
-						continue;
-
-					flag.ReserveItem( itemInHands );
-					if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building
-						ScheduleWalkToNeighbour( node.Add( Building.flagOffset ) );	// It is possible, that the building is not there anymore
-					ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
-					ScheduleDeliverItem( itemInHands );
-
-					// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has space
-					// By calling CancelTrip, this expectation is eliminated, and won't cause an assert fail.
-					itemInHands.CancelTrip();
-					return;
-				}
-				ScheduleWait( 50 );
-				return;
-			}
-
-			if ( FindItemToCarry() )
-				return;
-
-			if ( node != road.CenterNode() && road.ActiveWorkerCount == 1 )
-			{
-				ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
-				return;
-			}
+			Profiler.BeginSample( "Hauler" );
+			FindHaulerTask();
+			Profiler.EndSample();
+			return;
 		}
 
 		if ( type == Type.wildAnimal )
@@ -1131,6 +1079,53 @@ public class Worker : Assert.Base
 				ScheduleWalkToFlag( owner.mainBuilding.flag );
 			else
 				ScheduleWalkToNode( owner.mainBuilding.flag.node );
+		}
+	}
+
+	void FindHaulerTask()
+	{
+		if ( !onRoad )
+		{
+			Profiler.BeginSample( "BackToRoad" );
+			ScheduleWalkToNode( road.CenterNode(), false );
+			ScheduleStartWorkingOnRoad( road );
+			Profiler.EndSample();
+			return;
+		}
+		if ( itemInHands )
+		{
+			for ( int i = 0; i < 2; i++ )
+			{
+				Flag flag = road.GetEnd( i );
+				if ( flag.FreeSpace() == 0 )
+					continue;
+
+				flag.ReserveItem( itemInHands );
+				if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building
+					ScheduleWalkToNeighbour( node.Add( Building.flagOffset ) ); // It is possible, that the building is not there anymore
+				ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
+				ScheduleDeliverItem( itemInHands );
+
+				// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has space
+				// By calling CancelTrip, this expectation is eliminated, and won't cause an assert fail.
+				itemInHands.CancelTrip();
+				return;
+			}
+			ScheduleWait( 50 );
+			return;
+		}
+
+		if ( FindItemToCarry() )
+		{
+			Color = Color.white;
+			return;
+		}
+		Color = Color.green;
+
+		if ( node != road.CenterNode() && road.ActiveWorkerCount == 1 )
+		{
+			ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
+			return;
 		}
 	}
 

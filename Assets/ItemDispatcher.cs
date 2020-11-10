@@ -173,9 +173,15 @@ public class ItemDispatcher : ScriptableObject
 
 					int offerItemCount = 0, requestItemCount = 0;
 					foreach ( var offer in offers )
-						offerItemCount += offer.quantity;
+					{
+						if ( offer.priority >= priority )
+							offerItemCount += offer.quantity;
+					}
 					foreach ( var request in requests )
-						requestItemCount += request.quantity;
+					{
+						if ( request.priority >= priority )
+							requestItemCount += request.quantity;
+					}
 
 					success = false;
 					if ( offerItemCount < requestItemCount && offers.Count > 0 )

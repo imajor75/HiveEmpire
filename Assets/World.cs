@@ -152,6 +152,10 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Worker>();
 			foreach ( var o in list )
 			{
+				if ( o.type == Worker.Type.tinkerer )
+					o.cachedColor = Color.cyan;
+				if ( o.type == Worker.Type.cart )
+					o.cachedColor = Color.white;
 				if ( o.owner == null )
 					o.owner = players[0];
 				o.Validate();

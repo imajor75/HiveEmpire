@@ -11,7 +11,6 @@ public class Player : ScriptableObject
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
 	const int efficiencyUpdateTime = 3000;
-	const float efficiencyUpdateFactor = 0.3f;
 	public float totalEfficiency;
 	public World.Timer efficiencyTimer;
 	public Chart averageEfficiencyHistory;
@@ -44,7 +43,7 @@ public class Player : ScriptableObject
 		public float factor;
 		public int production;
 		public float weighted;
-		const float efficiencyUpdateFactor = 0.3f;
+		const float efficiencyUpdateFactor = 0.2f;
 
 		public static Chart Create()
 		{
