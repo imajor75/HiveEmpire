@@ -905,8 +905,9 @@ public class Worker : Assert.Base
 			var t = Item.Type.unknown;
 			if ( itemInHands )
 				t = itemInHands.type;
-			if ( this as Stock.Cart )
-				t = ( this as Stock.Cart ).itemType;
+			var c = this as Stock.Cart;
+			if ( c && c.itemQuantity > 0 )
+				t = c.itemType;
 			if ( t != Item.Type.unknown )
 			{
 				itemOnMap.sprite = Item.sprites[(int)t];
