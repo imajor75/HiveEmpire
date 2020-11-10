@@ -24,6 +24,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	static public MediaTable<AudioClip, Type> processingSounds;
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
+	static Texture2D mapIndicatorTexture;
 	public Configuration configuration;
 	public static Configuration[] configurations;
 
@@ -348,6 +349,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			else
 				resourceCutTime[i] = 500;
 		}
+		mapIndicatorTexture = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
 	}
 
 	public static Workshop Create()
@@ -448,6 +450,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		mapIndicator.transform.SetParent( transform, false );
 		World.SetLayerRecursive( mapIndicator, World.layerIndexMapOnly );
 		mapIndicatorMaterial = mapIndicator.GetComponent<MeshRenderer>().material = new Material( World.defaultShader );
+		mapIndicatorMaterial.mainTexture = mapIndicatorTexture;
 		mapIndicator.transform.position = node.Position + new Vector3( 0, 2, GroundNode.size * 0.5f );
 		mapIndicator.SetActive( false );
 
@@ -475,7 +478,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
-		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.green, productivity.current );
+		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
