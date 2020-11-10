@@ -910,6 +910,7 @@ public class Worker : Assert.Base
 			if ( t != Item.Type.unknown )
 			{
 				itemOnMap.sprite = Item.sprites[(int)t];
+				itemOnMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
 				itemOnMap.enabled = true;
 			}
 			else
