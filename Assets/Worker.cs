@@ -229,7 +229,7 @@ public class Worker : Assert.Base
 			if ( road == null )
 				return ResetBoss();
 
-			if ( stuck.Done && road.ActiveWorkerCount > 1 )
+			if ( stuck.Done && boss.type == Type.hauler && road.ActiveWorkerCount > 1 )
 			{
 				boss.Remove();
 				return true;
@@ -585,7 +585,7 @@ public class Worker : Assert.Base
 		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a", Type.hauler,
 		"FootmanPBRHPPolyart/Prefabs/footman_Blue_HP", Type.soldier,
 		"Rabbits/Prefabs/Rabbit 1", Type.wildAnimal,
-		"Medieval village/Cart/PREFABs/cart_4w", Type.cart };
+		"Medieval village/Cart/PREFABs/cartRoot", Type.cart };
 
 		looks.Fill( lookData );
 
@@ -979,8 +979,10 @@ public class Worker : Assert.Base
 			Profiler.BeginSample( "Road" );
 			if ( !onRoad )
 			{
+				Profiler.BeginSample( "BackToRoad" );
 				ScheduleWalkToNode( road.CenterNode(), false );
 				ScheduleStartWorkingOnRoad( road );
+				Profiler.EndSample();
 				return;
 			}
 			if ( itemInHands )
@@ -1404,7 +1406,7 @@ public class Worker : Assert.Base
 						continue;
 					g.transform.Rotate( 0, World.instance.timeFactor * currentSpeed * 300, 0 );
 				}
-				transform.Rotate( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
+				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
 			}
 		}
 	}
