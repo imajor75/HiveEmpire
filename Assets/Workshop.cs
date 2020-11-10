@@ -868,6 +868,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public override void Validate()
 	{
+		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && configuration.gatheredResource != Resource.Type.unknown );
 		base.Validate();
 		int itemsOnTheWayCount = 0;
 		foreach ( Buffer b in buffers )
