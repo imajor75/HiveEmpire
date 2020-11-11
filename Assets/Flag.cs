@@ -32,7 +32,7 @@ public class Flag : Assert.Base
 
 	public Flag Setup( GroundNode node, Player owner )
     {
-		if ( !IsItGood( node, owner ) )
+		if ( !IsNodeSuitable( node, owner ) )
 		{
 			Destroy( this );
 			return null;
@@ -246,7 +246,7 @@ public class Flag : Assert.Base
 		}
 	}
 
-	static public bool IsItGood( GroundNode placeToBuildOn, Player owner )
+	static public bool IsNodeSuitable( GroundNode placeToBuildOn, Player owner )
 	{
 		if ( placeToBuildOn.type == GroundNode.Type.underWater )
 			return false;

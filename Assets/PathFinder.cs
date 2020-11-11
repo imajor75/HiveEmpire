@@ -136,7 +136,7 @@ public class PathFinder : ScriptableObject
 		{
 			foreach ( var road in r.node.flag.roadsStartingHere )
 			{
-				if ( road == null )
+				if ( road == null || !road.ready )
 					continue;
 				int index = road.NodeIndex( r.node );
 				if ( index == 0 )

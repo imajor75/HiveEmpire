@@ -22,7 +22,6 @@ public class Road : Assert.Base, Interface.IInputHandler
 	public static Material material;
 	public int timeSinceWorkerAdded = 0;
 	public static int secBetweenWorkersAdded = 10;
-	public static Road newRoad;
 	public bool decorationOnly;
 	public static float height = 1.0f/20;
 	[JsonIgnore]
@@ -43,9 +42,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	public static Road Create()
 	{
-		var roadObject = new GameObject();
-		roadObject.name = "Road";
-		return (Road)roadObject.AddComponent( typeof( Road ) );
+		return new GameObject().AddComponent<Road>();
 	}
 
 	public Road SetupAsBuildingExit( Building building )
@@ -60,116 +57,102 @@ public class Road : Assert.Base, Interface.IInputHandler
 		return this;
 	}
 
-	public static bool AddNodeToNew( Ground ground, GroundNode node, Player owner )
+	public static bool IsNodeSuitable( Road road, GroundNode node, Player owner )
 	{
+		road.assert.IsFalse( road.ready );
+
 		// Starting a new road
-		if ( newRoad == null || newRoad.nodes.Count == 0 )
+		if ( road == null || road.nodes.Count == 0 )
 		{
-			if ( node.flag )
-			{
-				if ( node.flag.owner != owner )
-				{
-					UnityEngine.Debug.Log( "Flag belongs to another player" );
-					return true;
-				}
-				if ( newRoad == null )
-					newRoad = Create();
-				newRoad.ground = ground;
-				newRoad.nodes.Add( node );
-				newRoad.owner = owner;
-				return true;
-			}
-			else
-			{
-				UnityEngine.Debug.Log( "Road must start at a flag" );
-				return true;
-			}
-		}
-
-		if ( node.owner != owner )
-		{
-			UnityEngine.Debug.Log( "Area belongs to another player" );
-			return true;
-		}
-
-		GroundNode last = newRoad.nodes[newRoad.nodes.Count - 1];
-		// Special case, last node is the same as the current, remove one
-		if ( last == node )
-		{
-			if ( newRoad.nodes.Count == 1 )
-			{
-				CancelNew();
+			if ( !node.flag )
 				return false;
-			}
-			newRoad.nodes.RemoveAt( newRoad.nodes.Count - 1 );
-			node.road = null;
-			newRoad.RebuildMesh();
+
+			if ( node.flag.owner != road.owner )
+				return false;
 			return true;
 		}
+
+		if ( node.owner != road.owner )
+			return false;
 
 		// Check if the current node is adjacent to the previous one
+		GroundNode last = road.nodes[road.nodes.Count - 1];
 		int direction = last.DirectionTo( node );
 		if ( direction < 0 )
-		{
-			if ( node.flag == null )
-				Flag.Create().Setup( node, owner );
-			if ( node.flag )
-			{
-				// Find a path to the flag, and finish the road based on it
-				var p = Path.Between( last, node, PathFinder.Mode.avoidRoadsAndFlags, newRoad, true );
-				if ( p )
-				{
-					for ( int i = 1; i < p.path.Count; i++ )
-						newRoad.AddNode( p.path[i] );
-					newRoad.OnCreated();
-					newRoad = null;
-					return false;
-				}
-				UnityEngine.Debug.Log( "No path found to connect to that flag" );
-				return true;
-			}
-			UnityEngine.Debug.Log( "Node must be adjacent to previous one" );
-			return true;
-		}
+			return false;
+		//{
+			//if ( node.flag == null )
+			//	Flag.Create().Setup( node, owner );
+			//if ( node.flag )
+			//{
+			//	// Find a path to the flag, and finish the road based on it
+			//	var p = Path.Between( last, node, PathFinder.Mode.avoidRoadsAndFlags, newRoad, true );
+			//	if ( p )
+			//	{
+			//		for ( int i = 1; i < p.path.Count; i++ )
+			//			newRoad.AddNode( p.path[i] );
+			//		newRoad.OnCreated();
+			//		newRoad = null;
+			//		return false;
+			//	}
+			//	UnityEngine.Debug.Log( "No path found to connect to that flag" );
+			//	return true;
+			//}
+			//UnityEngine.Debug.Log( "Node must be adjacent to previous one" );
+		//	return true;
+		//}
 
 		// Check if the current node is blocking
 		if ( node.IsBlocking() && node.flag == null )
-		{
-			UnityEngine.Debug.Log( "Node is occupied" );
-			return true;
-		}
-
-		bool finished = newRoad.AddNode( node );
-		if ( finished )
-		{
-			newRoad.OnCreated();
-			newRoad = null;
 			return false;
-		}
-		else
-			newRoad.RebuildMesh();
 
 		return true;
 	}
 
-	bool AddNode( GroundNode node )
+	public Road Setup( Flag flag )
 	{
-		nodes.Add( node );
-		if ( newRoad.nodes.Count == 2 )
-			newRoad.name = "Road " + node.x + ", " + node.y;
+		this.ground = flag.node.ground;
+		nodes.Add( flag.node );
+		owner = flag.owner;
+		return this;
+	}
 
-		// Finishing a road
-		if ( node.flag )
-		{
-			nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
-			node.flag.roadsStartingHere[node.DirectionTo( GetNodeFromEnd( 1 ) )] = this;
-			ready = true;
-			return true;
-		}
+	public bool AddNode( GroundNode node )
+	{
+		assert.IsFalse( ready );
+		if ( !IsNodeSuitable( this, node, owner ) )
+			return false;
+		nodes.Add( node );
+		if ( nodes.Count == 2 )
+			name = "Road " + node.x + ", " + node.y;
 
 		node.road = this;
 		node.roadIndex = nodes.Count - 1;
-		return false;
+		return true;
+	}
+
+	public bool RemoveLastNode()
+	{
+		assert.IsFalse( ready );
+		if ( nodes.Count == 0 )
+			return false;
+
+		nodes.RemoveAt( nodes.Count - 1 );
+		return true;
+	}
+
+	public void Finish()
+	{
+		assert.IsFalse( ready );
+		foreach ( var n in nodes )
+			workerAtNodes.Add( null );
+		CreateNewWorker();
+		transform.localPosition = nodes[nodes.Count / 2].Position;
+		CreateCurves();
+		RebuildMesh();
+		AttachWatches();
+		RegisterOnGround();
+		ready = true;
 	}
 
 	GroundNode GetNodeFromEnd( int index )
@@ -184,16 +167,6 @@ public class Road : Assert.Base, Interface.IInputHandler
 		return GetNodeFromEnd( 0 ).flag;
 	}
 
-	public static void CancelNew()
-	{
-		if ( newRoad )
-		{
-			newRoad.name = "Deleted";
-			Destroy( newRoad );
-			newRoad = null;
-		}
-	}
-
 	void Start()
 	{
 		transform.SetParent( ground.transform, false );
@@ -201,6 +174,11 @@ public class Road : Assert.Base, Interface.IInputHandler
 			transform.localPosition = nodes[nodes.Count / 2].Position;
 		if ( invalid )
 			return;
+
+		if ( nodes.Count > 1 )
+			name = "Road " + nodes[1].x + ", " + nodes[1].y;
+		else
+			name = "Road";
 
 		var renderer = gameObject.AddComponent<MeshRenderer>();
 		renderer.material = material;
@@ -442,17 +420,6 @@ public class Road : Assert.Base, Interface.IInputHandler
 		}
 	}
 
-	public void OnCreated()
-	{
-		foreach ( var n in nodes )
-			workerAtNodes.Add( null );
-		CreateNewWorker();
-		transform.localPosition = nodes[nodes.Count / 2].Position;
-		CreateCurves();
-		RebuildMesh();
-		AttachWatches();
-	}
-
 	void AttachWatches()
 	{
 		watchStartFlag.Attach( nodes[0].flag.itemsStored );
@@ -606,10 +573,13 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	void RegisterOnGround()
 	{
+		assert.IsNull( nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] );
+		assert.IsNull( nodes[nodes.Count - 1].flag.roadsStartingHere[GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) )] );
 		nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
 		nodes[nodes.Count - 1].flag.roadsStartingHere[GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) )] = this;
 		for ( int i = 1; i < nodes.Count - 1; i++ )
 		{
+			assert.IsTrue( nodes[i].road == null || nodes[i].road == this );
 			nodes[i].road = this;
 			nodes[i].roadIndex = i;
 		}
@@ -732,7 +702,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 		if ( node == null )
 			return true;
 
-		GroundNode last = newRoad.GetNodeFromEnd( 0 );
+		GroundNode last = GetNodeFromEnd( 0 );
 		if ( node == last )
 		{
 			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
@@ -751,7 +721,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 			return true;
 		}
 
-		if ( Flag.IsItGood( node, owner ) )
+		if ( Flag.IsNodeSuitable( node, owner ) )
 		{
 			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
 			return true;
@@ -776,6 +746,16 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	public bool OnNodeClicked( GroundNode node )
 	{
-		return AddNodeToNew( node.ground, node, owner );
+		if ( node.road )
+			Flag.Create().Setup( node, owner );
+
+		AddNode( node );
+		if ( node.flag )
+		{
+			Finish();
+			return false;
+		}
+		else
+			return true;
 	}
 }

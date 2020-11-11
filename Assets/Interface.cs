@@ -1529,12 +1529,12 @@ public class Interface : Assert.Base
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				var type = (Workshop.Type)i;
-				BuildButton( 160, row, type.ToString(), Workshop.IsItGood( node, Root.mainPlayer, Workshop.GetConfiguration( type ) ), delegate { BuildWorkshop( type ); } );
+				BuildButton( 160, row, type.ToString(), Workshop.IsNodeSuitable( node, Root.mainPlayer, Workshop.GetConfiguration( type ) ), delegate { BuildWorkshop( type ); } );
 				row -= 20;
 			}
-			BuildButton( 20, -220, "Flag", Flag.IsItGood( node, Root.mainPlayer ), AddFlag );
-			BuildButton( 20, -240, "Stock", Stock.IsItGood( node, Root.mainPlayer ), AddStock );
-			BuildButton( 20, -260, "Guardhouse", GuardHouse.IsItGood( node, Root.mainPlayer ), AddGuardHouse );
+			BuildButton( 20, -220, "Flag", Flag.IsNodeSuitable( node, Root.mainPlayer ), AddFlag );
+			BuildButton( 20, -240, "Stock", Stock.IsNodeSuitable( node, Root.mainPlayer ), AddStock );
+			BuildButton( 20, -260, "Guardhouse", GuardHouse.IsNodeSuitable( node, Root.mainPlayer ), AddGuardHouse );
 #if DEBUG
 			BuildButton( 20, -280, "Tree", !node.IsBlocking( true ), AddTree );
 			BuildButton( 20, -300, "Remove", node.IsBlocking( true ), Remove );
@@ -1787,9 +1787,8 @@ public class Interface : Assert.Base
 		{
 			if ( flag )
 			{
-				Road.AddNodeToNew( flag.node.ground, flag.node, flag.owner );
-				if ( Road.newRoad )
-					Root.viewport.inputHandler = Road.newRoad;
+				Road road = Road.Create().Setup( flag );
+				Root.viewport.inputHandler = road;
 			}
 			Close();
 		}

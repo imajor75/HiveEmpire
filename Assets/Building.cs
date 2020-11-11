@@ -233,7 +233,7 @@ abstract public class Building : Assert.Base
 		Construction.Initialize();
 	}
 
-	static public bool IsItGood( GroundNode placeToBuild, Player owner, Configuration configuration )
+	static public bool IsNodeSuitable( GroundNode placeToBuild, Player owner, Configuration configuration )
 	{
 		var area = configuration.huge ? hugeArea : singleArea;
 
@@ -256,12 +256,12 @@ abstract public class Building : Assert.Base
 				return false;
 		}
 		GroundNode flagLocation = placeToBuild.Add( flagOffset );
-		return flagLocation.flag || Flag.IsItGood( flagLocation, owner );
+		return flagLocation.flag || Flag.IsNodeSuitable( flagLocation, owner );
 	}
 
 	public Building Setup( GroundNode node, Player owner, Configuration configuration )
 	{
-		if ( !IsItGood( node, owner, configuration ) )
+		if ( !IsNodeSuitable( node, owner, configuration ) )
 		{
 			Destroy( gameObject );
 			return null;
