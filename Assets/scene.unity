@@ -159,9 +159,11 @@ MonoBehaviour:
   debug: {fileID: 0}
   heightStrips: 0
   mainPlayer: {fileID: 0}
-  tooltip: {fileID: 0}
   autoSave: 15000
   highlightType: 0
+  highlightArea:
+    center: {fileID: 0}
+    radius: 8
   highlightVolume: {fileID: 0}
   highlightOwner: {fileID: 0}
 --- !u!4 &1680099500

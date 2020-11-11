@@ -7,8 +7,11 @@ public class Stock : Building
 {
 	public bool main = false;
 	public List<int> content = new List<int>();
-	public List<int> target = new List<int>();
 	public List<int> onWay = new List<int>();
+	public List<int> inputMin = new List<int>();
+	public List<int> inputMax = new List<int>();
+	public List<int> outputMin = new List<int>();
+	public List<int> outputMax = new List<int>();
 	public Stock[] destinations = new Stock[(int)Item.Type.total];
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
@@ -21,6 +24,9 @@ public class Stock : Building
 	public int totalTarget;
 	static public int maxItems = 100;
 	GameObject body;
+
+	[Obsolete("Compatibility for old files")]
+	public List<int> target = new List<int>();
 
 	public class Cart : Worker
 	{
@@ -110,8 +116,11 @@ public class Stock : Building
 		while ( content.Count < (int)Item.Type.total )
 		{
 			content.Add( 0 );
-			target.Add( 0 );
 			onWay.Add( 0 );
+			inputMin.Add( 0 );
+			inputMax.Add( maxItems / 10 );
+			outputMin.Add( 0 );
+			outputMax.Add( maxItems / 10 );
 		}
 		if ( base.Setup( node, owner, configuration ) == null )
 			return null;
@@ -169,8 +178,14 @@ public class Stock : Building
 			name = "Stock " + node.x + ", " + node.y;
 		while ( content.Count < (int)Item.Type.total )
 			content.Add( 0 );
-		while ( target.Count < (int)Item.Type.total )
-			target.Add( 0 );
+		while ( inputMin.Count < (int)Item.Type.total )
+			inputMin.Add( 0 );
+		while ( inputMax.Count < (int)Item.Type.total )
+			inputMax.Add( maxItems / 10 );
+		while ( outputMin.Count < (int)Item.Type.total )
+			outputMin.Add( 0 );
+		while ( outputMax.Count < (int)Item.Type.total )
+			outputMax.Add( maxItems / 10 );
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
 		Array.Resize( ref destinations, (int)Item.Type.total );
@@ -188,20 +203,29 @@ public class Stock : Building
 		{
 			int count = content[itemType] + onWay[itemType];
 			total += count;
-			totalTarget += Math.Max( count, target[itemType] );
+			totalTarget += Math.Max( count, inputMin[itemType] );
 		}
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
 			if ( maxItems > total )
-				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, maxItems - total, ItemDispatcher.Priority.stock, inputArea ); // TODO Should not order more than what fits
+			{
+				var p = ItemDispatcher.Priority.stock;
+				if ( content[itemType] < inputMin[itemType] )
+					p = ItemDispatcher.Priority.high;
+				if ( content[itemType] > inputMax[itemType] )
+					p = ItemDispatcher.Priority.zero;
+				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, maxItems - total, p, inputArea ); // TODO Should not order more than what fits
+			}
 			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
-				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], ItemDispatcher.Priority.stock, outputArea );
-			int missing = target[itemType] - content[itemType] - onWay[itemType];
-			if ( missing > maxItems - totalTarget )
-				missing = maxItems - totalTarget;
-			if ( missing > 0 )
-				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, missing, ItemDispatcher.Priority.high, inputArea );
+			{
+				var p = ItemDispatcher.Priority.stock;
+				if ( content[itemType] < outputMin[itemType] )
+					p = ItemDispatcher.Priority.zero;
+				if ( content[itemType] > outputMax[itemType] )
+					p = ItemDispatcher.Priority.high;
+				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea );
+			}
 
 			if ( destinations[itemType] && content[itemType] >= Cart.capacity && cart.IsIdle( true ) && flag.user == null && destinations[itemType].total + Cart.capacity <= maxItems )
 			{

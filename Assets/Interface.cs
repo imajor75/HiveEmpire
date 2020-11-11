@@ -67,6 +67,18 @@ public class Interface : Assert.Base
 		root = this;
 	}
 
+	static public GameObject GetUIElementUnderCursor()
+	{
+		PointerEventData p = new PointerEventData( EventSystem.current );
+		p.position = Input.mousePosition;
+		List<RaycastResult> result = new List<RaycastResult>();
+		EventSystem.current.RaycastAll( p, result );
+		if ( result.Count == 0 )
+			return null;
+
+		return result[0].gameObject;
+	}
+
 	public void Clear()
 	{
 		foreach ( Transform d in debug.transform )
@@ -550,6 +562,7 @@ public class Interface : Assert.Base
 		public Image frame;
 		public Interface cachedRoot;
 		public bool escCloses = true;
+		public bool disableDrag;
 
 		public static int itemIconBorderSize = 2;
 
@@ -807,6 +820,9 @@ public class Interface : Assert.Base
 
 		public void OnDrag( PointerEventData eventData )
 		{
+			if ( disableDrag )
+				return;
+
 			followTarget = false;
 			frame.rectTransform.anchoredPosition += eventData.delta;
 		}
@@ -1291,6 +1307,13 @@ public class Interface : Assert.Base
 		public Text[] counts = new Text[(int)Item.Type.total];
 		public Text total;
 		public Item.Type itemTypeForRetarget;
+		public Item.Type selectedItemType = Item.Type.log;
+		public ItemImage selected;
+		public Text inputMin, inputMax, outputMin, outputMax;
+
+		float lastMouseXPosition;
+		List<int>listToChange;
+		int min, max;
 
 		public static StockPanel Create()
 		{
@@ -1308,23 +1331,14 @@ public class Interface : Assert.Base
 				Root.world.eye.FocusOn( stock );
 		}
 
-		void SetItemTargetStock( Item.Type itemType )
+		void SelectItemType( Item.Type itemType )
 		{
-			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
 			{
-				SelectBuilding( stock.destinations[(int)itemType] );
+				stock.content[(int)itemType] = 0;
 				return;
 			}
-			if ( Input.GetKey( KeyCode.LeftControl ) || Input.GetKey( KeyCode.RightControl ) )
-			{
-				stock.destinations[(int)itemType] = null;
-				RecreateControls();
-				return;
-			}
-				itemTypeForRetarget = itemType;
-			Root.highlightOwner = gameObject;
-			Root.viewport.inputHandler = this;
-			Root.highlightType = HighlightType.stocks;
+			selectedItemType = itemType;
 		}
 
 		void RecreateControls()
@@ -1335,10 +1349,10 @@ public class Interface : Assert.Base
 			int height = 340;
 			Frame( 0, 0, 300, height );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
-			Button( 250, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			Button( 270, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			AreaIcon( 30, -30, stock.inputArea );
 			AreaIcon( 250, -30, stock.outputArea );
-			total = Text( 50, 40 - height, 100, 20 );
+			total = Text( 35, 35 - height, 100, 20 );
 			total.fontSize = 16;
 
 			int row = -55;
@@ -1352,7 +1366,7 @@ public class Interface : Assert.Base
 					Image( 35 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
 					offset += 10;
 				}
-				i.gameObject.GetComponent<Button>().onClick.AddListener( delegate { SetItemTargetStock( t ); } );
+				i.gameObject.GetComponent<Button>().onClick.AddListener( delegate { SelectItemType( t ); } );
 				counts[j] = Text( 44 + offset, row, 100, 20, "" );
 				if ( j % 2 > 0 )
 					row -= iconSize + 5;
@@ -1360,24 +1374,38 @@ public class Interface : Assert.Base
 
 			for ( int i = 0; i < counts.Length; i++ )
 			{
-				int j = i;
-				counts[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeTarget( j ); } );
+				Item.Type j = (Item.Type)i;
+				counts[i].gameObject.AddComponent<Button>().onClick.AddListener( delegate { SelectItemType( j ); } );
 			}
+
+			int ipx = 165, ipy = -280;
+			selected = ItemIcon( ipx, ipy, 2 * iconSize, 2 * iconSize, selectedItemType );
+			selected.GetComponent<Button>().onClick.RemoveAllListeners();
+			selected.GetComponent<Button>().onClick.AddListener( SetTarget );
+			inputMin = Text( ipx - 40, ipy, 40, 20 );
+			inputMax = Text( ipx + 50, ipy, 40, 20 );
+			outputMin = Text( ipx - 40, ipy - 20, 40, 20 );
+			outputMax = Text( ipx + 50, ipy - 20, 40, 20 );
 		}
 
-		void ChangeTarget( int itemType )
+		void SetTarget()
 		{
-			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
+			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
 			{
-				stock.content[itemType] = 0;
+				SelectBuilding( stock.destinations[(int)selectedItemType] );
 				return;
 			}
-			int increment = 1;
-			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
-				increment *= -1;
-			stock.target[itemType] += increment;
-			if ( stock.target[itemType] < 0 )
-				stock.target[itemType] = 0;
+			if ( Input.GetKey( KeyCode.LeftControl ) || Input.GetKey( KeyCode.RightControl ) )
+			{
+				stock.destinations[(int)selectedItemType] = null;
+				RecreateControls();
+				return;
+			}
+
+			itemTypeForRetarget = selectedItemType;
+			Root.highlightOwner = gameObject;
+			Root.viewport.inputHandler = this;
+			Root.highlightType = HighlightType.stocks;
 		}
 
 		void Remove()
@@ -1391,15 +1419,74 @@ public class Interface : Assert.Base
 			base.Update();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
-				if ( stock.content[i] == stock.target[i] )
-					counts[i].color = Color.yellow;
-				if ( stock.content[i] < stock.target[i] )
-					counts[i].color = Color.red;
-				if ( stock.content[i] > stock.target[i] )
-					counts[i].color = Color.green;
-				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ") =>" + stock.target[i];
+				Color c = Color.yellow;
+				if ( stock.content[i] < stock.inputMin[i] )
+					c = Color.red;
+				if ( stock.content[i] > stock.inputMax[i] )
+					c = Color.green;
+				counts[i].color = c;
+				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ")";
 			}
 			total.text = stock.total + " => " + stock.totalTarget;
+			selected.SetType( selectedItemType );
+			int t = (int)selectedItemType;
+			inputMin.text = stock.inputMin[t] + "<";
+			outputMin.text = stock.outputMin[t] + "<";
+			inputMax.text = "<" + stock.inputMax[t];
+			outputMax.text = "<" + stock.outputMax[t];
+
+			if ( Input.GetKeyDown( KeyCode.Mouse0 ) )
+			{
+				lastMouseXPosition = Input.mousePosition.x;
+				var g = GetUIElementUnderCursor();
+				if ( g == inputMin.gameObject )
+				{
+					listToChange = stock.inputMin;
+					min = 0;
+					max = stock.inputMax[t];
+					disableDrag = true;
+				}
+				if ( g == inputMax.gameObject )
+				{
+					listToChange = stock.inputMax;
+					min = stock.inputMin[t];
+					max = Stock.maxItems;
+					disableDrag = true;
+				}
+				if ( g == outputMin.gameObject )
+				{
+					listToChange = stock.outputMin;
+					min = 0;
+					max = stock.outputMin[t];
+					disableDrag = true;
+				}
+				if ( g == outputMax.gameObject )
+				{
+					listToChange = stock.outputMax;
+					min = stock.outputMax[t];
+					max = Stock.maxItems;
+					disableDrag = true;
+				}
+			}
+
+			if ( listToChange != null )
+			{
+				if ( Input.GetKey( KeyCode.Mouse0 ) )
+				{
+					int newValue = listToChange[(int)selectedItemType] + (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
+					if ( newValue < min )
+						newValue = min;
+					if ( newValue > max )
+						newValue = max;
+					listToChange[(int)selectedItemType] = newValue;
+					lastMouseXPosition = Input.mousePosition.x;
+				}
+				else
+				{
+					disableDrag = false;
+					listToChange = null;
+				}
+			}
 		}
 
 		public bool OnMovingOverNode( GroundNode node )
