@@ -578,7 +578,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 						if ( place.building || place.flag || place.road || place.fixedHeight )
 							continue;
 						Resource cornfield = place.resource;
-						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || !cornfield.IsReadyToBeHarvested() )
+						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || cornfield.hunter || !cornfield.IsReadyToBeHarvested() )
 							continue;
 						CollectResourceFromNode( place, Resource.Type.cornfield );
 						return;
