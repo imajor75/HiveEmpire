@@ -155,7 +155,7 @@ public class Resource : Assert.Base
 	{
 		if ( type == Type.cornfield )
 		{
-			float growth = (float)this.life.Age / cornfieldGrowthMax;
+			float growth = (float)life.Age / cornfieldGrowthMax;
 			if ( node.type != GroundNode.Type.grass )
 				growth /= 2;
 			if ( growth > 1 )
@@ -164,7 +164,7 @@ public class Resource : Assert.Base
 		}
 		if ( type == Type.tree )
 		{
-			float size = (float)life.Age/treeGrowthMax;
+			float size = (float)life.Age / treeGrowthMax;
 			if ( node.type != GroundNode.Type.forest )
 				size /= 2;
 			size = Math.Max( size, 0.1f );
@@ -264,7 +264,7 @@ public class Resource : Assert.Base
 
 	public bool IsReadyToBeHarvested()
 	{
-		if ( !keepAway.Done )
+		if ( !keepAway.Done && !keepAway.Empty )
 			return false;
 		if ( type == Type.tree )
 		{

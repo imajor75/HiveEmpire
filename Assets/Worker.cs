@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -24,6 +23,8 @@ public class Worker : Assert.Base
 	public float currentSpeed;
 	public Flag exclusiveFlag;
 	public int itemsDelivered;
+	public World.Timer bored;
+	public static int boredTimeBeforeRemove = 6000;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
 	static public MediaTable<AudioClip, Type> walkSounds;
 	[JsonIgnore]
@@ -499,6 +500,7 @@ public class Worker : Assert.Base
 				return false;
 
 			boss.itemsDelivered++;
+			boss.bored.Start( Worker.boredTimeBeforeRemove );
 			boss.box?.SetActive( item.buddy != null );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
@@ -1084,6 +1086,9 @@ public class Worker : Assert.Base
 
 	void FindHaulerTask()
 	{
+		if ( bored.Done && road.ActiveWorkerCount > 1 )
+			Remove();
+
 		if ( !onRoad )
 		{
 			Profiler.BeginSample( "BackToRoad" );

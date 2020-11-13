@@ -257,13 +257,17 @@ public class Interface : Assert.Base
 	{
 		GroundNode node = viewport.FindNodeAt( Input.mousePosition );
 
-		if ( world.timeFactor != 0 )
+		if ( world.timeFactor != 0 && world.timeFactor != 8 )
 		{
 			if ( Input.GetKey( KeyCode.Space ) )
 				world.SetTimeFactor( 5 );
 			else
 				world.SetTimeFactor( 1 );
 		}
+		if ( Input.GetKeyDown( KeyCode.Insert ) )
+			world.SetTimeFactor( 8 );
+		if ( Input.GetKeyDown( KeyCode.Delete ) )
+			world.SetTimeFactor( 1 );
 		if ( Input.GetKeyDown( KeyCode.Pause ) )
 		{
 			if ( world.timeFactor > 0 )

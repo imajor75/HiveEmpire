@@ -228,7 +228,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( !wait.Done )
+			if ( !wait.Empty && !wait.Done )
 				return false;
 
 			if ( done )

@@ -180,6 +180,15 @@ public class World : MonoBehaviour
 			}
 		}
 		{
+			var list = Resources.FindObjectsOfTypeAll<Resource>();
+			foreach ( var o in list )
+			{
+				if ( o.life.Empty )
+					o.life.reference = World.instance.time - 15000;
+				o.Validate();
+			}
+		}
+		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
 				o.Validate();
@@ -411,16 +420,18 @@ public class World : MonoBehaviour
 		{
 			reference = 0;
 		}
-		[JsonIgnore]
+		[JsonIgnore, SerializeField]
 		public int Age
 		{
 			get
 			{
+				if ( Empty )
+					return 0;
 				return instance.time - reference;
 			}
 		}
 		[JsonIgnore]
-		public bool Done { get { return Age >= 0; } }
+		public bool Done { get { return !Empty && Age >= 0; } }
 		[JsonIgnore]
 		public bool Empty { get { return reference == 0; } }
 	}
