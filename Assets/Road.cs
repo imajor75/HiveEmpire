@@ -14,14 +14,15 @@ public class Road : Assert.Base, Interface.IInputHandler
 	public Player owner;
 	public List<Worker> workers = new List<Worker>();
 	public bool ready = false;
+	public int tempNodes = 0;
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
 	public List<Worker> workerAtNodes = new List<Worker>();
 	[JsonIgnore]
 	public Mesh mesh;
 	public static Material material;
-	public int timeSinceWorkerAdded = 0;
-	public static int secBetweenWorkersAdded = 10;
+	public static int timeBetweenWorkersAdded = 3000;
+	public World.Timer workerAdded;
 	public bool decorationOnly;
 	public static float height = 1.0f/20;
 	[JsonIgnore]
@@ -33,7 +34,10 @@ public class Road : Assert.Base, Interface.IInputHandler
 	Material mapMaterial;
 	[JsonIgnore]
 	Mesh mapMesh;
-	public bool invalid;	
+	public bool invalid;
+
+	[JsonIgnore, Obsolete( "Compatibility for old files", true )]
+	public int timeSinceWorkerAdded = 0;
 
 	public static void Initialize()
 	{
@@ -76,8 +80,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 			return false;
 
 		// Check if the current node is adjacent to the previous one
-		GroundNode last = road.nodes[road.nodes.Count - 1];
-		int direction = last.DirectionTo( node );
+		int direction = road.LastNode.DirectionTo( node );
 		if ( direction < 0 )
 			return false;
 		//{
@@ -117,47 +120,65 @@ public class Road : Assert.Base, Interface.IInputHandler
 		return this;
 	}
 
-	public bool AddNode( GroundNode node )
+	public bool AddNode( GroundNode node, bool checkConditions = false )
 	{
 		assert.IsFalse( ready );
-		if ( !IsNodeSuitable( this, node, owner ) )
+		if ( checkConditions && !IsNodeSuitable( this, node, owner ) )
 			return false;
 		nodes.Add( node );
 		if ( nodes.Count == 2 )
 			name = "Road " + node.x + ", " + node.y;
 
-		node.road = this;
-		node.roadIndex = nodes.Count - 1;
+		if ( !node.IsBlocking( true ) )
+		{
+			node.road = this;
+			node.roadIndex = nodes.Count - 1;
+		}
 		return true;
 	}
 
 	public bool RemoveLastNode()
 	{
+		var node = LastNode;
+		if ( !node.flag )
+		{
+			if ( node.road == this )
+				node.road = null;
+		}
 		assert.IsFalse( ready );
 		if ( nodes.Count == 0 )
 			return false;
 
 		nodes.RemoveAt( nodes.Count - 1 );
+		if ( nodes.Count == 0 )
+		{
+			Destroy( gameObject );
+			return false;
+		}
 		return true;
 	}
 
-	public void Finish()
+	public bool Finish()
 	{
 		assert.IsFalse( ready );
+		if ( !LastNode.flag )
+			return false;
+
 		foreach ( var n in nodes )
 			workerAtNodes.Add( null );
-		CreateNewWorker();
+		CallNewWorker();
 		transform.localPosition = nodes[nodes.Count / 2].Position;
 		CreateCurves();
 		RebuildMesh();
 		AttachWatches();
 		RegisterOnGround();
 		ready = true;
+		return true;
 	}
 
 	GroundNode GetNodeFromEnd( int index )
 	{
-		return nodes[nodes.Count - 1 - index];
+   	return nodes[nodes.Count - 1 - index];
 	}
 
 	public Flag GetEnd( int side )
@@ -202,24 +223,22 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	void Update()
 	{
+		if ( !ready )
+			return;
+
 		int jam = Jam;
 		mapMaterial.color = Color.Lerp( Color.green, Color.red, Math.Max( 0, ( jam - 2 ) * 0.15f ) );
 
 		if ( decorationOnly )
 			return;
-		if ( timeSinceWorkerAdded < secBetweenWorkersAdded * 50 )
+		if ( !workerAdded.Done )
 			return;
 		if ( workers.Count >= nodes.Count - 2 )
 			return;
 
 		// TODO Refine when a new worker should be added
 		if ( jam > 4 || workers.Count == 0 )
-			CreateNewWorker();
-	}
-
-	void FixedUpdate()
-	{
-		timeSinceWorkerAdded++;
+			CallNewWorker();
 	}
 
 	static int blocksInSection = 8;
@@ -410,13 +429,13 @@ public class Road : Assert.Base, Interface.IInputHandler
 		}
 	}
 
-	public void CreateNewWorker()
+	public void CallNewWorker()
 	{
 		var worker = Worker.Create().SetupForRoad( this );
 		if ( worker != null )
 		{
 			workers.Add( worker );
-			timeSinceWorkerAdded = 0;
+			workerAdded.Start( timeBetweenWorkersAdded );
 		}
 	}
 
@@ -520,6 +539,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 		foreach ( var worker in workers )
         {
+			// TODO What if worker is not yet onRoad?
 			int workerPoint = NodeIndex( worker.node );
 			if ( flag.node == worker.node )
 			{
@@ -552,16 +572,16 @@ public class Road : Assert.Base, Interface.IInputHandler
 			worker.Reset();
 		}
 
-		flag.node.road = null;
+		UnregisterOnGround();
 		first.RegisterOnGround();
 		second.RegisterOnGround();
 		first.AttachWatches();
 		second.AttachWatches();
 
 		if ( first.workers.Count == 0 )
-			first.CreateNewWorker();
+			first.CallNewWorker();
 		if ( second.workers.Count == 0 )
-			second.CreateNewWorker();
+			second.CallNewWorker();
 
 		invalid = true;
 		Destroy( gameObject );
@@ -573,15 +593,49 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	void RegisterOnGround()
 	{
-		assert.IsNull( nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] );
-		assert.IsNull( nodes[nodes.Count - 1].flag.roadsStartingHere[GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) )] );
-		nodes[0].flag.roadsStartingHere[nodes[0].DirectionTo( nodes[1] )] = this;
-		nodes[nodes.Count - 1].flag.roadsStartingHere[GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) )] = this;
+		var a0 = nodes[0].flag.roadsStartingHere; var i0 = nodes[0].DirectionTo( nodes[1] );
+		var a1 = LastNode.flag.roadsStartingHere; var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
+		assert.IsTrue( a0[i0] == null || a0[i0] == this );
+		assert.IsTrue( a1[i1] == null || a1[i1] == this );
+		a0[i0] = this;
+		a1[i1] = this;
 		for ( int i = 1; i < nodes.Count - 1; i++ )
 		{
 			assert.IsTrue( nodes[i].road == null || nodes[i].road == this );
 			nodes[i].road = this;
 			nodes[i].roadIndex = i;
+		}
+	}
+
+	void UnregisterOnGround()
+	{
+		var a0 = nodes[0].flag.roadsStartingHere;
+		var i0 = nodes[0].DirectionTo( nodes[1] );
+		if ( ready )
+			assert.AreEqual( a0[i0], this );
+		else
+			assert.IsNull( a0[i0] );
+		a0[i0] = null;
+
+		int skipEnd = 0;
+		if ( LastNode.flag )
+		{
+			var a1 = LastNode.flag.roadsStartingHere;
+			var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
+			assert.AreEqual( a1[i1], this );
+			a1[i1] = null;
+			skipEnd = 1;
+			assert.IsTrue( ready );
+		}
+		else
+			assert.IsFalse( ready );
+
+		for ( int i = 1; i < nodes.Count - skipEnd; i++ )
+		{
+			if ( !ready && i == nodes.Count - skipEnd - 1 && nodes[i].road != this )
+				continue;
+			assert.AreEqual( nodes[i].road, this );
+			nodes[i].road = null;
 		}
 	}
 
@@ -596,21 +650,8 @@ public class Road : Assert.Base, Interface.IInputHandler
 		foreach ( var worker in localWorkers )
 			if ( !worker.Remove() )
 				return false;
-		for ( int i = 0; i < 2; i++ )
-		{
-			Flag flag = GetEnd( i );
-			if ( flag == null )
-				continue;
+		UnregisterOnGround();
 
-			for ( int j = 0; j < 6; j++ )
-				if ( flag.roadsStartingHere[j] == this )
-					flag.roadsStartingHere[j] = null;
-		}
-		foreach ( var node in nodes )
-		{
-			if ( node.road == this )
-				node.road = null;
-		}
 		invalid = true;
 		Destroy( gameObject );
 		return true;
@@ -644,6 +685,105 @@ public class Road : Assert.Base, Interface.IInputHandler
 		}
 	}
 
+	[JsonIgnore]
+	public int ActiveWorkerCount
+	{
+		get
+		{
+			int activeWorkers = 0;
+			foreach ( var worker in workers )
+				if ( worker.onRoad )
+					activeWorkers++;
+			return activeWorkers;
+		}
+	}
+
+	[JsonIgnore]
+	public GroundNode LastNode { get { return nodes[nodes.Count - 1]; } }
+
+	public bool OnMovingOverNode( GroundNode node )
+ 	{
+		if ( node == null )
+			return true;
+		assert.IsTrue( tempNodes < nodes.Count );
+
+		while ( tempNodes > 0 )
+		{
+			RemoveLastNode();
+			tempNodes--;
+		}
+		assert.IsTrue( nodes.Count > 0 );
+
+		PathFinder p = new PathFinder();
+		if ( p.FindPathBetween( LastNode, node, PathFinder.Mode.avoidRoadsAndFlags, true ) )
+		{
+			var j = nodes.Count;
+			for ( int i = 1; i < p.path.Count; i++ )
+				AddNode( p.path[i] );
+
+			tempNodes = nodes.Count - j;
+		}
+		RebuildMesh( true );
+
+  		if ( node == GetNodeFromEnd( tempNodes ) )
+		{
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
+			return true;
+		}
+
+		if ( node.flag )
+		{
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			return true;
+		}
+
+		if ( node.DistanceFrom( LastNode ) == 1 )
+		{
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.road );
+			return true;
+		}
+
+		if ( Flag.IsNodeSuitable( node, owner ) )
+		{
+			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			return true;
+		}
+
+		Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.nothing );
+		return true;
+	}
+
+	public bool OnNodeClicked( GroundNode node )
+	{
+		// TODO Roads under construction should not be saved
+		if ( node.road && node.road != this )
+			Flag.Create().Setup( node, owner );
+		if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+			Flag.Create().Setup( node, owner );
+
+		if ( node == LastNode && tempNodes == 0 )
+		{
+			if ( RemoveLastNode() )
+			{
+				RebuildMesh();
+				return true;
+			}
+			else
+				return false;
+		}
+
+		tempNodes = 0;
+		RebuildMesh();
+		if ( node.flag )
+		{
+			if ( !Finish() )
+				Remove();
+			return false;
+		}
+		else
+			return true;
+	}
+
 	public void Validate()
 	{
 		int length = nodes.Count;
@@ -656,13 +796,13 @@ public class Road : Assert.Base, Interface.IInputHandler
 			return;
 		}
 		var first = nodes[0];
-		var last = nodes[length-1];
+		var last = LastNode;
 		assert.IsNotNull( first.flag );
 		assert.IsNotNull( last.flag );
 		assert.AreEqual( this, first.flag.roadsStartingHere[first.DirectionTo( nodes[1] )] );
 		assert.AreEqual( this, last.flag.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
 		for ( int i = 1; i < length - 1; i++ )
-			assert.AreEqual( this, nodes[i].road );	// TODO This assert fired once
+			assert.AreEqual( this, nodes[i].road ); // TODO This assert fired once
 		for ( int i = 0; i < length - 1; i++ )
 			assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
 		foreach ( var worker in workers )
@@ -695,67 +835,18 @@ public class Road : Assert.Base, Interface.IInputHandler
 		assert.AreEqual( realJam, Jam );
 		for ( int i = 0; i < nodes.Count - 1; i++ )
 			assert.AreEqual( nodes[i].DistanceFrom( nodes[i + 1] ), 1 );
-	}
-
-	public bool OnMovingOverNode( GroundNode node )
- 	{
-		if ( node == null )
-			return true;
-
-		GroundNode last = GetNodeFromEnd( 0 );
-		if ( node == last )
-		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
-			return true;
-		}
-
-		if ( node.flag )
-		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
-			return true;
-		}
-
-		if ( node.DistanceFrom( last ) == 1 )
-		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.road );
-			return true;
-		}
-
-		if ( Flag.IsNodeSuitable( node, owner ) )
-		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
-			return true;
-		}
-
-		Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.nothing );
-		return true;
-	}
-
-	[JsonIgnore]
-	public int ActiveWorkerCount
-	{
-		get
-		{
-			int activeWorkers = 0;
-			foreach ( var worker in workers )
-				if ( worker.onRoad )
-					activeWorkers++;
-			return activeWorkers;
-		}
-	}
-
-	public bool OnNodeClicked( GroundNode node )
-	{
-		if ( node.road )
-			Flag.Create().Setup( node, owner );
-
-		AddNode( node );
-		if ( node.flag )
-		{
-			Finish();
-			return false;
-		}
+		if ( !ready )
+			assert.IsTrue( tempNodes < nodes.Count );
 		else
-			return true;
+		{
+			assert.AreEqual( tempNodes, 0 );
+			assert.IsTrue( nodes.Count > 1 );
+		}
+	}
+
+	public void OnLostInput()
+	{
+		bool removed = Remove();
+		assert.IsTrue( removed );
 	}
 }

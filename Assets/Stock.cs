@@ -25,7 +25,7 @@ public class Stock : Building
 	static public int maxItems = 100;
 	GameObject body;
 
-	[Obsolete("Compatibility for old files")]
+	[Obsolete( "Compatibility for old files", true )]
 	public List<int> target = new List<int>();
 
 	public class Cart : Worker

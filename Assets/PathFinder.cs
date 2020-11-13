@@ -140,7 +140,7 @@ public class PathFinder : ScriptableObject
 					continue;
 				int index = road.NodeIndex( r.node );
 				if ( index == 0 )
-					VisitNode( road.nodes[road.nodes.Count - 1], r.costG + road.Cost, r, road, false );
+					VisitNode( road.LastNode, r.costG + road.Cost, r, road, false );
 				else
 				{
 					Assert.global.AreEqual( index, road.nodes.Count - 1 );

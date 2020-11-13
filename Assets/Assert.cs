@@ -11,12 +11,18 @@ public class Assert
 	Component boss;
 	public static Assert global = new Assert( null );
 	public static bool problemSelected = false;
+	public static bool error;
 
 	public Assert() { }
 
 	public Assert( Component boss = null )
 	{
 		this.boss = boss;
+	}
+
+	public static void Initialize()
+	{
+		Application.logMessageReceived += LogCallback;
 	}
 
 	[Conditional( "DEBUG" )]
@@ -157,7 +163,7 @@ public class Assert
 
 		EditorApplication.isPaused = true;
 #endif
-		throw new System.Exception();
+		throw new Exception();
 	}
 
 	string Caller( int depth )
@@ -166,6 +172,12 @@ public class Assert
 		var stackFrame = stackTrace.GetFrame( depth );
 		var method = stackFrame.GetMethod();
 		return method.DeclaringType.Name + "." + method.Name;
+	}
+
+	static void LogCallback( string condition, string stackTrace, LogType type )
+	{
+		if ( type == LogType.Exception || type == LogType.Assert || type == LogType.Error )
+			error = true;
 	}
 
 	public class Base : MonoBehaviour

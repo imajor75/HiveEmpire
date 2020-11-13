@@ -42,7 +42,15 @@ public class Flag : Assert.Base
         this.node = node;
 		this.owner = owner;
 		if ( node.road )
-			node.road.Split( this );
+		{
+			if ( node.road.ready )
+				node.road.Split( this );
+			else
+			{
+				assert.IsTrue( node == node.road.LastNode );
+				node.road = null;
+			}
+		}
 		return this;
     }
 

@@ -92,7 +92,8 @@ public class Interface : Assert.Base
 
 	void OnApplicationQuit()
 	{
-		Save();
+		if ( !Assert.error )
+			Save();
 	}
 
 	void LateUpdate()
@@ -177,6 +178,7 @@ public class Interface : Assert.Base
 
 	void Start()
 	{
+		Assert.Initialize();
 		World.Initialize();
 		Ground.Initialize();
 		Item.Initialize();
@@ -244,6 +246,7 @@ public class Interface : Assert.Base
 
 	void Save( string fileName = "" )
 	{
+		viewport.ResetInputHandler();
 		if ( fileName == "" )
 			fileName = Application.persistentDataPath + "/Saves/" + World.rnd.Next() + ".json";
 		world.Save( fileName );
@@ -302,12 +305,15 @@ public class Interface : Assert.Base
 		}
 		if ( Input.GetKeyDown( KeyCode.Escape ) )
 		{
-			for ( int i = panels.Count - 1; i >= 0; i-- )
+			if ( !viewport.ResetInputHandler() )
 			{
-				if ( !panels[i].escCloses )
-					continue;
-				panels[panels.Count - 1].Close();
-				break;
+				for ( int i = panels.Count - 1; i >= 0; i-- )
+				{
+					if ( !panels[i].escCloses )
+						continue;
+					panels[panels.Count - 1].Close();
+					break;
+				}
 			}
 		}
 		if ( Input.GetKeyDown( KeyCode.M ) )
@@ -881,7 +887,7 @@ public class Interface : Assert.Base
 				root.highlightType = HighlightType.area;
 				root.highlightArea = area;
 				root.highlightOwner = gameObject;
-				root.viewport.inputHandler = this;
+				root.viewport.InputHandler = this;
 			}
 
 			public void OnPointerEnter( PointerEventData eventData )
@@ -896,7 +902,7 @@ public class Interface : Assert.Base
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == area )
+				if ( root.viewport.InputHandler != this as IInputHandler && root.highlightArea == area )
 					root.highlightType = HighlightType.none;
 			}
 
@@ -913,6 +919,12 @@ public class Interface : Assert.Base
 					if ( area.radius < 8 )
 						area.radius++;
 				}
+			}
+
+			public void OnLostInput()
+			{
+				area.center = null;
+				root.highlightType = HighlightType.none;
 			}
 		}
 
@@ -1404,7 +1416,7 @@ public class Interface : Assert.Base
 
 			itemTypeForRetarget = selectedItemType;
 			Root.highlightOwner = gameObject;
-			Root.viewport.inputHandler = this;
+			Root.viewport.InputHandler = this;
 			Root.highlightType = HighlightType.stocks;
 		}
 
@@ -1504,6 +1516,11 @@ public class Interface : Assert.Base
 			Root.highlightType = HighlightType.none;
 			RecreateControls();
 			return false;
+		}
+
+		public void OnLostInput()
+		{
+			Root.highlightType = HighlightType.none;
 		}
 	}
 
@@ -1788,7 +1805,7 @@ public class Interface : Assert.Base
 			if ( flag )
 			{
 				Road road = Road.Create().Setup( flag );
-				Root.viewport.inputHandler = road;
+				Root.viewport.InputHandler = road;
 			}
 			Close();
 		}
@@ -2082,11 +2099,32 @@ public class Interface : Assert.Base
 	{
 		public bool mouseOver;
 		public GameObject cursor;
-		public IInputHandler inputHandler;
+		IInputHandler inputHandler;
 		GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
 		GameObject cursorFlag;
 		GameObject cursorBuilding;
 		public new Camera camera;
+
+		public IInputHandler InputHandler
+		{
+			get { return inputHandler; }
+			set
+			{
+				if ( inputHandler == value )
+					return;
+				inputHandler?.OnLostInput();
+				inputHandler = value;
+			}
+
+		}
+
+		public bool ResetInputHandler()
+		{
+			if ( inputHandler == this as IInputHandler )
+				return false;
+			InputHandler = this;
+			return true;
+		}
 
 		public enum CursorType
 		{
@@ -2222,7 +2260,7 @@ public class Interface : Assert.Base
 				node.flag.OnClicked();
 				return true;
 			}
-			if ( node.road )
+			if ( node.road && node.road.ready )
 			{
 				var worker = node.road.workerAtNodes[node.road.NodeIndex( node )];
 				if ( worker && worker.type == Worker.Type.cart )
@@ -2233,6 +2271,10 @@ public class Interface : Assert.Base
 			}
 			node.OnClicked();
 			return true;
+		}
+
+		public void OnLostInput()
+		{
 		}
 	}
 
@@ -2532,6 +2574,7 @@ public class Interface : Assert.Base
 	{
 		bool OnMovingOverNode( GroundNode node );
 		bool OnNodeClicked( GroundNode node );
+		void OnLostInput();
 	}
 }
 
