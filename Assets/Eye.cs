@@ -143,10 +143,13 @@ public class Eye : MonoBehaviour
 			targetAltitude *= 1.01f;
 		if ( Input.GetKey( KeyCode.X ) )
 			targetAltitude *= 0.99f;
-		if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )		// TODO Use something else instead of strings here
-			targetAltitude += 1;	
-		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )		
-			targetAltitude -= 1;
+		if ( camera == camera.enabled )
+		{
+			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
+				targetAltitude += 1;
+			if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
+				targetAltitude -= 1;
+		}
 		if ( targetAltitude < minAltitude )
 			targetAltitude = minAltitude;
 		if ( targetAltitude > maxAltitude )

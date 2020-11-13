@@ -39,6 +39,10 @@ public class Map : Interface.Panel
 			zoom *= 0.97f;
 		if ( Input.GetKey( KeyCode.Minus ) )
 			zoom *= 1.03f;
+		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
+			zoom *= 0.82f;
+		if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )
+			zoom *= 1.2f;
 		if ( zoom < zoomMin )
 			zoom = zoomMin;
 		if ( zoom > zoomMax )
