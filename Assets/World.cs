@@ -158,6 +158,8 @@ public class World : MonoBehaviour
 					o.cachedColor = Color.white;
 				if ( o.owner == null )
 					o.owner = players[0];
+				if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemInHands != null && o.itemInHands.destination == null )
+					o.itemInHands.SetRawTarget( o.building );
 				o.Validate();
 			}
 		}
@@ -168,6 +170,12 @@ public class World : MonoBehaviour
 				var s = o as Workshop;
 				if ( s && s.working && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
 					s.working = false;
+				if ( s && s.outputPriority == ItemDispatcher.Priority.low )
+					s.outputPriority = ItemDispatcher.Priority.stock;
+
+				var t = o as Stock;
+				if ( t && t.cart == null )
+					t.cart = Stock.Cart.Create().SetupAsCart( t ) as Stock.Cart;
 
 				o.Validate();
 			}

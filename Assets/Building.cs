@@ -8,7 +8,7 @@ abstract public class Building : Assert.Base
 {
 	public string title;
 	public Player owner;
-	public Worker worker;
+	public Worker worker, workerMate;
 	public Flag flag;
 	public Ground ground;
 	public GroundNode node;
@@ -56,6 +56,7 @@ abstract public class Building : Assert.Base
 		public Worker worker;
 		public static Shader shader;
 		public static int sliceLevelID;
+		[JsonIgnore, Obsolete( "Old files", true )]
 		public int timeSinceCreated;
 		public bool flatteningNeeded;
 		public int flatteningCorner;
@@ -116,14 +117,10 @@ abstract public class Building : Assert.Base
 			// TODO Try to find a path only if the road network has been changed
 			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
-				if ( timeSinceCreated > 50 )
-				{
-					Building main = boss.owner.mainBuilding;
-					worker = Worker.Create();
-					worker.SetupForConstruction( boss );
-				}
-				else
-					timeSinceCreated++;
+				Building main = boss.owner.mainBuilding;
+				worker = Worker.Create();
+				worker.SetupForConstruction( boss );
+				worker.ScheduleWait( 100 );
 			}
 			if ( worker == null || !worker.IsIdle( true ) )
 				return;
@@ -337,6 +334,7 @@ abstract public class Building : Assert.Base
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
+		Worker worker = workerMate ?? this.worker;
 		if ( worker == null || !worker.IsIdle( true ) || flag.FreeSpace() == 0 )
 			return null;
 
@@ -462,6 +460,7 @@ abstract public class Building : Assert.Base
 		assert.AreEqual( this, node.building );
 		assert.AreEqual( flag, node.Add( flagOffset ).flag );
 		worker?.Validate();
+		workerMate?.Validate();
 		exit?.Validate();
 		construction?.Validate();
 		foreach ( var item in itemsOnTheWay )

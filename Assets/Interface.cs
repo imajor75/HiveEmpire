@@ -1162,7 +1162,7 @@ public class Interface : Assert.Base
 			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
 			{
 				showProgressBar = true;
-				showOutputBuffer = !workshop.gatherer;
+				showOutputBuffer = workshop.configuration.outputType != Item.Type.unknown;
 			}
 			int displayedBufferCount = workshop.buffers.Count + ( showOutputBuffer ? 1 : 0 );
 			int height = 80 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 );
@@ -1251,7 +1251,7 @@ public class Interface : Assert.Base
 
 		void Overdrive()
 		{
-			workshop.outputPriority = workshop.outputPriority == ItemDispatcher.Priority.high ? ItemDispatcher.Priority.low : ItemDispatcher.Priority.high;
+			workshop.outputPriority = workshop.outputPriority == ItemDispatcher.Priority.high ? ItemDispatcher.Priority.stock : ItemDispatcher.Priority.high;
 		}
 
 		public class Buffer

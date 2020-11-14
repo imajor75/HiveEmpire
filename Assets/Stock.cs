@@ -153,8 +153,7 @@ public class Stock : Building
 		}
 		content[(int)Item.Type.plank] = 10;
 		content[(int)Item.Type.fish] = 10;
-		worker = Worker.Create();
-		worker.SetupForBuilding( this );
+		worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		return this;
 	}
@@ -259,8 +258,7 @@ public class Stock : Building
 		base.FixedUpdate();
 		if ( worker == null && construction.done )
 		{
-			worker = Worker.Create();
-			worker.SetupForBuilding( this );
+			worker = Worker.Create().SetupForBuilding( this );
 		}
 	}
 

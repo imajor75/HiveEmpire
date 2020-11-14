@@ -10,7 +10,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 {
 	public int output;
 	public Ground.Area outputArea = new Ground.Area();
-	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
+	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.stock;
 	public float progress;
 	public bool working;
 	public Type type = Type.unknown;
@@ -514,7 +514,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return;
 			}
 		}
-		assert.IsTrue( false, "Item has wrong type (" + item.type + ")" );
+		assert.IsTrue( gatherer );
+		assert.AreEqual( configuration.outputType, item.type );
+		assert.IsTrue( output < configuration.outputMax );
 	}
 
 	public override void ItemArrived( Item item )
@@ -555,19 +557,15 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 
 		if ( worker == null )
+			worker = Worker.Create().SetupForBuilding( this );
+		if ( workerMate == null )
 		{
-			worker = Worker.Create();
-			worker.SetupForBuilding( this );
+			workerMate = Worker.Create().SetupForBuilding( this, true );
+			workerMate.ScheduleWait( 50 );
 		}
 
 		if ( gatherer && worker.IsIdle() && worker.node == node )
 			SetWorking( false );
-
-		if ( configuration.outputType != Item.Type.unknown && owner.surplus[(int)configuration.outputType] > 0 && outputPriority < ItemDispatcher.Priority.high && !working )
-		{
-			SetWorking( false );
-			return;
-		}
 
 		switch ( type )
 		{
@@ -722,7 +720,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		if ( !worker.IsIdle( true ) )
 			return;
-		if ( configuration.outputType != Item.Type.unknown && flag.FreeSpace() == 0 )
+		if ( configuration.outputType != Item.Type.unknown )
 			return;
 
 		resourcePlace = null;
@@ -881,6 +879,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 			assert.IsTrue( b.stored >= 0 && b.stored <= b.size, "Invalid store count for " + b.itemType + " (" + b.stored + ")" );
 		}
 		if ( construction.done )
-			assert.AreEqual( itemsOnTheWayCount, itemsOnTheWay.Count );
+			assert.AreEqual( itemsOnTheWayCount + ( worker.itemInHands ? 1 : 0 ), itemsOnTheWay.Count );
 	}
 }

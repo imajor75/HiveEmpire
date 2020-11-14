@@ -652,7 +652,7 @@ public class Worker : Assert.Base
 		return this;
 	}
 
-	public Worker SetupForBuilding( Building building )
+	public Worker SetupForBuilding( Building building, bool mate = false )
 	{
 		look = type = Type.tinkerer;
 		cachedColor = Color.cyan;
@@ -1523,6 +1523,13 @@ public class Worker : Assert.Base
 				assert.IsTrue( index >= 0 );
 				assert.AreEqual( road.workerAtNodes[index], this );
 			}
+		}
+		if ( type == Type.tinkerer && ( (Workshop)building ).gatherer )
+		{
+			if ( IsIdle( true ) )
+				assert.IsNull( itemInHands );
+			if ( itemInHands )
+				assert.AreEqual( itemInHands.destination, building );
 		}
 	}
 }
