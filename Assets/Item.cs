@@ -198,6 +198,14 @@ public class Item : Assert.Base
 		owner.itemDispatcher.RegisterOffer( this, offerPriority, area );
 	}
 
+	public void SetRawTarget( Building building, ItemDispatcher.Priority priority = ItemDispatcher.Priority.low )
+	{
+		destination = building;
+		building.ItemOnTheWay( this );
+		currentOrderPriority = priority;
+		tripCancelled = false;
+	}
+
 	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )
 	{
 		assert.IsTrue( building != destination || priority != currentOrderPriority );
@@ -214,10 +222,7 @@ public class Item : Assert.Base
 		if ( path != null )
 		{
 			flag?.itemsStored.Trigger();
-			destination = building;
-			building.ItemOnTheWay( this );
-			currentOrderPriority = priority;
-			tripCancelled = false;
+			SetRawTarget( building, priority );
 			return true;
 		}
 		return false;
@@ -263,7 +268,9 @@ public class Item : Assert.Base
 	{
 		if ( flag != null )
 			assert.AreEqual( destination.flag, flag );
+
 		destination.ItemArrived( this );
+
 		owner.UnregisterItem( this );
 		Destroy( gameObject );
 	}

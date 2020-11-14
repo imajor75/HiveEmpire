@@ -535,7 +535,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return;
 			}
 		}
-		assert.IsTrue( false );
+		assert.IsTrue( gatherer );
+		assert.AreEqual( configuration.outputType, item.type );
+		assert.IsTrue( output < configuration.outputMax );
+		output++;
 	}
 
 	[JsonIgnore]
@@ -777,8 +780,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			owner.ItemProduced( configuration.outputType );	// TODO It would be better to report the item once the worker brought it back to flag
 			item = Item.Create().Setup( configuration.outputType, this );
-			flag.ReserveItem( item );
 			item.worker = worker;
+			item.SetRawTarget( this, ItemDispatcher.Priority.low );
 		}
 		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
@@ -804,9 +807,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 			( (Workshop)worker.building ).itemsProduced++;
 		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
+		worker.ScheduleWalkToNeighbour( worker.building.node );
 		if ( item != null )
 			worker.ScheduleDeliverItem( item );
-		worker.ScheduleWalkToNeighbour( worker.building.node );
 		worker.ScheduleCall( worker.building as Workshop );
 	}
 

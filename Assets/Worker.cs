@@ -456,8 +456,7 @@ public class Worker : Assert.Base
 	{
 		static public int putdownTimeStart = 60;
 		public Item item;
-		public 
-			World.Timer timer;
+		public World.Timer timer;
 
 		public void Setup( Worker boss, Item item )
 		{
@@ -500,7 +499,7 @@ public class Worker : Assert.Base
 				return false;
 
 			boss.itemsDelivered++;
-			boss.bored.Start( Worker.boredTimeBeforeRemove );
+			boss.bored.Start( boredTimeBeforeRemove );
 			boss.box?.SetActive( item.buddy != null );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
