@@ -141,6 +141,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public GroundNode node;
 		public Resource.Type resourceType;
 		public World.Timer timer;
+		[JsonIgnore, Obsolete]
+		public Item item;
 
 		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
 		{
@@ -722,6 +724,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 		if ( configuration.outputType != Item.Type.unknown )
 			return;
+		if ( output >= configuration.outputMax )
+			return;
 
 		resourcePlace = null;
 		assert.IsTrue( worker.IsIdle() );
@@ -795,7 +799,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( itemType != Item.Type.unknown )
 			item = Item.Create().Setup( itemType, worker.building );
 		if ( item != null )
+		{
+			item.SetRawTarget( worker.building );
+			item.worker = worker;
 			worker.SchedulePickupItem( item );
+		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
 		worker.ScheduleWalkToNeighbour( worker.building.node );
 		if ( item != null )
@@ -872,8 +880,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		if ( construction.done )
 		{
-			bool gathering = !worker.IsIdle() && configuration.outputType != Item.Type.unknown;
-			assert.AreEqual( itemsOnTheWayCount + ( gathering ? 0 : 1 ), itemsOnTheWay.Count );
+			int missing = itemsOnTheWay.Count - itemsOnTheWayCount;
+			assert.IsTrue( missing >= 0 && missing < 2 );
+			if ( missing == 1 )
+			{
+				// If an incoming item is missing, then that can only happen if the worker is just gathering it
+				assert.IsTrue( gatherer );
+				assert.IsFalse( worker.IsIdle() );
+			}
 		}
 	}
 }

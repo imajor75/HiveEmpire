@@ -345,7 +345,9 @@ public class Item : Assert.Base
 			path.Validate();
 		if ( destination )
 		{
-			assert.IsNotNull( path );
+			// During gathering the destination is the same as the origin building, otherwise there should be a path
+			if ( origin != destination )
+				assert.IsNotNull( path );	
 			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
 			assert.IsTrue( currentOrderPriority > ItemDispatcher.Priority.zero );
 		}

@@ -149,6 +149,16 @@ public class World : MonoBehaviour
 			}
 		}
 		{
+			var list = Resources.FindObjectsOfTypeAll<Workshop.GetResource>();
+			foreach ( var o in list )
+			{
+#pragma warning disable CS0612 // Type or member is obsolete
+				o.item?.Remove();
+				o.item = null;
+#pragma warning restore CS0612 // Type or member is obsolete
+			}
+		}
+		{
 			var list = Resources.FindObjectsOfTypeAll<Worker>();
 			foreach ( var o in list )
 			{
@@ -184,7 +194,8 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Item>();
 			foreach ( var o in list )
 			{
-				o.Validate();
+				if ( o.index > -1 )
+					o.Validate();
 			}
 		}
 		{
