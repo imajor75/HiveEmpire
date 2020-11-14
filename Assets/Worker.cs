@@ -588,13 +588,14 @@ public class Worker : Assert.Base
 		soldier,
 		wildAnimal,
 		unemployed,
-		cart
+		cart,
+		tinkererMate
 	}
 
 	public static void Initialize()
 	{
 		object[] lookData = {
-		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a", Type.constructor,
+		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a", Type.constructor, Type.tinkererMate,
 		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a", Type.tinkerer,
 		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a", Type.hauler,
 		"FootmanPBRHPPolyart/Prefabs/footman_Blue_HP", Type.soldier,
@@ -655,6 +656,8 @@ public class Worker : Assert.Base
 	public Worker SetupForBuilding( Building building, bool mate = false )
 	{
 		look = type = Type.tinkerer;
+		if ( mate )
+			look = Type.tinkererMate;
 		cachedColor = Color.cyan;
 		name = "Tinkerer";
 		return SetupForBuildingSite( building );
@@ -1524,7 +1527,7 @@ public class Worker : Assert.Base
 				assert.AreEqual( road.workerAtNodes[index], this );
 			}
 		}
-		if ( type == Type.tinkerer && ( (Workshop)building ).gatherer )
+		if ( type == Type.tinkerer && building as Workshop && ( (Workshop)building ).gatherer )
 		{
 			if ( IsIdle( true ) )
 				assert.IsNull( itemInHands );

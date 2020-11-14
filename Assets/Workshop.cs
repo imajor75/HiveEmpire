@@ -141,13 +141,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public GroundNode node;
 		public Resource.Type resourceType;
 		public World.Timer timer;
-		public Item item;
 
-		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType, Item item )
+		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
 		{
 			base.Setup( boss );
 			this.node = node;
-			this.item = item;
 			this.resourceType = resourceType;
 		}
 		public override void Validate()
@@ -163,7 +161,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.assert.AreEqual( boss, node.resource.hunter );
 				node.resource.hunter = null;
 			}
-			item?.Remove();
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
@@ -208,7 +205,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.assert.AreEqual( resource.hunter, boss );
 				resource.hunter = null;
 			}
-			FinishJob( boss, item );
+			FinishJob( boss, Resource.ItemType( resourceType ) );
 			return true;
 		}
 	}
@@ -537,10 +534,13 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return;
 			}
 		}
+
+		// Gatherer arrived back from harvest
 		assert.IsTrue( gatherer );
 		assert.AreEqual( configuration.outputType, item.type );
 		assert.IsTrue( output < configuration.outputMax );
 		output++;
+		owner.ItemProduced( configuration.outputType );
 	}
 
 	[JsonIgnore]
@@ -773,14 +773,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( !UseInput() || flag.FreeSpace() == 0 )
 			return;
 
-		Item item = null;
-		if ( configuration.outputType != Item.Type.unknown )
-		{
-			owner.ItemProduced( configuration.outputType );	// TODO It would be better to report the item once the worker brought it back to flag
-			item = Item.Create().Setup( configuration.outputType, this );
-			item.worker = worker;
-			item.SetRawTarget( this, ItemDispatcher.Priority.low );
-		}
 		assert.IsTrue( worker.IsIdle() );
 		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )
@@ -790,20 +782,20 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		resourcePlace = target;
 		var task = ScriptableObject.CreateInstance<GetResource>();
-		task.Setup( worker, target, resourceType, item );
+		task.Setup( worker, target, resourceType );
 		worker.ScheduleTask( task );
 		if ( target.resource )
 			target.resource.hunter = worker;
 		SetWorking( true );
 	}
 
-	static void FinishJob( Worker worker, Item item )
+	static void FinishJob( Worker worker, Item.Type itemType )
 	{
+		Item item = null;
+		if ( itemType != Item.Type.unknown )
+			item = Item.Create().Setup( itemType, worker.building );
 		if ( item != null )
-		{
 			worker.SchedulePickupItem( item );
-			( (Workshop)worker.building ).itemsProduced++;
-		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
 		worker.ScheduleWalkToNeighbour( worker.building.node );
 		if ( item != null )
@@ -879,6 +871,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 			assert.IsTrue( b.stored >= 0 && b.stored <= b.size, "Invalid store count for " + b.itemType + " (" + b.stored + ")" );
 		}
 		if ( construction.done )
-			assert.AreEqual( itemsOnTheWayCount + ( worker.itemInHands ? 1 : 0 ), itemsOnTheWay.Count );
+		{
+			bool gathering = !worker.IsIdle() && configuration.outputType != Item.Type.unknown;
+			assert.AreEqual( itemsOnTheWayCount + ( gathering ? 0 : 1 ), itemsOnTheWay.Count );
+		}
 	}
 }
