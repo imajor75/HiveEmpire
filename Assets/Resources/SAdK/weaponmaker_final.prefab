@@ -89,6 +89,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 410727663736352662}
     m_Modifications:
+    - target: {fileID: 2901865658654869234, guid: 4074db89014a0ae49bbf11a3f28a66d4,
+        type: 3}
+      propertyPath: simulationSpeed
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 2901865658673848210, guid: 4074db89014a0ae49bbf11a3f28a66d4,
         type: 3}
       propertyPath: m_Name

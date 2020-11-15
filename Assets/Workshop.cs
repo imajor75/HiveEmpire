@@ -575,16 +575,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 			{
 				if ( worker.IsIdle( true ) )
 				{
-					foreach ( var o in Ground.areas[3] )
+					if ( output < configuration.outputMax )
 					{
-						GroundNode place = node.Add( o );
-						if ( place.building || place.flag || place.road || place.fixedHeight )
-							continue;
-						Resource cornfield = place.resource;
-						if ( cornfield == null || cornfield.type != Resource.Type.cornfield || cornfield.hunter || !cornfield.IsReadyToBeHarvested() )
-							continue;
-						CollectResourceFromNode( place, Resource.Type.cornfield );
-						return;
+						foreach ( var o in Ground.areas[3] )
+						{
+							GroundNode place = node.Add( o );
+							if ( place.building || place.flag || place.road || place.fixedHeight )
+								continue;
+							Resource cornfield = place.resource;
+							if ( cornfield == null || cornfield.type != Resource.Type.cornfield || cornfield.hunter || !cornfield.IsReadyToBeHarvested() )
+								continue;
+							CollectResourceFromNode( place, Resource.Type.cornfield );
+							return;
+						}
 					}
 					foreach ( var o in Ground.areas[3] )
 					{
@@ -778,6 +781,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 
 		assert.IsTrue( worker.IsIdle() );
+		worker.gameObject.SetActive( true );
 		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
@@ -840,6 +844,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	void PlantAt( GroundNode place, Resource.Type resourceType )
 	{
 		assert.IsTrue( worker.IsIdle() );
+		worker.gameObject.SetActive( true );
 		worker.ScheduleWalkToNeighbour( flag.node );
 		worker.ScheduleWalkToNode( place, true );
 		var task = ScriptableObject.CreateInstance<Plant>();

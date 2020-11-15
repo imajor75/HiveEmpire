@@ -153,8 +153,12 @@ public class World : MonoBehaviour
 			foreach ( var o in list )
 			{
 #pragma warning disable CS0612 // Type or member is obsolete
-				o.item?.Remove();
-				o.item = null;
+				if ( o.item )
+				{
+					o.item.nextFlag.CancelItem( o.item );
+					o.item?.Remove();
+					o.item = null;
+				}
 #pragma warning restore CS0612 // Type or member is obsolete
 			}
 		}

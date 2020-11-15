@@ -831,6 +831,11 @@ public class Worker : Assert.Base
 	// Update is called once per frame
 	void FixedUpdate()
 	{
+		if ( type == Type.tinkerer && IsIdle( true ) )
+		{
+			gameObject.SetActive( false );
+			return;
+		}
 		if ( debugReset )
 		{
 			Reset();
@@ -1089,7 +1094,10 @@ public class Worker : Assert.Base
 	void FindHaulerTask()
 	{
 		if ( bored.Done && road.ActiveWorkerCount > 1 )
+		{
 			Remove();
+			return;
+		}
 
 		if ( !onRoad )
 		{
@@ -1531,7 +1539,7 @@ public class Worker : Assert.Base
 		{
 			if ( IsIdle( true ) )
 				assert.IsNull( itemInHands );
-			if ( itemInHands )
+			if ( itemInHands && building.worker == this )
 				assert.AreEqual( itemInHands.destination, building );
 		}
 	}

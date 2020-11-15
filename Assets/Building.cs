@@ -338,6 +338,7 @@ abstract public class Building : Assert.Base
 		if ( worker == null || !worker.IsIdle( true ) || flag.FreeSpace() == 0 )
 			return null;
 
+		worker.gameObject.SetActive( true );
 		// TODO Don't create the item, if there is no path between this and destination
 		Item item = Item.Create().Setup( itemType, this, destination, priority );
 		if ( item != null )
