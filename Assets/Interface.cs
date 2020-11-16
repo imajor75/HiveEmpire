@@ -1162,7 +1162,7 @@ public class Interface : Assert.Base
 			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
 			{
 				showProgressBar = true;
-				showOutputBuffer = !workshop.gatherer;
+				showOutputBuffer = workshop.configuration.outputType != Item.Type.unknown;
 			}
 			int displayedBufferCount = workshop.buffers.Count + ( showOutputBuffer ? 1 : 0 );
 			int height = 80 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 );
@@ -1473,13 +1473,13 @@ public class Interface : Assert.Base
 				{
 					listToChange = stock.outputMin;
 					min = 0;
-					max = stock.outputMin[t];
+					max = stock.outputMax[t];
 					disableDrag = true;
 				}
 				if ( g == outputMax.gameObject )
 				{
 					listToChange = stock.outputMax;
-					min = stock.outputMax[t];
+					min = stock.outputMin[t];
 					max = Stock.maxItems;
 					disableDrag = true;
 				}

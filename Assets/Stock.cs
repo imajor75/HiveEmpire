@@ -153,8 +153,7 @@ public class Stock : Building
 		}
 		content[(int)Item.Type.plank] = 10;
 		content[(int)Item.Type.fish] = 10;
-		worker = Worker.Create();
-		worker.SetupForBuilding( this );
+		worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		return this;
 	}
@@ -208,26 +207,33 @@ public class Stock : Building
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
+			int current = content[itemType] + onWay[itemType];
 			if ( maxItems > total )
 			{
 				var p = ItemDispatcher.Priority.stock;
-				if ( content[itemType] < inputMin[itemType] )
+				if ( current < inputMin[itemType] )
 					p = ItemDispatcher.Priority.high;
-				if ( content[itemType] > inputMax[itemType] )
+				if ( current >= inputMax[itemType] )
 					p = ItemDispatcher.Priority.zero;
-				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, maxItems - total, p, inputArea ); // TODO Should not order more than what fits
+				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Max( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
 			}
 			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
 			{
 				var p = ItemDispatcher.Priority.stock;
-				if ( content[itemType] < outputMin[itemType] )
+				if ( current < outputMin[itemType] )
 					p = ItemDispatcher.Priority.zero;
-				if ( content[itemType] > outputMax[itemType] )
+				if ( current >= outputMax[itemType] )
 					p = ItemDispatcher.Priority.high;
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea );
 			}
 
-			if ( destinations[itemType] && content[itemType] >= Cart.capacity && cart.IsIdle( true ) && flag.user == null && destinations[itemType].total + Cart.capacity <= maxItems )
+			if ( 
+				destinations[itemType] && 
+				content[itemType] >= Cart.capacity && 
+				cart.IsIdle( true ) && 
+				flag.user == null && 
+				destinations[itemType].total + Cart.capacity <= maxItems &&
+				destinations[itemType].content[itemType] < destinations[itemType].inputMax[itemType] )
 			{
 				var target = destinations[itemType];
 				cart.itemQuantity = Cart.capacity;
@@ -259,8 +265,7 @@ public class Stock : Building
 		base.FixedUpdate();
 		if ( worker == null && construction.done )
 		{
-			worker = Worker.Create();
-			worker.SetupForBuilding( this );
+			worker = Worker.Create().SetupForBuilding( this );
 		}
 	}
 

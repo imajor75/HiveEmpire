@@ -261,6 +261,7 @@ public class Player : ScriptableObject
 		items[item.index] = null;
 		if ( item.index < firstPossibleEmptyItemSlot )
 			firstPossibleEmptyItemSlot = item.index;
+		item.index = -1;
 	}
 
 	public void ItemProduced( Item.Type itemType, int quantity = 1 )

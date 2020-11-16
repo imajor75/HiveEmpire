@@ -165,7 +165,6 @@ public class ItemDispatcher : ScriptableObject
 			Priority[] priorities = { Priority.high, Priority.low };
 			foreach ( var priority in priorities )
 			{
-				bool success;
 				do
 				{
 					while ( offers.Count > 0 && offers[0].quantity == 0 )
@@ -185,13 +184,20 @@ public class ItemDispatcher : ScriptableObject
 							requestItemCount += request.quantity;
 					}
 
-					success = false;
 					if ( offerItemCount < requestItemCount && offers.Count > 0 )
-						success = FindPotentialFor( offers[0], requests );
+					{
+						FulfillPotentialFrom( offers[0], requests );
+						offers.RemoveAt( 0 );
+					}
 					else if ( requests.Count > 0 )
-						success = FindPotentialFor( requests[0], offers );
+					{
+						FulfillPotentialFrom( requests[0], offers );
+						requests.RemoveAt( 0 );
+					}
+					else
+						break;
 				}
-				while ( success );
+				while ( ( offers.Count > 0 && offers[0].priority > Priority.stock ) || ( requests.Count > 0 && requests[0].priority > Priority.stock ) );
 			}
 			int surplus = 0;
 			foreach ( var offer in offers )
@@ -216,37 +222,52 @@ public class ItemDispatcher : ScriptableObject
 			Profiler.EndSample();
 		}
 
-		bool FindPotentialFor( Potential potential, List<Potential> list )
+		// This function is trying to fulfill a request or offer from a list of offers/requests. Returns true, if the request/offer
+		// was fully fulfilled.
+		public bool FulfillPotentialFrom( Potential potential, List<Potential> list )
 		{
-			Potential best = null;
-			float bestScore = 0;
+			float maxScore = float.MaxValue;
 
-			foreach ( var other in list )
+			while ( potential.quantity != 0 )
 			{
-				if ( other.quantity == 0 )
-					continue;
-				if ( potential.priority == Priority.stock && other.priority == Priority.stock )
-					continue;
-				if ( potential.building == other.building )
-					continue;
-				if ( !potential.area.IsInside( other.location ) )
-					continue;
-				if ( !other.area.IsInside( potential.location ) )
-					continue;
-				float score = (int)other.priority * 1000 + 1f / other.location.DistanceFrom( potential.location );
-				if ( score > bestScore )
+				float bestScore = 0;
+				Potential best = null;
+				foreach ( var other in list )
 				{
-					bestScore = score;
-					best = other;
+					if ( other.quantity == 0 )
+						continue;
+					if ( potential.priority == Priority.stock && other.priority == Priority.stock )
+						continue;
+					if ( potential.building == other.building )
+						continue;
+					if ( !potential.area.IsInside( other.location ) )
+						continue;
+					if ( !other.area.IsInside( potential.location ) )
+						continue;
+					float score = (int)other.priority * 1000 + 1f / other.location.DistanceFrom( potential.location );
+					if ( score >= maxScore )
+						continue;
+					if ( score > bestScore )
+					{
+						bestScore = score;
+						best = other;
+					}
 				}
+				if ( best != null )
+				{
+					maxScore = bestScore;
+					if ( Attach( best, potential ) )
+						continue;
+				}
+				else
+					return false;
 			}
-			if ( best != null )
-				return Attach( best, potential );    // TODO If this fails, the second best should be used
-
-			return false;
+			return true;
 		}
 
-		public bool Attach( Potential first, Potential second )
+		// This function is trying to send an item from an offer to a request. Returns true if the item was sent, otherwise false.
+		// When an item was sent, the quantity data member of both the offer and the request is decreased by one.
+		bool Attach( Potential first, Potential second )
 		{
 			if ( first.type == Potential.Type.request )
 			{
@@ -259,7 +280,7 @@ public class ItemDispatcher : ScriptableObject
 
 			bool success = false;
 			if ( first.building != null )
-				success = first.building.SendItem( (Item.Type)itemType, second.building, second.priority );
+				success = first.building.SendItem( itemType, second.building, second.priority );
 			else if ( first.item != null )
 			{
 				Assert.global.AreEqual( first.item.type, itemType );

@@ -456,8 +456,7 @@ public class Worker : Assert.Base
 	{
 		static public int putdownTimeStart = 60;
 		public Item item;
-		public 
-			World.Timer timer;
+		public World.Timer timer;
 
 		public void Setup( Worker boss, Item item )
 		{
@@ -500,7 +499,7 @@ public class Worker : Assert.Base
 				return false;
 
 			boss.itemsDelivered++;
-			boss.bored.Start( Worker.boredTimeBeforeRemove );
+			boss.bored.Start( boredTimeBeforeRemove );
 			boss.box?.SetActive( item.buddy != null );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
@@ -589,13 +588,14 @@ public class Worker : Assert.Base
 		soldier,
 		wildAnimal,
 		unemployed,
-		cart
+		cart,
+		tinkererMate
 	}
 
 	public static void Initialize()
 	{
 		object[] lookData = {
-		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a", Type.constructor,
+		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a", Type.constructor, Type.tinkererMate,
 		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a", Type.tinkerer,
 		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a", Type.hauler,
 		"FootmanPBRHPPolyart/Prefabs/footman_Blue_HP", Type.soldier,
@@ -653,9 +653,11 @@ public class Worker : Assert.Base
 		return this;
 	}
 
-	public Worker SetupForBuilding( Building building )
+	public Worker SetupForBuilding( Building building, bool mate = false )
 	{
 		look = type = Type.tinkerer;
+		if ( mate )
+			look = Type.tinkererMate;
 		cachedColor = Color.cyan;
 		name = "Tinkerer";
 		return SetupForBuildingSite( building );
@@ -829,6 +831,11 @@ public class Worker : Assert.Base
 	// Update is called once per frame
 	void FixedUpdate()
 	{
+		if ( type == Type.tinkerer && IsIdle( true ) )
+		{
+			gameObject.SetActive( false );
+			return;
+		}
 		if ( debugReset )
 		{
 			Reset();
@@ -1087,7 +1094,10 @@ public class Worker : Assert.Base
 	void FindHaulerTask()
 	{
 		if ( bored.Done && road.ActiveWorkerCount > 1 )
+		{
 			Remove();
+			return;
+		}
 
 		if ( !onRoad )
 		{
@@ -1524,6 +1534,13 @@ public class Worker : Assert.Base
 				assert.IsTrue( index >= 0 );
 				assert.AreEqual( road.workerAtNodes[index], this );
 			}
+		}
+		if ( type == Type.tinkerer && building as Workshop && ( (Workshop)building ).gatherer )
+		{
+			if ( IsIdle( true ) )
+				assert.IsNull( itemInHands );
+			if ( itemInHands && building.worker == this )
+				assert.AreEqual( itemInHands.destination, building );
 		}
 	}
 }
