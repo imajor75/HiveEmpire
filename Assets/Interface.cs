@@ -1251,7 +1251,7 @@ public class Interface : Assert.Base
 
 		void Overdrive()
 		{
-			workshop.outputPriority = workshop.outputPriority == ItemDispatcher.Priority.high ? ItemDispatcher.Priority.stock : ItemDispatcher.Priority.high;
+			workshop.outputPriority = workshop.outputPriority == ItemDispatcher.Priority.high ? ItemDispatcher.Priority.low : ItemDispatcher.Priority.high;
 		}
 
 		public class Buffer
@@ -1473,13 +1473,13 @@ public class Interface : Assert.Base
 				{
 					listToChange = stock.outputMin;
 					min = 0;
-					max = stock.outputMin[t];
+					max = stock.outputMax[t];
 					disableDrag = true;
 				}
 				if ( g == outputMax.gameObject )
 				{
 					listToChange = stock.outputMax;
-					min = stock.outputMax[t];
+					min = stock.outputMin[t];
 					max = Stock.maxItems;
 					disableDrag = true;
 				}

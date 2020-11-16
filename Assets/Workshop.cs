@@ -10,7 +10,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 {
 	public int output;
 	public Ground.Area outputArea = new Ground.Area();
-	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.stock;
+	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
 	public float progress;
 	public bool working;
 	public Type type = Type.unknown;
@@ -724,8 +724,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	void CollectResource( Resource.Type resourceType, int range )
 	{
 		if ( !worker.IsIdle( true ) )
-			return;
-		if ( configuration.outputType != Item.Type.unknown )
 			return;
 		if ( output >= configuration.outputMax )
 			return;

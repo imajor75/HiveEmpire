@@ -184,8 +184,8 @@ public class World : MonoBehaviour
 				var s = o as Workshop;
 				if ( s && s.working && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
 					s.working = false;
-				if ( s && s.outputPriority == ItemDispatcher.Priority.low )
-					s.outputPriority = ItemDispatcher.Priority.stock;
+				if ( s && s.outputPriority == ItemDispatcher.Priority.stock )
+					s.outputPriority = ItemDispatcher.Priority.low;
 
 				var t = o as Stock;
 				if ( t && t.cart == null )
