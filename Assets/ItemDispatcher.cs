@@ -194,8 +194,10 @@ public class ItemDispatcher : ScriptableObject
 						FulfillPotentialFrom( requests[0], offers );
 						requests.RemoveAt( 0 );
 					}
+					else
+						break;
 				}
-				while ( ( offers.Count > 0 && offers[0].priority > Priority.stock ) || ( offers.Count > 0 && requests[0].priority > Priority.stock ) );
+				while ( ( offers.Count > 0 && offers[0].priority > Priority.stock ) || ( requests.Count > 0 && requests[0].priority > Priority.stock ) );
 			}
 			int surplus = 0;
 			foreach ( var offer in offers )
