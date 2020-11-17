@@ -50,7 +50,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
-		public float processSpeed = 0.0015f;
+		public float processSpeed = 0.001f;
 		public int outputMax = 6;
 
 		public bool commonInputs = false;

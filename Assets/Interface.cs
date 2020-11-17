@@ -59,7 +59,8 @@ public class Interface : Assert.Base
 		rightArrow,
 		crosshair,
 		summa,
-		tinyFrame
+		tinyFrame,
+		reset
 	}
 
 	public Interface()
@@ -1368,6 +1369,7 @@ public class Interface : Assert.Base
 			Button( 270, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			AreaIcon( 30, -30, stock.inputArea );
 			AreaIcon( 250, -30, stock.outputArea );
+			Button( 140, -30, iconSize, iconSize, iconTable.GetMediaData( Icon.reset ) ).onClick.AddListener( stock.ClearSettings );
 			total = Text( 35, 35 - height, 100, 20 );
 			total.fontSize = 16;
 

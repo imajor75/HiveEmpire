@@ -22,7 +22,7 @@ public class Stock : Building
 	public Ground.Area outputArea = new Ground.Area();
 	public int total;
 	public int totalTarget;
-	static public int maxItems = 100;
+	static public int maxItems = 200;
 	GameObject body;
 
 	[Obsolete( "Compatibility for old files", true )]
@@ -35,7 +35,7 @@ public class Stock : Building
 			return new GameObject().AddComponent<Cart>();
 		}
 
-		public const int capacity = 16;
+		public const int capacity = 20;
 		public Item.Type itemType;
 		public int itemQuantity;
 		public Stock destination;
@@ -118,9 +118,9 @@ public class Stock : Building
 			content.Add( 0 );
 			onWay.Add( 0 );
 			inputMin.Add( 0 );
-			inputMax.Add( maxItems / 10 );
+			inputMax.Add( maxItems / 20 );
 			outputMin.Add( 0 );
-			outputMax.Add( maxItems / 10 );
+			outputMax.Add( maxItems / 20 );
 		}
 		if ( base.Setup( node, owner, configuration ) == null )
 			return null;
@@ -180,11 +180,11 @@ public class Stock : Building
 		while ( inputMin.Count < (int)Item.Type.total )
 			inputMin.Add( 0 );
 		while ( inputMax.Count < (int)Item.Type.total )
-			inputMax.Add( maxItems / 10 );
+			inputMax.Add( maxItems / 20 );
 		while ( outputMin.Count < (int)Item.Type.total )
 			outputMin.Add( 0 );
 		while ( outputMax.Count < (int)Item.Type.total )
-			outputMax.Add( maxItems / 10 );
+			outputMax.Add( maxItems / 20 );
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
 		Array.Resize( ref destinations, (int)Item.Type.total );
@@ -316,6 +316,15 @@ public class Stock : Building
 		while ( content.Count <= (int)item.type )
 			content.Add( 0 );
 		content[(int)item.type]++;
+	}
+
+	public void ClearSettings()
+	{
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+			inputMin[i] = inputMax[i] = outputMin[i] = outputMax[i] = 0;
+
+		inputArea.center = outputArea.center = node;
+		inputArea.radius = outputArea.radius = 4;
 	}
 
 	public override void Validate()
