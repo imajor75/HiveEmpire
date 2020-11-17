@@ -176,7 +176,7 @@ public class Resource : Assert.Base
 	void FixedUpdate()
 	{
 		if ( underGround )
-			body?.SetActive( !exposed.Done );
+			body?.SetActive( !exposed.Done && !exposed.Empty );
 		if ( type == Type.animalSpawner && spawn.Done )
 		{
 			foreach ( var o in Ground.areas[1] )
