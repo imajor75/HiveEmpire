@@ -123,6 +123,7 @@ public class World : MonoBehaviour
 		name = "World";
 		foreach ( var player in players )
 			player.Start();
+		water.transform.localPosition = Vector3.up * waterLevel * maxHeight;
 	}
 
 	public void Load( string fileName )
@@ -247,6 +248,11 @@ public class World : MonoBehaviour
 		light.color = new Color( 0.6f, 0.6f, 0.6f );
 		light.transform.SetParent( transform );
 
+		maxHeight = 8;
+		waterLevel = 0.3f;
+		hillLevel = 0.6f;
+		mountainLevel = 0.8f;
+		forestGroundChance = 0.45f;
 		{
 			// HACK The event system needs to be recreated after the main camera is destroyed,
 			// otherwise there is a crash in unity
