@@ -46,7 +46,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public Type type;
 
 		public Resource.Type gatheredResource = Resource.Type.unknown;
-		public int gatheringRange = 8;
+		public int gatheringRange = 6;
 
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
@@ -759,7 +759,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				continue;
 			if ( resourceType == Resource.Type.expose )
 			{
-				if ( resource.underGround && resource.exposed.Done )
+				if ( resource.underGround && ( resource.exposed.Done || resource.exposed.Empty ) )
 				{
 					CollectResourceFromNode( target, resourceType );
 					return;

@@ -551,7 +551,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 			{
 				GroundNode flagNode = worker.node.Add( Building.flagOffset );
 				workerPoint = NodeIndex( flagNode );
-				if ( !external )
+				if ( !external && worker.onRoad )
 					assert.AreNotEqual( workerPoint, -1 );
 			}
 			if ( worker.onRoad && splitPoint == workerPoint && !external )
@@ -755,7 +755,9 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	public bool OnNodeClicked( GroundNode node )
 	{
-		// TODO Roads under construction should not be saved
+		if ( node != LastNode )
+			return false;
+
 		if ( node.road && node.road != this )
 			Flag.Create().Setup( node, owner );
 		if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
