@@ -650,7 +650,8 @@ public class Road : Assert.Base, Interface.IInputHandler
 		foreach ( var worker in localWorkers )
 			if ( !worker.Remove() )
 				return false;
-		UnregisterOnGround();
+		if ( !decorationOnly )
+			UnregisterOnGround();
 
 		invalid = true;
 		Destroy( gameObject );
