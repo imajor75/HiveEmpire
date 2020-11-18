@@ -757,10 +757,13 @@ public class Road : Assert.Base, Interface.IInputHandler
 	public bool OnNodeClicked( GroundNode node )
 	{
 		if ( node != LastNode )
-			return false;
+			return true;
 
 		if ( node.road && node.road != this )
-			Flag.Create().Setup( node, owner );
+		{
+			if ( Flag.Create().Setup( node, owner ) == null )
+				return true;
+		}
 		if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
 			Flag.Create().Setup( node, owner );
 
@@ -845,6 +848,8 @@ public class Road : Assert.Base, Interface.IInputHandler
 			assert.AreEqual( tempNodes, 0 );
 			assert.IsTrue( nodes.Count > 1 );
 		}
+		if ( !ready )
+			assert.AreEqual( Interface.root.viewport.InputHandler, this );
 	}
 
 	public void OnLostInput()

@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 public class World : MonoBehaviour
 {
 	public Ground ground;
+	public int currentSeed;
 	
 	[JsonProperty]
 	public float timeFactor = 1;
@@ -100,7 +101,9 @@ public class World : MonoBehaviour
 	public void NewGame( int seed )
 	{
 		Debug.Log( "Starting new game with seed " + seed );
+
 		rnd = new System.Random( seed );
+		currentSeed = seed;
 
 		Clear();
 		Prepare();
@@ -187,6 +190,13 @@ public class World : MonoBehaviour
 					s.working = false;
 				if ( s && s.outputPriority == ItemDispatcher.Priority.stock )
 					s.outputPriority = ItemDispatcher.Priority.low;
+				if ( s && s.mode == Workshop.Mode.unknown )
+				{
+					if ( s.outputPriority == ItemDispatcher.Priority.low )
+						s.mode = Workshop.Mode.whenNeeded;
+					if ( s.outputPriority == ItemDispatcher.Priority.high )
+						s.mode = Workshop.Mode.always;
+				}
 
 				var t = o as Stock;
 				if ( t && t.cart == null )

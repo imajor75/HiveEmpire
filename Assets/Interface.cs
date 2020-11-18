@@ -60,7 +60,10 @@ public class Interface : Assert.Base
 		crosshair,
 		summa,
 		tinyFrame,
-		reset
+		reset,
+		sleeping,
+		clock,
+		alarm
 	}
 
 	public Interface()
@@ -1140,7 +1143,7 @@ public class Interface : Assert.Base
 	{
 		public Workshop workshop;
 		public Image progressBar;
-		public Image overdriveImage;
+		public Image changeModeImage;
 		public Text productivity;
 		public Text itemsProduced;
 
@@ -1166,14 +1169,14 @@ public class Interface : Assert.Base
 				showOutputBuffer = workshop.configuration.outputType != Item.Type.unknown;
 			}
 			int displayedBufferCount = workshop.buffers.Count + ( showOutputBuffer ? 1 : 0 );
-			int height = 80 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 );
+			int height = 100 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 );
 			Frame( 0, 0, 240, height );
 			Button( 210, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
-			Button( 190, 30 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
-			Button( 170, 30 - height, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( ShowWorker );
-			var overdriveButton = Button( 150, 30 - height, 20, 20, iconTable.GetMediaData( Icon.dynamite ) );
-			overdriveButton.onClick.AddListener( Overdrive );
-			overdriveImage = overdriveButton.gameObject.GetComponent<Image>();
+			Button( 190, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			Button( 170, 40 - height, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( ShowWorker );
+			var changeModeButton = Button( 150, 40 - height, 20, 20, GetModeIcon() );
+			changeModeButton.onClick.AddListener( ChangeMode );
+			changeModeImage = changeModeButton.gameObject.GetComponent<Image>();
 
 			Text( 20, -20, 160, 20, workshop.type.ToString() );
 
@@ -1222,6 +1225,19 @@ public class Interface : Assert.Base
 			WorkerPanel.Create().Open( workshop.worker, true );
 		}
 
+		Sprite GetModeIcon()
+		{
+			if ( workshop.mode == Workshop.Mode.sleeping )
+				return iconTable.GetMediaData( Icon.sleeping );
+			if ( workshop.mode == Workshop.Mode.whenNeeded )
+				return iconTable.GetMediaData( Icon.clock );
+			if ( workshop.mode == Workshop.Mode.always )
+				return iconTable.GetMediaData( Icon.alarm );
+
+			workshop.assert.IsTrue( false );
+			return null;
+		}
+
 		public override void Update()
 		{
 			base.Update();
@@ -1247,12 +1263,17 @@ public class Interface : Assert.Base
 				productivity.text = ( (int)( workshop.productivity.current * 100 ) ).ToString() + "%";
 				itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 			}
-			overdriveImage.color = new Color( 1, 1, 1, workshop.outputPriority == ItemDispatcher.Priority.high ? 1 : 0.4f );
+			changeModeImage.sprite = GetModeIcon();
 		}
 
-		void Overdrive()
+		void ChangeMode()
 		{
-			workshop.outputPriority = workshop.outputPriority == ItemDispatcher.Priority.high ? ItemDispatcher.Priority.low : ItemDispatcher.Priority.high;
+			if ( workshop.mode == Workshop.Mode.sleeping )
+				workshop.mode = Workshop.Mode.whenNeeded;
+			else if ( workshop.mode == Workshop.Mode.whenNeeded )
+				workshop.mode = Workshop.Mode.always;
+			else
+				workshop.mode = Workshop.Mode.sleeping;
 		}
 
 		public class Buffer

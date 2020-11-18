@@ -32,6 +32,15 @@ public class Workshop : Building, Worker.Callback.IHandler
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
 	ParticleSystem smoke;
+	public Mode mode;
+
+	public enum Mode
+	{
+		unknown,
+		sleeping,
+		whenNeeded,
+		always
+	}
 
 	[System.Serializable]
 	public new class Configuration : Building.Configuration
@@ -465,6 +474,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( !construction.done )
 			return;
 
+		int freeSpaceAtFlag = flag.FreeSpace();
 		foreach ( Buffer b in buffers )
 		{
 			int missing = b.size-b.stored-b.onTheWay;
@@ -472,8 +482,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area );
 		}
-		if ( output > 0 && flag.FreeSpace() > 0 && worker.IsIdle( true ) )
+		if ( output > 0 && freeSpaceAtFlag > 0 && worker.IsIdle( true ) )
 			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, outputPriority, outputArea );
+
+		if ( mode == Mode.always && output > 0 && workerMate.IsIdle() && freeSpaceAtFlag > 2 )
+			SendItem( configuration.outputType, null, ItemDispatcher.Priority.high );
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
@@ -573,7 +586,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			case Type.farm:
 			{
-				if ( worker.IsIdle( true ) )
+				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
 					if ( output < configuration.outputMax )
 					{
@@ -603,7 +616,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			case Type.forester:
 			{
-				if ( worker.IsIdle( true ) )
+				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
 					var o = Ground.areas[configuration.gatheringRange];
 					for ( int i = 0; i < o.Count; i++ )
@@ -632,6 +645,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			case Type.barrack:
 			{
+				if ( mode != Mode.sleeping )
+					return;
+
 				while ( buffers[0].stored > 0 && buffers[1].stored > 0 )
 				{
 					buffers[0].stored--;
@@ -703,7 +719,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( configuration.outputType == Item.Type.unknown )
 			return;
 
-		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && worker.IsIdle( true ) && UseInput() )
+		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && worker.IsIdle( true ) && mode != Mode.sleeping && UseInput() )
 		{
 			SetWorking( true );
 			progress = 0;
@@ -723,7 +739,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
-		if ( !worker.IsIdle( true ) )
+		if ( !worker.IsIdle( true ) || mode == Mode.sleeping )
 			return;
 		if ( output >= configuration.outputMax )
 			return;
