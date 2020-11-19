@@ -61,13 +61,25 @@ public class Worker : Assert.Base
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
 
+	BodyState bodyState = BodyState.unknown;
+
+	enum BodyState
+	{
+		unknown,
+		standing,
+		walking
+	}
+
+	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 	public Color cachedColor;
+	public SerializableColor currentColor;
+
 	[JsonIgnore]
 	public Color Color
 	{
 		set
 		{
-			cachedColor = value;
+			currentColor = value;
 			if ( shirtMaterial )
 				shirtMaterial.color = value;
 			if ( mapMaterial )
@@ -75,7 +87,7 @@ public class Worker : Assert.Base
 		}
 	}
 
-	public class Task : ScriptableObject
+	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
 	{
 		public Worker boss;
 
@@ -278,6 +290,7 @@ public class Worker : Assert.Base
 				nextPoint = currentPoint - 1;
 			wishedPoint = nextPoint;
 
+			boss.assert.IsNotSelected();
 			if ( exclusive && !ignoreOtherWorkers )
 			{
 				Worker other = road.workerAtNodes[nextPoint];
@@ -287,7 +300,6 @@ public class Worker : Assert.Base
 					boss.assert.IsTrue( other == null || other == flag.user );
 					other = flag.user;
 				}
-				other?.assert?.IsNotSelected();
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
@@ -641,7 +653,7 @@ public class Worker : Assert.Base
 		name = "Hauler";
 		owner = road.owner;
 		ground = road.ground;
-		cachedColor = Color.grey;
+		currentColor = Color.grey;
 		Building main = road.owner.mainBuilding;
 		node = main.node;
 		this.road = road;
@@ -658,7 +670,7 @@ public class Worker : Assert.Base
 		look = type = Type.tinkerer;
 		if ( mate )
 			look = Type.tinkererMate;
-		cachedColor = Color.cyan;
+		currentColor = Color.cyan;
 		name = "Tinkerer";
 		return SetupForBuildingSite( building );
 	}
@@ -667,7 +679,7 @@ public class Worker : Assert.Base
 	{
 		look = type = Type.constructor;
 		name = "Builder";
-		cachedColor = Color.cyan;
+		currentColor = Color.cyan;
 		return SetupForBuildingSite( building );
 	}
 
@@ -675,7 +687,7 @@ public class Worker : Assert.Base
 	{
 		look = type = Type.soldier;
 		name = "Soldier";
-		cachedColor = Color.red;
+		currentColor = Color.red;
 		return SetupForBuildingSite( building );
 	}
 
@@ -711,7 +723,7 @@ public class Worker : Assert.Base
 		node = stock.node;
 		ground = stock.ground;
 		owner = stock.owner;
-		cachedColor = Color.white;
+		currentColor = Color.white;
 		return this;
 	}
 
@@ -809,7 +821,7 @@ public class Worker : Assert.Base
 		itemOnMap.material = Instantiate( itemOnMap.material );
 		itemOnMap.material.renderQueue = 4003;
 
-		Color = cachedColor;
+		Color = currentColor;
 	}
 
 	// Distance the worker is taking in a single frame (0.02 sec)
@@ -878,6 +890,7 @@ public class Worker : Assert.Base
 
 	void UpdateOnMap()
 	{
+		Profiler.BeginSample( "UpdateOnMap" );
 		arrowObject.SetActive( false );
 		if ( type == Type.hauler || type == Type.cart )
 		{
@@ -911,6 +924,7 @@ public class Worker : Assert.Base
 			else
 				itemOnMap.enabled = false;
 		}
+		Profiler.EndSample();
 	}
 
 	public bool Remove( bool returnToMainBuilding = true )
@@ -1126,22 +1140,27 @@ public class Worker : Assert.Base
 				itemInHands.CancelTrip();
 				return;
 			}
-			ScheduleWait( 50 );
 			return;
 		}
 
+		Profiler.BeginSample( "FindItemToCarry" );
 		if ( FindItemToCarry() )
 		{
 			Color = Color.white;
+			Profiler.EndSample();
 			return;
 		}
+		Profiler.EndSample();
 		Color = Color.green;
 
-		if ( node != road.CenterNode() && road.ActiveWorkerCount == 1 )
+		Profiler.BeginSample( "GoToCenter" );
+		if ( node == road.nodes[0] || node == road.LastNode )
 		{
 			ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
+			Profiler.EndSample();
 			return;
 		}
+		Profiler.EndSample();
 	}
 
 	bool FindItemToCarry()
@@ -1361,24 +1380,38 @@ public class Worker : Assert.Base
 	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
 	public void UpdateBody()
 	{
+		Profiler.BeginSample( "UpdateBody" );
 		if ( walkTo == null )
 		{
-			animator?.SetBool( walkingID, false );
-			soundSource?.Stop();
-			transform.localPosition = node.Position;
-			if ( taskQueue.Count > 0 )
+			if ( bodyState != BodyState.standing )
 			{
-				WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;
-				if ( task == null || task.wishedPoint < 0 )
-					return;
+				animator?.SetBool( walkingID, false );
+				soundSource?.Stop();
+				transform.localPosition = node.Position;
+				if ( taskQueue.Count > 0 )
+				{
+					WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;
+					if ( task == null || task.wishedPoint < 0 )
+					{
+						Profiler.EndSample();
+						return;
+					}
 
-				int direction = node.DirectionTo( task.road.nodes[task.wishedPoint] );
-				assert.IsTrue( direction >= 0 );
-				transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+					int direction = node.DirectionTo( task.road.nodes[task.wishedPoint] );
+					assert.IsTrue( direction >= 0 );
+					transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+				}
+				bodyState = BodyState.standing;
 			}
+			Profiler.EndSample();
 			return;
 		}
-		animator?.SetBool( walkingID, true );
+
+		//if ( bodyState != BodyState.walking )
+		{
+			animator?.SetBool( walkingID, true );
+			bodyState = BodyState.walking;
+		}
 
 		if ( itemInHands )
 			itemInHands.UpdateLook();
@@ -1421,6 +1454,7 @@ public class Worker : Assert.Base
 				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public bool IsIdle( bool inBuilding = false )

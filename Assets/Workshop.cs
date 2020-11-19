@@ -651,7 +651,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			case Type.barrack:
 			{
-				if ( mode != Mode.sleeping )
+				if ( mode == Mode.sleeping )
 					return;
 
 				Profiler.BeginSample( "Barrack" );

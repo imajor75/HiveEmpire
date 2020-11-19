@@ -8,7 +8,7 @@ public class World : MonoBehaviour
 {
 	public Ground ground;
 	public int currentSeed;
-	
+
 	[JsonProperty]
 	public float timeFactor = 1;
 	static public System.Random rnd;
@@ -94,7 +94,7 @@ public class World : MonoBehaviour
 
 	public void LateUpdate()
 	{
-		foreach( var player in players )
+		foreach ( var player in players )
 			player.LateUpdate();
 	}
 
@@ -171,9 +171,9 @@ public class World : MonoBehaviour
 			foreach ( var o in list )
 			{
 				if ( o.type == Worker.Type.tinkerer )
-					o.cachedColor = Color.cyan;
+					o.currentColor = Color.cyan;
 				if ( o.type == Worker.Type.cart )
-					o.cachedColor = Color.white;
+					o.currentColor = Color.white;
 				if ( o.owner == null )
 					o.owner = players[0];
 				if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemInHands != null && o.itemInHands.destination == null )
@@ -228,8 +228,8 @@ public class World : MonoBehaviour
 				o.Validate();
 		}
 		gameInProgress = true;
-		SetTimeFactor( timeFactor );	// Just for the animators
-	}	
+		SetTimeFactor( timeFactor );    // Just for the animators
+	}
 
 	public void Save( string fileName )
 	{
@@ -429,7 +429,7 @@ public class World : MonoBehaviour
 	{
 		timeFactor = factor;
 		var list1 = Resources.FindObjectsOfTypeAll<Animator>();
-		foreach ( var o in list1)
+		foreach ( var o in list1 )
 			o.speed = factor;
 		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
 		foreach ( var o in list2 )
@@ -475,5 +475,29 @@ public class World : MonoBehaviour
 		public bool Empty { get { return reference == 0; } }
 		[JsonIgnore]
 		public bool InProgress { get { return !Empty && !Done; } }
+	}
+}
+
+[System.Serializable]
+public struct SerializableColor
+{
+	public float r, g, b, a;
+	public static implicit operator SerializableColor( Color unityColor )
+	{
+		SerializableColor s;
+		s.r = unityColor.r;
+		s.g = unityColor.g;
+		s.b = unityColor.b;
+		s.a = unityColor.a;
+		return s;
+	}
+	public static implicit operator Color( SerializableColor serializableColor )
+	{
+		Color s;
+		s.r = serializableColor.r;
+		s.g = serializableColor.g;
+		s.b = serializableColor.b;
+		s.a = serializableColor.a;
+		return s;
 	}
 }
