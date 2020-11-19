@@ -629,7 +629,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 				if ( ready || nodes[i].road != this )
 					continue;
 			}
-			assert.AreEqual( nodes[i].road, this );
+			assert.AreEqual( nodes[i].road, this );	// TODO Fired on unready road, nodes had 4 elements, the one with index 2 was null.
 			nodes[i].road = null;
 		}
 	}

@@ -1054,21 +1054,10 @@ public class Worker : Assert.Base
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
-			bool failedDelivery = false;
+			ScheduleWalkToNeighbour( building.node );
 			if ( itemInHands )
-			{
-				itemInHands.CancelTrip();
-				if ( building.flag.FreeSpace() > 0 )
-				{
-					building.flag.ReserveItem( itemInHands );
-					ScheduleDeliverItem( itemInHands );
-				}
-				else
-					failedDelivery = true;
-			}
-			if ( !failedDelivery )
-				ScheduleWalkToNeighbour( building.node );
-
+				ScheduleDeliverItem( itemInHands );
+			ScheduleCall( building as Workshop );
 			return;
 		}
 
