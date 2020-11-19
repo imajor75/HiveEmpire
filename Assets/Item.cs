@@ -247,7 +247,7 @@ public class Item : Assert.Base
 		assert.IsNull( this.flag );
 		assert.AreEqual( flag, nextFlag );
 
-		if ( destination && path.progress != 0 )
+		if ( destination && path.progress != 0 )	// TODO Triggered.
 		{
 			// path.progess is zero if the item was rerouting while in the hands of the hauler
 			assert.IsFalse( path.IsFinished );

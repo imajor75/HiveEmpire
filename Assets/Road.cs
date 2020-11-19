@@ -609,31 +609,26 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	void UnregisterOnGround()
 	{
-		var a0 = nodes[0].flag.roadsStartingHere;
-		var i0 = nodes[0].DirectionTo( nodes[1] );
 		if ( ready )
-			assert.AreEqual( a0[i0], this );
-		else
-			assert.IsNull( a0[i0] );
-		a0[i0] = null;
-
-		int skipEnd = 0;
-		if ( LastNode.flag )
 		{
+			var a0 = nodes[0].flag.roadsStartingHere;
+			var i0 = nodes[0].DirectionTo( nodes[1] );
+			assert.AreEqual( a0[i0], this );
+			a0[i0] = null;
+
 			var a1 = LastNode.flag.roadsStartingHere;
 			var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
 			assert.AreEqual( a1[i1], this );
 			a1[i1] = null;
-			skipEnd = 1;
-			assert.IsTrue( ready );
 		}
-		else
-			assert.IsFalse( ready );
 
-		for ( int i = 1; i < nodes.Count - skipEnd; i++ )
+		for ( int i = 1; i < nodes.Count; i++ )
 		{
-			if ( !ready && i == nodes.Count - skipEnd - 1 && nodes[i].road != this )
-				continue;
+			if ( i == nodes.Count - 1 )
+			{
+				if ( ready || nodes[i].road != this )
+					continue;
+			}
 			assert.AreEqual( nodes[i].road, this );
 			nodes[i].road = null;
 		}

@@ -1057,6 +1057,7 @@ public class Worker : Assert.Base
 			bool failedDelivery = false;
 			if ( itemInHands )
 			{
+				itemInHands.CancelTrip();
 				if ( building.flag.FreeSpace() > 0 )
 				{
 					building.flag.ReserveItem( itemInHands );
