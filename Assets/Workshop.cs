@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class Workshop : Building, Worker.Callback.IHandler
 {
@@ -32,7 +33,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
 	ParticleSystem smoke;
-	public Mode mode;
+	public Mode mode = Mode.whenNeeded;
 
 	public enum Mode
 	{
@@ -582,10 +583,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( gatherer && worker.IsIdle() && worker.node == node )
 			SetWorking( false );
 
+		Profiler.BeginSample( "Internal" );
 		switch ( type )
 		{
 			case Type.farm:
 			{
+				Profiler.BeginSample( "Farm" );
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
 					if ( output < configuration.outputMax )
@@ -612,10 +615,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 					}
 					worker.ScheduleWait( 300 );
 				}
+				Profiler.EndSample();
 				break;
 			}
 			case Type.forester:
 			{
+				Profiler.BeginSample( "Forester" );
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
 					var o = Ground.areas[configuration.gatheringRange];
@@ -641,6 +646,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					}
 					worker.ScheduleWait( 300 );
 				}
+				Profiler.EndSample();
 				break;
 			}
 			case Type.barrack:
@@ -648,6 +654,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				if ( mode != Mode.sleeping )
 					return;
 
+				Profiler.BeginSample( "Barrack" );
 				while ( buffers[0].stored > 0 && buffers[1].stored > 0 )
 				{
 					buffers[0].stored--;
@@ -668,10 +675,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 					owner.coinsProduced++;
 					print( "Coin produced" );
 				};
+				Profiler.EndSample();
 				break;
 			}
 			default:
 			{
+				Profiler.BeginSample( "Default" );
 				if ( gatherer )
 					CollectResource( configuration.gatheredResource, configuration.gatheringRange );
 				else
@@ -679,9 +688,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 				if ( type == Type.mill && working )
 					millWheel?.Rotate( 0, 0, 1 );
+				Profiler.EndSample();
 				break;
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	bool UseInput( int count = 1 )

@@ -177,7 +177,7 @@ public class Resource : Assert.Base
 	{
 		if ( underGround )
 			body?.SetActive( !exposed.Done && !exposed.Empty );
-		if ( type == Type.animalSpawner && spawn.Done )
+		if ( type == Type.animalSpawner && ( spawn.Done || spawn.Empty ) )
 		{
 			foreach ( var o in Ground.areas[1] )
 			{

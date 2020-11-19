@@ -473,5 +473,7 @@ public class World : MonoBehaviour
 		public bool Done { get { return !Empty && Age >= 0; } }
 		[JsonIgnore]
 		public bool Empty { get { return reference == 0; } }
+		[JsonIgnore]
+		public bool InProgress { get { return !Empty && !Done; } }
 	}
 }

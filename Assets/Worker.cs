@@ -576,7 +576,7 @@ public class Worker : Assert.Base
 			if ( timer.Empty )
 				timer.Start( time );
 
-			return !timer.Done;
+			return timer.Done;
 		}
 	}
 

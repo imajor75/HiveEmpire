@@ -1584,6 +1584,7 @@ public class Interface : Assert.Base
 			BuildButton( 20, -300, "Remove", node.IsBlocking( true ), Remove );
 			BuildButton( 20, -320, "Raise", true, delegate { AlignHeight( 0.1f ); } );
 			BuildButton( 20, -340, "Lower", true, delegate { AlignHeight( -0.1f ); } );
+			BuildButton( 20, -360, "Cave", !node.IsBlocking( true ), AddCave );
 #endif
 			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.Done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
@@ -1622,6 +1623,11 @@ public class Interface : Assert.Base
 		void AddTree()
 		{
 			Resource.Create().Setup( node, Resource.Type.tree ).life.Start( -2 * Resource.treeGrowthMax );
+		}
+
+		void AddCave()
+		{
+			Resource.Create().Setup( node, Resource.Type.animalSpawner );
 		}
 
 		void Remove()
