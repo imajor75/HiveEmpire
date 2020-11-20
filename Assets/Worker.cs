@@ -1146,7 +1146,10 @@ public class Worker : Assert.Base
 		Profiler.BeginSample( "GoToCenter" );
 		if ( node == road.nodes[0] || node == road.LastNode )
 		{
-			ScheduleWalkToRoadPoint( road, road.nodes.Count / 2 );
+			int center = ( road.nodes.Count - 1 ) / 2;
+			if ( node == road.LastNode )
+				center = road.nodes.Count / 2;
+			ScheduleWalkToRoadPoint( road, center );
 			Profiler.EndSample();
 			return;
 		}

@@ -762,7 +762,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 		if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
 			Flag.Create().Setup( node, owner );
 
-		if ( node == LastNode && tempNodes == 0 )
+		if ( tempNodes == 0 )
 		{
 			if ( RemoveLastNode() )
 			{
@@ -772,6 +772,9 @@ public class Road : Assert.Base, Interface.IInputHandler
 			else
 				return false;
 		}
+
+		if ( node.IsBlocking() && node.flag == null )
+			return true;
 
 		tempNodes = 0;
 		RebuildMesh();

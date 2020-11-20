@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 [SelectionBase]
 abstract public class Building : Assert.Base
@@ -62,6 +63,7 @@ abstract public class Building : Assert.Base
 		public int flatteningCorner;
 		public int flatteningCounter;
 		public List<GroundNode> flatteningArea = new List<GroundNode>();
+		public World.Timer suspend;
 
 		static public void Initialize()
 		{
@@ -111,7 +113,7 @@ abstract public class Building : Assert.Base
 
 		public void FixedUpdate()
 		{
-			if ( done )
+			if ( done || suspend.InProgress )
 				return;
 
 			// TODO Try to find a path only if the road network has been changed
@@ -122,6 +124,8 @@ abstract public class Building : Assert.Base
 				worker.SetupForConstruction( boss );
 				worker.ScheduleWait( 100 );
 			}
+			if ( worker == null )
+				suspend.Start( 250 );
 			if ( worker == null || !worker.IsIdle( true ) )
 				return;
 			if ( flatteningNeeded && flatteningCorner < flatteningArea.Count )
@@ -323,7 +327,9 @@ abstract public class Building : Assert.Base
 
 	public void FixedUpdate()
 	{
+		Profiler.BeginSample( "Construction" );
 		construction.FixedUpdate();
+		Profiler.EndSample();
 	}
 
 	public void Update()

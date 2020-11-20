@@ -1573,7 +1573,7 @@ public class Interface : Assert.Base
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				var type = (Workshop.Type)i;
-				BuildButton( 160, row, type.ToString(), Workshop.IsNodeSuitable( node, Root.mainPlayer, Workshop.GetConfiguration( type ) ), delegate { BuildWorkshop( type ); } );
+				BuildButton( 180, row, type.ToString(), Workshop.IsNodeSuitable( node, Root.mainPlayer, Workshop.GetConfiguration( type ) ), delegate { BuildWorkshop( type ); } );
 				row -= 20;
 			}
 			BuildButton( 20, -220, "Flag", Flag.IsNodeSuitable( node, Root.mainPlayer ), AddFlag );
