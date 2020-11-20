@@ -161,7 +161,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 	public bool Finish()
 	{
 		assert.IsFalse( ready );
-		if ( !LastNode.flag )
+		if ( !LastNode.flag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
 		foreach ( var n in nodes )

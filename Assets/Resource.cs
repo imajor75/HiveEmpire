@@ -259,7 +259,7 @@ public class Resource : Assert.Base
 		assert.AreEqual( this, node.resource );
 		node.resource = null;
 		Destroy( gameObject );
-		return this;
+		return true;
 	}
 
 	public bool IsReadyToBeHarvested()

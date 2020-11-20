@@ -137,7 +137,7 @@ public class GroundNode : Assert.Base
 		return Mathf.Max( h, Mathf.Max( v, d ) );
     }
 
-	public void AddResourcePatch( Resource.Type type, int size, float density )
+	public void AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false, bool expose = false )
 	{
 		for ( int x = -size; x < size; x++ )
 		{
@@ -147,15 +147,21 @@ public class GroundNode : Assert.Base
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > World.rnd.Next( 100 ) )
-					n.AddResource( type );
+					n.AddResource( type, overwrite, expose );
 			}
 		}
 	}
 
-	public void AddResource( Resource.Type type )
+	public void AddResource( Resource.Type type, bool overwrite = false, bool expose = false )
 	{
 		if ( this.resource != null )
-			return;
+		{
+			if ( overwrite )
+				this.resource.Remove();
+			else
+				return;
+		}
+		assert.IsNull( this.resource );
 
 		if ( type == Resource.Type.coal || type == Resource.Type.iron || type == Resource.Type.stone || type == Resource.Type.gold || type == Resource.Type.salt )
 		{
@@ -165,6 +171,9 @@ public class GroundNode : Assert.Base
 		Resource resource = Resource.Create().Setup( this, type );
 		if ( resource && type == Resource.Type.tree )
 			resource.life.Start( -2 * Resource.treeGrowthMax );
+
+		if ( resource && expose )
+				resource.exposed.Start( Resource.exposeMax );
 	}
 
 	public GroundNode Add( Ground.Offset o )

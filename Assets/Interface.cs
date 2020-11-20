@@ -1585,6 +1585,12 @@ public class Interface : Assert.Base
 			BuildButton( 20, -320, "Raise", true, delegate { AlignHeight( 0.1f ); } );
 			BuildButton( 20, -340, "Lower", true, delegate { AlignHeight( -0.1f ); } );
 			BuildButton( 20, -360, "Cave", !node.IsBlocking( true ), AddCave );
+
+			BuildButton( 20, -380, "Gold patch", true, delegate { AddResourcePatch( Resource.Type.gold ); } );
+			BuildButton( 20, -400, "Coal patch", true, delegate { AddResourcePatch( Resource.Type.coal ); } );
+			BuildButton( 20, -420, "Iron patch", true, delegate { AddResourcePatch( Resource.Type.iron ); } );
+			BuildButton( 20, -440, "Stone patch", true, delegate { AddResourcePatch( Resource.Type.stone ); } );
+			BuildButton( 20, -460, "Salt patch", true, delegate { AddResourcePatch( Resource.Type.salt ); } );
 #endif
 			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.Done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
@@ -1600,6 +1606,11 @@ public class Interface : Assert.Base
 				if ( text )
 					text.color = Color.red;
 			}
+		}
+
+		void AddResourcePatch( Resource.Type resourceType )
+		{
+			node.AddResourcePatch( resourceType, 3, 10, true, true );
 		}
 
 		void AddFlag()
