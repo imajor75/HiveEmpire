@@ -47,3 +47,5 @@ Corridor/Library/metadata/
 windowsbuild
 /*.jpg
 /*.png
+/Logs/ApiUpdaterCheck.txt
+/Logs/AssetImportWorker*.log

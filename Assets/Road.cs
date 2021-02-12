@@ -4,9 +4,6 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using System;
 using Newtonsoft.Json;
-using JetBrains.Annotations;
-using UnityEngine.VR;
-using UnityEngine.XR;
 
 [SelectionBase]
 public class Road : Assert.Base, Interface.IInputHandler

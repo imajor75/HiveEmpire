@@ -89,7 +89,7 @@ public class Stock : Building
 
 	public static new void Initialize()
 	{
-		template = (GameObject)Resources.Load( "Medieval fantasy house/Medieva_fantasy_house" );
+		template = Resources.Load<GameObject>( "Medieval fantasy house/Medieva_fantasy_house" );
 		configuration.plankNeeded = 2;
 		configuration.stoneNeeded = 2;
 		configuration.flatteningNeeded = true;
@@ -168,8 +168,7 @@ public class Stock : Building
 
 	new void Start()
 	{
-		body = Instantiate( template );
-		body.transform.SetParent( transform, false );
+		body = Instantiate( template, transform );
 		base.Start();
 		if ( main )
 			name = "Headquarters";
