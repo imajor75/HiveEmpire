@@ -57,7 +57,6 @@ public class Worker : Assert.Base
 	GameObject body;
 	GameObject box;
 	GameObject[] wheels = new GameObject[2];
-	MeshRenderer itemTable;
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
 
@@ -435,8 +434,7 @@ public class Worker : Assert.Base
 				timer.Start( pickupTimeStart );
 				boss.animator?.ResetTrigger( putdownID );
 				boss.animator?.SetTrigger( pickupID );   // TODO Animation phase is not saved in file
-				if ( boss.itemTable )
-					boss.itemTable.material = Item.materials[(int)item.type];
+				item.transform.SetParent( boss.box.transform, false );
 				boss.box?.SetActive( true );
 			}
 			if ( !timer.Done )
@@ -497,8 +495,7 @@ public class Worker : Assert.Base
 				timer.Start( putdownTimeStart );
 				if ( item.buddy )
 				{
-					if ( boss.itemTable )
-						boss.itemTable.material = Item.materials[(int)item.buddy.type];
+					item.buddy.transform.SetParent( boss.box.transform, false );
 					timer.reference -= 30;
 				}
 				else
@@ -616,9 +613,9 @@ public class Worker : Assert.Base
 
 		looks.Fill( lookData );
 
-		boxTemplateBoy = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands_boy" );
+		boxTemplateBoy = Resources.Load<GameObject>( "prefabs/misc/box in boy hand" );
 		Assert.global.IsNotNull( boxTemplateBoy );
-		boxTemplateMan = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands_man" );
+		boxTemplateMan = Resources.Load<GameObject>( "prefabs/misc/box in man hand" );
 		Assert.global.IsNotNull( boxTemplateMan );
 
 		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
@@ -744,9 +741,6 @@ public class Worker : Assert.Base
 				box = Instantiate( boxTemplateBoy, hand );
 			else
 				box = Instantiate( boxTemplateMan, hand );
-			box.SetActive( false );
-			itemTable = World.FindChildRecursive( box.transform, "ItemTable" ).GetComponent<MeshRenderer>();
-			assert.IsNotNull( itemTable );
 		}
 		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
 		if ( shirt )

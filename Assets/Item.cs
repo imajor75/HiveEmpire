@@ -17,7 +17,6 @@ public class Item : Assert.Base
 	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;
 	public Building destination;
 	public Building origin;
-	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	public Watch watchRoadDelete = new Watch();
 	public Watch watchBuildingDelete = new Watch();
 	public bool tripCancelled;
@@ -26,9 +25,13 @@ public class Item : Assert.Base
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 	public int index = -1;
+	public GameObject body;
 
 	[JsonIgnore]
 	public bool debugCancelTrip;
+
+	static public Sprite[] sprites = new Sprite[(int)Type.total];
+	static MediaTable<GameObject, Type> looks;
 
 	public enum Type
     {
@@ -84,6 +87,10 @@ public class Item : Assert.Base
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 			Assert.global.IsNotNull( sprites[i] );
 		}
+
+		object[] looksData = {
+			"prefab/items/log", Type.log };
+		looks.Fill( looksData );
 	}
 
 	public static Item Create()
@@ -116,8 +123,7 @@ public class Item : Assert.Base
 
 	void Start()
 	{
-		transform.SetParent( ground.transform );
-		transform.localScale *= 0.05f;
+		body = looks.GetMediaData( type );
 		name = type.ToString();
 		UpdateLook();
 	}
