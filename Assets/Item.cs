@@ -18,7 +18,6 @@ public class Item : Assert.Base
 	public Building destination;
 	public Building origin;
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
-	static public Material[] materials = new Material[(int)Type.total];
 	public Watch watchRoadDelete = new Watch();
 	public Watch watchBuildingDelete = new Watch();
 	public bool tripCancelled;
@@ -84,9 +83,6 @@ public class Item : Assert.Base
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 			Assert.global.IsNotNull( sprites[i] );
-			materials[i] = new Material( World.defaultShader );
-			materials[i].SetTexture( "_MainTex", tex );
-			World.SetRenderMode( materials[i], World.BlendMode.Cutout );
 		}
 	}
 
