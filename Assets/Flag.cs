@@ -10,14 +10,15 @@ public class Flag : Assert.Base
 	public const int maxItems = 8;
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
+	public GameObject[] frames = new GameObject[maxItems];
 	public Worker user;
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
 	public Building building;
 	static GameObject template;
 	public Versioned itemsStored = new Versioned();
-	MeshRenderer itemTable;
 	[JsonIgnore]
 	public bool debugSpawnPlank;
+	public const float itemSpread = 0.3f;
 
 	static public void Initialize()
 	{
@@ -59,10 +60,25 @@ public class Flag : Assert.Base
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
 		transform.localPosition = node.Position;
-		var body = GameObject.Instantiate( template );
+		var body = Instantiate( template );
 		body.transform.SetParent( transform, false );
-		itemTable = World.FindChildRecursive( transform, "ItemTable" )?.gameObject.GetComponent<MeshRenderer>();
 		UpdateBody();
+		for ( int i = 0; i < maxItems; i++ )
+		{
+			frames[i] = new GameObject();
+			frames[i].name = "Item Frame " + i;
+			var t = frames[i].transform;
+			t.SetParent( transform, false );
+			Vector3 pos;
+			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
+			pos.y = 0;
+			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
+			t.localPosition = pos;
+			t.localScale = 0.1f * Vector3.one;
+			t.LookAt( transform );
+			if ( items[i] != null )
+				items[i].transform.SetParent( frames[i].transform, false );
+		}
 	}
 
 	void Update()
@@ -81,30 +97,6 @@ public class Flag : Assert.Base
 
 	public void UpdateBody()
 	{
-		int[] l = new int[(int)Item.Type.total];
-		if ( itemTable == null )
-			return;
-		foreach ( var i in items )
-		{
-			if ( i != null )
-				l[(int)i.type]++;
-		}
-		int t = 0, b = 0;
-		for ( int i = 0; i < l.Length; i++ )
-		{
-			if ( l[i] > b )
-			{
-				b = l[i];
-				t = i;
-			}
-		}
-		if ( b > 0 )
-		{
-			itemTable.material = Item.materials[t];
-			itemTable.enabled = true;
-		}
-		else
-			itemTable.enabled = false;
 		transform.localPosition = node.Position + Vector3.up * GroundNode.size * Road.height;
 	}
 
@@ -190,6 +182,14 @@ public class Flag : Assert.Base
 					item.buddy = null;
 					return oldItem;
 				}
+			}
+		}
+		for ( int i = 0; i < maxItems; i++ )
+		{
+			if ( items[i] == item )
+			{
+				item.transform.SetParent( frames[i].transform, false );
+				break;
 			}
 		}
 		assert.IsTrue( items.Contains( item ) );

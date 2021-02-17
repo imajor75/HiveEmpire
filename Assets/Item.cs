@@ -8,8 +8,8 @@ using UnityEngine;
 public class Item : Assert.Base
 {
 	public Player owner;
-	public Flag flag;			// If this is a valid reference, the item is waiting at the flag for a worker to pick it up
-	public Flag nextFlag;		// If this is a valid reference, the item is on the way to nextFlag
+	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
+	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
 	public Worker worker;
 	public Type type;
 	public Ground ground;
@@ -17,8 +17,6 @@ public class Item : Assert.Base
 	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;
 	public Building destination;
 	public Building origin;
-	static public Sprite[] sprites = new Sprite[(int)Type.total];
-	static public Material[] materials = new Material[(int)Type.total];
 	public Watch watchRoadDelete = new Watch();
 	public Watch watchBuildingDelete = new Watch();
 	public bool tripCancelled;
@@ -27,9 +25,14 @@ public class Item : Assert.Base
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 	public int index = -1;
+	[JsonIgnore]
+	public GameObject body;
 
 	[JsonIgnore]
 	public bool debugCancelTrip;
+
+	static public Sprite[] sprites = new Sprite[(int)Type.total];
+	static MediaTable<GameObject, Type> looks;
 
 	public enum Type
     {
@@ -84,10 +87,11 @@ public class Item : Assert.Base
 			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 			Assert.global.IsNotNull( sprites[i] );
-			materials[i] = new Material( World.defaultShader );
-			materials[i].SetTexture( "_MainTex", tex );
-			World.SetRenderMode( materials[i], World.BlendMode.Cutout );
 		}
+
+		object[] looksData = {
+			"prefabs/items/common" };
+		looks.Fill( looksData );
 	}
 
 	public static Item Create()
@@ -113,17 +117,15 @@ public class Item : Assert.Base
 				return null;
 			}
 		}
-		UpdateLook();
 		owner.RegisterItem( this );
 		return this;
 	}
 
 	void Start()
 	{
-		transform.SetParent( ground.transform );
-		transform.localScale *= 0.05f;
+		body = Instantiate( looks.GetMediaData( type ), transform );
+		assert.IsNotNull( body );
 		name = type.ToString();
-		UpdateLook();
 	}
 
 	void Update()
@@ -273,28 +275,6 @@ public class Item : Assert.Base
 
 		owner.UnregisterItem( this );
 		Destroy( gameObject );
-	}
-
-	public void UpdateLook()	
-	{
-		if ( flag )
-		{
-			for ( int i = 0; i < Flag.maxItems; i++ )
-			{
-				if ( flag.items[i] == this )
-				{
-					// TODO Arrange the items around the flag
-					transform.localPosition = flag.node.Position + Vector3.up * GroundNode.size / 2 + Vector3.right * i * GroundNode.size / 10;
-					return;
-				}
-			}
-			assert.IsTrue( false );
-		}
-		if ( worker )
-		{
-			// TODO Put the item in the hand of the worker
-			transform.localPosition = worker.transform.localPosition + Vector3.up * GroundNode.size / 2.5f;			;
-		}
 	}
 
 	[JsonIgnore]

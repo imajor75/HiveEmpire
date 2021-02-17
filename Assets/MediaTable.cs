@@ -30,11 +30,15 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			else
 				data = Resources.Load<MediaType>( file );
 			if ( data == null && reportError )
+			{
 				Debug.Log( "Resource " + file + " not found" );
+				Assert.global.IsTrue( false );
+			}
 		}
 	}
 
 	List<Media> table;
+	Media failure;
 
 	public void Fill( object[] data )
 	{
@@ -58,7 +62,11 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				table[table.Count - 1].boolData = (bool)g;
 		}
 		foreach ( var l in table )
+		{
+			if ( l.keys.Count == 0 )
+				failure = l;
 			l.Load();
+		}
 	}
 
 	public Media GetMedia( Key key )
@@ -70,6 +78,9 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 
 		if ( candidates.Count == 0 )
 		{
+			if ( failure != null )
+				return failure;
+
 			Media media = new Media();
 			media.Load( key.ToString() );
 			media.keys.Add( key );

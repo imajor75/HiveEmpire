@@ -57,9 +57,9 @@ public class Worker : Assert.Base
 	GameObject body;
 	GameObject box;
 	GameObject[] wheels = new GameObject[2];
-	MeshRenderer itemTable;
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
+	static GameObject boxTemplateWoman;
 
 	BodyState bodyState = BodyState.unknown;
 
@@ -435,8 +435,7 @@ public class Worker : Assert.Base
 				timer.Start( pickupTimeStart );
 				boss.animator?.ResetTrigger( putdownID );
 				boss.animator?.SetTrigger( pickupID );   // TODO Animation phase is not saved in file
-				if ( boss.itemTable )
-					boss.itemTable.material = Item.materials[(int)item.type];
+				item.transform.SetParent( boss.box.transform, false );
 				boss.box?.SetActive( true );
 			}
 			if ( !timer.Done )
@@ -497,8 +496,7 @@ public class Worker : Assert.Base
 				timer.Start( putdownTimeStart );
 				if ( item.buddy )
 				{
-					if ( boss.itemTable )
-						boss.itemTable.material = Item.materials[(int)item.buddy.type];
+					item.buddy.transform.SetParent( boss.box.transform, false );
 					timer.reference -= 30;
 				}
 				else
@@ -616,10 +614,12 @@ public class Worker : Assert.Base
 
 		looks.Fill( lookData );
 
-		boxTemplateBoy = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands_boy" );
+		boxTemplateBoy = Resources.Load<GameObject>( "prefabs/misc/box in boy hand" );
 		Assert.global.IsNotNull( boxTemplateBoy );
-		boxTemplateMan = (GameObject)Resources.Load( "Tresure_box/tresure_box_inhands_man" );
+		boxTemplateMan = Resources.Load<GameObject>( "prefabs/misc/box in man hand" );
 		Assert.global.IsNotNull( boxTemplateMan );
+		boxTemplateWoman = Resources.Load<GameObject>( "prefabs/misc/box in woman hand" );
+		Assert.global.IsNotNull( boxTemplateWoman );
 
 		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
 		Assert.global.IsNotNull( animationController );
@@ -740,13 +740,12 @@ public class Worker : Assert.Base
 		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
 		if ( hand != null )
 		{
-			if ( type == Type.hauler )
+			if ( look == Type.hauler )
 				box = Instantiate( boxTemplateBoy, hand );
-			else
+			if ( look == Type.tinkerer )
 				box = Instantiate( boxTemplateMan, hand );
-			box.SetActive( false );
-			itemTable = World.FindChildRecursive( box.transform, "ItemTable" ).GetComponent<MeshRenderer>();
-			assert.IsNotNull( itemTable );
+			if ( look == Type.tinkererMate )
+				box = Instantiate( boxTemplateWoman, hand );
 		}
 		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
 		if ( shirt )
@@ -1405,9 +1404,6 @@ public class Worker : Assert.Base
 			animator?.SetBool( walkingID, true );
 			bodyState = BodyState.walking;
 		}
-
-		if ( itemInHands )
-			itemInHands.UpdateLook();
 
 		if ( walkBase != null )
 		{
