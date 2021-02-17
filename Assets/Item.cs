@@ -8,8 +8,8 @@ using UnityEngine;
 public class Item : Assert.Base
 {
 	public Player owner;
-	public Flag flag;			// If this is a valid reference, the item is waiting at the flag for a worker to pick it up
-	public Flag nextFlag;		// If this is a valid reference, the item is on the way to nextFlag
+	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
+	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
 	public Worker worker;
 	public Type type;
 	public Ground ground;
@@ -25,6 +25,7 @@ public class Item : Assert.Base
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 	public int index = -1;
+	[JsonIgnore]
 	public GameObject body;
 
 	[JsonIgnore]
@@ -89,7 +90,7 @@ public class Item : Assert.Base
 		}
 
 		object[] looksData = {
-			"prefab/items/log", Type.log };
+			"prefabs/items/common" };
 		looks.Fill( looksData );
 	}
 
@@ -116,16 +117,15 @@ public class Item : Assert.Base
 				return null;
 			}
 		}
-		UpdateLook();
 		owner.RegisterItem( this );
 		return this;
 	}
 
 	void Start()
 	{
-		body = looks.GetMediaData( type );
+		body = Instantiate( looks.GetMediaData( type ), transform );
+		assert.IsNotNull( body );
 		name = type.ToString();
-		UpdateLook();
 	}
 
 	void Update()
@@ -275,28 +275,6 @@ public class Item : Assert.Base
 
 		owner.UnregisterItem( this );
 		Destroy( gameObject );
-	}
-
-	public void UpdateLook()	
-	{
-		if ( flag )
-		{
-			for ( int i = 0; i < Flag.maxItems; i++ )
-			{
-				if ( flag.items[i] == this )
-				{
-					// TODO Arrange the items around the flag
-					transform.localPosition = flag.node.Position + Vector3.up * GroundNode.size / 2 + Vector3.right * i * GroundNode.size / 10;
-					return;
-				}
-			}
-			assert.IsTrue( false );
-		}
-		if ( worker )
-		{
-			// TODO Put the item in the hand of the worker
-			transform.localPosition = worker.transform.localPosition + Vector3.up * GroundNode.size / 2.5f;			;
-		}
 	}
 
 	[JsonIgnore]

@@ -30,7 +30,10 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			else
 				data = Resources.Load<MediaType>( file );
 			if ( data == null && reportError )
+			{
 				Debug.Log( "Resource " + file + " not found" );
+				Assert.global.IsTrue( false );
+			}
 		}
 	}
 

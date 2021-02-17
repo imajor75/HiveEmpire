@@ -60,18 +60,24 @@ public class Flag : Assert.Base
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
 		transform.localPosition = node.Position;
-		var body = GameObject.Instantiate( template );
+		var body = Instantiate( template );
 		body.transform.SetParent( transform, false );
 		UpdateBody();
 		for ( int i = 0; i < maxItems; i++ )
 		{
 			frames[i] = new GameObject();
+			frames[i].name = "Item Frame " + i;
 			var t = frames[i].transform;
 			t.SetParent( transform, false );
 			Vector3 pos;
-			pos.x = Mathf.Sin( i * Mathf.PI * 2 / maxItems ) * itemSpread * GroundNode.size;
-			pos.y = Mathf.Cos( i * Mathf.PI * 2 / maxItems ) * itemSpread * GroundNode.size;
+			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
+			pos.y = 0;
+			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
+			t.localPosition = pos;
+			t.localScale = 0.1f * Vector3.one;
 			t.LookAt( transform );
+			if ( items[i] != null )
+				items[i].transform.SetParent( frames[i].transform, false );
 		}
 	}
 

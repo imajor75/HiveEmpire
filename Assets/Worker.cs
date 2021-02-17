@@ -59,6 +59,7 @@ public class Worker : Assert.Base
 	GameObject[] wheels = new GameObject[2];
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
+	static GameObject boxTemplateWoman;
 
 	BodyState bodyState = BodyState.unknown;
 
@@ -617,6 +618,8 @@ public class Worker : Assert.Base
 		Assert.global.IsNotNull( boxTemplateBoy );
 		boxTemplateMan = Resources.Load<GameObject>( "prefabs/misc/box in man hand" );
 		Assert.global.IsNotNull( boxTemplateMan );
+		boxTemplateWoman = Resources.Load<GameObject>( "prefabs/misc/box in woman hand" );
+		Assert.global.IsNotNull( boxTemplateWoman );
 
 		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
 		Assert.global.IsNotNull( animationController );
@@ -737,10 +740,12 @@ public class Worker : Assert.Base
 		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
 		if ( hand != null )
 		{
-			if ( type == Type.hauler )
+			if ( look == Type.hauler )
 				box = Instantiate( boxTemplateBoy, hand );
-			else
+			if ( look == Type.tinkerer )
 				box = Instantiate( boxTemplateMan, hand );
+			if ( look == Type.tinkererMate )
+				box = Instantiate( boxTemplateWoman, hand );
 		}
 		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
 		if ( shirt )
@@ -1399,9 +1404,6 @@ public class Worker : Assert.Base
 			animator?.SetBool( walkingID, true );
 			bodyState = BodyState.walking;
 		}
-
-		if ( itemInHands )
-			itemInHands.UpdateLook();
 
 		if ( walkBase != null )
 		{
