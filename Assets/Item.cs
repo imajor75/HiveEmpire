@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 
 [SelectionBase]
-public class Item : Assert.Base
+public class Item : HiveObject
 {
 	public Player owner;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
@@ -310,7 +310,7 @@ public class Item : Assert.Base
 		}
 	}
 
-	public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
 		CancelTrip();
 		owner.UnregisterItem( this );
@@ -318,7 +318,12 @@ public class Item : Assert.Base
 		return true;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		assert.IsTrue( false );
+	}
+
+	public override void Validate()
 	{
 		assert.IsTrue( flag != null || worker != null );
 		if ( worker )

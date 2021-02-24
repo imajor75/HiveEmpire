@@ -204,7 +204,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					else
 					{
 						if ( --resource.charges == 0 )
-							resource.Remove();
+							resource.Remove( false );
 						else
 						{
 							if ( resource.underGround )
@@ -280,7 +280,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( resource.hunter == null )
 			{
 				resource.animals.Clear();
-				resource.Remove();
+				resource.Remove( false );
 				return true;
 			}
 			return false;
@@ -292,7 +292,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( resource )
 			{
 				resource.animals.Clear();
-				resource.Remove();
+				resource.Remove( false );
 			}
 			base.Cancel();
 		}
@@ -895,6 +895,17 @@ public class Workshop : Building, Worker.Callback.IHandler
 			Gizmos.DrawLine( node.Position + Vector3.up * GroundNode.size, resourcePlace.Position );
 		}
 #endif
+	}
+
+	public override void Reset()
+	{
+		base.Reset();
+		foreach ( var b in buffers )
+		{
+			b.stored = 0;
+			b.onTheWay = 0;
+		}
+		output = 0;
 	}
 
 	public override void Validate()

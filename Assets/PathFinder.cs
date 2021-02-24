@@ -222,9 +222,9 @@ public class PathFinder : ScriptableObject
 public class Path : PathFinder
 {
 	public int progress;
-	public Assert.Base owner;
+	public HiveObject owner;
 
-	public static Path Between( GroundNode start, GroundNode end, Mode mode, Assert.Base owner, bool ignoreFinalObstacle = false )
+	public static Path Between( GroundNode start, GroundNode end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false )
 	{
 		var p = CreateInstance<Path>();
 		p.owner = owner;

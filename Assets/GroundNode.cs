@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [System.Serializable]
-public class GroundNode : Assert.Base
+public class GroundNode : HiveObject
 {
     public const float size = 1;
     public const int neighbourCount = 6;
@@ -157,7 +157,7 @@ public class GroundNode : Assert.Base
 		if ( this.resource != null )
 		{
 			if ( overwrite )
-				this.resource.Remove();
+				this.resource.Remove( false );
 			else
 				return;
 		}
@@ -248,7 +248,14 @@ public class GroundNode : Assert.Base
 		return false;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		building?.Reset();
+		flag?.Reset();
+		resource?.Reset();
+	}
+
+	public override void Validate()
 	{
 		int o = 0;
 		if ( flag )

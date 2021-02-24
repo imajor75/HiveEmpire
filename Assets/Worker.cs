@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Profiling;
 
 [SelectionBase]
-public class Worker : Assert.Base
+public class Worker : HiveObject
 {
 	public Type type;
 	public Ground ground;
@@ -113,9 +113,9 @@ public class Worker : Assert.Base
 				boss.taskQueue.Add( newTask );
 		}
 
-		public bool ResetBoss()
+		public bool ResetBossTasks()
 		{
-			boss.Reset();
+			boss.ResetTasks();
 			return true;
 		}
 
@@ -254,11 +254,11 @@ public class Worker : Assert.Base
 		public override bool ExecuteFrame()
 		{
 			if ( road == null )
-				return ResetBoss();
+				return ResetBossTasks();
 
 			if ( stuck.Done && boss.type == Type.hauler && road.ActiveWorkerCount > 1 )
 			{
-				boss.Remove();
+				boss.Remove( true );
 				return true;
 			}
 			if ( currentPoint == -1 )
@@ -304,7 +304,7 @@ public class Worker : Assert.Base
 				{
 					// As a last resort to make space is to simply remove the other hauler
 					if ( other.onRoad && other.type == Type.hauler && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
-						other.Remove();
+						other.Remove( true );
 					else
 					{
 						if ( stuck.Empty )
@@ -446,7 +446,7 @@ public class Worker : Assert.Base
 				// This block can run for tinkerers too, if the item lost destination before the tinkerer would pick it up
 				if ( boss.type == Type.hauler )
 					boss.assert.AreEqual( boss.road, path.Road );
-				return ResetBoss();
+				return ResetBossTasks();
 			}
 
 			item.flag?.ReleaseItem( item );
@@ -531,7 +531,7 @@ public class Worker : Assert.Base
 					}
 				}
 				else
-					return ResetBoss(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
+					return ResetBossTasks(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
 
 			return true;
@@ -552,7 +552,7 @@ public class Worker : Assert.Base
 		{
 			if ( road == null )
 			{
-				boss.Remove();
+				boss.Remove( true );
 				return true;    // Task failed
 			}
 			int i = road.NodeIndex( boss.node );
@@ -849,7 +849,7 @@ public class Worker : Assert.Base
 		}
 		if ( debugReset )
 		{
-			Reset();
+			ResetTasks();
 			debugReset = false;
 			return;
 		}
@@ -926,10 +926,10 @@ public class Worker : Assert.Base
 		Profiler.EndSample();
 	}
 
-	public bool Remove( bool returnToMainBuilding = true )
+	public override	bool Remove( bool returnToMainBuilding = true )
 	{
 		assert.IsTrue( type != Type.cart || building == null );
-		Reset();
+		ResetTasks();
 		if ( origin != null )
 		{
 			assert.AreEqual( type, Type.wildAnimal );
@@ -1075,7 +1075,7 @@ public class Worker : Assert.Base
 					{
 						owner.mainBuilding.ItemOnTheWay( itemInHands );
 						owner.mainBuilding.ItemArrived( itemInHands );
-						itemInHands.Remove();
+						itemInHands.Remove( false );
 						itemInHands = null;
 					}
 					Destroy( gameObject );
@@ -1098,7 +1098,7 @@ public class Worker : Assert.Base
 	{
 		if ( bored.Done && road.ActiveWorkerCount > 1 )
 		{
-			Remove();
+			Remove( true );
 			return;
 		}
 
@@ -1362,7 +1362,7 @@ public class Worker : Assert.Base
 		item.worker = this;
 	}
 
-	public void Reset()
+	public void ResetTasks()
 	{
 		foreach ( var task in taskQueue )
 			task.Cancel();
@@ -1498,7 +1498,24 @@ public class Worker : Assert.Base
 		return null;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		itemInHands?.Remove( false );
+		walkTo = walkFrom = null;
+		if ( type == Type.hauler )
+		{
+			int index = road.nodes.Count / 2;
+			node = road.nodes[index];
+			road.workerAtNodes[index] = this;
+		}
+		if ( type == Type.tinkerer || type == Type.tinkererMate )
+			node = building.node;
+		if ( type == Type.constructor || type == Type.unemployed )
+			Remove( false );
+		exclusiveFlag = null;
+	}
+
+	public override void Validate()
 	{
 		if ( type == Type.wildAnimal )
 		{

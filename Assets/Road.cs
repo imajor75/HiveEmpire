@@ -6,7 +6,7 @@ using System;
 using Newtonsoft.Json;
 
 [SelectionBase]
-public class Road : Assert.Base, Interface.IInputHandler
+public class Road : HiveObject, Interface.IInputHandler
 {
 	public Player owner;
 	public List<Worker> workers = new List<Worker>();
@@ -566,7 +566,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 				second.workers.Add( worker );
 				worker.road = second;
 			}
-			worker.Reset();
+			worker.ResetTasks();
 		}
 
 		UnregisterOnGround();
@@ -636,7 +636,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 		owner.versionedRoadDelete.Trigger();
 	}
 
-	public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
 		var localWorkers = workers.GetRange( 0, workers.Count );
 		foreach ( var worker in localWorkers )
@@ -778,14 +778,23 @@ public class Road : Assert.Base, Interface.IInputHandler
 		if ( node.flag )
 		{
 			if ( !Finish() )
-				Remove();
+				Remove( false );
 			return false;
 		}
 		else
 			return true;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		for ( int i = 1; i < workers.Count; i++ )
+			workers[i].Remove( false );
+		for ( int i = 0; i < workerAtNodes.Count; i++ )
+			workerAtNodes[i] = null;
+		workers[0].Reset();
+	}
+
+	public override void Validate()
 	{
 		int length = nodes.Count;
 		assert.IsTrue( length > 1 );
@@ -849,7 +858,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	public void OnLostInput()
 	{
-		bool removed = Remove();
+		bool removed = Remove( false );
 		assert.IsTrue( removed );
 	}
 }

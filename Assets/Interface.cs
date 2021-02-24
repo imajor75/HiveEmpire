@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
 
-public class Interface : Assert.Base
+public class Interface : HiveObject
 {
 	public List<Panel> panels = new List<Panel>();
 	public static int iconSize = 20;
@@ -501,9 +501,9 @@ public class Interface : Assert.Base
 		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 );
 	}
 
-	[Conditional( "DEBUG" )]
-	void Validate()
+	public override void Validate()
 	{
+#if DEBUG
 		Profiler.BeginSample( "Validate" );
 		world.Validate();
 		if ( highlightType == HighlightType.volume )
@@ -514,6 +514,7 @@ public class Interface : Assert.Base
 			Assert.global.IsNotNull( highlightArea.center );
 		}
 		Profiler.EndSample();
+#endif
 	}
 
 	public class Tooltip : Panel
@@ -1216,7 +1217,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( workshop && workshop.Remove() )
+			if ( workshop && workshop.Remove( false ) )
 				Close();
 		}
 
@@ -1449,7 +1450,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( stock && stock.Remove() )
+			if ( stock && stock.Remove( false ) )
 				Close();
 		}
 
@@ -1643,7 +1644,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			node.resource?.Remove();
+			node.resource?.Remove( false );
 		}
 
 		void AlignHeight( float change )
@@ -1705,7 +1706,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( road && road.Remove() )
+			if ( road && road.Remove( false ) )
 				Close();
 		}
 
@@ -1840,7 +1841,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( flag && flag.Remove() )
+			if ( flag && flag.Remove( false ) )
 				Close();
 		}
 
@@ -2041,7 +2042,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( construction != null && construction.boss != null && construction.boss.Remove() )
+			if ( construction != null && construction.boss != null && construction.boss.Remove( true ) )
 				Close();
 		}
 	}

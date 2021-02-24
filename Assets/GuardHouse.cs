@@ -63,10 +63,10 @@ public class GuardHouse : Building
 		}
 	}
 
-	override public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
 		owner.UnregisterInfuence( this );
-		return base.Remove();
+		return base.Remove( takeYourTime );
 	}
 
 	public override int Influence( GroundNode node )

@@ -160,7 +160,7 @@ public class World : MonoBehaviour
 				if ( o.item )
 				{
 					o.item.nextFlag.CancelItem( o.item );
-					o.item?.Remove();
+					o.item?.Remove( false );
 					o.item = null;
 				}
 #pragma warning restore CS0612 // Type or member is obsolete

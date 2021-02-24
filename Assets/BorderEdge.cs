@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BorderEdge : Assert.Base
+public class BorderEdge : HiveObject
 {
     public GroundNode node;
     public int direction;

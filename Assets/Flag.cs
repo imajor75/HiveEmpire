@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [SelectionBase]
-public class Flag : Assert.Base
+public class Flag : HiveObject
 {
 	public Player owner;
 	public const int maxItems = 8;
@@ -201,14 +201,14 @@ public class Flag : Assert.Base
 		Interface.FlagPanel.Create().Open( this );
 	}
 
-	public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
-		if ( building && !building.Remove() )
+		if ( building && !building.Remove( takeYourTime ) )
 			return false;
 		foreach ( var road in roadsStartingHere )
-			road?.Remove();
+			road?.Remove( takeYourTime );
 		foreach ( var item in items )
-			item?.Remove();
+			item?.Remove( takeYourTime );
 
 		node.flag = null;
 		Destroy( gameObject );
@@ -224,7 +224,16 @@ public class Flag : Assert.Base
 		return free;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		foreach ( var item in items )
+			item?.Remove( false );
+		user = null;
+		foreach ( var road in roadsStartingHere )
+			road?.Reset();
+	}
+
+	override public void Validate()
     {
 		if ( building )
 			assert.AreEqual( building.flag, this );
