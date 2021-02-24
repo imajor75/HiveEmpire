@@ -90,7 +90,27 @@ public class Item : Assert.Base
 		}
 
 		object[] looksData = {
-			"prefabs/items/common" };
+			"prefabs/items/common",
+			"prefabs/items/barrel dispenser", Type.beer,
+			"prefabs/items/bucket", Type.water,
+			"prefabs/items/package", Type.pretzel,
+			"prefabs/items/book", Type.plank,
+			"prefabs/items/fish", Type.fish,
+			"prefabs/items/crystal", Type.iron,
+			"prefabs/items/pot", Type.gold,
+			"prefabs/items/sword", Type.weapon,
+			"prefabs/items/bow", Type.bow,
+			"prefabs/items/animal pelt", Type.hide,
+			"prefabs/items/beam cap", Type.stone,
+			"prefabs/items/gold ignot", Type.coin,
+			"prefabs/items/iron ignot", Type.steel,
+			"prefabs/items/meat ribs", Type.pork,
+			"prefabs/items/pouch", Type.flour,
+			"prefabs/items/hay", Type.grain,
+			"prefabs/items/rock", Type.stone,
+			"prefabs/items/jar", Type.salt,
+			"prefabs/items/wood", Type.log
+		};
 		looks.Fill( looksData );
 	}
 
