@@ -1487,15 +1487,27 @@ public class Worker : HiveObject
 
 	public override void Reset()
 	{
+		if ( itemInHands )
+			itemInHands.deleter = this;
 		itemInHands?.Remove( false );
+		itemInHands = null;
 		walkTo = walkFrom = null;
+		if ( onRoad )
+		{
+			int index = road.NodeIndex( node );
+			if ( index >= 0 )
+				road.workerAtNodes[index] = null;
+			onRoad = false;
+		}
 		if ( type == Type.hauler )
 		{
-			int index = road.nodes.Count / 2;
-			node = road.nodes[index];
-			road.workerAtNodes[index] = this;
+			assert.IsNotNull( road );
+			int newIndex = road.nodes.Count / 2;
+			node = road.nodes[newIndex];
+			road.workerAtNodes[newIndex] = this;
+			onRoad = true;
 		}
-		if ( type == Type.tinkerer || type == Type.tinkererMate )
+		if ( type == Type.tinkerer || type == Type.tinkererMate || type == Type.cart )
 			node = building.node;
 		if ( type == Type.constructor || type == Type.unemployed )
 			Remove( false );

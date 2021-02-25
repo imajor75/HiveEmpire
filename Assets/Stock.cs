@@ -35,6 +35,13 @@ public class Stock : Building
 			return new GameObject().AddComponent<Cart>();
 		}
 
+		public override void Reset()
+		{
+			base.Reset();
+			itemQuantity = 0;
+			destination = null;
+		}
+
 		public const int capacity = 20;
 		public Item.Type itemType;
 		public int itemQuantity;

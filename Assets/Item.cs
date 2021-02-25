@@ -7,6 +7,7 @@ using UnityEngine;
 [SelectionBase]
 public class Item : HiveObject
 {
+	// The item is either at a flag (the flag member is not null) or in the hands of a worker (the worker member is not null and worker.itemInHands references this object)
 	public Player owner;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
 	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
@@ -27,6 +28,7 @@ public class Item : HiveObject
 	public int index = -1;
 	[JsonIgnore]
 	public GameObject body;
+	public HiveObject deleter;
 
 	[JsonIgnore]
 	public bool debugCancelTrip;
@@ -325,22 +327,29 @@ public class Item : HiveObject
 
 	public override void Validate()
 	{
-		assert.IsTrue( flag != null || worker != null );
+		assert.IsTrue( flag != null || ( worker != null && worker.itemInHands == this ) );
 		if ( worker )
 		{
 			if ( worker.itemInHands )
+			{
 				assert.IsTrue( worker.itemInHands == this || worker.itemInHands.buddy == this );
+				assert.IsNull( flag );
+			}
 		}
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
+			assert.AreNotEqual( worker?.itemInHands, this );
 			if ( destination )
 				assert.IsNotNull( path );
 			if ( destination && !path.IsFinished && !path.Road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}
 		else
+		{
 			assert.IsNotNull( worker );
+			assert.AreEqual( worker.itemInHands, this );
+		};
 		if ( nextFlag )
 		{
 			assert.IsNotNull( worker );

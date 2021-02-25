@@ -796,10 +796,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override void Reset()
 	{
-		for ( int i = 1; i < workers.Count; i++ )
-			workers[i].Remove( false );
-		for ( int i = 0; i < workerAtNodes.Count; i++ )
-			workerAtNodes[i] = null;
+		while ( workers.Count > 1 )
+			workers[1].Remove( false );
 		workers[0].Reset();
 	}
 

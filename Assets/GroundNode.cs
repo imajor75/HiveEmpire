@@ -253,6 +253,7 @@ public class GroundNode : HiveObject
 		building?.Reset();
 		flag?.Reset();
 		resource?.Reset();
+		Validate();
 	}
 
 	public override void Validate()

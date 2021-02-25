@@ -464,7 +464,6 @@ abstract public class Building : HiveObject
 
 	public override void Reset()
 	{
-		itemsOnTheWay.Clear();
 		worker?.Reset();
 		workerMate?.Reset();
 	}

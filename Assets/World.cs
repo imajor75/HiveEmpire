@@ -406,6 +406,10 @@ public class World : MonoBehaviour
 	public void Reset()
 	{
 		ground.Reset();
+		foreach ( var player in players )
+			Assert.global.AreEqual( player.firstPossibleEmptyItemSlot, 0 );
+
+		Validate();
 	}
 
 	public void GenerateResources()

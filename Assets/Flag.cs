@@ -228,8 +228,14 @@ public class Flag : HiveObject
 
 	public override void Reset()
 	{
-		foreach ( var item in items )
-			item?.Remove( false );
+		for ( int i = 0; i < maxItems; i++ )
+		{
+			if ( items[i] == null || items[i].flag != this )
+				continue;
+			items[i].deleter = this;
+			items[i].Remove( false );
+			items[i] = null;
+		}
 		user = null;
 		foreach ( var road in roadsStartingHere )
 			road?.Reset();

@@ -901,10 +901,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		base.Reset();
 		foreach ( var b in buffers )
-		{
 			b.stored = 0;
-			b.onTheWay = 0;
-		}
 		output = 0;
 	}
 
