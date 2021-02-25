@@ -60,6 +60,9 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public static bool IsNodeSuitable( Road road, GroundNode node, Player owner )
 	{
+		if ( road.owner != owner )
+			return false;
+
 		road.assert.IsFalse( road.ready );
 
 		// Starting a new road
@@ -161,7 +164,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( !LastNode.flag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 		foreach ( var n in nodes )
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
 			workerAtNodes.Add( null );
 		CallNewWorker();
 		transform.localPosition = nodes[nodes.Count / 2].Position;
@@ -204,8 +209,10 @@ public class Road : HiveObject, Interface.IInputHandler
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
 
-		GameObject mapObject = new GameObject();
-		mapObject.name = "Map";
+		GameObject mapObject = new GameObject
+		{
+			name = "Map"
+		};
 		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new Mesh();
 		var r = mapObject.AddComponent<MeshRenderer>();
 		mapMaterial = r.material = new Material( World.defaultMapShader );
@@ -238,7 +245,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			CallNewWorker();
 	}
 
-	static int blocksInSection = 8;
+	static readonly int blocksInSection = 8;
 	public void RebuildMesh( bool force = false )
 	{
 		if ( mesh == null )
@@ -276,9 +283,11 @@ public class Road : HiveObject, Interface.IInputHandler
 				var pos = PositionAt(i, 1.0f / blocksInSection * b);
 				pos = transform.InverseTransformPoint( pos );
 				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
-				var side = new Vector3();
-				side.x = dir.z/2;
-				side.z = -dir.x/2;
+				var side = new Vector3
+				{
+					x = dir.z / 2,
+					z = -dir.x / 2
+				};
 
 				if ( b == 0 )
 				{
@@ -707,7 +716,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		assert.IsTrue( nodes.Count > 0 );
 
-		PathFinder p = new PathFinder();
+		PathFinder p = ScriptableObject.CreateInstance<PathFinder>();
 		if ( p.FindPathBetween( LastNode, node, PathFinder.Mode.avoidRoadsAndFlags, true ) )
 		{
 			var j = nodes.Count;

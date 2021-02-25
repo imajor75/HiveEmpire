@@ -56,7 +56,7 @@ public class Worker : HiveObject
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
 	GameObject box;
-	GameObject[] wheels = new GameObject[2];
+	readonly GameObject[] wheels = new GameObject[2];
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
 	static GameObject boxTemplateWoman;
@@ -770,27 +770,15 @@ public class Worker : HiveObject
 		wheels[1] = World.FindChildRecursive( body.transform, "cart_wheels_back" )?.gameObject;
 
 		UpdateBody();
-		switch ( type )
+		name = type switch
 		{
-			case Type.soldier:
-				name = "Soldier";
-				break;
-			case Type.wildAnimal:
-				name = "Bunny";
-				break;
-			case Type.hauler:
-				name = "Hauler";
-				break;
-			case Type.constructor:
-				name = "Builder";
-				break;
-			case Type.tinkerer:
-				name = "Tinkerer";
-				break;
-			default:
-				name = "Worker";
-				break;
-		}
+			Type.soldier => "Soldier",
+			Type.wildAnimal => "Bunny",
+			Type.hauler => "Hauler",
+			Type.constructor => "Builder",
+			Type.tinkerer => "Tinkerer",
+			_ => "Worker",
+		};
 		soundSource = World.CreateSoundSource( this );
 		World.SetLayerRecursive( gameObject, World.layerIndexNotOnMap );
 
@@ -1369,7 +1357,7 @@ public class Worker : HiveObject
 		taskQueue.Clear();
 	}
 
-	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
+	static readonly float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
 	public void UpdateBody()
 	{
 		Profiler.BeginSample( "UpdateBody" );
@@ -1453,7 +1441,7 @@ public class Worker : HiveObject
 		if ( !inBuilding || building as Workshop == null )
 			return true;
 		Workshop workshop = building as Workshop;
-		if ( workshop && workshop.working && !workshop.gatherer )
+		if ( workshop && workshop.working && !workshop.Gatherer )
 			return false;
 		return node == building.node;
 	}
@@ -1491,8 +1479,7 @@ public class Worker : HiveObject
 	{
 		foreach ( var task in taskQueue )
 		{
-			T result = task as T;
-			if ( result != null )
+			if ( task is T result )
 				return result;
 		}
 		return null;
@@ -1575,7 +1562,7 @@ public class Worker : HiveObject
 				assert.AreEqual( road.workerAtNodes[index], this );
 			}
 		}
-		if ( type == Type.tinkerer && building as Workshop && ( (Workshop)building ).gatherer )
+		if ( type == Type.tinkerer && building as Workshop && ( (Workshop)building ).Gatherer )
 		{
 			if ( IsIdle( true ) )
 				assert.IsNull( itemInHands );

@@ -65,8 +65,10 @@ public class Flag : HiveObject
 		UpdateBody();
 		for ( int i = 0; i < maxItems; i++ )
 		{
-			frames[i] = new GameObject();
-			frames[i].name = "Item Frame " + i;
+			frames[i] = new GameObject
+			{
+				name = "Item Frame " + i
+			};
 			var t = frames[i].transform;
 			t.SetParent( transform, false );
 			Vector3 pos;

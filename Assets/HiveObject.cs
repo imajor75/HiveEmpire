@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#pragma warning disable UNT0001
+
 public class HiveObject : MonoBehaviour
 {
 	[JsonIgnore]

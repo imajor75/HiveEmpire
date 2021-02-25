@@ -18,7 +18,7 @@ abstract public class Building : HiveObject
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	static int flatteningTime = 300;
+	static readonly int flatteningTime = 300;
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
@@ -121,7 +121,6 @@ abstract public class Building : HiveObject
 			// TODO Try to find a path only if the road network has been changed
 			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
-				Building main = boss.owner.mainBuilding;
 				worker = Worker.Create();
 				worker.SetupForConstruction( boss );
 				worker.ScheduleWait( 100 );
