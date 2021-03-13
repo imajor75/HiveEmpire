@@ -232,7 +232,6 @@ public class Flag : HiveObject
 		{
 			if ( items[i] == null || items[i].flag != this )
 				continue;
-			items[i].deleter = this;
 			items[i].Remove( false );
 			items[i] = null;
 		}

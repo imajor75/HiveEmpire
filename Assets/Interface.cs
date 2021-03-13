@@ -271,7 +271,13 @@ public class Interface : HiveObject
 				world.SetTimeFactor( 1 );
 		}
 		if ( Input.GetKey( KeyCode.R ) )
-			world.Reset();
+		{
+			if ( panels.Count > 0 )
+				foreach ( var panel in panels )
+					panel.target?.Reset();
+			else
+				world.Reset();
+		}
 		if ( Input.GetKeyDown( KeyCode.Insert ) )
 			world.SetTimeFactor( 8 );
 		if ( Input.GetKeyDown( KeyCode.Delete ) )

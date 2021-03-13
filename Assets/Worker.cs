@@ -916,6 +916,7 @@ public class Worker : HiveObject
 
 	public override	bool Remove( bool returnToMainBuilding = true )
 	{
+		// TODO What if the worker has an item in hands?
 		assert.IsTrue( type != Type.cart || building == null );
 		ResetTasks();
 		if ( origin != null )
@@ -1487,8 +1488,6 @@ public class Worker : HiveObject
 
 	public override void Reset()
 	{
-		if ( itemInHands )
-			itemInHands.deleter = this;
 		itemInHands?.Remove( false );
 		itemInHands = null;
 		walkTo = walkFrom = null;

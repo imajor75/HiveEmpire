@@ -8,6 +8,7 @@ using UnityEngine;
 public class Item : HiveObject
 {
 	// The item is either at a flag (the flag member is not null) or in the hands of a worker (the worker member is not null and worker.itemInHands references this object)
+	// or special case: the item is a resource just created, and the worker (as a tinkerer) is about to pick it up
 	public Player owner;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
 	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
@@ -28,7 +29,6 @@ public class Item : HiveObject
 	public int index = -1;
 	[JsonIgnore]
 	public GameObject body;
-	public HiveObject deleter;
 
 	[JsonIgnore]
 	public bool debugCancelTrip;
@@ -314,6 +314,7 @@ public class Item : HiveObject
 
 	public override bool Remove( bool takeYourTime )
 	{
+		worker?.ResetTasks();
 		CancelTrip();
 		owner.UnregisterItem( this );
 		Destroy( gameObject );
@@ -327,13 +328,14 @@ public class Item : HiveObject
 
 	public override void Validate()
 	{
-		assert.IsTrue( flag != null || ( worker != null && worker.itemInHands == this ) );
 		if ( worker )
 		{
 			if ( worker.itemInHands )
 			{
-				assert.IsTrue( worker.itemInHands == this || worker.itemInHands.buddy == this );
-				assert.IsNull( flag );
+				if ( worker.itemInHands == this )
+					assert.IsNull( flag );
+				else
+					assert.AreEqual( worker.itemInHands.buddy, this );
 			}
 		}
 		if ( flag )
@@ -348,7 +350,8 @@ public class Item : HiveObject
 		else
 		{
 			assert.IsNotNull( worker );
-			assert.AreEqual( worker.itemInHands, this );
+			if ( worker.type != Worker.Type.tinkerer )
+				assert.AreEqual( worker.itemInHands, this );
 		};
 		if ( nextFlag )
 		{
