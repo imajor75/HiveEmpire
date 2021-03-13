@@ -217,6 +217,7 @@ public class Flag : HiveObject
 		return true;
 	}
 
+	// Returns the number of available slots at the flag
 	public int FreeSpace()
 	{
 		int free = 0;
