@@ -660,7 +660,7 @@ public class Worker : HiveObject
 		onRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
-		ScheduleWalkToRoadNode( road, road.CenterNode(), false );
+		ScheduleWalkToRoadNode( road, road.CenterNode, false );
 		ScheduleStartWorkingOnRoad( road );
 		return this;
 	}
@@ -1094,7 +1094,7 @@ public class Worker : HiveObject
 		if ( !onRoad )
 		{
 			Profiler.BeginSample( "BackToRoad" );
-			ScheduleWalkToNode( road.CenterNode(), false );
+			ScheduleWalkToNode( road.CenterNode, false );
 			ScheduleStartWorkingOnRoad( road );
 			Profiler.EndSample();
 			return;
@@ -1489,7 +1489,7 @@ public class Worker : HiveObject
 	public override void Reset()
 	{
 		itemInHands?.Remove( false );
-		itemInHands = null;
+		assert.IsNull( itemInHands );
 		walkTo = walkFrom = null;
 		if ( onRoad )
 		{

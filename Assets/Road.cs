@@ -659,9 +659,13 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
-	public GroundNode CenterNode()
+	[JsonIgnore]
+	public GroundNode CenterNode
 	{
-		return nodes[nodes.Count / 2];
+		get
+		{
+			return nodes[nodes.Count / 2];
+		}
 	}
 
 	[JsonIgnore]
@@ -799,6 +803,14 @@ public class Road : HiveObject, Interface.IInputHandler
 		while ( workers.Count > 1 )
 			workers[1].Remove( false );
 		workers[0].Reset();
+	}
+
+	public override GroundNode Node
+	{
+		get
+		{
+			return CenterNode;
+		}
 	}
 
 	public override void Validate()

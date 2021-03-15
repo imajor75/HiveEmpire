@@ -27,6 +27,7 @@ public class Item : HiveObject
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 	public int index = -1;
+	public static bool creditOnRemove = true;
 	[JsonIgnore]
 	public GameObject body;
 
@@ -314,9 +315,16 @@ public class Item : HiveObject
 
 	public override bool Remove( bool takeYourTime )
 	{
-		worker?.ResetTasks();
+		if ( worker )
+		{
+			if ( worker.itemInHands == this )
+				worker.itemInHands = null;
+			worker.ResetTasks();
+		};
 		CancelTrip();
 		owner.UnregisterItem( this );
+		if ( creditOnRemove )
+			owner.mainBuilding.content[(int)type]++;
 		Destroy( gameObject );
 		return true;
 	}

@@ -586,7 +586,7 @@ public class Interface : HiveObject
 	}
 	public class Panel : MonoBehaviour, IDragHandler, IPointerClickHandler
 	{
-		public GroundNode target;
+		public HiveObject target;
 		public bool followTarget = true;
 		public Image frame;
 		public Interface cachedRoot;
@@ -614,7 +614,7 @@ public class Interface : HiveObject
 
 		// Summary:
 		// Return true if the caller should give
-		public bool Open( GroundNode target = null, int x = 0, int y = 0 )
+		public bool Open( HiveObject target = null, int x = 0, int y = 0 )
 		{
 			foreach ( var panel in Root.panels )
 			{
@@ -825,14 +825,14 @@ public class Interface : HiveObject
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.Position + Vector3.up * GroundNode.size );
+			MoveTo( target.Node.Position + Vector3.up * GroundNode.size );
 		}
 
 		public void MoveTo( Vector3 position )
 		{
 			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Position - Vector3.up * GroundNode.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Node.Position - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
 			Rect size = new Rect();
 			foreach ( RectTransform t in frame.rectTransform )
@@ -1691,7 +1691,7 @@ public class Interface : HiveObject
 
 		public void Open( Road road, GroundNode node )
 		{
-			base.Open( node );
+			base.Open( road );
 			this.road = road;
 			this.node = node;
 			Frame( 0, 0, 210, 140, 10 );

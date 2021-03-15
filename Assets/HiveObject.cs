@@ -48,6 +48,9 @@ public class HiveObject : MonoBehaviour
 		return false;
 	}
 
+	[JsonIgnore]
+	public virtual GroundNode Node { get; }
+
 	public virtual void Reset()
 	{ 
 	}
