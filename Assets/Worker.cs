@@ -1488,6 +1488,7 @@ public class Worker : HiveObject
 
 	public override void Reset()
 	{
+		ResetTasks();
 		itemInHands?.Remove( false );
 		assert.IsNull( itemInHands );
 		walkTo = walkFrom = null;
@@ -1510,7 +1511,12 @@ public class Worker : HiveObject
 			node = building.node;
 		if ( type == Type.constructor || type == Type.unemployed )
 			Remove( false );
-		exclusiveFlag = null;
+		if ( exclusiveFlag )
+		{
+			assert.AreEqual( exclusiveFlag.user, this );
+			exclusiveFlag.user = null;
+			exclusiveFlag = null;
+		}
 	}
 
 	public override void Validate()
