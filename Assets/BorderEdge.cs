@@ -42,4 +42,7 @@ public class BorderEdge : HiveObject
 			position.y = World.instance.waterLevel * World.instance.maxHeight;
 		transform.localPosition = position;
 	}
+
+	public override GroundNode Node { get { return null; } }
+
 }

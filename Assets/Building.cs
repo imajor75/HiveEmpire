@@ -468,6 +468,8 @@ abstract public class Building : HiveObject
 		workerMate?.Reset();
 	}
 
+	public override GroundNode Node { get { return node; } }
+
 	public override void Validate()
 	{
 		assert.AreEqual( this, flag.building );

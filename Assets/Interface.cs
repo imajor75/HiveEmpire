@@ -531,6 +531,8 @@ public class Interface : HiveObject
 #endif
 	}
 
+	public override GroundNode Node { get { return null; } }
+
 	public class Tooltip : Panel
 	{
 		GameObject objectToShow;
@@ -1828,7 +1830,7 @@ public class Interface : HiveObject
 #if DEBUG
 			Selection.activeGameObject = flag.gameObject;
 #endif
-			if ( base.Open( flag.node ) )
+			if ( base.Open( flag ) )
 				return;
 
 			this.flag = flag;

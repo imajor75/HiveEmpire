@@ -370,6 +370,8 @@ public class Ground : HiveObject
 			node.Reset();
 	}
 
+	public override GroundNode Node { get { return null; } }
+
 	override public void Validate()
  	{
         assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );

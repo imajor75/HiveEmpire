@@ -271,6 +271,14 @@ public class Flag : HiveObject
 		}
 	}
 
+	public override GroundNode Node
+	{
+		get
+		{
+			return node;
+		}
+	}
+
 	static public bool IsNodeSuitable( GroundNode placeToBuildOn, Player owner )
 	{
 		if ( placeToBuildOn.type == GroundNode.Type.underWater )

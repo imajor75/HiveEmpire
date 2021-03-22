@@ -334,6 +334,8 @@ public class Item : HiveObject
 		assert.IsTrue( false );
 	}
 
+	public override GroundNode Node { get { return flag ? flag.Node : worker.Node; } }
+
 	public override void Validate()
 	{
 		if ( worker )

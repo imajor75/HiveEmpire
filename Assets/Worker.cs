@@ -1519,6 +1519,8 @@ public class Worker : HiveObject
 		}
 	}
 
+	public override GroundNode Node { get { return node; } }
+
 	public override void Validate()
 	{
 		if ( type == Type.wildAnimal )

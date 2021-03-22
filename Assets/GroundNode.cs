@@ -256,6 +256,8 @@ public class GroundNode : HiveObject
 		Validate();
 	}
 
+	public override GroundNode Node { get { return this; } }
+
 	public override void Validate()
 	{
 		int o = 0;

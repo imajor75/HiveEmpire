@@ -6,7 +6,7 @@ using UnityEngine;
 
 #pragma warning disable UNT0001
 
-public class HiveObject : MonoBehaviour
+public abstract class HiveObject : MonoBehaviour
 {
 	[JsonIgnore]
 	public Assert assert;
@@ -49,7 +49,7 @@ public class HiveObject : MonoBehaviour
 	}
 
 	[JsonIgnore]
-	public virtual GroundNode Node { get; }
+	public abstract GroundNode Node { get; }
 
 	public virtual void Reset()
 	{ 

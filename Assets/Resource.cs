@@ -293,6 +293,8 @@ public class Resource : HiveObject
 			Remove( false );
 	}
 
+	public override GroundNode Node { get { return node; } }
+
 	public override void Validate()
 	{
 		//assert.IsNotNull( body );
