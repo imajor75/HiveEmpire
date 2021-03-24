@@ -452,6 +452,7 @@ public class Worker : HiveObject
 			}
 
 			item.flag?.ReleaseItem( item );
+			item.justCreated = false;
 			boss.itemInHands = item;
 			boss.assert.IsTrue( item.worker == boss || item.worker == null );
 			if ( item.worker.type == Type.hauler )
