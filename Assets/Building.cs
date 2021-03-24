@@ -339,7 +339,7 @@ abstract public class Building : HiveObject
 		UpdateLook();
 	}
 
-	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
+	public virtual Item `( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
 		Worker worker = workerMate ?? this.worker;
 		if ( worker == null || !worker.IsIdle( true ) || flag.FreeSpace() == 0 )
@@ -356,6 +356,7 @@ abstract public class Building : HiveObject
 			worker.ScheduleDeliverItem( item );
 			worker.ScheduleWalkToNeighbour( node );
 			worker.itemInHands = item;
+			assert.IsNotSelected();
 			item.worker = worker;
 		}
 		return item;

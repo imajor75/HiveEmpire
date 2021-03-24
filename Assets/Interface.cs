@@ -272,10 +272,16 @@ public class Interface : HiveObject
 		}
 		if ( Input.GetKey( KeyCode.R ) )
 		{
-			if ( panels.Count > 0 )
-				foreach ( var panel in panels )
+			bool localReset = false;
+			foreach ( var panel in panels )
+			{
+				if ( panel.target )
+				{
 					panel.target?.Reset();
-			else
+					localReset = true;
+				}
+			}
+			if ( !localReset )
 				world.Reset();
 		}
 		if ( Input.GetKeyDown( KeyCode.Insert ) )
@@ -1388,9 +1394,14 @@ public class Interface : HiveObject
 
 		void SelectItemType( Item.Type itemType )
 		{
-			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
+			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftControl ) )
 			{
 				stock.content[(int)itemType] = 0;
+				return;
+			}
+			if ( Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
+			{
+				stock.content[(int)itemType]++;
 				return;
 			}
 			selectedItemType = itemType;

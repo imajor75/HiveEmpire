@@ -236,9 +236,9 @@ public class Flag : HiveObject
 			items[i].Remove( false );
 			items[i] = null;
 		}
-		user = null;
 		foreach ( var road in roadsStartingHere )
 			road?.Reset();
+		assert.IsNull( user );
 	}
 
 	override public void Validate()

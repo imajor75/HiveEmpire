@@ -337,10 +337,7 @@ public class Stock : Building
 	{
 		base.Reset();
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
-		{
 			content[i] = 0;
-			onWay[i] = 0;
-		}	
 	}
 
 	public override void Validate()

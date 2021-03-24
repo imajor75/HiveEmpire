@@ -903,6 +903,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		foreach ( var b in buffers )
 			b.stored = 0;
 		output = 0;
+		SetWorking( false );
+		progress = 0;
 	}
 
 	public override void Validate()

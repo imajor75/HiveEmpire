@@ -7,6 +7,8 @@ using UnityEngine.Profiling;
 [SelectionBase]
 public class Worker : HiveObject
 {
+	[JsonIgnore]
+	public bool hack;
 	public Type type;
 	public Ground ground;
 	public Player owner;
@@ -1488,15 +1490,22 @@ public class Worker : HiveObject
 
 	public override void Reset()
 	{
+		if ( type == Type.tinkerer )
+			building.assert.IsNotSelected();
 		ResetTasks();
 		itemInHands?.Remove( false );
 		assert.IsNull( itemInHands );
 		walkTo = walkFrom = null;
+		walkProgress = 0;
 		if ( onRoad )
 		{
 			int index = road.NodeIndex( node );
-			if ( index >= 0 )
-				road.workerAtNodes[index] = null;
+			if ( index < 0 )
+			{
+				index = road.NodeIndex( node.Add( Building.flagOffset ) );
+				assert.IsTrue( index >= 0 );
+			}
+			road.workerAtNodes[index] = null;
 			onRoad = false;
 		}
 		if ( type == Type.hauler )
