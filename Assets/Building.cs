@@ -355,7 +355,6 @@ abstract public class Building : HiveObject
 			worker.ScheduleWalkToNeighbour( flag.node );
 			worker.ScheduleDeliverItem( item );
 			worker.ScheduleWalkToNeighbour( node );
-			assert.IsNotSelected();
 			item.worker = worker;
 		}
 		return item;

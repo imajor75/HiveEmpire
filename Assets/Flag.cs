@@ -10,6 +10,7 @@ public class Flag : HiveObject
 	public const int maxItems = 8;
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
+	[JsonIgnore]
 	public GameObject[] frames = new GameObject[maxItems];
 	public Worker user;
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];

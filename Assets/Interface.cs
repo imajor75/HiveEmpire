@@ -2654,6 +2654,7 @@ public class Interface : HiveObject
 
 		public void Open()
 		{
+			base.Open();
 			name = "Main Menu";
 			Frame( 0, 0, 450, 300 );
 		}
