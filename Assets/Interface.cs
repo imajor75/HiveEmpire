@@ -814,8 +814,11 @@ public class Interface : HiveObject
 		public InputField InputField( int x, int y, int xs, int ys, string text = "", Component parent = null )
 		{
 			Text t = Text( x, y, xs, ys, text, parent );
+			t.fontSize = 15;
 			var i = t.gameObject.AddComponent<InputField>();
 			i.textComponent = t;
+			i.name = "InputField";
+			i.ActivateInputField();
 			return i;
 		}
 
