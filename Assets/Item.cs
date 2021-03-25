@@ -199,7 +199,7 @@ public class Item : HiveObject
 		if ( worker && !nextFlag )
 			return;
 
-		// Anti-jam action. This can happen if all is met:
+		// Anti-jam action. This can happen if all the following is met:
 		// 1. item is waiting too much at a flag
 		// 2. flag is in front of a stock which is already built
 		// 3. item is not yet routing to this building
