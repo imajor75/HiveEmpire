@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [SelectionBase]
-public class Resource : Assert.Base
+public class Resource : HiveObject
 {
 	public GroundNode node;
 	public bool underGround;
@@ -249,7 +249,7 @@ public class Resource : Assert.Base
 		}
 	}
 
-	public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
 		if ( type == Type.pasturingAnimal && animals.Count > 0 )
 		{
@@ -286,7 +286,16 @@ public class Resource : Assert.Base
 		transform.localPosition = node.Position;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		keepAway.Start();
+		if ( type == Type.cornfield )
+			Remove( false );
+	}
+
+	public override GroundNode Node { get { return node; } }
+
+	public override void Validate()
 	{
 		//assert.IsNotNull( body );
 		if ( type == Type.animalSpawner )

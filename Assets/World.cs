@@ -160,7 +160,7 @@ public class World : MonoBehaviour
 				if ( o.item )
 				{
 					o.item.nextFlag.CancelItem( o.item );
-					o.item?.Remove();
+					o.item?.Remove( false );
 					o.item = null;
 				}
 #pragma warning restore CS0612 // Type or member is obsolete
@@ -186,7 +186,7 @@ public class World : MonoBehaviour
 			foreach ( var o in list )
 			{
 				var s = o as Workshop;
-				if ( s && s.working && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
+				if ( s && s.working && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.Gatherer )
 					s.working = false;
 				if ( s && s.outputPriority == ItemDispatcher.Priority.stock )
 					s.outputPriority = ItemDispatcher.Priority.low;
@@ -233,18 +233,18 @@ public class World : MonoBehaviour
 
 	public void Save( string fileName )
 	{
-		JsonSerializerSettings jsonSettings = new JsonSerializerSettings();
-		jsonSettings.TypeNameHandling = TypeNameHandling.Auto;
-		jsonSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
-		jsonSettings.ContractResolver = Serializer.SkipUnityContractResolver.Instance;
+		JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+		{
+			TypeNameHandling = TypeNameHandling.Auto,
+			PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+			ContractResolver = Serializer.SkipUnityContractResolver.Instance
+		};
 		var serializer = JsonSerializer.Create( jsonSettings );
 
-		using ( var sw = new StreamWriter( fileName ) )
-		using ( JsonTextWriter writer = new JsonTextWriter( sw ) )
-		{
-			//writer.Formatting = Formatting.Indented;
-			serializer.Serialize( writer, this );
-		}
+		using var sw = new StreamWriter( fileName );
+		using JsonTextWriter writer = new JsonTextWriter( sw );
+		//writer.Formatting = Formatting.Indented;
+		serializer.Serialize( writer, this );
 	}
 
 	public void Prepare()
@@ -267,8 +267,10 @@ public class World : MonoBehaviour
 			// HACK The event system needs to be recreated after the main camera is destroyed,
 			// otherwise there is a crash in unity
 			Destroy( GameObject.FindObjectOfType<EventSystem>().gameObject );
-			var esObject = new GameObject();
-			esObject.name = "Event System";
+			var esObject = new GameObject
+			{
+				name = "Event System"
+			};
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();
 		}
@@ -399,6 +401,15 @@ public class World : MonoBehaviour
 				standardShaderMaterial.renderQueue = 3000;
 				break;
 		}
+	}
+
+	public void Reset()
+	{
+		ground.Reset();
+		foreach ( var player in players )
+			Assert.global.AreEqual( player.firstPossibleEmptyItemSlot, 0 );
+
+		Validate();
 	}
 
 	public void GenerateResources()

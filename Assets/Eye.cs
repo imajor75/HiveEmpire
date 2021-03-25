@@ -165,7 +165,7 @@ public class Eye : MonoBehaviour
 	}
 }
 
-public class CameraHighlight : Assert.Base
+public class CameraHighlight : HiveObject
 {
 	public static Material highlightMaterial;
 	static Material blurMaterial;
@@ -218,5 +218,7 @@ public class CameraHighlight : Assert.Base
 
 		RenderTexture.ReleaseTemporary( tempRT );
 	}
+
+	public override GroundNode Node { get { return null; } }
 }
 

@@ -35,6 +35,13 @@ public class Stock : Building
 			return new GameObject().AddComponent<Cart>();
 		}
 
+		public override void Reset()
+		{
+			base.Reset();
+			itemQuantity = 0;
+			destination = null;
+		}
+
 		public const int capacity = 20;
 		public Item.Type itemType;
 		public int itemQuantity;
@@ -62,7 +69,7 @@ public class Stock : Building
 		public override bool ExecuteFrame()
 		{
 			if ( stock == null )
-				return ResetBoss();
+				return ResetBossTasks();
 
 			Cart cart = boss as Cart;
 			boss.assert.IsNotNull( cart );
@@ -158,12 +165,12 @@ public class Stock : Building
 		return this;
 	}
 
-	public override bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
 		if ( main )
 			return false;
 		owner.UnregisterStock( this );
-		return base.Remove();
+		return base.Remove( takeYourTime );
 	}
 
 	new void Start()
@@ -324,6 +331,13 @@ public class Stock : Building
 
 		inputArea.center = outputArea.center = node;
 		inputArea.radius = outputArea.radius = 4;
+	}
+
+	public override void Reset()
+	{
+		base.Reset();
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+			content[i] = 0;
 	}
 
 	public override void Validate()

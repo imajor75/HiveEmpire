@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Profiling;
 
 [SelectionBase]
-abstract public class Building : Assert.Base
+abstract public class Building : HiveObject
 {
 	public string title;
 	public Player owner;
@@ -18,7 +18,7 @@ abstract public class Building : Assert.Base
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	static int flatteningTime = 300;
+	static readonly int flatteningTime = 300;
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
@@ -95,9 +95,11 @@ abstract public class Building : Assert.Base
 			}
 		}
 
-		public void Remove()
+		public bool Remove( bool takeYourTime )
 		{
-			worker?.Remove();
+			if ( worker != null )
+				return worker.Remove( takeYourTime );
+			return true;
 		}
 
 		public void Update( Building building )
@@ -119,7 +121,6 @@ abstract public class Building : Assert.Base
 			// TODO Try to find a path only if the road network has been changed
 			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
-				Building main = boss.owner.mainBuilding;
 				worker = Worker.Create();
 				worker.SetupForConstruction( boss );
 				worker.ScheduleWait( 100 );
@@ -354,7 +355,7 @@ abstract public class Building : Assert.Base
 			worker.ScheduleWalkToNeighbour( flag.node );
 			worker.ScheduleDeliverItem( item );
 			worker.ScheduleWalkToNeighbour( node );
-			worker.itemInHands = item;
+			assert.IsNotSelected();
 			item.worker = worker;
 		}
 		return item;
@@ -419,14 +420,14 @@ abstract public class Building : Assert.Base
 			highlightArrow.SetActive( false );
 	}
 
-	public virtual bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
-		construction.Remove();
+		construction.Remove( takeYourTime );
 
 		var list = itemsOnTheWay.GetRange( 0, itemsOnTheWay.Count );
 		foreach ( var item in list )
 			item.CancelTrip();
-		if ( !exit.Remove() )
+		if ( !exit.Remove( takeYourTime ) )
 			return false;
 		if ( worker != null && !worker.Remove() )
 			return false;
@@ -461,7 +462,15 @@ abstract public class Building : Assert.Base
 		exit?.RebuildMesh( true );
 	}
 
-	virtual public void Validate()
+	public override void Reset()
+	{
+		worker?.Reset();
+		workerMate?.Reset();
+	}
+
+	public override GroundNode Node { get { return node; } }
+
+	public override void Validate()
 	{
 		assert.AreEqual( this, flag.building );
 		assert.AreEqual( this, node.building );

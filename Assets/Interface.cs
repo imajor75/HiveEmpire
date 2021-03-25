@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
 
-public class Interface : Assert.Base
+public class Interface : HiveObject
 {
 	public List<Panel> panels = new List<Panel>();
 	public static int iconSize = 20;
@@ -73,8 +73,10 @@ public class Interface : Assert.Base
 
 	static public GameObject GetUIElementUnderCursor()
 	{
-		PointerEventData p = new PointerEventData( EventSystem.current );
-		p.position = Input.mousePosition;
+		PointerEventData p = new PointerEventData( EventSystem.current )
+		{
+			position = Input.mousePosition
+		};
 		List<RaycastResult> result = new List<RaycastResult>();
 		EventSystem.current.RaycastAll( p, result );
 		if ( result.Count == 0 )
@@ -120,12 +122,6 @@ public class Interface : Assert.Base
 		materialUIPath.mainTextureOffset = o;
 	}
 
-	static Sprite LoadSprite( string fileName )
-	{
-		Texture2D tex = Resources.Load<Texture2D>( fileName );
-		return Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.0f, 0.0f ) );
-	}
-
 	static void Initialize()
 	{
 		//{
@@ -167,17 +163,19 @@ public class Interface : Assert.Base
 		"simple UI & icons/box/smallFrame", Icon.smallFrame };
 		iconTable.Fill( table );
 		Frame.Initialize();
-//			print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
-//#if DEVELOPMENT_BUILD
-//		print( "DEVELOPMENT_BUILD" );
-//#endif
-//#if DEBUG
-//		print( "DEBUG" );
-//#endif
+		//			print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
+		//#if DEVELOPMENT_BUILD
+		//		print( "DEVELOPMENT_BUILD" );
+		//#endif
+		//#if DEBUG
+		//		print( "DEBUG" );
+		//#endif
 
-		materialUIPath = new Material( World.defaultMapShader );
-		materialUIPath.mainTexture = Resources.Load<Texture2D>( "uipath" );
-		materialUIPath.renderQueue = 4001;
+		materialUIPath = new Material( World.defaultMapShader )
+		{
+			mainTexture = Resources.Load<Texture2D>( "uipath" ),
+			renderQueue = 4001
+		};
 	}
 
 	void Start()
@@ -208,13 +206,17 @@ public class Interface : Assert.Base
 		viewport.transform.SetParent( transform );
 		viewport.name = "Viewport";
 
-		var esObject = new GameObject();
-		esObject.name = "Event System";
+		var esObject = new GameObject
+		{
+			name = "Event System"
+		};
 		esObject.AddComponent<EventSystem>();
 		esObject.AddComponent<StandaloneInputModule>();
 
-		debug = new GameObject();
-		debug.name = "Debug";
+		debug = new GameObject
+		{
+			name = "Debug"
+		};
 		debug.transform.SetParent( transform );
 
 		tooltip = Tooltip.Create();
@@ -267,6 +269,20 @@ public class Interface : Assert.Base
 				world.SetTimeFactor( 5 );
 			else
 				world.SetTimeFactor( 1 );
+		}
+		if ( Input.GetKey( KeyCode.R ) )
+		{
+			bool localReset = false;
+			foreach ( var panel in panels )
+			{
+				if ( panel.target )
+				{
+					panel.target?.Reset();
+					localReset = true;
+				}
+			}
+			if ( !localReset )
+				world.Reset();
 		}
 		if ( Input.GetKeyDown( KeyCode.Insert ) )
 			world.SetTimeFactor( 8 );
@@ -357,8 +373,10 @@ public class Interface : Assert.Base
 		Mesh m;
 		if ( highlightVolume == null )
 		{
-			highlightVolume = new GameObject();
-			highlightVolume.name = "Highlight Volume";
+			highlightVolume = new GameObject
+			{
+				name = "Highlight Volume"
+			};
 			highlightVolume.transform.SetParent( World.instance.transform );
 			var f = highlightVolume.AddComponent<MeshFilter>();
 			var r = highlightVolume.AddComponent<MeshRenderer>();
@@ -449,8 +467,10 @@ public class Interface : Assert.Base
 		if ( path == null )
 			return null;
 
-		GameObject routeOnMap = new GameObject();
-		routeOnMap.name = "Path on map";
+		GameObject routeOnMap = new GameObject
+		{
+			name = "Path on map"
+		};
 		var renderer = routeOnMap.AddComponent<MeshRenderer>();
 		renderer.material = materialUIPath;
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -501,9 +521,9 @@ public class Interface : Assert.Base
 		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 );
 	}
 
-	[Conditional( "DEBUG" )]
-	void Validate()
+	public override void Validate()
 	{
+#if DEBUG
 		Profiler.BeginSample( "Validate" );
 		world.Validate();
 		if ( highlightType == HighlightType.volume )
@@ -514,7 +534,10 @@ public class Interface : Assert.Base
 			Assert.global.IsNotNull( highlightArea.center );
 		}
 		Profiler.EndSample();
+#endif
 	}
+
+	public override GroundNode Node { get { return null; } }
 
 	public class Tooltip : Panel
 	{
@@ -571,7 +594,7 @@ public class Interface : Assert.Base
 	}
 	public class Panel : MonoBehaviour, IDragHandler, IPointerClickHandler
 	{
-		public GroundNode target;
+		public HiveObject target;
 		public bool followTarget = true;
 		public Image frame;
 		public Interface cachedRoot;
@@ -599,7 +622,7 @@ public class Interface : Assert.Base
 
 		// Summary:
 		// Return true if the caller should give
-		public bool Open( GroundNode target = null, int x = 0, int y = 0 )
+		public bool Open( HiveObject target = null, int x = 0, int y = 0 )
 		{
 			foreach ( var panel in Root.panels )
 			{
@@ -810,14 +833,14 @@ public class Interface : Assert.Base
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.Position + Vector3.up * GroundNode.size );
+			MoveTo( target.Node.Position + Vector3.up * GroundNode.size );
 		}
 
 		public void MoveTo( Vector3 position )
 		{
 			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Position - Vector3.up * GroundNode.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Node.Position - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
 			Rect size = new Rect();
 			foreach ( RectTransform t in frame.rectTransform )
@@ -1003,7 +1026,7 @@ public class Interface : Assert.Base
 	{
 		public int borderWidth = 30;
 
-		static Sprite[] pieces = new Sprite[9];
+		static readonly Sprite[] pieces = new Sprite[9];
 		public static void Initialize()
 		{
 			string[] files = {
@@ -1216,7 +1239,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( workshop && workshop.Remove() )
+			if ( workshop && workshop.Remove( false ) )
 				Close();
 		}
 
@@ -1255,7 +1278,7 @@ public class Interface : Assert.Base
 				}
 				else
 				{
-					if ( workshop.gatherer && !workshop.working )
+					if ( workshop.Gatherer && !workshop.working )
 						progressBar.color = Color.green;
 					else
 						progressBar.color = Color.red;
@@ -1371,9 +1394,14 @@ public class Interface : Assert.Base
 
 		void SelectItemType( Item.Type itemType )
 		{
-			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
+			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftControl ) )
 			{
 				stock.content[(int)itemType] = 0;
+				return;
+			}
+			if ( Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
+			{
+				stock.content[(int)itemType]++;
 				return;
 			}
 			selectedItemType = itemType;
@@ -1449,7 +1477,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( stock && stock.Remove() )
+			if ( stock && stock.Remove( false ) )
 				Close();
 		}
 
@@ -1643,7 +1671,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			node.resource?.Remove();
+			node.resource?.Remove( false );
 		}
 
 		void AlignHeight( float change )
@@ -1676,7 +1704,7 @@ public class Interface : Assert.Base
 
 		public void Open( Road road, GroundNode node )
 		{
-			base.Open( node );
+			base.Open( road );
 			this.road = road;
 			this.node = node;
 			Frame( 0, 0, 210, 140, 10 );
@@ -1705,7 +1733,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( road && road.Remove() )
+			if ( road && road.Remove( false ) )
 				Close();
 		}
 
@@ -1813,7 +1841,7 @@ public class Interface : Assert.Base
 #if DEBUG
 			Selection.activeGameObject = flag.gameObject;
 #endif
-			if ( base.Open( flag.node ) )
+			if ( base.Open( flag ) )
 				return;
 
 			this.flag = flag;
@@ -1840,7 +1868,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( flag && flag.Remove() )
+			if ( flag && flag.Remove( false ) )
 				Close();
 		}
 
@@ -2041,7 +2069,7 @@ public class Interface : Assert.Base
 
 		void Remove()
 		{
-			if ( construction != null && construction.boss != null && construction.boss.Remove() )
+			if ( construction != null && construction.boss != null && construction.boss.Remove( true ) )
 				Close();
 		}
 	}
@@ -2144,9 +2172,9 @@ public class Interface : Assert.Base
 		public bool mouseOver;
 		public GameObject cursor;
 		IInputHandler inputHandler;
-		GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
-		GameObject cursorFlag;
-		GameObject cursorBuilding;
+		readonly GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
+		//readonly GameObject cursorFlag;
+		//readonly GameObject cursorBuilding;
 		public new Camera camera;
 
 		public IInputHandler InputHandler
@@ -2197,8 +2225,7 @@ public class Interface : Assert.Base
 			if ( camera == null )
 				camera = World.instance.eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			RaycastHit hit;
-			if ( !World.instance.ground.collider.Raycast( ray, out hit, 1000 ) ) // TODO How long the ray should really be?
+			if ( !World.instance.ground.collider.Raycast( ray, out RaycastHit hit, 1000 ) ) // TODO How long the ray should really be?
 				return null;
 
 			var ground = World.instance.ground;
@@ -2440,12 +2467,12 @@ public class Interface : Assert.Base
 		ScrollRect scroll;
 		Player player;
 		Text finalEfficiency;
-		Text[] inStock = new Text[(int)Item.Type.total];
-		Text[] onWay = new Text[(int)Item.Type.total];
-		Text[] surplus = new Text[(int)Item.Type.total];
-		Text[] production = new Text[(int)Item.Type.total];
-		Text[] efficiency = new Text[(int)Item.Type.total];
-		Button[] stockButtons = new Button[(int)Item.Type.total];
+		readonly Text[] inStock = new Text[(int)Item.Type.total];
+		readonly Text[] onWay = new Text[(int)Item.Type.total];
+		readonly Text[] surplus = new Text[(int)Item.Type.total];
+		readonly Text[] production = new Text[(int)Item.Type.total];
+		readonly Text[] efficiency = new Text[(int)Item.Type.total];
+		readonly Button[] stockButtons = new Button[(int)Item.Type.total];
 
 		public static ItemStats Create()
 		{

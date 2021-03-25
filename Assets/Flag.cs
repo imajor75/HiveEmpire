@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [SelectionBase]
-public class Flag : Assert.Base
+public class Flag : HiveObject
 {
 	public Player owner;
 	public const int maxItems = 8;
@@ -65,8 +65,10 @@ public class Flag : Assert.Base
 		UpdateBody();
 		for ( int i = 0; i < maxItems; i++ )
 		{
-			frames[i] = new GameObject();
-			frames[i].name = "Item Frame " + i;
+			frames[i] = new GameObject
+			{
+				name = "Item Frame " + i
+			};
 			var t = frames[i].transform;
 			t.SetParent( transform, false );
 			Vector3 pos;
@@ -201,20 +203,21 @@ public class Flag : Assert.Base
 		Interface.FlagPanel.Create().Open( this );
 	}
 
-	public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
-		if ( building && !building.Remove() )
+		if ( building && !building.Remove( takeYourTime ) )
 			return false;
 		foreach ( var road in roadsStartingHere )
-			road?.Remove();
+			road?.Remove( takeYourTime );
 		foreach ( var item in items )
-			item?.Remove();
+			item?.Remove( takeYourTime );
 
 		node.flag = null;
 		Destroy( gameObject );
 		return true;
 	}
 
+	// Returns the number of available slots at the flag
 	public int FreeSpace()
 	{
 		int free = 0;
@@ -224,7 +227,21 @@ public class Flag : Assert.Base
 		return free;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		for ( int i = 0; i < maxItems; i++ )
+		{
+			if ( items[i] == null || items[i].flag != this )
+				continue;
+			items[i].Remove( false );
+			items[i] = null;
+		}
+		foreach ( var road in roadsStartingHere )
+			road?.Reset();
+		assert.IsNull( user );
+	}
+
+	override public void Validate()
     {
 		if ( building )
 			assert.AreEqual( building.flag, this );
@@ -251,6 +268,14 @@ public class Flag : Assert.Base
 				assert.IsNotNull( user.road );
 			assert.IsTrue( user.onRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
+		}
+	}
+
+	public override GroundNode Node
+	{
+		get
+		{
+			return node;
 		}
 	}
 

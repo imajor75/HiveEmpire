@@ -5,7 +5,7 @@ using System.IO;
 using UnityEngine;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
-public class Ground : Assert.Base
+public class Ground : HiveObject
 {
 	public World world;
 	public int width = 64, height = 64;
@@ -364,7 +364,15 @@ public class Ground : Assert.Base
 		}
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		foreach ( var node in nodes )
+			node.Reset();
+	}
+
+	public override GroundNode Node { get { return null; } }
+
+	override public void Validate()
  	{
         assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
         assert.AreEqual( ( width + 1 ) * ( height + 1 ), nodes.Length, "Map layout size is incorrect" );

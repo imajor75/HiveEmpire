@@ -141,7 +141,10 @@ public class Assert
 	{
 #if DEBUG
 		if ( Selection.Contains( boss.gameObject ) )
+		{
 			UnityEngine.Debug.Log( "code on selected from " + Caller( 2 ) );
+			IsTrue( true );
+		}
 #endif
 	}
 
@@ -178,42 +181,5 @@ public class Assert
 	{
 		if ( type == LogType.Exception || type == LogType.Assert || type == LogType.Error )
 			error = true;
-	}
-
-	public class Base : MonoBehaviour
-	{
-		[JsonIgnore]
-		public Assert assert;
-
-		public Base()
-		{
-			assert = new Assert( this );
-		}
-
-		static public string Nice( string raw )
-		{
-			string nice = "";
-			bool capitalize = true;
-			foreach ( var c in raw )
-			{
-				char current = c;
-				if ( Char.IsUpper( c ) )
-					nice += " ";
-				if ( capitalize )
-				{
-					current = Char.ToUpper( c );
-					capitalize = false;
-				}
-				nice += current;
-			}
-			return nice;
-		}
-
-		public static new void Destroy( UnityEngine.Object toDestroy )
-		{
-			if ( toDestroy == null )
-				return;
-			UnityEngine.Object.Destroy( toDestroy );
-		}
 	}
 }

@@ -5,8 +5,11 @@ using UnityEditor;
 using UnityEngine;
 
 [SelectionBase]
-public class Item : Assert.Base
+public class Item : HiveObject
 {
+	// The item is either at a flag (the flag member is not null) or in the hands of a worker (the worker member is not null and worker.itemInHands references this object)
+	// or special case: the item is a resource just created, and the worker (as a tinkerer) is about to pick it up
+	public bool justCreated;	// True if the item did not yet enter the world
 	public Player owner;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
 	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
@@ -25,6 +28,7 @@ public class Item : Assert.Base
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 	public int index = -1;
+	public static bool creditOnRemove = true;
 	[JsonIgnore]
 	public GameObject body;
 
@@ -126,6 +130,7 @@ public class Item : Assert.Base
 		life.Start();
 		ground = origin.ground;
 		owner = origin.owner;
+		justCreated = true;
 		watchRoadDelete.Attach( owner.versionedRoadDelete );
 		watchBuildingDelete.Attach( owner.versionedBuildingDelete );
 		this.type = type;
@@ -187,14 +192,14 @@ public class Item : Assert.Base
 
 		// If the item is just being gathered, it should not be offered yet
 		if ( flag == null && worker.type != Worker.Type.hauler )
-			return;
+			return;	
 
 		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the hauler will not be
 		// able to skip entering the building, as it is scheduled already.
 		if ( worker && !nextFlag )
-			return;
+			return;	// justCreated is true here?
 
-		// Anti-jam action. This can happen if all is met:
+		// Anti-jam action. This can happen if all the following is met:
 		// 1. item is waiting too much at a flag
 		// 2. flag is in front of a stock which is already built
 		// 3. item is not yet routing to this building
@@ -310,32 +315,58 @@ public class Item : Assert.Base
 		}
 	}
 
-	public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
+		if ( worker )
+		{
+			if ( worker.itemInHands == this )
+				worker.itemInHands = null;
+			worker.ResetTasks();
+		};
 		CancelTrip();
 		owner.UnregisterItem( this );
+		if ( creditOnRemove )
+			owner.mainBuilding.content[(int)type]++;
 		Destroy( gameObject );
 		return true;
 	}
 
-	public void Validate()
+	public override void Reset()
 	{
-		assert.IsTrue( flag != null || worker != null );
+		assert.IsTrue( false );
+	}
+
+	public override GroundNode Node { get { return flag ? flag.Node : worker.Node; } }
+
+	public override void Validate()
+	{
 		if ( worker )
 		{
 			if ( worker.itemInHands )
-				assert.IsTrue( worker.itemInHands == this || worker.itemInHands.buddy == this );
+			{
+				if ( worker.itemInHands == this )
+					assert.IsNull( flag );
+				else
+					assert.AreEqual( worker.itemInHands.buddy, this );
+			}
 		}
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
+			assert.AreNotEqual( worker?.itemInHands, this );
 			if ( destination )
 				assert.IsNotNull( path );
 			if ( destination && !path.IsFinished && !path.Road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
 		}
 		else
-			assert.IsNotNull( worker );
+		{
+			if ( !justCreated )
+			{
+				assert.IsNotNull( worker );
+				assert.AreEqual( worker.itemInHands, this );
+			}
+		};
 		if ( nextFlag )
 		{
 			assert.IsNotNull( worker );

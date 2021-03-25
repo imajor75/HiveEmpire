@@ -204,7 +204,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					else
 					{
 						if ( --resource.charges == 0 )
-							resource.Remove();
+							resource.Remove( false );
 						else
 						{
 							if ( resource.underGround )
@@ -280,7 +280,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( resource.hunter == null )
 			{
 				resource.animals.Clear();
-				resource.Remove();
+				resource.Remove( false );
 				return true;
 			}
 			return false;
@@ -292,7 +292,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( resource )
 			{
 				resource.animals.Clear();
-				resource.Remove();
+				resource.Remove( false );
 			}
 			base.Cancel();
 		}
@@ -527,7 +527,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return;
 			}
 		}
-		assert.IsTrue( gatherer );
+		assert.IsTrue( Gatherer );
 		assert.AreEqual( configuration.outputType, item.type );
 		assert.IsTrue( output < configuration.outputMax );
 	}
@@ -552,7 +552,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 
 		// Gatherer arrived back from harvest
-		assert.IsTrue( gatherer );
+		assert.IsTrue( Gatherer );
 		assert.AreEqual( configuration.outputType, item.type );
 		assert.IsTrue( output < configuration.outputMax );
 		output++;
@@ -560,7 +560,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	}
 
 	[JsonIgnore]
-	public bool gatherer { get { return configuration.gatheredResource != Resource.Type.unknown; } }
+	public bool Gatherer { get { return configuration.gatheredResource != Resource.Type.unknown; } }
 
 	new void FixedUpdate()
 	{
@@ -580,7 +580,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			workerMate.ScheduleWait( 50 );
 		}
 
-		if ( gatherer && worker.IsIdle() && worker.node == node )
+		if ( Gatherer && worker.IsIdle() && worker.node == node )
 			SetWorking( false );
 
 		Profiler.BeginSample( "Internal" );
@@ -681,7 +681,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			default:
 			{
 				Profiler.BeginSample( "Default" );
-				if ( gatherer )
+				if ( Gatherer )
 					CollectResource( configuration.gatheredResource, configuration.gatheringRange );
 				else
 					ProcessInput();
@@ -897,9 +897,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 #endif
 	}
 
+	public override void Reset()
+	{
+		base.Reset();
+		foreach ( var b in buffers )
+			b.stored = 0;
+		output = 0;
+		SetWorking( false );
+		progress = 0;
+	}
+
 	public override void Validate()
 	{
-		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && gatherer );
+		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && Gatherer );
 		base.Validate();
 		int itemsOnTheWayCount = 0;
 		foreach ( Buffer b in buffers )
@@ -915,7 +925,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( missing == 1 )
 			{
 				// If an incoming item is missing, then that can only happen if the worker is just gathering it
-				assert.IsTrue( gatherer );
+				assert.IsTrue( Gatherer );
 				assert.IsFalse( worker.IsIdle() );
 			}
 		}

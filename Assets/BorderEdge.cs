@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BorderEdge : Assert.Base
+public class BorderEdge : HiveObject
 {
     public GroundNode node;
     public int direction;
@@ -42,4 +42,7 @@ public class BorderEdge : Assert.Base
 			position.y = World.instance.waterLevel * World.instance.maxHeight;
 		transform.localPosition = position;
 	}
+
+	public override GroundNode Node { get { return null; } }
+
 }

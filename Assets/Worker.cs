@@ -5,8 +5,10 @@ using UnityEngine;
 using UnityEngine.Profiling;
 
 [SelectionBase]
-public class Worker : Assert.Base
+public class Worker : HiveObject
 {
+	[JsonIgnore]
+	public bool hack;
 	public Type type;
 	public Ground ground;
 	public Player owner;
@@ -56,7 +58,7 @@ public class Worker : Assert.Base
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
 	GameObject box;
-	GameObject[] wheels = new GameObject[2];
+	readonly GameObject[] wheels = new GameObject[2];
 	static GameObject boxTemplateBoy;
 	static GameObject boxTemplateMan;
 	static GameObject boxTemplateWoman;
@@ -113,9 +115,9 @@ public class Worker : Assert.Base
 				boss.taskQueue.Add( newTask );
 		}
 
-		public bool ResetBoss()
+		public bool ResetBossTasks()
 		{
-			boss.Reset();
+			boss.ResetTasks();
 			return true;
 		}
 
@@ -254,11 +256,11 @@ public class Worker : Assert.Base
 		public override bool ExecuteFrame()
 		{
 			if ( road == null )
-				return ResetBoss();
+				return ResetBossTasks();
 
 			if ( stuck.Done && boss.type == Type.hauler && road.ActiveWorkerCount > 1 )
 			{
-				boss.Remove();
+				boss.Remove( true );
 				return true;
 			}
 			if ( currentPoint == -1 )
@@ -304,7 +306,7 @@ public class Worker : Assert.Base
 				{
 					// As a last resort to make space is to simply remove the other hauler
 					if ( other.onRoad && other.type == Type.hauler && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
-						other.Remove();
+						other.Remove( true );
 					else
 					{
 						if ( stuck.Empty )
@@ -421,6 +423,12 @@ public class Worker : Assert.Base
 		{
 			boss.assert.AreEqual( boss, item.worker );
 			item.worker = null;
+			if ( item.justCreated )
+			{
+				// Item is hanging in the air, it never actually entered the logistic network
+				item.assert.IsNull( item.flag );
+				item.Remove( false );
+			}
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
@@ -446,10 +454,11 @@ public class Worker : Assert.Base
 				// This block can run for tinkerers too, if the item lost destination before the tinkerer would pick it up
 				if ( boss.type == Type.hauler )
 					boss.assert.AreEqual( boss.road, path.Road );
-				return ResetBoss();
+				return ResetBossTasks();
 			}
 
 			item.flag?.ReleaseItem( item );
+			item.justCreated = false;
 			boss.itemInHands = item;
 			boss.assert.IsTrue( item.worker == boss || item.worker == null );
 			if ( item.worker.type == Type.hauler )
@@ -531,7 +540,7 @@ public class Worker : Assert.Base
 					}
 				}
 				else
-					return ResetBoss(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
+					return ResetBossTasks(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
 
 			return true;
@@ -552,7 +561,7 @@ public class Worker : Assert.Base
 		{
 			if ( road == null )
 			{
-				boss.Remove();
+				boss.Remove( true );
 				return true;    // Task failed
 			}
 			int i = road.NodeIndex( boss.node );
@@ -660,7 +669,7 @@ public class Worker : Assert.Base
 		onRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.GetEnd( 0 ) ); // TODO Pick the end closest to the main building
-		ScheduleWalkToRoadNode( road, road.CenterNode(), false );
+		ScheduleWalkToRoadNode( road, road.CenterNode, false );
 		ScheduleStartWorkingOnRoad( road );
 		return this;
 	}
@@ -770,27 +779,15 @@ public class Worker : Assert.Base
 		wheels[1] = World.FindChildRecursive( body.transform, "cart_wheels_back" )?.gameObject;
 
 		UpdateBody();
-		switch ( type )
+		name = type switch
 		{
-			case Type.soldier:
-				name = "Soldier";
-				break;
-			case Type.wildAnimal:
-				name = "Bunny";
-				break;
-			case Type.hauler:
-				name = "Hauler";
-				break;
-			case Type.constructor:
-				name = "Builder";
-				break;
-			case Type.tinkerer:
-				name = "Tinkerer";
-				break;
-			default:
-				name = "Worker";
-				break;
-		}
+			Type.soldier => "Soldier",
+			Type.wildAnimal => "Bunny",
+			Type.hauler => "Hauler",
+			Type.constructor => "Builder",
+			Type.tinkerer => "Tinkerer",
+			_ => "Worker",
+		};
 		soundSource = World.CreateSoundSource( this );
 		World.SetLayerRecursive( gameObject, World.layerIndexNotOnMap );
 
@@ -849,7 +846,7 @@ public class Worker : Assert.Base
 		}
 		if ( debugReset )
 		{
-			Reset();
+			ResetTasks();
 			debugReset = false;
 			return;
 		}
@@ -926,10 +923,11 @@ public class Worker : Assert.Base
 		Profiler.EndSample();
 	}
 
-	public bool Remove( bool returnToMainBuilding = true )
+	public override	bool Remove( bool returnToMainBuilding = true )
 	{
+		// TODO What if the worker has an item in hands?
 		assert.IsTrue( type != Type.cart || building == null );
-		Reset();
+		ResetTasks();
 		if ( origin != null )
 		{
 			assert.AreEqual( type, Type.wildAnimal );
@@ -1075,7 +1073,7 @@ public class Worker : Assert.Base
 					{
 						owner.mainBuilding.ItemOnTheWay( itemInHands );
 						owner.mainBuilding.ItemArrived( itemInHands );
-						itemInHands.Remove();
+						itemInHands.Remove( false );
 						itemInHands = null;
 					}
 					Destroy( gameObject );
@@ -1098,14 +1096,14 @@ public class Worker : Assert.Base
 	{
 		if ( bored.Done && road.ActiveWorkerCount > 1 )
 		{
-			Remove();
+			Remove( true );
 			return;
 		}
 
 		if ( !onRoad )
 		{
 			Profiler.BeginSample( "BackToRoad" );
-			ScheduleWalkToNode( road.CenterNode(), false );
+			ScheduleWalkToNode( road.CenterNode, false );
 			ScheduleStartWorkingOnRoad( road );
 			Profiler.EndSample();
 			return;
@@ -1362,14 +1360,14 @@ public class Worker : Assert.Base
 		item.worker = this;
 	}
 
-	public void Reset()
+	public void ResetTasks()
 	{
 		foreach ( var task in taskQueue )
 			task.Cancel();
 		taskQueue.Clear();
 	}
 
-	static float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
+	static readonly float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
 	public void UpdateBody()
 	{
 		Profiler.BeginSample( "UpdateBody" );
@@ -1453,7 +1451,7 @@ public class Worker : Assert.Base
 		if ( !inBuilding || building as Workshop == null )
 			return true;
 		Workshop workshop = building as Workshop;
-		if ( workshop && workshop.working && !workshop.gatherer )
+		if ( workshop && workshop.working && !workshop.Gatherer )
 			return false;
 		return node == building.node;
 	}
@@ -1491,14 +1489,55 @@ public class Worker : Assert.Base
 	{
 		foreach ( var task in taskQueue )
 		{
-			T result = task as T;
-			if ( result != null )
+			if ( task is T result )
 				return result;
 		}
 		return null;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		if ( type == Type.tinkerer )
+			building.assert.IsNotSelected();
+		ResetTasks();
+		itemInHands?.Remove( false );
+		assert.IsNull( itemInHands );
+		walkTo = walkFrom = null;
+		walkProgress = 0;
+		if ( onRoad )
+		{
+			int index = road.NodeIndex( node );
+			if ( index < 0 )
+			{
+				index = road.NodeIndex( node.Add( Building.flagOffset ) );
+				assert.IsTrue( index >= 0 );
+			}
+			road.workerAtNodes[index] = null;
+			onRoad = false;
+		}
+		if ( type == Type.hauler )
+		{
+			assert.IsNotNull( road );
+			int newIndex = road.nodes.Count / 2;
+			node = road.nodes[newIndex];
+			road.workerAtNodes[newIndex] = this;
+			onRoad = true;
+		}
+		if ( type == Type.tinkerer || type == Type.tinkererMate || type == Type.cart )
+			node = building.node;
+		if ( type == Type.constructor || type == Type.unemployed )
+			Remove( false );
+		if ( exclusiveFlag )
+		{
+			assert.AreEqual( exclusiveFlag.user, this );
+			exclusiveFlag.user = null;
+			exclusiveFlag = null;
+		}
+	}
+
+	public override GroundNode Node { get { return node; } }
+
+	public override void Validate()
 	{
 		if ( type == Type.wildAnimal )
 		{
@@ -1558,7 +1597,7 @@ public class Worker : Assert.Base
 				assert.AreEqual( road.workerAtNodes[index], this );
 			}
 		}
-		if ( type == Type.tinkerer && building as Workshop && ( (Workshop)building ).gatherer )
+		if ( type == Type.tinkerer && building as Workshop && ( (Workshop)building ).Gatherer )
 		{
 			if ( IsIdle( true ) )
 				assert.IsNull( itemInHands );

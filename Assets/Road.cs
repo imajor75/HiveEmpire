@@ -6,7 +6,7 @@ using System;
 using Newtonsoft.Json;
 
 [SelectionBase]
-public class Road : Assert.Base, Interface.IInputHandler
+public class Road : HiveObject, Interface.IInputHandler
 {
 	public Player owner;
 	public List<Worker> workers = new List<Worker>();
@@ -60,6 +60,9 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	public static bool IsNodeSuitable( Road road, GroundNode node, Player owner )
 	{
+		if ( road.owner != owner )
+			return false;
+
 		road.assert.IsFalse( road.ready );
 
 		// Starting a new road
@@ -161,7 +164,9 @@ public class Road : Assert.Base, Interface.IInputHandler
 		if ( !LastNode.flag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 		foreach ( var n in nodes )
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
 			workerAtNodes.Add( null );
 		CallNewWorker();
 		transform.localPosition = nodes[nodes.Count / 2].Position;
@@ -204,8 +209,10 @@ public class Road : Assert.Base, Interface.IInputHandler
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
 
-		GameObject mapObject = new GameObject();
-		mapObject.name = "Map";
+		GameObject mapObject = new GameObject
+		{
+			name = "Map"
+		};
 		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new Mesh();
 		var r = mapObject.AddComponent<MeshRenderer>();
 		mapMaterial = r.material = new Material( World.defaultMapShader );
@@ -238,7 +245,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 			CallNewWorker();
 	}
 
-	static int blocksInSection = 8;
+	static readonly int blocksInSection = 8;
 	public void RebuildMesh( bool force = false )
 	{
 		if ( mesh == null )
@@ -276,9 +283,11 @@ public class Road : Assert.Base, Interface.IInputHandler
 				var pos = PositionAt(i, 1.0f / blocksInSection * b);
 				pos = transform.InverseTransformPoint( pos );
 				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
-				var side = new Vector3();
-				side.x = dir.z/2;
-				side.z = -dir.x/2;
+				var side = new Vector3
+				{
+					x = dir.z / 2,
+					z = -dir.x / 2
+				};
 
 				if ( b == 0 )
 				{
@@ -566,7 +575,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 				second.workers.Add( worker );
 				worker.road = second;
 			}
-			worker.Reset();
+			worker.ResetTasks();
 		}
 
 		UnregisterOnGround();
@@ -636,7 +645,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 		owner.versionedRoadDelete.Trigger();
 	}
 
-	public bool Remove()
+	public override bool Remove( bool takeYourTime )
 	{
 		var localWorkers = workers.GetRange( 0, workers.Count );
 		foreach ( var worker in localWorkers )
@@ -650,9 +659,13 @@ public class Road : Assert.Base, Interface.IInputHandler
 		return true;
 	}
 
-	public GroundNode CenterNode()
+	[JsonIgnore]
+	public GroundNode CenterNode
 	{
-		return nodes[nodes.Count / 2];
+		get
+		{
+			return nodes[nodes.Count / 2];
+		}
 	}
 
 	[JsonIgnore]
@@ -707,7 +720,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 		}
 		assert.IsTrue( nodes.Count > 0 );
 
-		PathFinder p = new PathFinder();
+		PathFinder p = ScriptableObject.CreateInstance<PathFinder>();
 		if ( p.FindPathBetween( LastNode, node, PathFinder.Mode.avoidRoadsAndFlags, true ) )
 		{
 			var j = nodes.Count;
@@ -778,14 +791,29 @@ public class Road : Assert.Base, Interface.IInputHandler
 		if ( node.flag )
 		{
 			if ( !Finish() )
-				Remove();
+				Remove( false );
 			return false;
 		}
 		else
 			return true;
 	}
 
-	public void Validate()
+	public override void Reset()
+	{
+		while ( workers.Count > 1 )
+			workers[1].Remove( false );
+		workers[0].Reset();
+	}
+
+	public override GroundNode Node
+	{
+		get
+		{
+			return CenterNode;
+		}
+	}
+
+	public override void Validate()
 	{
 		int length = nodes.Count;
 		assert.IsTrue( length > 1 );
@@ -849,7 +877,7 @@ public class Road : Assert.Base, Interface.IInputHandler
 
 	public void OnLostInput()
 	{
-		bool removed = Remove();
+		bool removed = Remove( false );
 		assert.IsTrue( removed );
 	}
 }
