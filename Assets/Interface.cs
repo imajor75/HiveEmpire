@@ -331,13 +331,17 @@ public class Interface : HiveObject
 		{
 			if ( !viewport.ResetInputHandler() )
 			{
+				bool closedSomething = false;
 				for ( int i = panels.Count - 1; i >= 0; i-- )
 				{
 					if ( !panels[i].escCloses )
 						continue;
 					panels[panels.Count - 1].Close();
+					closedSomething = true;
 					break;
 				}
+				if ( !closedSomething )
+					MainMenu.Create().Open();
 			}
 		}
 		if ( Input.GetKeyDown( KeyCode.M ) )
@@ -1257,7 +1261,7 @@ public class Interface : HiveObject
 			if ( workshop.mode == Workshop.Mode.always )
 				return iconTable.GetMediaData( Icon.alarm );
 
-			workshop.assert.IsTrue( false );
+			workshop.assert.Fail();
 			return null;
 		}
 
@@ -2638,6 +2642,20 @@ public class Interface : HiveObject
 			record.text = "Record: " + a.record;
 			itemFrame.rectTransform.anchoredPosition = new Vector2( 17 + iconSize * (int)selected, -17 );
 			lastAverageEfficiency = player.averageEfficiencyHistory.current;
+		}
+	}
+
+	public class MainMenu : Panel
+	{
+		public static MainMenu Create()
+		{
+			return new GameObject().AddComponent<MainMenu>();
+		}
+
+		public void Open()
+		{
+			name = "Main Menu";
+			Frame( 0, 0, 450, 300 );
 		}
 	}
 

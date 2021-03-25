@@ -137,7 +137,7 @@ public class Flag : HiveObject
 				return true;
 			}
 		}
-		item.assert.IsTrue( false, "Item not found at flag" );
+		item.assert.Fail( "Item not found at flag" );
 		return false;
 	}
 
@@ -159,7 +159,7 @@ public class Flag : HiveObject
 				return true;
 			}
 		}
-		assert.IsTrue( false );
+		assert.Fail();
 		return false;
 	}
 

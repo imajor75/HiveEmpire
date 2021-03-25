@@ -32,7 +32,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			if ( data == null && reportError )
 			{
 				Debug.Log( "Resource " + file + " not found" );
-				Assert.global.IsTrue( false );
+				Assert.global.Fail();
 			}
 		}
 	}

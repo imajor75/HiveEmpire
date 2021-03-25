@@ -184,7 +184,7 @@ abstract public class Building : HiveObject
 				}
 				return true;			}
 
-			boss.assert.IsTrue( false, "Item is not expected (" + item.type + ")" );
+			boss.assert.Fail( "Item is not expected (" + item.type + ")" );
 			return false;
 		}
 
@@ -210,7 +210,7 @@ abstract public class Building : HiveObject
 				return true;
 			}
 
-			boss.assert.IsTrue( false );
+			boss.assert.Fail();
 			return false;
 		}
 

@@ -333,7 +333,7 @@ public class Item : HiveObject
 
 	public override void Reset()
 	{
-		assert.IsTrue( false );
+		assert.Fail();
 	}
 
 	public override GroundNode Node { get { return flag ? flag.Node : worker.Node; } }
@@ -342,6 +342,27 @@ public class Item : HiveObject
 	{
 		if ( worker )
 		{
+			switch ( worker.type )
+			{
+				case Worker.Type.hauler:
+				{
+					assert.IsTrue( worker.onRoad );
+					assert.IsNotNull( worker.road );
+					break;
+				}
+				case Worker.Type.tinkerer:
+				{
+					if ( !justCreated )
+						assert.AreEqual( worker.itemInHands, this );
+					break;
+				}
+				default:
+				{
+					assert.Fail();
+					break;
+				}
+			}
+
 			if ( worker.itemInHands )
 			{
 				if ( worker.itemInHands == this )

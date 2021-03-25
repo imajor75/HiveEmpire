@@ -134,7 +134,7 @@ public class Serializer : JsonSerializer
 		catch ( System.Exception exception )
 		{
 			Debug.Log( exception.Message );
-			Assert.global.IsTrue( false, "Field type mismatch with " + type.Name + "." + i.Name );
+			Assert.global.Fail( "Field type mismatch with " + type.Name + "." + i.Name );
 		}
 	}
 
@@ -159,7 +159,7 @@ public class Serializer : JsonSerializer
 				}
 				catch ( SystemException exception )
 				{
-					Assert.global.IsTrue( false, "Error creating object of type " + type.FullName + " for " + owner );
+					Assert.global.Fail( "Error creating object of type " + type.FullName + " for " + owner );
 					throw exception;
 				}
 			}
