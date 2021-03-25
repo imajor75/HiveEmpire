@@ -423,6 +423,12 @@ public class Worker : HiveObject
 		{
 			boss.assert.AreEqual( boss, item.worker );
 			item.worker = null;
+			if ( item.justCreated )
+			{
+				// Item is hanging in the air, it never actually entered the logistic network
+				item.assert.IsNull( item.flag );
+				item.Remove( false );
+			}
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
