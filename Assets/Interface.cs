@@ -248,6 +248,8 @@ public class Interface : HiveObject
 		}
 		if ( !world.gameInProgress )
 			NewGame( 1299783286 );
+
+		Main.Create().Open();
 	}
 
 	void NewGame( int seed )
@@ -326,11 +328,6 @@ public class Interface : HiveObject
 			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
 			Load( myFile.FullName );
 		}
-		if ( GetKeyDown( KeyCode.N ) )
-		{
-			NewGame( new System.Random().Next() );
-			print( "New game created" );
-		}
 		if ( GetKeyDown( KeyCode.H ) )
 		{
 			History.Create().Open( mainPlayer );
@@ -357,7 +354,7 @@ public class Interface : HiveObject
 					break;
 				}
 				if ( !closedSomething )
-					MainMenu.Create().Open();
+					Main.Create().Open();
 			}
 		}
 		if ( GetKeyDown( KeyCode.M ) )
@@ -642,7 +639,7 @@ public class Interface : HiveObject
 
 		// Summary:
 		// Return true if the caller should give
-		public bool Open( HiveObject target = null, int x = 0, int y = 0 )
+		public bool Open( HiveObject target = null, int x = 0, int y = 0, int xs = 100, int ys = 100 )
 		{
 			foreach ( var panel in Root.panels )
 			{
@@ -658,8 +655,8 @@ public class Interface : HiveObject
 
 			if ( target == null && x == 0 && y == 0 )
 			{
-				x = Screen.width / 2 - 50;
-				y = -Screen.height / 2 - 50;
+				x = ( Screen.width - xs ) / 2;
+				y = -( Screen.height - ys ) / 2;
 			}
 			Root.panels.Add( this );
 			name = "Panel";
@@ -2253,10 +2250,14 @@ public class Interface : HiveObject
 
 		public GroundNode FindNodeAt( Vector3 screenPosition )
 		{
+			var c = World.instance.ground.collider;
+			if ( c == null )
+				return null;
+
 			if ( camera == null )
 				camera = World.instance.eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			if ( !World.instance.ground.collider.Raycast( ray, out RaycastHit hit, 1000 ) ) // TODO How long the ray should really be?
+			if ( !c.Raycast( ray, out RaycastHit hit, 1000 ) ) // TODO How long the ray should really be?
 				return null;
 
 			var ground = World.instance.ground;
@@ -2672,29 +2673,40 @@ public class Interface : HiveObject
 		}
 	}
 
-	public class MainMenu : Panel
+	public class Main : Panel
 	{
-		public static MainMenu Create()
+		InputField seed;
+
+		public static Main Create()
 		{
-			return new GameObject().AddComponent<MainMenu>();
+			return new GameObject().AddComponent<Main>();
 		}
 
 		public void Open()
 		{
-			base.Open();
-			name = "Main Menu";
+			base.Open( null, 0, 0, 450, 300 );
+			name = "Main Panel";
 			Frame( 0, 0, 450, 300 );
-			var newGameButton = Button( 20, -20, 100, 20, "Start New World" );
-			newGameButton.onClick.AddListener( StartNewGame );
-			InputField( 20, -40, 100, 25, "proba" );
-			InputField( 20, -80, 200, 25, "proba2" );
+			Button( 20, -20, 100, 20, "Continue" ).onClick.AddListener( Close );
 
-
+			Button( 20, -50, 200, 20, "Start New World" ).onClick.AddListener( StartNewGame );
+			Text( 20, -70, 50, 20, "Seed" );
+			seed = InputField( 80, -70, 100, 25 );
+			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
+			Button( 200, -70, 200, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
+			escCloses = false;
+			RandomizeSeed();
 		}
 
 		void StartNewGame()
 		{
-			int j = 9;
+			root.NewGame( int.Parse( seed.text ) );
+			Close();
+		}
+
+		void RandomizeSeed()
+		{
+			seed.text = new System.Random().Next().ToString();
 		}
 	}
 
