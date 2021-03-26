@@ -769,7 +769,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( Flag.Create().Setup( node, owner ) == null )
 				return true;
 		}
-		if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+		if ( Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
 			Flag.Create().Setup( node, owner );
 
 		if ( tempNodes == 0 )
