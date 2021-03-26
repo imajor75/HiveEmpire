@@ -112,7 +112,7 @@ public class Interface : HiveObject
 		if ( EventSystem.current.currentSelectedGameObject != null )
 			return false;
 
-		return Interface.GetKey( key );
+		return Input.GetKey( key );
 	}
 
 	public static bool GetKeyDown( KeyCode key )
@@ -120,7 +120,7 @@ public class Interface : HiveObject
 		if ( EventSystem.current.currentSelectedGameObject != null )
 			return false;
 
-		return Interface.GetKeyDown( key );
+		return Input.GetKeyDown( key );
 	}
 
 	void FixedUpdate()
@@ -281,12 +281,12 @@ public class Interface : HiveObject
 
 		if ( world.timeFactor != 0 && world.timeFactor != 8 )
 		{
-			if ( Interface.GetKey( KeyCode.Space ) )
+			if ( GetKey( KeyCode.Space ) )
 				world.SetTimeFactor( 5 );
 			else
 				world.SetTimeFactor( 1 );
 		}
-		if ( Interface.GetKey( KeyCode.R ) )
+		if ( GetKey( KeyCode.R ) )
 		{
 			bool localReset = false;
 			foreach ( var panel in panels )
@@ -300,24 +300,24 @@ public class Interface : HiveObject
 			if ( !localReset )
 				world.Reset();
 		}
-		if ( Interface.GetKeyDown( KeyCode.Insert ) )
+		if ( GetKeyDown( KeyCode.Insert ) )
 			world.SetTimeFactor( 8 );
-		if ( Interface.GetKeyDown( KeyCode.Delete ) )
+		if ( GetKeyDown( KeyCode.Delete ) )
 			world.SetTimeFactor( 1 );
-		if ( Interface.GetKeyDown( KeyCode.Pause ) )
+		if ( GetKeyDown( KeyCode.Pause ) )
 		{
 			if ( world.timeFactor > 0 )
 				world.SetTimeFactor( 0 );
 			else
 				world.SetTimeFactor( 1 );
 		}
-		if ( Interface.GetKeyDown( KeyCode.P ) )
+		if ( GetKeyDown( KeyCode.P ) )
 		{
 			string fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
 			world.Save( fileName );
 			print( fileName + " is saved" );
 		}
-		if ( Interface.GetKeyDown( KeyCode.L ) )
+		if ( GetKeyDown( KeyCode.L ) )
 		{
 			var panels = this.panels.GetRange( 0, this.panels.Count );
 			foreach ( var panel in panels )
@@ -326,24 +326,24 @@ public class Interface : HiveObject
 			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
 			Load( myFile.FullName );
 		}
-		if ( Interface.GetKeyDown( KeyCode.N ) )
+		if ( GetKeyDown( KeyCode.N ) )
 		{
 			NewGame( new System.Random().Next() );
 			print( "New game created" );
 		}
-		if ( Interface.GetKeyDown( KeyCode.H ) )
+		if ( GetKeyDown( KeyCode.H ) )
 		{
 			History.Create().Open( mainPlayer );
 		}
-		if ( Interface.GetKeyDown( KeyCode.I ) )
+		if ( GetKeyDown( KeyCode.I ) )
 		{
 			ItemList.Create().Open( mainPlayer );
 		}
-		if ( Interface.GetKeyDown( KeyCode.J ) )
+		if ( GetKeyDown( KeyCode.J ) )
 		{
 			ItemStats.Create().Open( mainPlayer );
 		}
-		if ( Interface.GetKeyDown( KeyCode.Escape ) )
+		if ( GetKeyDown( KeyCode.Escape ) )
 		{
 			if ( !viewport.ResetInputHandler() )
 			{
@@ -360,9 +360,9 @@ public class Interface : HiveObject
 					MainMenu.Create().Open();
 			}
 		}
-		if ( Interface.GetKeyDown( KeyCode.M ) )
-			Map.Create().Open( Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) );
-		if ( Interface.GetKeyDown( KeyCode.Alpha9 ) )
+		if ( GetKeyDown( KeyCode.M ) )
+			Map.Create().Open( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) );
+		if ( GetKeyDown( KeyCode.Alpha9 ) )
 			SetHeightStrips( !heightStrips );
 
 		CheckHighlight();
@@ -937,7 +937,7 @@ public class Interface : HiveObject
 
 			public void OnPointerClick( PointerEventData eventData )
 			{
-				if ( Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
+				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
 					area.center = null;
 					if ( root.highlightArea == area )
@@ -971,12 +971,12 @@ public class Interface : HiveObject
 			void Update()
 			{
 				image.color = area.center != null ? Color.green : Color.grey;
-				if ( Interface.GetKeyDown( KeyCode.Comma ) )
+				if ( GetKeyDown( KeyCode.Comma ) )
 				{
 					if ( area.radius > 1 )
 						area.radius--;
 				}
-				if ( Interface.GetKeyDown( KeyCode.Period ) )
+				if ( GetKeyDown( KeyCode.Period ) )
 				{
 					if ( area.radius < 8 )
 						area.radius++;
@@ -1425,12 +1425,12 @@ public class Interface : HiveObject
 
 		void SelectItemType( Item.Type itemType )
 		{
-			if ( Interface.GetKey( KeyCode.LeftAlt ) && Interface.GetKey( KeyCode.LeftControl ) )
+			if ( GetKey( KeyCode.LeftAlt ) && GetKey( KeyCode.LeftControl ) )
 			{
 				stock.content[(int)itemType] = 0;
 				return;
 			}
-			if ( Interface.GetKey( KeyCode.LeftShift ) && Interface.GetKey( KeyCode.LeftControl ) )
+			if ( GetKey( KeyCode.LeftShift ) && GetKey( KeyCode.LeftControl ) )
 			{
 				stock.content[(int)itemType]++;
 				return;
@@ -1488,12 +1488,12 @@ public class Interface : HiveObject
 
 		void SetTarget()
 		{
-			if ( Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
+			if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 			{
 				SelectBuilding( stock.destinations[(int)selectedItemType] );
 				return;
 			}
-			if ( Interface.GetKey( KeyCode.LeftControl ) || Interface.GetKey( KeyCode.RightControl ) )
+			if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
 			{
 				stock.destinations[(int)selectedItemType] = null;
 				RecreateControls();
@@ -1533,7 +1533,7 @@ public class Interface : HiveObject
 			inputMax.text = "<" + stock.inputMax[t];
 			outputMax.text = "<" + stock.outputMax[t];
 
-			if ( Interface.GetKeyDown( KeyCode.Mouse0 ) )
+			if ( GetKeyDown( KeyCode.Mouse0 ) )
 			{
 				lastMouseXPosition = Input.mousePosition.x;
 				var g = GetUIElementUnderCursor();
@@ -1569,7 +1569,7 @@ public class Interface : HiveObject
 
 			if ( listToChange != null )
 			{
-				if ( Interface.GetKey( KeyCode.Mouse0 ) )
+				if ( GetKey( KeyCode.Mouse0 ) )
 				{
 					int newValue = listToChange[(int)selectedItemType] + (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
 					if ( newValue < min )
@@ -2304,9 +2304,9 @@ public class Interface : HiveObject
 			if ( !inputHandler.OnMovingOverNode( node ) )
 				inputHandler = this;
 #if DEBUG
-			if ( Interface.GetKeyDown( KeyCode.PageUp ) && node )
+			if ( GetKeyDown( KeyCode.PageUp ) && node )
 				node.SetHeight( node.height + 0.05f );
-			if ( Interface.GetKeyDown( KeyCode.PageDown ) && node )
+			if ( GetKeyDown( KeyCode.PageDown ) && node )
 				node.SetHeight( node.height - 0.05f );
 #endif
 		}
