@@ -345,15 +345,18 @@ public class Interface : HiveObject
 			if ( !viewport.ResetInputHandler() )
 			{
 				bool closedSomething = false;
+				bool isMainOpen = false;
 				for ( int i = panels.Count - 1; i >= 0; i-- )
 				{
+					if ( panels[i] as Main )
+						isMainOpen = true;
 					if ( !panels[i].escCloses )
 						continue;
 					panels[panels.Count - 1].Close();
 					closedSomething = true;
 					break;
 				}
-				if ( !closedSomething )
+				if ( !closedSomething && !isMainOpen )
 					Main.Create().Open();
 			}
 		}
@@ -2686,8 +2689,10 @@ public class Interface : HiveObject
 	public class Main : Panel
 	{
 		InputField seed;
+		InputField saveName;
 		Dropdown loadNames;
 		FileSystemWatcher watcher;
+		bool loadNamesRefreshNeeded = true;
 
 		public static Main Create()
 		{
@@ -2696,9 +2701,9 @@ public class Interface : HiveObject
 
 		public void Open()
 		{
-			base.Open( null, 0, 0, 450, 300 );
+			base.Open( null, 0, 0, 350, 200 );
 			name = "Main Panel";
-			Frame( 0, 0, 450, 300 );
+			Frame( 0, 0, 350, 200 );
 			Button( 20, -20, 100, 20, "Continue" ).onClick.AddListener( Close );
 
 			Button( 20, -50, 200, 20, "Start New World" ).onClick.AddListener( StartNewGame );
@@ -2710,6 +2715,9 @@ public class Interface : HiveObject
 			Button( 20, -110, 200, 20, "Load" ).onClick.AddListener( Load );
 			loadNames = Dropdown( 80, -110, 200, 25 );
 
+			Button( 20, -140, 200, 20, "Save" ).onClick.AddListener( Save );
+			saveName = InputField( 80, -140, 100, 25 );
+			saveName.text = new System.Random().Next().ToString();
 
 			escCloses = false;
 			RandomizeSeed();
@@ -2717,7 +2725,13 @@ public class Interface : HiveObject
 			watcher.Created += SaveFolderChanged;
 			watcher.Deleted += SaveFolderChanged;
 			watcher.EnableRaisingEvents = true;
-			UpdateLoadNames();
+		}
+
+		new void Update()
+		{
+			base.Update();
+			if ( loadNamesRefreshNeeded )
+				UpdateLoadNames();
 		}
 
 		void StartNewGame()
@@ -2728,17 +2742,23 @@ public class Interface : HiveObject
 
 		void Load()
 		{
-			root.Load( loadNames.options[loadNames.value].text );
+			root.Load( Application.persistentDataPath + "/Saves/" + loadNames.options[loadNames.value].text );
 			Close();
+		}
+
+		void Save()
+		{
+			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json" );
 		}
 
 		void SaveFolderChanged( object sender, FileSystemEventArgs args )
 		{
-			UpdateLoadNames();
+			loadNamesRefreshNeeded = true;
 		}
 
 		void UpdateLoadNames()
 		{
+			loadNamesRefreshNeeded = false;
 			loadNames.ClearOptions();
 
 			List<string> files = new List<string>();
