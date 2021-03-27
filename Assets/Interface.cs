@@ -835,6 +835,16 @@ public class Interface : HiveObject
 			return i;
 		}
 
+		public Dropdown Dropdown( int x, int y, int xs, int ys, Component parent = null )
+		{
+			var o = Instantiate( Resources.Load<GameObject>( "Dropdown" ) );
+			var d = o.GetComponent<Dropdown>();
+			var image = d.GetComponent<Image>();
+			Init( image.rectTransform, x, y, xs, ys, parent );
+			d.name = "InputField";
+			return d;
+		}
+
 		public virtual void Close()
 		{
 			Destroy( gameObject );
@@ -2676,6 +2686,8 @@ public class Interface : HiveObject
 	public class Main : Panel
 	{
 		InputField seed;
+		Dropdown loadNames;
+		FileSystemWatcher watcher;
 
 		public static Main Create()
 		{
@@ -2694,14 +2706,51 @@ public class Interface : HiveObject
 			seed = InputField( 80, -70, 100, 25 );
 			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
 			Button( 200, -70, 200, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
+
+			Button( 20, -110, 200, 20, "Load" ).onClick.AddListener( Load );
+			loadNames = Dropdown( 80, -110, 200, 25 );
+
+
 			escCloses = false;
 			RandomizeSeed();
+			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
+			watcher.Created += SaveFolderChanged;
+			watcher.Deleted += SaveFolderChanged;
+			watcher.EnableRaisingEvents = true;
+			UpdateLoadNames();
 		}
 
 		void StartNewGame()
 		{
 			root.NewGame( int.Parse( seed.text ) );
 			Close();
+		}
+
+		void Load()
+		{
+			root.Load( loadNames.options[loadNames.value].text );
+			Close();
+		}
+
+		void SaveFolderChanged( object sender, FileSystemEventArgs args )
+		{
+			UpdateLoadNames();
+		}
+
+		void UpdateLoadNames()
+		{
+			loadNames.ClearOptions();
+
+			List<string> files = new List<string>();
+			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+			if ( !directory.Exists )
+				return;
+
+			var saveGameFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+			foreach ( var f in saveGameFiles )
+				files.Add( f.Name );
+
+			loadNames.AddOptions( files );
 		}
 
 		void RandomizeSeed()
