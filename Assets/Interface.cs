@@ -810,9 +810,15 @@ public class Interface : HiveObject
 
 		public Button Button( int x, int y, int xs, int ys, string text, Component parent = null )
 		{
+			const int border = 4;
 			Image i = Image( x, y, xs, ys, null, parent );
-			i.enabled = false;
-			Text( 0, 0, xs, ys, text, i );
+			i.sprite = Resources.Load<Sprite>( "simple UI & icons/button/button_round" );
+			i.type = UnityEngine.UI.Image.Type.Sliced;
+			i.pixelsPerUnitMultiplier = 6;
+			var t = Text( border, -border, xs - 2 * border, ys - 2 * border, text, i );
+			t.color = Color.black;
+			t.alignment = TextAnchor.MiddleCenter;
+			t.fontSize = 11;
 			return i.gameObject.AddComponent<Button>();
 		}
 
@@ -2703,19 +2709,19 @@ public class Interface : HiveObject
 		{
 			base.Open( null, 0, 0, 350, 200 );
 			name = "Main Panel";
-			Frame( 0, 0, 350, 200 );
-			Button( 20, -20, 100, 20, "Continue" ).onClick.AddListener( Close );
+			Frame( 0, 0, 300, 200 );
+			Button( 110, -20, 80, 20, "Continue" ).onClick.AddListener( Close );
 
-			Button( 20, -50, 200, 20, "Start New World" ).onClick.AddListener( StartNewGame );
+			Button( 90, -50, 120, 20, "Start New World" ).onClick.AddListener( StartNewGame );
 			Text( 20, -70, 50, 20, "Seed" );
 			seed = InputField( 80, -70, 100, 25 );
 			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
-			Button( 200, -70, 200, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
+			Button( 200, -70, 60, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
 
-			Button( 20, -110, 200, 20, "Load" ).onClick.AddListener( Load );
+			Button( 20, -110, 50, 20, "Load" ).onClick.AddListener( Load );
 			loadNames = Dropdown( 80, -110, 200, 25 );
 
-			Button( 20, -140, 200, 20, "Save" ).onClick.AddListener( Save );
+			Button( 20, -140, 50, 20, "Save" ).onClick.AddListener( Save );
 			saveName = InputField( 80, -140, 100, 25 );
 			saveName.text = new System.Random().Next().ToString();
 
