@@ -10,6 +10,7 @@ public class Flag : HiveObject
 	public const int maxItems = 8;
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
+	[JsonIgnore]
 	public GameObject[] frames = new GameObject[maxItems];
 	public Worker user;
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
@@ -137,7 +138,7 @@ public class Flag : HiveObject
 				return true;
 			}
 		}
-		item.assert.IsTrue( false, "Item not found at flag" );
+		item.assert.Fail( "Item not found at flag" );
 		return false;
 	}
 
@@ -159,7 +160,7 @@ public class Flag : HiveObject
 				return true;
 			}
 		}
-		assert.IsTrue( false );
+		assert.Fail();
 		return false;
 	}
 

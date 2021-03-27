@@ -107,6 +107,22 @@ public class Interface : HiveObject
 		Validate();
 	}
 
+	public static bool GetKey( KeyCode key )
+	{
+		if ( EventSystem.current.currentSelectedGameObject != null )
+			return false;
+
+		return Input.GetKey( key );
+	}
+
+	public static bool GetKeyDown( KeyCode key )
+	{
+		if ( EventSystem.current.currentSelectedGameObject != null )
+			return false;
+
+		return Input.GetKeyDown( key );
+	}
+
 	void FixedUpdate()
 	{
 		autoSave--;
@@ -232,6 +248,8 @@ public class Interface : HiveObject
 		}
 		if ( !world.gameInProgress )
 			NewGame( 1299783286 );
+
+		Main.Create().Open();
 	}
 
 	void NewGame( int seed )
@@ -265,12 +283,12 @@ public class Interface : HiveObject
 
 		if ( world.timeFactor != 0 && world.timeFactor != 8 )
 		{
-			if ( Input.GetKey( KeyCode.Space ) )
+			if ( GetKey( KeyCode.Space ) )
 				world.SetTimeFactor( 5 );
 			else
 				world.SetTimeFactor( 1 );
 		}
-		if ( Input.GetKey( KeyCode.R ) )
+		if ( GetKey( KeyCode.R ) )
 		{
 			bool localReset = false;
 			foreach ( var panel in panels )
@@ -284,65 +302,52 @@ public class Interface : HiveObject
 			if ( !localReset )
 				world.Reset();
 		}
-		if ( Input.GetKeyDown( KeyCode.Insert ) )
+		if ( GetKeyDown( KeyCode.Insert ) )
 			world.SetTimeFactor( 8 );
-		if ( Input.GetKeyDown( KeyCode.Delete ) )
+		if ( GetKeyDown( KeyCode.Delete ) )
 			world.SetTimeFactor( 1 );
-		if ( Input.GetKeyDown( KeyCode.Pause ) )
+		if ( GetKeyDown( KeyCode.Pause ) )
 		{
 			if ( world.timeFactor > 0 )
 				world.SetTimeFactor( 0 );
 			else
 				world.SetTimeFactor( 1 );
 		}
-		if ( Input.GetKeyDown( KeyCode.P ) )
-		{
-			string fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
-			world.Save( fileName );
-			print( fileName + " is saved" );
-		}
-		if ( Input.GetKeyDown( KeyCode.L ) )
-		{
-			var panels = this.panels.GetRange( 0, this.panels.Count );
-			foreach ( var panel in panels )
-				panel.Close();
-			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
-			Load( myFile.FullName );
-		}
-		if ( Input.GetKeyDown( KeyCode.N ) )
-		{
-			NewGame( new System.Random().Next() );
-			print( "New game created" );
-		}
-		if ( Input.GetKeyDown( KeyCode.H ) )
+		if ( GetKeyDown( KeyCode.H ) )
 		{
 			History.Create().Open( mainPlayer );
 		}
-		if ( Input.GetKeyDown( KeyCode.I ) )
+		if ( GetKeyDown( KeyCode.I ) )
 		{
 			ItemList.Create().Open( mainPlayer );
 		}
-		if ( Input.GetKeyDown( KeyCode.J ) )
+		if ( GetKeyDown( KeyCode.J ) )
 		{
 			ItemStats.Create().Open( mainPlayer );
 		}
-		if ( Input.GetKeyDown( KeyCode.Escape ) )
+		if ( GetKeyDown( KeyCode.Escape ) )
 		{
 			if ( !viewport.ResetInputHandler() )
 			{
+				bool closedSomething = false;
+				bool isMainOpen = false;
 				for ( int i = panels.Count - 1; i >= 0; i-- )
 				{
+					if ( panels[i] as Main )
+						isMainOpen = true;
 					if ( !panels[i].escCloses )
 						continue;
 					panels[panels.Count - 1].Close();
+					closedSomething = true;
 					break;
 				}
+				if ( !closedSomething && !isMainOpen )
+					Main.Create().Open();
 			}
 		}
-		if ( Input.GetKeyDown( KeyCode.M ) )
-			Map.Create().Open( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) );
-		if ( Input.GetKeyDown( KeyCode.Alpha9 ) )
+		if ( GetKeyDown( KeyCode.M ) )
+			Map.Create().Open( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) );
+		if ( GetKeyDown( KeyCode.Alpha9 ) )
 			SetHeightStrips( !heightStrips );
 
 		CheckHighlight();
@@ -622,7 +627,7 @@ public class Interface : HiveObject
 
 		// Summary:
 		// Return true if the caller should give
-		public bool Open( HiveObject target = null, int x = 0, int y = 0 )
+		public bool Open( HiveObject target = null, int x = 0, int y = 0, int xs = 100, int ys = 100 )
 		{
 			foreach ( var panel in Root.panels )
 			{
@@ -638,8 +643,8 @@ public class Interface : HiveObject
 
 			if ( target == null && x == 0 && y == 0 )
 			{
-				x = Screen.width / 2 - 50;
-				y = -Screen.height / 2 - 50;
+				x = ( Screen.width - xs ) / 2;
+				y = -( Screen.height - ys ) / 2;
 			}
 			Root.panels.Add( this );
 			name = "Panel";
@@ -790,9 +795,15 @@ public class Interface : HiveObject
 
 		public Button Button( int x, int y, int xs, int ys, string text, Component parent = null )
 		{
+			const int border = 4;
 			Image i = Image( x, y, xs, ys, null, parent );
-			i.enabled = false;
-			Text( 0, 0, xs, ys, text, i );
+			i.sprite = Resources.Load<Sprite>( "simple UI & icons/button/button_round" );
+			i.type = UnityEngine.UI.Image.Type.Sliced;
+			i.pixelsPerUnitMultiplier = 6;
+			var t = Text( border, -border, xs - 2 * border, ys - 2 * border, text, i );
+			t.color = Color.black;
+			t.alignment = TextAnchor.MiddleCenter;
+			t.resizeTextForBestFit = true;
 			return i.gameObject.AddComponent<Button>();
 		}
 
@@ -805,6 +816,27 @@ public class Interface : HiveObject
 			t.text = text;
 			t.color = Color.yellow;
 			return t;
+		}
+
+		public InputField InputField( int x, int y, int xs, int ys, string text = "", Component parent = null )
+		{
+			var o = Instantiate( Resources.Load<GameObject>( "InputField" ) );
+			var i = o.GetComponent<InputField>();
+			var image = i.GetComponent<Image>();
+			Init( image.rectTransform, x, y, xs, ys, parent );
+			i.name = "InputField";
+			i.text = text;
+			return i;
+		}
+
+		public Dropdown Dropdown( int x, int y, int xs, int ys, Component parent = null )
+		{
+			var o = Instantiate( Resources.Load<GameObject>( "Dropdown" ) );
+			var d = o.GetComponent<Dropdown>();
+			var image = d.GetComponent<Image>();
+			Init( image.rectTransform, x, y, xs, ys, parent );
+			d.name = "InputField";
+			return d;
 		}
 
 		public virtual void Close()
@@ -906,7 +938,7 @@ public class Interface : HiveObject
 
 			public void OnPointerClick( PointerEventData eventData )
 			{
-				if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
 					area.center = null;
 					if ( root.highlightArea == area )
@@ -940,12 +972,12 @@ public class Interface : HiveObject
 			void Update()
 			{
 				image.color = area.center != null ? Color.green : Color.grey;
-				if ( Input.GetKeyDown( KeyCode.Comma ) )
+				if ( GetKeyDown( KeyCode.Comma ) )
 				{
 					if ( area.radius > 1 )
 						area.radius--;
 				}
-				if ( Input.GetKeyDown( KeyCode.Period ) )
+				if ( GetKeyDown( KeyCode.Period ) )
 				{
 					if ( area.radius < 8 )
 						area.radius++;
@@ -1257,7 +1289,7 @@ public class Interface : HiveObject
 			if ( workshop.mode == Workshop.Mode.always )
 				return iconTable.GetMediaData( Icon.alarm );
 
-			workshop.assert.IsTrue( false );
+			workshop.assert.Fail();
 			return null;
 		}
 
@@ -1394,12 +1426,12 @@ public class Interface : HiveObject
 
 		void SelectItemType( Item.Type itemType )
 		{
-			if ( Input.GetKey( KeyCode.LeftAlt ) && Input.GetKey( KeyCode.LeftControl ) )
+			if ( GetKey( KeyCode.LeftAlt ) && GetKey( KeyCode.LeftControl ) )
 			{
 				stock.content[(int)itemType] = 0;
 				return;
 			}
-			if ( Input.GetKey( KeyCode.LeftShift ) && Input.GetKey( KeyCode.LeftControl ) )
+			if ( GetKey( KeyCode.LeftShift ) && GetKey( KeyCode.LeftControl ) )
 			{
 				stock.content[(int)itemType]++;
 				return;
@@ -1457,12 +1489,12 @@ public class Interface : HiveObject
 
 		void SetTarget()
 		{
-			if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+			if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 			{
 				SelectBuilding( stock.destinations[(int)selectedItemType] );
 				return;
 			}
-			if ( Input.GetKey( KeyCode.LeftControl ) || Input.GetKey( KeyCode.RightControl ) )
+			if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
 			{
 				stock.destinations[(int)selectedItemType] = null;
 				RecreateControls();
@@ -1502,7 +1534,7 @@ public class Interface : HiveObject
 			inputMax.text = "<" + stock.inputMax[t];
 			outputMax.text = "<" + stock.outputMax[t];
 
-			if ( Input.GetKeyDown( KeyCode.Mouse0 ) )
+			if ( GetKeyDown( KeyCode.Mouse0 ) )
 			{
 				lastMouseXPosition = Input.mousePosition.x;
 				var g = GetUIElementUnderCursor();
@@ -1538,7 +1570,7 @@ public class Interface : HiveObject
 
 			if ( listToChange != null )
 			{
-				if ( Input.GetKey( KeyCode.Mouse0 ) )
+				if ( GetKey( KeyCode.Mouse0 ) )
 				{
 					int newValue = listToChange[(int)selectedItemType] + (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
 					if ( newValue < min )
@@ -2222,10 +2254,14 @@ public class Interface : HiveObject
 
 		public GroundNode FindNodeAt( Vector3 screenPosition )
 		{
+			var c = World.instance.ground.collider;
+			if ( c == null )
+				return null;
+
 			if ( camera == null )
 				camera = World.instance.eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			if ( !World.instance.ground.collider.Raycast( ray, out RaycastHit hit, 1000 ) ) // TODO How long the ray should really be?
+			if ( !c.Raycast( ray, out RaycastHit hit, 1000 ) ) // TODO How long the ray should really be?
 				return null;
 
 			var ground = World.instance.ground;
@@ -2273,9 +2309,9 @@ public class Interface : HiveObject
 			if ( !inputHandler.OnMovingOverNode( node ) )
 				inputHandler = this;
 #if DEBUG
-			if ( Input.GetKeyDown( KeyCode.PageUp ) && node )
+			if ( GetKeyDown( KeyCode.PageUp ) && node )
 				node.SetHeight( node.height + 0.05f );
-			if ( Input.GetKeyDown( KeyCode.PageDown ) && node )
+			if ( GetKeyDown( KeyCode.PageDown ) && node )
 				node.SetHeight( node.height - 0.05f );
 #endif
 		}
@@ -2638,6 +2674,100 @@ public class Interface : HiveObject
 			record.text = "Record: " + a.record;
 			itemFrame.rectTransform.anchoredPosition = new Vector2( 17 + iconSize * (int)selected, -17 );
 			lastAverageEfficiency = player.averageEfficiencyHistory.current;
+		}
+	}
+
+	public class Main : Panel
+	{
+		InputField seed;
+		InputField saveName;
+		Dropdown loadNames;
+		FileSystemWatcher watcher;
+		bool loadNamesRefreshNeeded = true;
+
+		public static Main Create()
+		{
+			return new GameObject().AddComponent<Main>();
+		}
+
+		public void Open()
+		{
+			Open( null, ( Screen.width - 300 ) / 2, -Screen.height + 250 );
+
+			name = "Main Panel";
+			Frame( 0, 0, 300, 200 );
+			Button( 110, -20, 80, 20, "Continue" ).onClick.AddListener( Close );
+
+			Button( 90, -50, 120, 20, "Start New World" ).onClick.AddListener( StartNewGame );
+			Text( 20, -70, 50, 20, "Seed" );
+			seed = InputField( 80, -70, 100, 25 );
+			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
+			Button( 200, -70, 60, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
+
+			Button( 20, -110, 50, 20, "Load" ).onClick.AddListener( Load );
+			loadNames = Dropdown( 80, -110, 200, 25 );
+
+			Button( 20, -140, 50, 20, "Save" ).onClick.AddListener( Save );
+			saveName = InputField( 80, -140, 100, 25 );
+			saveName.text = new System.Random().Next().ToString();
+
+			escCloses = false;
+			RandomizeSeed();
+			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
+			watcher.Created += SaveFolderChanged;
+			watcher.Deleted += SaveFolderChanged;
+			watcher.EnableRaisingEvents = true;
+		}
+
+		new void Update()
+		{
+			base.Update();
+			if ( loadNamesRefreshNeeded )
+				UpdateLoadNames();
+		}
+
+		void StartNewGame()
+		{
+			root.NewGame( int.Parse( seed.text ) );
+			Close();
+		}
+
+		void Load()
+		{
+			root.Load( Application.persistentDataPath + "/Saves/" + loadNames.options[loadNames.value].text );
+			Close();
+		}
+
+		void Save()
+		{
+			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json" );
+		}
+
+		void SaveFolderChanged( object sender, FileSystemEventArgs args )
+		{
+			loadNamesRefreshNeeded = true;
+		}
+
+		void UpdateLoadNames()
+		{
+			loadNamesRefreshNeeded = false;
+			loadNames.ClearOptions();
+
+			List<string> files = new List<string>();
+			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+			if ( !directory.Exists )
+				return;
+
+			var saveGameFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+			foreach ( var f in saveGameFiles )
+				files.Add( f.Name );
+
+			loadNames.AddOptions( files );
+		}
+
+		void RandomizeSeed()
+		{
+			seed.text = new System.Random().Next().ToString();
 		}
 	}
 

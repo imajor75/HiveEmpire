@@ -35,9 +35,9 @@ public class Map : Interface.Panel
 	{
 		base.Update();
 
-		if ( Input.GetKey( KeyCode.Equals ) )
+		if ( Interface.GetKey( KeyCode.Equals ) )
 			zoom *= 0.97f;
-		if ( Input.GetKey( KeyCode.Minus ) )
+		if ( Interface.GetKey( KeyCode.Minus ) )
 			zoom *= 1.03f;
 		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
 			zoom *= 0.82f;
@@ -47,7 +47,7 @@ public class Map : Interface.Panel
 			zoom = zoomMin;
 		if ( zoom > zoomMax )
 			zoom = zoomMax;
-		if ( Input.GetKeyDown( KeyCode.Return ) )
+		if ( Interface.GetKeyDown( KeyCode.Return ) )
 		{
 			fullScreen = !fullScreen;
 			content.Setup( fullScreen );

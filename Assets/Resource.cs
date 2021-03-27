@@ -193,7 +193,7 @@ public class Resource : HiveObject
 					break;
 				}
 				else
-					assert.IsTrue( false );
+					assert.Fail();
 			}
 			spawn.Start( 1000 );
 		}

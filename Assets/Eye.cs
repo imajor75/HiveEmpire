@@ -107,22 +107,22 @@ public class Eye : MonoBehaviour
 	void FixedUpdate()
 	{
 		Vector3 movement = new Vector3();
-		if ( Input.GetKey( KeyCode.A ) )
+		if ( Interface.GetKey( KeyCode.A ) )
 		{
 			movement += transform.right * -0.1f * altitude / 6;
 			director = null;
 		}
-		if ( Input.GetKey( KeyCode.D ) )
+		if ( Interface.GetKey( KeyCode.D ) )
 		{
 			movement += transform.right * 0.1f * altitude / 6;
 			director = null;
 		}
-		if ( Input.GetKey( KeyCode.W ) )
+		if ( Interface.GetKey( KeyCode.W ) )
 		{
 			movement += transform.forward * 0.13f * altitude / 6;
 			director = null;
 		}
-		if ( Input.GetKey( KeyCode.S ) )
+		if ( Interface.GetKey( KeyCode.S ) )
 		{
 			movement += transform.forward * -0.13f * altitude / 6;
 			director = null;
@@ -130,18 +130,18 @@ public class Eye : MonoBehaviour
 		x += movement.x;
 		y += movement.z;
 
-		if ( Input.GetKey( KeyCode.Q ) )
+		if ( Interface.GetKey( KeyCode.Q ) )
 			direction += 0.03f;
-		if ( Input.GetKey( KeyCode.E ) )
+		if ( Interface.GetKey( KeyCode.E ) )
 			direction -= 0.03f;
 		if ( direction >= Math.PI * 2 )
 			direction -= (float)Math.PI * 2;
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
 
-		if ( Input.GetKey( KeyCode.Z ) )
+		if ( Interface.GetKey( KeyCode.Z ) )
 			targetAltitude *= 1.01f;
-		if ( Input.GetKey( KeyCode.X ) )
+		if ( Interface.GetKey( KeyCode.X ) )
 			targetAltitude *= 0.99f;
 		if ( camera == camera.enabled )
 		{

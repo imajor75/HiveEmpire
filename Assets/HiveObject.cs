@@ -44,7 +44,7 @@ public abstract class HiveObject : MonoBehaviour
 
 	public virtual bool Remove( bool takeYourTime = false )
 	{
-		assert.IsTrue( false );
+		assert.Fail();
 		return false;
 	}
 
