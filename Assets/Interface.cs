@@ -313,21 +313,6 @@ public class Interface : HiveObject
 			else
 				world.SetTimeFactor( 1 );
 		}
-		if ( GetKeyDown( KeyCode.P ) )
-		{
-			string fileName = Application.persistentDataPath+"/Saves/"+World.rnd.Next()+".json";
-			world.Save( fileName );
-			print( fileName + " is saved" );
-		}
-		if ( GetKeyDown( KeyCode.L ) )
-		{
-			var panels = this.panels.GetRange( 0, this.panels.Count );
-			foreach ( var panel in panels )
-				panel.Close();
-			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-			var myFile = directory.GetFiles().OrderByDescending( f => f.LastWriteTime ).First();
-			Load( myFile.FullName );
-		}
 		if ( GetKeyDown( KeyCode.H ) )
 		{
 			History.Create().Open( mainPlayer );
@@ -818,7 +803,7 @@ public class Interface : HiveObject
 			var t = Text( border, -border, xs - 2 * border, ys - 2 * border, text, i );
 			t.color = Color.black;
 			t.alignment = TextAnchor.MiddleCenter;
-			t.fontSize = 11;
+			t.resizeTextForBestFit = true;
 			return i.gameObject.AddComponent<Button>();
 		}
 
@@ -2707,7 +2692,8 @@ public class Interface : HiveObject
 
 		public void Open()
 		{
-			base.Open( null, 0, 0, 350, 200 );
+			Open( null, ( Screen.width - 300 ) / 2, -Screen.height + 250 );
+
 			name = "Main Panel";
 			Frame( 0, 0, 300, 200 );
 			Button( 110, -20, 80, 20, "Continue" ).onClick.AddListener( Close );
