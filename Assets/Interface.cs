@@ -249,7 +249,7 @@ public class Interface : HiveObject
 		if ( !world.gameInProgress )
 			NewGame( 1299783286 );
 
-		Main.Create().Open();
+		Main.Create().Open( true );
 	}
 
 	void NewGame( int seed )
@@ -2690,7 +2690,7 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<Main>();
 		}
 
-		public void Open()
+		public void Open( bool focusOnMainBuilding = false )
 		{
 			Open( null, ( Screen.width - 300 ) / 2, -Screen.height + 250 );
 
@@ -2717,6 +2717,15 @@ public class Interface : HiveObject
 			watcher.Created += SaveFolderChanged;
 			watcher.Deleted += SaveFolderChanged;
 			watcher.EnableRaisingEvents = true;
+
+			if ( focusOnMainBuilding )
+				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
+		}
+
+		void OnDestroy()
+		{
+			base.OnDestroy();
+			root.world.eye.ReleaseFocus( null, true );
 		}
 
 		new void Update()

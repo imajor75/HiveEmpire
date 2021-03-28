@@ -49,3 +49,4 @@ windowsbuild
 /*.png
 /Logs/ApiUpdaterCheck.txt
 /Logs/AssetImportWorker*.log
+/Logs

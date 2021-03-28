@@ -16,6 +16,8 @@ public class Eye : MonoBehaviour
 	public World world;
 	public float x, y;
 	public float direction;
+	public bool rotateAround;
+	float storedX, storedY, storedDirection;
 	public new Camera camera;
 	[JsonIgnore]
 	public IDirector director;
@@ -80,28 +82,49 @@ public class Eye : MonoBehaviour
 
 	public void GrabFocus( IDirector director )
 	{
+		storedX = x;
+		storedY = y;
+		storedDirection = direction;
 		this.director = director;
 	}
 
-	public void ReleaseFocus( IDirector director )
+	public void ReleaseFocus( IDirector director, bool restore = false )
 	{
 		if ( this.director == director )
 			this.director = null;
+
+		if ( restore )
+		{
+			x = storedX;
+			y = storedY;
+			direction = storedDirection;
+			rotateAround = false;
+		}
 	}
 
-	public void FocusOn( GroundNode node )
+	public void FocusOn( GroundNode node, bool rotateAround = false )
 	{
+		storedX = x;
+		storedY = y;
+		storedDirection = direction;
+
 		var p = node.Position;
 		x = p.x;
 		y = p.z;
 		director = null;
+		this.rotateAround = rotateAround;
 	}
 
-	public void FocusOn( Component component )
+	public void FocusOn( Component component, bool rotateAround = false )
 	{
+		storedX = x;
+		storedY = y;
+		storedDirection = direction;
+
 		x = component.transform.position.x;
 		y = component.transform.position.z;
 		director = null;
+		this.rotateAround = rotateAround;
 	}
 
 	void FixedUpdate()
@@ -134,6 +157,8 @@ public class Eye : MonoBehaviour
 			direction += 0.03f;
 		if ( Interface.GetKey( KeyCode.E ) )
 			direction -= 0.03f;
+		if ( rotateAround )
+			direction += 0.001f;
 		if ( direction >= Math.PI * 2 )
 			direction -= (float)Math.PI * 2;
 		if ( direction < 0 )
