@@ -98,7 +98,7 @@ public class World : MonoBehaviour
 			player.LateUpdate();
 	}
 
-	public void NewGame( int seed )
+	public void NewGame( int seed, int size = 64 )
 	{
 		Debug.Log( "Starting new game with seed " + seed );
 
@@ -109,7 +109,7 @@ public class World : MonoBehaviour
 		Prepare();
 
 		eye = Eye.Create().Setup( this );
-		ground = Ground.Create().Setup( this, seed );
+		ground = Ground.Create().Setup( this, seed, size, size );
 		GenerateResources();
 		var mainPlayer = Player.Create().Setup();
 		if ( mainPlayer )
