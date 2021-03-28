@@ -252,9 +252,9 @@ public class Interface : HiveObject
 		Main.Create().Open( true );
 	}
 
-	void NewGame( int seed )
+	void NewGame( int seed, int size = 64 )
 	{
-		world.NewGame( seed );
+		world.NewGame( seed, size );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
 		else
@@ -2683,6 +2683,7 @@ public class Interface : HiveObject
 		InputField saveName;
 		Dropdown loadNames;
 		FileSystemWatcher watcher;
+		Dropdown size;
 		bool loadNamesRefreshNeeded = true;
 
 		public static Main Create()
@@ -2695,20 +2696,28 @@ public class Interface : HiveObject
 			Open( null, ( Screen.width - 300 ) / 2, -Screen.height + 250 );
 
 			name = "Main Panel";
-			Frame( 0, 0, 300, 200 );
+			Frame( 0, 0, 300, 210 );
 			Button( 110, -20, 80, 20, "Continue" ).onClick.AddListener( Close );
+			Image( 20, -45, 260, 1 );
 
 			Button( 90, -50, 120, 20, "Start New World" ).onClick.AddListener( StartNewGame );
-			Text( 20, -70, 50, 20, "Seed" );
-			seed = InputField( 80, -70, 100, 25 );
+			Text( 20, -75, 40, 20, "Seed" ).fontSize = 12;
+			seed = InputField( 60, -70, 100, 25 );
 			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
-			Button( 200, -70, 60, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
+			Button( 165, -73, 60, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
+			Text( 20, -100, 30, 20, "Size" ).fontSize = 12;
+			size = Dropdown( 60, -95, 80, 25 );
+			size.ClearOptions();
+			size.AddOptions( new List<string>() { "Small", "Medium", "Big" } );
+			size.value = 1;
+			Image( 20, -125, 260, 1 );
 
-			Button( 20, -110, 50, 20, "Load" ).onClick.AddListener( Load );
-			loadNames = Dropdown( 80, -110, 200, 25 );
+			Button( 20, -133, 50, 20, "Load" ).onClick.AddListener( Load );
+			loadNames = Dropdown( 80, -130, 200, 25 );
+			Image( 20, -158, 260, 1 );
 
-			Button( 20, -140, 50, 20, "Save" ).onClick.AddListener( Save );
-			saveName = InputField( 80, -140, 100, 25 );
+			Button( 20, -168, 50, 20, "Save" ).onClick.AddListener( Save );
+			saveName = InputField( 80, -165, 100, 25 );
 			saveName.text = new System.Random().Next().ToString();
 
 			escCloses = false;
@@ -2722,7 +2731,7 @@ public class Interface : HiveObject
 				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
 		}
 
-		void OnDestroy()
+		new void OnDestroy()
 		{
 			base.OnDestroy();
 			root.world.eye.ReleaseFocus( null, true );
@@ -2737,7 +2746,7 @@ public class Interface : HiveObject
 
 		void StartNewGame()
 		{
-			root.NewGame( int.Parse( seed.text ) );
+			root.NewGame( int.Parse( seed.text ), 32 + 16 * size.value );
 			Close();
 		}
 
