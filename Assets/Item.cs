@@ -9,7 +9,7 @@ public class Item : HiveObject
 {
 	// The item is either at a flag (the flag member is not null) or in the hands of a worker (the worker member is not null and worker.itemInHands references this object)
 	// or special case: the item is a resource just created, and the worker (as a tinkerer) is about to pick it up
-	public bool justCreated;	// True if the item did not yet enter the world
+	public bool justCreated;    // True if the item did not yet enter the world
 	public Player owner;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
 	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
@@ -37,6 +37,9 @@ public class Item : HiveObject
 
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	static MediaTable<GameObject, Type> looks;
+
+	[JsonIgnore]
+	public bool Heavy { get { return true; } }
 
 	public enum Type
     {

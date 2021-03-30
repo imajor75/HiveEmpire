@@ -53,7 +53,7 @@ public class Worker : HiveObject
 	Animator animator;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
-	static public int walkingID, pickupID, putdownID;
+	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
 
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
@@ -407,7 +407,7 @@ public class Worker : HiveObject
 
 	public class PickupItem : Task
 	{
-		static public int pickupTimeStart = 60;
+		static public int pickupTimeStart = 120;
 		public Item item;
 		public Path path;
 		public World.Timer timer;
@@ -442,7 +442,7 @@ public class Worker : HiveObject
 			{
 				timer.Start( pickupTimeStart );
 				boss.animator?.ResetTrigger( putdownID );
-				boss.animator?.SetTrigger( pickupID );   // TODO Animation phase is not saved in file
+				boss.animator?.SetTrigger( item.Heavy ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file
 				item.transform.SetParent( boss.box.transform, false );
 				boss.box?.SetActive( true );
 			}
@@ -474,7 +474,7 @@ public class Worker : HiveObject
 
 	public class DeliverItem : Task
 	{
-		static public int putdownTimeStart = 60;
+		static public int putdownTimeStart = 120;
 		public Item item;
 		public World.Timer timer;
 
@@ -510,7 +510,8 @@ public class Worker : HiveObject
 				}
 				else
 				{
-					boss.animator?.ResetTrigger( pickupID );
+					boss.animator?.ResetTrigger( pickupHeavyID );
+					boss.animator?.ResetTrigger( pickupLightID );
 					boss.animator?.SetTrigger( putdownID );
 				}
 			}
@@ -630,11 +631,12 @@ public class Worker : HiveObject
 		boxTemplateWoman = Resources.Load<GameObject>( "prefabs/misc/box in woman hand" );
 		Assert.global.IsNotNull( boxTemplateWoman );
 
-		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
+		animationController = (RuntimeAnimatorController)Resources.Load( "animations/worker" );
 		Assert.global.IsNotNull( animationController );
-		walkingID = Animator.StringToHash( "Moving" );
-		pickupID = Animator.StringToHash( "CarryPickupTrigger" );
-		putdownID = Animator.StringToHash( "CarryPutdownTrigger" );
+		walkingID = Animator.StringToHash( "walk" );
+		pickupHeavyID = Animator.StringToHash( "pick up heavy" );
+		pickupLightID = Animator.StringToHash( "pick up light" );
+		putdownID = Animator.StringToHash( "put down" );
 
 		object[] sounds = {
 			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
