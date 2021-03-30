@@ -28,6 +28,7 @@ public class Worker : HiveObject
 	public World.Timer bored;
 	public static int boredTimeBeforeRemove = 6000;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
+	static public int[] resourceGetAnimations = new int[(int)Resource.Type.total];
 	static public MediaTable<AudioClip, Type> walkSounds;
 	[JsonIgnore]
 	public AudioSource soundSource;
@@ -50,10 +51,11 @@ public class Worker : HiveObject
 
 	public Building building;
 
-	Animator animator;
+	public Animator animator;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
 	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
+	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
 
 	public List<Task> taskQueue = new List<Task>();
 	GameObject body;
@@ -637,6 +639,13 @@ public class Worker : HiveObject
 		pickupHeavyID = Animator.StringToHash( "pick up heavy" );
 		pickupLightID = Animator.StringToHash( "pick up light" );
 		putdownID = Animator.StringToHash( "put down" );
+		choppingID = Animator.StringToHash( "chopping" );
+		miningID = Animator.StringToHash( "mining" );
+		skinningID = Animator.StringToHash( "skinning" );
+		buildingID = Animator.StringToHash( "building" );
+		fishingID = Animator.StringToHash( "fishing" );
+		shovelingID = Animator.StringToHash( "shoveling" );
+		harvestingID = Animator.StringToHash( "harvesting" );
 
 		object[] sounds = {
 			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
@@ -649,6 +658,14 @@ public class Worker : HiveObject
 
 		var tex = Resources.Load<Texture2D>( "arrow" );
 		arrowSprite = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
+
+		for ( int i = 0; i < (int)Resource.Type.total; i++ )
+			resourceGetAnimations[i] = -1;
+		resourceGetAnimations[(int)Resource.Type.cornfield] = harvestingID;
+		resourceGetAnimations[(int)Resource.Type.fish] = fishingID;
+		resourceGetAnimations[(int)Resource.Type.pasturingAnimal] = skinningID;
+		resourceGetAnimations[(int)Resource.Type.rock] = miningID;
+		resourceGetAnimations[(int)Resource.Type.tree] = choppingID;
 	}
 
 	static public Worker Create()

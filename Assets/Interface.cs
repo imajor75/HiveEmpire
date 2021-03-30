@@ -109,6 +109,7 @@ public class Interface : HiveObject
 
 	public static bool GetKey( KeyCode key )
 	{
+		var a = EventSystem.current.currentSelectedGameObject;
 		if ( EventSystem.current.currentSelectedGameObject != null )
 			return false;
 

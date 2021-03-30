@@ -180,8 +180,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( timer.Empty )
 				timer.Start( resourceCutTime[(int)resourceType] );
 
+			int animHash = Worker.resourceGetAnimations[(int)resourceType];
 			if ( !boss.soundSource.isPlaying )
 			{
+				if ( animHash != -1 )
+					boss.animator?.SetBool( animHash, true );
 				boss.soundSource.clip = Worker.resourceGetSounds.GetMediaData( resourceType );
 				boss.soundSource.loop = true;
 				boss.soundSource.Play();
@@ -190,6 +193,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( !timer.Done )    // TODO Working on the resource
 				return false;
 
+			if ( animHash != -1 )
+				boss.animator?.SetBool( animHash, false );
 			boss.soundSource.Stop();
 			Resource resource = node.resource;
 			if ( resource && resourceType != Resource.Type.fish )
