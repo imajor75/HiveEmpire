@@ -7,8 +7,6 @@ using UnityEngine.Profiling;
 [SelectionBase]
 public class Worker : HiveObject
 {
-	[JsonIgnore]
-	public bool hack;
 	public Type type;
 	public Ground ground;
 	public Player owner;
@@ -28,6 +26,7 @@ public class Worker : HiveObject
 	public World.Timer bored;
 	public static int boredTimeBeforeRemove = 6000;
 	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
+	static public int[] resourceGetAnimations = new int[(int)Resource.Type.total];
 	static public MediaTable<AudioClip, Type> walkSounds;
 	[JsonIgnore]
 	public AudioSource soundSource;
@@ -50,12 +49,15 @@ public class Worker : HiveObject
 
 	public Building building;
 
-	Animator animator;
+	[JsonIgnore]
+	public Animator animator;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
-	static public int walkingID, pickupID, putdownID;
+	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
+	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
 
 	public List<Task> taskQueue = new List<Task>();
+	public bool underControl;	// When this is true, something is giving tasks to the workers, no need to find a new task if the queue is empty.
 	GameObject body;
 	GameObject box;
 	readonly GameObject[] wheels = new GameObject[2];
@@ -407,7 +409,7 @@ public class Worker : HiveObject
 
 	public class PickupItem : Task
 	{
-		static public int pickupTimeStart = 60;
+		static public int pickupTimeStart = 120;
 		public Item item;
 		public Path path;
 		public World.Timer timer;
@@ -442,7 +444,7 @@ public class Worker : HiveObject
 			{
 				timer.Start( pickupTimeStart );
 				boss.animator?.ResetTrigger( putdownID );
-				boss.animator?.SetTrigger( pickupID );   // TODO Animation phase is not saved in file
+				boss.animator?.SetTrigger( item.Heavy ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file
 				item.transform.SetParent( boss.box.transform, false );
 				boss.box?.SetActive( true );
 			}
@@ -474,7 +476,7 @@ public class Worker : HiveObject
 
 	public class DeliverItem : Task
 	{
-		static public int putdownTimeStart = 60;
+		static public int putdownTimeStart = 120;
 		public Item item;
 		public World.Timer timer;
 
@@ -510,7 +512,8 @@ public class Worker : HiveObject
 				}
 				else
 				{
-					boss.animator?.ResetTrigger( pickupID );
+					boss.animator?.ResetTrigger( pickupHeavyID );
+					boss.animator?.ResetTrigger( pickupLightID );
 					boss.animator?.SetTrigger( putdownID );
 				}
 			}
@@ -599,6 +602,37 @@ public class Worker : HiveObject
 		}
 	}
 
+	public class Shoveling : Task
+	{
+		public int time;
+		public float level;
+		public World.Timer timer;
+
+		public void Setup( Worker boss, int time, float level )
+		{
+			base.Setup( boss );
+			this.time = time;
+			this.level = level;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			if ( timer.Empty )
+			{
+				timer.Start( time );
+				boss.animator?.SetBool( shovelingID, true );
+			}
+
+			if ( timer.Done )
+			{
+				boss.animator?.SetBool( shovelingID, false );
+				boss.node.SetHeight( level );
+				return true;
+			}
+			return false;
+		}
+	}
+
 	public enum Type
 	{
 		hauler,
@@ -630,11 +664,20 @@ public class Worker : HiveObject
 		boxTemplateWoman = Resources.Load<GameObject>( "prefabs/misc/box in woman hand" );
 		Assert.global.IsNotNull( boxTemplateWoman );
 
-		animationController = (RuntimeAnimatorController)Resources.Load( "Crafting Mecanim Animation Pack FREE/Prefabs/Crafter Animation Controller FREE" );
+		animationController = (RuntimeAnimatorController)Resources.Load( "animations/worker" );
 		Assert.global.IsNotNull( animationController );
-		walkingID = Animator.StringToHash( "Moving" );
-		pickupID = Animator.StringToHash( "CarryPickupTrigger" );
-		putdownID = Animator.StringToHash( "CarryPutdownTrigger" );
+		walkingID = Animator.StringToHash( "walk" );
+		pickupHeavyID = Animator.StringToHash( "pick up heavy" );
+		pickupLightID = Animator.StringToHash( "pick up light" );
+		putdownID = Animator.StringToHash( "put down" );
+		choppingID = Animator.StringToHash( "chopping" );
+		miningID = Animator.StringToHash( "mining" );
+		skinningID = Animator.StringToHash( "skinning" );
+		buildingID = Animator.StringToHash( "building" );
+		fishingID = Animator.StringToHash( "fishing" );
+		shovelingID = Animator.StringToHash( "shoveling" );
+		harvestingID = Animator.StringToHash( "harvesting" );
+		sowingID = Animator.StringToHash( "sowing" );
 
 		object[] sounds = {
 			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
@@ -647,6 +690,14 @@ public class Worker : HiveObject
 
 		var tex = Resources.Load<Texture2D>( "arrow" );
 		arrowSprite = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
+
+		for ( int i = 0; i < (int)Resource.Type.total; i++ )
+			resourceGetAnimations[i] = -1;
+		resourceGetAnimations[(int)Resource.Type.cornfield] = harvestingID;
+		resourceGetAnimations[(int)Resource.Type.fish] = fishingID;
+		resourceGetAnimations[(int)Resource.Type.pasturingAnimal] = skinningID;
+		resourceGetAnimations[(int)Resource.Type.rock] = miningID;
+		resourceGetAnimations[(int)Resource.Type.tree] = choppingID;
 	}
 
 	static public Worker Create()
@@ -770,6 +821,7 @@ public class Worker : HiveObject
 		animator = body.GetComponent<Animator>();
 		if ( animator )
 		{
+			animator.speed = ground.world.timeFactor;
 			animator.runtimeAnimatorController = animationController;
 			animator.applyRootMotion = false;
 		}
@@ -839,6 +891,7 @@ public class Worker : HiveObject
 	// Update is called once per frame
 	void FixedUpdate()
 	{
+		assert.IsNotSelected();
 		if ( type == Type.tinkerer && IsIdle( true ) )
 		{
 			gameObject.SetActive( false );
@@ -874,7 +927,7 @@ public class Worker : HiveObject
 			}
 			Profiler.EndSample();
 		}
-		if ( IsIdle() )
+		if ( IsIdle() && !underControl )
 		{
 			Profiler.BeginSample( "FindTask" );
 			FindTask();
@@ -1001,8 +1054,8 @@ public class Worker : HiveObject
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
+				ScheduleWalkToNeighbour( t );
 				ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
-				Walk( t );
 				return;
 			}
 		}
@@ -1048,6 +1101,7 @@ public class Worker : HiveObject
 
 		if ( type != Type.unemployed && building != null && node != building.node )
 		{
+			assert.AreEqual( type, Type.tinkerer );
 			ScheduleWait( 300 );
 			if ( node.flag )	// TODO Do something if the worker can't get home
 				ScheduleWalkToFlag( building.flag );
@@ -1312,6 +1366,13 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
+	public void ScheduleShoveling( int time, float level, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<Shoveling>();
+		instance.Setup( this, time, level );
+		ScheduleTask( instance, first );
+	}
+
 	public void ScheduleTask( Task task, bool first = false )
 	{
 		if ( first )
@@ -1370,6 +1431,14 @@ public class Worker : HiveObject
 	}
 
 	static readonly float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
+	public void TurnTo( GroundNode node, GroundNode from = null )
+	{
+		from ??= this.node;
+		int direction = from.DirectionTo( node );
+		assert.IsTrue( direction >= 0, "Asked to turn towards a distant node" );
+		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+	}
+
 	public void UpdateBody()
 	{
 		Profiler.BeginSample( "UpdateBody" );
@@ -1389,9 +1458,7 @@ public class Worker : HiveObject
 						return;
 					}
 
-					int direction = node.DirectionTo( task.road.nodes[task.wishedPoint] );
-					assert.IsTrue( direction >= 0 );
-					transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+					TurnTo( task.road.nodes[task.wishedPoint] );
 				}
 				bodyState = BodyState.standing;
 			}
@@ -1420,9 +1487,7 @@ public class Worker : HiveObject
 		else
 		{
 			transform.localPosition = Vector3.Lerp( walkFrom.Position, walkTo.Position, walkProgress ) + Vector3.up * GroundNode.size * Road.height;
-			int direction = walkFrom.DirectionTo( walkTo );
-			assert.IsTrue( direction >= 0 );
-			transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+			TurnTo( walkTo, walkFrom );
 		}
 
 		if ( walkTo )

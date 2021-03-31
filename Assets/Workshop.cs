@@ -180,8 +180,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( timer.Empty )
 				timer.Start( resourceCutTime[(int)resourceType] );
 
+			int animHash = Worker.resourceGetAnimations[(int)resourceType];
 			if ( !boss.soundSource.isPlaying )
 			{
+				if ( animHash != -1 )
+					boss.animator?.SetBool( animHash, true );
 				boss.soundSource.clip = Worker.resourceGetSounds.GetMediaData( resourceType );
 				boss.soundSource.loop = true;
 				boss.soundSource.Play();
@@ -190,6 +193,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( !timer.Done )    // TODO Working on the resource
 				return false;
 
+			if ( animHash != -1 )
+				boss.animator?.SetBool( animHash, false );
 			boss.soundSource.Stop();
 			Resource resource = node.resource;
 			if ( resource && resourceType != Resource.Type.fish )
@@ -241,7 +246,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return false;
 
 			if ( done )
+			{
+				boss.animator?.SetBool( Worker.sowingID, false );
 				return true;
+			}
 			if ( boss.node != node || node.building || node.flag || node.road || node.fixedHeight || node.resource || !node.CheckType( GroundNode.Type.land ) )
 			{
 				(boss.building as Workshop).SetWorking( false );
@@ -251,7 +259,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			Resource.Create().Setup( node, resourceType );
 			done = true;
 			boss.assert.IsNotNull( node.resource );
-			wait.Start( 100 );
+			wait.Start( 300 );
+			boss.animator?.SetBool( Worker.sowingID, true );
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
 			boss.ScheduleCall( boss.building as Workshop );
@@ -354,7 +363,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( Resource.IsUnderGround( (Resource.Type)i ) )
 				resourceCutTime[i] = 1000;
 			else if ( i == (int)Resource.Type.cornfield )
-				resourceCutTime[i] = 100;
+				resourceCutTime[i] = 300;
 			else
 				resourceCutTime[i] = 500;
 		}
@@ -466,6 +475,16 @@ public class Workshop : Building, Worker.Callback.IHandler
 		SetupConfiguration();
 
 		smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
+		if ( working && smoke )
+		{
+			var a = smoke.main;
+			var s = a.simulationSpeed;
+			a.simulationSpeed = 1;
+			smoke.Simulate( 10 );
+			smoke.Play();
+			var b = smoke.main;
+			b.simulationSpeed = s;
+		}
 	}
 
 	new void Update()
@@ -577,7 +596,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( workerMate == null )
 		{
 			workerMate = Worker.Create().SetupForBuilding( this, true );
-			workerMate.ScheduleWait( 50 );
+			workerMate.ScheduleWait( 100, true );
 		}
 
 		if ( Gatherer && worker.IsIdle() && worker.node == node )
@@ -862,6 +881,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public void Callback( Worker worker )
 	{
+		// Worker returned back from gathering resource
 		assert.AreEqual( worker, this.worker );
 		SetWorking( false );
 	}

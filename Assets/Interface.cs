@@ -34,6 +34,7 @@ public class Interface : HiveObject
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
 	public static Material materialUIPath;
+	static bool focusOnInputField;
 
 	public enum HighlightType
 	{
@@ -109,7 +110,7 @@ public class Interface : HiveObject
 
 	public static bool GetKey( KeyCode key )
 	{
-		if ( EventSystem.current.currentSelectedGameObject != null )
+		if ( focusOnInputField )
 			return false;
 
 		return Input.GetKey( key );
@@ -117,7 +118,7 @@ public class Interface : HiveObject
 
 	public static bool GetKeyDown( KeyCode key )
 	{
-		if ( EventSystem.current.currentSelectedGameObject != null )
+		if ( focusOnInputField )
 			return false;
 
 		return Input.GetKeyDown( key );
@@ -125,6 +126,11 @@ public class Interface : HiveObject
 
 	void FixedUpdate()
 	{
+		if ( EventSystem.current.currentSelectedGameObject != null && EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null )
+			focusOnInputField = true;
+		else
+			focusOnInputField = false;
+
 		autoSave--;
 		if ( autoSave < 0 )
 		{

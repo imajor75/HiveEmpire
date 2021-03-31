@@ -18,7 +18,7 @@ abstract public class Building : HiveObject
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	static readonly int flatteningTime = 300;
+	static readonly int flatteningTime = 200;
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
@@ -60,8 +60,9 @@ abstract public class Building : HiveObject
 		[JsonIgnore, Obsolete( "Old files", true )]
 		public int timeSinceCreated;
 		public bool flatteningNeeded;
-		public int flatteningCorner;
+		[JsonIgnore, Obsolete( "Compatibility for old files", true )]
 		public int flatteningCounter;
+		public int flatteningCorner;
 		public List<GroundNode> flatteningArea = new List<GroundNode>();
 		public World.Timer suspend;
 
@@ -127,27 +128,47 @@ abstract public class Building : HiveObject
 			}
 			if ( worker == null )
 				suspend.Start( 250 );
-			if ( worker == null || !worker.IsIdle( true ) )
+			if ( worker == null || !worker.IsIdle( false ) )
 				return;
 			if ( flatteningNeeded && flatteningCorner < flatteningArea.Count )
 			{
-				flatteningCounter++;
-				if ( flatteningCounter > flatteningTime / 6 )
+				if ( worker && worker.IsIdle() )
 				{
-					flatteningCounter = 0;
-					flatteningArea[flatteningCorner++].SetHeight( boss.node.height );
+					worker.ScheduleWalkToNode( flatteningArea[flatteningCorner++], true );
+					worker.ScheduleShoveling( flatteningTime, boss.node.height );
+					worker.ScheduleWalkToNode( boss.node, true );
 				}
 				return;
+			}
+			if ( progress == 0 )
+			{
+				if ( worker.node == boss.node )
+				{
+					worker.underControl = true; // What if the building is removed meanwhile?
+					var o = new Ground.Offset( 0, -1, 1 );
+					worker.Walk( boss.node.Add( o ) );
+					return;
+				}
+
+				worker.TurnTo( boss.node );
+				worker.animator?.SetBool( Worker.buildingID, true );
 			}
 			progress += 0.001f*boss.ground.world.timeFactor;	// TODO This should be different for each building type
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
+			{
 				progress = maxProgress;
+				worker.animator?.SetBool( Worker.buildingID, false );
+			}
+			else
+				worker.animator?.SetBool( Worker.buildingID, true );
 
 			if ( progress < 1 )
 				return;
 
 			done = true;
+			worker.animator?.SetBool( Worker.buildingID, false );
+			worker.underControl = false;
 			worker.ScheduleWalkToNeighbour( boss.flag.node );
 			worker.type = Worker.Type.unemployed;
 		}
