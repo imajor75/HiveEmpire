@@ -471,6 +471,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 		SetupConfiguration();
 
 		smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
+		if ( working )
+		{
+			smoke?.Simulate( 10 );
+			smoke?.Play();
+		}
 	}
 
 	new void Update()

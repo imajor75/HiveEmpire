@@ -858,6 +858,7 @@ public class Worker : HiveObject
 	// Update is called once per frame
 	void FixedUpdate()
 	{
+		assert.IsNotSelected();
 		if ( type == Type.tinkerer && IsIdle( true ) )
 		{
 			gameObject.SetActive( false );
