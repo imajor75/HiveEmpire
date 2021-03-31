@@ -7,8 +7,6 @@ using UnityEngine.Profiling;
 [SelectionBase]
 public class Worker : HiveObject
 {
-	[JsonIgnore]
-	public bool hack;
 	public Type type;
 	public Ground ground;
 	public Player owner;
@@ -51,6 +49,7 @@ public class Worker : HiveObject
 
 	public Building building;
 
+	[JsonIgnore]
 	public Animator animator;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
@@ -58,6 +57,7 @@ public class Worker : HiveObject
 	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
 
 	public List<Task> taskQueue = new List<Task>();
+	public bool underControl;	// When this is true, something is giving tasks to the workers, no need to find a new task if the queue is empty.
 	GameObject body;
 	GameObject box;
 	readonly GameObject[] wheels = new GameObject[2];
@@ -927,7 +927,7 @@ public class Worker : HiveObject
 			}
 			Profiler.EndSample();
 		}
-		if ( IsIdle() )
+		if ( IsIdle() && !underControl )
 		{
 			Profiler.BeginSample( "FindTask" );
 			FindTask();
@@ -1054,8 +1054,8 @@ public class Worker : HiveObject
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
+				ScheduleWalkToNeighbour( t );
 				ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
-				Walk( t );
 				return;
 			}
 		}
@@ -1101,6 +1101,7 @@ public class Worker : HiveObject
 
 		if ( type != Type.unemployed && building != null && node != building.node )
 		{
+			assert.AreEqual( type, Type.tinkerer );
 			ScheduleWait( 300 );
 			if ( node.flag )	// TODO Do something if the worker can't get home
 				ScheduleWalkToFlag( building.flag );
@@ -1430,6 +1431,14 @@ public class Worker : HiveObject
 	}
 
 	static readonly float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
+	public void TurnTo( GroundNode node, GroundNode from = null )
+	{
+		from ??= this.node;
+		int direction = from.DirectionTo( node );
+		assert.IsTrue( direction >= 0, "Asked to turn towards a distant node" );
+		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+	}
+
 	public void UpdateBody()
 	{
 		Profiler.BeginSample( "UpdateBody" );
@@ -1449,9 +1458,7 @@ public class Worker : HiveObject
 						return;
 					}
 
-					int direction = node.DirectionTo( task.road.nodes[task.wishedPoint] );
-					assert.IsTrue( direction >= 0 );
-					transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+					TurnTo( task.road.nodes[task.wishedPoint] );
 				}
 				bodyState = BodyState.standing;
 			}
@@ -1480,9 +1487,7 @@ public class Worker : HiveObject
 		else
 		{
 			transform.localPosition = Vector3.Lerp( walkFrom.Position, walkTo.Position, walkProgress ) + Vector3.up * GroundNode.size * Road.height;
-			int direction = walkFrom.DirectionTo( walkTo );
-			assert.IsTrue( direction >= 0 );
-			transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+			TurnTo( walkTo, walkFrom );
 		}
 
 		if ( walkTo )

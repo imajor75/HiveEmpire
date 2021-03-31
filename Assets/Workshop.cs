@@ -881,6 +881,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public void Callback( Worker worker )
 	{
+		// Worker returned back from gathering resource
 		assert.AreEqual( worker, this.worker );
 		SetWorking( false );
 	}
