@@ -246,7 +246,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return false;
 
 			if ( done )
+			{
+				boss.animator?.SetBool( Worker.sowingID, false );
 				return true;
+			}
 			if ( boss.node != node || node.building || node.flag || node.road || node.fixedHeight || node.resource || !node.CheckType( GroundNode.Type.land ) )
 			{
 				(boss.building as Workshop).SetWorking( false );
@@ -256,7 +259,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			Resource.Create().Setup( node, resourceType );
 			done = true;
 			boss.assert.IsNotNull( node.resource );
-			wait.Start( 100 );
+			wait.Start( 300 );
+			boss.animator?.SetBool( Worker.sowingID, true );
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
 			boss.ScheduleCall( boss.building as Workshop );
@@ -359,7 +363,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( Resource.IsUnderGround( (Resource.Type)i ) )
 				resourceCutTime[i] = 1000;
 			else if ( i == (int)Resource.Type.cornfield )
-				resourceCutTime[i] = 100;
+				resourceCutTime[i] = 300;
 			else
 				resourceCutTime[i] = 500;
 		}
@@ -471,10 +475,15 @@ public class Workshop : Building, Worker.Callback.IHandler
 		SetupConfiguration();
 
 		smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
-		if ( working )
+		if ( working && smoke )
 		{
-			smoke?.Simulate( 10 );
-			smoke?.Play();
+			var a = smoke.main;
+			var s = a.simulationSpeed;
+			a.simulationSpeed = 1;
+			smoke.Simulate( 10 );
+			smoke.Play();
+			var b = smoke.main;
+			b.simulationSpeed = s;
 		}
 	}
 

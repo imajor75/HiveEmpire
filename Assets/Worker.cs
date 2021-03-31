@@ -646,6 +646,7 @@ public class Worker : HiveObject
 		fishingID = Animator.StringToHash( "fishing" );
 		shovelingID = Animator.StringToHash( "shoveling" );
 		harvestingID = Animator.StringToHash( "harvesting" );
+		sowingID = Animator.StringToHash( "sowing" );
 
 		object[] sounds = {
 			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
@@ -789,6 +790,7 @@ public class Worker : HiveObject
 		animator = body.GetComponent<Animator>();
 		if ( animator )
 		{
+			animator.speed = ground.world.timeFactor;
 			animator.runtimeAnimatorController = animationController;
 			animator.applyRootMotion = false;
 		}
