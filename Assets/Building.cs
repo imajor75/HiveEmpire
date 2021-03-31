@@ -18,7 +18,7 @@ abstract public class Building : HiveObject
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	static readonly int flatteningTime = 300;
+	static readonly int flatteningTime = 100;
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
@@ -60,8 +60,9 @@ abstract public class Building : HiveObject
 		[JsonIgnore, Obsolete( "Old files", true )]
 		public int timeSinceCreated;
 		public bool flatteningNeeded;
-		public int flatteningCorner;
+		[JsonIgnore, Obsolete( "Compatibility for old files", true )]
 		public int flatteningCounter;
+		public int flatteningCorner;
 		public List<GroundNode> flatteningArea = new List<GroundNode>();
 		public World.Timer suspend;
 
@@ -131,11 +132,10 @@ abstract public class Building : HiveObject
 				return;
 			if ( flatteningNeeded && flatteningCorner < flatteningArea.Count )
 			{
-				flatteningCounter++;
-				if ( flatteningCounter > flatteningTime / 6 )
+				if ( worker && worker.IsIdle() )
 				{
-					flatteningCounter = 0;
-					flatteningArea[flatteningCorner++].SetHeight( boss.node.height );
+					worker.ScheduleWalkToNode( flatteningArea[flatteningCorner++], true );
+					worker.ScheduleShoveling( flatteningTime, boss.node.height );
 				}
 				return;
 			}

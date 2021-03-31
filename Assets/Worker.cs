@@ -602,6 +602,37 @@ public class Worker : HiveObject
 		}
 	}
 
+	public class Shoveling : Task
+	{
+		public int time;
+		public float level;
+		public World.Timer timer;
+
+		public void Setup( Worker boss, int time, float level )
+		{
+			base.Setup( boss );
+			this.time = time;
+			this.level = level;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			if ( timer.Empty )
+			{
+				timer.Start( time );
+				boss.animator?.SetBool( shovelingID, true );
+			}
+
+			if ( timer.Done )
+			{
+				boss.animator?.SetBool( shovelingID, false );
+				boss.node.SetHeight( level );
+				return true;
+			}
+			return false;
+		}
+	}
+
 	public enum Type
 	{
 		hauler,
@@ -1331,6 +1362,13 @@ public class Worker : HiveObject
 	{
 		var instance = ScriptableObject.CreateInstance<Wait>();
 		instance.Setup( this, time );
+		ScheduleTask( instance, first );
+	}
+
+	public void ScheduleShoveling( int time, float level, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<Shoveling>();
+		instance.Setup( this, time, level );
 		ScheduleTask( instance, first );
 	}
 

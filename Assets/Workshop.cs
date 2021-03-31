@@ -596,7 +596,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( workerMate == null )
 		{
 			workerMate = Worker.Create().SetupForBuilding( this, true );
-			workerMate.ScheduleWait( 50 );
+			workerMate.ScheduleWait( 100, true );
 		}
 
 		if ( Gatherer && worker.IsIdle() && worker.node == node )
