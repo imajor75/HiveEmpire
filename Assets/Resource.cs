@@ -60,12 +60,10 @@ public class Resource : HiveObject
 		"prefabs/trees/thin05", Type.tree,
 		"prefabs/trees/thin06", Type.tree,
 
-		"LowPoly Rocks/Prefabs/Rock1", Type.rock,
-		"LowPoly Rocks/Prefabs/Rock3", Type.rock,
-		"LowPoly Rocks/Prefabs/Rock9", Type.rock,
-		"Rocks pack Lite/Prefabs/Rock2", Type.rock,
-		"Rocks pack Lite/Prefabs/Rock1", Type.rock,
-		"Rocks pack Lite/Prefabs/Rock3", Type.rock,
+		"prefabs/rocks/rock01", Type.rock,
+		"prefabs/rocks/rock02", Type.rock,
+		"prefabs/rocks/rock03", Type.rock,
+		"prefabs/rocks/rock04", Type.rock,
 
 		"Ores/coaltable_final" , Type.coal,
 		"Ores/goldtable_final" , Type.gold,
