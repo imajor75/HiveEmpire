@@ -327,7 +327,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 
 		object[] looksData = {
-			"Medieval fantasy house/Medieva_fantasy_house",
 			"Medieval house/Medieval_house 1", 1.1f, Type.fishingHut,
 			"Baker House/Prefabs/Baker_house", 1.4f, Type.bakery, Type.hunter,
 			"Fantasy House/Prefab/Fantasy_House_6", 1.8f, Type.sawmill,

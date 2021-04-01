@@ -144,7 +144,7 @@ public class Assert
 		{
 
 			UnityEngine.Debug.Log( "code on selected from " + Caller( 2 ) );
-			int h = 3;
+			int h = 3; h++;
 		}
 #endif
 	}

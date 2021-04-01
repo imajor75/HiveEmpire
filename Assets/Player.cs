@@ -176,23 +176,43 @@ public class Player : ScriptableObject
 	{
 		GroundNode center = World.instance.ground.GetCenter(), best = null;
 		float heightdDif = float.MaxValue;
+		var area = Building.hugeArea;
+		List<Ground.Offset> extendedArea = new List<Ground.Offset>();
+		foreach ( var p in area )
+		{
+			foreach ( var o in Ground.areas[1] )
+			{
+				var n = p + o;
+				if ( !extendedArea.Contains( n ) )
+					extendedArea.Add( n );
+			}
+		}
+
 		foreach ( var o in Ground.areas[8] )
 		{
-			GroundNode node = center.Add( o );
-			if ( !node.CheckType( GroundNode.Type.land ) || node.owner != null )
+			GroundNode node = center + o;
+
+			bool invalidNode = false;
+			foreach ( var n in area )
+			{
+				var localNode = node + n;
+				if ( !localNode.CheckType( GroundNode.Type.land ) || localNode.owner != null || localNode.IsBlocking() )
+					invalidNode = true;
+			}
+			if ( invalidNode || node.Add( Building.flagOffset ).IsBlocking() )
 				continue;
-			if ( node.IsBlocking() || node.Add( Building.flagOffset ).IsBlocking() )
-				continue;
+
 			float min, max;
 			min = max = node.height;
-			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+			foreach ( var e in extendedArea )
 			{
-				if ( !node.Neighbour( i ).CheckType( GroundNode.Type.land ) )
+				var localNode = node + e;
+				if ( !localNode.CheckType( GroundNode.Type.land ) )
 				{
 					max = float.MaxValue;
 					break;
 				}
-				float height = node.Neighbour( i ).height;
+				float height = localNode.height;
 				if ( height < min )
 					min = height;
 				if ( height > max )
@@ -207,6 +227,12 @@ public class Player : ScriptableObject
 
 		if ( best == null )
 			return false;
+
+		foreach ( var j in extendedArea )
+		{
+			best.Add( j ).SetHeight( best.height );
+			best.Add( j ).owner = this;
+		}
 
 		Assert.global.IsNull( mainBuilding );
 		mainBuilding = Stock.Create();

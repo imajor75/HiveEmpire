@@ -258,6 +258,11 @@ public class GroundNode : HiveObject
 
 	public override GroundNode Node { get { return this; } }
 
+	public static GroundNode operator +( GroundNode node, Ground.Offset offset )
+	{
+		return node.Add( offset );
+	}
+
 	public override void Validate()
 	{
 		int o = 0;

@@ -749,13 +749,15 @@ public class Worker : HiveObject
 		owner = building.owner;
 		this.building = building;
 		Building main = owner.mainBuilding;
-		node = main.node;
-		if ( building != main )
+		if ( main && main != building )
 		{
+			node = main.node;
 			ScheduleWalkToNeighbour( main.flag.node );
 			ScheduleWalkToFlag( building.flag );
 			ScheduleWalkToNeighbour( building.node );
 		}
+		else
+			node = building.node;
 		return this;
 	}
 

@@ -15,8 +15,9 @@ public class Stock : Building
 	public Stock[] destinations = new Stock[(int)Item.Type.total];
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
-	public static GameObject template;
+	public static GameObject template, mainTemplate;
 	static Configuration configuration = new Configuration();
+	static Configuration mainConfiguration = new Configuration();
 	public Cart cart;
 	public Ground.Area inputArea = new Ground.Area();
 	public Ground.Area outputArea = new Ground.Area();
@@ -96,10 +97,13 @@ public class Stock : Building
 
 	public static new void Initialize()
 	{
-		template = Resources.Load<GameObject>( "Medieval fantasy house/stock" );
+		mainTemplate = Resources.Load<GameObject>( "prefabs/buildings/main" );
+		template = Resources.Load<GameObject>( "prefabs/buildings/stock" );
+
 		configuration.plankNeeded = 2;
 		configuration.stoneNeeded = 2;
 		configuration.flatteningNeeded = true;
+		mainConfiguration.huge = true;
 	}
 
 	public static Stock Create()
@@ -118,7 +122,7 @@ public class Stock : Building
 		construction.plankNeeded = 3;
 		construction.stoneNeeded = 3;
 		construction.flatteningNeeded = true;
-		height = 2;
+		height = 3;
 
 		while ( content.Count < (int)Item.Type.total )
 		{
@@ -129,7 +133,7 @@ public class Stock : Building
 			outputMin.Add( 0 );
 			outputMax.Add( maxItems / 20 );
 		}
-		if ( base.Setup( node, owner, configuration ) == null )
+		if ( base.Setup( node, owner, main ? mainConfiguration : configuration ) == null )
 			return null;
 
 		owner.RegisterStock( this );
@@ -141,14 +145,15 @@ public class Stock : Building
 
 	public Stock SetupMain( GroundNode node, Player owner )
 	{
+		main = true;
+		huge = true;
+
 		node.owner = owner;
-		foreach ( var o in Ground.areas[1] )
-			node.Add( o ).owner = owner;
 		if ( !Setup( node, owner ) )
 			return null;
 
 		title = "headquarter";
-		main = true;
+		height = 3;
 		construction = new Construction();
 		construction.boss = this;
 		construction.done = true;
@@ -175,7 +180,11 @@ public class Stock : Building
 
 	new void Start()
 	{
-		body = Instantiate( template, transform );
+		if ( main )
+			body = Instantiate( mainTemplate, transform );
+		else
+			body = Instantiate( template, transform );
+
 		base.Start();
 		if ( main )
 			name = "Headquarters";

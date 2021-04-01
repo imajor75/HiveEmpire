@@ -38,10 +38,14 @@ public class Ground : HiveObject
 		}
 		public int x;
 		public int y;
-		public int d;
+		public int d;	// -1 means unknown
 		public static Offset operator -( Offset o )
 		{
 			return new Offset( -o.x, -o.y, o.d );
+		}
+		public static Offset operator +( Offset a, Offset b )
+		{
+			return new Offset( a.x + b.x, a.y + b.y, -1 );
 		}
 	}
 
