@@ -333,7 +333,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"Fantasy House/Prefab/Fantasy_House_6", 1.8f, Type.sawmill,
 			"prefabs/buildings/smallCabin", 1.4f, Type.stonemason,
 			"WatchTower/Tower",
-			"Fantasy_Kingdom_Pack_Lite/Perfabs/Building Combination/BuildingAT07", 1.5f, Type.farm,
+			"prefabs/buildings/farm", 1.8f, Type.farm,
 			"mill/melnica_mod", 2.0f, Type.mill,
 			"Mines/saltmine_final", 1.5f, Type.saltmine,
 			"Mines/coalmine_final", 1.1f, Type.coalmine,

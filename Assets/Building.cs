@@ -342,9 +342,9 @@ abstract public class Building : HiveObject
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this );
-		highlightArrow = Instantiate( Resources.Load<GameObject>( "Fantasy_Kingdom_Pack_Lite/Perfabs/Main Structures/Decoration/Vane01_a01" ) );
+		highlightArrow = Instantiate( Resources.Load<GameObject>( "prefabs/others/gem" ) );
 		highlightArrow.transform.SetParent( transform );
-		highlightArrow.transform.localScale = Vector3.one * 0.6f;
+		highlightArrow.transform.localScale = Vector3.one * 3f;
 	}
 
 	public void FixedUpdate()
