@@ -47,10 +47,18 @@ public class Resource : HiveObject
 	public static void Initialize()
 	{
 		object[] meshes = {
-		"Tree/Tree 1", Type.tree,
-		"Tree/Tree 2", Type.tree,
-		"Tree/Tree 3", Type.tree,
-		"Tree/Tree 4", Type.tree,
+		//"prefabs/trees/large01", Type.tree,
+		//"prefabs/trees/large02", Type.tree,
+		"prefabs/trees/round01", Type.tree,
+		"prefabs/trees/round02", Type.tree,
+		"prefabs/trees/round03", Type.tree,
+		"prefabs/trees/round04", Type.tree,
+		"prefabs/trees/thin01", Type.tree,
+		"prefabs/trees/thin02", Type.tree,
+		"prefabs/trees/thin03", Type.tree,
+		"prefabs/trees/thin04", Type.tree,
+		"prefabs/trees/thin05", Type.tree,
+		"prefabs/trees/thin06", Type.tree,
 
 		"LowPoly Rocks/Prefabs/Rock1", Type.rock,
 		"LowPoly Rocks/Prefabs/Rock3", Type.rock,
