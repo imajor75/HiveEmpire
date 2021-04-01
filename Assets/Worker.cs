@@ -59,11 +59,8 @@ public class Worker : HiveObject
 	public List<Task> taskQueue = new List<Task>();
 	public bool underControl;	// When this is true, something is giving tasks to the workers, no need to find a new task if the queue is empty.
 	GameObject body;
-	GameObject box;
+	public GameObject haulingBox;
 	readonly GameObject[] wheels = new GameObject[2];
-	static GameObject boxTemplateBoy;
-	static GameObject boxTemplateMan;
-	static GameObject boxTemplateWoman;
 
 	BodyState bodyState = BodyState.unknown;
 
@@ -445,8 +442,8 @@ public class Worker : HiveObject
 				timer.Start( pickupTimeStart );
 				boss.animator?.ResetTrigger( putdownID );
 				boss.animator?.SetTrigger( item.Heavy ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file
-				item.transform.SetParent( boss.box.transform, false );
-				boss.box?.SetActive( true );
+				item.transform.SetParent( boss.haulingBox?.transform, false );
+				boss.haulingBox?.SetActive( true );
 			}
 			if ( !timer.Done )
 				return false;
@@ -507,7 +504,7 @@ public class Worker : HiveObject
 				timer.Start( putdownTimeStart );
 				if ( item.buddy )
 				{
-					item.buddy.transform.SetParent( boss.box.transform, false );
+					item.buddy.transform.SetParent( boss.haulingBox?.transform, false );
 					timer.reference -= 30;
 				}
 				else
@@ -522,7 +519,7 @@ public class Worker : HiveObject
 
 			boss.itemsDelivered++;
 			boss.bored.Start( boredTimeBeforeRemove );
-			boss.box?.SetActive( item.buddy != null );
+			boss.haulingBox?.SetActive( item.buddy != null );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 			{
@@ -650,19 +647,13 @@ public class Worker : HiveObject
 		object[] lookData = {
 		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a", Type.constructor, Type.tinkererMate,
 		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a", Type.tinkerer,
-		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Boy_Peasant_01_a", Type.hauler,
+		"prefabs/characters/hauler", Type.hauler,
 		"prefabs/characters/soldier", Type.soldier,
 		"Rabbits/Prefabs/Rabbit 1", Type.wildAnimal,
 		"Medieval village/Cart/PREFABs/cartRoot", Type.cart };
 
 		looks.Fill( lookData );
 
-		boxTemplateBoy = Resources.Load<GameObject>( "prefabs/misc/box in boy hand" );
-		Assert.global.IsNotNull( boxTemplateBoy );
-		boxTemplateMan = Resources.Load<GameObject>( "prefabs/misc/box in man hand" );
-		Assert.global.IsNotNull( boxTemplateMan );
-		boxTemplateWoman = Resources.Load<GameObject>( "prefabs/misc/box in woman hand" );
-		Assert.global.IsNotNull( boxTemplateWoman );
 
 		animationController = (RuntimeAnimatorController)Resources.Load( "animations/worker" );
 		Assert.global.IsNotNull( animationController );
@@ -797,16 +788,7 @@ public class Worker : HiveObject
 			transform.SetParent( node.ground.transform );
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
-		Transform hand = World.FindChildRecursive( body.transform, "RightHand" );
-		if ( hand != null )
-		{
-			if ( look == Type.hauler )
-				box = Instantiate( boxTemplateBoy, hand );
-			if ( look == Type.tinkerer )
-				box = Instantiate( boxTemplateMan, hand );
-			if ( look == Type.tinkererMate )
-				box = Instantiate( boxTemplateWoman, hand );
-		}
+		haulingBox = World.FindChildRecursive( body.transform, "haulingBox" )?.gameObject;
 		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
 		if ( shirt )
 		{
