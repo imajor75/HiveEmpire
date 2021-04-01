@@ -349,7 +349,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"SAdK/butcher_final", 1.8f, Type.butcher,
 			"SAdK/barrack_final", 1.5f, Type.barrack,
 			"SAdK/coinmaker_final", 2f, Type.coinmaker,
-			"Stylized Well/Well/Prefab", 1f, Type.well };
+			"prefabs/buildings/well", 1.1f, Type.well };
 		looks.Fill( looksData );
 		object[] sounds = {
 			"handsaw", Type.sawmill,
