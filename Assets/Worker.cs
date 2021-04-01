@@ -645,8 +645,9 @@ public class Worker : HiveObject
 	public static void Initialize()
 	{
 		object[] lookData = {
-		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Female_Peasant_01_a", Type.constructor, Type.tinkererMate,
-		"Polytope Studio/Lowpoly Medieval Characters/Prefabs/PT_Medieval_Male_Peasant_01_a", Type.tinkerer,
+		"prefabs/characters/peasant", Type.tinkerer,
+		"prefabs/characters/peasantFemale", Type.tinkererMate,
+		"prefabs/characters/blacksmith", Type.constructor,
 		"prefabs/characters/hauler", Type.hauler,
 		"prefabs/characters/soldier", Type.soldier,
 		"Rabbits/Prefabs/Rabbit 1", Type.wildAnimal,

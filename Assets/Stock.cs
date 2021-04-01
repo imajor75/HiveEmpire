@@ -96,7 +96,7 @@ public class Stock : Building
 
 	public static new void Initialize()
 	{
-		template = Resources.Load<GameObject>( "Medieval fantasy house/Medieva_fantasy_house" );
+		template = Resources.Load<GameObject>( "Medieval fantasy house/stock" );
 		configuration.plankNeeded = 2;
 		configuration.stoneNeeded = 2;
 		configuration.flatteningNeeded = true;
