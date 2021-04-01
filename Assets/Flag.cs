@@ -23,7 +23,7 @@ public class Flag : HiveObject
 
 	static public void Initialize()
 	{
-		template = (GameObject)Resources.Load( "Bizulka/Witchs_house/Prefabs/Pointer" );
+		template = (GameObject)Resources.Load( "prefabs/others/pathPointers" );
 		Assert.global.IsNotNull( template );
 	}
 
