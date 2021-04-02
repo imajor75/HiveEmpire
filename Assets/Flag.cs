@@ -74,8 +74,8 @@ public class Flag : HiveObject
 			t.SetParent( transform, false );
 			Vector3 pos;
 			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
-			pos.y = 0;
 			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
+			pos.y = node.ground.GetHeightAt( node.Position.x + pos.x, node.Position.z + pos.z ) - node.height;
 			t.localPosition = pos;
 			t.localScale = 0.1f * Vector3.one;
 			t.LookAt( transform );

@@ -114,7 +114,6 @@ public class Item : HiveObject
 			"prefabs/items/meat ribs", Type.pork,
 			"prefabs/items/pouch", Type.flour,
 			"prefabs/items/hay", Type.grain,
-			"prefabs/items/rock", Type.stone,
 			"prefabs/items/jar", Type.salt,
 			"prefabs/items/wood", Type.log
 		};
