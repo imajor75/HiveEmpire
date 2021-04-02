@@ -281,7 +281,6 @@ public class Road : HiveObject, Interface.IInputHandler
 				if ( tv > 1 )
 					tv = 2 - tv;
 				var pos = PositionAt(i, 1.0f / blocksInSection * b);
-				pos = transform.InverseTransformPoint( pos );
 				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
 				var side = new Vector3
 				{
@@ -303,6 +302,13 @@ public class Road : HiveObject, Interface.IInputHandler
 				vertices[v++] = pos + h + side;
 			}
 		}
+
+		for ( int i = 0; i < vertices.Length; i++ )
+		{
+			vertices[i].y = ground.GetHeightAt( vertices[i].x, vertices[i].z ) + 0.02f;	// Add 0.02f to avoid z fight.
+			vertices[i] = transform.InverseTransformPoint( vertices[i] );
+		}
+
 		assert.AreEqual( v, vertexRows * 3 );
 		mesh.vertices = vertices;
 		mesh.uv = uvs;
