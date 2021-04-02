@@ -407,6 +407,7 @@ public class Worker : HiveObject
 	public class PickupItem : Task
 	{
 		static public int pickupTimeStart = 120;
+		static public int pickupReparentTime = 60;
 		public Item item;
 		public Path path;
 		public World.Timer timer;
@@ -442,9 +443,14 @@ public class Worker : HiveObject
 				timer.Start( pickupTimeStart );
 				boss.animator?.ResetTrigger( putdownID );
 				boss.animator?.SetTrigger( item.Heavy ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file
+			}
+
+			if ( item.transform.parent != boss.haulingBox && timer.Age > -pickupReparentTime )
+			{
 				item.transform.SetParent( boss.haulingBox?.transform, false );
 				boss.haulingBox?.SetActive( true );
 			}
+
 			if ( !timer.Done )
 				return false;
 
@@ -474,6 +480,7 @@ public class Worker : HiveObject
 	public class DeliverItem : Task
 	{
 		static public int putdownTimeStart = 120;
+		static public int putdownRelinkTime = 80;
 		public Item item;
 		public World.Timer timer;
 
@@ -501,7 +508,7 @@ public class Worker : HiveObject
 		{
 			if ( timer.Empty )
 			{
-				timer.Start( putdownTimeStart );
+				timer.Start( putdownRelinkTime );
 				if ( item.buddy )
 				{
 					item.buddy.transform.SetParent( boss.haulingBox?.transform, false );
@@ -514,6 +521,11 @@ public class Worker : HiveObject
 					boss.animator?.SetTrigger( putdownID );
 				}
 			}
+
+			if ( item.transform.parent == boss.haulingBox && timer.Age > -putdownRelinkTime )
+			{
+			}
+
 			if ( !timer.Done )
 				return false;
 
@@ -543,6 +555,7 @@ public class Worker : HiveObject
 					return ResetBossTasks(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target
 			}
 
+			boss.ScheduleWait( putdownTimeStart - putdownRelinkTime, true );
 			return true;
 		}
 	}
