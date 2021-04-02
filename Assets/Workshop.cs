@@ -364,6 +364,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 				resourceCutTime[i] = 1000;
 			else if ( i == (int)Resource.Type.cornfield )
 				resourceCutTime[i] = 300;
+			else if ( i == (int)Resource.Type.tree || i == (int)Resource.Type.rock || i == (int)Resource.Type.pasturingAnimal )
+				resourceCutTime[i] = 0;
 			else
 				resourceCutTime[i] = 500;
 		}
@@ -830,7 +832,28 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
 			worker.ScheduleWalkToNeighbour( flag.node );
-			worker.ScheduleWalkToNode( target, true );
+			float interruptAt = 0;
+			int interruptionAnimation = -1;
+			int interruptionDuration = 0;
+			if ( resourceType == Resource.Type.tree )
+			{
+				interruptAt = 0.7f;
+				interruptionAnimation = Worker.choppingID;
+				interruptionDuration = 200;
+			}
+			if ( resourceType == Resource.Type.rock )
+			{
+				interruptAt = 0.7f;
+				interruptionAnimation = Worker.miningID;
+				interruptionDuration = 200;
+			}
+			if ( resourceType == Resource.Type.pasturingAnimal )
+			{
+				interruptAt = 0.8f;
+				interruptionAnimation = Worker.skinningID;
+				interruptionDuration = 200;
+			}
+			worker.ScheduleWalkToNode( target, true, false, interruptAt, interruptionAnimation, interruptionDuration );
 		}
 		resourcePlace = target;
 		var task = ScriptableObject.CreateInstance<GetResource>();

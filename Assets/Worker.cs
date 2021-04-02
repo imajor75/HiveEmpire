@@ -98,6 +98,7 @@ public class Worker : HiveObject
 			return this;
 		}
 		public virtual void Prepare() { }
+		public virtual bool InterruptWalk() { return false; }
 		public virtual bool ExecuteFrame() { return false; }
 		public virtual void Cancel() { }
 		public void ReplaceThisWith( Task another )
@@ -208,11 +209,42 @@ public class Worker : HiveObject
 		public Path path;
 		public bool ignoreFinalObstacle;
 
-		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false )
+		public World.Timer interruption;
+		public float interruptAt;
+		public int interruptionAnimation = -1;
+		public int interruptionDuration = 0;
+
+		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, float interruptAt = 0, int interruptionAnimation = -1, int interruptionDuration = 0 )
 		{
 			base.Setup( boss );
 			this.target = target;
 			this.ignoreFinalObstacle = ignoreFinalObstacle;
+			this.interruptionAnimation = interruptionAnimation;
+			this.interruptAt = interruptAt;
+			this.interruptionDuration = interruptionDuration;
+		}
+		public override bool InterruptWalk()
+		{
+			if ( interruption.InProgress )
+				return true;
+
+			if ( interruption.Done )
+			{
+				interruption.Reset();
+				boss.animator?.SetBool( interruptionAnimation, false );
+				boss.animator?.SetBool( walkingID, true );
+			}
+
+			if ( interruptionDuration > 0 && path && path.IsFinished && boss.walkProgress >= interruptAt )
+			{
+				boss.animator?.SetBool( walkingID, false );
+				boss.animator?.SetBool( interruptionAnimation, true );
+				interruption.Start( interruptionDuration );
+				interruptionDuration = 0;
+				return true;
+			}
+
+			return false;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -700,9 +732,6 @@ public class Worker : HiveObject
 			resourceGetAnimations[i] = -1;
 		resourceGetAnimations[(int)Resource.Type.cornfield] = harvestingID;
 		resourceGetAnimations[(int)Resource.Type.fish] = fishingID;
-		resourceGetAnimations[(int)Resource.Type.pasturingAnimal] = skinningID;
-		resourceGetAnimations[(int)Resource.Type.rock] = miningID;
-		resourceGetAnimations[(int)Resource.Type.tree] = choppingID;
 	}
 
 	static public Worker Create()
@@ -904,6 +933,8 @@ public class Worker : HiveObject
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
+			if ( taskQueue.Count > 0 && taskQueue[0].InterruptWalk() )
+				return;
 			walkProgress += currentSpeed * ground.world.timeFactor;
 			if ( walkProgress >= 1 )
 			{
@@ -1308,10 +1339,10 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false )
+	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, float interruptAt = 0, int interruptionAnimation = -1, int interruptionDuration = 0 )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
-		instance.Setup( this, target, ignoreFinalObstacle );
+		instance.Setup( this, target, ignoreFinalObstacle, interruptAt, interruptionAnimation, interruptionDuration );
 		ScheduleTask( instance, first );
 	}
 
