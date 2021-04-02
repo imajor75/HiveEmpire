@@ -60,6 +60,13 @@ public class Ground : HiveObject
 		mesh.name = "GroundMesh";
 		material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
 
+		n00x = GetNode( 0, 0 ).Position.x;
+		n00y = GetNode( 0, 0 ).Position.z;
+		n01x = GetNode( 0, 1 ).Position.x;
+		n01y = GetNode( 0, 1 ).Position.z;
+		n10x = GetNode( 1, 0 ).Position.x;
+		n10y = GetNode( 1, 0 ).Position.z;
+
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";
 	}
@@ -68,6 +75,8 @@ public class Ground : HiveObject
 	{
 		CreateAreas();
 	}
+
+	float n00x, n00y, n10x, n10y, n01x, n01y;
 
 	public Ground Setup( World world, int seed, int width = 64, int height = 64 )
 	{
@@ -82,6 +91,7 @@ public class Ground : HiveObject
 			for ( int y = 0; y <= height; y++ )
 				nodes[y * ( width + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
 		GenerateHeights();
+
 		return this;
     }
 
@@ -198,6 +208,35 @@ public class Ground : HiveObject
 			nodes = new GroundNode[( width + 1 ) * ( height + 1 )];
 
 		nodes[y * ( width + 1 ) + x] = node;
+	}
+
+	public float GetHeightAt( float x, float y )
+	{
+		float gridY = ( y - n00y ) / ( n01y - n00y );
+		float offset = gridY * ( n01x - n00x );
+		float gridX = ( x - offset - n00x ) / ( n10x - n00x );
+
+		int gridXNode = (int)Math.Floor( gridX );
+		int gridYNode = (int)Math.Floor( gridY );
+		if ( gridXNode < 0 || gridYNode < 0 || gridXNode >= width || gridYNode >= height )
+			return -1;
+		float gridXFrac = gridX - gridXNode;
+		float gridYFrac = gridY - gridYNode;
+
+		if ( gridXFrac + gridYFrac < 1 )
+		{
+			float wx = gridXFrac;
+			float wy = gridYFrac;
+			float wxy = 1 - gridXFrac - gridYFrac;
+			return GetNode( gridXNode, gridYNode ).height * wxy + GetNode( gridXNode + 1, gridYNode ).height * wx + GetNode( gridXNode, gridYNode + 1 ).height * wy;
+		}
+		else
+		{
+			float wx = 1 - gridXFrac;
+			float wy = 1 - gridYFrac;
+			float wxy = gridXFrac + gridYFrac - 1;
+			return GetNode( gridXNode + 1, gridYNode + 1 ).height * wxy + GetNode( gridXNode, gridYNode + 1 ).height * wx + GetNode( gridXNode + 1, gridYNode ).height * wy;
+		}
 	}
 
 	void UpdateMesh()

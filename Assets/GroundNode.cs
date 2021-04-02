@@ -64,7 +64,7 @@ public class GroundNode : HiveObject
 
 		Gizmos.color = Color.blue;
 		Gizmos.DrawCube( position, Vector3.one * 0.1f );
-		Handles.Label( position, x.ToString() + ":" + y.ToString() );
+		Handles.Label( position + Vector3.one * 0.1f, x.ToString() + ":" + y.ToString() );
 #endif
 	}
 

@@ -54,16 +54,15 @@ public class Eye : MonoBehaviour
 
 	private void Update()
 	{
-		Ray ray = new Ray( new Vector3( x, GroundNode.size * 50, y ), Vector3.down );
-		RaycastHit hit;
-		if ( world.ground.collider.Raycast( ray, out hit, GroundNode.size * 100 ) )
+		var h = World.instance.ground.GetHeightAt( x, y );
+		if ( h != -1 )
 		{
-			Vector3 position = hit.point;
-			if ( position.y < World.instance.waterLevel * World.instance.maxHeight )
-				position.y = World.instance.waterLevel * World.instance.maxHeight;
-			ear.position = position;
+			var p = new Vector3( x, h, y );
+			if ( h < World.instance.waterLevel * World.instance.maxHeight )
+				h = World.instance.waterLevel * World.instance.maxHeight;
+			ear.position = p;
 			Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
-			transform.position = position - viewer;
+			transform.position = p - viewer;
 			transform.LookAt( ear );
 		}
 		if ( director == null )
