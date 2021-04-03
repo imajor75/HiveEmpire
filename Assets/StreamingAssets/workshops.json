@@ -39,7 +39,7 @@
   },
   {
     "type": "mill",
-    "flatteningNeeded": false,
+    "flatteningNeeded": true,
     "outputType": "flour",
     "inputs": [
       {

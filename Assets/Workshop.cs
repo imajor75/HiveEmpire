@@ -17,7 +17,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
 	GameObject body;
-	Transform millWheel;
+	[JsonIgnore]
+	public Transform millWheel;
+	public float millWheelSpeed = 0;
 	public GroundNode resourcePlace;
 	public int itemsProduced;
 	public Productivity productivity = new Productivity( 0.5f );
@@ -333,7 +335,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"prefabs/buildings/smallCabin", 1.4f, Type.stonemason,
 			"WatchTower/Tower",
 			"prefabs/buildings/farm", 1.8f, Type.farm,
-			"mill/melnica_mod", 2.0f, Type.mill,
+			"prefabs/buildings/mill", 3.5f, Type.mill,
 			"Mines/saltmine_final", 1.5f, Type.saltmine,
 			"Mines/coalmine_final", 1.1f, Type.coalmine,
 			"Mines/ironmine_final", 1.5f, Type.ironmine,
@@ -456,10 +458,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		height = m.floatData;
 		assert.IsNotNull( body );
 		if ( type == Type.mill )
-		{
-			millWheel = body.transform.Find( "group1/millWheel" );
-			assert.IsNotNull( millWheel );
-		}
+			millWheel = body.transform.Find( "SM_Bld_Preset_House_Windmill_01_Blades_Optimized" );
 		base.Start();
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
@@ -708,7 +707,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 					ProcessInput();
 
 				if ( type == Type.mill && working )
-					millWheel?.Rotate( 0, 0, 1 );
+					millWheelSpeed += 0.01f;
+				else
+					millWheelSpeed -= 0.01f;
+				if ( millWheelSpeed > 1 )
+					millWheelSpeed = 1;
+				if ( millWheelSpeed < 0 )
+					millWheelSpeed = 0;
+				millWheel?.Rotate( 0, 0, World.instance.timeFactor * millWheelSpeed );
 				Profiler.EndSample();
 				break;
 			}
