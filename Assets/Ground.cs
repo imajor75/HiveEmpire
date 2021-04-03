@@ -246,16 +246,16 @@ public class Ground : HiveObject
 
 		if ( mesh.vertices == null || mesh.vertices.Length == 0 )
 		{
-			var vertices = new Vector3[(width+1)*(height+1)];
-			var uvs = new Vector2[(width+1)*(height+1)];
-			var colors = new Color[(width+1)*(height+1)];
+			int vertexCount = ( width + 1 ) * ( height + 1 ) * 6;
+			var vertices = new Vector3[vertexCount];
+			var colors = new Color[vertexCount];
+			assert.AreEqual( nodes.Length * 6, vertexCount );
 
-			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
+			for ( int i = 0; i < vertexCount; i++ )
 			{
-				var p = nodes[i].Position;
-				vertices[i] = p;
-				uvs[i] = new Vector2( p.x, p.z );
-				switch ( nodes[i].type )
+				GroundNode node = nodes[i/6];
+				vertices[i] = node.Position;
+				switch ( node.type )
 				{
 					case GroundNode.Type.grass:
 					case GroundNode.Type.underWater:
@@ -281,7 +281,6 @@ public class Ground : HiveObject
 				}
 			}
 			mesh.vertices = vertices;
-			mesh.uv = uvs;
 			mesh.colors = colors;
 
 			var triangles = new int[width*height*2*3];
@@ -290,12 +289,12 @@ public class Ground : HiveObject
 				for ( int y = 0; y < height; y++ )
 				{
 					var i = (y*width+x)*2*3;
-					triangles[i + 0] = ( y + 0 ) * ( width + 1 ) + ( x + 0 );
-					triangles[i + 1] = ( y + 1 ) * ( width + 1 ) + ( x + 0 );
-					triangles[i + 2] = ( y + 0 ) * ( width + 1 ) + ( x + 1 );
-					triangles[i + 3] = ( y + 0 ) * ( width + 1 ) + ( x + 1 );
-					triangles[i + 4] = ( y + 1 ) * ( width + 1 ) + ( x + 0 );
-					triangles[i + 5] = ( y + 1 ) * ( width + 1 ) + ( x + 1 );
+					triangles[i + 1] = ( ( y + 1 ) * ( width + 1 ) + ( x + 0 ) ) * 6 + 0;
+					triangles[i + 2] = ( ( y + 0 ) * ( width + 1 ) + ( x + 1 ) ) * 6 + 1;
+					triangles[i + 0] = ( ( y + 0 ) * ( width + 1 ) + ( x + 0 ) ) * 6 + 2;
+					triangles[i + 3] = ( ( y + 0 ) * ( width + 1 ) + ( x + 1 ) ) * 6 + 3;
+					triangles[i + 4] = ( ( y + 1 ) * ( width + 1 ) + ( x + 0 ) ) * 6 + 4;
+					triangles[i + 5] = ( ( y + 1 ) * ( width + 1 ) + ( x + 1 ) ) * 6 + 5;
 				}
 			}
 			mesh.triangles = triangles;
