@@ -248,6 +248,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	static readonly int blocksInSection = 8;
 	public void RebuildMesh( bool force = false )
 	{
+		const float width = 0.3f;
 		if ( mesh == null )
 			return; // The road was already destroyed in the past, but a reference keeps the script alive
 
@@ -295,11 +296,11 @@ public class Road : HiveObject, Interface.IInputHandler
 				}
 
 				uvs[v] = new Vector2(0.0f, tv );
-				vertices[v++] = pos + h - side;
+				vertices[v++] = pos + h - side * width;
 				uvs[v] = new Vector2(0.5f, tv );
 				vertices[v++] = pos + h;
 				uvs[v] = new Vector2(1.0f, tv );
-				vertices[v++] = pos + h + side;
+				vertices[v++] = pos + h + side * width;
 			}
 		}
 
