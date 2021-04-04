@@ -228,7 +228,7 @@ public class Stock : Building
 				var p = ItemDispatcher.Priority.stock;
 				if ( current < inputMin[itemType] )
 					p = ItemDispatcher.Priority.high;
-				if ( current >= inputMax[itemType] )
+				if ( current > inputMax[itemType] )
 					p = ItemDispatcher.Priority.zero;
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Max( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
 			}
@@ -237,7 +237,7 @@ public class Stock : Building
 				var p = ItemDispatcher.Priority.stock;
 				if ( current < outputMin[itemType] )
 					p = ItemDispatcher.Priority.zero;
-				if ( current >= outputMax[itemType] )
+				if ( current > outputMax[itemType] )
 					p = ItemDispatcher.Priority.high;
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea );
 			}

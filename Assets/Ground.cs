@@ -305,8 +305,16 @@ public class Ground : HiveObject
 		{
 			var vertices = mesh.vertices;
 			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
-				vertices[i] = nodes[i].Position;
+			{
+				vertices[i * 6 + 0] = nodes[i].Position;
+				vertices[i * 6 + 1] = nodes[i].Position;
+				vertices[i * 6 + 2] = nodes[i].Position;
+				vertices[i * 6 + 3] = nodes[i].Position;
+				vertices[i * 6 + 4] = nodes[i].Position;
+				vertices[i * 6 + 5] = nodes[i].Position;
+			}
 			mesh.vertices = vertices;
+			mesh.RecalculateNormals();
 			collider.sharedMesh = mesh;
 		}
 	}
