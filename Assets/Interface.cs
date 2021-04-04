@@ -2348,7 +2348,7 @@ public class Interface : HiveObject
 		{
 			if ( cursor == null )
 			{
-				cursor = GameObject.Instantiate( Resources.Load<GameObject>( "cursor" ) );
+				cursor = GameObject.Instantiate( Resources.Load<GameObject>( "prefabs/others/cursor" ) );
 				cursor.transform.SetParent( World.instance.ground.transform );
 				for ( int i = 0; i < cursorTypes.Length; i++ )
 				{

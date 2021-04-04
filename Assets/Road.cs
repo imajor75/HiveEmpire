@@ -790,7 +790,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				return false;
 		}
 
-		if ( node.IsBlocking() && node.flag == null )
+		if ( node.IsBlocking() && node.flag == null && node.road != this )
 			return true;
 
 		tempNodes = 0;

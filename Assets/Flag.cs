@@ -20,7 +20,7 @@ public class Flag : HiveObject
 	public Versioned itemsStored = new Versioned();
 	[JsonIgnore]
 	public bool debugSpawnPlank;
-	public const float itemSpread = 0.3f;
+	public const float itemSpread = 0.25f;
 
 	static public void Initialize()
 	{
