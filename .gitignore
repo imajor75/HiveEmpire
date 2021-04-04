@@ -51,3 +51,4 @@ windowsbuild
 /Logs/AssetImportWorker*.log
 /Logs
 /Assets/PolygonFantasyKingdom
+/TextFile1.txt

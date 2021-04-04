@@ -16,6 +16,7 @@ public class Flag : HiveObject
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
 	public Building building;
 	static GameObject template;
+	static GameObject baseTemplate;
 	public Versioned itemsStored = new Versioned();
 	[JsonIgnore]
 	public bool debugSpawnPlank;
@@ -25,6 +26,8 @@ public class Flag : HiveObject
 	{
 		template = (GameObject)Resources.Load( "prefabs/others/pathPointers" );
 		Assert.global.IsNotNull( template );
+		baseTemplate = (GameObject)Resources.Load( "prefabs/others/flagBase" );
+		Assert.global.IsNotNull( baseTemplate );
 	}
 
 	public static Flag Create()
@@ -58,11 +61,24 @@ public class Flag : HiveObject
 
 	void Start()
 	{
+		var gt = node.ground.transform;
 		gameObject.name = "Flag " + node.x + ", " + node.y;
-		transform.SetParent( node.ground.transform );
+		transform.SetParent( gt );
 		transform.localPosition = node.Position;
-		var body = Instantiate( template );
-		body.transform.SetParent( transform, false );
+		Instantiate( template ).transform.SetParent( transform, false );
+
+		var tiles = Instantiate( baseTemplate );
+		tiles.transform.SetParent( transform, false );
+		Mesh tileMesh = tiles.GetComponent<MeshFilter>().mesh;
+		var vertices = tileMesh.vertices;
+		for ( int i = 0; i < vertices.Length; i++ )
+		{
+			var groundPosition = gt.InverseTransformPoint( tiles.transform.TransformPoint( vertices[i] ) );
+			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z );
+			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
+		}
+		tileMesh.vertices = vertices;
+
 		UpdateBody();
 		for ( int i = 0; i < maxItems; i++ )
 		{
