@@ -68,34 +68,6 @@ public class Item : HiveObject
 
 	public static void Initialize()
 	{
-		string[] filenames = {
-			"log",
-			"rock",
-			"plank",
-			"fish",
-			"wheat",
-			"flour",
-			"salt",
-			"pretzel",
-			"hide",
-			"iron",
-			"coal",
-			"gold",
-			"crossbow",
-			"steel",
-			"weapon",
-			"water",
-			"beer",
-			"pork",
-			"coin"
-		};
-		for ( int i = 0; i < (int)Type.total; i++ )
-		{
-			Texture2D tex = Resources.Load<Texture2D>( filenames[i] );
-			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
-			Assert.global.IsNotNull( sprites[i] );
-		}
-
 		object[] looksData = {
 			"prefabs/items/common",
 			"prefabs/items/barrel dispenser", Type.beer,
@@ -118,6 +90,14 @@ public class Item : HiveObject
 			"prefabs/items/wood", Type.log
 		};
 		looks.Fill( looksData );
+
+		RuntimePreviewGenerator.BackgroundColor = new Color( 0.5f, 0.5f, 0.5f, 0 );
+		for ( int i = 0; i < (int)Type.total; i++ )
+		{
+			Texture2D tex = RuntimePreviewGenerator.GenerateModelPreview( looks.GetMediaData( (Type)i ).transform );
+			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
+			Assert.global.IsNotNull( sprites[i] );
+		}
 	}
 
 	public static Item Create()
