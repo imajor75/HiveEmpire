@@ -7,7 +7,7 @@ using UnityEngine.Assertions;
 public class Flag : HiveObject
 {
 	public Player owner;
-	public const int maxItems = 8;
+	public const int maxItems = 6;
 	public GroundNode node;
 	public Item[] items = new Item[maxItems];
 	[JsonIgnore]
