@@ -51,7 +51,7 @@
     "type": "bakery",
     "stoneNeeded": 2,
 	"outputStackSize": 2,
-    "flatteningNeeded": false,
+    "flatteningNeeded": true,
     "outputType": "pretzel",
     "inputs": [
       {
