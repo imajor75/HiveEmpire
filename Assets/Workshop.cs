@@ -330,7 +330,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		object[] looksData = {
 			"prefabs/buildings/fishingHut", 1.25f, Type.fishingHut,
-			"Baker House/Prefabs/Baker_house", 1.4f, Type.bakery, Type.hunter,
+			"Baker House/Prefabs/Baker_house", 1.4f, Type.bakery,
+			"prefabs/buildings/hunter", 1.1f, Type.hunter,
 			"prefabs/buildings/sawmill", 2.3f, Type.sawmill,
 			"prefabs/buildings/smallCabin", 1.4f, Type.stonemason,
 			"WatchTower/Tower",

@@ -65,7 +65,7 @@
   {
     "type": "hunter",
     "plankNeeded": 1,
-    "flatteningNeeded": false,
+    "flatteningNeeded": true,
     "gatheredResource": "pasturingAnimal",
     "outputType": "hide"
   },
