@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4453998131161577834}
   - component: {fileID: 4429425764408923002}
   m_Layer: 0
-  m_Name: SM_Item_Meat_Fish_02
+  m_Name: fish
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -52,6 +52,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1

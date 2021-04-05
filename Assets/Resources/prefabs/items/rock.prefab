@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3630210499508780082}
   - component: {fileID: 3662356408772742164}
   m_Layer: 0
-  m_Name: SM_Env_Rock_Chunk_03
+  m_Name: rock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26,7 +26,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3618215108510373802}
-  m_LocalRotation: {x: 0.16702764, y: -0.4015276, z: -0.099185474, w: 0.8950082}
+  m_LocalRotation: {x: 0.16702966, y: -0.40152472, z: -0.09918531, w: 0.89500916}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.2697119, y: 0.2697119, z: 0.2697119}
   m_Children: []
@@ -52,6 +52,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1

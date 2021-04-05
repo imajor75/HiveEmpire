@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5865223242961984971}
   - component: {fileID: 5896357243272524413}
   m_Layer: 0
-  m_Name: SM_Item_Ingot_Gold_01
+  m_Name: gold ignot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 5850713432688332323}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -0, y: -0.085, z: 0}
-  m_LocalScale: {x: 5.7026143, y: 5.7026143, z: 5.7026143}
+  m_LocalScale: {x: 5.7026143, y: 5.7026143, z: 8.558484}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -52,6 +52,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1

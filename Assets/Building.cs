@@ -271,7 +271,10 @@ abstract public class Building : HiveObject
 			{
 				foreach ( var b in Ground.areas[1] )
 				{
-					if ( basis.Add( b ).owner != owner )
+					var perim = basis.Add( b );
+					if ( perim.owner != owner )
+						return false;
+					if ( perim.fixedHeight )
 						return false;
 				}
 			}

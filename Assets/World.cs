@@ -255,7 +255,7 @@ public class World : MonoBehaviour
 		lightObject.name = "Sun";
 		light.transform.Rotate( new Vector3( 40, -60, 0 ) );
 		light.shadows = LightShadows.Soft;
-		light.color = new Color( 0.6f, 0.6f, 0.6f );
+		light.color = new Color( 1, 1, 1 );
 		light.transform.SetParent( transform );
 
 		maxHeight = 8;
