@@ -202,6 +202,7 @@ public class Interface : HiveObject
 
 	void Start()
 	{
+		GroundNode.Initialize();
 		Assert.Initialize();
 		World.Initialize();
 		Ground.Initialize();

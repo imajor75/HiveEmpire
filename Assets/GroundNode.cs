@@ -22,6 +22,10 @@ public class GroundNode : HiveObject
 	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
 	public bool fixedHeight;
 	public Type type;
+	static MediaTable<GameObject, Type> decorations;
+	const float decorationSpreadMin = 0.3f;
+	const float decorationSpreadMax = 0.6f;
+	const float decorationDensity = 0.2f;
 
 	public enum Type
 	{
@@ -33,6 +37,44 @@ public class GroundNode : HiveObject
 		land = grass + forest,
 		high = hill + mountain
 	}
+
+	public static void Initialize()
+	{
+		object[] decorationData = {
+			"prefabs/ground/bush00", Type.grass,
+			"prefabs/ground/bush01", Type.grass,
+			"prefabs/ground/bush02", Type.grass,
+			"prefabs/ground/fern00", Type.forest,
+			"prefabs/ground/fern01", Type.forest,
+			"prefabs/ground/fern02", Type.forest,
+			"prefabs/ground/flower01", Type.grass,
+			"prefabs/ground/flower02", Type.grass,
+			"prefabs/ground/flower03", Type.grass,
+			"prefabs/ground/flower04", Type.grass,
+			"prefabs/ground/flower00", Type.grass,
+			"prefabs/ground/grassTuft00", Type.grass,
+			"prefabs/ground/grassTuft01", Type.grass,
+			"prefabs/ground/grassTuft02", Type.grass,
+			"prefabs/ground/herb", Type.forest,
+			"prefabs/ground/ivy", Type.forest,
+			"prefabs/ground/leaves", Type.forest,
+			"prefabs/ground/mushroom00", Type.forest,
+			"prefabs/ground/mushroom01", Type.forest,
+			"prefabs/ground/reeds", Type.forest,
+			"prefabs/ground/treeBurnt", Type.forest,
+			"prefabs/ground/treeDead", Type.forest,
+			"prefabs/ground/woodPile", Type.forest,
+			"prefabs/ground/rock00", Type.hill,
+			"prefabs/ground/rock01", Type.hill,
+			"prefabs/ground/rock02", Type.hill,
+			"prefabs/ground/rock03", Type.hill,
+			"prefabs/ground/flower05", Type.hill,
+			"prefabs/ground/crystal", Type.hill,
+			"prefabs/ground/oreIron", Type.hill
+		};
+		decorations.Fill( decorationData );
+	}
+
 
 	static public GroundNode Create()
 	{
@@ -53,6 +95,24 @@ public class GroundNode : HiveObject
 		name = "GroundNode (" + x + ", " + y + ")";
 		transform.SetParent( World.nodes.transform );
 		transform.localPosition = Position;
+
+		// Decoration
+		World.rnd = new System.Random( (int)( height * 1000 ) );
+		for ( int i = 0; i < neighbourCount / 2; i++ )
+		{
+			if ( World.rnd.NextDouble() > decorationDensity )
+				continue;
+
+			var decoration = decorations.GetMediaData( type );
+			if ( decoration )
+			{
+				var d = Instantiate( decoration ).transform;
+				d.SetParent( transform, false );
+				var o = Neighbour( i );
+				var l = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
+				d.position = Position * ( 1 - l ) + o.Position * l;
+			}
+		}
 	}
 
 	void OnDrawGizmos()
