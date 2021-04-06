@@ -219,6 +219,7 @@
   },
   {
     "type": "brewery",
+	"huge": true,
     "stoneNeeded": 2,
     "outputType": "beer",
 	"outputStackSize": 2,

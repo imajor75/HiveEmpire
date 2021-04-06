@@ -348,7 +348,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"SAdK/weaponmaker_final", 1.7f, Type.weaponmaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowmaker,
-			"SAdK/brewery_final", 1.4f, Type.brewery,
+			"prefabs/buildings/brewery", 1.4f, Type.brewery,
 			"SAdK/butcher_final", 1.8f, Type.butcher,
 			"SAdK/barrack_final", 1.5f, Type.barrack,
 			"SAdK/coinmaker_final", 2f, Type.coinmaker,
