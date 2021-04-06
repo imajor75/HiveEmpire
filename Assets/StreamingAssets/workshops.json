@@ -175,6 +175,7 @@
   },
   {
     "type": "bowmaker",
+	"huge": true,
     "outputType": "bow",
     "inputs": [
       {
