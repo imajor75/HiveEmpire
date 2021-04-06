@@ -61,7 +61,7 @@ public class Worker : HiveObject
 	public GameObject haulingBox;
 	[JsonIgnore]
 	public GameObject[] links = new GameObject[(int)LinkType.total];
-	readonly GameObject[] wheels = new GameObject[2];
+	readonly GameObject[] wheels = new GameObject[4];
 
 	public enum LinkType
 	{
@@ -726,7 +726,7 @@ public class Worker : HiveObject
 		"prefabs/characters/hauler", Type.hauler,
 		"prefabs/characters/soldier", Type.soldier,
 		"Rabbits/Prefabs/Rabbit 1", Type.wildAnimal,
-		"Medieval village/Cart/PREFABs/cartRoot", Type.cart };
+		"prefabs/characters/cart", Type.cart };
 
 		looks.Fill( lookData );
 
@@ -926,8 +926,10 @@ public class Worker : HiveObject
 		}
 		else
 			animator = null;
-		wheels[0] = World.FindChildRecursive( body.transform, "cart_wheels_front" )?.gameObject;
-		wheels[1] = World.FindChildRecursive( body.transform, "cart_wheels_back" )?.gameObject;
+		wheels[0] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_fl" )?.gameObject;
+		wheels[1] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_fr" )?.gameObject;
+		wheels[2] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_rl" )?.gameObject;
+		wheels[3] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_rr" )?.gameObject;
 
 		UpdateBody();
 		name = type switch
@@ -1604,7 +1606,7 @@ public class Worker : HiveObject
 				{
 					if ( g == null )
 						continue;
-					g.transform.Rotate( 0, World.instance.timeFactor * currentSpeed * 300, 0 );
+					g.transform.Rotate( World.instance.timeFactor * currentSpeed * 300, 0, 0 );
 				}
 				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
 			}

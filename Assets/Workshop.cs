@@ -347,7 +347,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"Ores/geologist_final", 0.8f, Type.geologist,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"SAdK/weaponmaker_final", 1.7f, Type.weaponmaker,
-			"prefabs/buildings/bowmaker", 1.7f, Type.bowmaker,
+			"prefabs/buildings/bowmaker", 2.5f, Type.bowmaker,
 			"SAdK/brewery_final", 1.4f, Type.brewery,
 			"SAdK/butcher_final", 1.8f, Type.butcher,
 			"SAdK/barrack_final", 1.5f, Type.barrack,
