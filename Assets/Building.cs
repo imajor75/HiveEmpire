@@ -43,7 +43,7 @@ abstract public class Building : HiveObject
 	}
 
 	[System.Serializable]
-	public class Construction
+	public class Construction : Worker.Callback.IHandler
 	{
 		public Building boss;
 		public bool done;
@@ -135,7 +135,8 @@ abstract public class Building : HiveObject
 				if ( worker && worker.IsIdle() )
 				{
 					worker.ScheduleWalkToNode( flatteningArea[flatteningCorner++], true );
-					worker.ScheduleShoveling( flatteningTime, boss.node.height );
+					worker.ScheduleDoAct( Worker.shovelingAct );
+					worker.ScheduleCall( this );
 					worker.ScheduleWalkToNode( boss.node, true );
 				}
 				return;
@@ -240,6 +241,11 @@ abstract public class Building : HiveObject
 			worker?.Validate();
 			if ( !done )
 				boss.assert.AreEqual( plankOnTheWay + stoneOnTheWay, boss.itemsOnTheWay.Count );
+		}
+
+		public void Callback( Worker worker )
+		{
+			worker.node.SetHeight( boss.node.height );
 		}
 	}
 

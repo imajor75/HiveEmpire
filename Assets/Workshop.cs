@@ -182,12 +182,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( timer.Empty )
 				timer.Start( resourceCutTime[(int)resourceType] );
 
-			int animHash = Worker.resourceGetAnimations[(int)resourceType];
+			int animHash = Worker.resourceCollectAct[(int)resourceType].animation;
 			if ( !boss.soundSource.isPlaying )
 			{
 				if ( animHash != -1 )
 					boss.animator?.SetBool( animHash, true );
-				boss.soundSource.clip = Worker.resourceGetSounds.GetMediaData( resourceType );
+				boss.soundSource.clip = Worker.resourceCollectAct[(int)resourceType].sound;
 				boss.soundSource.loop = true;
 				boss.soundSource.Play();
 			}
@@ -839,28 +839,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
 			worker.ScheduleWalkToNeighbour( flag.node );
-			float interruptAt = 0;
-			int interruptionAnimation = -1;
-			int interruptionDuration = 0;
-			if ( resourceType == Resource.Type.tree )
-			{
-				interruptAt = 0.7f;
-				interruptionAnimation = Worker.choppingID;
-				interruptionDuration = 200;
-			}
-			if ( resourceType == Resource.Type.rock )
-			{
-				interruptAt = 0.7f;
-				interruptionAnimation = Worker.miningID;
-				interruptionDuration = 200;
-			}
-			if ( resourceType == Resource.Type.pasturingAnimal )
-			{
-				interruptAt = 0.8f;
-				interruptionAnimation = Worker.skinningID;
-				interruptionDuration = 200;
-			}
-			worker.ScheduleWalkToNode( target, true, false, interruptAt, interruptionAnimation, interruptionDuration );
+			worker.ScheduleWalkToNode( target, true, false, Worker.resourceCollectAct[(int)resourceType] );
 		}
 		resourcePlace = target;
 		var task = ScriptableObject.CreateInstance<GetResource>();

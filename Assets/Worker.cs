@@ -25,8 +25,6 @@ public class Worker : HiveObject
 	public int itemsDelivered;
 	public World.Timer bored;
 	public static int boredTimeBeforeRemove = 6000;
-	static public MediaTable<AudioClip, Resource.Type> resourceGetSounds;
-	static public int[] resourceGetAnimations = new int[(int)Resource.Type.total];
 	static public MediaTable<AudioClip, Type> walkSounds;
 	[JsonIgnore]
 	public AudioSource soundSource;
@@ -40,9 +38,9 @@ public class Worker : HiveObject
 	[JsonIgnore]
 	public bool debugReset;
 	static public int stuckTimeout = 3000;
-
-
 	static MediaTable<GameObject, Type> looks;
+	public static Act[] resourceCollectAct = new Act[(int)Resource.Type.total];
+	public static Act shovelingAct;
 
 	public Road road;
 	public bool onRoad;
@@ -59,8 +57,19 @@ public class Worker : HiveObject
 	public List<Task> taskQueue = new List<Task>();
 	public bool underControl;	// When this is true, something is giving tasks to the workers, no need to find a new task if the queue is empty.
 	GameObject body;
+	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 	public GameObject haulingBox;
+	[JsonIgnore]
+	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[2];
+
+	public enum LinkType
+	{
+		haulingBox,
+		rightHand,
+		leftHand,
+		total
+	}
 
 	BodyState bodyState = BodyState.unknown;
 
@@ -86,6 +95,16 @@ public class Worker : HiveObject
 			if ( mapMaterial )
 				mapMaterial.color = value;
 		}
+	}
+
+	public class Act
+	{
+		public float timeToInterrupt;
+		public int duration;
+		public int animation;
+		public AudioClip sound;
+		public GameObject toolTemplate;
+		public LinkType toolSlot;
 	}
 
 	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
@@ -148,6 +167,73 @@ public class Worker : HiveObject
 		}
 	}
 
+	public class DoAct : Task
+	{
+		public Act act;
+		public World.Timer timer;
+		public bool started = false;
+		GameObject tool;
+		public bool wasWalking;
+
+		public void Setup( Worker boss, Act act )
+		{
+			base.Setup( boss );
+			this.act = act;
+		}
+
+		public void Start()
+		{
+			if ( boss.animator )
+				wasWalking = boss.animator.GetBool( walkingID );
+			boss.animator?.SetBool( walkingID, false );
+			boss.animator?.SetBool( act.animation, true );
+			if ( act.toolTemplate )
+				tool = Instantiate( act.toolTemplate, boss.links[(int)act.toolSlot]?.transform );
+			timer.Start( act.duration );
+			started = true;
+		}
+
+		public void Stop()
+		{
+			timer.Reset();
+			boss.animator?.SetBool( act.animation, false );
+			boss.animator?.SetBool( walkingID, wasWalking );
+			if ( tool )
+				Destroy( tool );
+		}
+
+		public override bool InterruptWalk()
+		{
+			if ( timer.InProgress )
+				return true;
+
+			if ( timer.Done )
+				Stop();
+
+			if ( !started && boss.walkProgress >= act.timeToInterrupt )
+			{
+				Start();
+				return true;
+			}
+
+			return false;
+		}
+
+		public override bool ExecuteFrame()
+		{
+			if ( timer.InProgress )
+				return false;
+
+			if ( timer.Done )
+				Stop();
+
+			if ( started )
+				return true;
+
+			Start();
+			return false;
+		}
+	}
 	public class WalkToFlag : Task
 	{
 		public Flag target;
@@ -209,42 +295,15 @@ public class Worker : HiveObject
 		public Path path;
 		public bool ignoreFinalObstacle;
 
-		public World.Timer interruption;
-		public float interruptAt;
-		public int interruptionAnimation = -1;
-		public int interruptionDuration = 0;
+		public World.Timer interruptionTimer;
+		public Act lastStepInterruption;
 
-		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, float interruptAt = 0, int interruptionAnimation = -1, int interruptionDuration = 0 )
+		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null )
 		{
 			base.Setup( boss );
 			this.target = target;
 			this.ignoreFinalObstacle = ignoreFinalObstacle;
-			this.interruptionAnimation = interruptionAnimation;
-			this.interruptAt = interruptAt;
-			this.interruptionDuration = interruptionDuration;
-		}
-		public override bool InterruptWalk()
-		{
-			if ( interruption.InProgress )
-				return true;
-
-			if ( interruption.Done )
-			{
-				interruption.Reset();
-				boss.animator?.SetBool( interruptionAnimation, false );
-				boss.animator?.SetBool( walkingID, true );
-			}
-
-			if ( interruptionDuration > 0 && path && path.IsFinished && boss.walkProgress >= interruptAt )
-			{
-				boss.animator?.SetBool( walkingID, false );
-				boss.animator?.SetBool( interruptionAnimation, true );
-				interruption.Start( interruptionDuration );
-				interruptionDuration = 0;
-				return true;
-			}
-
-			return false;
+			this.lastStepInterruption = lastStepInterruption;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -261,6 +320,8 @@ public class Worker : HiveObject
 				}
 			}
 			boss.Walk( path.NextNode() );
+			if ( path.IsFinished && lastStepInterruption != null )
+				boss.ScheduleDoAct( lastStepInterruption, true );
 			return false;
 		}
 	}
@@ -477,10 +538,10 @@ public class Worker : HiveObject
 				boss.animator?.SetTrigger( item.Heavy ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file
 			}
 
-			if ( item.transform.parent != boss.haulingBox && timer.Age > -pickupReparentTime )
+			if ( item.transform.parent != boss.links[(int)LinkType.haulingBox] && timer.Age > -pickupReparentTime )
 			{
-				item.transform.SetParent( boss.haulingBox?.transform, false );
-				boss.haulingBox?.SetActive( true );
+				item.transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
+				boss.links[(int)LinkType.haulingBox]?.SetActive( true );
 			}
 
 			if ( !timer.Done )
@@ -543,7 +604,7 @@ public class Worker : HiveObject
 				timer.Start( putdownRelinkTime );
 				if ( item.buddy )
 				{
-					item.buddy.transform.SetParent( boss.haulingBox?.transform, false );
+					item.buddy.transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
 					timer.reference -= 30;
 				}
 				else
@@ -554,7 +615,7 @@ public class Worker : HiveObject
 				}
 			}
 
-			if ( item.transform.parent == boss.haulingBox && timer.Age > -putdownRelinkTime )
+			if ( item.transform.parent == boss.links[(int)LinkType.haulingBox] && timer.Age > -putdownRelinkTime )
 			{
 			}
 
@@ -563,7 +624,7 @@ public class Worker : HiveObject
 
 			boss.itemsDelivered++;
 			boss.bored.Start( boredTimeBeforeRemove );
-			boss.haulingBox?.SetActive( item.buddy != null );
+			boss.links[(int)LinkType.haulingBox]?.SetActive( item.buddy != null );
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 			{
@@ -644,37 +705,6 @@ public class Worker : HiveObject
 		}
 	}
 
-	public class Shoveling : Task
-	{
-		public int time;
-		public float level;
-		public World.Timer timer;
-
-		public void Setup( Worker boss, int time, float level )
-		{
-			base.Setup( boss );
-			this.time = time;
-			this.level = level;
-		}
-
-		public override bool ExecuteFrame()
-		{
-			if ( timer.Empty )
-			{
-				timer.Start( time );
-				boss.animator?.SetBool( shovelingID, true );
-			}
-
-			if ( timer.Done )
-			{
-				boss.animator?.SetBool( shovelingID, false );
-				boss.node.SetHeight( level );
-				return true;
-			}
-			return false;
-		}
-	}
-
 	public enum Type
 	{
 		hauler,
@@ -716,11 +746,11 @@ public class Worker : HiveObject
 		harvestingID = Animator.StringToHash( "harvesting" );
 		sowingID = Animator.StringToHash( "sowing" );
 
-		object[] sounds = {
-			"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
-			"Forest/treecut", Resource.Type.tree,
-			"Mines/pickaxe", Resource.Type.rock };
-		resourceGetSounds.Fill( sounds );
+		//object[] sounds = {
+		//	"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
+		//	"Forest/treecut", Resource.Type.tree,
+		//	"Mines/pickaxe", Resource.Type.rock };
+		//resourceGetSounds.Fill( sounds );
 		object[] walk = {
 			"cart", Type.cart };
 		walkSounds.Fill( walk );
@@ -728,10 +758,50 @@ public class Worker : HiveObject
 		var tex = Resources.Load<Texture2D>( "arrow" );
 		arrowSprite = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 
-		for ( int i = 0; i < (int)Resource.Type.total; i++ )
-			resourceGetAnimations[i] = -1;
-		resourceGetAnimations[(int)Resource.Type.cornfield] = harvestingID;
-		resourceGetAnimations[(int)Resource.Type.fish] = fishingID;
+		//float interruptAt = 0;
+		//int interruptionAnimation = -1;
+		//int interruptionDuration = 0;
+		//if ( resourceType == Resource.Type.tree )
+		//{
+		//	interruptAt = 0.7f;
+		//	interruptionAnimation = Worker.choppingID;
+		//	interruptionDuration = 200;
+		//}
+		//if ( resourceType == Resource.Type.rock )
+		//{
+		//	interruptAt = 0.7f;
+		//	interruptionAnimation = Worker.miningID;
+		//	interruptionDuration = 200;
+		//}
+		//if ( resourceType == Resource.Type.pasturingAnimal )
+		//{
+		//	interruptAt = 0.8f;
+		//	interruptionAnimation = Worker.skinningID;
+		//	interruptionDuration = 200;
+		//}
+		resourceCollectAct[(int)Resource.Type.tree] = new Act
+		{
+			animation = choppingID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/axe" ),
+			toolSlot = LinkType.leftHand,
+			timeToInterrupt = 0.7f,
+			duration = 200
+		};
+		resourceCollectAct[(int)Resource.Type.rock] = new Act
+		{
+			animation = miningID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/pickaxe" ),
+			toolSlot = LinkType.leftHand,
+			timeToInterrupt = 0.7f,
+			duration = 200
+		};
+		shovelingAct = new Act
+		{
+			animation = shovelingID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/shovel" ),
+			toolSlot = LinkType.leftHand,
+			duration = 200
+		};
 	}
 
 	static public Worker Create()
@@ -833,7 +903,9 @@ public class Worker : HiveObject
 			transform.SetParent( node.ground.transform );
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
-		haulingBox = World.FindChildRecursive( body.transform, "haulingBox" )?.gameObject;
+		links[(int)LinkType.haulingBox] = World.FindChildRecursive( body.transform, "haulingBox" )?.gameObject;
+		links[(int)LinkType.rightHand] = World.FindChildRecursive( body.transform, "Hand_R" )?.gameObject;
+		links[(int)LinkType.leftHand] = World.FindChildRecursive( body.transform, "Hand_L" )?.gameObject;
 		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
 		if ( shirt )
 		{
@@ -1339,10 +1411,10 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, float interruptAt = 0, int interruptionAnimation = -1, int interruptionDuration = 0 )
+	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
-		instance.Setup( this, target, ignoreFinalObstacle, interruptAt, interruptionAnimation, interruptionDuration );
+		instance.Setup( this, target, ignoreFinalObstacle, interruption );
 		ScheduleTask( instance, first );
 	}
 
@@ -1395,10 +1467,10 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleShoveling( int time, float level, bool first = false )
+	public void ScheduleDoAct( Act act, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<Shoveling>();
-		instance.Setup( this, time, level );
+		var instance = ScriptableObject.CreateInstance<DoAct>();
+		instance.Setup( this, act );
 		ScheduleTask( instance, first );
 	}
 
