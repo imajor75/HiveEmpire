@@ -15,7 +15,7 @@
         LOD 200
 
         CGPROGRAM
-        #pragma surface surf SimpleLambert fullforwardshadows
+        #pragma surface surf Standard fullforwardshadows
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
@@ -34,17 +34,17 @@
 		float _HeightMax;
         fixed4 _Color;
 
-		half4 LightingSimpleLambert(SurfaceOutput s, half3 lightDir, half atten) 
-		{
-			half3 modNormal = s.Normal;
-			//modNormal.y *= 0.35;
-			//modNormal = normalize( modNormal );
-			half NdotL = dot(modNormal, lightDir);
-			half4 c;
-			c.rgb = s.Albedo * _LightColor0.rgb * (NdotL * atten);
-			c.a = s.Alpha;
-			return c;
-		}
+		//half4 LightingSimpleLambert(SurfaceOutput s, half3 lightDir, half atten) 
+		//{
+		//	half3 modNormal = s.Normal;
+		//	//modNormal.y *= 0.35;
+		//	modNormal = normalize( modNormal );
+		//	half NdotL = dot(modNormal, lightDir);
+		//	half4 c;
+		//	c.rgb = s.Albedo * _LightColor0.rgb * (NdotL * atten);
+		//	c.a = s.Alpha;
+		//	return c;
+		//}
 
 		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -53,7 +53,7 @@
             // put more per-instance properties here
         UNITY_INSTANCING_BUFFER_END(Props)
 
-        void surf (Input IN, inout SurfaceOutput o)
+        void surf (Input IN, inout SurfaceOutputStandard o)
         {
 			const float noiseStrength = 0.3;
 			fixed noise = tex2D(_NoiseTex, IN.worldPos.xz / 5);
