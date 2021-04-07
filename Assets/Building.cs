@@ -18,7 +18,7 @@ abstract public class Building : HiveObject
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	static readonly int flatteningTime = 200;
+	public const int flatteningTime = 200;
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
@@ -409,7 +409,7 @@ abstract public class Building : HiveObject
 		construction.ItemArrived( item );
 	}
 
-	virtual public void OnClicked()
+	public override void OnClicked()
 	{
 		if ( !construction.done )
 			Interface.ConstructionPanel.Create().Open( construction );

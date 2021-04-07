@@ -455,6 +455,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		var m = looks.GetMedia( type );
 		body = Instantiate( m.data, transform );
+		body.layer = World.layerIndexPickable;
 		height = m.floatData;
 		assert.IsNotNull( body );
 		if ( type == Type.mill )

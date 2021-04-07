@@ -184,6 +184,7 @@ public class Stock : Building
 			body = Instantiate( mainTemplate, transform );
 		else
 			body = Instantiate( template, transform );
+		body.layer = World.layerIndexPickable;
 
 		base.Start();
 		if ( main )

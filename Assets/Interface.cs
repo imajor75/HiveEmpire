@@ -2259,6 +2259,29 @@ public class Interface : HiveObject
 			}
 		}
 
+		public HiveObject FindObjectAt( Vector3 screenPosition )
+		{
+			if ( camera == null )
+				camera = World.instance.eye.camera;
+			Ray ray = camera.ScreenPointToRay( screenPosition );
+			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexPickable ) ) // TODO How long the ray should really be?
+				return null;
+
+			var hiveObject = hit.collider.GetComponent<HiveObject>();
+			if ( hiveObject == null )
+				hiveObject = hit.collider.transform.parent.GetComponent<HiveObject>();
+			Assert.global.IsNotNull( hiveObject );
+
+			var ground = World.instance.ground;
+			if ( hiveObject == ground )
+			{
+				Vector3 localPosition = ground.transform.InverseTransformPoint( hit.point );
+				return GroundNode.FromPosition( localPosition, ground );
+			}
+			
+			return hiveObject;
+		}
+
 		public GroundNode FindNodeAt( Vector3 screenPosition )
 		{
 			var c = World.instance.ground.collider;
@@ -2278,9 +2301,20 @@ public class Interface : HiveObject
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			GroundNode node = FindNodeAt( Input.mousePosition );
-			if ( !inputHandler.OnNodeClicked( node ) )
-				inputHandler = this;
+			var hiveObject = FindObjectAt( Input.mousePosition );
+			if ( hiveObject == null )
+			{
+				UnityEngine.Debug.Log( "Clicked on nothing?" );
+				return;
+			}
+			var node = hiveObject as GroundNode;
+			if ( node )
+			{
+				if ( !inputHandler.OnNodeClicked( node ) )
+					inputHandler = this;
+			}
+			else
+				hiveObject.OnClicked();
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )

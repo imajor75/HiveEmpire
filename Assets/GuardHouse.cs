@@ -41,7 +41,7 @@ public class GuardHouse : Building
 
 	new void Start()
 	{
-		GameObject.Instantiate( template, transform );
+		Instantiate( template, transform ).layer = World.layerIndexPickable;
 		base.Start();
 	}
 

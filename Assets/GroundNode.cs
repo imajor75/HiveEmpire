@@ -286,7 +286,7 @@ public class GroundNode : HiveObject
 		return true;
 	}
 
-	public void OnClicked()
+	public override void OnClicked()
 	{
 		Interface.NodePanel.Create().Open( this );
 	}

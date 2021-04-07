@@ -55,6 +55,10 @@ public abstract class HiveObject : MonoBehaviour
 	{ 
 	}
 
+	public virtual void OnClicked()
+	{
+	}
+
 	public virtual void Validate()
 	{
 	}

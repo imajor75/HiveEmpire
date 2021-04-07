@@ -143,7 +143,7 @@ public class Assert
 		if ( Selection.Contains( boss.gameObject ) )
 		{
 
-			UnityEngine.Debug.Log( "code on selected from " + Caller( 2 ) );
+			UnityEngine.Debug.Log( "Code on selected from " + Caller( 2 ) );
 			int h = 3; h++;
 		}
 #endif

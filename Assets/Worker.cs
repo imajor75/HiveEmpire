@@ -800,7 +800,7 @@ public class Worker : HiveObject
 			animation = shovelingID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/shovel" ),
 			toolSlot = LinkType.leftHand,
-			duration = 200
+			duration = Building.flatteningTime
 		};
 	}
 
@@ -1650,7 +1650,7 @@ public class Worker : HiveObject
 		return true;			
 	}
 
-	public void OnClicked()
+	public override void OnClicked()
 	{
 		Interface.WorkerPanel.Create().Open( this, false );
 	}

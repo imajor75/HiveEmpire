@@ -52,6 +52,7 @@ public class Ground : HiveObject
 	void Start()
 	{
 		gameObject.name = "Ground";
+		gameObject.layer = World.layerIndexPickable;
 		transform.SetParent( World.instance.transform );
 
 		MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();

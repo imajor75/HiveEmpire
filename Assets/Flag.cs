@@ -215,7 +215,7 @@ public class Flag : HiveObject
 		return null;
 	}
 
-	public void OnClicked()
+	public override void OnClicked()
 	{
 		Interface.FlagPanel.Create().Open( this );
 	}

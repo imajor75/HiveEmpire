@@ -16,11 +16,9 @@ public class World : MonoBehaviour
 	static public World instance;
 	public Eye eye;
 	static public int soundMaxDistance = 15;
-	[JsonIgnore]
 	static public int layerIndexNotOnMap;
-	[JsonIgnore]
 	static public int layerIndexMapOnly;
-	[JsonIgnore]
+	static public int layerIndexPickable;
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
 	static public Shader defaultMapShader;
@@ -52,6 +50,7 @@ public class World : MonoBehaviour
 	{
 		layerIndexNotOnMap = LayerMask.NameToLayer( "Not on map" );
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
+		layerIndexPickable = LayerMask.NameToLayer( "Pickable" );
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
