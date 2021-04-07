@@ -3,6 +3,7 @@
     Properties
     {
         _Color ("Color", Color) = (1,1,1,1)
+		_NoiseTex("Noise", 2D) = "white" {}
 		_HeightStripsTexture("Height Strips Texture", 2D) = "white" {}
 		_HeightStrips ( "Height Strips", Int) = 0
 		_HeightMin ("Height Min", Float) = 0
@@ -19,6 +20,7 @@
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
 
+		sampler2D _NoiseTex;
 		sampler2D _HeightStripsTexture;
 
         struct Input
@@ -53,8 +55,12 @@
 
         void surf (Input IN, inout SurfaceOutput o)
         {
+			const float noiseStrength = 0.3;
+			fixed noise = tex2D(_NoiseTex, IN.worldPos.xz / 5);
+			noise = ( noise * noiseStrength ) + ( 1 - noiseStrength / 2 );
 			float4 w = IN.weights;
 			o.Albedo = fixed3(1,1,1) * w.b + fixed3(0.5, 0.5, 0.45) * w.g + fixed3(0.26, 0.28, 0.17) * w.r + fixed3(0.35, 0.25, 0.15) * w.a;
+			o.Albedo *= noise;
 			if ( _HeightStrips )
 			{
 				float height = (IN.worldPos.y - _HeightMin) / (_HeightMax - _HeightMin);
