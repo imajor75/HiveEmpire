@@ -37,8 +37,8 @@
 		half4 LightingSimpleLambert(SurfaceOutput s, half3 lightDir, half atten) 
 		{
 			half3 modNormal = s.Normal;
-			//modNormal.y *= 0.35;
-			//modNormal = normalize( modNormal );
+			modNormal.y *= 0.35;
+			modNormal = normalize( modNormal );
 			half NdotL = dot(modNormal, lightDir);
 			half4 c;
 			c.rgb = s.Albedo * _LightColor0.rgb * (NdotL * atten);

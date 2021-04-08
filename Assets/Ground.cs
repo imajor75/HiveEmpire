@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
@@ -18,6 +17,7 @@ public class Ground : HiveObject
 	public new MeshCollider collider;
 	public static int maxArea = 10;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
+	const float sharpRendering = 0.5f;
 
 	[JsonIgnore]
 	public Material material;
@@ -245,80 +245,157 @@ public class Ground : HiveObject
 		if ( mesh == null )
 			return;
 
-		if ( mesh.vertices == null || mesh.vertices.Length == 0 )
-		{
-			int vertexCount = ( width + 1 ) * ( height + 1 ) * 6;
-			var vertices = new Vector3[vertexCount];
-			var colors = new Color[vertexCount];
-			assert.AreEqual( nodes.Length * 6, vertexCount );
+		var positions = new List<Vector3>();
+		var colors = new List<Color>();
 
-			for ( int i = 0; i < vertexCount; i++ )
+		for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
+		{
+			positions.Add( nodes[i].Position );
+			switch ( nodes[i].type )
 			{
-				GroundNode node = nodes[i/6];
-				vertices[i] = node.Position;
-				switch ( node.type )
+				case GroundNode.Type.grass:
+				case GroundNode.Type.underWater:
 				{
-					case GroundNode.Type.grass:
-					case GroundNode.Type.underWater:
-					{
-						colors[i] = new Color( 1, 0, 0, 0 );
-						break;
-					}
-					case GroundNode.Type.hill:
-					{
-						colors[i] = new Color( 0, 1, 0, 0 );
-						break;
-					}
-					case GroundNode.Type.mountain:
-					{
-						colors[i] = new Color( 0, 0, 1, 0 );
-						break;
-					}
-					case GroundNode.Type.forest:
-					{
-						colors[i] = new Color( 0, 0, 0, 1 );
-						break;
-					}
+					colors.Add( new Color( 1, 0, 0, 0 ) );
+					break;
+				}
+				case GroundNode.Type.hill:
+				{
+					colors.Add( new Color( 0, 1, 0, 0 ) );
+					break;
+				}
+				case GroundNode.Type.mountain:
+				{
+					colors.Add( new Color( 0, 0, 1, 0 ) );
+					break;
+				}
+				case GroundNode.Type.forest:
+				{
+					colors.Add( new Color( 0, 0, 0, 1 ) );
+					break;
 				}
 			}
-			mesh.vertices = vertices;
-			mesh.colors = colors;
+		}
 
-			var triangles = new int[width*height*2*3];
+		int horizontalStart = positions.Count;
+		for ( int y = 0; y <= height; y++ )
+		{
 			for ( int x = 0; x < width; x++ )
 			{
-				for ( int y = 0; y < height; y++ )
-				{
-					var i = (y*width+x)*2*3;
-					triangles[i + 1] = ( ( y + 1 ) * ( width + 1 ) + ( x + 0 ) ) * 6 + 0;
-					triangles[i + 2] = ( ( y + 0 ) * ( width + 1 ) + ( x + 1 ) ) * 6 + 1;
-					triangles[i + 0] = ( ( y + 0 ) * ( width + 1 ) + ( x + 0 ) ) * 6 + 2;
-					triangles[i + 3] = ( ( y + 0 ) * ( width + 1 ) + ( x + 1 ) ) * 6 + 3;
-					triangles[i + 4] = ( ( y + 1 ) * ( width + 1 ) + ( x + 0 ) ) * 6 + 4;
-					triangles[i + 5] = ( ( y + 1 ) * ( width + 1 ) + ( x + 1 ) ) * 6 + 5;
-				}
+				int a = y * ( width + 1 ) + x;
+				AddVertex( a, a + 1, ( 1 + sharpRendering ) / 2 );
+				AddVertex( a, a + 1, ( 1 - sharpRendering ) / 2 );
 			}
-			mesh.triangles = triangles;
-			mesh.RecalculateNormals();
-			collider.sharedMesh = mesh;
 		}
-		else
+
+		int verticalStart = positions.Count;
+		for ( int y = 0; y < height; y++ )
 		{
-			var vertices = mesh.vertices;
-			for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
+			for ( int x = 0; x <= width; x++ )
 			{
-				vertices[i * 6 + 0] = nodes[i].Position;
-				vertices[i * 6 + 1] = nodes[i].Position;
-				vertices[i * 6 + 2] = nodes[i].Position;
-				vertices[i * 6 + 3] = nodes[i].Position;
-				vertices[i * 6 + 4] = nodes[i].Position;
-				vertices[i * 6 + 5] = nodes[i].Position;
+				int a = y * ( width + 1 ) + x;
+				AddVertex( a, a + height + 1, ( 1 + sharpRendering ) / 2 );
+				AddVertex( a, a + height + 1, ( 1 - sharpRendering ) / 2 );
 			}
-			mesh.vertices = vertices;
-			mesh.RecalculateNormals();
-			collider.sharedMesh = mesh;
+		}
+
+		int diagonalStart = positions.Count;
+		for ( int y = 0; y < height; y++ )
+		{
+			for ( int x = 0; x < width; x++ )
+			{
+				int a = y * ( width + 1 ) + x;
+				AddVertex( a + height + 1, a + 1, ( 1 + sharpRendering ) / 2 );
+				AddVertex( a + height + 1, a + 1, ( 1 - sharpRendering ) / 2 );
+			}
+		}
+
+		var triangles = new List<int>();
+		for ( int x = 0; x < width; x++ )
+		{
+			for ( int y = 0; y < height; y++ )
+			{
+				int hi = ( x + y * width ) * 2;
+				int vi = ( x + y * ( width + 1 ) ) * 2;
+				int di = ( x + y * width ) * 2;
+				CoverTriangle(
+					( y + 0 ) * ( width + 1 ) + ( x + 0 ),
+					( y + 1 ) * ( width + 1 ) + ( x + 0 ),
+					( y + 0 ) * ( width + 1 ) + ( x + 1 ),
+					verticalStart + vi, verticalStart + vi + 1,
+					diagonalStart + di, diagonalStart + di + 1,
+					horizontalStart + hi + 1, horizontalStart + hi );
+				CoverTriangle(
+					( y + 0 ) * ( width + 1 ) + ( x + 1 ),
+					( y + 1 ) * ( width + 1 ) + ( x + 0 ),
+					( y + 1 ) * ( width + 1 ) + ( x + 1 ),
+					diagonalStart + di + 1, diagonalStart + di,
+					horizontalStart + width * 2 + hi, horizontalStart + width * 2 + hi + 1,
+					verticalStart + 2 + vi + 1, verticalStart + 2 + vi );
+			}
+		}		
+
+		mesh.vertices = positions.ToArray();
+		mesh.colors = colors.ToArray();
+		mesh.triangles = triangles.ToArray();
+
+		mesh.RecalculateNormals();
+		collider.sharedMesh = mesh;
+
+		void AddVertex( int a, int b, float weight )
+		{
+			positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
+			colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
+		}
+
+		void CoverTriangle(
+			int a, int b, int c,
+			int ar, int bl,
+			int br, int cl,
+			int cr, int al )
+		{
+			const float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
+			const float otherWeight = ( 1 - sharpRendering ) / 3;
+
+			var ai = positions.Count;
+			positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
+			colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
+
+			var bi = positions.Count;
+			positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
+			colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
+
+			var ci = positions.Count;
+			positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
+			colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
+
+			AddTriangle( ai, bi, ci );
+
+			AddTriangle( a, ar, ai );
+			AddTriangle( ar, bi, ai );
+			AddTriangle( ar, bl, bi );
+			AddTriangle( bl, b, bi );
+
+			AddTriangle( b, br, bi );
+			AddTriangle( br, ci, bi );
+			AddTriangle( br, cl, ci );
+			AddTriangle( cl, c, ci );
+
+			AddTriangle( c, cr, ci );
+			AddTriangle( cr, ai, ci );
+			AddTriangle( cr, al, ai );
+			AddTriangle( al, a, ai );
+
+			void AddTriangle( int a, int b, int c )
+			{
+				triangles.Add( a );
+				triangles.Add( b );
+				triangles.Add( c );
+			}
 		}
 	}
+
+
 
 	class InfluenceChange
 	{

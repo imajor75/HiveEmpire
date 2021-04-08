@@ -1325,20 +1325,20 @@ public class Worker : HiveObject
 			{
 				if ( item == null || item.flag == null )	// It can be nextFlag as well
 					continue;
-				var score = CheckItem( item );
-				if ( score.Item2 )
+				var value = CheckItem( item );
+				if ( value.swapOnly )
 				{
-					if ( score.Item1 > bestScoreOnSide[c] )
+					if ( value.score > bestScoreOnSide[c] )
 					{
-						bestScoreOnSide[c] = score.Item1;
+						bestScoreOnSide[c] = value.score;
 						bestItemOnSide[c] = item;
 					}
 				}
 				else
 				{
-					if ( score.Item1 > bestScore )
+					if ( value.score > bestScore )
 					{
-						bestScore = score.Item1;
+						bestScore = value.score;
 						bestItem = item;
 					}
 				}
@@ -1364,7 +1364,7 @@ public class Worker : HiveObject
 		return false;
 	}
 
-	public Tuple<float, bool> CheckItem( Item item )
+	public (float score, bool swapOnly) CheckItem( Item item )
 	{
 		float value = road.owner.itemHaulPriorities[(int)item.type];
 
@@ -1373,16 +1373,16 @@ public class Worker : HiveObject
 			value *= 2;
 
 		if ( item.worker || item.destination == null )
-			return Tuple.Create( 0f, false );
+			return ( 0f, false );
 
 		if ( item.buddy )
-			return Tuple.Create( 0f, false );
+			return ( 0f, false );
 
 		if ( item.path == null )
-			return Tuple.Create( 0f, false );
+			return ( 0f, false );
 
 		if ( !item.path.IsFinished && item.path.Road != road )
-			return Tuple.Create( 0f, false );
+			return ( 0f, false );
 		
 		Flag target = road.GetEnd( 0 );
 		if ( target == item.flag )
@@ -1391,11 +1391,11 @@ public class Worker : HiveObject
 		if ( target.FreeSpace() == 0 && item.path.StepsLeft != 1 )
 		{
 			if ( item.path.StepsLeft <= 1 )
-				return Tuple.Create( 0f, false );
-			return Tuple.Create( value, true );
+				return ( 0f, false );
+			return ( value, true );
 		}
 
-		return Tuple.Create( value, false );
+		return ( value, false );
 	}
 
 	public void ScheduleCall( Callback.IHandler handler )
