@@ -246,12 +246,12 @@ public class Ground : HiveObject
 		if ( mesh == null )
 			return;
 
-		var vertices = new List<Vector3>();
+		var positions = new List<Vector3>();
 		var colors = new List<Color>();
 
 		for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
 		{
-			vertices.Add( nodes[i].Position );
+			positions.Add( nodes[i].Position );
 			switch ( nodes[i].type )
 			{
 				case GroundNode.Type.grass:
@@ -278,16 +278,18 @@ public class Ground : HiveObject
 			}
 		}
 
+		int horizontalStart = vertices.Count;
 		for ( int x = 0; x < width; x++ )
 		{
 			for ( int y = 0; y <= height; y++ )
 			{
 				int a = y * width + x;
-				AddRenderVertex( vertices, colors, a, a + 1, ( 1 - sharpRendering ) / 2 );
-				AddRenderVertex( vertices, colors, a, a + 1, ( 1 + sharpRendering ) / 2 );
+				AddRenderVertex( a, a + 1, ( 1 - sharpRendering ) / 2 );
+				AddRenderVertex( a, a + 1, ( 1 + sharpRendering ) / 2 );
 			}
 		}
 
+		int verticalStart = vertices.Count;
 		for ( int x = 0; x < width; x++ )
 		{
 			for ( int y = 0; y < height; y++ )
@@ -298,6 +300,7 @@ public class Ground : HiveObject
 			}
 		}
 
+		int diagonalStart = vertices.Count;
 		for ( int y = 0; y < height; y++ )
 		{
 			for ( int x = 0; x <= width; x++ )
@@ -331,59 +334,61 @@ public class Ground : HiveObject
 
 		mesh.RecalculateNormals();
 		collider.sharedMesh = mesh;
+
+		void AddRenderVertex( int a, int b, float weight )
+		{
+			positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
+			colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
+		}
+
+		void CoverGroundTriangle( List<int> triangles, List<Vector3> positions, List<Color> colors, int a, int b, int c )
+		{
+			const float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
+			const float otherWeight = ( 1 - sharpRendering ) / 3;
+
+			var ai = positions.Count;
+			positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
+			colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
+
+			var bi = positions.Count;
+			positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
+			colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
+
+			var ci = positions.Count;
+			positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
+			colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
+
+			triangles.Add( ai );
+			triangles.Add( bi );
+			triangles.Add( ci );
+
+			triangles.Add( ai );
+			triangles.Add( b );
+			triangles.Add( bi );
+
+			triangles.Add( bi );
+			triangles.Add( c );
+			triangles.Add( ci );
+
+			triangles.Add( ci );
+			triangles.Add( a );
+			triangles.Add( ai );
+
+			triangles.Add( ai );
+			triangles.Add( a );
+			triangles.Add( b );
+
+			triangles.Add( bi );
+			triangles.Add( b );
+			triangles.Add( c );
+
+			triangles.Add( ci );
+			triangles.Add( c );
+			triangles.Add( a );
+		}
 	}
 
-	void AddRenderVertex( List<Vector3> positions, List<Color> colors, int a, int b, float weight )
-	{
-		positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
-		colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
-	}
 
-	void CoverGroundTriangle( List<int> triangles, List<Vector3> positions, List<Color> colors, int a, int b, int c )
-	{
-		const float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
-		const float otherWeight = ( 1 - sharpRendering ) / 3;
-
-		var ai = positions.Count;
-		positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
-		colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
-
-		var bi = positions.Count;
-		positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
-		colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
-
-		var ci = positions.Count;
-		positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
-		colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
-
-		triangles.Add( ai );
-		triangles.Add( bi );
-		triangles.Add( ci );
-
-		triangles.Add( ai );
-		triangles.Add( b );
-		triangles.Add( bi );
-
-		triangles.Add( bi );
-		triangles.Add( c );
-		triangles.Add( ci );
-
-		triangles.Add( ci );
-		triangles.Add( a );
-		triangles.Add( ai );
-
-		triangles.Add( ai );
-		triangles.Add( a );
-		triangles.Add( b );
-
-		triangles.Add( bi );
-		triangles.Add( b );
-		triangles.Add( c );
-
-		triangles.Add( ci );
-		triangles.Add( c );
-		triangles.Add( a );
-	}
 
 	class InfluenceChange
 	{
