@@ -278,6 +278,36 @@ public class Ground : HiveObject
 			}
 		}
 
+		for ( int x = 0; x < width; x++ )
+		{
+			for ( int y = 0; y <= height; y++ )
+			{
+				int a = y * width + x;
+				AddRenderVertex( vertices, colors, a, a + 1, ( 1 - sharpRendering ) / 2 );
+				AddRenderVertex( vertices, colors, a, a + 1, ( 1 + sharpRendering ) / 2 );
+			}
+		}
+
+		for ( int x = 0; x < width; x++ )
+		{
+			for ( int y = 0; y < height; y++ )
+			{
+				int a = y * width + x;
+				AddRenderVertex( vertices, colors, a + height, a + 1, ( 1 - sharpRendering ) / 2 );
+				AddRenderVertex( vertices, colors, a + height, a + 1, ( 1 + sharpRendering ) / 2 );
+			}
+		}
+
+		for ( int y = 0; y < height; y++ )
+		{
+			for ( int x = 0; x <= width; x++ )
+			{
+				int a = y * width + x;
+				AddRenderVertex( vertices, colors, a, a + height, ( 1 - sharpRendering ) / 2 );
+				AddRenderVertex( vertices, colors, a, a + height, ( 1 + sharpRendering ) / 2 );
+			}
+		}
+
 		var triangles = new List<int>();
 		for ( int x = 0; x < width; x++ )
 		{
@@ -301,6 +331,12 @@ public class Ground : HiveObject
 
 		mesh.RecalculateNormals();
 		collider.sharedMesh = mesh;
+	}
+
+	void AddRenderVertex( List<Vector3> positions, List<Color> colors, int a, int b, float weight )
+	{
+		positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
+		colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
 	}
 
 	void CoverGroundTriangle( List<int> triangles, List<Vector3> positions, List<Color> colors, int a, int b, int c )
