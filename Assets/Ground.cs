@@ -278,35 +278,35 @@ public class Ground : HiveObject
 		}
 
 		int horizontalStart = positions.Count;
-		for ( int x = 0; x < width; x++ )
+		for ( int y = 0; y <= height; y++ )
 		{
-			for ( int y = 0; y <= height; y++ )
+			for ( int x = 0; x < width; x++ )
 			{
 				int a = y * ( width + 1 ) + x;
-				AddVertex( a, a + 1, ( 1 - sharpRendering ) / 2 );
 				AddVertex( a, a + 1, ( 1 + sharpRendering ) / 2 );
+				AddVertex( a, a + 1, ( 1 - sharpRendering ) / 2 );
 			}
 		}
 
 		int verticalStart = positions.Count;
-		for ( int x = 0; x <= width; x++ )
+		for ( int y = 0; y < height; y++ )
 		{
-			for ( int y = 0; y < height; y++ )
+			for ( int x = 0; x <= width; x++ )
 			{
 				int a = y * ( width + 1 ) + x;
-				AddVertex( a, a + height + 1, ( 1 - sharpRendering ) / 2 );
 				AddVertex( a, a + height + 1, ( 1 + sharpRendering ) / 2 );
+				AddVertex( a, a + height + 1, ( 1 - sharpRendering ) / 2 );
 			}
 		}
 
 		int diagonalStart = positions.Count;
 		for ( int y = 0; y < height; y++ )
 		{
-			for ( int x = 0; x <= width; x++ )
+			for ( int x = 0; x < width; x++ )
 			{
 				int a = y * ( width + 1 ) + x;
-				AddVertex( a + height + 1, a + 1, ( 1 - sharpRendering ) / 2 );
 				AddVertex( a + height + 1, a + 1, ( 1 + sharpRendering ) / 2 );
+				AddVertex( a + height + 1, a + 1, ( 1 - sharpRendering ) / 2 );
 			}
 		}
 
@@ -331,7 +331,7 @@ public class Ground : HiveObject
 					( y + 1 ) * ( width + 1 ) + ( x + 1 ),
 					diagonalStart + di + 1, diagonalStart + di,
 					horizontalStart + width * 2 + hi, horizontalStart + width * 2 + hi + 1,
-					verticalStart + height * 2 + vi + 1, verticalStart + vi );
+					verticalStart + 2 + vi + 1, verticalStart + 2 + vi );
 			}
 		}		
 
@@ -354,42 +354,37 @@ public class Ground : HiveObject
 			int br, int cl,
 			int cr, int al )
 		{
-			//const float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
-			//const float otherWeight = ( 1 - sharpRendering ) / 3;
+			const float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
+			const float otherWeight = ( 1 - sharpRendering ) / 3;
 
-			//var ai = positions.Count;
-			//positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
-			//colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
+			var ai = positions.Count;
+			positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
+			colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
 
-			//var bi = positions.Count;
-			//positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
-			//colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
+			var bi = positions.Count;
+			positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
+			colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
 
-			//var ci = positions.Count;
-			//positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
-			//colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
+			var ci = positions.Count;
+			positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
+			colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
 
+			AddTriangle( ai, bi, ci );
 
-			if ( a == 0 )
-			{
-				AddTriangle( a, b, c );
-				AddTriangle( al, bl, cl );
-			}
+			AddTriangle( a, ar, ai );
+			AddTriangle( ar, bi, ai );
+			AddTriangle( ar, bl, bi );
+			AddTriangle( bl, b, bi );
 
-			//AddTriangle( a, ar, ai );
-			//AddTriangle( ar, bi, ai );
-			//AddTriangle( ar, bl, bi );
-			//AddTriangle( bl, b, bi );
+			AddTriangle( b, br, bi );
+			AddTriangle( br, ci, bi );
+			AddTriangle( br, cl, ci );
+			AddTriangle( cl, c, ci );
 
-			//AddTriangle( b, br, bi );
-			//AddTriangle( br, ci, bi );
-			//AddTriangle( br, cl, ci );
-			//AddTriangle( cl, c, ci );
-
-			//AddTriangle( c, cr, ci );
-			//AddTriangle( cr, ai, ci );
-			//AddTriangle( cr, al, ai );
-			//AddTriangle( al, a, ai );
+			AddTriangle( c, cr, ci );
+			AddTriangle( cr, ai, ci );
+			AddTriangle( cr, al, ai );
+			AddTriangle( al, a, ai );
 
 			void AddTriangle( int a, int b, int c )
 			{
