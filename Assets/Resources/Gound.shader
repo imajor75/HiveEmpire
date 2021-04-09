@@ -4,10 +4,19 @@
     {
         _Color ("Color", Color) = (1,1,1,1)
 		_NoiseTex("Noise", 2D) = "white" {}
+		_GridTex("Grid", 2D) = "white" {}
 		_HeightStripsTexture("Height Strips Texture", 2D) = "white" {}
 		_HeightStrips ( "Height Strips", Int) = 0
 		_HeightMin ("Height Min", Float) = 0
 		_HeightMax ("Height Max", Float) = 10
+		_GridStartX("Grid Start X", Float) = 0
+		_GridStartZ("Grid Start Z", Float) = 0
+		_GridFactorX("Grid Factor X", Float) = 1
+		_GridFactorZ("Grid Factor Z", Float) = 0.5
+		_GridMaskTex("Grid Mask", 2D) = "white" {}
+		_GridMaskX("Grid Mask X", Float) = 0
+		_GridMaskZ("Grid Mask Z", Float) = 0
+		_GridMaskFactor("Grid Mask Factor", Float) = 0.15
     }
     SubShader
     {
@@ -21,6 +30,8 @@
         #pragma target 3.0
 
 		sampler2D _NoiseTex;
+		sampler2D _GridTex;
+		sampler2D _GridMaskTex;
 		sampler2D _HeightStripsTexture;
 
         struct Input
@@ -32,7 +43,14 @@
 		bool _HeightStrips;
 		float _HeightMin;
 		float _HeightMax;
-        fixed4 _Color;
+		float _GridStartX;
+		float _GridStartZ;
+		float _GridFactorX;
+		float _GridFactorZ;
+		float _GridMaskFactor;
+		float _GridMaskX;
+		float _GridMaskZ;
+		fixed4 _Color;
 
 		half4 LightingSimpleLambert(SurfaceOutput s, half3 lightDir, half atten) 
 		{
@@ -67,6 +85,11 @@
 				fixed4 stripes = tex2D(_HeightStripsTexture, float2(0.4, height));
 				o.Albedo = lerp(o.Albedo, stripes.rgb, stripes.a);
 			}
+
+			fixed grid = tex2D(_GridTex, IN.worldPos.xz * fixed2(_GridFactorX, _GridFactorZ) + fixed2(_GridStartX, _GridStartZ));
+			fixed gridMask = tex2D(_GridMaskTex, (IN.worldPos.xz - fixed2(_GridMaskX, _GridMaskZ)) * _GridMaskFactor + fixed2(0.5, 0.5));
+			o.Albedo = lerp(o.Albedo, fixed3(1, 1, 1), grid*gridMask*0.5);
+
 			o.Alpha = 1;
         }
         ENDCG

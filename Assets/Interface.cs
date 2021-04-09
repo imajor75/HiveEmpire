@@ -219,6 +219,7 @@ public class Interface : HiveObject
 		Stock.Initialize();
 		GuardHouse.Initialize();
 		CameraHighlight.Initialize();
+		Viewport.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 
@@ -288,8 +289,6 @@ public class Interface : HiveObject
 
 	void Update()
 	{
-		GroundNode node = viewport.FindNodeAt( Input.mousePosition );
-
 		if ( world.timeFactor != 0 && world.timeFactor != 8 )
 		{
 			if ( GetKey( KeyCode.Space ) )
@@ -1919,6 +1918,7 @@ public class Interface : HiveObject
 			{
 				Road road = Road.Create().Setup( flag );
 				Root.viewport.InputHandler = road;
+				Root.viewport.showGridAtMouse = true;
 			}
 			Close();
 		}
@@ -2217,6 +2217,10 @@ public class Interface : HiveObject
 		//readonly GameObject cursorFlag;
 		//readonly GameObject cursorBuilding;
 		public new Camera camera;
+		public Vector3 lastMouseOnGround;
+		static int gridMaskXID;
+		static int gridMaskZID;
+		public bool showGridAtMouse;
 
 		public IInputHandler InputHandler
 		{
@@ -2247,6 +2251,12 @@ public class Interface : HiveObject
 			flag,
 			building,
 			total
+		}
+
+		public static void Initialize()
+		{
+			gridMaskXID = Shader.PropertyToID( "_GridMaskX" );
+			gridMaskZID = Shader.PropertyToID( "_GridMaskZ" );
 		}
 
 		public void SetCamera( Camera camera )
@@ -2297,8 +2307,19 @@ public class Interface : HiveObject
 				return null;
 
 			var ground = World.instance.ground;
-			Vector3 localPosition = ground.transform.InverseTransformPoint( hit.point );
-			return GroundNode.FromPosition( localPosition, ground );
+			lastMouseOnGround = ground.transform.InverseTransformPoint( hit.point );
+
+			if ( showGridAtMouse )
+			{
+				World.instance.ground.material.SetFloat( gridMaskXID, hit.point.x );
+				World.instance.ground.material.SetFloat( gridMaskZID, hit.point.z );
+			}
+			else
+			{
+				World.instance.ground.material.SetFloat( gridMaskXID, 10000 );
+				World.instance.ground.material.SetFloat( gridMaskZID, 10000 );
+			}
+			return GroundNode.FromPosition( lastMouseOnGround, ground );
 		}
 
 		public void OnPointerClick( PointerEventData eventData )

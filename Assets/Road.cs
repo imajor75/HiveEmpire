@@ -643,6 +643,7 @@ public class Road : HiveObject, Interface.IInputHandler
 					continue;
 			}
 			assert.AreEqual( nodes[i].road, this );	// TODO Fired on unready road, nodes had 4 elements, the one with index 2 was null.
+													// And fired again when I pressed ESC while the road had 4 nodes already.
 			nodes[i].road = null;
 		}
 	}
@@ -799,6 +800,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			if ( !Finish() )
 				Remove( false );
+			Interface.root.viewport.showGridAtMouse = false;
 			return false;
 		}
 		else
@@ -885,6 +887,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public void OnLostInput()
 	{
 		bool removed = Remove( false );
+		Interface.root.viewport.showGridAtMouse = false;
 		assert.IsTrue( removed );
 	}
 }
