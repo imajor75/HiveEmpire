@@ -17,7 +17,8 @@ public class Ground : HiveObject
 	public new MeshCollider collider;
 	public static int maxArea = 10;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
-	const float sharpRendering = 0.5f;
+	[Range(0.0f, 1.0f)]
+	public float sharpRendering = 0.5f;
 
 	[JsonIgnore]
 	public Material material;
@@ -248,6 +249,12 @@ public class Ground : HiveObject
 		var positions = new List<Vector3>();
 		var colors = new List<Color>();
 
+		// Each ground triangle is rendered using 13 smaller triangles which all lie in the same plane (the plane of the original ground triangle between three nodes), to make it possible 
+		// to control the smoothness of the rendering. The surface normal at the vertices will change, that makes the 13 triangles look different than a single triangle in the same area.
+		// There is one triangle in the middle, which is totally flat (has the same surface normals at the three vertices) and 12 other triangles around it to make the transition to the 
+		// adjacent ground triangles smooth.
+
+		// This first block is simply creating a vertex for each node.
 		for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
 		{
 			positions.Add( nodes[i].Position );
@@ -277,6 +284,8 @@ public class Ground : HiveObject
 			}
 		}
 
+		// The following three blocks are adding two vertices for each edge between nodes. The distance of these vertices from the nodes depend on the sharpRendering property.
+		// Note that the number of edges is different in all the three directions.
 		int horizontalStart = positions.Count;
 		for ( int y = 0; y <= height; y++ )
 		{
@@ -310,6 +319,7 @@ public class Ground : HiveObject
 			}
 		}
 
+		// This block creates the actual triangles, one iteration is covering the area between four nodes, two ground triangles.
 		var triangles = new List<int>();
 		for ( int x = 0; x < width; x++ )
 		{
@@ -342,20 +352,23 @@ public class Ground : HiveObject
 		mesh.RecalculateNormals();
 		collider.sharedMesh = mesh;
 
+		// This function adds two new vertices at an edge between two nodes. The weight is depending on the sharpRendering property.
 		void AddVertex( int a, int b, float weight )
 		{
 			positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
 			colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
 		}
 
+		// This function is covering the area of a ground triangle by creating 13 smaller triangles
 		void CoverTriangle(
-			int a, int b, int c,
-			int ar, int bl,
+			int a, int b, int c,	// These three are the vertex indices of the original three corners of the trianle, they are coming from nodes
+			int ar, int bl,			// These additional lines are the indices of vertices at the edges between original nodes.
 			int br, int cl,
 			int cr, int al )
 		{
-			const float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
-			const float otherWeight = ( 1 - sharpRendering ) / 3;
+			// First three new vertices are created inside the gound triangle. The surface normal of these new vertices will be the same as the surface normal of the big triangle
+			float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
+			float otherWeight = ( 1 - sharpRendering ) / 3;
 
 			var ai = positions.Count;
 			positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
@@ -369,8 +382,11 @@ public class Ground : HiveObject
 			positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
 			colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
 
+			// First create the inner triangle, which is the flat part of the whole ground rendering, the normals at the three corners are the same
 			AddTriangle( ai, bi, ci );
 
+			// And now create the additional 12 triangles on the perimeter, these will be smooth and handling the transition to other ground triangles. 
+			// They are added in three groups, 4 triangle for every side of the triangle inside
 			AddTriangle( a, ar, ai );
 			AddTriangle( ar, bi, ai );
 			AddTriangle( ar, bl, bi );
@@ -490,6 +506,11 @@ public class Ground : HiveObject
 
 			return center.DistanceFrom( node ) <= radius;
 		}
+	}
+
+	private void OnValidate()
+	{
+		UpdateMesh();
 	}
 
 	public override void Reset()
