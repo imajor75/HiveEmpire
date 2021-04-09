@@ -288,6 +288,7 @@ public class GroundNode : HiveObject
 
 	public override void OnClicked()
 	{
+		Interface.root.viewport.showPossibleBuildings = false;
 		Interface.NodePanel.Create().Open( this );
 	}
 

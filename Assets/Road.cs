@@ -644,6 +644,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			}
 			assert.AreEqual( nodes[i].road, this );	// TODO Fired on unready road, nodes had 4 elements, the one with index 2 was null.
 													// And fired again when I pressed ESC while the road had 4 nodes already.
+													// Fired again when pressing esc. (i=1, Count=4, tempNodes=0)
 			nodes[i].road = null;
 		}
 	}

@@ -2221,6 +2221,16 @@ public class Interface : HiveObject
 		static int gridMaskXID;
 		static int gridMaskZID;
 		public bool showGridAtMouse;
+		public bool showPossibleBuildings;
+		static List<BuildPossibility> buildCategories = new List<BuildPossibility>();
+
+		struct BuildPossibility
+		{
+			public Building.Configuration configuration;
+			public Material material;
+			public Mesh mesh;
+			public float scale;
+		}
 
 		public IInputHandler InputHandler
 		{
@@ -2257,6 +2267,54 @@ public class Interface : HiveObject
 		{
 			gridMaskXID = Shader.PropertyToID( "_GridMaskX" );
 			gridMaskZID = Shader.PropertyToID( "_GridMaskZ" );
+
+			var greenMaterial = new Material( World.defaultShader );
+			greenMaterial.color = Color.green;
+			var blueMaterial = new Material( World.defaultShader );
+			blueMaterial.color = Color.blue;
+			var yellowMaterial = new Material( World.defaultShader );
+			yellowMaterial.color = Color.yellow;
+			var magentaMaterial = new Material( World.defaultShader );
+			magentaMaterial.color = Color.magenta;
+			var greyMaterial = new Material( World.defaultShader );
+			greyMaterial.color = Color.grey;
+			buildCategories.Add( new BuildPossibility
+			{
+				configuration = Workshop.GetConfiguration( Workshop.Type.farm ),
+				material = greenMaterial,
+				mesh = Resources.Load<Mesh>( "meshes/groundSigns/bigHouse" ),
+				scale = 1.5f
+			} );
+			buildCategories.Add( new BuildPossibility
+			{
+				configuration = Workshop.GetConfiguration( Workshop.Type.sawmill ),
+				material = blueMaterial,
+				mesh = Resources.Load<Mesh>( "meshes/groundSigns/mediumHouse" ),
+				scale = 1.5f
+			} );
+			buildCategories.Add( new BuildPossibility
+			{
+				configuration = Workshop.GetConfiguration( Workshop.Type.woodcutter ),
+				material = yellowMaterial,
+				mesh = Resources.Load<Mesh>( "meshes/groundSigns/smallHouse" ),
+				scale = 1.5f
+			} );
+			buildCategories.Add( new BuildPossibility
+			{
+				configuration = Workshop.GetConfiguration( Workshop.Type.ironmine ),
+				material = magentaMaterial,
+				mesh = Resources.Load<Mesh>( "meshes/groundSigns/mine" ),
+				scale = 0.7f
+			} );
+			buildCategories.Add( new BuildPossibility
+			{
+				configuration = null,
+				material = greyMaterial,
+				mesh = Resources.Load<Mesh>( "meshes/groundSigns/flag" ),
+				scale = 0.15f
+			} );
+			foreach ( var c in buildCategories )
+				Assert.global.IsNotNull( c.mesh );
 		}
 
 		public void SetCamera( Camera camera )
@@ -2363,6 +2421,10 @@ public class Interface : HiveObject
 
 		void Update()
 		{
+			if ( GetKeyDown( KeyCode.Alpha1 ) )
+				showPossibleBuildings = !showPossibleBuildings;
+			if ( GetKeyDown( KeyCode.Alpha2 ) )
+				showGridAtMouse = !showGridAtMouse;
 			if ( inputHandler == null || inputHandler.Equals( null ) )
 				inputHandler = this;
 			if ( !mouseOver )
@@ -2378,6 +2440,29 @@ public class Interface : HiveObject
 			if ( GetKeyDown( KeyCode.PageDown ) && node )
 				node.SetHeight( node.height - 0.05f );
 #endif
+			if ( showPossibleBuildings && node )
+			{
+				foreach ( var o in Ground.areas[6] )
+				{
+					var n = node + o;
+					foreach ( var p in buildCategories )
+					{
+						if ( p.configuration != null )
+						{
+							if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration ) )
+								continue;
+						}
+						else
+						{
+							if ( !Flag.IsNodeSuitable( n, root.mainPlayer ) )
+								continue;
+						}
+
+						Graphics.DrawMesh( p.mesh, Matrix4x4.TRS( n.Position, Quaternion.identity, new Vector3( p.scale, p.scale, p.scale ) ), p.material, 0 );
+						break;
+					}
+				}
+			}
 		}
 
 		public bool OnMovingOverNode( GroundNode node )

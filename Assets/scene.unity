@@ -153,6 +153,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panels: []
+  postProcessResources: {fileID: 0}
   world: {fileID: 0}
   selectedWorkshopType: -1
   viewport: {fileID: 0}

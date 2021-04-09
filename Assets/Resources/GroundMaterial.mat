@@ -47,6 +47,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: 8cef1f579b7122e40a9395ff05837ead, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _GridMaskTex:
+        m_Texture: {fileID: 2800000, guid: 6ce4f230c83f61a47acc2d2825ece7bb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GridTex:
+        m_Texture: {fileID: 2800000, guid: b1b39eca3f28f93479e12fd76af8b351, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _HeightStripes:
         m_Texture: {fileID: 2800000, guid: 21f32745421cb7049a5086bfef7f0f38, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -96,6 +104,13 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 1
     - _GlossyReflections: 1
+    - _GridFactorX: 1
+    - _GridFactorZ: 0.5
+    - _GridMaskFactor: 0.15
+    - _GridMaskX: 10000
+    - _GridMaskZ: 10000
+    - _GridStartX: 0
+    - _GridStartZ: 0
     - _HeightMax: 15
     - _HeightMin: 10
     - _HeightStrips: 0
