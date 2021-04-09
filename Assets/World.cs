@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering.PostProcessing;
 
 public class World : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class World : MonoBehaviour
 	static public int layerIndexNotOnMap;
 	static public int layerIndexMapOnly;
 	static public int layerIndexPickable;
+	static public int layerIndexPPVolume;
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
 	static public Shader defaultMapShader;
@@ -51,6 +53,7 @@ public class World : MonoBehaviour
 		layerIndexNotOnMap = LayerMask.NameToLayer( "Not on map" );
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
 		layerIndexPickable = LayerMask.NameToLayer( "Pickable" );
+		layerIndexPPVolume = LayerMask.NameToLayer( "PPVolume" );
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
@@ -249,6 +252,7 @@ public class World : MonoBehaviour
 	public void Prepare()
 	{
 		var lightObject = new GameObject();
+		lightObject.layer = World.layerIndexPPVolume;
 		var light = lightObject.AddComponent<Light>();
 		light.type = UnityEngine.LightType.Directional;
 		lightObject.name = "Sun";
@@ -256,6 +260,10 @@ public class World : MonoBehaviour
 		light.shadows = LightShadows.Soft;
 		light.color = new Color( 1, 1, 1 );
 		light.transform.SetParent( transform );
+		var ppv = lightObject.AddComponent<PostProcessVolume>();
+		ppv.profile = Resources.Load<PostProcessProfile>( "Post-processing Profile" );
+		ppv.isGlobal = true;
+		Assert.global.IsNotNull( ppv.profile );
 
 		maxHeight = 8;
 		waterLevel = 0.3f;

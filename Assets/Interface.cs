@@ -7,11 +7,13 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 
 public class Interface : HiveObject
 {
 	public List<Panel> panels = new List<Panel>();
+	public PostProcessResources postProcessResources;
 	public static int iconSize = 20;
 	public static Font font;
 	public World world;

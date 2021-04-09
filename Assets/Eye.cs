@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SocialPlatforms.GameCenter;
 
 [RequireComponent( typeof( Camera ) )]
@@ -45,6 +46,12 @@ public class Eye : MonoBehaviour
 		camera.nearClipPlane = 0.001f;
 		transform.SetParent( World.instance.transform );
 		gameObject.AddComponent<CameraHighlight>();
+		var ppl = gameObject.AddComponent<PostProcessLayer>();
+		ppl.Init( Interface.root.postProcessResources );
+		ppl.volumeLayer = 1 << World.layerIndexPPVolume;
+
+		// Disable temprarily, as unity is crashing at the moment with it.
+		ppl.enabled = false;
 
 		ear = new GameObject().transform;
 		ear.gameObject.AddComponent<AudioListener>();
