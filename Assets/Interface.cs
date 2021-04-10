@@ -2833,6 +2833,7 @@ public class Interface : HiveObject
 		InputField saveName;
 		Dropdown loadNames;
 		FileSystemWatcher watcher;
+		bool focusOnMainBuilding = false;
 		Dropdown size;
 		bool loadNamesRefreshNeeded = true;
 
@@ -2870,7 +2871,6 @@ public class Interface : HiveObject
 			saveName = InputField( 80, -165, 100, 25 );
 			saveName.text = new System.Random().Next().ToString();
 
-			escCloses = false;
 			RandomizeSeed();
 			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
 			watcher.Created += SaveFolderChanged;
@@ -2878,13 +2878,18 @@ public class Interface : HiveObject
 			watcher.EnableRaisingEvents = true;
 
 			if ( focusOnMainBuilding )
+			{
 				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
+				escCloses = false;
+				this.focusOnMainBuilding = true;
+			}
 		}
 
 		new void OnDestroy()
 		{
 			base.OnDestroy();
-			root.world.eye.ReleaseFocus( null, true );
+			if ( focusOnMainBuilding )
+				root.world.eye.ReleaseFocus( null, true );
 		}
 
 		new void Update()
