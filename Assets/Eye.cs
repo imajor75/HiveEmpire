@@ -110,6 +110,9 @@ public class Eye : MonoBehaviour
 
 	public void FocusOn( GroundNode node, bool rotateAround = false )
 	{
+		if ( node == null )
+			return;
+
 		storedX = x;
 		storedY = y;
 		storedDirection = direction;

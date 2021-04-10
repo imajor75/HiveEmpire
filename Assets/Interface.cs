@@ -275,7 +275,8 @@ public class Interface : HiveObject
 	{
 		print( "Loading " + fileName );
 		world.Load( fileName );
-		mainPlayer = world.players[0];
+		if ( world.players.Count > 0 )
+			mainPlayer = world.players[0];
 	}
 
 	void Save( string fileName = "" )
@@ -2878,9 +2879,9 @@ public class Interface : HiveObject
 			watcher.Deleted += SaveFolderChanged;
 			watcher.EnableRaisingEvents = true;
 
-			if ( focusOnMainBuilding )
+			if ( focusOnMainBuilding && root.mainPlayer )
 			{
-				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
+				root.world.eye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true );
 				escCloses = false;
 				this.focusOnMainBuilding = true;
 			}
