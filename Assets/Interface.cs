@@ -2269,13 +2269,14 @@ public class Interface : HiveObject
 			gridMaskZID = Shader.PropertyToID( "_GridMaskZ" );
 
 			var greenMaterial = new Material( World.defaultShader );
-			greenMaterial.color = Color.green;
+			greenMaterial.color = new Color( 0.5f, 0.5f, 0.35f );
 			var blueMaterial = new Material( World.defaultShader );
-			blueMaterial.color = Color.blue;
+
+			blueMaterial.color = new Color( 0.3f, 0.45f, 0.6f );
 			var yellowMaterial = new Material( World.defaultShader );
-			yellowMaterial.color = Color.yellow;
-			var magentaMaterial = new Material( World.defaultShader );
-			magentaMaterial.color = Color.magenta;
+			yellowMaterial.color = new Color( 177 / 255f, 146 / 255f, 97 / 255f );
+			var orangeMaterial = new Material( World.defaultShader );
+			orangeMaterial.color = new Color( 191 / 255f, 134 / 255f, 91 / 255f );
 			var greyMaterial = new Material( World.defaultShader );
 			greyMaterial.color = Color.grey;
 			buildCategories.Add( new BuildPossibility
@@ -2302,7 +2303,7 @@ public class Interface : HiveObject
 			buildCategories.Add( new BuildPossibility
 			{
 				configuration = Workshop.GetConfiguration( Workshop.Type.ironmine ),
-				material = magentaMaterial,
+				material = orangeMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/mine" ),
 				scale = 0.7f
 			} );
