@@ -91,6 +91,12 @@ public class Item : HiveObject
 		};
 		looks.Fill( looksData );
 
+		var dl = new GameObject();
+		var l = dl.AddComponent<Light>();
+		l.type = LightType.Directional;
+		l.color = new Color( .7f, .7f, .7f );
+		dl.transform.rotation = Quaternion.LookRotation( RuntimePreviewGenerator.PreviewDirection );
+
 		RuntimePreviewGenerator.BackgroundColor = new Color( 0.5f, 0.5f, 0.5f, 0 );
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
@@ -98,6 +104,8 @@ public class Item : HiveObject
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 			Assert.global.IsNotNull( sprites[i] );
 		}
+
+		Destroy( dl );
 	}
 
 	public static Item Create()
