@@ -201,6 +201,7 @@
   {
     "type": "weaponmaker",
     "outputType": "weapon",
+	"huge": true,
     "inputs": [
       {
         "itemType": "coal"

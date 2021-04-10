@@ -182,12 +182,15 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( timer.Empty )
 				timer.Start( resourceCutTime[(int)resourceType] );
 
-			int animHash = Worker.resourceCollectAct[(int)resourceType].animation;
+			var act = Worker.resourceCollectAct[(int)resourceType];
+			int animHash = -1;
+			if ( act != null )
+				animHash = act.animation;
 			if ( !boss.soundSource.isPlaying )
 			{
 				if ( animHash != -1 )
 					boss.animator?.SetBool( animHash, true );
-				boss.soundSource.clip = Worker.resourceCollectAct[(int)resourceType].sound;
+				boss.soundSource.clip = act?.sound;
 				boss.soundSource.loop = true;
 				boss.soundSource.Play();
 			}
@@ -346,7 +349,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"Forest/forester_final", 1.33f, Type.forester,
 			"Ores/geologist_final", 0.8f, Type.geologist,
 			"SAdK/smelter_final", 2f, Type.smelter,
-			"SAdK/weaponmaker_final", 1.7f, Type.weaponmaker,
+			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponmaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowmaker,
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
 			"SAdK/butcher_final", 1.8f, Type.butcher,
@@ -357,7 +360,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		object[] sounds = {
 			"handsaw", Type.sawmill,
 			"SAdK/smelter", Type.smelter,
-			"SAdK/weaponmaker", Type.weaponmaker,
 			"windmill", Type.mill };
 		processingSounds.Fill( sounds );
 		for ( int i = 0; i < resourceCutTime.Length; i++ )
