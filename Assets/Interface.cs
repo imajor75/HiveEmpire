@@ -2836,6 +2836,7 @@ public class Interface : HiveObject
 		bool focusOnMainBuilding = false;
 		Dropdown size;
 		bool loadNamesRefreshNeeded = true;
+		static int savedSize = 1;
 
 		public static Main Create()
 		{
@@ -2860,7 +2861,7 @@ public class Interface : HiveObject
 			size = Dropdown( 60, -95, 80, 25 );
 			size.ClearOptions();
 			size.AddOptions( new List<string>() { "Small", "Medium", "Big" } );
-			size.value = 1;
+			size.value = savedSize;
 			Image( 20, -125, 260, 1 );
 
 			Button( 20, -133, 50, 20, "Load" ).onClick.AddListener( Load );
@@ -2897,6 +2898,7 @@ public class Interface : HiveObject
 			base.Update();
 			if ( loadNamesRefreshNeeded )
 				UpdateLoadNames();
+			savedSize = size.value;
 		}
 
 		void StartNewGame()
