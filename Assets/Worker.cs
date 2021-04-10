@@ -1204,7 +1204,7 @@ public class Worker : HiveObject
 
 		if ( type != Type.unemployed && building != null && node != building.node )
 		{
-			assert.AreEqual( type, Type.tinkerer );
+			assert.IsTrue( type == Type.tinkerer || type == Type.constructor );	// This happens if the path to the building gets disabled for any reason
 			ScheduleWait( 300 );
 			if ( node.flag )	// TODO Do something if the worker can't get home
 				ScheduleWalkToFlag( building.flag );
