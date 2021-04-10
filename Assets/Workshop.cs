@@ -352,7 +352,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponmaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowmaker,
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
-			"SAdK/butcher_final", 1.8f, Type.butcher,
+			"prefabs/buildings/slaughterhouse", 1.5f, Type.butcher,
 			"SAdK/barrack_final", 1.5f, Type.barrack,
 			"SAdK/coinmaker_final", 2f, Type.coinmaker,
 			"prefabs/buildings/well", 1.1f, Type.well };
