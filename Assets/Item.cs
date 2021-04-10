@@ -72,7 +72,7 @@ public class Item : HiveObject
 			"prefabs/items/common",
 			"prefabs/items/barrel dispenser", Type.beer,
 			"prefabs/items/bucket", Type.water,
-			"prefabs/items/package", Type.pretzel,
+			"prefabs/items/pretzel", Type.pretzel,
 			"prefabs/items/plank", Type.plank,
 			"prefabs/items/fish", Type.fish,
 			"prefabs/items/crystal", Type.iron,
