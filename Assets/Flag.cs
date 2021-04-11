@@ -21,6 +21,7 @@ public class Flag : HiveObject
 	[JsonIgnore]
 	public bool debugSpawnPlank;
 	public const float itemSpread = 0.25f;
+	GameObject tiles;
 
 	static public void Initialize()
 	{
@@ -61,23 +62,12 @@ public class Flag : HiveObject
 
 	void Start()
 	{
-		var gt = node.ground.transform;
 		gameObject.name = "Flag " + node.x + ", " + node.y;
-		transform.SetParent( gt );
-		transform.localPosition = node.Position;
+		transform.SetParent( node.ground.transform );
 		Instantiate( template ).transform.SetParent( transform, false );
 
-		var tiles = Instantiate( baseTemplate );
+		tiles = Instantiate( baseTemplate );
 		tiles.transform.SetParent( transform, false );
-		Mesh tileMesh = tiles.GetComponent<MeshFilter>().mesh;
-		var vertices = tileMesh.vertices;
-		for ( int i = 0; i < vertices.Length; i++ )
-		{
-			var groundPosition = gt.InverseTransformPoint( tiles.transform.TransformPoint( vertices[i] ) );
-			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z );
-			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
-		}
-		tileMesh.vertices = vertices;
 
 		UpdateBody();
 		for ( int i = 0; i < maxItems; i++ )
@@ -116,7 +106,18 @@ public class Flag : HiveObject
 
 	public void UpdateBody()
 	{
-		transform.localPosition = node.Position + Vector3.up * GroundNode.size * Road.height;
+		transform.localPosition = node.Position;
+
+		var tileMesh = tiles.GetComponent<MeshFilter>().mesh;
+		var gt = node.ground.transform;
+		var vertices = tileMesh.vertices;
+		for ( int i = 0; i < vertices.Length; i++ )
+		{
+			var groundPosition = gt.InverseTransformPoint( tiles.transform.TransformPoint( vertices[i] ) );
+			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z ) + 0.03f;
+			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
+		}
+		tileMesh.vertices = vertices;
 	}
 
 	public bool ReleaseItem( Item item )

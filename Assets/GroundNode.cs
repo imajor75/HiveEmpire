@@ -258,6 +258,7 @@ public class GroundNode : HiveObject
 
 	public void SetHeight( float height )
 	{
+		// TODO Dont rebuild the whole mesh
 		this.height = height;
 		ground.layoutVersion++;
 		if ( flag )
@@ -267,6 +268,8 @@ public class GroundNode : HiveObject
 				road?.RebuildMesh( true );
 			flag?.building?.exit.RebuildMesh( true );
 		}
+		foreach ( var n in Ground.areas[1] )
+			Node.Add( n ).flag?.UpdateBody();
 		road?.RebuildMesh( true );
 		resource?.UpdateBody();
 		foreach ( var border in borders )
