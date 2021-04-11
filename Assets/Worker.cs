@@ -785,7 +785,7 @@ public class Worker : HiveObject
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/axe" ),
 			toolSlot = LinkType.leftHand,
 			timeToInterrupt = 0.7f,
-			duration = 200
+			duration = 500
 		};
 		resourceCollectAct[(int)Resource.Type.rock] = new Act
 		{
@@ -793,7 +793,7 @@ public class Worker : HiveObject
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/pickaxe" ),
 			toolSlot = LinkType.leftHand,
 			timeToInterrupt = 0.7f,
-			duration = 200
+			duration = 500
 		};
 		shovelingAct = new Act
 		{
