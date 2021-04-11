@@ -233,10 +233,10 @@ public class Worker : HiveObject
 				return false;
 
 			if ( timer.Done )
+			{
 				Stop();
-
-			if ( started )
 				return true;
+			}
 
 			Start();
 			return false;
@@ -313,12 +313,14 @@ public class Worker : HiveObject
 		public World.Timer interruptionTimer;
 		public Act lastStepInterruption;
 
-		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null )
+		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, bool findPathNow = false )
 		{
 			base.Setup( boss );
 			this.target = target;
 			this.ignoreFinalObstacle = ignoreFinalObstacle;
 			this.lastStepInterruption = lastStepInterruption;
+			if ( findPathNow )
+				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, boss, ignoreFinalObstacle );
 		}
 		public override bool ExecuteFrame()
 		{
@@ -334,7 +336,7 @@ public class Worker : HiveObject
 					return true;
 				}
 			}
-			boss.Walk( path.NextNode() );
+			boss.Walk( path.NextNode() );	// TODO Check if the node is blocked? The shoveling for construction code relies on we don't check.
 			if ( path.IsFinished && lastStepInterruption != null )
 				boss.ScheduleDoAct( lastStepInterruption, true );
 			return false;
@@ -353,7 +355,7 @@ public class Worker : HiveObject
 
 		public void Setup( Worker boss, Road road, int point, bool exclusive )
 		{
-			boss.assert.IsTrue( point >= 0 && point < road.nodes.Count, "Invalid road point (" + point + ", " + road.nodes.Count + ")" );
+			boss.assert.IsTrue( point >= 0 && point < road.nodes.Count, "Invalid road point (" + point + ", " + road.nodes.Count + ")" ); // TODO Triggered (point=-1)
 			base.Setup( boss );
 			this.road = road;
 			this.exclusive = exclusive;
@@ -1442,10 +1444,10 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null )
+	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, bool findPathNow = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
-		instance.Setup( this, target, ignoreFinalObstacle, interruption );
+		instance.Setup( this, target, ignoreFinalObstacle, interruption, findPathNow );
 		ScheduleTask( instance, first );
 	}
 

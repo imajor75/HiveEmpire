@@ -97,7 +97,7 @@ public class GroundNode : HiveObject
 		transform.localPosition = Position;
 
 		// Decoration
-		World.rnd = new System.Random( (int)( height * 1000 ) );
+		World.rnd = new System.Random( 1000 * x + y );
 		for ( int i = 0; i < neighbourCount / 2; i++ )
 		{
 			if ( World.rnd.NextDouble() > decorationDensity )

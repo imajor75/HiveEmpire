@@ -57,6 +57,7 @@ abstract public class Building : HiveObject
 		public int stoneNeeded;
 		public int stoneOnTheWay;
 		public int stoneArrived;
+		public float level;
 		public Worker worker;
 		public static Shader shader;
 		public static int sliceLevelID;
@@ -83,6 +84,7 @@ abstract public class Building : HiveObject
 			if ( flatteningNeeded )
 			{
 				var area = boss.huge ? hugeArea : singleArea;
+				flatteningArea.Add( boss.node );
 				foreach ( var o in area )
 				{
 					GroundNode basis = boss.node.Add( o );
@@ -93,8 +95,7 @@ abstract public class Building : HiveObject
 							flatteningArea.Add( node );
 					}
 				}
-				flatteningArea.Remove( boss.node );
-				boss.assert.IsTrue( flatteningArea.Count == 6 || flatteningArea.Count == 13, "Area has " + flatteningArea.Count + " nodes" );
+				boss.assert.IsTrue( flatteningArea.Count == 7 || flatteningArea.Count == 14, "Area has " + flatteningArea.Count + " nodes" );
 				foreach ( var node in flatteningArea )
 					node.fixedHeight = true;
 			}
@@ -135,23 +136,51 @@ abstract public class Building : HiveObject
 				suspend.Start( 250 );
 			if ( worker == null || !worker.IsIdle( false ) )
 				return;
+			if ( level == 0 )
+			{
+				foreach ( var o in flatteningArea )
+					level += o.height;
+				level /= flatteningArea.Count;
+			}
+			var area = boss.huge ? hugeArea : singleArea;
 			if ( flatteningNeeded && flatteningCorner < flatteningArea.Count )
 			{
 				if ( worker && worker.IsIdle() )
 				{
-					worker.ScheduleWalkToNode( flatteningArea[flatteningCorner++], true );
-					worker.ScheduleDoAct( Worker.shovelingAct );
-					worker.ScheduleCall( this );
-					worker.ScheduleWalkToNode( boss.node, true );
+					GroundNode node = flatteningArea[flatteningCorner++];
+					float dif = node.height - level;
+					if ( Math.Abs( dif ) > 0.001f )
+					{
+						foreach ( var o in area )
+						{
+							boss.assert.AreEqual( boss.node.Add( o ).building, boss );
+							boss.node.Add( o ).building = null;
+						}
+						worker.ScheduleWalkToNode( node, true, false, null, true );
+						foreach ( var o in area )
+							boss.node.Add( o ).building = boss;
+						worker.ScheduleDoAct( Worker.shovelingAct );
+						worker.ScheduleCall( this );
+					}
 				}
 				return;
 			}
 			if ( progress == 0 )
 			{
-				if ( worker.node == boss.node )
+				var o = new Ground.Offset( 0, -1, 1 );
+				GroundNode node = boss.node.Add( o );
+				if ( worker.node != node )
 				{
-					var o = new Ground.Offset( 0, -1, 1 );
-					worker.Walk( boss.node.Add( o ) );
+					if ( !worker.IsIdle() )
+						return;
+					foreach ( var t in area )
+					{
+						boss.assert.AreEqual( boss.node.Add( t ).building, boss );
+						boss.node.Add( t ).building = null;
+					}
+					worker.ScheduleWalkToNode( node, true, false, null, true );
+					foreach ( var t in area )
+						boss.node.Add( t ).building = boss;
 					return;
 				}
 
@@ -250,7 +279,7 @@ abstract public class Building : HiveObject
 
 		public void Callback( Worker worker )
 		{
-			worker.node.SetHeight( boss.node.height );
+			worker.node.SetHeight( level );
 		}
 	}
 
