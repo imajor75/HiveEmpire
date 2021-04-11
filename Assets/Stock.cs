@@ -122,7 +122,7 @@ public class Stock : Building
 		construction.plankNeeded = 3;
 		construction.stoneNeeded = 3;
 		construction.flatteningNeeded = true;
-		height = 3;
+		height = 1.5f;
 
 		while ( content.Count < (int)Item.Type.total )
 		{
@@ -272,6 +272,7 @@ public class Stock : Building
 				flag.user = cart;
 				cart.exclusiveFlag = flag;
 				cart.onRoad = true;
+				cart.gameObject.SetActive( true );
 			}
 		}
     }

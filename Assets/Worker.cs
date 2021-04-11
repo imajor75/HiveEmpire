@@ -993,7 +993,7 @@ public class Worker : HiveObject
 	void FixedUpdate()
 	{
 		assert.IsNotSelected();
-		if ( type == Type.tinkerer && IsIdle( true ) )
+		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
 			gameObject.SetActive( false );
 			return;
