@@ -41,6 +41,7 @@ abstract public class Building : HiveObject
 		public int stoneNeeded = 0;
 		public bool flatteningNeeded = true;
 		public bool huge = false;
+		public int constructionTime = 0;
 	}
 
 	[System.Serializable]
@@ -48,6 +49,7 @@ abstract public class Building : HiveObject
 	{
 		public Building boss;
 		public bool done;
+		public int duration = 1000;
 		public float progress;
 		public int plankNeeded;
 		public int plankOnTheWay;
@@ -155,7 +157,7 @@ abstract public class Building : HiveObject
 				worker.TurnTo( boss.node );
 				worker.animator?.SetBool( Worker.buildingID, true );
 			}
-			progress += 0.001f*boss.ground.world.timeFactor;	// TODO This should be different for each building type
+			progress += boss.ground.world.timeFactor / duration;
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
 			{

@@ -329,6 +329,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			var serializer = JsonSerializer.Create();
 			configurations = serializer.Deserialize<Configuration[]>( reader );
+			foreach ( var c in configurations )
+				if ( c.constructionTime == 0 )
+					c.constructionTime = 500 * ( c.plankNeeded + c.stoneNeeded );
 		}
 
 		object[] looksData = {
@@ -416,6 +419,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		construction.plankNeeded = configuration.plankNeeded;
 		construction.stoneNeeded = configuration.stoneNeeded;
 		construction.flatteningNeeded = configuration.flatteningNeeded;
+		construction.duration = configuration.constructionTime;
 
 		if ( configuration.inputs == null )
 		{
