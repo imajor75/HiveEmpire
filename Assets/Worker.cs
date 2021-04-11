@@ -41,6 +41,10 @@ public class Worker : HiveObject
 	static MediaTable<GameObject, Type> looks;
 	public static Act[] resourceCollectAct = new Act[(int)Resource.Type.total];
 	public static Act shovelingAct;
+	public static Act constructingAct;
+
+	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
+	public bool underControl;
 
 	public Road road;
 	public bool onRoad;
@@ -55,7 +59,6 @@ public class Worker : HiveObject
 	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
 
 	public List<Task> taskQueue = new List<Task>();
-	public bool underControl;	// When this is true, something is giving tasks to the workers, no need to find a new task if the queue is empty.
 	GameObject body;
 	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 	public GameObject haulingBox;
@@ -99,7 +102,7 @@ public class Worker : HiveObject
 
 	public class Act
 	{
-		public float timeToInterrupt;
+		public float timeToInterrupt = -1;
 		public int duration;
 		public int animation;
 		public AudioClip sound;
@@ -183,6 +186,8 @@ public class Worker : HiveObject
 
 		public void Start()
 		{
+			if ( started )
+				return;
 			if ( boss.animator )
 				wasWalking = boss.animator.GetBool( walkingID );
 			boss.animator?.SetBool( walkingID, false );
@@ -195,11 +200,14 @@ public class Worker : HiveObject
 
 		public void Stop()
 		{
+			if ( !started )
+				return;
 			timer.Reset();
 			boss.animator?.SetBool( act.animation, false );
 			boss.animator?.SetBool( walkingID, wasWalking );
 			if ( tool )
 				Destroy( tool );
+			started = false;
 		}
 
 		public override bool InterruptWalk()
@@ -210,7 +218,7 @@ public class Worker : HiveObject
 			if ( timer.Done )
 				Stop();
 
-			if ( !started && boss.walkProgress >= act.timeToInterrupt )
+			if ( !started && boss.walkProgress >= act.timeToInterrupt && act.timeToInterrupt >= 0 )
 			{
 				Start();
 				return true;
@@ -221,7 +229,7 @@ public class Worker : HiveObject
 
 		public override bool ExecuteFrame()
 		{
-			if ( timer.InProgress )
+			if ( timer.InProgress || act.duration < 0 )
 				return false;
 
 			if ( timer.Done )
@@ -708,7 +716,7 @@ public class Worker : HiveObject
 			if ( timer.Empty )
 				timer.Start( time );
 
-			return timer.Done;
+			return timer.Done && time >= 0;
 		}
 	}
 
@@ -808,6 +816,13 @@ public class Worker : HiveObject
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/shovel" ),
 			toolSlot = LinkType.leftHand,
 			duration = Building.flatteningTime
+		};
+		constructingAct = new Act
+		{
+			animation = buildingID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/hammer" ),
+			toolSlot = LinkType.rightHand,
+			duration = -1
 		};
 	}
 
@@ -1037,7 +1052,7 @@ public class Worker : HiveObject
 			}
 			Profiler.EndSample();
 		}
-		if ( IsIdle() && !underControl )
+		if ( IsIdle() )
 		{
 			Profiler.BeginSample( "FindTask" );
 			FindTask();
@@ -1149,6 +1164,9 @@ public class Worker : HiveObject
 	public void FindTask()
 	{
 		assert.IsTrue( IsIdle() );
+		if ( type == Type.constructor )
+			return;		// Let the building control it
+
 		if ( type == Type.hauler )
 		{
 			Profiler.BeginSample( "Hauler" );

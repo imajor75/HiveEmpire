@@ -60,14 +60,15 @@ abstract public class Building : HiveObject
 		public Worker worker;
 		public static Shader shader;
 		public static int sliceLevelID;
-		[JsonIgnore, Obsolete( "Old files", true )]
+		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 		public int timeSinceCreated;
 		public bool flatteningNeeded;
-		[JsonIgnore, Obsolete( "Compatibility for old files", true )]
+		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 		public int flatteningCounter;
 		public int flatteningCorner;
 		public List<GroundNode> flatteningArea = new List<GroundNode>();
 		public World.Timer suspend;
+		public Worker.DoAct hammering;
 
 		static public void Initialize()
 		{
@@ -101,6 +102,7 @@ abstract public class Building : HiveObject
 
 		public bool Remove( bool takeYourTime )
 		{
+			hammering?.Stop();
 			if ( worker != null )
 				return worker.Remove( takeYourTime );
 			return true;
@@ -148,33 +150,33 @@ abstract public class Building : HiveObject
 			{
 				if ( worker.node == boss.node )
 				{
-					worker.underControl = true; // What if the building is removed meanwhile?
 					var o = new Ground.Offset( 0, -1, 1 );
 					worker.Walk( boss.node.Add( o ) );
 					return;
 				}
 
 				worker.TurnTo( boss.node );
-				worker.animator?.SetBool( Worker.buildingID, true );
+				hammering = new Worker.DoAct();
+				hammering.Setup( worker, Worker.constructingAct );
+				hammering.Start();
 			}
 			progress += boss.ground.world.timeFactor / duration;
 			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
 			if ( progress > maxProgress )
 			{
 				progress = maxProgress;
-				worker.animator?.SetBool( Worker.buildingID, false );
+				hammering.Stop();
 			}
 			else
-				worker.animator?.SetBool( Worker.buildingID, true );
+				hammering.Start();
 
 			if ( progress < 1 )
 				return;
 
 			done = true;
-			worker.animator?.SetBool( Worker.buildingID, false );
-			worker.underControl = false;
 			worker.ScheduleWalkToNeighbour( boss.flag.node );
 			worker.type = Worker.Type.unemployed;
+			hammering = null;
 		}
 		public bool ItemOnTheWay( Item item, bool cancel = false )
 		{
