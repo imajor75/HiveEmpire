@@ -1121,12 +1121,16 @@ public class Worker : HiveObject
 			return true;
 		}
 
+		gameObject.SetActive( true );       // Tinkerers are not active when they are idle
+
 		// Try to get to a flag, so that we could walk on the road network to the main building
 		// In case of haulers, node.road should be nonzero, except for the ends, but those already 
 		// has a flag
 		// TODO Pick the closer end
 		if ( node.road != null )
 			ScheduleWalkToRoadPoint( node.road, 0, false );
+		else if ( ( node + Building.flagOffset ).flag )		// Tinkerers are often waiting in building, so there is a flag likely nearby
+			ScheduleWalkToNeighbour( Node + Building.flagOffset );
 
 		road = null;
 		building = null;

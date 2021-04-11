@@ -460,6 +460,8 @@ abstract public class Building : HiveObject
 			return false;
 		if ( worker != null && !worker.Remove() )
 			return false;
+		if ( workerMate != null && !workerMate.Remove() )
+			return false;
 
 		foreach ( var o in construction.flatteningArea )
 			o.fixedHeight = false;
