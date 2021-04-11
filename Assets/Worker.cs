@@ -212,11 +212,17 @@ public class Worker : HiveObject
 
 		public override bool InterruptWalk()
 		{
+			if ( act == null )
+				return false;
 			if ( timer.InProgress )
 				return true;
 
 			if ( timer.Done )
+			{
 				Stop();
+				act = null;
+				return false;
+			}
 
 			if ( !started && boss.walkProgress >= act.timeToInterrupt && act.timeToInterrupt >= 0 )
 			{
@@ -229,6 +235,8 @@ public class Worker : HiveObject
 
 		public override bool ExecuteFrame()
 		{
+			if ( act == null )
+				return true;
 			if ( timer.InProgress || act.duration < 0 )
 				return false;
 
