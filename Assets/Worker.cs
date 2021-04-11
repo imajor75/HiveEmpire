@@ -233,6 +233,13 @@ public class Worker : HiveObject
 			Start();
 			return false;
 		}
+
+		public override void Cancel()
+		{
+			if ( started )
+				Stop();
+			base.Cancel();
+		}
 	}
 	public class WalkToFlag : Task
 	{
