@@ -18,7 +18,7 @@ abstract public class Building : HiveObject
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	public const int flatteningTime = 200;
+	public const int flatteningTime = 220;
 	public float height = 1.5f;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();

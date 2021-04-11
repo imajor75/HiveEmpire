@@ -1213,7 +1213,8 @@ public class Worker : HiveObject
 			ScheduleWalkToNeighbour( building.node );
 			if ( itemInHands )
 				ScheduleDeliverItem( itemInHands );
-			ScheduleCall( building as Workshop );
+			if ( type == Type.tinkerer )
+				ScheduleCall( building as Workshop );
 			return;
 		}
 

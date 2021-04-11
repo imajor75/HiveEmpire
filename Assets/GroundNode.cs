@@ -25,7 +25,7 @@ public class GroundNode : HiveObject
 	static MediaTable<GameObject, Type> decorations;
 	const float decorationSpreadMin = 0.3f;
 	const float decorationSpreadMax = 0.6f;
-	const float decorationDensity = 0.13f;
+	const float decorationDensity = 0.08f;
 
 	public enum Type
 	{
