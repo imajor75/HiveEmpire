@@ -624,7 +624,7 @@ public class Worker : HiveObject
 
 			boss.itemsDelivered++;
 			boss.bored.Start( boredTimeBeforeRemove );
-			boss.links[(int)LinkType.haulingBox]?.SetActive( item.buddy != null );
+			boss.links[(int)LinkType.haulingBox]?.SetActive( item.buddy != null );  // ?
 			boss.assert.AreEqual( item, boss.itemInHands );
 			if ( item.destination?.node == boss.node )
 			{
@@ -1081,9 +1081,6 @@ public class Worker : HiveObject
 
 	public override	bool Remove( bool returnToMainBuilding = true )
 	{
-		itemInHands?.Remove( false );
-		itemInHands = null;
-
 		assert.IsTrue( type != Type.cart || building == null );
 		ResetTasks();
 		if ( origin != null )
@@ -1117,6 +1114,9 @@ public class Worker : HiveObject
 		}
 		if ( !returnToMainBuilding )
 		{
+			itemInHands?.Remove( false );
+			itemInHands = null;
+
 			Destroy( gameObject );
 			return true;
 		}
@@ -1224,16 +1224,15 @@ public class Worker : HiveObject
 		if ( type == Type.unemployed )
 		{
 			if ( this as Stock.Cart )
-				assert.IsNull( building as Stock );
+				assert.IsNull( building as Stock );		// ?
 			if ( node == owner.mainBuilding.node )
 			{
 				if ( walkTo == null )
 				{
 					if ( itemInHands )
 					{
-						owner.mainBuilding.ItemOnTheWay( itemInHands );
-						owner.mainBuilding.ItemArrived( itemInHands );
-						itemInHands.Remove( false );
+						itemInHands.SetRawTarget( owner.mainBuilding );
+						itemInHands.Arrived();
 						itemInHands = null;
 					}
 					Destroy( gameObject );

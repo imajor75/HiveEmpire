@@ -9,7 +9,7 @@ public class Item : HiveObject
 {
 	// The item is either at a flag (the flag member is not null) or in the hands of a worker (the worker member is not null and worker.itemInHands references this object)
 	// or special case: the item is a resource just created, and the worker (as a tinkerer) is about to pick it up
-	public bool justCreated;    // True if the item did not yet enter the world
+	public bool justCreated;    // True if the item did not yet enter the world (for example if the item is a log and in the hand of the woodcutter after chopping a tree, on the way back to the building)
 	public Player owner;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
 	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
@@ -145,6 +145,12 @@ public class Item : HiveObject
 
 	void Update()
 	{
+		// This is dirty. When the origin of an item is destroyed, unity will return true when comparing it to null, however the object is still there, because the 
+		// reference keeps it alive. The problem occurs when the game is saved, the destroyed building is also serialized into the file, and when the file is loaded,
+		// even the unity graphics will be restored, so unity will no longer saying that the reference is null.
+		if ( origin == null )
+			origin = null;
+
 		if ( debugCancelTrip )
 		{
 			CancelTrip();
@@ -281,6 +287,9 @@ public class Item : HiveObject
 		return flag.FinalizeItem( this );
 	}
 
+	/// <summary>
+	///  It also destroys the item.
+	/// </summary>
 	public void Arrived()
 	{
 		if ( flag != null )
@@ -344,6 +353,10 @@ public class Item : HiveObject
 				{
 					if ( !justCreated )
 						assert.AreEqual( worker.itemInHands, this );
+					break;
+				}
+				case Worker.Type.unemployed:
+				{
 					break;
 				}
 				default:
