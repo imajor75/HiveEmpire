@@ -20,6 +20,7 @@ abstract public class Building : HiveObject
 	public Construction construction = new Construction();
 	public const int flatteningTime = 220;
 	public float height = 1.5f;
+	public float levelBrake = 1;
 	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
 	public GroundNode.Type groundTypeNeeded = GroundNode.Type.land;
@@ -338,7 +339,7 @@ abstract public class Building : HiveObject
 		float upperLimit = lowerLimit + height;
 		float level = upperLimit;
 		if ( !construction.done )
-			level = lowerLimit + ( upperLimit - lowerLimit ) * construction.progress;
+			level = lowerLimit + ( upperLimit - lowerLimit ) * (float)Math.Pow( construction.progress, levelBrake );
 		foreach ( var renderer in renderers )
 		{
 			foreach ( var m in renderer.materials )
@@ -421,7 +422,7 @@ abstract public class Building : HiveObject
 		float upperLimit = lowerLimit + height;
 		float level = upperLimit;
 		if ( !construction.done )
-			level = lowerLimit+(upperLimit-lowerLimit)*construction.progress;
+			level = lowerLimit + ( upperLimit - lowerLimit ) * (float)Math.Pow( construction.progress, levelBrake );
 
 		bool highlight = Interface.root.highlightType == Interface.HighlightType.stocks && this as Stock;
 
