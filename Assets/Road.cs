@@ -46,9 +46,10 @@ public class Road : HiveObject, Interface.IInputHandler
 		return new GameObject().AddComponent<Road>();
 	}
 
-	public Road SetupAsBuildingExit( Building building )
+	public Road SetupAsBuildingExit( Building building, bool blueprintOnly )
 	{
 		owner = building.owner;
+		this.blueprintOnly = blueprintOnly;
 		assert.AreEqual( nodes.Count, 0 );
 		decorationOnly = true;
 		nodes.Add( building.node );
@@ -377,22 +378,23 @@ public class Road : HiveObject, Interface.IInputHandler
 			curves[0][block].DirectionAt( fraction ),
 			curves[1][block].DirectionAt( fraction ),
 			curves[2][block].DirectionAt( fraction ) );
-	}						 
+	}
 
 	public int NodeIndex( GroundNode node )
 	{
+		if ( node.road )
+		{
+			assert.AreEqual( nodes[node.roadIndex], node );
+			return node.roadIndex;
+		}
 		if ( node.flag )
 		{
 			if ( nodes[0] == node )
 				return 0;
 			if ( GetNodeFromEnd( 0 ) == node )
 				return nodes.Count - 1;
-			return -1;
 		}
-		if ( node.road != this )
-			return -1;
-		assert.AreEqual( nodes[node.roadIndex], node );
-		return node.roadIndex;
+		return -1;
 	}
 
 	static public Road Between( GroundNode first, GroundNode second )
@@ -505,12 +507,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		int forget = 0;
 		int splitPoint = 0;
 		assert.IsNull( flag.user );
+		// Two cases, in first the flag is already on the road, in the second the flag is next to the road.
 		if ( flag.node.road == this )
-		{
-			while ( splitPoint < nodes.Count && nodes[splitPoint] != flag.node )
-				splitPoint++;
-			assert.AreEqual( nodes[splitPoint], flag.node );
-		}
+			splitPoint = NodeIndex( flag.node );
 		else
 		{
 			int start = 0;
@@ -557,8 +556,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( flag.node == worker.node )
 			{
 				assert.IsFalse( external );
-				assert.AreEqual( workerPoint, -1 );
-				workerPoint = splitPoint;
+				assert.AreEqual( workerPoint, splitPoint );
 			}
 			if ( workerPoint == -1 )
 			{

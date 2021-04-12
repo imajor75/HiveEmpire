@@ -257,7 +257,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			if ( boss.node != node || node.building || node.flag || node.road || node.fixedHeight || node.resource || !node.CheckType( GroundNode.Type.land ) )
 			{
-				(boss.building as Workshop).SetWorking( false );
+				( boss.building as Workshop ).SetWorking( false );
 				return true;
 			}
 
@@ -385,7 +385,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return buildingObject.AddComponent<Workshop>();
 	}
 
-	public Workshop Setup( GroundNode node, Player owner, Type type )
+	public Workshop Setup( GroundNode node, Player owner, Type type, bool blueprintOnly = false )
 	{
 		this.type = type;
 		title = type.ToString();
@@ -393,7 +393,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		SetupConfiguration();
 
-		if ( Setup( node, owner, configuration ) == null )
+		if ( Setup( node, owner, configuration, blueprintOnly ) == null )
 			return null;
 
 		return this;
@@ -463,7 +463,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		body = Instantiate( m.data, transform );
 		body.layer = World.layerIndexPickable;
 		height = m.floatData;
-		levelBrake = height / 2;	// TODO Better way?
+		levelBrake = height / 2;    // TODO Better way?
 		if ( levelBrake < 1 )
 			levelBrake = 1;
 		assert.IsNotNull( body );
@@ -596,7 +596,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		productivity.FixedUpdate( this );
 
-		if ( !construction.done )
+		if ( !construction.done || blueprintOnly )
 		{
 			base.FixedUpdate();
 			return;

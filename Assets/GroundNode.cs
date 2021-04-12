@@ -6,17 +6,17 @@ using UnityEngine.Assertions;
 [System.Serializable]
 public class GroundNode : HiveObject
 {
-    public const float size = 1;
-    public const int neighbourCount = 6;
-    public int x, y;
-    public Building building;
-    public Flag flag;
-    public Road road;
+	public const float size = 1;
+	public const int neighbourCount = 6;
+	public int x, y;
+	public Building building;
+	public Flag flag;
+	public Road road;
 	public Resource resource;
 	public int roadIndex;
-    public float height = 0;
-    public int index = -1;
-    public Ground ground;
+	public float height = 0;
+	public int index = -1;
+	public Ground ground;
 	public Player owner;
 	public int influence;
 	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
@@ -130,7 +130,7 @@ public class GroundNode : HiveObject
 
 	[JsonIgnore]
 	public Vector3 Position
-    {
+	{
 		get
 		{
 			int rx = x-ground.width/2;
@@ -138,23 +138,23 @@ public class GroundNode : HiveObject
 			Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
 			return position;
 		}
-    }
+	}
 
-    public static GroundNode FromPosition( Vector3 position, Ground ground )
-    {
-        int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
-        int x = Mathf.FloorToInt( ( position.x - y * size / 2 + ( size / 2 ) ) / size );
-		return ground.GetNode( x+ground.width/2, y+ground.height/2 );
-    }
+	public static GroundNode FromPosition( Vector3 position, Ground ground )
+	{
+		int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
+		int x = Mathf.FloorToInt( ( position.x - y * size / 2 + ( size / 2 ) ) / size );
+		return ground.GetNode( x + ground.width / 2, y + ground.height / 2 );
+	}
 
-    public int DirectionTo( GroundNode another )
-    {
-        int direction = -1;
-        for ( int i = 0; i < 6; i++ )
-            if ( Neighbour( i ) == another )
-                direction = i;
-        return direction;
-    }
+	public int DirectionTo( GroundNode another )
+	{
+		int direction = -1;
+		for ( int i = 0; i < 6; i++ )
+			if ( Neighbour( i ) == another )
+				direction = i;
+		return direction;
+	}
 
 	public GroundNode Neighbour( int i )
 	{
@@ -177,16 +177,16 @@ public class GroundNode : HiveObject
 		return null;
 	}
 
-    public int DistanceFrom( GroundNode o )
-    {
-        //int e = ground.height, w = ground.width;
+	public int DistanceFrom( GroundNode o )
+	{
+		//int e = ground.height, w = ground.width;
 
-        int h = Mathf.Abs( x - o.x );
-        //int h1 = Mathf.Abs(x-o.x-w);
-        //int h2 = Mathf.Abs(x-o.x+w);
-        //int h = Mathf.Min(Mathf.Min(h0,h1),h2);
+		int h = Mathf.Abs( x - o.x );
+		//int h1 = Mathf.Abs(x-o.x-w);
+		//int h2 = Mathf.Abs(x-o.x+w);
+		//int h = Mathf.Min(Mathf.Min(h0,h1),h2);
 
-        int v = Mathf.Abs( y - o.y );
+		int v = Mathf.Abs( y - o.y );
 		//int v1 = Mathf.Abs(y-o.y-e);
 		//int v2 = Mathf.Abs(y-o.y+e);
 		//int v = Mathf.Min(Mathf.Min(v0,v1),v2);
@@ -195,7 +195,7 @@ public class GroundNode : HiveObject
 		int d = Mathf.Abs( ( x - o.x ) + ( y - o.y ) );
 
 		return Mathf.Max( h, Mathf.Max( v, d ) );
-    }
+	}
 
 	public void AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false, bool expose = false )
 	{
@@ -233,7 +233,7 @@ public class GroundNode : HiveObject
 			resource.life.Start( -2 * Resource.treeGrowthMax );
 
 		if ( resource && expose )
-				resource.exposed.Start( Resource.exposeMax );
+			resource.exposed.Start( Resource.exposeMax );
 	}
 
 	public GroundNode Add( Ground.Offset o )
@@ -338,7 +338,7 @@ public class GroundNode : HiveObject
 			o++;
 		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal )
 			o++;
-		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
+		assert.IsTrue( o == 0 || o == 1 || ( road && flag && flag.blueprintOnly ) );  // TODO Sometimes this is triggered
 		if ( flag )
 			assert.AreEqual( this, flag.node );
 		for ( int i = 0; i < 6; i++ )

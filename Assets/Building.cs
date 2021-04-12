@@ -111,7 +111,7 @@ abstract public class Building : HiveObject
 
 		public void Update( Building building )
 		{
-			if ( done )
+			if ( done || boss.blueprintOnly )
 				return;
 
 			int plankMissing = plankNeeded - plankOnTheWay - plankArrived;
@@ -122,7 +122,7 @@ abstract public class Building : HiveObject
 
 		public void FixedUpdate()
 		{
-			if ( done || suspend.InProgress )
+			if ( done || suspend.InProgress || boss.blueprintOnly )
 				return;
 
 			// TODO Try to find a path only if the road network has been changed
@@ -325,7 +325,7 @@ abstract public class Building : HiveObject
 		return flagLocation.flag || Flag.IsNodeSuitable( flagLocation, owner );
 	}
 
-	public Building Setup( GroundNode node, Player owner, Configuration configuration )
+	public Building Setup( GroundNode node, Player owner, Configuration configuration, bool blueprintOnly = false )
 	{
 		if ( !IsNodeSuitable( node, owner, configuration ) )
 		{
@@ -335,7 +335,7 @@ abstract public class Building : HiveObject
 		var flagNode = node.Add( flagOffset );
 		Flag flag = flagNode.flag;
 		if ( flag == null )
-			flag = Flag.Create().Setup( flagNode, owner );
+			flag = Flag.Create().Setup( flagNode, owner, blueprintOnly );
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
@@ -346,6 +346,7 @@ abstract public class Building : HiveObject
 		ground = node.ground;
 		this.flag = flag;
 		this.owner = owner;
+		this.blueprintOnly = blueprintOnly;
 		flag.building = this;
 
 		this.node = node;
@@ -358,6 +359,13 @@ abstract public class Building : HiveObject
 		}
 
 		return this;
+	}
+
+	public override void Materialize()
+	{
+		if ( flag.blueprintOnly )
+			flag.Materialize();
+		base.Materialize();
 	}
 
 	public void Start()
@@ -384,7 +392,7 @@ abstract public class Building : HiveObject
 
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
-		exit.SetupAsBuildingExit( this );
+		exit.SetupAsBuildingExit( this, blueprintOnly );
 		highlightArrow = Instantiate( Resources.Load<GameObject>( "prefabs/others/gem" ) );
 		highlightArrow.transform.SetParent( transform );
 		highlightArrow.transform.localScale = Vector3.one * 3f;
@@ -454,7 +462,7 @@ abstract public class Building : HiveObject
 		float lowerLimit = transform.position.y;
 		float upperLimit = lowerLimit + height;
 		float level = upperLimit;
-		if ( !construction.done )
+		if ( !construction.done && !blueprintOnly )
 			level = lowerLimit + ( upperLimit - lowerLimit ) * (float)Math.Pow( construction.progress, levelBrake );
 
 		bool highlight = Interface.root.highlightType == Interface.HighlightType.stocks && this as Stock;
@@ -507,6 +515,12 @@ abstract public class Building : HiveObject
 			basis.building = null;
 		}
 		flag.building = null;
+		int roads = 0;
+		foreach ( var road in flag.roadsStartingHere )
+			if ( road )
+				roads++;
+		if ( roads == 0 )
+			flag.Remove();
 		owner?.versionedBuildingDelete.Trigger();
 		Destroy( gameObject );
 		return true;

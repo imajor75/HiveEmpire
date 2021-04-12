@@ -1635,31 +1635,21 @@ public class Interface : HiveObject
 			this.node = node;
 			name = "Node panel";
 
-			Frame( 0, 0, 400, 550, 30 );
-			Button( 360, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Frame( 0, 0, 380, 180, 30 );
+			Button( 350, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
-			int row = -20;
-			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
-			{
-				var type = (Workshop.Type)i;
-				BuildButton( 180, row, type.ToString(), Workshop.IsNodeSuitable( node, Root.mainPlayer, Workshop.GetConfiguration( type ) ), delegate { BuildWorkshop( type ); } );
-				row -= 20;
-			}
-			BuildButton( 20, -220, "Flag", Flag.IsNodeSuitable( node, Root.mainPlayer ), AddFlag );
-			BuildButton( 20, -240, "Stock", Stock.IsNodeSuitable( node, Root.mainPlayer ), AddStock );
-			BuildButton( 20, -260, "Guardhouse", GuardHouse.IsNodeSuitable( node, Root.mainPlayer ), AddGuardHouse );
 #if DEBUG
-			BuildButton( 20, -280, "Tree", !node.IsBlocking( true ), AddTree );
-			BuildButton( 20, -300, "Remove", node.IsBlocking( true ), Remove );
-			BuildButton( 20, -320, "Raise", true, delegate { AlignHeight( 0.1f ); } );
-			BuildButton( 20, -340, "Lower", true, delegate { AlignHeight( -0.1f ); } );
-			BuildButton( 20, -360, "Cave", !node.IsBlocking( true ), AddCave );
+			BuildButton( 20, -60, "Tree", !node.IsBlocking( true ), AddTree );
+			BuildButton( 20, -80, "Remove", node.IsBlocking( true ), Remove );
+			BuildButton( 20, -100, "Raise", true, delegate { AlignHeight( 0.1f ); } );
+			BuildButton( 20, -120, "Lower", true, delegate { AlignHeight( -0.1f ); } );
+			BuildButton( 20, -140, "Cave", !node.IsBlocking( true ), AddCave );
 
-			BuildButton( 20, -380, "Gold patch", true, delegate { AddResourcePatch( Resource.Type.gold ); } );
-			BuildButton( 20, -400, "Coal patch", true, delegate { AddResourcePatch( Resource.Type.coal ); } );
-			BuildButton( 20, -420, "Iron patch", true, delegate { AddResourcePatch( Resource.Type.iron ); } );
-			BuildButton( 20, -440, "Stone patch", true, delegate { AddResourcePatch( Resource.Type.stone ); } );
-			BuildButton( 20, -460, "Salt patch", true, delegate { AddResourcePatch( Resource.Type.salt ); } );
+			BuildButton( 200, -60, "Gold patch", true, delegate { AddResourcePatch( Resource.Type.gold ); } );
+			BuildButton( 200, -80, "Coal patch", true, delegate { AddResourcePatch( Resource.Type.coal ); } );
+			BuildButton( 200, -100, "Iron patch", true, delegate { AddResourcePatch( Resource.Type.iron ); } );
+			BuildButton( 200, -120, "Stone patch", true, delegate { AddResourcePatch( Resource.Type.stone ); } );
+			BuildButton( 200, -140, "Salt patch", true, delegate { AddResourcePatch( Resource.Type.salt ); } );
 #endif
 			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.Done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
@@ -1682,24 +1672,6 @@ public class Interface : HiveObject
 			node.AddResourcePatch( resourceType, 3, 10, true, true );
 		}
 
-		void AddFlag()
-		{
-			if ( Flag.Create().Setup( node, Root.mainPlayer ) != null )
-				Close();
-		}
-
-		void AddStock()
-		{
-			if ( Stock.Create().Setup( node, Root.mainPlayer ) != null )
-				Close();
-		}
-
-		void AddGuardHouse()
-		{
-			if ( GuardHouse.Create().Setup( node, Root.mainPlayer ) != null )
-				Close();
-		}
-
 		void AddTree()
 		{
 			Resource.Create().Setup( node, Resource.Type.tree ).life.Start( -2 * Resource.treeGrowthMax );
@@ -1719,13 +1691,78 @@ public class Interface : HiveObject
 		{
 			node.SetHeight( node.height + change );
 		}
+	}
+
+	public class BuildPanel : Panel
+	{
+		public static BuildPanel Create()
+		{
+			return new GameObject().AddComponent<BuildPanel>();
+		}
+
+		public void Open()
+		{
+			base.Open();
+			name = "Build panel";
+
+			Frame( 0, 0, 360, 300, 30 );
+			Button( 330, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+
+			int row = -20;
+			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			{
+				var type = (Workshop.Type)i;
+				BuildButton( i % 2 == 0 ? 20 : 180, row, type.ToString(), delegate { BuildWorkshop( type ); } );
+				if ( i % 2 != 0 )
+					row -= 20;
+			}
+			BuildButton( 180, -260, "Flag", AddFlag );
+			BuildButton( 180, -240, "Stock", AddStock );
+			BuildButton( 20, -260, "Guardhouse", AddGuardHouse );
+		}
+
+		void BuildButton( int x, int y, string title, UnityEngine.Events.UnityAction action )
+		{
+			Button button = Button( x, y, 160, 20, title );
+			button.onClick.AddListener( action );
+			if ( !enabled )
+			{
+				Text text = button.gameObject.GetComponentInChildren<Text>();
+				if ( text )
+					text.color = Color.red;
+			}
+		}
+
+		void AddFlag()
+		{
+			root.viewport.constructionMode = Viewport.Construct.flag;
+			Root.viewport.showPossibleBuildings = true;
+			Close();
+		}
+
+		void AddStock()
+		{
+			root.viewport.constructionMode = Viewport.Construct.stock;
+			Root.viewport.showPossibleBuildings = true;
+			Close();
+		}
+
+		void AddGuardHouse()
+		{
+			root.viewport.constructionMode = Viewport.Construct.guardHouse;
+			Root.viewport.showPossibleBuildings = true;
+			Close();
+		}
 
 		public void BuildWorkshop( Workshop.Type type )
 		{
-			if ( Workshop.Create().Setup( node, Root.mainPlayer, type ) != null )
-				Close();
+			root.viewport.constructionMode = Viewport.Construct.workshop;
+			Root.viewport.workshopType = type;
+			Root.viewport.showPossibleBuildings = true;
+			Close();
 		}
 	}
+
 
 	public class RoadPanel : Panel
 	{
@@ -2224,6 +2261,18 @@ public class Interface : HiveObject
 		public bool showGridAtMouse;
 		public bool showPossibleBuildings;
 		static List<BuildPossibility> buildCategories = new List<BuildPossibility>();
+		public HiveObject currentBlueprint;
+
+		public enum Construct
+		{
+			nothing,
+			workshop,
+			stock,
+			guardHouse,
+			flag,
+		}
+		public Construct constructionMode = Construct.nothing;
+		public Workshop.Type workshopType;
 
 		struct BuildPossibility
 		{
@@ -2249,7 +2298,17 @@ public class Interface : HiveObject
 		public bool ResetInputHandler()
 		{
 			if ( inputHandler == this as IInputHandler )
+			{
+				if ( constructionMode != Construct.nothing )
+				{
+					constructionMode = Construct.nothing;
+					currentBlueprint?.Remove();
+					showPossibleBuildings = false;
+					currentBlueprint = null;
+					return true;
+				}
 				return false;
+			}
 			InputHandler = this;
 			return true;
 		}
@@ -2261,6 +2320,7 @@ public class Interface : HiveObject
 			road,
 			flag,
 			building,
+			invisible,
 			total
 		}
 
@@ -2345,6 +2405,11 @@ public class Interface : HiveObject
 			Assert.global.IsNotNull( hiveObject );
 
 			var ground = World.instance.ground;
+
+			var b = hiveObject as Building;
+			if ( b && !b.construction.done )
+				hiveObject = ground;
+
 			if ( hiveObject == ground )
 			{
 				Vector3 localPosition = ground.transform.InverseTransformPoint( hit.point );
@@ -2384,6 +2449,15 @@ public class Interface : HiveObject
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
+			if ( currentBlueprint )
+			{
+				currentBlueprint.Materialize();
+				currentBlueprint = null;
+				constructionMode = Construct.nothing;
+				showPossibleBuildings = false;
+				return;
+			}
+
 			var hiveObject = FindObjectAt( Input.mousePosition );
 			if ( hiveObject == null )
 			{
@@ -2424,9 +2498,11 @@ public class Interface : HiveObject
 		void Update()
 		{
 			if ( GetKeyDown( KeyCode.Alpha1 ) )
-				showPossibleBuildings = !showPossibleBuildings;
+				BuildPanel.Create().Open();
 			if ( GetKeyDown( KeyCode.Alpha2 ) )
 				showGridAtMouse = !showGridAtMouse;
+			if ( GetKeyDown( KeyCode.Alpha3 ) )
+				showPossibleBuildings = !showPossibleBuildings;
 			if ( inputHandler == null || inputHandler.Equals( null ) )
 				inputHandler = this;
 			if ( !mouseOver )
@@ -2471,20 +2547,56 @@ public class Interface : HiveObject
 		{
 			if ( node != null )
 			{
-				CursorType t = CursorType.nothing;
-				GroundNode flagNode = node.Add( Building.flagOffset );
-				bool hasFlagAround = false, hasFlagAroundFlag = false;
-				foreach ( var o in Ground.areas[1] )
-					if ( node.Add( o ).flag != null )
-						hasFlagAround = true;
-				foreach ( var o in Ground.areas[1] )
-					if ( flagNode.Add( o ).flag != null )
-						hasFlagAroundFlag = true;
-				if ( !node.IsBlocking( false ) && !hasFlagAround )
-					t = CursorType.flag;
-				if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
-					t = CursorType.building;
-				SetCursorType( t );
+				if ( constructionMode == Construct.nothing )
+				{
+					CursorType t = CursorType.nothing;
+					GroundNode flagNode = node.Add( Building.flagOffset );
+					bool hasFlagAround = false, hasFlagAroundFlag = false;
+					foreach ( var o in Ground.areas[1] )
+						if ( node.Add( o ).flag != null )
+							hasFlagAround = true;
+					foreach ( var o in Ground.areas[1] )
+						if ( flagNode.Add( o ).flag != null )
+							hasFlagAroundFlag = true;
+					if ( !node.IsBlocking( false ) && !hasFlagAround )
+						t = CursorType.flag;
+					if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
+						t = CursorType.building;
+					SetCursorType( t );
+					return true;
+				}
+
+				SetCursorType( CursorType.invisible );
+				if ( currentBlueprint && currentBlueprint.Node != node )
+				{
+					currentBlueprint.Remove();
+					currentBlueprint = null;
+				}
+				if ( currentBlueprint )
+					return true;
+				switch ( constructionMode )
+				{
+					case Construct.workshop:
+					{
+						currentBlueprint = Workshop.Create().Setup( node, root.mainPlayer, workshopType, true );
+						break;
+					};
+					case Construct.flag:
+					{
+						currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true );
+						break;
+					};
+					case Construct.stock:
+					{
+						currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, true );
+						break;
+					};
+					case Construct.guardHouse:
+					{
+						currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, true );
+						break;
+					};
+				};
 			}
 			return true;
 		}
@@ -2497,13 +2609,14 @@ public class Interface : HiveObject
 				cursor.transform.SetParent( World.instance.ground.transform );
 				for ( int i = 0; i < cursorTypes.Length; i++ )
 				{
-					cursorTypes[i] = World.FindChildRecursive( cursor.transform, ( (CursorType)i ).ToString() ).gameObject;
-					Assert.global.IsNotNull( cursorTypes[i] );
+					cursorTypes[i] = World.FindChildRecursive( cursor.transform, ( (CursorType)i ).ToString() )?.gameObject;
+					if ( i != (int)CursorType.invisible )
+						Assert.global.IsNotNull( cursorTypes[i] );
 				}
 			}
 			
 			for ( int i = 0; i < cursorTypes.Length; i++ )
-				cursorTypes[i].SetActive( i == (int)cursortype );
+				cursorTypes[i]?.SetActive( i == (int)cursortype );
 		}
 
 		public bool OnNodeClicked( GroundNode node )

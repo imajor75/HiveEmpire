@@ -116,7 +116,7 @@ public class Stock : Building
 		return Building.IsNodeSuitable( placeToBuild, owner, configuration );
 	}
 
-	public Stock Setup( GroundNode node, Player owner )
+	public Stock Setup( GroundNode node, Player owner, bool blueprintOnly = false )
 	{
 		title = "stock";
 		construction.plankNeeded = 3;
@@ -133,12 +133,10 @@ public class Stock : Building
 			outputMin.Add( 0 );
 			outputMax.Add( maxItems / 20 );
 		}
-		if ( base.Setup( node, owner, main ? mainConfiguration : configuration ) == null )
+		if ( base.Setup( node, owner, main ? mainConfiguration : configuration, blueprintOnly ) == null )
 			return null;
 
 		owner.RegisterStock( this );
-
-		cart = Cart.Create().SetupAsCart( this ) as Cart;
 
 		return this;
 	}
@@ -207,11 +205,14 @@ public class Stock : Building
 	}
 
 	new public void Update()
-    {
+	{
 		base.Update();
 
-		if ( !construction.done )
+		if ( !construction.done || blueprintOnly )
 			return;
+
+		if ( cart == null )
+			cart = Cart.Create().SetupAsCart( this ) as Cart;
 
 		total = totalTarget = 0;
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
@@ -280,10 +281,8 @@ public class Stock : Building
 	new void FixedUpdate()
 	{
 		base.FixedUpdate();
-		if ( worker == null && construction.done )
-		{
+		if ( worker == null && construction.done && !blueprintOnly )
 			worker = Worker.Create().SetupForBuilding( this );
-		}
 	}
 
 	public override int Influence( GroundNode node )
@@ -354,9 +353,9 @@ public class Stock : Building
 	public override void Validate()
 	{
 		base.Validate();
-		assert.IsNotNull( cart );
-		cart.Validate();
-		assert.AreEqual( cart.building, this );		// TODO Fired
+		cart?.Validate();
+		if ( cart )
+			assert.AreEqual( cart.building, this );		// TODO Fired
 		int[] onWayCounted = new int[(int)Item.Type.total];
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;

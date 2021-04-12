@@ -36,7 +36,7 @@ public class Flag : HiveObject
 		return new GameObject().AddComponent<Flag>();
 	}
 
-	public Flag Setup( GroundNode node, Player owner )
+	public Flag Setup( GroundNode node, Player owner, bool blueprintOnly = false )
     {
 		if ( !IsNodeSuitable( node, owner ) )
 		{
@@ -47,7 +47,8 @@ public class Flag : HiveObject
 		node.flag = this;
         this.node = node;
 		this.owner = owner;
-		if ( node.road )
+		this.blueprintOnly = blueprintOnly;
+		if ( node.road && !blueprintOnly )
 		{
 			if ( node.road.ready )
 				node.road.Split( this );
@@ -59,6 +60,21 @@ public class Flag : HiveObject
 		}
 		return this;
     }
+
+	public override void Materialize()
+	{
+		if ( node.road )
+		{
+			if ( node.road.ready )
+				node.road.Split( this );
+			else
+			{
+				assert.IsTrue( node == node.road.LastNode );
+				node.road = null;
+			}
+		}
+		base.Materialize();
+	}
 
 	void Start()
 	{
@@ -221,7 +237,7 @@ public class Flag : HiveObject
 		Interface.FlagPanel.Create().Open( this );
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override bool Remove( bool takeYourTime = false )
 	{
 		if ( building && !building.Remove( takeYourTime ) )
 			return false;

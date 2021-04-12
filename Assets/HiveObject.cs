@@ -10,6 +10,7 @@ public abstract class HiveObject : MonoBehaviour
 {
 	[JsonIgnore]
 	public Assert assert;
+	public bool blueprintOnly;
 
 	public HiveObject()
 	{
@@ -53,6 +54,12 @@ public abstract class HiveObject : MonoBehaviour
 
 	public virtual void Reset()
 	{ 
+	}
+
+	public virtual void Materialize()
+	{
+		assert.IsTrue( blueprintOnly );
+		blueprintOnly = false;
 	}
 
 	public virtual void OnClicked()

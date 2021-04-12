@@ -28,12 +28,12 @@ public class GuardHouse : Building
 		return new GameObject().AddComponent<GuardHouse>();
 	}
 
-	public GuardHouse Setup( GroundNode node, Player owner )
+	public GuardHouse Setup( GroundNode node, Player owner, bool blueprintOnly = false )
 	{
 		construction.plankNeeded = 2;
 		title = "guardhouse";
 		height = 2;
-		if ( base.Setup( node, owner, configuration ) == null )
+		if ( base.Setup( node, owner, configuration, blueprintOnly ) == null )
 			return null;
 
 		return this;
@@ -48,7 +48,7 @@ public class GuardHouse : Building
 	public new void Update()
 	{
 		base.Update();
-		if ( construction.done && soldiers.Count == 0 )
+		if ( construction.done && soldiers.Count == 0 && !blueprintOnly )
 		{
 			Worker soldier = Worker.Create().SetupAsSoldier( this );
 			if ( soldier == null )
