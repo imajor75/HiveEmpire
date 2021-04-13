@@ -202,12 +202,13 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.animator?.SetBool( animHash, false );
 			boss.soundSource.Stop();
 			Resource resource = node.resource;
+			bool underGround = Resource.IsUnderGround( resourceType );
 			if ( resource && resourceType != Resource.Type.fish )
 			{
 				if ( resourceType != Resource.Type.expose )
 					boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting " + resourceType.ToString() + " but was " + resource.type.ToString() + ")" );   // TODO Fired once (maybe fisherman met a tree?)
 				boss.assert.AreEqual( boss, resource.hunter );
-				if ( Resource.IsUnderGround( resourceType ) || node == boss.node )
+				if ( underGround || node == boss.node )
 				{
 					if ( resourceType == Resource.Type.expose )
 						resource.exposed.Start( Resource.exposeMax );
@@ -227,7 +228,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.assert.AreEqual( resource.hunter, boss );
 				resource.hunter = null;
 			}
-			FinishJob( boss, Resource.ItemType( resourceType ) );
+			if ( underGround )
+				( boss.building as Workshop )?.ItemGathered();
+			else
+				FinishJob( boss, Resource.ItemType( resourceType ) );
 			return true;
 		}
 	}
@@ -581,12 +585,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 		}
 
+		assert.AreEqual( configuration.outputType, item.type );
+		ItemGathered();
+	}
+
+	public void ItemGathered()
+	{
 		// Gatherer arrived back from harvest
 		assert.IsTrue( Gatherer );
-		assert.AreEqual( configuration.outputType, item.type );
 		assert.IsTrue( output < configuration.outputMax );
 		output++;
 		owner.ItemProduced( configuration.outputType );
+		SetWorking( false );
 	}
 
 	[JsonIgnore]
