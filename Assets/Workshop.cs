@@ -370,7 +370,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				resourceCutTime[i] = 1000;
 			else if ( i == (int)Resource.Type.cornfield )
 				resourceCutTime[i] = 300;
-			else if ( i == (int)Resource.Type.tree || i == (int)Resource.Type.rock || i == (int)Resource.Type.pasturingAnimal )
+			else if ( i == (int)Resource.Type.tree || i == (int)Resource.Type.rock || i == (int)Resource.Type.pasturingAnimal || i == (int)Resource.Type.expose )
 				resourceCutTime[i] = 0;
 			else
 				resourceCutTime[i] = 500;
