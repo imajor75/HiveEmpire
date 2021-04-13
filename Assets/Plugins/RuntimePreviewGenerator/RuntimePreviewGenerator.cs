@@ -89,10 +89,10 @@ public static class RuntimePreviewGenerator
 	private static Vector3 PREVIEW_POSITION = new Vector3( -9245f, 9899f, -9356f );
 
 	private static Camera renderCamera;
-	private static CameraSetup cameraSetup = new CameraSetup();
+	private static readonly CameraSetup cameraSetup = new CameraSetup();
 
-	private static List<Renderer> renderersList = new List<Renderer>( 64 );
-	private static List<int> layersList = new List<int>( 64 );
+	private static readonly List<Renderer> renderersList = new List<Renderer>( 64 );
+	private static readonly List<int> layersList = new List<int>( 64 );
 
 	private static float aspect;
 	private static float minX, maxX, minY, maxY;
@@ -364,7 +364,7 @@ public static class RuntimePreviewGenerator
 			if( shader == null )
 				renderCamera.Render();
 			else
-				renderCamera.RenderWithShader( shader, replacementTag == null ? string.Empty : replacementTag );
+				renderCamera.RenderWithShader( shader, replacementTag ?? string.Empty );
 
 			renderCamera.targetTexture = null;
 

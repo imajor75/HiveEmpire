@@ -1127,7 +1127,9 @@ public class Worker : HiveObject
 			if ( currentPoint < 0 )
 			{
 				// There was a building at node, but it was already destroyed
-				currentPoint = road.NodeIndex( node.Add( Building.flagOffset ) );
+				currentPoint = 0;
+				if ( road.workerAtNodes[0] != this )
+					currentPoint = road.nodes.Count - 1;
 			}
 			assert.AreEqual( road.workerAtNodes[currentPoint], this );
 			road.workerAtNodes[currentPoint] = null;
@@ -1161,8 +1163,13 @@ public class Worker : HiveObject
 		// TODO Pick the closer end
 		if ( node.road != null )
 			ScheduleWalkToRoadPoint( node.road, 0, false );
-		else if ( ( node + Building.flagOffset ).flag )		// Tinkerers are often waiting in building, so there is a flag likely nearby
-			ScheduleWalkToNeighbour( Node + Building.flagOffset );
+		foreach ( var o in Ground.areas[1] )        // Tinkerers are often waiting in building, so there is a flag likely nearby
+		{
+			if ( node.Add( o ).flag == null )
+				continue;
+			ScheduleWalkToNeighbour( node.Add( o ) );
+			break;
+		}
 
 		road = null;
 		building = null;
@@ -1218,9 +1225,7 @@ public class Worker : HiveObject
 			}
 			if ( road )
 			{
-				int index = road.NodeIndex( node );
-				if ( index < 0 )
-					index = road.NodeIndex( node.Add( Building.flagOffset ) );
+				int index = IndexOnRoad();
 				assert.AreEqual( road.workerAtNodes[index], this );
 				road.workerAtNodes[index] = null;
 				road = null;
@@ -1316,7 +1321,14 @@ public class Worker : HiveObject
 
 				flag.ReserveItem( itemInHands );
 				if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building
-					ScheduleWalkToNeighbour( node.Add( Building.flagOffset ) ); // It is possible, that the building is not there anymore
+				{
+					foreach ( var o in Ground.areas[1] )
+					{
+						var nn = node.Add( o );
+						if ( nn.flag == road.GetEnd( 0 ) || nn.flag == road.GetEnd( 1 ) )
+							ScheduleWalkToNeighbour( nn ); // It is possible, that the building is not there anymore
+					}
+				}
 				ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
 				ScheduleDeliverItem( itemInHands );
 
@@ -1364,20 +1376,20 @@ public class Worker : HiveObject
 			{
 				if ( item == null || item.flag == null )	// It can be nextFlag as well
 					continue;
-				var value = CheckItem( item );
-				if ( value.swapOnly )
+				var (score, swapOnly) = CheckItem( item );
+				if ( swapOnly )
 				{
-					if ( value.score > bestScoreOnSide[c] )
+					if ( score > bestScoreOnSide[c] )
 					{
-						bestScoreOnSide[c] = value.score;
+						bestScoreOnSide[c] = score;
 						bestItemOnSide[c] = item;
 					}
 				}
 				else
 				{
-					if ( value.score > bestScore )
+					if ( score > bestScore )
 					{
-						bestScore = value.score;
+						bestScore = score;
 						bestItem = item;
 					}
 				}
@@ -1657,7 +1669,7 @@ public class Worker : HiveObject
 	{
 		if ( taskQueue.Count != 0 || walkTo != null )
 			return false;
-		if ( !inBuilding || building as Workshop == null )
+		if ( !inBuilding || !(building is Workshop) )
 			return true;
 		Workshop workshop = building as Workshop;
 		if ( workshop && workshop.working && !workshop.Gatherer )
@@ -1704,6 +1716,25 @@ public class Worker : HiveObject
 		return null;
 	}
 
+	public int IndexOnRoad()
+	{
+		assert.IsTrue( onRoad );
+		assert.IsNotNull( road );
+		int i = road.NodeIndex( node );
+		if ( i >= 0 )
+			return i;
+		foreach ( var o in Ground.areas[1] )
+		{
+			var nn = node.Add( o );
+			if ( nn == road.nodes[0] )
+				return 0;
+
+			assert.AreEqual( nn, road.LastNode );
+			return road.nodes.Count - 1;
+		}
+		return -1;
+	}
+
 	public override void Reset()
 	{
 		if ( type == Type.tinkerer )
@@ -1715,12 +1746,8 @@ public class Worker : HiveObject
 		walkProgress = 0;
 		if ( onRoad )
 		{
-			int index = road.NodeIndex( node );
-			if ( index < 0 )
-			{
-				index = road.NodeIndex( node.Add( Building.flagOffset ) );
-				assert.IsTrue( index >= 0 );
-			}
+			int index = IndexOnRoad();
+			assert.AreEqual( this, road.workerAtNodes[index] );
 			road.workerAtNodes[index] = null;
 			onRoad = false;
 		}
@@ -1799,14 +1826,12 @@ public class Worker : HiveObject
 			assert.IsNotNull( building as Stock );
 			if ( road )
 			{
-				int index = road.NodeIndex( node );
-				if ( index < 0 )
-					index = road.NodeIndex( node.Add( Building.flagOffset ) );
+				int index = IndexOnRoad();
 				assert.IsTrue( index >= 0 );
 				assert.AreEqual( road.workerAtNodes[index], this );
 			}
 		}
-		if ( type == Type.tinkerer && building as Workshop && ( (Workshop)building ).Gatherer )
+		if ( type == Type.tinkerer && building is Workshop workshop && workshop.Gatherer )
 		{
 			if ( IsIdle( true ) )
 				assert.IsNull( itemInHands );

@@ -8,7 +8,7 @@ public class GuardHouse : Building
 	public bool ready;
 	public int influence = 8;
 	public static GameObject template;
-	static Configuration configuration = new Configuration();
+	static readonly Configuration configuration = new Configuration();
 
 	public static new void Initialize()
 	{
@@ -18,9 +18,9 @@ public class GuardHouse : Building
 		configuration.flatteningNeeded = false;
 	}
 
-	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner )
+	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner, int flagDirection )
 	{
-		return Building.IsNodeSuitable( placeToBuild, owner, configuration );
+		return Building.IsNodeSuitable( placeToBuild, owner, configuration, flagDirection );
 	}
 
 	public static GuardHouse Create()
@@ -28,12 +28,12 @@ public class GuardHouse : Building
 		return new GameObject().AddComponent<GuardHouse>();
 	}
 
-	public GuardHouse Setup( GroundNode node, Player owner, bool blueprintOnly = false )
+	public GuardHouse Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
 		construction.plankNeeded = 2;
 		title = "guardhouse";
 		height = 2;
-		if ( base.Setup( node, owner, configuration, blueprintOnly ) == null )
+		if ( base.Setup( node, owner, configuration, flagDirection, blueprintOnly ) == null )
 			return null;
 
 		return this;
@@ -41,7 +41,9 @@ public class GuardHouse : Building
 
 	new void Start()
 	{
-		Instantiate( template, transform ).layer = World.layerIndexPickable;
+		var body = Instantiate( template, transform );
+		body.layer = World.layerIndexPickable;
+		body.transform.RotateAround( node.Position, Vector3.up, 60 * ( 1 - flagDirection ) );
 		base.Start();
 	}
 

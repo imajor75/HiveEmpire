@@ -1,0 +1,5 @@
+﻿[*.cs]
+
+# UNT0008: Uniy object should not use propagation
+dotnet_diagnostic.UNT0007.severity = none
+dotnet_diagnostic.UNT0008.severity = none

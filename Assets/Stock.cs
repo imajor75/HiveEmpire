@@ -16,8 +16,8 @@ public class Stock : Building
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template, mainTemplate;
-	static Configuration configuration = new Configuration();
-	static Configuration mainConfiguration = new Configuration();
+	static readonly Configuration configuration = new Configuration();
+	static readonly Configuration mainConfiguration = new Configuration();
 	public Cart cart;
 	public Ground.Area inputArea = new Ground.Area();
 	public Ground.Area outputArea = new Ground.Area();
@@ -111,12 +111,12 @@ public class Stock : Building
 		return new GameObject().AddComponent<Stock>();
 	}
 
-	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner )
+	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner, int flagDirection )
 	{
-		return Building.IsNodeSuitable( placeToBuild, owner, configuration );
+		return Building.IsNodeSuitable( placeToBuild, owner, configuration, flagDirection );
 	}
 
-	public Stock Setup( GroundNode node, Player owner, bool blueprintOnly = false )
+	public Stock Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
 		title = "stock";
 		construction.plankNeeded = 3;
@@ -133,7 +133,7 @@ public class Stock : Building
 			outputMin.Add( 0 );
 			outputMax.Add( maxItems / 20 );
 		}
-		if ( base.Setup( node, owner, main ? mainConfiguration : configuration, blueprintOnly ) == null )
+		if ( base.Setup( node, owner, main ? mainConfiguration : configuration, flagDirection, blueprintOnly ) == null )
 			return null;
 
 		owner.RegisterStock( this );
@@ -141,20 +141,22 @@ public class Stock : Building
 		return this;
 	}
 
-	public Stock SetupMain( GroundNode node, Player owner )
+	public Stock SetupMain( GroundNode node, Player owner, int flagDirection )
 	{
 		main = true;
 		huge = true;
 
 		node.owner = owner;
-		if ( !Setup( node, owner ) )
+		if ( !Setup( node, owner, flagDirection ) )
 			return null;
 
 		title = "headquarter";
 		height = 3;
-		construction = new Construction();
-		construction.boss = this;
-		construction.done = true;
+		construction = new Construction
+		{
+			boss = this,
+			done = true
+		};
 		if ( construction.flatteningNeeded )
 		{
 			foreach ( var o in Ground.areas[1] )
@@ -202,6 +204,8 @@ public class Stock : Building
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
 		Array.Resize( ref destinations, (int)Item.Type.total );
+
+		body.transform.RotateAround( node.Position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
 	new public void Update()

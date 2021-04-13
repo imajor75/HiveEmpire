@@ -2260,7 +2260,7 @@ public class Interface : HiveObject
 		static int gridMaskZID;
 		public bool showGridAtMouse;
 		public bool showPossibleBuildings;
-		static List<BuildPossibility> buildCategories = new List<BuildPossibility>();
+		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
 
 		public enum Construct
@@ -2273,6 +2273,7 @@ public class Interface : HiveObject
 		}
 		public Construct constructionMode = Construct.nothing;
 		public Workshop.Type workshopType;
+		public int currentFlagDirection = 1;	// 1 is a legacy value.
 
 		struct BuildPossibility
 		{
@@ -2302,9 +2303,8 @@ public class Interface : HiveObject
 				if ( constructionMode != Construct.nothing )
 				{
 					constructionMode = Construct.nothing;
-					currentBlueprint?.Remove();
+					CancelBlueprint();
 					showPossibleBuildings = false;
-					currentBlueprint = null;
 					return true;
 				}
 				return false;
@@ -2324,22 +2324,22 @@ public class Interface : HiveObject
 			total
 		}
 
+		public void CancelBlueprint()
+		{
+			currentBlueprint?.Remove();
+			currentBlueprint = null;
+		}
+
 		public static void Initialize()
 		{
 			gridMaskXID = Shader.PropertyToID( "_GridMaskX" );
 			gridMaskZID = Shader.PropertyToID( "_GridMaskZ" );
 
-			var greenMaterial = new Material( World.defaultShader );
-			greenMaterial.color = new Color( 0.5f, 0.5f, 0.35f );
-			var blueMaterial = new Material( World.defaultShader );
-
-			blueMaterial.color = new Color( 0.3f, 0.45f, 0.6f );
-			var yellowMaterial = new Material( World.defaultShader );
-			yellowMaterial.color = new Color( 177 / 255f, 146 / 255f, 97 / 255f );
-			var orangeMaterial = new Material( World.defaultShader );
-			orangeMaterial.color = new Color( 191 / 255f, 134 / 255f, 91 / 255f );
-			var greyMaterial = new Material( World.defaultShader );
-			greyMaterial.color = Color.grey;
+			var greenMaterial = new Material( World.defaultShader )		{ color = new Color( 0.5f, 0.5f, 0.35f ) };
+			var blueMaterial = new Material( World.defaultShader )		{ color = new Color( 0.3f, 0.45f, 0.6f ) };
+			var yellowMaterial = new Material( World.defaultShader )	{ color = new Color( 177 / 255f, 146 / 255f, 97 / 255f ) };
+			var orangeMaterial = new Material( World.defaultShader )	{ color = new Color( 191 / 255f, 134 / 255f, 91 / 255f ) };
+			var greyMaterial = new Material( World.defaultShader )		{ color = Color.grey };
 			buildCategories.Add( new BuildPossibility
 			{
 				configuration = Workshop.GetConfiguration( Workshop.Type.farm ),
@@ -2501,6 +2501,23 @@ public class Interface : HiveObject
 				BuildPanel.Create().Open();
 			if ( GetKeyDown( KeyCode.Alpha2 ) )
 				showGridAtMouse = !showGridAtMouse;
+			if ( GetKeyDown( KeyCode.Comma ) )
+			{
+				if ( currentFlagDirection == 0 )
+					currentFlagDirection = 5;
+				else
+					currentFlagDirection--;
+				CancelBlueprint();
+			}
+			if ( GetKeyDown( KeyCode.Period ) )
+			{
+				if ( currentFlagDirection == 5 )
+					currentFlagDirection = 0;
+				else
+					currentFlagDirection++;
+				CancelBlueprint();
+			}
+
 			if ( GetKeyDown( KeyCode.Alpha3 ) )
 				showPossibleBuildings = !showPossibleBuildings;
 			if ( inputHandler == null || inputHandler.Equals( null ) )
@@ -2527,7 +2544,7 @@ public class Interface : HiveObject
 					{
 						if ( p.configuration != null )
 						{
-							if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration ) )
+							if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration, currentFlagDirection ) )
 								continue;
 						}
 						else
@@ -2550,7 +2567,7 @@ public class Interface : HiveObject
 				if ( constructionMode == Construct.nothing )
 				{
 					CursorType t = CursorType.nothing;
-					GroundNode flagNode = node.Add( Building.flagOffset );
+					GroundNode flagNode = node.Neighbour( currentFlagDirection );
 					bool hasFlagAround = false, hasFlagAroundFlag = false;
 					foreach ( var o in Ground.areas[1] )
 						if ( node.Add( o ).flag != null )
@@ -2568,17 +2585,14 @@ public class Interface : HiveObject
 
 				SetCursorType( CursorType.invisible );
 				if ( currentBlueprint && currentBlueprint.Node != node )
-				{
-					currentBlueprint.Remove();
-					currentBlueprint = null;
-				}
+					CancelBlueprint();
 				if ( currentBlueprint )
 					return true;
 				switch ( constructionMode )
 				{
 					case Construct.workshop:
 					{
-						currentBlueprint = Workshop.Create().Setup( node, root.mainPlayer, workshopType, true );
+						currentBlueprint = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
 						break;
 					};
 					case Construct.flag:
@@ -2588,12 +2602,12 @@ public class Interface : HiveObject
 					};
 					case Construct.stock:
 					{
-						currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, true );
+						currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
 						break;
 					};
 					case Construct.guardHouse:
 					{
-						currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, true );
+						currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
 						break;
 					};
 				};

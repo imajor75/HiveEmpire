@@ -7,7 +7,7 @@ public class HeightMap : MonoBehaviour
 	public int sizeX = 513, sizeY = 513, size = 9;
 	public bool tileable = false;
 	public bool island = false;
-	float borderLevel = -0.5f;
+	readonly float borderLevel = -0.5f;
 
 	[Range(0.0f, 2.0f)]
 	public float randomness = 1;

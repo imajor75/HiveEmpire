@@ -64,9 +64,9 @@ public class Eye : MonoBehaviour
 		var h = World.instance.ground.GetHeightAt( x, y );
 		if ( h != -1 )
 		{
-			var p = new Vector3( x, h, y );
 			if ( h < World.instance.waterLevel * World.instance.maxHeight )
 				h = World.instance.waterLevel * World.instance.maxHeight;
+			var p = new Vector3( x, h, y );
 			ear.position = p;
 			Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
 			transform.position = p - viewer;

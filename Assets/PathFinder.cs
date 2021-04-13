@@ -95,11 +95,13 @@ public class PathFinder : ScriptableObject
 
 	void AddNode( GroundNode node, float cost, Reached from, Road road = null, bool reversed = false )
     {
-        var n = new Reached();
-        n.node = node;
-        n.costG = cost;
-        n.costH = node.DistanceFrom( target );
-        n.costF = n.costG + n.costH;
+		var n = new Reached
+		{
+			node = node,
+			costG = cost,
+			costH = node.DistanceFrom( target )
+		};
+		n.costF = n.costG + n.costH;
         n.from = from;
 		n.road = road;
 		n.reversed = reversed;

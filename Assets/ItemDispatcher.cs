@@ -108,34 +108,40 @@ public class ItemDispatcher : ScriptableObject
 
 		public void RegisterRequest( Building building, int quantity, Priority priority, Ground.Area area )
 		{
-			var r = new Potential();
-			r.building = building;
-			r.quantity = quantity;
-			r.priority = priority;
-			r.location = building.node;
-			r.type = Potential.Type.request;
-			r.area = area;
+			var r = new Potential
+			{
+				building = building,
+				quantity = quantity,
+				priority = priority,
+				location = building.node,
+				type = Potential.Type.request,
+				area = area
+			};
 			requests.Add( r );
 		}
 
 		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area )
 		{
-			var o = new Potential();
-			o.building = building;
-			o.quantity = quantity;
-			o.priority = priority;
-			o.location = building.node;
-			o.type = Potential.Type.offer;
-			o.area = area;
+			var o = new Potential
+			{
+				building = building,
+				quantity = quantity,
+				priority = priority,
+				location = building.node,
+				type = Potential.Type.offer,
+				area = area
+			};
 			offers.Add( o );
 		}
 
 		public void RegisterOffer( Item item, Priority priority, Ground.Area area )
 		{
-			var o = new Potential();
-			o.item = item;
-			o.quantity = 1;
-			o.priority = priority;
+			var o = new Potential
+			{
+				item = item,
+				quantity = 1,
+				priority = priority
+			};
 			if ( item.flag )
 				o.location = item.flag.node;
 			else

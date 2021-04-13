@@ -123,6 +123,14 @@ public class GroundNode : HiveObject
 			return;
 
 		Gizmos.color = Color.blue;
+		if ( resource )
+			Gizmos.color = Color.magenta;
+		if ( building )
+			Gizmos.color = Color.green;
+		if ( flag )
+			Gizmos.color = Color.red;
+		if ( road )
+			Gizmos.color = Color.yellow;
 		Gizmos.DrawCube( position, Vector3.one * 0.1f );
 		Handles.Label( position + Vector3.one * 0.1f, x.ToString() + ":" + y.ToString() );
 #endif
@@ -159,22 +167,16 @@ public class GroundNode : HiveObject
 	public GroundNode Neighbour( int i )
 	{
 		assert.IsTrue( i >= 0 && i < 6 );
-		switch ( i )
+		return i switch
 		{
-			case 0:
-				return ground.GetNode( x + 0, y - 1 );
-			case 1:
-				return ground.GetNode( x + 1, y - 1 );
-			case 2:
-				return ground.GetNode( x + 1, y + 0 );
-			case 3:
-				return ground.GetNode( x + 0, y + 1 );
-			case 4:
-				return ground.GetNode( x - 1, y + 1 );
-			case 5:
-				return ground.GetNode( x - 1, y + 0 );
-		}
-		return null;
+			0 => ground.GetNode( x + 0, y - 1 ),
+			1 => ground.GetNode( x + 1, y - 1 ),
+			2 => ground.GetNode( x + 1, y + 0 ),
+			3 => ground.GetNode( x + 0, y + 1 ),
+			4 => ground.GetNode( x - 1, y + 1 ),
+			5 => ground.GetNode( x - 1, y + 0 ),
+			_ => null,
+		};
 	}
 
 	public int DistanceFrom( GroundNode o )
@@ -266,7 +268,11 @@ public class GroundNode : HiveObject
 			flag.UpdateBody();
 			foreach ( var road in flag.roadsStartingHere )
 				road?.RebuildMesh( true );
-			flag?.building?.exit.RebuildMesh( true );
+			if ( flag )
+			{
+				foreach ( var building in flag.Buildings() )
+					building.exit?.RebuildMesh( true );
+			}
 		}
 		foreach ( var n in Ground.areas[1] )
 			Node.Add( n ).flag?.UpdateBody();

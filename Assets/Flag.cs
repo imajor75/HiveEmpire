@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -14,6 +16,7 @@ public class Flag : HiveObject
 	public GameObject[] frames = new GameObject[maxItems];
 	public Worker user;
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
+	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 	public Building building;
 	static GameObject template;
 	static GameObject baseTemplate;
@@ -37,29 +40,28 @@ public class Flag : HiveObject
 	}
 
 	public Flag Setup( GroundNode node, Player owner, bool blueprintOnly = false )
-    {
-		if ( !IsNodeSuitable( node, owner ) )
+	{
+		if ( IsNodeSuitable( node, owner ) )
 		{
-			Destroy( this );
-			return null;
-		}
-
-		node.flag = this;
-        this.node = node;
-		this.owner = owner;
-		this.blueprintOnly = blueprintOnly;
-		if ( node.road && !blueprintOnly )
-		{
-			if ( node.road.ready )
-				node.road.Split( this );
-			else
+			node.flag = this;
+			this.node = node;
+			this.owner = owner;
+			this.blueprintOnly = blueprintOnly;
+			if ( node.road && !blueprintOnly )
 			{
-				assert.IsTrue( node == node.road.LastNode );
-				node.road = null;
+				if ( node.road.ready )
+					node.road.Split( this );
+				else
+				{
+					assert.IsTrue( node == node.road.LastNode );
+					node.road = null;
+				}
 			}
+			return this;
 		}
-		return this;
-    }
+		Destroy( this );
+		return null;
+	}
 
 	public override void Materialize()
 	{
@@ -239,8 +241,9 @@ public class Flag : HiveObject
 
 	public override bool Remove( bool takeYourTime = false )
 	{
-		if ( building && !building.Remove( takeYourTime ) )
-			return false;
+		foreach ( var building in Buildings() )
+			if ( !building.Remove( takeYourTime ) )
+				return false;
 		foreach ( var road in roadsStartingHere )
 			road?.Remove( takeYourTime );
 		foreach ( var item in items )
@@ -277,7 +280,7 @@ public class Flag : HiveObject
 
 	override public void Validate()
     {
-		if ( building )
+		foreach ( var building in Buildings() )
 			assert.AreEqual( building.flag, this );
         assert.AreEqual( this, node.flag );
         for ( int i = 0; i < GroundNode.neighbourCount; i++ )
@@ -311,6 +314,22 @@ public class Flag : HiveObject
 		{
 			return node;
 		}
+	}
+
+	/// <summary>
+	/// Returns a list of buildings using this flag as their exit.
+	/// </summary>
+	/// <returns></returns>
+	public List<Building> Buildings()
+	{
+		List<Building> list = new List<Building>();
+		foreach ( var o in Ground.areas[1] )
+		{
+			var b = node.Add( o ).building;
+			if ( b && b.flag == this )
+				list.Add( b );
+		}
+		return list;
 	}
 
 	static public bool IsNodeSuitable( GroundNode placeToBuildOn, Player owner )

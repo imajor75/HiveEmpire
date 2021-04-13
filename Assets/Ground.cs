@@ -415,8 +415,6 @@ public class Ground : HiveObject
 
 	class InfluenceChange
 	{
-		GroundNode node;
-		int newValue;
 	}
 
 	public GroundNode GetCenter()
@@ -436,8 +434,10 @@ public class Ground : HiveObject
 		{
 			foreach ( var building in player.influencers )
 			{
-				List<GroundNode> touched = new List<GroundNode>();
-				touched.Add( building.node );
+				List<GroundNode> touched = new List<GroundNode>
+				{
+					building.node
+				};
 				for ( int i = 0; i < touched.Count; i++ )
 				{
 					int influence = building.Influence( touched[i] );

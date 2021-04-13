@@ -193,17 +193,23 @@ public class Item : HiveObject
 		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the hauler will not be
 		// able to skip entering the building, as it is scheduled already.
 		if ( worker && !nextFlag )
-			return;	// justCreated is true here?
+			return; // justCreated is true here?
 
 		// Anti-jam action. This can happen if all the following is met:
 		// 1. item is waiting too much at a flag
 		// 2. flag is in front of a stock which is already built
 		// 3. item is not yet routing to this building
 		// 4. worker not yet started coming
-		if ( flag && flag.building as Stock && flag.building.construction.done && destination != flag.building && worker == null && atFlag.Age > timeoutAtFlag )
+		if ( flag )
 		{
-			SetTarget( flag.building, ItemDispatcher.Priority.high );
-			return;
+			foreach ( var building in flag.Buildings() )
+			{
+				if ( building as Stock && building.construction.done && destination != building && worker == null && atFlag.Age > timeoutAtFlag )
+				{
+					SetTarget( building, ItemDispatcher.Priority.high );
+					return;
+				}
+			}
 		}
 
 		var offerPriority = ItemDispatcher.Priority.zero;

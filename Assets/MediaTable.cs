@@ -45,11 +45,9 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		table = new List<Media>();
 		foreach ( var g in data )
 		{
-			string file = g as string;
-			if ( file != null )
+			if ( g is string file )
 			{
-				Media media = new Media();
-				media.file = file;
+				Media media = new Media { file = file };
 				table.Add( media );
 			}
 			if ( g.GetType() == typeof( Key ) )

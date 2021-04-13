@@ -187,6 +187,7 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
+				o.flagDirection = o.node.DirectionTo( o.flag.node );
 				var s = o as Workshop;
 				if ( s && s.working && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.Gatherer )
 					s.working = false;
@@ -251,8 +252,7 @@ public class World : MonoBehaviour
 
 	public void Prepare()
 	{
-		var lightObject = new GameObject();
-		lightObject.layer = World.layerIndexPPVolume;
+		var lightObject = new GameObject { layer = World.layerIndexPPVolume };
 		var light = lightObject.AddComponent<Light>();
 		light.type = UnityEngine.LightType.Directional;
 		lightObject.name = "Sun";

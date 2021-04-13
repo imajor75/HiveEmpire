@@ -505,8 +505,8 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		bool external = false;
 		int forget = 0;
-		int splitPoint = 0;
 		assert.IsNull( flag.user );
+		int splitPoint;
 		// Two cases, in first the flag is already on the road, in the second the flag is next to the road.
 		if ( flag.node.road == this )
 			splitPoint = NodeIndex( flag.node );
@@ -552,19 +552,14 @@ public class Road : HiveObject, Interface.IInputHandler
 		foreach ( var worker in workers )
         {
 			// TODO What if worker is not yet onRoad?
-			int workerPoint = NodeIndex( worker.node );
+			int workerPoint = worker.IndexOnRoad();
 			if ( flag.node == worker.node )
 			{
 				assert.IsFalse( external );
 				assert.AreEqual( workerPoint, splitPoint );
 			}
-			if ( workerPoint == -1 )
-			{
-				GroundNode flagNode = worker.node.Add( Building.flagOffset );
-				workerPoint = NodeIndex( flagNode );
-				if ( !external && worker.onRoad )
-					assert.AreNotEqual( workerPoint, -1 );
-			}
+			if ( !external && worker.onRoad )
+				assert.AreNotEqual( workerPoint, -1 );
 			if ( worker.onRoad && splitPoint == workerPoint && !external )
 			{
 				flag.user = worker;

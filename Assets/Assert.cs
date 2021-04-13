@@ -8,7 +8,7 @@ using UnityEngine;
 
 public class Assert
 {
-	Component boss;
+	readonly Component boss;
 	public static Assert global = new Assert( null );
 	public static bool problemSelected = false;
 	public static bool error;

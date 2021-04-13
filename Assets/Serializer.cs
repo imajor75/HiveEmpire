@@ -13,8 +13,7 @@ public class Serializer : JsonSerializer
 	public List<object> objects;
 	object instance;
 	Type type;
-	Type staticType;
-	Serializer boss;
+	readonly Serializer boss;
 	int index;
 	JsonReader reader;
 	static MethodInfo scriptableObjectCreator;
@@ -203,7 +202,7 @@ public class Serializer : JsonSerializer
 
 	object Deserialize( Type type )
 	{
-		this.type = staticType = type;
+		this.type = type;
 		Assert.global.AreEqual( reader.TokenType, JsonToken.StartObject );
 		reader.Read();
 		while ( reader.TokenType == JsonToken.PropertyName )

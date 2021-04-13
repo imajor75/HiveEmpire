@@ -11,6 +11,7 @@ abstract public class Building : HiveObject
 	public Player owner;
 	public Worker worker, workerMate;
 	public Flag flag;
+	public int flagDirection;
 	public Ground ground;
 	public GroundNode node;
 	[JsonIgnore]
@@ -21,12 +22,29 @@ abstract public class Building : HiveObject
 	public const int flatteningTime = 220;
 	public float height = 1.5f;
 	public float levelBrake = 1;
-	public static Ground.Offset flagOffset = new Ground.Offset( 1, -1, 1 );
 	public List<Item> itemsOnTheWay = new List<Item>();
 	public GroundNode.Type groundTypeNeeded = GroundNode.Type.land;
 	public bool huge;
-	public static List<Ground.Offset> singleArea = new List<Ground.Offset>();
-	public static List<Ground.Offset> hugeArea = new List<Ground.Offset>();
+	static List<Ground.Offset> foundationHelper;
+	[JsonIgnore]
+	public List<Ground.Offset> Foundation
+	{
+		get
+		{
+			return GetFoundation( huge, flagDirection );
+		}
+	}
+	static public List<Ground.Offset> GetFoundation( bool huge, int flagDirection )
+	{
+		var list = new List<Ground.Offset> { new Ground.Offset( 0, 0, 0 ) };
+		if ( huge )
+		{
+			list.Add( foundationHelper[( flagDirection + 2 ) % GroundNode.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 3 ) % GroundNode.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 4 ) % GroundNode.neighbourCount] );
+		}
+		return list;
+	}
 	GameObject highlightArrow;
 	bool currentHighlight;
 	float currentLevel;
@@ -83,7 +101,7 @@ abstract public class Building : HiveObject
 			this.boss = boss;
 			if ( flatteningNeeded )
 			{
-				var area = boss.huge ? hugeArea : singleArea;
+				var area = boss.Foundation;
 				flatteningArea.Add( boss.node );
 				foreach ( var o in area )
 				{
@@ -142,7 +160,6 @@ abstract public class Building : HiveObject
 					level += o.height;
 				level /= flatteningArea.Count;
 			}
-			var area = boss.huge ? hugeArea : singleArea;
 			if ( flatteningNeeded && flatteningCorner < flatteningArea.Count )
 			{
 				if ( worker && worker.IsIdle() )
@@ -151,6 +168,7 @@ abstract public class Building : HiveObject
 					float dif = node.height - level;
 					if ( Math.Abs( dif ) > 0.001f )
 					{
+						var area = boss.Foundation;
 						foreach ( var o in area )
 						{
 							boss.assert.AreEqual( boss.node.Add( o ).building, boss );
@@ -173,6 +191,7 @@ abstract public class Building : HiveObject
 				{
 					if ( !worker.IsIdle() )
 						return;
+					var area = boss.Foundation;
 					foreach ( var t in area )
 					{
 						boss.assert.AreEqual( boss.node.Add( t ).building, boss );
@@ -185,7 +204,7 @@ abstract public class Building : HiveObject
 				}
 
 				worker.TurnTo( boss.node );
-				hammering = new Worker.DoAct();
+				hammering = ScriptableObject.CreateInstance<Worker.DoAct>();
 				hammering.Setup( worker, Worker.constructingAct );
 				hammering.Start();
 			}
@@ -285,20 +304,23 @@ abstract public class Building : HiveObject
 
 	public static void Initialize()
 	{
-		singleArea.Add( new Ground.Offset( 0, 0, 0 ) );
-
-		hugeArea.Add( new Ground.Offset( 0, 0, 0 ) );
-		hugeArea.Add( new Ground.Offset( -1, 0, 1 ) );
-		hugeArea.Add( new Ground.Offset( -1, 1, 1 ) );
-		hugeArea.Add( new Ground.Offset( 0, 1, 1 ) );
+		foundationHelper = new List<Ground.Offset>
+		{
+			new Ground.Offset( 0, -1, 1 ),
+			new Ground.Offset( 1, -1, 1 ),
+			new Ground.Offset( 1, 0, 1 ),
+			new Ground.Offset( 0, 1, 1 ),
+			new Ground.Offset( -1, 1, 1 ),
+			new Ground.Offset( -1, 0, 1 )
+		};
 
 		highlightID = Shader.PropertyToID( "_StencilRef" );
 		Construction.Initialize();
 	}
 
-	static public bool IsNodeSuitable( GroundNode placeToBuild, Player owner, Configuration configuration )
+	static public bool IsNodeSuitable( GroundNode placeToBuild, Player owner, Configuration configuration, int flagDirection )
 	{
-		var area = configuration.huge ? hugeArea : singleArea;
+		var area = GetFoundation( configuration.huge, flagDirection );
 
 		foreach ( var o in area )
 		{
@@ -321,18 +343,18 @@ abstract public class Building : HiveObject
 			if ( !basis.CheckType( configuration.groundTypeNeeded ) )
 				return false;
 		}
-		GroundNode flagLocation = placeToBuild.Add( flagOffset );
+		GroundNode flagLocation = placeToBuild.Neighbour( flagDirection );
 		return flagLocation.flag || Flag.IsNodeSuitable( flagLocation, owner );
 	}
 
-	public Building Setup( GroundNode node, Player owner, Configuration configuration, bool blueprintOnly = false )
+	public Building Setup( GroundNode node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
 	{
-		if ( !IsNodeSuitable( node, owner, configuration ) )
+		if ( !IsNodeSuitable( node, owner, configuration, flagDirection ) )
 		{
 			Destroy( gameObject );
 			return null;
 		}
-		var flagNode = node.Add( flagOffset );
+		var flagNode = node.Neighbour( flagDirection );
 		Flag flag = flagNode.flag;
 		if ( flag == null )
 			flag = Flag.Create().Setup( flagNode, owner, blueprintOnly );
@@ -345,13 +367,13 @@ abstract public class Building : HiveObject
 
 		ground = node.ground;
 		this.flag = flag;
+		this.flagDirection = flagDirection;
 		this.owner = owner;
 		this.blueprintOnly = blueprintOnly;
-		flag.building = this;
 
 		this.node = node;
 		construction.Setup( this );
-		var area = configuration.huge ? hugeArea : singleArea;
+		var area = Foundation;
 		foreach ( var o in area )
 		{
 			var basis = node.Add( o );
@@ -507,14 +529,13 @@ abstract public class Building : HiveObject
 
 		foreach ( var o in construction.flatteningArea )
 			o.fixedHeight = false;
-		var area = huge ? hugeArea : singleArea;
+		var area = Foundation;
 		foreach ( var o in area )
 		{
 			var basis = node.Add( o );
 			assert.AreEqual( basis.building, this );
 			basis.building = null;
 		}
-		flag.building = null;
 		int roads = 0;
 		foreach ( var road in flag.roadsStartingHere )
 			if ( road )
@@ -533,7 +554,7 @@ abstract public class Building : HiveObject
 
 	public void UpdateBody()
 	{
-		var area = huge ? hugeArea : singleArea;
+		var area = Foundation;
 		Vector3 position = new Vector3();
 		foreach ( var o in area )
 			position += node.Add( o ).Position;
@@ -551,9 +572,9 @@ abstract public class Building : HiveObject
 
 	public override void Validate()
 	{
-		assert.AreEqual( this, flag.building );
+		assert.IsTrue( flag.Buildings().Contains( this ) );
 		assert.AreEqual( this, node.building );
-		assert.AreEqual( flag, node.Add( flagOffset ).flag );
+		assert.AreEqual( flag, node.Neighbour( flagDirection ).flag );
 		worker?.Validate();
 		workerMate?.Validate();
 		exit?.Validate();

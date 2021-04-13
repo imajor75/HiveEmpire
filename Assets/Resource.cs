@@ -228,31 +228,20 @@ public class Resource : HiveObject
 
 	static public Item.Type ItemType( Type type )
 	{
-		switch ( type )
+		return type switch
 		{
-			case Type.tree:
-				return Item.Type.log;
-			case Type.rock:
-				return Item.Type.stone;
-			case Type.fish:
-				return Item.Type.fish;
-			case Type.cornfield:
-				return Item.Type.grain;
-			case Type.pasturingAnimal:
-				return Item.Type.hide;
-			case Type.salt:
-				return Item.Type.salt;
-			case Type.iron:
-				return Item.Type.iron;
-			case Type.gold:
-				return Item.Type.gold;
-			case Type.coal:
-				return Item.Type.coal;
-			case Type.stone:
-				return Item.Type.stone;
-			default:
-				return Item.Type.unknown;
-		}
+			Type.tree => Item.Type.log,
+			Type.rock => Item.Type.stone,
+			Type.fish => Item.Type.fish,
+			Type.cornfield => Item.Type.grain,
+			Type.pasturingAnimal => Item.Type.hide,
+			Type.salt => Item.Type.salt,
+			Type.iron => Item.Type.iron,
+			Type.gold => Item.Type.gold,
+			Type.coal => Item.Type.coal,
+			Type.stone => Item.Type.stone,
+			_ => Item.Type.unknown,
+		};
 	}
 
 	public override bool Remove( bool takeYourTime )

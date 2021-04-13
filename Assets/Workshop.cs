@@ -385,7 +385,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return buildingObject.AddComponent<Workshop>();
 	}
 
-	public Workshop Setup( GroundNode node, Player owner, Type type, bool blueprintOnly = false )
+	public Workshop Setup( GroundNode node, Player owner, Type type, int flagDirection, bool blueprintOnly = false )
 	{
 		this.type = type;
 		title = type.ToString();
@@ -393,7 +393,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		SetupConfiguration();
 
-		if ( Setup( node, owner, configuration, blueprintOnly ) == null )
+		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly ) == null )
 			return null;
 
 		return this;
@@ -496,6 +496,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			var b = smoke.main;
 			b.simulationSpeed = s;
 		}
+		body.transform.RotateAround( node.Position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
 	new void Update()

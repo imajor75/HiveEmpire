@@ -174,9 +174,10 @@ public class Player : ScriptableObject
 
 	bool CreateMainBuilding()
 	{
+		const int flagDirection = 1;
 		GroundNode center = World.instance.ground.GetCenter(), best = null;
 		float heightdDif = float.MaxValue;
-		var area = Building.hugeArea;
+		var area = Building.GetFoundation( true, flagDirection );
 		List<Ground.Offset> extendedArea = new List<Ground.Offset>();
 		foreach ( var p in area )
 		{
@@ -199,7 +200,7 @@ public class Player : ScriptableObject
 				if ( !localNode.CheckType( GroundNode.Type.land ) || localNode.owner != null || localNode.IsBlocking() )
 					invalidNode = true;
 			}
-			if ( invalidNode || node.Add( Building.flagOffset ).IsBlocking() )
+			if ( invalidNode || node.Neighbour( flagDirection ).IsBlocking() )
 				continue;
 
 			float min, max;
@@ -236,7 +237,7 @@ public class Player : ScriptableObject
 
 		Assert.global.IsNull( mainBuilding );
 		mainBuilding = Stock.Create();
-		mainBuilding.SetupMain( best, this );
+		mainBuilding.SetupMain( best, this, flagDirection );
 		World.instance.eye.FocusOn( mainBuilding.node );
 		return true;
 	}
