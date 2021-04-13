@@ -12,7 +12,7 @@ public class GuardHouse : Building
 
 	public static new void Initialize()
 	{
-		template = (GameObject)Resources.Load( "WatchTower/Tower" );
+		template = (GameObject)Resources.Load( "prefabs/buildings/guardhouse" );
 		configuration.plankNeeded = 2;
 		configuration.stoneNeeded = 2;
 		configuration.flatteningNeeded = false;

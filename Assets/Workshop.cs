@@ -340,7 +340,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"prefabs/buildings/hunter", 1.1f, Type.hunter,
 			"prefabs/buildings/sawmill", 2.9f, Type.sawmill,
 			"prefabs/buildings/smallCabin", 1.4f, Type.stonemason,
-			"WatchTower/Tower",
 			"prefabs/buildings/farm", 1.8f, Type.farm,
 			"prefabs/buildings/mill", 3.5f, Type.mill,
 			"Mines/saltmine_final", 1.5f, Type.saltmine,
