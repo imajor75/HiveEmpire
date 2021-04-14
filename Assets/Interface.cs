@@ -99,13 +99,13 @@ public class Interface : HiveObject
 		}
 	}
 
-	void OnApplicationQuit()
+	public void OnApplicationQuit()
 	{
 		if ( !Assert.error )
 			Save();
 	}
 
-	void LateUpdate()
+	public void LateUpdate()
 	{
 		Validate();
 	}
@@ -126,7 +126,7 @@ public class Interface : HiveObject
 		return Input.GetKeyDown( key );
 	}
 
-	void FixedUpdate()
+	public void FixedUpdate()
 	{
 		if ( EventSystem.current.currentSelectedGameObject != null && EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null )
 			focusOnInputField = true;
@@ -202,7 +202,7 @@ public class Interface : HiveObject
 		};
 	}
 
-	void Start()
+	public void Start()
 	{
 		GroundNode.Initialize();
 		Assert.Initialize();
@@ -288,7 +288,7 @@ public class Interface : HiveObject
 		print( fileName + " is saved" );
 	}
 
-	void Update()
+	public void Update()
 	{
 		if ( world.timeFactor != 0 && world.timeFactor != 8 )
 		{
@@ -978,7 +978,7 @@ public class Interface : HiveObject
 					root.highlightType = HighlightType.none;
 			}
 
-			void Update()
+			public void Update()
 			{
 				image.color = area.center != null ? Color.green : Color.grey;
 				if ( GetKeyDown( KeyCode.Comma ) )
@@ -1032,7 +1032,7 @@ public class Interface : HiveObject
 				sprite = Item.sprites[(int)itemType];
 			}
 
-			new void OnDestroy()
+			public new void OnDestroy()
 			{
 				base.OnDestroy();
 				Destroy( path );
@@ -1420,6 +1420,8 @@ public class Interface : HiveObject
 			Frame( 0, 0, 300, 200 );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 270, -160, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+			if ( show )
+				Root.world.eye.FocusOn( guardHouse );
 		}
 		void Remove()
 		{
@@ -2109,7 +2111,7 @@ public class Interface : HiveObject
 				MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
 		}
 
-		new void OnDestroy()
+		public new void OnDestroy()
 		{
 			base.OnDestroy();
 			World.instance.eye.ReleaseFocus( this );
@@ -2152,7 +2154,7 @@ public class Interface : HiveObject
 				Root.world.eye.FocusOn( workshop );
 		}
 
-		new void Update()
+		public new void Update()
 		{
 			if ( construction.done )
 			{
@@ -2264,7 +2266,7 @@ public class Interface : HiveObject
 				World.instance.eye.FocusOn( item.worker );
 		}
 
-		new void OnDestroy()
+		public new void OnDestroy()
 		{
 			base.OnDestroy();
 			World.instance.eye.ReleaseFocus( this );
@@ -2509,7 +2511,7 @@ public class Interface : HiveObject
 			mouseOver = false;
 		}
 
-		void Start()
+		public void Start()
 		{
 			Image image = gameObject.AddComponent<Image>();
 			image.rectTransform.anchorMin = Vector2.zero;
@@ -2520,7 +2522,7 @@ public class Interface : HiveObject
 			inputHandler = this;
 		}
 
-		void Update()
+		public void Update()
 		{
 			if ( GetKeyDown( KeyCode.Alpha1 ) )
 				BuildPanel.Create().Open();
@@ -2717,7 +2719,7 @@ public class Interface : HiveObject
 			Fill( CompareByAge );
 		}
 
-		new void OnDestroy()
+		public new void OnDestroy()
 		{
 			base.OnDestroy();
 			World.instance.SetTimeFactor( 1 );
@@ -2851,7 +2853,7 @@ public class Interface : HiveObject
 			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 280, (int)Item.Type.total * ( iconSize + 5 ) );
 		}
 
-		new void Update()
+		public new void Update()
 		{
 			base.Update();
 			int[] inStockCount = new int[(int)Item.Type.total];
@@ -3039,14 +3041,14 @@ public class Interface : HiveObject
 			}
 		}
 
-		new void OnDestroy()
+		public new void OnDestroy()
 		{
 			base.OnDestroy();
 			if ( focusOnMainBuilding )
 				root.world.eye.ReleaseFocus( null, true );
 		}
 
-		new void Update()
+		public new void Update()
 		{
 			base.Update();
 			if ( loadNamesRefreshNeeded )

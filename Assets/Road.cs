@@ -69,7 +69,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		// Starting a new road
 		if ( road == null || road.nodes.Count == 0 )
 		{
-			if ( !node.flag )
+			if ( !node.ValidFlag )
 				return false;
 
 			if ( node.flag.owner != road.owner )
@@ -141,7 +141,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool RemoveLastNode()
 	{
 		var node = LastNode;
-		if ( !node.flag )
+		if ( !node.ValidFlag )
 		{
 			if ( node.road == this )
 				node.road = null;
@@ -162,7 +162,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool Finish()
 	{
 		assert.IsFalse( ready );
-		if ( !LastNode.flag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
+		if ( !LastNode.ValidFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
@@ -191,7 +191,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return GetNodeFromEnd( 0 ).flag;
 	}
 
-	void Start()
+	public void Start()
 	{
 		transform.SetParent( ground.transform, false );
 		if ( nodes.Count > 0 )	
@@ -226,7 +226,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 	}
 
-	void Update()
+	public void Update()
 	{
 		if ( !ready )
 			return;
@@ -387,7 +387,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( nodes[node.roadIndex], node );
 			return node.roadIndex;
 		}
-		if ( node.flag )
+		if ( node.ValidFlag )
 		{
 			if ( nodes[0] == node )
 				return 0;
@@ -399,9 +399,9 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	static public Road Between( GroundNode first, GroundNode second )
 	{
-		Assert.global.IsNotNull( first.flag );
-		Assert.global.IsNotNull( second.flag );
-		if ( first.flag == null || second.flag == null )
+		Assert.global.IsNotNull( first.ValidFlag );
+		Assert.global.IsNotNull( second.ValidFlag );
+		if ( first.ValidFlag == null || second.ValidFlag == null )
 			return null;
 		foreach ( var road in first.flag.roadsStartingHere )
 		{
@@ -457,7 +457,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	void AttachWatches()
 	{
 		watchStartFlag.Attach( nodes[0].flag.itemsStored );
-		watchEndFlag.Attach( GetNodeFromEnd( 0 ).flag.itemsStored );
+		watchEndFlag.Attach( LastNode.flag.itemsStored );
 	}
 
 	public void CreateCurves()
@@ -642,7 +642,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	void OnDestroy()
+	public void OnDestroy()
 	{
 		owner.versionedRoadDelete.Trigger();
 	}
@@ -790,7 +790,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		tempNodes = 0;
 		RebuildMesh();
-		if ( node.flag )
+		if ( node.ValidFlag )
 		{
 			if ( !Finish() )
 				Remove( false );

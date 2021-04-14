@@ -79,7 +79,7 @@ public class Flag : HiveObject
 		base.Materialize();
 	}
 
-	void Start()
+	public void Start()
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
@@ -108,7 +108,7 @@ public class Flag : HiveObject
 		}
 	}
 
-	void Update()
+	public void Update()
 	{
 		if ( debugSpawnPlank )
 		{

@@ -135,7 +135,7 @@ public class Resource : HiveObject
 	}
 
     // Start is called before the first frame update
-    void Start()
+    public void Start()
     {
 		transform.SetParent( World.resources.transform );
 		transform.localPosition = node.Position;
@@ -157,7 +157,7 @@ public class Resource : HiveObject
 		soundSource = World.CreateSoundSource( this );
 	}
 
-	void Update()
+	public void Update()
 	{
 		if ( type == Type.cornfield )
 		{
@@ -179,7 +179,7 @@ public class Resource : HiveObject
 		}
 	}
 
-	void FixedUpdate()
+	public void FixedUpdate()
 	{
 		if ( underGround )
 			body?.SetActive( !exposed.Done && !exposed.Empty );

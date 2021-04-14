@@ -27,6 +27,16 @@ public class GroundNode : HiveObject
 	const float decorationSpreadMax = 0.6f;
 	const float decorationDensity = 0.08f;
 
+	public Flag ValidFlag
+	{
+		get
+		{
+			if ( flag && !flag.blueprintOnly )
+				return flag;
+			return null;
+		}
+	}
+
 	public enum Type
 	{
 		grass = 1,
@@ -90,7 +100,7 @@ public class GroundNode : HiveObject
 		return this;
 	}
 
-	void Start()
+	public void Start()
 	{
 		name = "GroundNode (" + x + ", " + y + ")";
 		transform.SetParent( World.nodes.transform );
@@ -115,7 +125,7 @@ public class GroundNode : HiveObject
 		}
 	}
 
-	void OnDrawGizmos()
+	public void OnDrawGizmos()
 	{
 #if DEBUG
 		Vector3 position = Position;
@@ -336,7 +346,7 @@ public class GroundNode : HiveObject
 	public override void Validate()
 	{
 		int o = 0;
-		if ( flag )
+		if ( ValidFlag )
 			o++;
 		if ( road )
 			o++;
@@ -344,9 +354,7 @@ public class GroundNode : HiveObject
 			o++;
 		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal )
 			o++;
-		assert.IsTrue( o == 0 || o == 1 || ( road && flag && flag.blueprintOnly ) );  // TODO Sometimes this is triggered
-		if ( flag )
-			assert.AreEqual( this, flag.node );
+		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 		for ( int i = 0; i < 6; i++ )
 			assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
 		if ( flag )

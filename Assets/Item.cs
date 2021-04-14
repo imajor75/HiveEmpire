@@ -137,7 +137,7 @@ public class Item : HiveObject
 		return this;
 	}
 
-	void Start()
+	public void Start()
 	{
 		body = Instantiate( looks.GetMediaData( type ) );
 		bottomHeight = body.GetComponent<MeshRenderer>().bounds.min.y;
@@ -146,7 +146,7 @@ public class Item : HiveObject
 		name = type.ToString();
 	}
 
-	void Update()
+	public void Update()
 	{
 		// This is dirty. When the origin of an item is destroyed, unity will return true when comparing it to null, however the object is still there, because the 
 		// reference keeps it alive. The problem occurs when the game is saved, the destroyed building is also serialized into the file, and when the file is loaded,

@@ -460,7 +460,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return worker != null && !worker.IsIdle( true );
 	}
 
-	new void Start()
+	public new void Start()
 	{
 		var m = looks.GetMedia( type );
 		body = Instantiate( m.data, transform );
@@ -502,7 +502,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		body.transform.RotateAround( node.Position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
-	new void Update()
+	public new void Update()
 	{
 		base.Update();
 
@@ -602,7 +602,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	[JsonIgnore]
 	public bool Gatherer { get { return configuration.gatheredResource != Resource.Type.unknown; } }
 
-	new void FixedUpdate()
+	public new void FixedUpdate()
 	{
 		productivity.FixedUpdate( this );
 
@@ -934,7 +934,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			Interface.ConstructionPanel.Create().Open( this.construction );
 	}
 
-	void OnDrawGizmos()
+	public void OnDrawGizmos()
 	{
 #if DEBUG
 		if ( Selection.Contains( gameObject ) && resourcePlace != null )

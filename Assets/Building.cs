@@ -344,7 +344,7 @@ abstract public class Building : HiveObject
 				return false;
 		}
 		GroundNode flagLocation = placeToBuild.Neighbour( flagDirection );
-		return flagLocation.flag || Flag.IsNodeSuitable( flagLocation, owner );
+		return flagLocation.ValidFlag || Flag.IsNodeSuitable( flagLocation, owner );
 	}
 
 	public Building Setup( GroundNode node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
@@ -355,7 +355,7 @@ abstract public class Building : HiveObject
 			return null;
 		}
 		var flagNode = node.Neighbour( flagDirection );
-		Flag flag = flagNode.flag;
+		Flag flag = flagNode.ValidFlag;
 		if ( flag == null )
 			flag = Flag.Create().Setup( flagNode, owner, blueprintOnly );
 		if ( flag == null )

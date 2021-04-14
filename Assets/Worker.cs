@@ -413,7 +413,7 @@ public class Worker : HiveObject
 			if ( exclusive && !ignoreOtherWorkers )
 			{
 				Worker other = road.workerAtNodes[nextPoint];
-				Flag flag = road.nodes[nextPoint].flag;
+				Flag flag = road.nodes[nextPoint].ValidFlag;
 				if ( flag )
 				{
 					boss.assert.IsTrue( other == null || other == flag.user );
@@ -455,14 +455,14 @@ public class Worker : HiveObject
 			if ( exclusive )
 			{
 				road.workerAtNodes[currentPoint] = boss;
-				if ( boss.walkTo.flag )
+				if ( boss.walkTo.ValidFlag )
 				{
 					if ( !ignoreOtherWorkers )
 						boss.assert.IsNull( boss.walkTo.flag.user, "Worker still in way at flag." );
 					boss.walkTo.flag.user = boss;
 					boss.exclusiveFlag = boss.walkTo.flag;
 				}
-				if ( boss.walkFrom.flag )
+				if ( boss.walkFrom.ValidFlag )
 				{
 					if ( boss.walkFrom.flag.user == boss )
 						boss.walkFrom.flag.user = null;
@@ -934,7 +934,7 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	void Start()
+	public void Start()
 	{
 		if ( road != null )
 			transform.SetParent( road.ground.transform );
@@ -1031,7 +1031,7 @@ public class Worker : HiveObject
 	}
 
 	// Update is called once per frame
-	void FixedUpdate()
+	public void FixedUpdate()
 	{
 		assert.IsNotSelected();
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
@@ -1174,7 +1174,7 @@ public class Worker : HiveObject
 			ScheduleWalkToRoadPoint( node.road, 0, false );
 		foreach ( var o in Ground.areas[1] )        // Tinkerers are often waiting in building, so there is a flag likely nearby
 		{
-			if ( node.Add( o ).flag == null )
+			if ( node.Add( o ).ValidFlag == null )
 				continue;
 			ScheduleWalkToNeighbour( node.Add( o ) );
 			break;
@@ -1244,7 +1244,7 @@ public class Worker : HiveObject
 				return;
 
 			assert.IsNotNull( stock );
-			if ( node.flag )
+			if ( node.ValidFlag )
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
@@ -1259,7 +1259,7 @@ public class Worker : HiveObject
 		{
 			assert.IsTrue( type == Type.tinkerer || type == Type.constructor );	// This happens if the path to the building gets disabled for any reason
 			ScheduleWait( 300 );
-			if ( node.flag )	// TODO Do something if the worker can't get home
+			if ( node.ValidFlag )	// TODO Do something if the worker can't get home
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
@@ -1297,7 +1297,7 @@ public class Worker : HiveObject
 				ScheduleWalkToNeighbour( owner.mainBuilding.node );
 				return;
 			}
-			if ( node.flag )
+			if ( node.ValidFlag )
 				ScheduleWalkToFlag( owner.mainBuilding.flag );
 			else
 				ScheduleWalkToNode( owner.mainBuilding.flag.node );
