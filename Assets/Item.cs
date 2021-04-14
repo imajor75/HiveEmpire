@@ -26,6 +26,7 @@ public class Item : HiveObject
 	public World.Timer life;
 	public World.Timer atFlag;
 	const int timeoutAtFlag = 9000;
+	public float bottomHeight;		// y coordinate of the plane at the bottom of the item in the parent transformation
 	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
 	public int index = -1;
 	public static bool creditOnRemove = true;
@@ -138,8 +139,10 @@ public class Item : HiveObject
 
 	void Start()
 	{
-		body = Instantiate( looks.GetMediaData( type ), transform );
-		assert.IsNotNull( body );
+		body = Instantiate( looks.GetMediaData( type ) );
+		bottomHeight = body.GetComponent<MeshRenderer>().bounds.min.y;
+		body.transform.SetParent( transform, false );
+   		assert.IsNotNull( body );
 		name = type.ToString();
 	}
 

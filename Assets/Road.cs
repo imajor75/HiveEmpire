@@ -864,8 +864,8 @@ public class Road : HiveObject, Interface.IInputHandler
 					realJam++;
 			}
 		}
-		assert.AreEqual( realJam, Jam );
-		for ( int i = 0; i < nodes.Count - 1; i++ )
+		assert.AreEqual( realJam, Jam );	// TODO Triggered (realJam=7, Jam=8)
+			for ( int i = 0; i < nodes.Count - 1; i++ )
 			assert.AreEqual( nodes[i].DistanceFrom( nodes[i + 1] ), 1 );
 		if ( !ready )
 			assert.IsTrue( tempNodes < nodes.Count );

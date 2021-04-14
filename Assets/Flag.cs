@@ -25,6 +25,7 @@ public class Flag : HiveObject
 	public bool debugSpawnPlank;
 	public const float itemSpread = 0.25f;
 	GameObject tiles;
+	const float tilesHeight = 0.03f;
 
 	static public void Initialize()
 	{
@@ -90,18 +91,17 @@ public class Flag : HiveObject
 		UpdateBody();
 		for ( int i = 0; i < maxItems; i++ )
 		{
-			frames[i] = new GameObject
-			{
-				name = "Item Frame " + i
-			};
+			frames[i] = new GameObject { name = "Item Frame " + i };
 			var t = frames[i].transform;
 			t.SetParent( transform, false );
+			t.localScale = 0.1f * Vector3.one;
 			Vector3 pos;
+			float itemBottomHeight = items[i] == null ? 0 : items[i].bottomHeight;
 			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
 			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
-			pos.y = node.ground.GetHeightAt( node.Position.x + pos.x, node.Position.z + pos.z ) - node.height;
+			// Adjust the height of the frame so that the item in it should be just above the tiles of the flag
+			pos.y = node.ground.GetHeightAt( node.Position.x + pos.x, node.Position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.Position.y + tilesHeight;
 			t.localPosition = pos;
-			t.localScale = 0.1f * Vector3.one;
 			t.LookAt( transform );
 			if ( items[i] != null )
 				items[i].transform.SetParent( frames[i].transform, false );
@@ -132,7 +132,7 @@ public class Flag : HiveObject
 		for ( int i = 0; i < vertices.Length; i++ )
 		{
 			var groundPosition = gt.InverseTransformPoint( tiles.transform.TransformPoint( vertices[i] ) );
-			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z ) + 0.03f;
+			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z ) + tilesHeight;
 			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
 		}
 		tileMesh.vertices = vertices;
@@ -226,7 +226,13 @@ public class Flag : HiveObject
 		{
 			if ( items[i] == item )
 			{
-				item.transform.SetParent( frames[i].transform, false );
+				var t = frames[i].transform;
+				item.transform.SetParent( t, false );
+
+				// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
+				Vector3 framePos = frames[i].transform.position;
+				framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + tilesHeight;
+				t.position = framePos;
 				break;
 			}
 		}

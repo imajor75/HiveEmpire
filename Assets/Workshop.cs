@@ -188,7 +188,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				animHash = act.animation;
 			if ( !boss.soundSource.isPlaying )
 			{
-				if ( animHash != -1 )
+				if ( animHash != -1 )	// TODO Is this executed in every frame?
 					boss.animator?.SetBool( animHash, true );
 				boss.soundSource.clip = act?.sound;
 				boss.soundSource.loop = true;

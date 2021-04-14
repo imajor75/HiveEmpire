@@ -65,6 +65,13 @@ public class GuardHouse : Building
 		}
 	}
 
+	public override void OnClicked()
+	{
+		base.OnClicked();
+		if ( construction.done )
+			Interface.GuardHousePanel.Create().Open( this );
+	}
+
 	public override bool Remove( bool takeYourTime )
 	{
 		owner.UnregisterInfuence( this );

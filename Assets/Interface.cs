@@ -1400,7 +1400,32 @@ public class Interface : HiveObject
 				Update( buffer.stored, buffer.onTheWay );
 			}
 		}
+	}
 
+	public class GuardHousePanel : BuildingPanel
+	{
+		public GuardHouse guardHouse;
+
+		public static GuardHousePanel Create()
+		{
+			return new GameObject().AddComponent<GuardHousePanel>();
+		}
+
+		public void Open( GuardHouse guardHouse, bool show = false )
+		{
+			this.guardHouse = guardHouse;
+			if ( base.Open( guardHouse ) )
+				return;
+			name = "Guard House panel";
+			Frame( 0, 0, 300, 200 );
+			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Button( 270, -160, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+		}
+		void Remove()
+		{
+			if ( guardHouse && guardHouse.Remove( false ) )
+				Close();
+		}
 	}
 
 	public class StockPanel : BuildingPanel, IInputHandler
