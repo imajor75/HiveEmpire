@@ -1743,6 +1743,8 @@ public class Interface : HiveObject
 
 	public class BuildPanel : Panel
 	{
+		public int showID;
+		Workshop.Type showType;
 		public static BuildPanel Create()
 		{
 			return new GameObject().AddComponent<BuildPanel>();
@@ -1757,10 +1759,16 @@ public class Interface : HiveObject
 			Button( 330, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 			int row = -20;
+			var workshops = FindObjectsOfType<Workshop>( true );
+
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				var type = (Workshop.Type)i;
-				BuildButton( i % 2 == 0 ? 20 : 180, row, type.ToString(), delegate { BuildWorkshop( type ); } );
+				int c = 0;
+				foreach ( var workshop in workshops )
+					if ( workshop.type == type && workshop.owner == root.mainPlayer )
+						c++;
+				BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type} ({c})", delegate { BuildWorkshop( type ); } );
 				if ( i % 2 != 0 )
 					row -= 20;
 			}
@@ -1804,6 +1812,24 @@ public class Interface : HiveObject
 
 		public void BuildWorkshop( Workshop.Type type )
 		{
+			if ( GetKey( KeyCode.LeftShift ) )
+			{
+				if ( type != showType )
+					showID = 0;
+				var workshops = FindObjectsOfType<Workshop>( true );
+				for ( int i = showID; i < workshops.Length; i++ )
+				{
+					if ( workshops[i].type == type && workshops[i].owner == root.mainPlayer )
+					{
+						WorkshopPanel.Create().Open( workshops[i], true );
+						showType = type;
+						showID = i + 1;
+						return;
+					}
+				}
+				showID = 0;
+				return;
+			}
 			root.viewport.constructionMode = Viewport.Construct.workshop;
 			Root.viewport.workshopType = type;
 			Root.viewport.showPossibleBuildings = true;
