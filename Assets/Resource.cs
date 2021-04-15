@@ -143,7 +143,7 @@ public class Resource : HiveObject
 		name = type.ToString();
 		GameObject prefab = meshes.GetMediaData( type );
 		if ( prefab )
-			body = GameObject.Instantiate( prefab );
+			body = Instantiate( prefab );
 		if ( type == Type.pasturingAnimal )
 			name = "Pasturing Animal Resource";
 		if ( body != null )
@@ -152,6 +152,21 @@ public class Resource : HiveObject
 				body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
 			body.transform.SetParent( transform );
 			body.transform.localPosition = Vector3.zero;
+
+			// Align cornfield to ground
+			if ( type == Type.cornfield )
+			{
+				Mesh mesh = body.GetComponent<MeshFilter>().mesh;
+				var positions = mesh.vertices;
+				for ( int i = 0; i < positions.Length; i++ )
+				{
+					var worldPos = body.transform.TransformPoint( positions[i] );
+					float h = node.ground.GetHeightAt( worldPos.x, worldPos.z ) - node.height;
+					positions[i] = body.transform.InverseTransformPoint( worldPos + Vector3.up * h );
+				}
+				mesh.vertices = positions;
+			}
+
 		}
 
 		soundSource = World.CreateSoundSource( this );
@@ -166,7 +181,8 @@ public class Resource : HiveObject
 				growth /= 2;
 			if ( growth > 1 )
 				growth = 1;
-			transform.localScale = new Vector3( 1, growth, 1 );
+			var p = node.Position;
+			transform.localPosition = node.Position + Vector3.up * ( -0.4f + 0.4f * growth );
 		}
 		if ( type == Type.tree )
 		{

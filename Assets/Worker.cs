@@ -829,6 +829,12 @@ public class Worker : HiveObject
 			timeToInterrupt = 1.0f,
 			duration = 500
 		};
+		resourceCollectAct[(int)Resource.Type.cornfield] = new Act
+		{
+			animation = harvestingID,
+			timeToInterrupt = 1.0f,
+			duration = 300
+		};
 		shovelingAct = new Act
 		{
 			animation = shovelingID,

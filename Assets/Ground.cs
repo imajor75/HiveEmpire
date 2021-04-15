@@ -62,13 +62,6 @@ public class Ground : HiveObject
 		mesh.name = "GroundMesh";
 		material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "GroundMaterial" );
 
-		n00x = GetNode( 0, 0 ).Position.x;
-		n00y = GetNode( 0, 0 ).Position.z;
-		n01x = GetNode( 0, 1 ).Position.x;
-		n01y = GetNode( 0, 1 ).Position.z;
-		n10x = GetNode( 1, 0 ).Position.x;
-		n10y = GetNode( 1, 0 ).Position.z;
-
 		mesh = meshFilter.mesh = new Mesh();
 		mesh.name = "GroundMesh";
 	}
@@ -78,7 +71,7 @@ public class Ground : HiveObject
 		CreateAreas();
 	}
 
-	float n00x, n00y, n10x, n10y, n01x, n01y;
+	public float n00x, n00y, n10x, n10y, n01x, n01y;
 
 	public Ground Setup( World world, int seed, int width = 64, int height = 64 )
 	{
@@ -93,6 +86,13 @@ public class Ground : HiveObject
 			for ( int y = 0; y <= height; y++ )
 				nodes[y * ( width + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
 		GenerateHeights();
+
+		n00x = GetNode( 0, 0 ).Position.x;
+		n00y = GetNode( 0, 0 ).Position.z;
+		n01x = GetNode( 0, 1 ).Position.x;
+		n01y = GetNode( 0, 1 ).Position.z;
+		n10x = GetNode( 1, 0 ).Position.x;
+		n10y = GetNode( 1, 0 ).Position.z;
 
 		return this;
     }
@@ -409,12 +409,6 @@ public class Ground : HiveObject
 				triangles.Add( c );
 			}
 		}
-	}
-
-
-
-	class InfluenceChange
-	{
 	}
 
 	public GroundNode GetCenter()
