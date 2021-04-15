@@ -810,10 +810,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 		GroundNode target;
 		int t = Ground.areas[range].Count;
 		int r = World.rnd.Next( t );
-		for ( int j = 0; j < t; j++ )
+		for ( int j = -1; j < t; j++ )
 		{
-			var o = Ground.areas[range][(j+r)%t];
-			target = node.Add( o );
+			if ( j < 0 )
+				target = node;
+			else
+				target = node.Add( Ground.areas[range][(j+r)%t] );
 			if ( resourceType == Resource.Type.fish )
 			{
 				int water = 0;

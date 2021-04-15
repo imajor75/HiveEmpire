@@ -1210,6 +1210,7 @@ public class Interface : HiveObject
 		public Image changeModeImage;
 		public Text productivity;
 		public Text itemsProduced;
+		public Text resourcesLeft;
 
 		public List<Buffer> buffers;
 		public Buffer outputs;
@@ -1233,7 +1234,7 @@ public class Interface : HiveObject
 				showOutputBuffer = workshop.configuration.outputType != Item.Type.unknown;
 			}
 			int displayedBufferCount = workshop.buffers.Count + ( showOutputBuffer ? 1 : 0 );
-			int height = 100 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 );
+			int height = 100 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 ) + ( workshop.Gatherer ? 25 : 0 );
 			Frame( 0, 0, 240, height );
 			Button( 210, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 190, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
@@ -1273,7 +1274,11 @@ public class Interface : HiveObject
 
 				itemsProduced = Text( 20, row - 24, 200, 20 );
 				productivity = Text( 180, -20, 30, 20 );
+				row -= 50;
 			}
+			if ( workshop.Gatherer )
+				resourcesLeft = Text( 20, row, 150, 20, "Resources left: 0" );
+
 			if ( show )
 				Root.world.eye.FocusOn( workshop );
 		}
@@ -1326,6 +1331,22 @@ public class Interface : HiveObject
 				}
 				productivity.text = ( (int)( workshop.productivity.current * 100 ) ).ToString() + "%";
 				itemsProduced.text = "Items produced: " + workshop.itemsProduced;
+			}
+			if ( resourcesLeft )
+			{
+				int left = 0;
+				void CheckNode( GroundNode node )
+				{
+					var resource = node.resource;
+					if ( resource == null || resource.type != workshop.configuration.gatheredResource )
+						return;
+					if ( !resource.underGround || node == workshop.node || resource.exposed.InProgress )
+						left++;
+				}
+				CheckNode( workshop.node );
+				foreach ( var o in Ground.areas[workshop.configuration.gatheringRange] )
+					CheckNode( workshop.node + o );
+				resourcesLeft.text = "Resources left: " + left;
 			}
 			changeModeImage.sprite = GetModeIcon();
 		}

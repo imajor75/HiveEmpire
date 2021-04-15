@@ -34,7 +34,8 @@
     "type": "farm",
 	"huge": true,
 	"gatheredResource": "cornfield",
-    "stoneNeeded": 2,
+	"gatheringRange": 3,
+	"stoneNeeded": 2,
     "outputType": "grain",
   },
   {
