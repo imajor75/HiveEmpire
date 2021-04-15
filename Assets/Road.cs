@@ -292,8 +292,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 				if ( b == 0 )
 				{
-					mapVertices[i * 2 + 0] = pos - side * 0.2f + Vector3.up;
-					mapVertices[i * 2 + 1] = pos + side * 0.2f + Vector3.up;
+					mapVertices[i * 2 + 0] = transform.InverseTransformPoint( pos - side * 0.2f + Vector3.up );
+					mapVertices[i * 2 + 1] = transform.InverseTransformPoint( pos + side * 0.2f + Vector3.up );
 				}
 
 				uvs[v] = new Vector2(0.0f, tv );
@@ -530,7 +530,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			if ( workerAtNodes[i] )
 				workerAtNodes[i].onRoad = false;
-			nodes[i].road = null;
 		}
 
 		Road first = Create(), second = Create();
@@ -638,6 +637,9 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( nodes[i].road, this );	// TODO Fired on unready road, nodes had 4 elements, the one with index 2 was null.
 													// And fired again when I pressed ESC while the road had 4 nodes already.
 													// Fired again when pressing esc. (i=1, Count=4, tempNodes=0)
+													// Fired when pressing ESC in map mode during road construction. Road had three nodes, 
+													// the one in the middle had the problem, nodes[1].road was null. It seems like the second
+													// node was already finalized, like when you spin down that location.
 			nodes[i].road = null;
 		}
 	}
