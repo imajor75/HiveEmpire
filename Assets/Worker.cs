@@ -464,9 +464,9 @@ public class Worker : HiveObject
 				}
 				if ( boss.walkFrom.ValidFlag )
 				{
+					boss.assert.AreEqual( boss.walkFrom.flag, boss.exclusiveFlag ); // TODO Triggered (onroad hauler, excflag 0, didn't build anything recently)
 					if ( boss.walkFrom.flag.user == boss )
 						boss.walkFrom.flag.user = null;
-					boss.assert.AreEqual( boss.walkFrom.flag, boss.exclusiveFlag );
 					boss.exclusiveFlag = null;
 				}
 			}
@@ -1727,7 +1727,8 @@ public class Worker : HiveObject
 
 	public int IndexOnRoad()
 	{
-		assert.IsTrue( onRoad );
+		if ( !onRoad )
+			return -1;
 		assert.IsNotNull( road );
 		int i = road.NodeIndex( node );
 		if ( i >= 0 )

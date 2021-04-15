@@ -1844,7 +1844,10 @@ public class Interface : HiveObject
 
 		void Hauler()
 		{
-			WorkerPanel.Create().Open( road.workers[0], true ); // TODO Make it possibe to view additional workers
+			if ( GetKey( KeyCode.LeftShift ) )
+				road.CallNewWorker();
+			else
+				WorkerPanel.Create().Open( road.workers[0], true ); // TODO Make it possibe to view additional workers
 		}
 
 		void Split()

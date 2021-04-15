@@ -159,3 +159,12 @@ The following packages were updated:
   com.unity.test-framework from version 1.1.20 to 1.1.22
   com.unity.textmeshpro from version 3.0.1 to 3.0.4
   com.unity.timeline from version 1.2.15 to 1.5.2
+
+=== Thu Apr 15 09:43:16 2021
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.test-framework from version 1.1.22 to 1.1.24
+  com.unity.timeline from version 1.5.2 to 1.5.4
