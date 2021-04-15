@@ -66,6 +66,7 @@ public class Flag : HiveObject
 
 	public override void Materialize()
 	{
+		base.Materialize();
 		if ( node.road )
 		{
 			if ( node.road.ready )
@@ -76,7 +77,6 @@ public class Flag : HiveObject
 				node.road = null;
 			}
 		}
-		base.Materialize();
 	}
 
 	public void Start()
