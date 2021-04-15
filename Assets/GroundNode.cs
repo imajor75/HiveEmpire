@@ -27,6 +27,7 @@ public class GroundNode : HiveObject
 	const float decorationSpreadMax = 0.6f;
 	const float decorationDensity = 0.08f;
 
+	[JsonIgnore]
 	public Flag ValidFlag
 	{
 		get

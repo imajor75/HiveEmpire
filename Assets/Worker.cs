@@ -1300,7 +1300,10 @@ public class Worker : HiveObject
 			if ( node.ValidFlag )
 				ScheduleWalkToFlag( owner.mainBuilding.flag );
 			else
-				ScheduleWalkToNode( owner.mainBuilding.flag.node );
+			{
+				if ( !ScheduleWalkToNode( owner.mainBuilding.flag.node, false, false, null, true ) )
+					node = owner.mainBuilding.flag.node;	// Hack, teleport to the main building flag, if there is no path
+			}
 		}
 	}
 
@@ -1473,11 +1476,21 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, bool findPathNow = false )
+	/// <summary>
+	/// Adds a task to the worker to reach a specific node.
+	/// </summary>
+	/// <param name="target"></param>
+	/// <param name="ignoreFinalObstacle"></param>
+	/// <param name="first"></param>
+	/// <param name="interruption"></param>
+	/// <param name="findPathNow"></param>
+	/// <returns>True, if a valid path is found.</returns>
+	public bool ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, bool findPathNow = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
 		instance.Setup( this, target, ignoreFinalObstacle, interruption, findPathNow );
 		ScheduleTask( instance, first );
+		return instance.path != null;
 	}
 
 	public void ScheduleWalkToFlag( Flag target, bool exclusive = false, bool first = false )
