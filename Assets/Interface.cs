@@ -56,7 +56,7 @@ public class Interface : HiveObject
 		hauler,
 		box,
 		destroy,
-		path,
+		newRoad,
 		magnet,
 		dynamite,
 		rightArrow,
@@ -186,7 +186,6 @@ public class Interface : HiveObject
 		"simple UI & icons/button/button_login", Icon.button,
 		"simple UI & icons/box/smallFrame", Icon.smallFrame };
 		iconTable.Fill( table );
-		Frame.Initialize();
 		//			print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
 		//#if DEVELOPMENT_BUILD
 		//		print( "DEVELOPMENT_BUILD" );
@@ -571,7 +570,7 @@ public class Interface : HiveObject
 			name = "Tooltip";
 			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
 
-			Frame( 0, 0, 200, 40, 10 );
+			Frame( 0, 0, 200, 40, 3 );
 			text = Text( 20, -10, 150, 20 );
 			gameObject.SetActive( false );
 			FollowMouse();
@@ -687,13 +686,12 @@ public class Interface : HiveObject
 			return i;
 		}
 
-		public Frame Frame( int x, int y, int xs, int ys, int borderWidth = 30, Component parent = null )
+		public Image Frame( int x, int y, int xs, int ys, float pixelsPerUnitMultiplier = 1.5f, Component parent = null )
 		{
-			Frame f = new GameObject().AddComponent<Frame>();
-			f.name = "Image";
-			f.borderWidth = borderWidth;
-			Init( f.rectTransform, x, y, xs, ys, parent );
-			return f;
+			Image i = Image( x, y, xs, ys, iconTable.GetMediaData( Icon.frame ) );
+			i.type = UnityEngine.UI.Image.Type.Sliced;
+			i.pixelsPerUnitMultiplier = pixelsPerUnitMultiplier;
+			return i;
 
 		}
 
@@ -790,7 +788,7 @@ public class Interface : HiveObject
 		{
 			var workshop = building as Workshop;
 			if ( workshop )
-				WorkshopPanel.Create().Open( workshop, true );
+				WorkshopPanel.Create().Open( workshop, WorkshopPanel.Content.everything, true );
 			var stock = building as Stock;
 			if ( stock )
 				StockPanel.Create().Open( stock, true );
@@ -1063,120 +1061,6 @@ public class Interface : HiveObject
 		}
 	}
 
-	public class Frame : Image
-	{
-		public int borderWidth = 30;
-
-		static readonly Sprite[] pieces = new Sprite[9];
-		public static void Initialize()
-		{
-			string[] files = {
-				"simple UI & icons/box/frame11",
-				"simple UI & icons/box/frame21",
-				"simple UI & icons/box/frame31",
-				"simple UI & icons/box/frame12",
-				"simple UI & icons/box/frame22",
-				"simple UI & icons/box/frame32",
-				"simple UI & icons/box/frame13",
-				"simple UI & icons/box/frame23",
-				"simple UI & icons/box/frame33" };
-			for ( int i = 0; i < files.Length; i++ )
-			{
-				var t = Resources.Load<Texture2D>( files[i] );
-				pieces[i] = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
-			}
-		}
-
-		new public void Start()
-		{
-			int w = borderWidth;
-			int a = 0;
-			base.Start();
-			Image i11 = new GameObject().AddComponent<Image>();
-			i11.rectTransform.SetParent( transform );
-			i11.rectTransform.anchorMin = new Vector2( 0, 1 );
-			i11.rectTransform.anchorMax = new Vector2( 0, 1 );
-			i11.rectTransform.offsetMin = new Vector2( 0, -w-a );
-			i11.rectTransform.offsetMax = new Vector2( w+a, 0 );
-			i11.sprite = pieces[0];
-			i11.name = "Frame piece";
-
-			Image i21 = new GameObject().AddComponent<Image>();
-			i21.rectTransform.SetParent( transform );
-			i21.rectTransform.anchorMin = new Vector2( 0, 1 );
-			i21.rectTransform.anchorMax = new Vector2( 1, 1 );
-			i21.rectTransform.offsetMin = new Vector2( w-a, -w-a );
-			i21.rectTransform.offsetMax = new Vector2( -w+a, 0 );
-			i21.sprite = pieces[1];
-			i21.name = "Frame piece";
-
-			Image i31 = new GameObject().AddComponent<Image>();
-			i31.rectTransform.SetParent( transform );
-			i31.rectTransform.anchorMin = new Vector2( 1, 1 );
-			i31.rectTransform.anchorMax = new Vector2( 1, 1 );
-			i31.rectTransform.offsetMin = new Vector2( -w-a, -w-a );
-			i31.rectTransform.offsetMax = new Vector2( 0, 0 );
-			i31.sprite = pieces[2];
-			i31.name = "Frame piece";
-
-			Image i12 = new GameObject().AddComponent<Image>();
-			i12.rectTransform.SetParent( transform );
-			i12.rectTransform.anchorMin = new Vector2( 0, 0 );
-			i12.rectTransform.anchorMax = new Vector2( 0, 1 );
-			i12.rectTransform.offsetMin = new Vector2( 0, w-a );
-			i12.rectTransform.offsetMax = new Vector2( w+a, -w+a );
-			i12.sprite = pieces[3];
-			i12.name = "Frame piece";
-
-			Image i22 = new GameObject().AddComponent<Image>();
-			i22.rectTransform.SetParent( transform );
-			i22.rectTransform.anchorMin = new Vector2( 0, 0 );
-			i22.rectTransform.anchorMax = new Vector2( 1, 1 );
-			i22.rectTransform.offsetMin = new Vector2( w-a, w-a );
-			i22.rectTransform.offsetMax = new Vector2( -w+a, -w+a );
-			i22.sprite = pieces[4];
-			i22.name = "Frame piece";
-
-			Image i32 = new GameObject().AddComponent<Image>();
-			i32.rectTransform.SetParent( transform );
-			i32.rectTransform.anchorMin = new Vector2( 1, 0 );
-			i32.rectTransform.anchorMax = new Vector2( 1, 1 );
-			i32.rectTransform.offsetMin = new Vector2( -w-a, w-a );
-			i32.rectTransform.offsetMax = new Vector2( 0, -w+a );
-			i32.sprite = pieces[5];
-			i32.name = "Frame piece";
-
-			Image i13 = new GameObject().AddComponent<Image>();
-			i13.rectTransform.SetParent( transform );
-			i13.rectTransform.anchorMin = new Vector2( 0, 0 );
-			i13.rectTransform.anchorMax = new Vector2( 0, 0 );
-			i13.rectTransform.offsetMin = new Vector2( 0, 0 );
-			i13.rectTransform.offsetMax = new Vector2( w+a, w+a );
-			i13.sprite = pieces[6];
-			i13.name = "Frame piece";
-
-			Image i23 = new GameObject().AddComponent<Image>();
-			i23.rectTransform.SetParent( transform );
-			i23.rectTransform.anchorMin = new Vector2( 0, 0 );
-			i23.rectTransform.anchorMax = new Vector2( 1, 0 );
-			i23.rectTransform.offsetMin = new Vector2( w-a, 0 );
-			i23.rectTransform.offsetMax = new Vector2( -w+a, w+a );
-			i23.sprite = pieces[7];
-			i23.name = "Frame piece";
-
-			Image i33 = new GameObject().AddComponent<Image>();
-			i33.rectTransform.SetParent( transform );
-			i33.rectTransform.anchorMin = new Vector2( 1, 0 );
-			i33.rectTransform.anchorMax = new Vector2( 1, 0 );
-			i33.rectTransform.offsetMin = new Vector2( -w-a, 0 );
-			i33.rectTransform.offsetMax = new Vector2( 0, w+a );
-			i33.sprite = pieces[8];
-			i33.name = "Frame piece";
-
-			enabled = false;
-		}
-	}
-
 	public class BuildingPanel : Panel
 	{
 		public Building building;
@@ -1220,7 +1104,19 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<WorkshopPanel>();
 		}
 
-		public void Open( Workshop workshop, bool show = false )
+		public enum Content
+		{
+			name = 1,
+			buffers = 2,
+			output = 4,
+			progress = 8,
+			resourcesLeft = 16,
+			controlIcons = 32,
+			itemsProduced = 64,
+			everything = -1
+		}
+
+		public void Open( Workshop workshop, Content contentToShow = Content.everything, bool show = false )
 		{
 			if ( base.Open( workshop ) )
 				return;
@@ -1233,33 +1129,35 @@ public class Interface : HiveObject
 				showProgressBar = true;
 				showOutputBuffer = workshop.configuration.outputType != Item.Type.unknown;
 			}
+
+			if ( ( contentToShow & Content.progress ) == 0 )
+				showProgressBar = false;
+			if ( ( contentToShow & Content.output ) == 0 )
+				showOutputBuffer = false;
+
 			int displayedBufferCount = workshop.buffers.Count + ( showOutputBuffer ? 1 : 0 );
-			int height = 100 + displayedBufferCount * iconSize * 3 / 2 + ( showProgressBar ? iconSize : 0 ) + ( workshop.Gatherer ? 25 : 0 );
-			Frame( 0, 0, 240, height );
+			var backGround = Frame( 0, 0, 240, 100 );
 			Button( 210, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
-			Button( 190, 40 - height, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
-			Button( 170, 40 - height, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( ShowWorker );
-			var changeModeButton = Button( 150, 40 - height, 20, 20, GetModeIcon() );
-			changeModeButton.onClick.AddListener( ChangeMode );
-			changeModeImage = changeModeButton.gameObject.GetComponent<Image>();
 
-			Text( 20, -20, 160, 20, workshop.type.ToString() );
-
-			int row = -40;
-			int col = 20;
-			buffers = new List<Buffer>();
-			foreach ( var b in workshop.buffers )
+			int row = -20;
+			if ( ( contentToShow & Content.name ) > 0 )
 			{
-				var bui = new Buffer();
-				bui.Setup( this, b, col, row, iconSize + 5 );
-				buffers.Add( bui );
-				//if ( !workshop.configuration.commonInputs )
-					row -= iconSize * 3 / 2;
-				//else
-				//	col += b.size * ( iconSize + 5 ) + 20;
+				Text( 20, row, 160, 20, workshop.type.ToString() );
+				row -= 20;
 			}
-			//if ( workshop.configuration.commonInputs )
-			//	row -= iconSize * 3 / 2;
+
+			if ( ( contentToShow & Content.buffers ) > 0 )
+			{
+				int col = 20;
+				buffers = new List<Buffer>();
+				foreach ( var b in workshop.buffers )
+				{
+					var bui = new Buffer();
+					bui.Setup( this, b, col, row, iconSize + 5 );
+					buffers.Add( bui );
+					row -= iconSize * 3 / 2;
+				}
+			}
 
 			if ( showProgressBar )
 			{
@@ -1271,13 +1169,31 @@ public class Interface : HiveObject
 				}
 				progressBar = Image( 20, row, ( iconSize + 5 ) * 7, iconSize, iconTable.GetMediaData( Icon.progress ) );
 				AreaIcon( 200, row, workshop.outputArea );
+				row -= 25;
 
-				itemsProduced = Text( 20, row - 24, 200, 20 );
-				productivity = Text( 180, -20, 30, 20 );
-				row -= 50;
+				if ( ( contentToShow & Content.itemsProduced ) > 0 )
+				{
+					itemsProduced = Text( 20, row, 200, 20 );
+					productivity = Text( 180, -20, 30, 20 );
+					row -= 25;
+				}
 			}
-			if ( workshop.Gatherer )
+			if ( workshop.Gatherer && ( contentToShow & Content.resourcesLeft ) > 0 )
+			{
 				resourcesLeft = Text( 20, row, 150, 20, "Resources left: 0" );
+				row -= 25;
+			}
+
+			if ( ( contentToShow & Content.controlIcons ) != 0 )
+			{
+				Button( 190, row, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
+				Button( 170, row, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( ShowWorker );
+				var changeModeButton = Button( 150, row, 20, 20, GetModeIcon() );
+				changeModeButton.onClick.AddListener( ChangeMode );
+				changeModeImage = changeModeButton.gameObject.GetComponent<Image>();
+			}
+
+			backGround.rectTransform.sizeDelta = new Vector2( 240, -row + 20 );
 
 			if ( show )
 				Root.world.eye.FocusOn( workshop );
@@ -1310,8 +1226,9 @@ public class Interface : HiveObject
 		public override void Update()
 		{
 			base.Update();
-			foreach ( var buffer in buffers )
-				buffer.Update();
+			if ( buffers != null )
+				foreach ( var buffer in buffers )
+					buffer.Update();
 
 			outputs?.Update( workshop.output, 0 );
 
@@ -1329,8 +1246,10 @@ public class Interface : HiveObject
 					else
 						progressBar.color = Color.red;
 				}
-				productivity.text = ( (int)( workshop.productivity.current * 100 ) ).ToString() + "%";
-				itemsProduced.text = "Items produced: " + workshop.itemsProduced;
+				if ( productivity )
+					productivity.text = ( (int)( workshop.productivity.current * 100 ) ).ToString() + "%";
+				if ( itemsProduced )
+					itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 			}
 			if ( resourcesLeft )
 			{
@@ -1348,7 +1267,8 @@ public class Interface : HiveObject
 					CheckNode( workshop.node + o );
 				resourcesLeft.text = "Resources left: " + left;
 			}
-			changeModeImage.sprite = GetModeIcon();
+			if ( changeModeImage )
+				changeModeImage.sprite = GetModeIcon();
 		}
 
 		void ChangeMode()
@@ -1683,7 +1603,7 @@ public class Interface : HiveObject
 			this.node = node;
 			name = "Node panel";
 
-			Frame( 0, 0, 380, 180, 30 );
+			Frame( 0, 0, 380, 180 );
 			Button( 350, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 #if DEBUG
@@ -1755,7 +1675,7 @@ public class Interface : HiveObject
 			base.Open();
 			name = "Build panel";
 
-			Frame( 0, 0, 360, 300, 30 );
+			Frame( 0, 0, 360, 300 );
 			Button( 330, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 			int row = -20;
@@ -1821,7 +1741,7 @@ public class Interface : HiveObject
 				{
 					if ( workshops[i].type == type && workshops[i].owner == root.mainPlayer )
 					{
-						WorkshopPanel.Create().Open( workshops[i], true );
+						WorkshopPanel.Create().Open( workshops[i], WorkshopPanel.Content.everything, true );
 						showType = type;
 						showID = i + 1;
 						return;
@@ -1859,7 +1779,7 @@ public class Interface : HiveObject
 			base.Open( road );
 			this.road = road;
 			this.node = node;
-			Frame( 0, 0, 210, 140, 10 );
+			Frame( 0, 0, 210, 140, 3 );
 			Button( 190, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 170, -10, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( Hauler );
 			Button( 150, -10, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
@@ -2001,10 +1921,10 @@ public class Interface : HiveObject
 
 			this.flag = flag;
 			int col = 16;
-			Frame( 0, 0, 250, 75, 10 );
+			Frame( 0, 0, 250, 75, 3 );
 			Button( 230, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 210, -45, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
-			Button( 20, -45, 20, 20, iconTable.GetMediaData( Icon.path ) ).onClick.AddListener( StartRoad );
+			Button( 20, -45, 20, 20, iconTable.GetMediaData( Icon.newRoad ) ).onClick.AddListener( StartRoad );
 			Button( 45, -45, 20, 20, iconTable.GetMediaData( Icon.magnet ) ).onClick.AddListener( CaptureRoads );
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
@@ -2251,7 +2171,7 @@ public class Interface : HiveObject
 
 			name = "Item panel";
 
-			Frame( 0, 0, 300, 150, 20 );
+			Frame( 0, 0, 300, 150, 1.5f );
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 15, -15, 100, 20, item.type.ToString() );
 			stats = Text( 15, -35, 250, 20 );
@@ -2339,6 +2259,7 @@ public class Interface : HiveObject
 		public bool showPossibleBuildings;
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
+		public WorkshopPanel currentBlueprintPanel;
 
 		public enum Construct
 		{
@@ -2405,6 +2326,8 @@ public class Interface : HiveObject
 		{
 			currentBlueprint?.Remove();
 			currentBlueprint = null;
+			currentBlueprintPanel?.Close();
+			currentBlueprintPanel = null;
 		}
 
 		public static void Initialize()
@@ -2670,6 +2593,11 @@ public class Interface : HiveObject
 					case Construct.workshop:
 					{
 						currentBlueprint = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
+						if ( currentBlueprint )
+						{
+							currentBlueprintPanel = WorkshopPanel.Create();
+							currentBlueprintPanel.Open( currentBlueprint as Workshop, WorkshopPanel.Content.resourcesLeft );
+						}
 						break;
 					};
 					case Construct.flag:

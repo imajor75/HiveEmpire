@@ -23,7 +23,7 @@ public class Map : Interface.Panel
 		this.fullScreen = fullScreen;
 		base.Open();
 		name = "Map";
-		Frame( 0, 0, 316, 316, 30, dialog );
+		Image( 0, 0, 316, 316, Interface.iconTable.GetMediaData( Interface.Icon.frame ), dialog );
 		content = MapImage.Create();
 		content.Setup( fullScreen );
 		Init( content.rawImage.rectTransform, 30, -30, 256, 256, dialog );

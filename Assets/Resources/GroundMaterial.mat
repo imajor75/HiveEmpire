@@ -107,8 +107,8 @@ Material:
     - _GridFactorX: 1
     - _GridFactorZ: 0.5
     - _GridMaskFactor: 0.15
-    - _GridMaskX: 11.489749
-    - _GridMaskZ: 1.5160298
+    - _GridMaskX: 10000
+    - _GridMaskZ: 10000
     - _GridStartX: 0
     - _GridStartZ: 0
     - _HeightMax: 15

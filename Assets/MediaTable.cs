@@ -22,13 +22,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				file = this.file;
 				reportError = true;
 			}
-			if ( typeof( MediaType ) == typeof( Sprite ) )
-			{
-				var texture = Resources.Load<Texture2D>( file );
-				data = Sprite.Create( texture, new Rect( 0.0f, 0.0f, texture.width, texture.height ), Vector2.zero ) as MediaType;
-			}
-			else
-				data = Resources.Load<MediaType>( file );
+			data = Resources.Load<MediaType>( file );
 			if ( data == null && reportError )
 				Assert.global.Fail( "Resource " + file + " not found" );
 		}
