@@ -557,6 +557,7 @@ public class Interface : HiveObject
 		GameObject objectToShow;
 		Component origin;
 		Text text;
+		Image image, backGround;
 
 		public static Tooltip Create()
 		{
@@ -570,19 +571,31 @@ public class Interface : HiveObject
 			name = "Tooltip";
 			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
 
-			Frame( 0, 0, 200, 40, 3 );
+			backGround = Frame( 0, 0, 200, 40, 3 );
 			text = Text( 20, -10, 150, 20 );
+			image = Image( 20, -20, 100, 100 );
 			gameObject.SetActive( false );
 			FollowMouse();
 		}
 
-		public void SetText( Component origin, string text = "", GameObject objectToShow = null )
+		public void SetText( Component origin, string text = "", Sprite imageToShow = null, GameObject objectToShow = null )
 		{
 			this.origin = origin;
 			this.text.text = text;
 			if ( this.objectToShow != null && this.objectToShow != objectToShow )
 				Destroy( this.objectToShow );
 			this.objectToShow = objectToShow;
+			if ( imageToShow )
+			{
+				image.sprite = imageToShow;
+				image.enabled = true;
+				backGround.rectTransform.sizeDelta = new Vector2( 160, 140 );
+			}
+			else
+			{
+				image.enabled = false;
+				backGround.rectTransform.sizeDelta = new Vector2( 160, 40 );
+			}
 			gameObject.SetActive( text != "" );
 			FollowMouse();
 		}
@@ -1052,9 +1065,9 @@ public class Interface : HiveObject
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					tooltip.SetText( this, item.type.ToString(), path = CreateUIPath( item.path ) );
+					tooltip.SetText( this, item.type.ToString(), Item.sprites[(int)item.type], path = CreateUIPath( item.path ) );
 				else
-					tooltip.SetText( this, itemType.ToString() );
+					tooltip.SetText( this, itemType.ToString(), Item.sprites[(int)itemType] );
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
