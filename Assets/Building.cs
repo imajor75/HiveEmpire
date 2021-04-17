@@ -554,11 +554,7 @@ abstract public class Building : HiveObject
 
 	public void UpdateBody()
 	{
-		var area = Foundation;
-		Vector3 position = new Vector3();
-		foreach ( var o in area )
-			position += node.Add( o ).Position;
-		transform.localPosition = position / area.Count;
+		transform.localPosition = node.Position;
 		exit?.RebuildMesh( true );
 	}
 
