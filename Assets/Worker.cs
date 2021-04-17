@@ -1372,7 +1372,7 @@ public class Worker : HiveObject
 		if ( node == road.nodes[0] || node == road.LastNode )
 		{
 			int center = ( road.nodes.Count - 1 ) / 2;
-			if ( node == road.LastNode )
+			if ( node == road.nodes[0] )
 				center = road.nodes.Count / 2;
 			ScheduleWalkToRoadPoint( road, center );
 			Profiler.EndSample();

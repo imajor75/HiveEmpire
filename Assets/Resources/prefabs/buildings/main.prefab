@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6703279254592612188}
   - component: {fileID: 3316948291794530220}
   m_Layer: 0
-  m_Name: main(Clone)
+  m_Name: main
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26,14 +26,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4895001802000317471}
-  m_LocalRotation: {x: 0, y: 0.95881975, z: 0, w: 0.2840153}
-  m_LocalPosition: {x: -0.234, y: -0.319, z: -0.956}
+  m_LocalRotation: {x: 0, y: 0.9935719, z: -0, w: -0.11320323}
+  m_LocalPosition: {x: -0.674, y: -0.319, z: 0.061}
   m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
   m_Children:
   - {fileID: 3254971824884898983}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 147, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 193, z: 0}
 --- !u!33 &7666975496937703424
 MeshFilter:
   m_ObjectHideFlags: 0
