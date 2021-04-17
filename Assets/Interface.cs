@@ -613,6 +613,7 @@ public class Interface : HiveObject
 		public Interface cachedRoot;
 		public bool escCloses = true;
 		public bool disableDrag;
+		public Vector2 offset;
 
 		public static int itemIconBorderSize = 2;
 
@@ -878,6 +879,8 @@ public class Interface : HiveObject
 		public void MoveTo( Vector3 position )
 		{
 			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
+			screenPosition.x += offset.x;
+			screenPosition.y += offset.y;
 			if ( screenPosition.y > Screen.height )
 				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Node.Position - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
@@ -2319,6 +2322,12 @@ public class Interface : HiveObject
 			flag,
 			building,
 			invisible,
+			direction0,
+			direction1,
+			direction2,
+			direction3,
+			direction4,
+			direction5,
 			total
 		}
 
@@ -2453,6 +2462,8 @@ public class Interface : HiveObject
 			{
 				currentBlueprint.Materialize();
 				currentBlueprint = null;
+				currentBlueprintPanel?.Close();
+				currentBlueprintPanel = null;
 				constructionMode = Construct.nothing;
 				showPossibleBuildings = false;
 				return;
@@ -2583,7 +2594,7 @@ public class Interface : HiveObject
 					return true;
 				}
 
-				SetCursorType( CursorType.invisible );
+				SetCursorType( CursorType.building, currentFlagDirection );
 				if ( currentBlueprint && currentBlueprint.Node != node )
 					CancelBlueprint();
 				if ( currentBlueprint )
@@ -2592,12 +2603,14 @@ public class Interface : HiveObject
 				{
 					case Construct.workshop:
 					{
-						currentBlueprint = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
-						if ( currentBlueprint )
+						var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
+						if ( workshop && workshop.Gatherer )
 						{
 							currentBlueprintPanel = WorkshopPanel.Create();
-							currentBlueprintPanel.Open( currentBlueprint as Workshop, WorkshopPanel.Content.resourcesLeft );
+							currentBlueprintPanel.offset = new Vector2( 100, 0 );
+							currentBlueprintPanel.Open( workshop, WorkshopPanel.Content.resourcesLeft );
 						}
+						currentBlueprint = workshop;
 						break;
 					};
 					case Construct.flag:
@@ -2620,11 +2633,11 @@ public class Interface : HiveObject
 			return true;
 		}
 
-		public void SetCursorType( CursorType cursortype )
+		public void SetCursorType( CursorType cursortype, int roadDirection = -1 )
 		{
 			if ( cursor == null )
 			{
-				cursor = GameObject.Instantiate( Resources.Load<GameObject>( "prefabs/others/cursor" ) );
+				cursor = Instantiate( Resources.Load<GameObject>( "prefabs/others/cursor" ) );
 				cursor.transform.SetParent( World.instance.ground.transform );
 				for ( int i = 0; i < cursorTypes.Length; i++ )
 				{
@@ -2636,6 +2649,8 @@ public class Interface : HiveObject
 			
 			for ( int i = 0; i < cursorTypes.Length; i++ )
 				cursorTypes[i]?.SetActive( i == (int)cursortype );
+			if ( roadDirection >= 0 )
+				cursorTypes[(int)CursorType.direction0 + roadDirection].SetActive( true );
 		}
 
 		public bool OnNodeClicked( GroundNode node )

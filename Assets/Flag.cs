@@ -126,6 +126,9 @@ public class Flag : HiveObject
 	{
 		transform.localPosition = node.Position;
 
+		if ( tiles == null )
+			return;
+
 		var tileMesh = tiles.GetComponent<MeshFilter>().mesh;
 		var gt = node.ground.transform;
 		var vertices = tileMesh.vertices;
