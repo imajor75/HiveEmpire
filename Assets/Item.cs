@@ -232,6 +232,7 @@ public class Item : HiveObject
 
 	public void SetRawTarget( Building building, ItemDispatcher.Priority priority = ItemDispatcher.Priority.low )
 	{
+		assert.IsNull( destination );
 		destination = building;
 		building.ItemOnTheWay( this );
 		currentOrderPriority = priority;

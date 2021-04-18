@@ -1290,6 +1290,7 @@ public class Worker : HiveObject
 				{
 					if ( itemInHands )
 					{
+						itemInHands.CancelTrip();
 						itemInHands.SetRawTarget( owner.mainBuilding );
 						itemInHands.Arrived();
 						itemInHands = null;
