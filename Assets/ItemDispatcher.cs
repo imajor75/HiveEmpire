@@ -27,6 +27,7 @@ public class ItemDispatcher : ScriptableObject
 		public int quantity;
 		public Type type;
 		public Ground.Area area;
+		public float weight = 0.5f;
 	}
 
 	public Market[] markets;
@@ -52,24 +53,24 @@ public class ItemDispatcher : ScriptableObject
 			market.Start();
 	}
 
-	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area )
+	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 	{
 		Assert.global.IsNotNull( area );
 		if ( quantity == 0 || priority == Priority.zero )
 			return;
 
 		Assert.global.IsTrue( quantity > 0 );
-		markets[(int)itemType].RegisterRequest( building, quantity, priority, area );
+		markets[(int)itemType].RegisterRequest( building, quantity, priority, area, weight );
 	}
 
-	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area )
+	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 	{
 		Assert.global.IsNotNull( area );
 		if ( quantity == 0 || priority == Priority.zero )
 			return;
 
 		Assert.global.IsTrue( quantity > 0 );
-		markets[(int)itemType].RegisterOffer( building, quantity, priority, area );
+		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, weight );
 	}
 
 	public void RegisterOffer( Item item, Priority priority, Ground.Area area )
@@ -106,7 +107,7 @@ public class ItemDispatcher : ScriptableObject
 			name = itemType + " market";
 		}
 
-		public void RegisterRequest( Building building, int quantity, Priority priority, Ground.Area area )
+		public void RegisterRequest( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 		{
 			var r = new Potential
 			{
@@ -115,12 +116,13 @@ public class ItemDispatcher : ScriptableObject
 				priority = priority,
 				location = building.node,
 				type = Potential.Type.request,
-				area = area
+				area = area,
+				weight = weight
 			};
 			requests.Add( r );
 		}
 
-		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area )
+		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 		{
 			var o = new Potential
 			{
@@ -129,12 +131,13 @@ public class ItemDispatcher : ScriptableObject
 				priority = priority,
 				location = building.node,
 				type = Potential.Type.offer,
-				area = area
+				area = area,
+				weight = weight
 			};
 			offers.Add( o );
 		}
 
-		public void RegisterOffer( Item item, Priority priority, Ground.Area area )
+		public void RegisterOffer( Item item, Priority priority, Ground.Area area, float weight = 0.5f )
 		{
 			var o = new Potential
 			{
@@ -148,6 +151,7 @@ public class ItemDispatcher : ScriptableObject
 				o.location = item.nextFlag.node;
 			o.type = Potential.Type.offer;
 			o.area = area;
+			o.weight = weight;
 
 			offers.Add( o );
 		}
@@ -250,7 +254,9 @@ public class ItemDispatcher : ScriptableObject
 						continue;
 					if ( !other.area.IsInside( potential.location ) )
 						continue;
-					float score = (int)other.priority * 1000 + 1f / other.location.DistanceFrom( potential.location );
+					int distance = other.location.DistanceFrom( potential.location );
+					float weightedDistance = distance * ( 1 - potential.weight ) * ( 1 - other.weight ) + 1;
+					float score = (int)other.priority * 1000 + 1f / weightedDistance;	// TODO Priorities?
 					if ( score >= maxScore )
 						continue;
 					if ( score > bestScore )

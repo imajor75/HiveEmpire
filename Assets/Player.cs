@@ -33,6 +33,16 @@ public class Player : ScriptableObject
 	[JsonIgnore]
 	public List<float> efficiency;
 
+	public class InputWeight
+	{
+		public Workshop.Type workshopType;
+		public Item.Type itemType;
+		public float weight;
+	}
+
+	public List<InputWeight> inputWeights;
+	public InputWeight plankForConstructionWeight, stoneForConstructionWeight;
+
 	public class Chart : ScriptableObject
 	{
 		public List<float> data;
@@ -119,7 +129,7 @@ public class Player : ScriptableObject
 				itemHaulPriorities.Add( 1 );
 		}
 
-		itemDispatcher = ScriptableObject.CreateInstance<ItemDispatcher>();
+		itemDispatcher = CreateInstance<ItemDispatcher>();
 		itemDispatcher.Setup( this );
 		if ( !CreateMainBuilding() )
 		{
@@ -127,7 +137,51 @@ public class Player : ScriptableObject
 			return null;
 		}
 		efficiencyTimer.Start( efficiencyUpdateTime );
+		CreateInputWeights();
+
 		return this;
+	}
+
+	void CreateInputWeights()
+	{
+		inputWeights = new List<InputWeight>();
+		inputWeights.Add( new InputWeight
+		{
+			workshopType = Workshop.Type.unknown,
+			itemType = Item.Type.plank,
+			weight = 1
+		} );
+		inputWeights.Add( new InputWeight
+		{
+			workshopType = Workshop.Type.unknown,
+			itemType = Item.Type.stone,
+			weight = 1
+		} );
+		foreach ( var c in Workshop.configurations )
+		{
+			if ( c.inputs == null )
+				continue;
+			foreach ( var b in c.inputs )
+			{
+				inputWeights.Add( new InputWeight
+				{
+					workshopType = c.type,
+					itemType = b.itemType,
+					weight = 0.5f
+				} );
+			}
+		}
+		plankForConstructionWeight = FindInputWeight( Workshop.Type.unknown, Item.Type.plank );
+		stoneForConstructionWeight = FindInputWeight( Workshop.Type.unknown, Item.Type.stone );
+	}
+
+	public InputWeight FindInputWeight( Workshop.Type workshopType, Item.Type itemType )
+	{
+		foreach ( var w in inputWeights )
+			if ( workshopType == w.workshopType && itemType == w.itemType )
+				return w;
+
+		return null;
 	}
 
 	public void Start()
@@ -139,6 +193,9 @@ public class Player : ScriptableObject
 		while ( itemEfficiencyHistory.Count < (int)Item.Type.total )
 			itemEfficiencyHistory.Add( Chart.Create().Setup( (Item.Type)itemEfficiencyHistory.Count ) );
 		itemDispatcher.Start();
+
+		if ( inputWeights == null )
+			CreateInputWeights();	// For compatibility with old files
 	}
 
 	public void FixedUpdate()

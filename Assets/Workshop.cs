@@ -117,6 +117,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public int onTheWay;
 		public int important = 3;
 		public Ground.Area area = new Ground.Area();
+		public Player.InputWeight weight;
 	}
 
 	public enum Type
@@ -448,6 +449,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			if ( j == buffers.Count )
 				newList.Add( new Buffer( input.itemType, input.bufferSize ) );
+			foreach ( var b in buffers )
+				b.weight = owner.FindInputWeight( type, b.itemType );
 		}
 		assert.AreEqual( newList.Count, configuration.inputs.Length );
 		buffers = newList;
@@ -512,8 +515,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			int missing = b.size-b.stored-b.onTheWay;
 			var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
+			float weight = b.weight != null ? b.weight.weight : 0.5f;
 			if ( missing > 0 )
-				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area );
+				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 		}
 		if ( output > 0 && freeSpaceAtFlag > 0 && worker.IsIdle( true ) )
 			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, outputPriority, outputArea );

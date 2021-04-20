@@ -133,9 +133,9 @@ abstract public class Building : HiveObject
 				return;
 
 			int plankMissing = plankNeeded - plankOnTheWay - plankArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.plankForConstructionWeight.weight );
 			int stoneMissing = stoneNeeded - stoneOnTheWay - stoneArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global );
+			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
 		}
 
 		public void FixedUpdate()
