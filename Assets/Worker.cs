@@ -835,6 +835,14 @@ public class Worker : HiveObject
 			timeToInterrupt = 1.0f,
 			duration = 300
 		};
+		resourceCollectAct[(int)Resource.Type.pasturingAnimal] = new Act
+		{
+			animation = skinningID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
+			toolSlot = LinkType.rightHand,
+			timeToInterrupt = 0.8f,
+			duration = 300
+		};
 		shovelingAct = new Act
 		{
 			animation = shovelingID,
