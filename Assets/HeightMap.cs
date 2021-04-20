@@ -2,25 +2,9 @@
 using System;
 using UnityEngine;
 
-public class HeightMap : MonoBehaviour
+public class HeightMap
 {
 	public int sizeX = 513, sizeY = 513, size = 9;
-	public bool tileable = false;
-	public bool island = false;
-	readonly float borderLevel = -0.5f;
-
-	[Range(0.0f, 2.0f)]
-	public float randomness = 1;
-	[Range(0.0f, 2.0f)]
-	public float noise = 1;
-
-	public bool normalize = true;
-	[Range(-1.0f, 1.0f)]
-	public float adjustment = 0;
-
-	[Range(0.5f, 1.5f)]
-	public float squareDiamondRatio = 1;
-
 	public System.Random random;
 	[JsonIgnore]
 	public float[,] data;
@@ -28,19 +12,39 @@ public class HeightMap : MonoBehaviour
 	public int seed;
 	public float averageValue;
 
-	public static HeightMap Create()
+	public class Settings : ScriptableObject
 	{
-		var map = new GameObject().AddComponent<HeightMap>();
-		map.name = "Height map";
-		return map;
+		public int mapSize = 9;
+		public bool tileable = true;
+		public bool island = false;
+
+		[Range(0.0f, 1.0f)]
+		public float borderLevel = 0.5f;
+
+		[Range(0.0f, 4.0f)]
+		public float randomness = 1;
+		[Range(0.0f, 2.0f)]
+		public float noise = 1;
+
+		public bool normalize = true;
+		[Range(-1.0f, 1.0f)]
+		public float adjustment = 0;
+
+		[Range(0.5f, 1.5f)]
+		public float squareDiamondRatio = 1;
 	}
 
-	public void Setup( int size, int seed, bool tileable = false, bool island = false )
+	Settings settings;
+
+	public static HeightMap Create()
 	{
-		this.size = size;
-		sizeX = sizeY = ( 1 << size ) + 1;
-		this.tileable = tileable;
-		this.island = island;
+		return new HeightMap();	;
+	}
+
+	public void Setup( Settings settings, int seed )
+	{
+		this.settings = settings;
+		sizeX = sizeY = ( 1 << settings.mapSize ) + 1;
 		this.seed = seed;
 	}
 
@@ -50,31 +54,45 @@ public class HeightMap : MonoBehaviour
 		averageValue = 0;
 		data = new float[sizeX, sizeY];
 		Randomize( ref data[0, 0], 1 );
-		Randomize( ref data[sizeX - 1, 0], 1 );
-		Randomize( ref data[0, sizeY - 1], 1 );
-		Randomize( ref data[sizeX - 1, sizeY - 1], 1 );
-		float randomWeight = randomness;
+		if ( settings.tileable )
+			data[sizeX - 1, 0] = data[0, sizeY - 1] = data[sizeX - 1, sizeY - 1] = data[0, 0];
+		else
+		{
+			Randomize( ref data[sizeX - 1, 0], 1 );
+			Randomize( ref data[0, sizeY - 1], 1 );
+			Randomize( ref data[sizeX - 1, sizeY - 1], 1 );
+		}
+		float randomWeight = settings.randomness;
 		int i = sizeX - 1;
 		float step = 0;
 		while ( i > 1 )
 		{
-			if ( island )
+			if ( settings.island )
 			{
 				Assert.global.AreEqual( sizeX, sizeY );
 				for ( int j = 0; j < sizeX; j++ )
 				{
-					data[j, 0] = borderLevel;
-					data[j, sizeY - 1] = borderLevel;
-					data[0, j] = borderLevel;
-					data[sizeX - 1, j] = borderLevel;
+					data[j, 0] = settings.borderLevel;
+					data[j, sizeY - 1] = settings.borderLevel;
+					data[0, j] = settings.borderLevel;
+					data[sizeX - 1, j] = settings.borderLevel;
 				}
 			}
 			ProcessLevel( i, Math.Min( randomWeight, 1 ) );
+			if ( settings.tileable )
+			{
+				Assert.global.AreEqual( sizeX, sizeY );
+				for ( int j = 0; j < sizeX; j++ )
+				{
+					data[j, 0] = data[j, sizeY - 1];
+					data[0, j] = data[sizeX - 1, j];
+				}
+			}
 
 			i /= 2;
 			step += 1f/size;
 			randomWeight /= 2;
-			randomWeight *= noise;
+			randomWeight *= settings.noise;
 		}
 
 		PostProcess();
@@ -83,7 +101,7 @@ public class HeightMap : MonoBehaviour
 	void PostProcess()
 	{
 		averageValue = 0;
-		float power = (float)Math.Pow( 0.25f, adjustment );
+		float power = (float)Math.Pow( 0.25f, settings.adjustment );
 		float min = 1, max = 0;
 		for ( int x = 0; x < sizeX; x++ )
 		{
@@ -99,7 +117,7 @@ public class HeightMap : MonoBehaviour
 			for ( int y = 0; y < sizeY; y++ )
 			{
 				float value = data[x, y];
-				if ( normalize )
+				if ( settings.normalize )
 					value = ( value - min ) * normalizer;
 				value = (float)Math.Pow( value, power );
 				data[x, y] = value;
@@ -131,7 +149,7 @@ public class HeightMap : MonoBehaviour
 		average += data[x - s, y + s];
 		average += data[x + s, y + s];
 		average /= 4;
-		Randomize( ref average, m * squareDiamondRatio );
+		Randomize( ref average, m * settings.squareDiamondRatio );
 		data[x, y] = average;
 	}
 
@@ -141,7 +159,7 @@ public class HeightMap : MonoBehaviour
 		int count = 0;
 		if ( y == 0 )
 		{
-			if ( tileable )
+			if ( settings.tileable )
 			{
 				average += data[x, sizeY - s - 1];
 				count++;
@@ -154,7 +172,7 @@ public class HeightMap : MonoBehaviour
 		}
 		if ( x == 0 )
 		{
-			if ( tileable )
+			if ( settings.tileable )
 			{
 				average += data[sizeX - s - 1, y];
 				count++;
@@ -167,7 +185,7 @@ public class HeightMap : MonoBehaviour
 		}
 		if ( y == sizeY - 1 )
 		{
-			if ( tileable )
+			if ( settings.tileable )
 			{
 				average += data[x, s];
 				count++;
@@ -180,9 +198,9 @@ public class HeightMap : MonoBehaviour
 		}
 		if ( x == sizeY - 1 )
 		{
-			if ( tileable )
+			if ( settings.tileable )
 			{
-				average += data[s, x];
+				average += data[s, y];
 				count++;
 			}
 		}
@@ -223,20 +241,6 @@ public class HeightMap : MonoBehaviour
 	public void SavePNG( string file )
 	{
 		System.IO.File.WriteAllBytes( file, AsTexture().EncodeToPNG() );
-	}
-
-	Texture2D mapTexture;
-	void OnValidate()
-	{
-		sizeX = sizeY = ( 1 << size ) + 1;
-		Fill();
-		mapTexture = AsTexture();
-	}
-
-	void OnGUI()
-	{
-		if ( mapTexture != null )
-			GUI.DrawTexture( new Rect( 140, 140, 512, 512 ), mapTexture );
 	}
 }
 

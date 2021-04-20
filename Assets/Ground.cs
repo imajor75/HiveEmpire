@@ -73,7 +73,7 @@ public class Ground : HiveObject
 
 	public float n00x, n00y, n10x, n10y, n01x, n01y;
 
-	public Ground Setup( World world, int seed, int width = 64, int height = 64 )
+	public Ground Setup( World world, HeightMap heightMap, HeightMap forestMap, int width = 64, int height = 64 )
 	{
 		this.world = world;
 		gameObject.name = "Ground";
@@ -85,7 +85,7 @@ public class Ground : HiveObject
 		for ( int x = 0; x <= width; x++ )
 			for ( int y = 0; y <= height; y++ )
 				nodes[y * ( width + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
-		GenerateHeights();
+		ScanHeights( heightMap, forestMap );
 
 		n00x = GetNode( 0, 0 ).Position.x;
 		n00y = GetNode( 0, 0 ).Position.z;
@@ -132,54 +132,28 @@ public class Ground : HiveObject
 		}
 	}
 
-	public void GenerateHeights()
+	public void ScanHeights( HeightMap heightMap, HeightMap forestMap )
 	{
-		bool reuse = true;
-		var heightMapObject = GameObject.Find( "heightmap" );
-		var heightMap = heightMapObject?.GetComponent<HeightMap>();
-
-		if ( heightMap == null )
-		{
-			heightMap = HeightMap.Create();
-			heightMap.Setup( 6, World.rnd.Next(), false, true );
-			heightMap.randomness = 2;
-			heightMap.adjustment = -0.3f;
-			heightMap.Fill();
-			reuse = false;
-		};
-
-		var forestMap = HeightMap.Create();
-		forestMap.Setup( heightMap.size, World.rnd.Next() );
-		forestMap.Fill();
-
 		float xf = (float)( heightMap.sizeX - 1 ) / width;
 		float yf = (float)( heightMap.sizeY - 1 ) / height;
 
 		foreach ( var n in nodes )
 		{
-			float d = heightMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
-			n.height = d * World.instance.maxHeight;
+			float d = heightMap.data[(int)Math.Round( xf * n.x ), (int)Math.Round( yf * n.y )];
+			n.height = d * World.instance.settings.maxHeight;
 			n.type = GroundNode.Type.grass;
 			float forestData = forestMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
 			forestData = forestData - forestMap.averageValue + 0.5f;
-			if ( forestData < World.instance.forestGroundChance )
+			if ( forestData < World.instance.settings.forestGroundChance )
 				n.type = GroundNode.Type.forest;
-			if ( d > World.instance.hillLevel )
+			if ( d > World.instance.settings.hillLevel )
 				n.type = GroundNode.Type.hill;
-			if ( d > World.instance.mountainLevel )
+			if ( d > World.instance.settings.mountainLevel )
 				n.type = GroundNode.Type.mountain;
-			if ( d < World.instance.waterLevel )
+			if ( d < World.instance.settings.waterLevel )
 				n.type = GroundNode.Type.underWater;
 			n.transform.localPosition = n.Position;
 		}
-
-#if DEBUG
-		forestMap.SavePNG( "forest.png" );
-#endif
-
-		if ( !reuse )
-			Destroy( heightMap.gameObject );
-		Destroy( forestMap.gameObject );
 	}
 
 	void Update()
@@ -188,6 +162,17 @@ public class Ground : HiveObject
 		{
 			UpdateMesh();
 			meshVersion = layoutVersion;
+		}
+
+		const int overseas = 3;
+		for ( int x = -overseas; x <= overseas; x++ )
+		{
+			for ( int y = -overseas; y <= overseas; y++ )
+			{
+				if ( x == 0 && y == 0 )
+					continue;
+				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* width * GroundNode.size, 0, y * height * GroundNode.size ), Quaternion.identity, material, 0 );
+			}
 		}
 	}
 

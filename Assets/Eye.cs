@@ -16,9 +16,11 @@ public class Eye : MonoBehaviour
 	public float viewDistance = 5.0f;
 	public World world;
 	public float x, y;
+	float lastGoodX, lastGoodY;
 	public float direction;
 	public bool rotateAround;
 	float storedX, storedY, storedDirection;
+	bool hasStoredValues;
 	public new Camera camera;
 	[JsonIgnore]
 	public IDirector director;
@@ -64,13 +66,20 @@ public class Eye : MonoBehaviour
 		var h = World.instance.ground.GetHeightAt( x, y );
 		if ( h != -1 )
 		{
-			if ( h < World.instance.waterLevel * World.instance.maxHeight )
-				h = World.instance.waterLevel * World.instance.maxHeight;
+			lastGoodX = x;
+			lastGoodY = y;
+			if ( h < World.instance.settings.waterLevel * World.instance.settings.maxHeight )
+				h = World.instance.settings.waterLevel * World.instance.settings.maxHeight;
 			var p = new Vector3( x, h, y );
 			ear.position = p;
 			Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
 			transform.position = p - viewer;
 			transform.LookAt( ear );
+		}
+		else
+		{
+			x = lastGoodX;
+			y = lastGoodY;
 		}
 		if ( director == null )
 		{
@@ -91,6 +100,7 @@ public class Eye : MonoBehaviour
 		storedX = x;
 		storedY = y;
 		storedDirection = direction;
+		hasStoredValues = true;
 		this.director = director;
 	}
 
@@ -99,13 +109,14 @@ public class Eye : MonoBehaviour
 		if ( this.director == director )
 			this.director = null;
 
-		if ( restore )
+		if ( restore && hasStoredValues )
 		{
 			x = storedX;
 			y = storedY;
 			direction = storedDirection;
-			rotateAround = false;
+			hasStoredValues = false;
 		}
+		rotateAround = false;
 	}
 
 	public void FocusOn( GroundNode node, bool rotateAround = false )
@@ -116,6 +127,7 @@ public class Eye : MonoBehaviour
 		storedX = x;
 		storedY = y;
 		storedDirection = direction;
+		hasStoredValues = true;
 
 		var p = node.Position;
 		x = p.x;
@@ -129,6 +141,7 @@ public class Eye : MonoBehaviour
 		storedX = x;
 		storedY = y;
 		storedDirection = direction;
+		hasStoredValues = true;
 
 		x = component.transform.position.x;
 		y = component.transform.position.z;

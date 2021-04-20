@@ -261,9 +261,9 @@ public class Interface : HiveObject
 		Main.Create().Open( true );
 	}
 
-	void NewGame( int seed, int size = 64 )
+	void NewGame( int seed )
 	{
-		world.NewGame( seed, size );
+		world.NewGame( seed );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
 		else
@@ -2994,10 +2994,10 @@ public class Interface : HiveObject
 		InputField saveName;
 		Dropdown loadNames;
 		FileSystemWatcher watcher;
-		bool focusOnMainBuilding = false;
 		Dropdown size;
 		bool loadNamesRefreshNeeded = true;
 		static int savedSize = 1;
+		Eye grabbedEye;
 
 		public static Main Create()
 		{
@@ -3041,17 +3041,17 @@ public class Interface : HiveObject
 
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
-				root.world.eye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true );
+				grabbedEye = root.world.eye;
+				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true );
 				escCloses = false;
-				this.focusOnMainBuilding = true;
 			}
 		}
 
 		public new void OnDestroy()
 		{
 			base.OnDestroy();
-			if ( focusOnMainBuilding )
-				root.world.eye.ReleaseFocus( null, true );
+			if ( grabbedEye == root.world.eye )
+				root?.world?.eye?.ReleaseFocus( null, true );
 		}
 
 		public new void Update()
@@ -3064,7 +3064,9 @@ public class Interface : HiveObject
 
 		void StartNewGame()
 		{
-			root.NewGame( int.Parse( seed.text ), 32 + 16 * size.value );
+			root.world.settings = ScriptableObject.CreateInstance<World.Settings>();
+			root.world.settings.size = 32 + 16 * size.value;
+			root.NewGame( int.Parse( seed.text ) );
 			Close();
 		}
 

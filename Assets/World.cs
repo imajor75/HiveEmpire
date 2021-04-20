@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -28,25 +29,74 @@ public class World : MonoBehaviour
 	public bool gameInProgress;
 	public int time;
 
-	public float maxHeight = 8;
-	public float waterLevel = 0.3f;
-	public float hillLevel = 0.6f;
-	public float mountainLevel = 0.8f;
-	public float forestGroundChance = 0.45f;
-
 	static public GameObject water;
 	static public GameObject resources;
 	static public GameObject buoys;
 	static public GameObject nodes;
 
-	public static float forestChance = 0.006f;
-	public static float rocksChance = 0.002f;
-	public static float animalSpawnerChance = 0.001f;
-	public static float ironChance = 0.04f;
-	public static float coalChance = 0.04f;
-	public static float stoneChance = 0.02f;
-	public static float saltChance = 0.02f;
-	public static float goldChance = 0.02f;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float maxHeight;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float waterLevel;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float hillLevel;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float mountainLevel;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float forestGroundChance;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float rockChance;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float animalSpawnerChance;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float ironChance;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float coalChance;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float stoneChance;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float saltChance;
+	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
+	public float goldChance;
+
+	public Settings settings;
+
+	public class Settings : HeightMap.Settings
+	{
+		[Range(16, 128)]
+		public int size = 48;
+
+		public float maxHeight = 6;
+		[Range(0.0f, 1.0f)]
+		public float waterLevel = 0.25f;
+		[Range(0.0f, 1.0f)]
+		public float hillLevel = 0.55f;
+		[Range(0.0f, 1.0f)]
+		public float mountainLevel = 0.8f;
+		[Range(0.0f, 1.0f)]
+		public float forestGroundChance = 0.45f;
+
+		public float forestChance = 0.006f;
+		public float rocksChance = 0.002f;
+		public float animalSpawnerChance = 0.001f;
+		public float ironChance = 0.04f;
+		public float coalChance = 0.04f;
+		public float stoneChance = 0.02f;
+		public float saltChance = 0.02f;
+		public float goldChance = 0.02f;
+
+		[JsonIgnore]
+		public bool apply;  // For debug purposes only
+
+		public void OnValidate()
+		{
+			if ( apply )
+			{
+				apply = false;
+				instance.NewGame( instance.currentSeed, true );
+			}
+		}
+	}
 
 	public static void Initialize()
 	{
@@ -70,6 +120,11 @@ public class World : MonoBehaviour
 	public static World Create()
 	{
 		return new GameObject().AddComponent<World>();
+	}
+
+	public void Awake()
+	{
+		settings = ScriptableObject.CreateInstance<Settings>();
 	}
 
 	public World Setup()
@@ -100,18 +155,33 @@ public class World : MonoBehaviour
 			player.LateUpdate();
 	}
 
-	public void NewGame( int seed, int size = 64 )
+	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
+		var oldEye = ( eye.x, eye.y, eye.direction, eye.altitude, eye.targetAltitude, eye.viewDistance );
+
 		Debug.Log( "Starting new game with seed " + seed );
 
 		rnd = new System.Random( seed );
 		currentSeed = seed;
 
+		var heightMap = HeightMap.Create();
+		heightMap.Setup( settings, rnd.Next() );
+		heightMap.Fill();
+
+		var forestMap = HeightMap.Create();
+		forestMap.Setup( settings, rnd.Next() );
+		forestMap.Fill();
+
+#if DEBUG
+		heightMap.SavePNG( "height.png" );
+		forestMap.SavePNG( "forest.png" );
+#endif
+
 		Clear();
 		Prepare();
 
 		eye = Eye.Create().Setup( this );
-		ground = Ground.Create().Setup( this, seed, size, size );
+		ground = Ground.Create().Setup( this, heightMap, forestMap, settings.size, settings.size );
 		GenerateResources();
 		var mainPlayer = Player.Create().Setup();
 		if ( mainPlayer )
@@ -121,6 +191,16 @@ public class World : MonoBehaviour
 
 		foreach ( var player in players )
 			player.Start();
+
+		if ( keepCameraLocation )
+		{
+			eye.x = oldEye.x;
+			eye.y = oldEye.y;
+			eye.altitude = oldEye.altitude;
+			eye.targetAltitude = oldEye.targetAltitude;
+			eye.direction = oldEye.direction;
+			eye.viewDistance = oldEye.viewDistance;
+		}
 	}
 
 	void Start()
@@ -128,7 +208,7 @@ public class World : MonoBehaviour
 		name = "World";
 		foreach ( var player in players )
 			player.Start();
-		water.transform.localPosition = Vector3.up * waterLevel * maxHeight;
+		water.transform.localPosition = Vector3.up * settings.waterLevel * settings.maxHeight;
 	}
 
 	public void Load( string fileName )
@@ -265,11 +345,6 @@ public class World : MonoBehaviour
 		ppv.isGlobal = true;
 		Assert.global.IsNotNull( ppv.profile );
 
-		maxHeight = 8;
-		waterLevel = 0.3f;
-		hillLevel = 0.6f;
-		mountainLevel = 0.8f;
-		forestGroundChance = 0.45f;
 		{
 			// HACK The event system needs to be recreated after the main camera is destroyed,
 			// otherwise there is a crash in unity
@@ -286,7 +361,7 @@ public class World : MonoBehaviour
 		water.transform.SetParent( transform );
 		water.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
 		water.name = "Water";
-		water.transform.localPosition = Vector3.up * waterLevel * maxHeight;
+		water.transform.localPosition = Vector3.up * settings.waterLevel * settings.maxHeight;
 		water.transform.localScale = Vector3.one * 1000 * GroundNode.size;
 
 		resources = new GameObject();
@@ -424,21 +499,21 @@ public class World : MonoBehaviour
 		foreach ( var node in ground.nodes )
 		{
 			var r = new System.Random( World.rnd.Next() );
-			if ( r.NextDouble() < forestChance )
+			if ( r.NextDouble() < settings.forestChance )
 				node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
-			if ( r.NextDouble() < rocksChance )
+			if ( r.NextDouble() < settings.rocksChance )
 				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
-			if ( r.NextDouble() < animalSpawnerChance )
+			if ( r.NextDouble() < settings.animalSpawnerChance )
 				node.AddResource( Resource.Type.animalSpawner );
-			if ( r.NextDouble() < ironChance )
+			if ( r.NextDouble() < settings.ironChance )
 				node.AddResourcePatch( Resource.Type.iron, 5, 10 );
-			if ( r.NextDouble() < coalChance )
+			if ( r.NextDouble() < settings.coalChance )
 				node.AddResourcePatch( Resource.Type.coal, 5, 10 );
-			if ( r.NextDouble() < stoneChance )
+			if ( r.NextDouble() < settings.stoneChance )
 				node.AddResourcePatch( Resource.Type.stone, 3, 10 );
-			if ( r.NextDouble() < saltChance )
+			if ( r.NextDouble() < settings.saltChance )
 				node.AddResourcePatch( Resource.Type.salt, 3, 10 );
-			if ( r.NextDouble() < goldChance )
+			if ( r.NextDouble() < settings.goldChance )
 				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
 		}
 	}
