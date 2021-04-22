@@ -31,6 +31,12 @@ public class Stock : Building
 
 	public class Cart : Worker
 	{
+		public const int capacity = 20;
+		public Item.Type itemType;
+		public int itemQuantity;
+		public Stock destination;
+		public const int frameCount = 8;
+		readonly GameObject[] frames = new GameObject[8];
 		new public static Cart Create()
 		{
 			return new GameObject().AddComponent<Cart>();
@@ -43,10 +49,36 @@ public class Stock : Building
 			destination = null;
 		}
 
-		public const int capacity = 20;
-		public Item.Type itemType;
-		public int itemQuantity;
-		public Stock destination;
+		new public void Start()
+		{
+			base.Start();
+
+			for ( int i = 0; i < frameCount; i++ )
+			{
+				frames[i] = World.FindChildRecursive( body.transform, $"frame{i}" )?.gameObject;
+				assert.IsNotNull( frames[i] );
+			}
+
+			UpdateLook();
+		}
+
+		public void UpdateLook()
+		{
+			if ( itemQuantity > 0 )
+			{
+				for ( int i = 0; i < frameCount; i++ )
+				{
+					var itemBody = Instantiate( Item.looks.GetMediaData( itemType ) );
+					itemBody.transform.SetParent( frames[i].transform, false );
+				}
+			}
+			else
+			{
+				foreach ( var f in frames )
+					if ( f.transform.childCount > 0 )
+						Destroy( f.transform.GetChild( 0 ).gameObject );
+			}
+		}
 	}
 
 	public class DeliverStackTask : Worker.Task
@@ -82,6 +114,7 @@ public class Stock : Building
 				if ( stock != cartStock )
 					stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
 				cart.itemQuantity = 0;
+				cart.UpdateLook();
 			}
 			if ( stock == cartStock )
 			{
@@ -279,6 +312,7 @@ public class Stock : Building
 				cart.exclusiveFlag = flag;
 				cart.onRoad = true;
 				cart.gameObject.SetActive( true );
+				cart.UpdateLook();
 			}
 		}
     }

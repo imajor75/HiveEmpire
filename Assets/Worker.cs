@@ -60,7 +60,7 @@ public class Worker : HiveObject
 	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID, hammeringID;
 
 	public List<Task> taskQueue = new List<Task>();
-	GameObject body;
+	protected GameObject body;
 	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 	public GameObject haulingBox;
 	[JsonIgnore]
@@ -998,10 +998,13 @@ public class Worker : HiveObject
 		}
 		else
 			animator = null;
-		wheels[0] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_fl" )?.gameObject;
-		wheels[1] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_fr" )?.gameObject;
-		wheels[2] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_rl" )?.gameObject;
-		wheels[3] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_rr" )?.gameObject;
+		if ( type == Type.cart )
+		{
+			wheels[0] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_fl" )?.gameObject;
+			wheels[1] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_fr" )?.gameObject;
+			wheels[2] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_rl" )?.gameObject;
+			wheels[3] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_rr" )?.gameObject;
+		}
 
 		UpdateBody();
 		name = type switch

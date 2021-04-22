@@ -37,6 +37,7 @@ public class Interface : HiveObject
 	public GameObject highlightOwner;
 	public static Material materialUIPath;
 	static bool focusOnInputField;
+	public static bool quiting;
 
 	public enum HighlightType
 	{
@@ -102,6 +103,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
+		quiting = true;
 		if ( !Assert.error )
 			Save();
 	}

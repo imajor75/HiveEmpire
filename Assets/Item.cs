@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -37,7 +38,7 @@ public class Item : HiveObject
 	public bool debugCancelTrip;
 
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
-	static MediaTable<GameObject, Type> looks;
+	public static MediaTable<GameObject, Type> looks;
 
 	[JsonIgnore]
 	public bool Heavy { get { return true; } }
@@ -338,6 +339,12 @@ public class Item : HiveObject
 			owner.mainBuilding.content[(int)type]++;
 		Destroy( gameObject );
 		return true;
+	}
+
+	[Conditional( "Debug" )]
+	public void OnDestroy()
+	{
+		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || Interface.quiting );
 	}
 
 	public override void Reset()

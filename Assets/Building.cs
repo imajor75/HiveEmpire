@@ -616,7 +616,8 @@ abstract public class Building : HiveObject
 		construction?.Validate();
 		foreach ( var item in itemsOnTheWay )
 		{
-			assert.IsNotNull( item );
+			assert.IsNotNull( item );	// TODO Triggered for a sawmill (6 items are in the itemsOnTheWay array, one of them is missing. The missing item has a flag and a nextFlag, and a valid path, it also has a worker.
+			// Originated at a stock. The worker has another log in hands. The path of the item has 7 roads, progress is 4
 			assert.AreEqual( item.destination, this );
 		}
 	}
