@@ -123,12 +123,16 @@ public class Serializer : JsonSerializer
 			return;
 		}
 		FieldInfo i = type.GetField( name );
-		Assert.global.IsNotNull( i, "No field with the name " + name + " found in " + type.Name );
+		PropertyInfo p = type.GetProperty( name );
+		Assert.global.IsTrue( i != null || p != null, "No field with the name " + name + " found in " + type.Name );
 		reader.Read();
 
 		try
 		{
-			i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
+			if ( i != null )
+				i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
+			else
+				p.SetValue( Object(), ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
 		}
 		catch ( System.Exception exception )
 		{

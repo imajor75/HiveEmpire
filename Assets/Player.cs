@@ -33,6 +33,7 @@ public class Player : ScriptableObject
 	[JsonIgnore]
 	public List<float> efficiency;
 
+	[System.Serializable]
 	public class InputWeight
 	{
 		public Workshop.Type workshopType;

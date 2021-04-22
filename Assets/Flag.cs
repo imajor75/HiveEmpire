@@ -23,9 +23,11 @@ public class Flag : HiveObject
 	public Versioned itemsStored = new Versioned();
 	[JsonIgnore]
 	public bool debugSpawnPlank;
+	public bool requestFlattening;
 	public const float itemSpread = 0.25f;
 	GameObject tiles;
 	const float tilesHeight = 0.03f;
+	public Building.Flattening flattening = new Building.Flattening();
 
 	static public void Initialize()
 	{
@@ -122,6 +124,23 @@ public class Flag : HiveObject
 		}
 	}
 
+	public void FixedUpdate()
+	{
+		assert.IsNotSelected();
+		if ( requestFlattening && !flattening.flatteningNeeded )
+		{
+			requestFlattening = false;
+			if ( flattening == null )	// This should never be null, only after loading old files.
+				flattening = new Building.Flattening();
+			var area = new List<GroundNode>();
+			area.Add( node );
+			foreach ( var o in Ground.areas[1] )
+				area.Add( node + o );
+			flattening.Setup( area, false );
+		}
+		flattening?.FixedUpdate();
+	}
+
 	public void UpdateBody()
 	{
 		transform.localPosition = node.Position;
@@ -149,7 +168,6 @@ public class Flag : HiveObject
 		item.flag = null;
 		if ( item.buddy )
 			item.buddy.buddy = null;
-		itemsStored.Trigger();
 		return true;
 	}
 
@@ -173,6 +191,7 @@ public class Flag : HiveObject
 			{
 				items[i] = replace;
 				UpdateBody();
+				itemsStored.Trigger();
 				return true;
 			}
 		}

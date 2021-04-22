@@ -22,6 +22,7 @@ public class Worker : HiveObject
 	public Resource origin;
 	public float currentSpeed;
 	public Flag exclusiveFlag;
+	public bool recalled;
 	public int itemsDelivered;
 	public World.Timer bored;
 	public static int boredTimeBeforeRemove = 6000;
@@ -317,18 +318,18 @@ public class Worker : HiveObject
 		public GroundNode target;
 		public Path path;
 		public bool ignoreFinalObstacle;
+		public HiveObject ignoreObject;
 
 		public World.Timer interruptionTimer;
 		public Act lastStepInterruption;
 
-		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, bool findPathNow = false )
+		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null )
 		{
 			base.Setup( boss );
 			this.target = target;
 			this.ignoreFinalObstacle = ignoreFinalObstacle;
 			this.lastStepInterruption = lastStepInterruption;
-			if ( findPathNow )
-				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, boss, ignoreFinalObstacle );
+			this.ignoreObject = ignoreObject;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -337,7 +338,7 @@ public class Worker : HiveObject
 
 			if ( path == null )
 			{
-				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, boss, ignoreFinalObstacle );
+				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, boss, ignoreFinalObstacle, ignoreObject );
 				if ( path == null )
 				{
 					Debug.Log( "Worker failed to go to " + target.x + ", " + target.y );
@@ -902,6 +903,22 @@ public class Worker : HiveObject
 		return SetupForBuildingSite( building );
 	}
 
+	public Worker SetupForFlattening( Flag flag )
+	{
+		assert.IsNotNull( flag );
+
+		look = type = Type.constructor;
+		name = "Builder";
+		currentColor = Color.cyan;
+		ground = flag.node.ground;
+		owner = flag.owner;
+		Building main = owner.mainBuilding;
+		node = main.node;
+		ScheduleWalkToNeighbour( main.flag.node );
+		ScheduleWalkToFlag( flag );
+		return this;
+	}
+
 	public Worker SetupAsSoldier( Building building )
 	{
 		look = type = Type.soldier;
@@ -1312,13 +1329,17 @@ public class Worker : HiveObject
 				ScheduleWalkToNeighbour( owner.mainBuilding.node );
 				return;
 			}
+			if ( recalled )
+			{
+				node = owner.mainBuilding.flag.node;    // Hack, teleport to the main building flag, if there is no path
+				return;
+			}
+
 			if ( node.ValidFlag )
 				ScheduleWalkToFlag( owner.mainBuilding.flag );
 			else
-			{
-				if ( !ScheduleWalkToNode( owner.mainBuilding.flag.node, false, false, null, true ) )
-					node = owner.mainBuilding.flag.node;	// Hack, teleport to the main building flag, if there is no path
-			}
+				ScheduleWalkToNode( owner.mainBuilding.flag.node, false, false, null );	// TODO Handle when no path
+			recalled = true;
 		}
 	}
 
@@ -1500,12 +1521,11 @@ public class Worker : HiveObject
 	/// <param name="interruption"></param>
 	/// <param name="findPathNow"></param>
 	/// <returns>True, if a valid path is found.</returns>
-	public bool ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, bool findPathNow = false )
+	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, HiveObject ignoreObject = null )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
-		instance.Setup( this, target, ignoreFinalObstacle, interruption, findPathNow );
+		instance.Setup( this, target, ignoreFinalObstacle, interruption, ignoreObject );
 		ScheduleTask( instance, first );
-		return instance.path != null;
 	}
 
 	public void ScheduleWalkToFlag( Flag target, bool exclusive = false, bool first = false )

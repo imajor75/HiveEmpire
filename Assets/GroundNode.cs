@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -19,8 +20,10 @@ public class GroundNode : HiveObject
 	public Ground ground;
 	public Player owner;
 	public int influence;
-	public BorderEdge[] borders = new BorderEdge[GroundNode.neighbourCount];
-	public bool fixedHeight;
+	public BorderEdge[] borders = new BorderEdge[neighbourCount];
+	[JsonIgnore]
+	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
+	public float staticHeight = -1;
 	public Type type;
 	static MediaTable<GameObject, Type> decorations;
 	const float decorationSpreadMin = 0.3f;

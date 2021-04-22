@@ -66,7 +66,8 @@ public class Interface : HiveObject
 		reset,
 		sleeping,
 		clock,
-		alarm
+		alarm,
+		shovel
 	}
 
 	public Interface()
@@ -1623,7 +1624,7 @@ public class Interface : HiveObject
 			Button( 350, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 #if DEBUG
-			BuildButton( 20, -60, "Tree", !node.IsBlocking( true ), AddTree );
+			BuildButton( 20, -60, "Tree", !node.IsBlocking( true ) && node.CheckType( GroundNode.Type.land ), AddTree );
 			BuildButton( 20, -80, "Remove", node.IsBlocking( true ), Remove );
 			BuildButton( 20, -100, "Raise", true, delegate { AlignHeight( 0.1f ); } );
 			BuildButton( 20, -120, "Lower", true, delegate { AlignHeight( -0.1f ); } );
@@ -1658,7 +1659,7 @@ public class Interface : HiveObject
 
 		void AddTree()
 		{
-			Resource.Create().Setup( node, Resource.Type.tree ).life.Start( -2 * Resource.treeGrowthMax );
+			Resource.Create().Setup( node, Resource.Type.tree )?.life.Start( -2 * Resource.treeGrowthMax );
 		}
 
 		void AddCave()
@@ -1921,6 +1922,7 @@ public class Interface : HiveObject
 		public Flag flag;
 		public ItemImage[] items = new ItemImage[Flag.maxItems];
 		public Image[] itemTimers = new Image[Flag.maxItems];
+		public Image shovelingIcon;
 
 		public static FlagPanel Create()
 		{
@@ -1942,6 +1944,9 @@ public class Interface : HiveObject
 			Button( 210, -45, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			Button( 20, -45, 20, 20, iconTable.GetMediaData( Icon.newRoad ) ).onClick.AddListener( StartRoad );
 			Button( 45, -45, 20, 20, iconTable.GetMediaData( Icon.magnet ) ).onClick.AddListener( CaptureRoads );
+			var shovelingButton = Button( 65, -45, 20, 20, iconTable.GetMediaData( Icon.shovel ) );
+			shovelingButton.onClick.AddListener( Flatten );
+			shovelingIcon = shovelingButton.GetComponent<Image>();
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
@@ -1989,6 +1994,11 @@ public class Interface : HiveObject
 			}
 		}
 
+		void Flatten()
+		{
+			flag.requestFlattening = true;
+		}
+
 		public override void Update()
 		{
 			base.Update();
@@ -2012,6 +2022,9 @@ public class Interface : HiveObject
 						items[i].color = new Color( 1, 1, 1, 0.4f );
 				}
 			}
+
+			if ( flag.flattening != null )	// This should never be null unless after loaded old files.
+				shovelingIcon.color = flag.flattening.flatteningNeeded ? Color.grey : Color.white;
 		}
 	}
 

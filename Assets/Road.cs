@@ -232,7 +232,9 @@ public class Road : HiveObject, Interface.IInputHandler
 			return;
 
 		int jam = Jam;
-		mapMaterial.color = Color.Lerp( Color.green, Color.red, Math.Max( 0, ( jam - 2 ) * 0.15f ) );
+		const int maxJam = 2 * Flag.maxItems;
+		float weight = (float)( jam - 2 ) / ( maxJam - 6 );
+		mapMaterial.color = Color.Lerp( Color.green, Color.red, weight );
 
 		if ( decorationOnly )
 			return;
@@ -242,7 +244,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return;
 
 		// TODO Refine when a new worker should be added
-		if ( jam > 4 || workers.Count == 0 )
+		if ( jam > 3 || workers.Count == 0 )
 			CallNewWorker();
 	}
 
@@ -866,7 +868,7 @@ public class Road : HiveObject, Interface.IInputHandler
 					realJam++;
 			}
 		}
-		assert.AreEqual( realJam, Jam );	// TODO Triggered (realJam=7, Jam=8)
+		assert.AreEqual( realJam, Jam );	// TODO Triggered (realJam=7, Jam=8), triggered again (realJam=10, Jam=11, max=12) and again (realJam==3, Jam==4). Potential fix was made. Triggered again (4, 5)(2, 3).
 			for ( int i = 0; i < nodes.Count - 1; i++ )
 			assert.AreEqual( nodes[i].DistanceFrom( nodes[i + 1] ), 1 );
 		if ( !ready )

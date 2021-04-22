@@ -11,6 +11,7 @@ public class PathFinder : ScriptableObject
 	public List<GroundNode> path = new List<GroundNode>();
 	public List<Road> roadPath = new List<Road>();
 	public List<bool> roadPathReversed = new List<bool>();
+	public HiveObject ignoreObject;
 	public bool ready = false;
 	public int openNodes;
 	public Mode mode;
@@ -36,10 +37,11 @@ public class PathFinder : ScriptableObject
 		total
 	}
 
-    public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false )
+    public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
     {
         target = end;
 		this.ignoreFinalObstacle = ignoreFinalObstacle;
+		this.ignoreObject = ignoreObject;
 		this.mode = mode;
 		if ( start == end )
 		{
@@ -69,7 +71,8 @@ public class PathFinder : ScriptableObject
 		if ( !ignoreFinalObstacle || node != target )
 		{
 			if ( node.IsBlocking( mode == Mode.avoidRoadsAndFlags ) )
-				return;
+				if ( ignoreObject == null || ignoreObject == node.building ) 
+					return;
 
 			if ( mode == Mode.avoidRoadsAndFlags && ( node.owner != target.owner || node.road ) )
 				return;
@@ -226,11 +229,11 @@ public class Path : PathFinder
 	public int progress;
 	public HiveObject owner;
 
-	public static Path Between( GroundNode start, GroundNode end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false )
+	public static Path Between( GroundNode start, GroundNode end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
 	{
 		var p = CreateInstance<Path>();
 		p.owner = owner;
-		if ( p.FindPathBetween( start, end, mode, ignoreFinalObstacle ) )
+		if ( p.FindPathBetween( start, end, mode, ignoreFinalObstacle, ignoreObject ) )
 		{
 			if ( mode != Mode.onRoad )
 				p.progress = 1;

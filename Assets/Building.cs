@@ -63,7 +63,94 @@ abstract public class Building : HiveObject
 	}
 
 	[System.Serializable]
-	public class Construction : Worker.Callback.IHandler
+	public class Flattening : Worker.Callback.IHandler
+	{
+		public bool flatteningNeeded;
+		public int corner;
+		public bool permanent;
+		public HiveObject ignoreDuringWalking;
+		public World.Timer suspend;
+		public float level;
+		public Worker worker;
+		public List<GroundNode> area;
+
+		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
+		public bool flatteningCorner;
+		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
+		public List<GroundNode> flatteningArea;
+
+		public void Setup( List<GroundNode> area, bool permanent = true, HiveObject ignoreDuringWalking = null )
+		{
+			this.area = area;
+			this.ignoreDuringWalking = ignoreDuringWalking;
+			this.permanent = permanent;
+			this.corner = 0;
+			flatteningNeeded = true;
+			level = 0;
+			foreach ( var o in area )
+			{
+				if ( o.staticHeight > 0 )
+				{
+					level = o.staticHeight;
+					break;
+				}
+				level += o.height / area.Count;
+			}
+			if ( permanent )
+				foreach ( var node in area )
+					node.staticHeight = level;
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>True if the function call was useful</returns>
+		public bool FixedUpdate()
+		{
+			if ( flatteningNeeded == false )
+			{
+				worker?.Remove( true );
+				worker = null;
+				return false;
+			}
+
+			if ( worker == null )
+			{	// TODO Check the path before creating the worker
+				worker = Worker.Create();
+				worker.SetupForFlattening( area[0].flag );
+			}
+			if ( worker == null || !worker.IsIdle( false ) )
+				return true;
+			if ( corner < area.Count )
+			{
+				if ( worker && worker.IsIdle() )
+				{
+					GroundNode node = area[corner++];
+					if ( node.fixedHeight && node.staticHeight != level )
+						return true;
+					float dif = node.height - level;
+					if ( Math.Abs( dif ) > 0.001f )
+					{
+						worker.ScheduleWalkToNode( node, true, false, null, ignoreDuringWalking );
+						worker.ScheduleDoAct( Worker.shovelingAct );
+						worker.ScheduleCall( this );
+					}
+				}
+				return true;
+			}
+			flatteningNeeded = false;
+			return false;
+		}
+
+		public void Callback( Worker worker )
+		{
+			if ( permanent || worker.node.fixedHeight == false )
+				worker.node.SetHeight( level );
+		}
+	}
+
+	[System.Serializable]
+	public class Construction : Flattening
 	{
 		public Building boss;
 		public bool done;
@@ -75,18 +162,10 @@ abstract public class Building : HiveObject
 		public int stoneNeeded;
 		public int stoneOnTheWay;
 		public int stoneArrived;
-		public float level;
-		public Worker worker;
 		public static Shader shader;
 		public static int sliceLevelID;
 		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 		public int timeSinceCreated;
-		public bool flatteningNeeded;
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public int flatteningCounter;
-		public int flatteningCorner;
-		public List<GroundNode> flatteningArea = new List<GroundNode>();
-		public World.Timer suspend;
 		public Worker.DoAct hammering;
 
 		static public void Initialize()
@@ -99,31 +178,27 @@ abstract public class Building : HiveObject
 		public void Setup( Building boss )
 		{
 			this.boss = boss;
-			if ( flatteningNeeded )
+			List<GroundNode> flatteningArea = new List<GroundNode>();
+			var area = boss.Foundation;
+			flatteningArea.Add( boss.node );
+			foreach ( var o in area )
 			{
-				var area = boss.Foundation;
-				flatteningArea.Add( boss.node );
-				foreach ( var o in area )
+				GroundNode basis = boss.node.Add( o );
+				foreach ( var b in Ground.areas[1] )
 				{
-					GroundNode basis = boss.node.Add( o );
-					foreach ( var b in Ground.areas[1] )
-					{
-						GroundNode node = basis.Add( b );
-						if ( !flatteningArea.Contains( node ) )
-							flatteningArea.Add( node );
-					}
+					GroundNode node = basis.Add( b );
+					if ( !flatteningArea.Contains( node ) )
+						flatteningArea.Add( node );
 				}
-				boss.assert.IsTrue( flatteningArea.Count == 7 || flatteningArea.Count == 14, "Area has " + flatteningArea.Count + " nodes" );
-				foreach ( var node in flatteningArea )
-					node.fixedHeight = true;
 			}
+			boss.assert.IsTrue( flatteningArea.Count == 7 || flatteningArea.Count == 14, "Area has " + flatteningArea.Count + " nodes" );
+			base.Setup( flatteningArea, true, boss );
 		}
 
 		public bool Remove( bool takeYourTime )
 		{
 			hammering?.Stop();
-			if ( worker != null )
-				return worker.Remove( takeYourTime );
+			worker?.Remove( takeYourTime );
 			return true;
 		}
 
@@ -138,68 +213,37 @@ abstract public class Building : HiveObject
 			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
 		}
 
-		public void FixedUpdate()
+		new public void FixedUpdate()
 		{
 			if ( done || suspend.InProgress || boss.blueprintOnly )
 				return;
 
-			// TODO Try to find a path only if the road network has been changed
 			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
 				worker = Worker.Create();
 				worker.SetupForConstruction( boss );
-				worker.ScheduleWait( 100 );
+				return;
 			}
+
 			if ( worker == null )
-				suspend.Start( 250 );
-			if ( worker == null || !worker.IsIdle( false ) )
-				return;
-			if ( level == 0 )
 			{
-				foreach ( var o in flatteningArea )
-					level += o.height;
-				level /= flatteningArea.Count;
-			}
-			if ( flatteningNeeded && flatteningCorner < flatteningArea.Count )
-			{
-				if ( worker && worker.IsIdle() )
-				{
-					GroundNode node = flatteningArea[flatteningCorner++];
-					float dif = node.height - level;
-					if ( Math.Abs( dif ) > 0.001f )
-					{
-						var area = boss.Foundation;
-						foreach ( var o in area )
-						{
-							boss.assert.AreEqual( boss.node.Add( o ).building, boss );
-							boss.node.Add( o ).building = null;
-						}
-						worker.ScheduleWalkToNode( node, true, false, null, true );
-						foreach ( var o in area )
-							boss.node.Add( o ).building = boss;
-						worker.ScheduleDoAct( Worker.shovelingAct );
-						worker.ScheduleCall( this );
-					}
-				}
+				suspend.Start( 200 );
 				return;
-			}
+			};
+
+			if ( flatteningNeeded && base.FixedUpdate() )
+				return;
+
+			if ( !worker.IsIdle() )
+				return;
+
 			if ( progress == 0 )
 			{
 				var o = new Ground.Offset( 0, -1, 1 );
 				GroundNode node = boss.node.Add( o );
 				if ( worker.node != node )
 				{
-					if ( !worker.IsIdle() )
-						return;
-					var area = boss.Foundation;
-					foreach ( var t in area )
-					{
-						boss.assert.AreEqual( boss.node.Add( t ).building, boss );
-						boss.node.Add( t ).building = null;
-					}
-					worker.ScheduleWalkToNode( node, true, false, null, true );
-					foreach ( var t in area )
-						boss.node.Add( t ).building = boss;
+					worker.ScheduleWalkToNode( node, true, false, null, boss );
 					return;
 				}
 
@@ -294,11 +338,6 @@ abstract public class Building : HiveObject
 			worker?.Validate();
 			if ( !done )
 				boss.assert.AreEqual( plankOnTheWay + stoneOnTheWay, boss.itemsOnTheWay.Count );
-		}
-
-		public void Callback( Worker worker )
-		{
-			worker.node.SetHeight( level );
 		}
 	}
 
@@ -527,7 +566,7 @@ abstract public class Building : HiveObject
 		if ( workerMate != null && !workerMate.Remove() )
 			return false;
 
-		foreach ( var o in construction.flatteningArea )
+		foreach ( var o in construction.area )
 			o.fixedHeight = false;
 		var area = Foundation;
 		foreach ( var o in area )
