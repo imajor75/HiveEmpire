@@ -1013,6 +1013,11 @@ public class Interface : HiveObject
 				area.center = null;
 				root.highlightType = HighlightType.none;
 			}
+
+			public bool OnObjectClicked( HiveObject target )
+			{
+				return OnNodeClicked( target.Node );
+			}
 		}
 
 		public class ItemImage : Image, IPointerEnterHandler, IPointerExitHandler
@@ -1589,11 +1594,16 @@ public class Interface : HiveObject
 
 		public bool OnNodeClicked( GroundNode node )
 		{
-			var target = node.building as Stock;
-			if ( target == null )
+			return false;	// Cancel?
+		}
+
+		public bool OnObjectClicked( HiveObject target )
+		{
+			var destination = target as Stock;
+			if ( destination == null )
 				return true;
 
-			stock.destinations[(int)itemTypeForRetarget] = target;
+			stock.destinations[(int)itemTypeForRetarget] = destination;
 			Root.highlightType = HighlightType.none;
 			RecreateControls();
 			return false;
@@ -2508,7 +2518,8 @@ public class Interface : HiveObject
 					inputHandler = this;
 			}
 			else
-				hiveObject.OnClicked();
+				if ( !inputHandler.OnObjectClicked( hiveObject ) )
+					inputHandler = this;
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )
@@ -2706,6 +2717,12 @@ public class Interface : HiveObject
 
 		public void OnLostInput()
 		{
+		}
+
+		public bool OnObjectClicked( HiveObject target )
+		{
+			target.OnClicked();
+			return true;
 		}
 	}
 
@@ -3126,6 +3143,7 @@ public class Interface : HiveObject
 	{
 		bool OnMovingOverNode( GroundNode node );
 		bool OnNodeClicked( GroundNode node );
+		bool OnObjectClicked( HiveObject target );
 		void OnLostInput();
 	}
 }

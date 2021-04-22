@@ -805,6 +805,11 @@ public class Road : HiveObject, Interface.IInputHandler
 			return true;
 	}
 
+	public bool OnObjectClicked( HiveObject target )
+	{
+		return false;
+	}
+
 	public override void Reset()
 	{
 		while ( workers.Count > 1 )
