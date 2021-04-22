@@ -615,6 +615,9 @@ abstract public class Building : HiveObject
 		exit?.Validate();
 		construction?.Validate();
 		foreach ( var item in itemsOnTheWay )
+		{
+			assert.IsNotNull( item );
 			assert.AreEqual( item.destination, this );
+		}
 	}
 }
