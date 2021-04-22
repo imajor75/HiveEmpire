@@ -256,6 +256,7 @@ public class Stock : Building
 				destinations[itemType].total + Cart.capacity <= maxItems &&
 				destinations[itemType].content[itemType] < destinations[itemType].inputMax[itemType] )
 			{
+				content[itemType] -= Cart.capacity;
 				var target = destinations[itemType];
 				cart.itemQuantity = Cart.capacity;
 				cart.itemType = (Item.Type)itemType;

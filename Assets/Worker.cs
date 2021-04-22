@@ -1786,9 +1786,8 @@ public class Worker : HiveObject
 			var nn = node.Add( o );
 			if ( nn == road.nodes[0] )
 				return 0;
-
-			assert.AreEqual( nn, road.LastNode );
-			return road.nodes.Count - 1;
+			if ( nn == road.LastNode )
+				return road.nodes.Count - 1;
 		}
 		return -1;
 	}
