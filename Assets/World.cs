@@ -384,6 +384,8 @@ public class World : MonoBehaviour
 		gameInProgress = false;
 		players.Clear();
 		eye = null;
+		foreach ( var item in Resources.FindObjectsOfTypeAll<Item>() )
+			item.destination = null;    // HACK to silence the assert in Item.OnDestroy
 		foreach ( Transform o in transform )
 		{
 			o.name += " - DESTROYED";

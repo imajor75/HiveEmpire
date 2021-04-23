@@ -10,8 +10,10 @@ Shader "Custom/cursor"
     SubShader
     {
         Tags { "RenderType"="Opaque" }
-		ZTest Always
+		//ZTest Always
         LOD 200
+		//Cull Off
+		Offset 0, -1000
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types

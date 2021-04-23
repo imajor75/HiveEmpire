@@ -137,6 +137,8 @@ public class GroundNode : HiveObject
 			return;
 
 		Gizmos.color = Color.blue;
+		if ( !fixedHeight )
+			Gizmos.color = Color.Lerp( Color.blue, Color.white, 0.5f );
 		if ( resource )
 			Gizmos.color = Color.magenta;
 		if ( building )

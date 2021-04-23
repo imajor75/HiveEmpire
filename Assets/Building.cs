@@ -620,6 +620,9 @@ abstract public class Building : HiveObject
 		{
 			assert.IsNotNull( item );	// TODO Triggered for a sawmill (6 items are in the itemsOnTheWay array, one of them is missing. The missing item has a flag and a nextFlag, and a valid path, it also has a worker.
 			// Originated at a stock. The worker has another log in hands. The path of the item has 7 roads, progress is 4
+			// Triggered again for a barrack, itemsOnTheWay has 6 entries, three beer, two bow and one missing. Missing item is a bow, destination is the barrack
+			// has a flag, but no nextFlag and worker. Item is still far away.
+
 			assert.AreEqual( item.destination, this );
 		}
 	}

@@ -830,6 +830,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override void Validate()
 	{
+		if ( !ready )
+			return;
 		int length = nodes.Count;
 		assert.IsTrue( length > 1 );
 		if ( decorationOnly )
@@ -843,7 +845,11 @@ public class Road : HiveObject, Interface.IInputHandler
 		var last = LastNode;
 		assert.IsNotNull( first.flag );
 		assert.IsNotNull( last.flag );
-		assert.AreEqual( this, first.flag.roadsStartingHere[first.DirectionTo( nodes[1] )] );
+		assert.AreEqual( this, first.flag.roadsStartingHere[first.DirectionTo( nodes[1] )] );	
+		// TODO Triggered after restarting and loading back the game. 
+		// The road was not registered at any of the flags, and wasn't blueprint. 
+		// It was registered at the two inner nodes. This is a recently built road.
+		// The Validate was called from World.Load. The road has no workers on it.
 		assert.AreEqual( this, last.flag.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
 		for ( int i = 1; i < length - 1; i++ )
 			assert.AreEqual( this, nodes[i].road ); // TODO This assert fired once

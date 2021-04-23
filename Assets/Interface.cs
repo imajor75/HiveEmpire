@@ -28,6 +28,8 @@ public class Interface : HiveObject
 	static Tooltip tooltip;
 	public int autoSave = autoSaveInterval;
 	const int autoSaveInterval = 15000;
+	public int fullValidate = fullValidateInterval;
+	const int fullValidateInterval = 500;
 	public HighlightType highlightType;
 	public Ground.Area highlightArea;
 	public GameObject highlightVolume;
@@ -105,6 +107,9 @@ public class Interface : HiveObject
 	{
 		if ( !Assert.error )
 			Save();
+
+		foreach ( var item in Resources.FindObjectsOfTypeAll<Item>() )
+			item.destination = null;    // HACK to silence the assert in Item.OnDestroy
 	}
 
 	public void LateUpdate()
@@ -135,8 +140,14 @@ public class Interface : HiveObject
 		else
 			focusOnInputField = false;
 
-		autoSave--;
-		if ( autoSave < 0 )
+		if ( --fullValidate < 0 )
+		{
+			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
+				ho.Validate();
+			fullValidate = fullValidateInterval;
+		}
+
+		if ( --autoSave < 0 )
 		{
 			Save();
 			autoSave = autoSaveInterval;
