@@ -69,7 +69,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		// Starting a new road
 		if ( road == null || road.nodes.Count == 0 )
 		{
-			if ( !node.ValidFlag )
+			if ( !node.validFlag )
 				return false;
 
 			if ( node.flag.owner != road.owner )
@@ -141,7 +141,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool RemoveLastNode()
 	{
 		var node = LastNode;
-		if ( !node.ValidFlag )
+		if ( !node.validFlag )
 		{
 			if ( node.road == this )
 				node.road = null;
@@ -162,7 +162,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool Finish()
 	{
 		assert.IsFalse( ready );
-		if ( !LastNode.ValidFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
+		if ( !LastNode.validFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
@@ -389,7 +389,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( nodes[node.roadIndex], node );
 			return node.roadIndex;
 		}
-		if ( node.ValidFlag )
+		if ( node.validFlag )
 		{
 			if ( nodes[0] == node )
 				return 0;
@@ -401,9 +401,9 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	static public Road Between( GroundNode first, GroundNode second )
 	{
-		Assert.global.IsNotNull( first.ValidFlag );
-		Assert.global.IsNotNull( second.ValidFlag );
-		if ( first.ValidFlag == null || second.ValidFlag == null )
+		Assert.global.IsNotNull( first.validFlag );
+		Assert.global.IsNotNull( second.validFlag );
+		if ( first.validFlag == null || second.validFlag == null )
 			return null;
 		foreach ( var road in first.flag.roadsStartingHere )
 		{
@@ -554,17 +554,20 @@ public class Road : HiveObject, Interface.IInputHandler
         {
 			// TODO What if worker is not yet onRoad?
 			int workerPoint = worker.IndexOnRoad();
-			if ( flag.node == worker.node )
+			if ( worker.onRoad )
 			{
-				assert.IsFalse( external );
-				assert.AreEqual( workerPoint, splitPoint );
-			}
-			if ( !external && worker.onRoad )
-				assert.AreNotEqual( workerPoint, -1 );
-			if ( worker.onRoad && splitPoint == workerPoint && !external )
-			{
-				flag.user = worker;
-				worker.exclusiveFlag = flag;
+				if ( flag.node == worker.node )
+				{
+					assert.IsFalse( external );
+					assert.AreEqual( workerPoint, splitPoint ); // TODO Triggered
+				}
+				if ( !external )
+					assert.AreNotEqual( workerPoint, -1 );
+				if ( splitPoint == workerPoint && !external )
+				{
+					flag.user = worker;
+					worker.exclusiveFlag = flag;
+				}
 			}
 			if ( workerPoint <= splitPoint )
 			{
@@ -794,7 +797,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		tempNodes = 0;
 		RebuildMesh();
-		if ( node.ValidFlag )
+		if ( node.validFlag )
 		{
 			if ( !Finish() )
 				Remove( false );
@@ -858,9 +861,9 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( i, 1 );
 			worker.Validate();
 		}
-		if ( workerAtNodes[0] != null )
+		if ( workerAtNodes[0] != null && !GetEnd( 0 ).crossing )
 			assert.AreEqual( GetEnd( 0 ).user, workerAtNodes[0] );
-		if ( workerAtNodes[nodes.Count - 1] != null )
+		if ( workerAtNodes[nodes.Count - 1] != null && !GetEnd( 1 ).crossing )
 			assert.AreEqual( GetEnd( 1 ).user, workerAtNodes[nodes.Count - 1] );
 		int realJam = 0;
 		for ( int e = 0; e < 2; e++ )

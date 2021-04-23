@@ -37,7 +37,6 @@ public class Interface : HiveObject
 	public GameObject highlightOwner;
 	public static Material materialUIPath;
 	static bool focusOnInputField;
-	public static bool quiting;
 
 	public enum HighlightType
 	{
@@ -68,7 +67,8 @@ public class Interface : HiveObject
 		sleeping,
 		clock,
 		alarm,
-		shovel
+		shovel,
+		crossing
 	}
 
 	public Interface()
@@ -103,7 +103,6 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		quiting = true;
 		if ( !Assert.error )
 			Save();
 	}
@@ -1704,7 +1703,7 @@ public class Interface : HiveObject
 			base.Open();
 			name = "Build panel";
 
-			Frame( 0, 0, 360, 300 );
+			Frame( 0, 0, 360, 320 );
 			Button( 330, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 			int row = -20;
@@ -1721,9 +1720,11 @@ public class Interface : HiveObject
 				if ( i % 2 != 0 )
 					row -= 20;
 			}
-			BuildButton( 180, -260, "Flag", AddFlag );
-			BuildButton( 180, -240, "Stock", AddStock );
-			BuildButton( 20, -260, "Guardhouse", AddGuardHouse );
+			BuildButton( 20, -260, "Flag", AddFlag );
+			BuildButton( 180, -260, "Crossing", AddCrossing );
+
+			BuildButton( 20, -280, "Guardhouse", AddGuardHouse );
+			BuildButton( 180, -280, "Stock", AddStock );
 		}
 
 		void BuildButton( int x, int y, string title, UnityEngine.Events.UnityAction action )
@@ -1741,6 +1742,13 @@ public class Interface : HiveObject
 		void AddFlag()
 		{
 			root.viewport.constructionMode = Viewport.Construct.flag;
+			Root.viewport.showPossibleBuildings = true;
+			Close();
+		}
+
+		void AddCrossing()
+		{
+			root.viewport.constructionMode = Viewport.Construct.crossing;
 			Root.viewport.showPossibleBuildings = true;
 			Close();
 		}
@@ -1959,6 +1967,8 @@ public class Interface : HiveObject
 			var shovelingButton = Button( 65, -45, 20, 20, iconTable.GetMediaData( Icon.shovel ) );
 			shovelingButton.onClick.AddListener( Flatten );
 			shovelingIcon = shovelingButton.GetComponent<Image>();
+			if ( flag.crossing == false && flag.Buildings().Count == 0 )
+				Button( 85, -45, 20, 20, iconTable.GetMediaData( Icon.crossing ) ).onClick.AddListener( ConvertToCrossing );
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
@@ -2004,6 +2014,12 @@ public class Interface : HiveObject
 					return;
 				}
 			}
+		}
+
+		void ConvertToCrossing()
+		{
+			if ( !flag.crossing )
+				flag.ConvertToCrossing();
 		}
 
 		void Flatten()
@@ -2309,6 +2325,7 @@ public class Interface : HiveObject
 			stock,
 			guardHouse,
 			flag,
+			crossing
 		}
 		public Construct constructionMode = Construct.nothing;
 		public Workshop.Type workshopType;
@@ -2655,6 +2672,11 @@ public class Interface : HiveObject
 					case Construct.flag:
 					{
 						currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true );
+						break;
+					};
+					case Construct.crossing:
+					{
+						currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true, true );
 						break;
 					};
 					case Construct.stock:

@@ -414,8 +414,8 @@ public class Worker : HiveObject
 			if ( exclusive && !ignoreOtherWorkers )
 			{
 				Worker other = road.workerAtNodes[nextPoint];
-				Flag flag = road.nodes[nextPoint].ValidFlag;
-				if ( flag )
+				Flag flag = road.nodes[nextPoint].validFlag;
+				if ( flag && !flag.crossing )
 				{
 					boss.assert.IsTrue( other == null || other == flag.user );
 					other = flag.user;
@@ -456,14 +456,14 @@ public class Worker : HiveObject
 			if ( exclusive )
 			{
 				road.workerAtNodes[currentPoint] = boss;
-				if ( boss.walkTo.ValidFlag )
+				if ( boss.walkTo.validFlag && !boss.walkTo.validFlag.crossing )
 				{
 					if ( !ignoreOtherWorkers )
 						boss.assert.IsNull( boss.walkTo.flag.user, "Worker still in way at flag." );
 					boss.walkTo.flag.user = boss;
 					boss.exclusiveFlag = boss.walkTo.flag;
 				}
-				if ( boss.walkFrom.ValidFlag )
+				if ( boss.walkFrom.validFlag && !boss.walkFrom.validFlag.crossing )
 				{
 					boss.assert.AreEqual( boss.walkFrom.flag, boss.exclusiveFlag ); // TODO Triggered (onroad hauler, excflag 0, didn't build anything recently)
 					if ( boss.walkFrom.flag.user == boss )
@@ -1208,7 +1208,7 @@ public class Worker : HiveObject
 			ScheduleWalkToRoadPoint( node.road, 0, false );
 		foreach ( var o in Ground.areas[1] )        // Tinkerers are often waiting in building, so there is a flag likely nearby
 		{
-			if ( node.Add( o ).ValidFlag == null )
+			if ( node.Add( o ).validFlag == null )
 				continue;
 			ScheduleWalkToNeighbour( node.Add( o ) );
 			break;
@@ -1278,7 +1278,7 @@ public class Worker : HiveObject
 				return;
 
 			assert.IsNotNull( stock );
-			if ( node.ValidFlag )
+			if ( node.validFlag )
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
@@ -1293,7 +1293,7 @@ public class Worker : HiveObject
 		{
 			assert.IsTrue( type == Type.tinkerer || type == Type.constructor );	// This happens if the path to the building gets disabled for any reason
 			ScheduleWait( 300 );
-			if ( node.ValidFlag )	// TODO Do something if the worker can't get home
+			if ( node.validFlag )	// TODO Do something if the worker can't get home
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
@@ -1338,7 +1338,7 @@ public class Worker : HiveObject
 				return;
 			}
 
-			if ( node.ValidFlag )
+			if ( node.validFlag )
 				ScheduleWalkToFlag( owner.mainBuilding.flag );
 			else
 				ScheduleWalkToNode( owner.mainBuilding.flag.node, false, false, null );	// TODO Handle when no path
@@ -1873,6 +1873,7 @@ public class Worker : HiveObject
 			task.Validate();
 		if ( exclusiveFlag )
 		{
+			assert.IsFalse( exclusiveFlag.crossing );
 			assert.IsTrue( type == Type.hauler || type == Type.cart );
 			if ( type != Type.cart )
 			{

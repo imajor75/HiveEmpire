@@ -15,6 +15,7 @@ public class Flag : HiveObject
 	[JsonIgnore]
 	public GameObject[] frames = new GameObject[maxItems];
 	public Worker user;
+	public bool crossing;
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
 	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 	public Building building;
@@ -42,7 +43,7 @@ public class Flag : HiveObject
 		return new GameObject().AddComponent<Flag>();
 	}
 
-	public Flag Setup( GroundNode node, Player owner, bool blueprintOnly = false )
+	public Flag Setup( GroundNode node, Player owner, bool blueprintOnly = false, bool crossing = false )
 	{
 		if ( IsNodeSuitable( node, owner ) )
 		{
@@ -50,6 +51,7 @@ public class Flag : HiveObject
 			this.node = node;
 			this.owner = owner;
 			this.blueprintOnly = blueprintOnly;
+			this.crossing = crossing;
 			if ( node.road && !blueprintOnly )
 			{
 				if ( node.road.ready )
@@ -60,6 +62,8 @@ public class Flag : HiveObject
 					node.road = null;
 				}
 			}
+			if ( crossing )
+				requestFlattening = true;
 			return this;
 		}
 		Destroy( this );
@@ -85,7 +89,8 @@ public class Flag : HiveObject
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
-		Instantiate( template ).transform.SetParent( transform, false );
+		if ( crossing )
+			Instantiate( template ).transform.SetParent( transform, false );
 
 		tiles = Instantiate( baseTemplate );
 		tiles.transform.SetParent( transform, false );
@@ -127,7 +132,7 @@ public class Flag : HiveObject
 	public void FixedUpdate()
 	{
 		assert.IsNotSelected();
-		if ( requestFlattening && !flattening.flatteningNeeded )
+		if ( requestFlattening && !flattening.flatteningNeeded && !blueprintOnly )
 		{
 			requestFlattening = false;
 			if ( flattening == null )	// This should never be null, only after loading old files.
@@ -158,6 +163,29 @@ public class Flag : HiveObject
 			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
 		}
 		tileMesh.vertices = vertices;
+	}
+
+	public bool ConvertToCrossing( bool checkConditions = true )
+	{
+		assert.IsFalse( crossing );
+
+		if ( checkConditions )
+		{
+			if ( Buildings().Count > 0 )
+				return false;
+		}
+
+		if ( user )
+		{
+			assert.AreEqual( user.exclusiveFlag, this );
+			user.exclusiveFlag = null;
+			user = null;
+		}
+
+		crossing = true;
+		requestFlattening = true;
+		Instantiate( template ).transform.SetParent( transform, false );
+		return true;
 	}
 
 	public bool ReleaseItem( Item item )
@@ -334,6 +362,8 @@ public class Flag : HiveObject
 			assert.IsTrue( user.onRoad );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}
+		if ( crossing )
+			assert.IsNull( user );
 	}
 
 	public override GroundNode Node

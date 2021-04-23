@@ -31,7 +31,7 @@ public class GroundNode : HiveObject
 	const float decorationDensity = 0.08f;
 
 	[JsonIgnore]
-	public Flag ValidFlag
+	public Flag validFlag
 	{
 		get
 		{
@@ -350,7 +350,7 @@ public class GroundNode : HiveObject
 	public override void Validate()
 	{
 		int o = 0;
-		if ( ValidFlag )
+		if ( validFlag )
 			o++;
 		if ( road )
 			o++;

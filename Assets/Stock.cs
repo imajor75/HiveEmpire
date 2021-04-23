@@ -200,6 +200,7 @@ public class Stock : Building
 		content[(int)Item.Type.fish] = 10;
 		worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
+		flag.ConvertToCrossing( false );
 		return this;
 	}
 

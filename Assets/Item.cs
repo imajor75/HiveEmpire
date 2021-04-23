@@ -344,7 +344,7 @@ public class Item : HiveObject
 	[Conditional( "Debug" )]
 	public void OnDestroy()
 	{
-		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || Interface.quiting );
+		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || Node == null );
 	}
 
 	public override void Reset()
