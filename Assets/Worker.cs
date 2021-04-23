@@ -287,24 +287,39 @@ public class Worker : HiveObject
 				}
 			}
 			int point = 0;
-			Road road = path.NextRoad();
-			if ( boss.node.flag == road.GetEnd( 0 ) )
-				point = road.nodes.Count - 1;
+			Road nextRoad = path.NextRoad();
+			if ( boss.node.flag == nextRoad.GetEnd( 0 ) )
+				point = nextRoad.nodes.Count - 1;
 			if ( exclusive )
 			{
-				if ( boss.road )
+				if ( boss.road && boss.onRoad )
 				{
 					int index = boss.road.NodeIndex( boss.node );
 					boss.assert.IsTrue( index >= 0 );
 					boss.assert.AreEqual( boss.road.workerAtNodes[index], boss );
 					boss.road.workerAtNodes[index] = null;
+					boss.onRoad = false;
 				}
 				if ( !boss.node.flag.crossing )	
 					boss.assert.AreEqual( boss.node.flag.user, boss );
-				road.workerAtNodes[road.NodeIndex( boss.node )] = boss;
-				boss.road = road;
+				int i = nextRoad.NodeIndex( boss.node );
+				if ( nextRoad.workerAtNodes[i] == null )
+				{
+					nextRoad.workerAtNodes[i] = boss;
+					boss.road = nextRoad;
+					boss.onRoad = true;
+				}
+				else
+				{
+					// Boss is trying to move to the next road. This is always possible when the flag is not a crossing, since no workers 
+					// can use the same entry as the cart. But when the flag is a crossing, it is possible that the cart cannot jump to the 
+					// road in an exclusive way, because a worker is in the way. In that case the cart simply waits.
+					boss.assert.IsTrue( boss.node.flag.crossing );
+					path.progress--;    // cancel advancement
+					return false;
+				}
 			}
-			boss.ScheduleWalkToRoadPoint( road, point, exclusive, true );
+			boss.ScheduleWalkToRoadPoint( nextRoad, point, exclusive, true );
 			return false;
 		}
 
