@@ -252,6 +252,7 @@ public class Stock : Building
 		if ( cart == null )
 			cart = Cart.Create().SetupAsCart( this ) as Cart;
 
+
 		total = totalTarget = 0;
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
@@ -262,33 +263,13 @@ public class Stock : Building
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			int current = content[itemType] + onWay[itemType];
-			if ( maxItems > total )
-			{
-				var p = ItemDispatcher.Priority.stock;
-				if ( current < inputMin[itemType] )
-					p = ItemDispatcher.Priority.high;
-				if ( current > inputMax[itemType] )
-					p = ItemDispatcher.Priority.zero;
-				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
-			}
-			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
-			{
-				var p = ItemDispatcher.Priority.stock;
-				if ( current < outputMin[itemType] )
-					p = ItemDispatcher.Priority.zero;
-				if ( current > outputMax[itemType] )
-					p = ItemDispatcher.Priority.high;
-				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea );
-			}
-
-			if ( 
-				destinations[itemType] && 
-				content[itemType] >= Cart.capacity && 
-				cart.IsIdle( true ) && 
-				flag.user == null && 
-				destinations[itemType].total + Cart.capacity <= maxItems &&
-				destinations[itemType].content[itemType] < destinations[itemType].inputMax[itemType] )
+			if (
+				destinations[itemType] &&
+				content[itemType] >= Cart.capacity &&
+				cart.IsIdle( true ) &&
+				flag.user == null &&
+				destinations[itemType].total + Cart.capacity <= maxItems /*&&
+				destinations[itemType].content[itemType] < destinations[itemType].inputMax[itemType]*/ )
 			{
 				content[itemType] -= Cart.capacity;
 				var target = destinations[itemType];
@@ -314,6 +295,26 @@ public class Stock : Building
 				cart.onRoad = true;
 				cart.gameObject.SetActive( true );
 				cart.UpdateLook();
+			}
+
+			int current = content[itemType] + onWay[itemType];
+			if ( maxItems > total )
+			{
+				var p = ItemDispatcher.Priority.stock;
+				if ( current < inputMin[itemType] )
+					p = ItemDispatcher.Priority.high;
+				if ( current > inputMax[itemType] )
+					p = ItemDispatcher.Priority.zero;
+				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
+			}
+			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
+			{
+				var p = ItemDispatcher.Priority.stock;
+				if ( current < outputMin[itemType] )
+					p = ItemDispatcher.Priority.zero;
+				if ( current > outputMax[itemType] )
+					p = ItemDispatcher.Priority.high;
+				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea );
 			}
 		}
     }
@@ -343,7 +344,7 @@ public class Stock : Building
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
-		assert.IsTrue( content[(int)itemType] > 0 );
+		assert.IsTrue( content[(int)itemType] > 0 );	// TODO Triggered?
 		Item item = base.SendItem( itemType, destination, priority );
 		if ( item != null )
 			content[(int)itemType]--;

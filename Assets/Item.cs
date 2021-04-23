@@ -44,10 +44,10 @@ public class Item : HiveObject
 	public bool Heavy { get { return true; } }
 
 	public enum Type
-    {
-        log,
-        stone,
-        plank,
+	{
+		log,
+		stone,
+		plank,
 		fish,
 		grain,
 		flour,
@@ -64,9 +64,9 @@ public class Item : HiveObject
 		beer,
 		pork,
 		coin,
-        total,
+		total,
 		unknown = -1
-    }
+	}
 
 	public static void Initialize()
 	{
@@ -143,7 +143,7 @@ public class Item : HiveObject
 		body = Instantiate( looks.GetMediaData( type ) );
 		bottomHeight = body.GetComponent<MeshRenderer>().bounds.min.y;
 		body.transform.SetParent( transform, false );
-   		assert.IsNotNull( body );
+		assert.IsNotNull( body );
 		name = type.ToString();
 	}
 
@@ -192,7 +192,7 @@ public class Item : HiveObject
 
 		// If the item is just being gathered, it should not be offered yet
 		if ( flag == null && worker.type != Worker.Type.hauler )
-			return;	
+			return;
 
 		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the hauler will not be
 		// able to skip entering the building, as it is scheduled already.
@@ -344,7 +344,7 @@ public class Item : HiveObject
 	[Conditional( "Debug" )]
 	public void OnDestroy()
 	{
-		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || Node == null );
+		//assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || Node == null || Assert.error );
 	}
 
 	public override void Reset()

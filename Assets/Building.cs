@@ -268,6 +268,7 @@ abstract public class Building : HiveObject
 			done = true;
 			worker.ScheduleWalkToNeighbour( boss.flag.node );
 			worker.type = Worker.Type.unemployed;
+			worker = null;
 			hammering = null;
 		}
 		public bool ItemOnTheWay( Item item, bool cancel = false )
@@ -566,8 +567,9 @@ abstract public class Building : HiveObject
 		if ( workerMate != null && !workerMate.Remove() )
 			return false;
 
-		foreach ( var o in construction.area )
-			o.fixedHeight = false;
+		if ( construction.area != null )	// Should never be null, but old saves are having this.
+			foreach ( var o in construction.area )
+				o.fixedHeight = false;
 		var area = Foundation;
 		foreach ( var o in area )
 		{

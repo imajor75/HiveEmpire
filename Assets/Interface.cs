@@ -558,7 +558,7 @@ public class Interface : HiveObject
 	{
 		GameObject objectToShow;
 		Component origin;
-		Text text;
+		Text text, additionalText;
 		Image image, backGround;
 
 		public static Tooltip Create()
@@ -574,16 +574,19 @@ public class Interface : HiveObject
 			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
 
 			backGround = Frame( 0, 0, 200, 40, 3 );
-			text = Text( 20, -10, 150, 20 );
+			text = Text( 15, -10, 270, 60 );
+			additionalText = Text( 20, -30, 150, 60 );
+			additionalText.fontSize = 10;
 			image = Image( 20, -20, 100, 100 );
 			gameObject.SetActive( false );
 			FollowMouse();
 		}
 
-		public void SetText( Component origin, string text = "", Sprite imageToShow = null, GameObject objectToShow = null )
+		public void SetText( Component origin, string text = "", Sprite imageToShow = null, GameObject objectToShow = null, string additionalText = "" )
 		{
 			this.origin = origin;
 			this.text.text = text;
+			this.additionalText.text = additionalText;
 			if ( this.objectToShow != null && this.objectToShow != objectToShow )
 				Destroy( this.objectToShow );
 			this.objectToShow = objectToShow;
@@ -591,15 +594,23 @@ public class Interface : HiveObject
 			{
 				image.sprite = imageToShow;
 				image.enabled = true;
-				backGround.rectTransform.sizeDelta = new Vector2( 160, 140 );
+				backGround.rectTransform.sizeDelta = new Vector2( 200, 140 );
 			}
 			else
 			{
 				image.enabled = false;
-				backGround.rectTransform.sizeDelta = new Vector2( 160, 40 );
+				if ( text.Length > 20 ) // TODO Big fat hack
+					backGround.rectTransform.sizeDelta = new Vector2( 300, 70 );
+				else
+					backGround.rectTransform.sizeDelta = new Vector2( 200, 40 );
 			}
-			gameObject.SetActive( text != "" );
+			gameObject.SetActive( true );
 			FollowMouse();
+		}
+
+		public void Clear()
+		{
+			gameObject.SetActive( false );
 		}
 
 		public override void Update()
@@ -620,6 +631,33 @@ public class Interface : HiveObject
 			t.anchoredPosition = new Vector2( Input.mousePosition.x + 20, Input.mousePosition.y - Screen.height );
 		}
 	}
+
+	class TooltipSource : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+	{
+		public string text;
+		public string additionalText;
+		public Sprite image;
+
+		public void OnPointerEnter( PointerEventData eventData )
+		{
+			tooltip.SetText( this, text, image, null, additionalText );
+		}
+
+		public void OnPointerExit( PointerEventData eventData )
+		{
+			tooltip.Clear();
+		}
+
+		public static TooltipSource AddTo( Component widget, string text, Sprite image = null, string additionalText = "" )
+		{
+			var s = widget.gameObject.AddComponent<TooltipSource>();
+			s.text = text;
+			s.image = image;
+			s.additionalText = additionalText;
+			return s;
+		}
+	}
+
 	public class Panel : MonoBehaviour, IDragHandler, IPointerClickHandler
 	{
 		public HiveObject target;
@@ -1025,6 +1063,7 @@ public class Interface : HiveObject
 		{
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
+			public string additionalTooltip;
 			GameObject path;
 
 			public void Track()
@@ -1072,14 +1111,14 @@ public class Interface : HiveObject
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					tooltip.SetText( this, item.type.ToString(), Item.sprites[(int)item.type], path = CreateUIPath( item.path ) );
+					tooltip.SetText( this, item.type.ToString(), Item.sprites[(int)item.type], path = CreateUIPath( item.path ), additionalTooltip );
 				else
-					tooltip.SetText( this, itemType.ToString(), Item.sprites[(int)itemType] );
+					tooltip.SetText( this, itemType.ToString(), Item.sprites[(int)itemType], null, additionalTooltip );
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				tooltip.SetText( this, "" );
+				tooltip.Clear();
 			}
 		}
 	}
@@ -1460,6 +1499,7 @@ public class Interface : HiveObject
 				int offset = j % 2 > 0 ? 140 : 0;
 				var t = (Item.Type)j;
 				var i = ItemIcon( 20 + offset, row, iconSize, iconSize, (Item.Type)j );
+				i.additionalTooltip = "Shift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
 				if ( stock.destinations[j] )
 				{
 					Image( 35 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
@@ -1479,12 +1519,17 @@ public class Interface : HiveObject
 
 			int ipx = 165, ipy = -280;
 			selected = ItemIcon( ipx, ipy, 2 * iconSize, 2 * iconSize, selectedItemType );
+			selected.additionalTooltip = "LMB Set cart target\nShift+LMB Show current target\nCtrl+LMB Clear target";
 			selected.GetComponent<Button>().onClick.RemoveAllListeners();
 			selected.GetComponent<Button>().onClick.AddListener( SetTarget );
 			inputMin = Text( ipx - 40, ipy, 40, 20 );
+			TooltipSource.AddTo( inputMin, "If this number is higher than the current content, the stock will request new items at high priority" );
 			inputMax = Text( ipx + 50, ipy, 40, 20 );
+			TooltipSource.AddTo( inputMax, "If the stock has at least this many items, it will no longer accept surplus" );
 			outputMin = Text( ipx - 40, ipy - 20, 40, 20 );
+			TooltipSource.AddTo( outputMin, "The stock will only supply other buildings with the item if it has at least this many" );
 			outputMax = Text( ipx + 50, ipy - 20, 40, 20 );
+			TooltipSource.AddTo( outputMax, "If the stock has more items than this number, then it will send the surplus even to other stocks" );
 		}
 
 		void SetTarget()

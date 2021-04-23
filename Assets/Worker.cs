@@ -299,7 +299,8 @@ public class Worker : HiveObject
 					boss.assert.AreEqual( boss.road.workerAtNodes[index], boss );
 					boss.road.workerAtNodes[index] = null;
 				}
-				boss.assert.AreEqual( boss.node.flag.user, boss );
+				if ( !boss.node.flag.crossing )	
+					boss.assert.AreEqual( boss.node.flag.user, boss );
 				road.workerAtNodes[road.NodeIndex( boss.node )] = boss;
 				boss.road = road;
 			}
