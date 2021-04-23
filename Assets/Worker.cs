@@ -1901,7 +1901,7 @@ public class Worker : HiveObject
 		if ( type == Type.cart )
 		{
 			assert.IsNotNull( building as Stock );
-			if ( road )
+			if ( road && onRoad )
 			{
 				int index = IndexOnRoad();
 				assert.IsTrue( index >= 0 );

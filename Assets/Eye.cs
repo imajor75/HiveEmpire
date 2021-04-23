@@ -138,6 +138,8 @@ public class Eye : MonoBehaviour
 
 	public void FocusOn( Component component, bool rotateAround = false )
 	{
+		if ( component == null )
+			return;
 		storedX = x;
 		storedY = y;
 		storedDirection = direction;
