@@ -1334,9 +1334,11 @@ public class Worker : HiveObject
 				{
 					if ( itemInHands )
 					{
+						// TODO Sometimes this item keeps alive with all the destinations? Suspicious
 						itemInHands.CancelTrip();
 						itemInHands.SetRawTarget( owner.mainBuilding );
 						itemInHands.Arrived();
+						itemInHands.transform.SetParent( node.ground.transform );
 						itemInHands = null;
 					}
 					DestroyThis();
@@ -1853,7 +1855,7 @@ public class Worker : HiveObject
 	{
 		var box = links[(int)LinkType.haulingBox];
 		if ( box )
-			assert.AreEqual( box.transform.childCount, 0 );
+			assert.AreEqual( box.transform.childCount, 0 ); // TODO Triggered, called from Worker:FindTask() line 1342
 		base.DestroyThis();
 	}
 

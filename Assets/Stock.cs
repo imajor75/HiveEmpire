@@ -268,8 +268,8 @@ public class Stock : Building
 				content[itemType] >= Cart.capacity &&
 				cart.IsIdle( true ) &&
 				flag.user == null &&
-				destinations[itemType].total + Cart.capacity <= maxItems /*&&
-				destinations[itemType].content[itemType] < destinations[itemType].inputMax[itemType]*/ )
+				destinations[itemType].total + Cart.capacity <= maxItems &&
+				destinations[itemType].content[itemType] < destinations[itemType].inputMax[itemType] )
 			{
 				content[itemType] -= Cart.capacity;
 				var target = destinations[itemType];
@@ -307,7 +307,7 @@ public class Stock : Building
 					p = ItemDispatcher.Priority.zero;
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
 			}
-			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 3 )
+			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 1 )
 			{
 				var p = ItemDispatcher.Priority.stock;
 				if ( current < outputMin[itemType] )

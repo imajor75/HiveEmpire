@@ -12,6 +12,7 @@ public class ItemDispatcher : ScriptableObject
 		high
 	};
 
+	[System.Serializable]
 	public class Potential
 	{
 		public enum Type

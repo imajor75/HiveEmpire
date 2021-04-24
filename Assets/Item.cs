@@ -344,7 +344,22 @@ public class Item : HiveObject
 	[Conditional( "Debug" )]
 	public void OnDestroy()
 	{
-		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) );
+		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) );	// TODO Triggered randomly for a beer. 
+		// It has a destination (butcher) has a valid path, no worker, nextFlag null. 
+		// Current node is 10, 11, butcher is at 11, 9. 
+		// No buddy. Origin: brewery at 8, 14
+		// tripCancelled false, justCreated false
+		// Item is still registered at the flag (last entry)
+		// Flag is almost full of beer and grain
+
+		// Triggered again for a pork, destination gold mine, origin butcher, flag nextFlag and worker are all valid
+		// Flag 15, 11
+		// nextFlag 19, 11
+		// worker.node 15, 11
+		// worker.itemInHands null
+		// destination.flag 20, 15
+		// origin 12, 9
+		// Item is correctly registered in all 3 places, destination.itemsOnTheWay, flag.items, owner.items
 	}
 
 	public override void Reset()
