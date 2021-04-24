@@ -391,7 +391,7 @@ abstract public class Building : HiveObject
 	{
 		if ( !IsNodeSuitable( node, owner, configuration, flagDirection ) )
 		{
-			Destroy( gameObject );
+			DestroyThis();
 			return null;
 		}
 		var flagNode = node.Neighbour( flagDirection );
@@ -401,7 +401,7 @@ abstract public class Building : HiveObject
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
-			Destroy( gameObject );
+			DestroyThis();
 			return null;
 		}
 
@@ -584,7 +584,7 @@ abstract public class Building : HiveObject
 		if ( roads == 0 )
 			flag.Remove();
 		owner?.versionedBuildingDelete.Trigger();
-		Destroy( gameObject );
+		DestroyThis();
 		return true;
 	}
 

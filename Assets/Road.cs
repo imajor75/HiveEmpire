@@ -153,7 +153,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		nodes.RemoveAt( nodes.Count - 1 );
 		if ( nodes.Count == 0 )
 		{
-			Destroy( gameObject );
+			DestroyThis();
 			return false;
 		}
 		return true;
@@ -594,7 +594,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			second.CallNewWorker();
 
 		invalid = true;
-		Destroy( gameObject );
+		DestroyThis();
 
 		first.Validate();
 		second.Validate();
@@ -664,7 +664,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			UnregisterOnGround();
 
 		invalid = true;
-		Destroy( gameObject );
+		DestroyThis();
 		return true;
 	}
 

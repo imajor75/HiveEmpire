@@ -1210,7 +1210,7 @@ public class Worker : HiveObject
 			itemInHands?.Remove( false );
 			itemInHands = null;
 
-			Destroy( gameObject );
+			DestroyThis();
 			return true;
 		}
 
@@ -1339,7 +1339,7 @@ public class Worker : HiveObject
 						itemInHands.Arrived();
 						itemInHands = null;
 					}
-					Destroy( gameObject );
+					DestroyThis();
 				}
 				return;
 			}
@@ -1848,6 +1848,14 @@ public class Worker : HiveObject
 	}
 
 	public override GroundNode Node { get { return node; } }
+
+	public override void DestroyThis()
+	{
+		var box = links[(int)LinkType.haulingBox];
+		if ( box )
+			assert.AreEqual( box.transform.childCount, 0 );
+		base.DestroyThis();
+	}
 
 	public override void Validate()
 	{

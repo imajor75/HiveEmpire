@@ -130,7 +130,7 @@ public class Item : HiveObject
 		{
 			if ( !SetTarget( destination, priority, origin ) )
 			{
-				Destroy( gameObject );
+				DestroyThis();
 				return null;
 			}
 		}
@@ -309,7 +309,7 @@ public class Item : HiveObject
 		destination.ItemArrived( this );
 
 		owner.UnregisterItem( this );
-		Destroy( gameObject );
+		DestroyThis();
 	}
 
 	[JsonIgnore]
@@ -337,7 +337,7 @@ public class Item : HiveObject
 		owner.UnregisterItem( this );
 		if ( creditOnRemove )
 			owner.mainBuilding.content[(int)type]++;
-		Destroy( gameObject );
+		DestroyThis();
 		return true;
 	}
 

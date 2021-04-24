@@ -448,7 +448,7 @@ public class Ground : HiveObject
 				{
 					if ( node.borders[j] )
 					{
-						Destroy( node.borders[j].gameObject );
+						node.borders[j].DestroyThis();
 						node.borders[j] = null;
 					}
 				}

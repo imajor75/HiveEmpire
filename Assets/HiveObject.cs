@@ -36,11 +36,9 @@ public abstract class HiveObject : MonoBehaviour
 		return nice;
 	}
 
-	public static new void Destroy( UnityEngine.Object toDestroy )
+	public virtual void DestroyThis()
 	{
-		if ( toDestroy == null )
-			return;
-		UnityEngine.Object.Destroy( toDestroy );
+		Destroy( gameObject );
 	}
 
 	public virtual bool Remove( bool takeYourTime = false )

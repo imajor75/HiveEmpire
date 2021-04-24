@@ -66,7 +66,7 @@ public class Flag : HiveObject
 				requestFlattening = true;
 			return this;
 		}
-		Destroy( this );
+		DestroyThis();
 		return null;
 	}
 
@@ -306,7 +306,7 @@ public class Flag : HiveObject
 			item?.Remove( takeYourTime );
 
 		node.flag = null;
-		Destroy( gameObject );
+		DestroyThis();
 		return true;
 	}
 
@@ -388,6 +388,13 @@ public class Flag : HiveObject
 				list.Add( b );
 		}
 		return list;
+	}
+
+	public override void DestroyThis()
+	{
+		foreach ( var f in frames )
+			assert.AreEqual( f.transform.childCount, 0 );
+		base.DestroyThis();
 	}
 
 	static public bool IsNodeSuitable( GroundNode placeToBuildOn, Player owner )

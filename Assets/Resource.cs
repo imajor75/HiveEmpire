@@ -107,13 +107,13 @@ public class Resource : HiveObject
 
 		if ( ( underGround && node.type != GroundNode.Type.hill ) || ( !underGround && !node.CheckType( GroundNode.Type.land ) ) )
 		{
-			Destroy( gameObject );
+			DestroyThis();
 			return null;
 		}
 
 		if ( node.building || node.flag || node.resource )
 		{
-			Destroy( gameObject );
+			DestroyThis();
 			return null;
 		}
 
@@ -269,7 +269,7 @@ public class Resource : HiveObject
 		}
 		assert.AreEqual( this, node.resource );
 		node.resource = null;
-		Destroy( gameObject );
+		DestroyThis();
 		return true;
 	}
 

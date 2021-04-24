@@ -19,7 +19,7 @@ public class BorderEdge : HiveObject
     {
 		if ( node.DistanceFrom( node.Neighbour( direction ) ) > 1 )
 		{
-			Destroy( gameObject );
+			DestroyThis();
 			return null;
 		}
         this.node = node;
