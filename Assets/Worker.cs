@@ -1366,7 +1366,7 @@ public class Worker : HiveObject
 
 	void FindHaulerTask()
 	{
-		if ( bored.Done && road.ActiveWorkerCount > 1 )
+		if ( ( bored.Done && road.ActiveWorkerCount > 1 ) || ( road.ActiveWorkerCount > road.targetWorkerCount && road.targetWorkerCount != 0 ) )
 		{
 			Remove( true );
 			return;

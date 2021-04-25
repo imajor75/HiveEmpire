@@ -25,6 +25,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	[JsonIgnore]
 	public float cost = 0;
 	public float cachedCost = 0;
+	public int targetWorkerCount;   // Zero means automaic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	[JsonIgnore]
@@ -84,27 +85,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		int direction = road.LastNode.DirectionTo( node );
 		if ( direction < 0 )
 			return false;
-		//{
-			//if ( node.flag == null )
-			//	Flag.Create().Setup( node, owner );
-			//if ( node.flag )
-			//{
-			//	// Find a path to the flag, and finish the road based on it
-			//	var p = Path.Between( last, node, PathFinder.Mode.avoidRoadsAndFlags, newRoad, true );
-			//	if ( p )
-			//	{
-			//		for ( int i = 1; i < p.path.Count; i++ )
-			//			newRoad.AddNode( p.path[i] );
-			//		newRoad.OnCreated();
-			//		newRoad = null;
-			//		return false;
-			//	}
-			//	UnityEngine.Debug.Log( "No path found to connect to that flag" );
-			//	return true;
-			//}
-			//UnityEngine.Debug.Log( "Node must be adjacent to previous one" );
-		//	return true;
-		//}
 
 		// Check if the current node is blocking
 		if ( node.IsBlocking() && node.flag == null )
@@ -181,7 +161,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	GroundNode GetNodeFromEnd( int index )
 	{
-   	return nodes[nodes.Count - 1 - index];
+		return nodes[nodes.Count - 1 - index];
 	}
 
 	public Flag GetEnd( int side )
@@ -194,7 +174,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public void Start()
 	{
 		transform.SetParent( ground.transform, false );
-		if ( nodes.Count > 0 )	
+		if ( nodes.Count > 0 )
 			transform.localPosition = nodes[nodes.Count / 2].Position;
 		if ( invalid )
 			return;
@@ -238,13 +218,10 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		if ( decorationOnly )
 			return;
-		if ( !workerAdded.Done )
-			return;
 		if ( workers.Count >= nodes.Count - 2 )
 			return;
 
-		// TODO Refine when a new worker should be added
-		if ( jam > 3 || workers.Count == 0 )
+		if ( ( jam > 3 && targetWorkerCount == 0 && workerAdded.Done ) || workers.Count < targetWorkerCount || workers.Count == 0 )
 			CallNewWorker();
 	}
 

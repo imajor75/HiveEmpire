@@ -1872,18 +1872,23 @@ public class Interface : HiveObject
 			base.Open( road );
 			this.road = road;
 			this.node = node;
-			Frame( 0, 0, 210, 140, 3 );
+			Frame( 0, 0, 210, 165, 3 );
 			Button( 190, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 170, -10, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( Hauler );
 			Button( 150, -10, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			Button( 130, -10, 20, 20, iconTable.GetMediaData( Icon.box ) ).onClick.AddListener( Split );
 			jam = Text( 12, -4, 120, 20, "Jam" );
-			workers = Text( 12, -24, 120, 20, "Worker count" );
+			workers = Text( 12, -28, 120, 20, "Worker count" );
 			name = "Road panel";
+			var t = Dropdown( 20, -44, 150, 25 );
+			t.ClearOptions();
+			t.AddOptions( new List<string> { "Auto", "1", "2", "3", "4" } );
+			t.value = road.targetWorkerCount;
+			t.onValueChanged.AddListener( TargetWorkerCountChanged );
 
 			for ( int i = 0; i < itemsDisplayed; i++ )
 			{
-				int row = i * (iconSize + 5 ) - 100;
+				int row = i * (iconSize + 5 ) - 128;
 				leftItems.Add( ItemIcon( 15, row ) );
 				leftNumbers.Add( Text( 40, row, 30, 20, "0" ) );
 				rightNumbers.Add( Text( 150, row, 20, 20, "0" ) );
@@ -1915,6 +1920,12 @@ public class Interface : HiveObject
 			if ( Flag.Create().Setup( node, node.owner ) != null )
 				Close();
 			World.instance.Validate();
+		}
+
+		void TargetWorkerCountChanged( int newValue )
+		{
+			if ( road )
+				road.targetWorkerCount = newValue;
 		}
 
 		public override void Update()
