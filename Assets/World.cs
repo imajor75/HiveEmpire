@@ -228,6 +228,15 @@ public class World : MonoBehaviour
 			player.Start();
 
 		{
+			var list = Resources.FindObjectsOfTypeAll<Road>();
+			foreach ( var o in list )
+			{
+				o.ends[0] = o.nodes[0].flag;
+				o.ends[1] = o.lastNode.flag;
+			}
+		}
+
+		{
 			var list = Resources.FindObjectsOfTypeAll<Path>();
 			foreach ( var o in list )
 			{
@@ -258,8 +267,8 @@ public class World : MonoBehaviour
 					o.currentColor = Color.white;
 				if ( o.owner == null )
 					o.owner = players[0];
-				if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemInHands != null && o.itemInHands.destination == null )
-					o.itemInHands.SetRawTarget( o.building );
+				if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
+					o.itemsInHands[0].SetRawTarget( o.building );
 				o.Validate();
 			}
 		}
@@ -303,7 +312,7 @@ public class World : MonoBehaviour
 			foreach ( var o in list )
 			{
 				if ( o.life.Empty )
-					o.life.reference = World.instance.time - 15000;
+					o.life.reference = instance.time - 15000;
 				o.Validate();
 			}
 		}
@@ -311,6 +320,11 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
 				o.Validate();
+		}
+
+		{
+			foreach ( var node in ground.nodes )
+				node.AlignType();
 		}
 		gameInProgress = true;
 		SetTimeFactor( timeFactor );    // Just for the animators
@@ -320,6 +334,7 @@ public class World : MonoBehaviour
 	{
 		JsonSerializerSettings jsonSettings = new JsonSerializerSettings
 		{
+			
 			TypeNameHandling = TypeNameHandling.Auto,
 			PreserveReferencesHandling = PreserveReferencesHandling.Objects,
 			ContractResolver = Serializer.SkipUnityContractResolver.Instance

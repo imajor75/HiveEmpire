@@ -485,9 +485,9 @@ abstract public class Building : HiveObject
 		if ( item != null )
 		{
 			flag.ReserveItem( item );
-			worker.SchedulePickupItem( item );
+			worker.SchedulePickupItems( item );
 			worker.ScheduleWalkToNeighbour( flag.node );
-			worker.ScheduleDeliverItem( item );
+			worker.ScheduleDeliverItems( item );
 			worker.ScheduleWalkToNeighbour( node );
 			item.worker = worker;
 		}
@@ -595,7 +595,7 @@ abstract public class Building : HiveObject
 
 	public void UpdateBody()
 	{
-		transform.localPosition = node.Position;
+		transform.localPosition = node.position;
 		exit?.RebuildMesh( true );
 	}
 

@@ -414,7 +414,7 @@ public class Interface : HiveObject
 			CreateHighLightVolumeMesh( m );
 		}
 
-		highlightVolume.transform.localPosition = highlightVolumeCenter.Position;
+		highlightVolume.transform.localPosition = highlightVolumeCenter.position;
 		float scale = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
 		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
 		Destroy( highlightVolume.GetComponent<MeshCollider>() );
@@ -511,8 +511,8 @@ public class Interface : HiveObject
 			float uvDir = path.roadPathReversed[j] ? 1f : 0f;
 			for ( int i = 0; i < road.nodes.Count - 1; i++ )
 			{
-				Vector3 start = road.nodes[i].Position + Vector3.up * 0.1f;
-				Vector3 end = road.nodes[i + 1].Position + Vector3.up * 0.1f;
+				Vector3 start = road.nodes[i].position + Vector3.up * 0.1f;
+				Vector3 end = road.nodes[i + 1].position + Vector3.up * 0.1f;
 				Vector3 side = (end - start) * 0.1f;
 				side = new Vector3( -side.z, side.y, side.x );
 
@@ -937,7 +937,7 @@ public class Interface : HiveObject
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.Node.Position + Vector3.up * GroundNode.size );
+			MoveTo( target.Node.position + Vector3.up * GroundNode.size );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -946,7 +946,7 @@ public class Interface : HiveObject
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Node.Position - Vector3.up * GroundNode.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Node.position - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
 			Rect size = new Rect();
 			foreach ( RectTransform t in frame.rectTransform )
@@ -1936,8 +1936,8 @@ public class Interface : HiveObject
 
 			bool reversed = false;
 			var camera = World.instance.eye.camera;
-			float x0 = camera.WorldToScreenPoint( road.GetEnd( 0 ).node.Position ).x;
-			float x1 = camera.WorldToScreenPoint( road.GetEnd( 1 ).node.Position ).x;
+			float x0 = camera.WorldToScreenPoint( road.nodes[0].position ).x;
+			float x1 = camera.WorldToScreenPoint( road.lastNode.position ).x;
 			if ( x1 < x0 )
 				reversed = true;
 
@@ -1947,14 +1947,14 @@ public class Interface : HiveObject
 				Worker worker;
 				if ( j < road.workers.Count && (worker = road.workers[j]) && worker.taskQueue.Count > 0 )
 				{
-					Item item = worker.itemInHands;
+					Item item = worker.itemsInHands[0];	// TODO show the second item somehow	
 					centerItems[i].SetItem( item );
 					if ( item )
 					{
 						Flag flag = item.nextFlag;
 						if ( flag == null )
 							flag = item.destination.flag;
-						if ( flag == road.GetEnd( reversed ? 1 : 0 ) )
+						if ( flag == road.ends[reversed ? 1 : 0] )
 							centerDirections[i].text = "<";
 						else
 							centerDirections[i].text = "        >";
@@ -1970,11 +1970,11 @@ public class Interface : HiveObject
 				var itemImages = side ? leftItems : rightItems;
 				var itemTexts = side ? leftNumbers : rightNumbers;
 				int[] counts = new int[(int)Item.Type.total];
-				var flag = road.GetEnd( i );
+				var flag = road.ends[i];
 				var items = flag.items;
 				foreach ( var item in items )
 				{
-					if ( item != null && item.Road == road && item.flag == flag )
+					if ( item != null && item.road == road && item.flag == flag )
 						counts[(int)item.type]++;
 				}
 				for ( int j = itemsDisplayed - 1; j >= 0; j-- )
@@ -2075,7 +2075,7 @@ public class Interface : HiveObject
 				GroundNode A = flag.node.Neighbour( i ), B = flag.node.Neighbour( ( i + 1 ) % GroundNode.neighbourCount );
 				if ( A.road && A.road == B.road )
 				{
-					if ( A.road.GetEnd( 0 ) == flag || A.road.GetEnd( 1 ) == flag )
+					if ( A.road.ends[0] == flag || A.road.ends[1] == flag )
 						continue;
 					A.road.Split( flag );
 					return;
@@ -2199,7 +2199,7 @@ public class Interface : HiveObject
 				}
 			}
 			else
-				item.SetItem( worker.itemInHands );
+				item.SetItem( worker.itemsInHands[0] );	// TODO Show the second item
 			itemCount.text = "Items delivered: " + worker.itemsDelivered;
 			if ( followTarget )
 				MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
@@ -2335,10 +2335,10 @@ public class Interface : HiveObject
 			if ( item.destination && route == null )
 			{
 				route = CreateUIPath( item.path );
-				route.transform.SetParent( Root.transform );
+				route?.transform.SetParent( Root.transform );
 			}
 			if ( item.flag )
-				mapIcon.transform.position = item.flag.node.Position + Vector3.up * 4;
+				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
 			else
 			{
 				item.assert.IsNotNull( item.worker );
@@ -2660,7 +2660,7 @@ public class Interface : HiveObject
 				return;
 			GroundNode node = FindNodeAt( Input.mousePosition );
 			if ( cursor && node )
-				cursor.transform.localPosition = node.Position;
+				cursor.transform.localPosition = node.position;
 			if ( !inputHandler.OnMovingOverNode( node ) )
 				inputHandler = this;
 #if DEBUG
@@ -2687,7 +2687,7 @@ public class Interface : HiveObject
 								continue;
 						}
 
-						Graphics.DrawMesh( p.mesh, Matrix4x4.TRS( n.Position, Quaternion.identity, new Vector3( p.scale, p.scale, p.scale ) ), p.material, 0 );
+						Graphics.DrawMesh( p.mesh, Matrix4x4.TRS( n.position, Quaternion.identity, new Vector3( p.scale, p.scale, p.scale ) ), p.material, 0 );
 						break;
 					}
 				}

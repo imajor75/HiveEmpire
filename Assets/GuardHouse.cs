@@ -44,7 +44,7 @@ public class GuardHouse : Building
 		var body = Instantiate( template, transform );
 		body.layer = World.layerIndexPickable;
 		base.Start();
-		body.transform.RotateAround( node.Position, Vector3.up, 60 * ( 1 - flagDirection ) );
+		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
 	public new void Update()

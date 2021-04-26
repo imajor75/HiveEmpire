@@ -37,7 +37,7 @@ public class BorderEdge : HiveObject
 
 	public void UpdateBody()
 	{
-		Vector3 position = Vector3.Lerp( node.Position, node.Neighbour( direction ).Position, 0.4f );
+		Vector3 position = Vector3.Lerp( node.position, node.Neighbour( direction ).position, 0.4f );
 		if ( position.y < World.instance.settings.waterLevel * World.instance.settings.maxHeight )
 			position.y = World.instance.settings.waterLevel * World.instance.settings.maxHeight;
 		transform.localPosition = position;

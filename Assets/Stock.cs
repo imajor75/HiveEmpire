@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
@@ -36,10 +37,44 @@ public class Stock : Building
 		public int itemQuantity;
 		public Stock destination;
 		public const int frameCount = 8;
+		[JsonIgnore]
+		public Stock boss { get { return building as Stock; } }
 		readonly GameObject[] frames = new GameObject[8];
 		new public static Cart Create()
 		{
 			return new GameObject().AddComponent<Cart>();
+		}
+
+		public void DeliverItems( Stock destination )
+		{
+			this.destination = destination;
+			destination.onWay[(int)itemType] += itemQuantity;
+			ScheduleWalkToFlag( destination.flag, true );
+			ScheduleWalkToNeighbour( destination.node );
+
+			var task = ScriptableObject.CreateInstance<DeliverStackTask>();
+			task.Setup( this, destination );
+			ScheduleTask( task );
+		}
+
+		public void TransferItems( Item.Type itemType, Stock destination )
+		{
+			int typeIndex = (int)itemType;
+			boss.content[typeIndex] -= capacity;
+			itemQuantity = capacity;
+			this.itemType = itemType;
+
+			ScheduleWalkToNeighbour( boss.flag.node );
+			DeliverItems( destination );
+			ScheduleWalkToNeighbour( destination.flag.node );
+			ScheduleWalkToFlag( boss.flag, true );
+			ScheduleWalkToNeighbour( node );
+
+			boss.flag.user = this;
+			exclusiveFlag = boss.flag;
+			onRoad = true;
+			gameObject.SetActive( true );
+			UpdateLook();
 		}
 
 		public override void Reset()
@@ -60,6 +95,34 @@ public class Stock : Building
 			}
 
 			UpdateLook();
+		}
+
+		public new void FixedUpdate()
+		{
+			if ( itemQuantity > 0 && destination == null )
+			{
+				destination = null; // Real null, not the unity style fake one
+				ResetTasks();
+				DeliverItems( boss );
+			}
+			base.FixedUpdate();
+		}
+
+		override public void FindTask()
+		{
+			if ( boss == null )
+			{
+				type = Type.unemployed;
+				return;
+			}
+			if ( node != boss.node )
+			{
+				DeliverItems( destination ?? boss );
+				return;
+			}
+			assert.IsTrue( itemQuantity == 0 );
+			destination = null;	// Theoretically not needed
+			gameObject.SetActive( false );
 		}
 
 		public void UpdateLook()
@@ -116,14 +179,23 @@ public class Stock : Building
 				cart.itemQuantity = 0;
 				cart.UpdateLook();
 			}
-			if ( stock == cartStock )
+			if ( cartStock != stock )
 			{
-				if ( cart.exclusiveFlag )
+				// Not at home yet, so the following tasks supposed to get the cart back
+				boss.assert.IsTrue( boss.taskQueue.Count > 1 );
+				if ( !stock.flag.crossing )
 				{
-					cart.exclusiveFlag.user = null;
-					cart.exclusiveFlag = null;
+					if ( stock.flag.user )
+						return false;
+
+					stock.flag.user = boss;
+					boss.exclusiveFlag = stock.flag;
 				}
+				boss.onRoad = true;
+
 			}
+			boss.assert.AreEqual( cart.destination, stock );
+			cart.destination = null;
 			return true;
 		}
 	}
@@ -230,16 +302,16 @@ public class Stock : Building
 		while ( inputMin.Count < (int)Item.Type.total )
 			inputMin.Add( 0 );
 		while ( inputMax.Count < (int)Item.Type.total )
-			inputMax.Add( maxItems / 20 );
+			inputMax.Add( 0 );
 		while ( outputMin.Count < (int)Item.Type.total )
 			outputMin.Add( 0 );
 		while ( outputMax.Count < (int)Item.Type.total )
-			outputMax.Add( maxItems / 20 );
+			outputMax.Add( maxItems / 4 );
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
 		Array.Resize( ref destinations, (int)Item.Type.total );
 
-		body.transform.RotateAround( node.Position, Vector3.up, 60 * ( 1 - flagDirection ) );
+		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
 	new public void Update()
@@ -259,6 +331,10 @@ public class Stock : Building
 			int count = content[itemType] + onWay[itemType];
 			total += count;
 			totalTarget += Math.Max( count, inputMin[itemType] );
+
+			// Remove unity stype null references
+			if ( destinations[itemType] == null )
+				destinations[itemType] = null;
 		}
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
@@ -269,32 +345,9 @@ public class Stock : Building
 				cart.IsIdle( true ) &&
 				flag.user == null &&
 				destinations[itemType].total + Cart.capacity <= maxItems &&
-				destinations[itemType].content[itemType] < destinations[itemType].inputMax[itemType] )
+				destinations[itemType].content[itemType] + Cart.capacity <= destinations[itemType].inputMax[itemType] )
 			{
-				content[itemType] -= Cart.capacity;
-				var target = destinations[itemType];
-				cart.itemQuantity = Cart.capacity;
-				cart.itemType = (Item.Type)itemType;
-				cart.destination = target;
-				target.onWay[itemType] += cart.itemQuantity;
-
-				cart.ScheduleWalkToNeighbour( flag.node );
-				cart.ScheduleWalkToFlag( target.flag, true );
-				cart.ScheduleWalkToNeighbour( target.node );
-
-				var task = ScriptableObject.CreateInstance<DeliverStackTask>();
-				task.Setup( cart, target );
-				cart.ScheduleTask( task );
-
-				cart.ScheduleWalkToNeighbour( target.flag.node );
-				cart.ScheduleWalkToFlag( flag, true );
-				cart.ScheduleWalkToNeighbour( node );
-
-				flag.user = cart;
-				cart.exclusiveFlag = flag;
-				cart.onRoad = true;
-				cart.gameObject.SetActive( true );
-				cart.UpdateLook();
+				cart.TransferItems( (Item.Type)itemType, destinations[itemType] );
 			}
 
 			int current = content[itemType] + onWay[itemType];
@@ -378,7 +431,10 @@ public class Stock : Building
 	public void ClearSettings()
 	{
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
-			inputMin[i] = inputMax[i] = outputMin[i] = outputMax[i] = 0;
+		{
+			inputMin[i] = inputMax[i] = outputMin[i] = 0;
+			outputMax[i] = 50;
+		}
 
 		inputArea.center = outputArea.center = node;
 		inputArea.radius = outputArea.radius = 4;

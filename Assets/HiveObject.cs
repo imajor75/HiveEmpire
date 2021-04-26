@@ -11,6 +11,8 @@ public abstract class HiveObject : MonoBehaviour
 	[JsonIgnore]
 	public Assert assert;
 	public bool blueprintOnly;
+	static System.Random idSource = new System.Random();
+	public int id = idSource.Next();		// Only to help debugging
 
 	public HiveObject()
 	{

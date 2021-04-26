@@ -108,7 +108,7 @@ public class GroundNode : HiveObject
 	{
 		name = "GroundNode (" + x + ", " + y + ")";
 		transform.SetParent( World.nodes.transform );
-		transform.localPosition = Position;
+		transform.localPosition = position;
 
 		// Decoration
 		World.rnd = new System.Random( 1000 * x + y );
@@ -124,7 +124,7 @@ public class GroundNode : HiveObject
 				d.SetParent( transform, false );
 				var o = Neighbour( i );
 				var l = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
-				d.position = Position * ( 1 - l ) + o.Position * l;
+				d.position = position * ( 1 - l ) + o.position * l;
 			}
 		}
 	}
@@ -132,7 +132,6 @@ public class GroundNode : HiveObject
 	public void OnDrawGizmos()
 	{
 #if DEBUG
-		Vector3 position = Position;
 		if ( ( position - SceneView.lastActiveSceneView.camera.transform.position ).magnitude > 10 )
 			return;
 
@@ -153,7 +152,7 @@ public class GroundNode : HiveObject
 	}
 
 	[JsonIgnore]
-	public Vector3 Position
+	public Vector3 position
 	{
 		get
 		{
@@ -278,6 +277,9 @@ public class GroundNode : HiveObject
 	{
 		// TODO Dont rebuild the whole mesh
 		this.height = height;
+
+		AlignType();
+
 		ground.layoutVersion++;
 		if ( flag )
 		{
@@ -298,7 +300,7 @@ public class GroundNode : HiveObject
 			border?.UpdateBody();
 		building?.UpdateBody();
 
-		transform.localPosition = Position;
+		transform.localPosition = position;
 	}
 
 	public bool CanBeFlattened()
@@ -309,6 +311,25 @@ public class GroundNode : HiveObject
 			if ( Neighbour( i ).fixedHeight )
 				return false;
 		return true;
+	}
+
+	public void AlignType()
+	{
+		var settings = ground.world.settings;
+		float relativeHeight = height / settings.maxHeight;
+		if ( relativeHeight < settings.waterLevel )
+			type = Type.underWater;
+		else if ( type == Type.underWater )
+			type = Type.grass;
+		if ( relativeHeight > settings.mountainLevel )
+			type = Type.mountain;
+		else if ( type == Type.mountain )
+			type = Type.hill;
+		if ( relativeHeight >= settings.hillLevel && relativeHeight < settings.mountainLevel )
+
+			type = Type.hill;
+		if ( relativeHeight < settings.hillLevel && type == Type.hill )
+			type = Type.grass;
 	}
 
 	public override void OnClicked()

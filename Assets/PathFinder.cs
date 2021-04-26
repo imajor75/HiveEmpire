@@ -145,7 +145,7 @@ public class PathFinder : ScriptableObject
 					continue;
 				int index = road.NodeIndex( r.node );
 				if ( index == 0 )
-					VisitNode( road.LastNode, r.costG + road.Cost, r, road, false );
+					VisitNode( road.lastNode, r.costG + road.Cost, r, road, false );
 				else
 				{
 					Assert.global.AreEqual( index, road.nodes.Count - 1 );
@@ -200,14 +200,14 @@ public class PathFinder : ScriptableObject
 				{
 					if ( roadPath[i] == null || roadPath[i + 1] == null )
 						continue;
-					Assert.global.AreEqual( roadPath[i].GetEnd( roadPathReversed[i] ? 0 : 1 ), roadPath[i + 1].GetEnd( roadPathReversed[i + 1] ? 1 : 0 ) );
+					Assert.global.AreEqual( roadPath[i].ends[roadPathReversed[i] ? 0 : 1], roadPath[i + 1].ends[roadPathReversed[i + 1] ? 1 : 0] );
 				}
 				Assert.global.IsTrue( path.Count == 0 );
 				if ( roadPath.Count > 0 )
 				{
 					Road last = roadPath[roadPath.Count - 1];
 					if ( last )
-						Assert.global.IsTrue( last.GetEnd( roadPathReversed[roadPath.Count - 1] ? 0 : 1 ).node == target );
+						Assert.global.IsTrue( last.ends[roadPathReversed[roadPath.Count - 1] ? 0 : 1].node == target );
 				}
 			}
 			else
@@ -243,7 +243,7 @@ public class Path : PathFinder
 	}
 
 	[JsonIgnore]
-	public Road Road
+	public Road road
 	{
 		get
 		{
@@ -271,7 +271,7 @@ public class Path : PathFinder
 	}
 
 	[JsonIgnore]
-	public bool IsFinished
+	public bool isFinished
 	{
 		get
 		{
@@ -283,7 +283,7 @@ public class Path : PathFinder
 	}
 
 	[JsonIgnore]
-	public int StepsLeft
+	public int stepsLeft
 	{
 		get
 		{

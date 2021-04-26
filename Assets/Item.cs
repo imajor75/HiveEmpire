@@ -5,6 +5,17 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
+// The item has three stages while on the way to it's destination:
+// 1. Waiting for a worker.
+//		In this stage the item is sitting at a flag, waiting for a worker to transfer it to the next flag. So the flag member is not null, but the worker and nextFlag members are both zero
+// 2. Has a worker assigned, waiting for the worker to pick it up.
+//		In this stage the item is still at a flag, but it has an associated worker, and the nextFlag member is also filled. The worker is on its way to pick up the item. The item got a reserved spot at nextFlag
+// 3. The item is in the hand of the worker, who is carrying it to the next flag. In this state the flag member is null, as the item is linked to the hand of the worker.
+
+// The items are registered in three possible places:
+// 1, In Player.items (every item is always registered there)
+// 2. In Flag.items (if the item is sitting at a flag waiting for a worker)
+// 3. In Building.itemsOnTheWay (if the item has a destination)
 [SelectionBase]
 public class Item : HiveObject
 {
@@ -13,22 +24,26 @@ public class Item : HiveObject
 	public bool justCreated;    // True if the item did not yet enter the world (for example if the item is a log and in the hand of the woodcutter after chopping a tree, on the way back to the building)
 	public Player owner;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
-	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag
-	public Worker worker;
+	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag (Still could be waiting at a flag, but has an associated worker). It is also possible that this is null, but the item is in the hand of a worker. That happens when the item is on the last road of its path, and the worker will deliver it into a building, and not a flag.
+	public Worker worker;		// If this is a valid reference, the item has a worker who promised to come and pick it up. Other workers will not care about the item, when it already has an associated worker.
 	public Type type;
 	public Ground ground;
-	public Path path;
-	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;
-	public Building destination;
-	public Building origin;
+	public Path path;			// This is the current path of the item leading to the destination. The next road in this path is starting at the current flag, and the last road on this path is using the final flag. This member might be null at any point, if the previous path was destroyed for some reason (for example because the player did remove a road)
+	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;	// This member shows the priority of the current order the item is fulfilling, so the destination member should not be zero. If this priority is low, the item keeps offering itself at higher priorities, so it is possible that the item changes its destination while on the way to the previous one. (for example a log is carried to a stock, but meanwhile a sawmill requests a new one)
+	public Building destination;	// The current destination of the item. This could be null at any point, if the item is not needed anywhere. The game is trying to avoid it, so buildings are only spitting out items if they know that the item is needed somewhere, but the player might remove the destination building at any time. The current destination can change also if the game finds a better use for the item, except on the last road, where the item is not offered, even if it is delivered to a stock.
+	public Building origin;			// This is where the item comes from. Only used for statistical and validation purposes. The game is constantly checking this reference to make sure it is valid, and if it is not, it sets it to null. Otherwise this reference might keep old buildings alive in the memory while the player already removed them from the game.
 	public Watch watchRoadDelete = new Watch();
 	public Watch watchBuildingDelete = new Watch();
-	public bool tripCancelled;
+	public bool tripCancelled;		// If this boolean is true, the items destination was lost, so the current value of the destination member is zero. It will be tudned back to false once a new destination for the item is found.
 	public World.Timer life;
 	public World.Timer atFlag;
 	const int timeoutAtFlag = 9000;
 	public float bottomHeight;		// y coordinate of the plane at the bottom of the item in the parent transformation
-	public Item buddy;  // If this reference is not null, the target item is holding this item on it's back at nextFlag
+	public Item buddy;  // This reference is used when two items at the different end of a road are swapping space, one goes to one direction, while the other one is going the opposite. Otherwise this member is null. Without this feature a deadlock at a road can very easily occur. When a worker notices that there is a possibility to swap two items, it can do that even if both flags are full without free space. In this case the two items get a reference in this member to each other. Picking up the first item is done as usual, but when the worker arrives at the next flag with the item, it will not search for a free entry at the flag (because it is possible that there is no) but swaps the item with its buddy. After this swap, delivering the item to the first flag is happening in a normal way.
+						// There are three phases of this:
+						// 1. Worker realizes that two items A and B could be swapped, so makrs them as buddies of each other. Walks to pick up A. During this phase, the buddy refernce of both items are valid, referring to each other.
+						// 2. A is in hand of the worker it is on its way to put down A and pick up B. During this phase A.buddy is null (cleared in Flag.ReleaseItem) but B.buddy is still referring to A, since it is keeping it's spot
+						// 3. A is already delivered, the worker is now carrying B as normal. Both A.buddy and B.buddy is null. The latter got cleared in Flag.FinalizeItem
 	public int index = -1;
 	public static bool creditOnRemove = true;
 	[JsonIgnore]
@@ -179,28 +194,26 @@ public class Item : HiveObject
 			}
 		}
 
-		if ( path && !path.IsFinished && path.Road == null )
+		if ( path && !path.isFinished && path.road == null )
 			CancelTrip();
 
 		if ( watchBuildingDelete.Check() )
 		{
 			if ( destination == null && path )
 				CancelTrip();
-			if ( origin == null )
-				origin = null;	// Releasing the reference when the building was removed
 		}
 
 		// If the item is just being gathered, it should not be offered yet
 		if ( flag == null && worker.type != Worker.Type.hauler )
 			return;
 
-		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered into a buildig. Too late to offer it, the hauler will not be
+		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered straight into a buildig. Too late to offer it, the hauler will not be
 		// able to skip entering the building, as it is scheduled already.
 		if ( worker && !nextFlag )
 			return; // justCreated is true here?
 
 		// Anti-jam action. This can happen if all the following is met:
-		// 1. item is waiting too much at a flag
+		// 1. item is waiting for too long at a flag
 		// 2. flag is in front of a stock which is already built
 		// 3. item is not yet routing to this building
 		// 4. worker not yet started coming
@@ -284,15 +297,15 @@ public class Item : HiveObject
 		if ( destination && path.progress != 0 )	// TODO Triggered.
 		{
 			// path.progess is zero if the item was rerouting while in the hands of the hauler
-			assert.IsFalse( path.IsFinished );
-			assert.IsTrue( flag == path.Road.GetEnd( 0 ) || flag == path.Road.GetEnd( 1 ), "Path is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" ); // TODO Triggered multiple times
+			assert.IsFalse( path.isFinished );
+			assert.IsTrue( flag == path.road.ends[0] || flag == path.road.ends[1], "Path is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" ); // TODO Triggered multiple times
 			// Maybe this is happening when the hauler is exchanging two items, and the second item changes its path before the hauler would pick it up. Since no PickupItem.ExecuteFrame is called when picking
 			// up the item, the hauler does not check if the item still want to go that way, and anyway it cannot do anything else than picking up the item and carrying to the other flag. So in this case the trip
 			// of the item needs to be cancelled. DeliverItem.ExecuteFrame is doing this now, so maybe the bug causing the assert trigger is already fixed.
 		}
 
 		worker = null;
-		assert.IsTrue( destination == null || !path.IsFinished || destination.flag == flag );
+		assert.IsTrue( destination == null || !path.isFinished || destination.flag == flag );
 
 		atFlag.Start();
 		return flag.FinalizeItem( this );
@@ -313,25 +326,29 @@ public class Item : HiveObject
 	}
 
 	[JsonIgnore]
-	public Road Road
+	public Road road
 	{
 		get
 		{
 			if ( path == null )
 				return null;
-			if ( path.IsFinished )
+			if ( path.isFinished )
 				return null;
-			return path.Road;
+			return path.road;
 		}
 	}
+
+	[JsonIgnore]
+	public bool lastRoad { get { return path != null && path.stepsLeft == 1; } }
 
 	public override bool Remove( bool takeYourTime )
 	{
 		if ( worker )
 		{
-			if ( worker.itemInHands == this )
-				worker.itemInHands = null;
-			worker.ResetTasks();
+			for ( int i = 0; i < worker.itemsInHands.Length; i++ )
+				if ( worker.itemsInHands[i] == this )
+					worker.itemsInHands[i] = null;
+			worker.ResetTasks();	// TODO What if the worker has a second item in hand?
 		};
 		CancelTrip();
 		owner.UnregisterItem( this );
@@ -384,7 +401,7 @@ public class Item : HiveObject
 				case Worker.Type.tinkerer:
 				{
 					if ( !justCreated )
-						assert.AreEqual( worker.itemInHands, this );
+						assert.AreEqual( worker.itemsInHands[0], this );
 					break;
 				}
 				case Worker.Type.unemployed:
@@ -398,29 +415,36 @@ public class Item : HiveObject
 				}
 			}
 
-			if ( worker.itemInHands )
+			if ( worker.hasItems )
 			{
-				if ( worker.itemInHands == this )
+				if ( worker.itemsInHands.Contains( this ) )
 					assert.IsNull( flag );
 				else
-					assert.AreEqual( worker.itemInHands.buddy, this );
+				{
+					bool buddyIsCarried = false;
+					foreach ( var item in worker.itemsInHands )
+						if ( item?.buddy == this )
+							buddyIsCarried = true;
+					assert.IsTrue( buddyIsCarried );
+				}
 			}
 		}
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
-			assert.AreNotEqual( worker?.itemInHands, this );
+			if ( worker )
+				assert.IsFalse( worker.itemsInHands.Contains( this ) );
 			if ( destination )
 				assert.IsNotNull( path );
-			if ( destination && !path.IsFinished && !path.Road.invalid )
-				assert.IsTrue( flag.roadsStartingHere.Contains( path.Road ) );
+			if ( destination && !path.isFinished && !path.road.invalid )
+				assert.IsTrue( flag.roadsStartingHere.Contains( path.road ) );
 		}
 		else
 		{
 			if ( !justCreated )
 			{
 				assert.IsNotNull( worker );
-				assert.AreEqual( worker.itemInHands, this );
+				assert.IsTrue( worker.itemsInHands.Contains( this ) );
 			}
 		};
 		if ( nextFlag )
@@ -428,6 +452,8 @@ public class Item : HiveObject
 			assert.IsNotNull( worker );
 			assert.IsTrue( nextFlag.items.Contains( this ) || nextFlag.items.Contains( buddy ) );
 		}
+		else
+
 		if ( path != null )
 			path.Validate();
 		if ( destination )

@@ -129,7 +129,7 @@ public class Eye : MonoBehaviour
 		storedDirection = direction;
 		hasStoredValues = true;
 
-		var p = node.Position;
+		var p = node.position;
 		x = p.x;
 		y = p.z;
 		director = null;

@@ -58,7 +58,7 @@ public class Flag : HiveObject
 					node.road.Split( this );
 				else
 				{
-					assert.IsTrue( node == node.road.LastNode );
+					assert.IsTrue( node == node.road.lastNode );
 					node.road = null;
 				}
 			}
@@ -79,7 +79,7 @@ public class Flag : HiveObject
 				node.road.Split( this );
 			else
 			{
-				assert.IsTrue( node == node.road.LastNode );
+				assert.IsTrue( node == node.road.lastNode );
 				node.road = null;
 			}
 		}
@@ -107,7 +107,7 @@ public class Flag : HiveObject
 			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
 			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
 			// Adjust the height of the frame so that the item in it should be just above the tiles of the flag
-			pos.y = node.ground.GetHeightAt( node.Position.x + pos.x, node.Position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.Position.y + tilesHeight;
+			pos.y = node.ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + tilesHeight;
 			t.localPosition = pos;
 			t.LookAt( transform );
 			if ( items[i] != null )
@@ -131,7 +131,6 @@ public class Flag : HiveObject
 
 	public void FixedUpdate()
 	{
-		assert.IsNotSelected();
 		if ( requestFlattening && !flattening.flatteningNeeded && !blueprintOnly )
 		{
 			requestFlattening = false;
@@ -148,7 +147,7 @@ public class Flag : HiveObject
 
 	public void UpdateBody()
 	{
-		transform.localPosition = node.Position;
+		transform.localPosition = node.position;
 
 		if ( tiles == null )
 			return;

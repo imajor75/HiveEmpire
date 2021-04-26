@@ -87,12 +87,12 @@ public class Ground : HiveObject
 				nodes[y * ( width + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
 		ScanHeights( heightMap, forestMap );
 
-		n00x = GetNode( 0, 0 ).Position.x;
-		n00y = GetNode( 0, 0 ).Position.z;
-		n01x = GetNode( 0, 1 ).Position.x;
-		n01y = GetNode( 0, 1 ).Position.z;
-		n10x = GetNode( 1, 0 ).Position.x;
-		n10y = GetNode( 1, 0 ).Position.z;
+		n00x = GetNode( 0, 0 ).position.x;
+		n00y = GetNode( 0, 0 ).position.z;
+		n01x = GetNode( 0, 1 ).position.x;
+		n01y = GetNode( 0, 1 ).position.z;
+		n10x = GetNode( 1, 0 ).position.x;
+		n10y = GetNode( 1, 0 ).position.z;
 
 		return this;
     }
@@ -152,7 +152,7 @@ public class Ground : HiveObject
 				n.type = GroundNode.Type.mountain;
 			if ( d < World.instance.settings.waterLevel )
 				n.type = GroundNode.Type.underWater;
-			n.transform.localPosition = n.Position;
+			n.transform.localPosition = n.position;
 		}
 	}
 
@@ -242,7 +242,7 @@ public class Ground : HiveObject
 		// This first block is simply creating a vertex for each node.
 		for ( int i = 0; i < ( width + 1 ) * ( height + 1 ); i++ )
 		{
-			positions.Add( nodes[i].Position );
+			positions.Add( nodes[i].position );
 			switch ( nodes[i].type )
 			{
 				case GroundNode.Type.grass:

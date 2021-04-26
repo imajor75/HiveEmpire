@@ -15,6 +15,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public Ground ground;
 	public List<GroundNode> nodes = new List<GroundNode>();
 	public List<Worker> workerAtNodes = new List<Worker>();
+	public Flag[] ends = new Flag[2];
 	[JsonIgnore]
 	public Mesh mesh;
 	public static Material material;
@@ -82,7 +83,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return false;
 
 		// Check if the current node is adjacent to the previous one
-		int direction = road.LastNode.DirectionTo( node );
+		int direction = road.lastNode.DirectionTo( node );
 		if ( direction < 0 )
 			return false;
 
@@ -120,7 +121,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public bool RemoveLastNode()
 	{
-		var node = LastNode;
+		var node = lastNode;
 		if ( !node.validFlag )
 		{
 			if ( node.road == this )
@@ -142,7 +143,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool Finish()
 	{
 		assert.IsFalse( ready );
-		if ( !LastNode.validFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
+		if ( !lastNode.validFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
@@ -150,11 +151,13 @@ public class Road : HiveObject, Interface.IInputHandler
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
 			workerAtNodes.Add( null );
 		CallNewWorker();
-		transform.localPosition = nodes[nodes.Count / 2].Position;
+		transform.localPosition = nodes[nodes.Count / 2].position;
 		CreateCurves();
 		RebuildMesh();
 		AttachWatches();
 		RegisterOnGround();
+		ends[0] = nodes[0].flag;
+		ends[1] = lastNode.flag;
 		ready = true;
 		return true;
 	}
@@ -164,18 +167,20 @@ public class Road : HiveObject, Interface.IInputHandler
 		return nodes[nodes.Count - 1 - index];
 	}
 
-	public Flag GetEnd( int side )
+	public Flag OtherEnd( Flag flag )
 	{
-		if ( side == 0 )
-			return nodes[0].flag;
-		return GetNodeFromEnd( 0 ).flag;
+		if ( ends[0] == flag )
+			return ends[1];
+
+		assert.AreEqual( ends[1], flag );
+		return ends[0];
 	}
 
 	public void Start()
 	{
 		transform.SetParent( ground.transform, false );
 		if ( nodes.Count > 0 )
-			transform.localPosition = nodes[nodes.Count / 2].Position;
+			transform.localPosition = nodes[nodes.Count / 2].position;
 		if ( invalid )
 			return;
 
@@ -410,11 +415,11 @@ public class Road : HiveObject, Interface.IInputHandler
 				cachedJam = 0;
 				for ( int e = 0; e < 2; e++ )
 				{
-					Flag flag = GetEnd( e );
+					Flag flag = ends[e];
 					for ( int i = 0; i < Flag.maxItems; i++ )
 					{
 						Item t = flag.items[i];
-						if ( t != null && t.flag == flag && t.Road == this )
+						if ( t != null && t.flag == flag && t.road == this )
 							cachedJam++;
 					}
 				}
@@ -436,7 +441,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	void AttachWatches()
 	{
 		watchStartFlag.Attach( nodes[0].flag.itemsStored );
-		watchEndFlag.Attach( LastNode.flag.itemsStored );
+		watchEndFlag.Attach( lastNode.flag.itemsStored );
 	}
 
 	public void CreateCurves()
@@ -449,7 +454,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			int p = Math.Max( j - 1, 0 );
 			int n = Math.Min( j + 1, nodes.Count - 1 );
-			directions.Add( ( nodes[n].Position - nodes[p].Position ).normalized );
+			directions.Add( ( nodes[n].position - nodes[p].position ).normalized );
 		}
 		for ( int i = 0; i < 3; i++ )
 		{
@@ -459,14 +464,14 @@ public class Road : HiveObject, Interface.IInputHandler
 				if ( i == 1 )
 				{
 					curves[i].Add( CubicCurve.Create().SetupAsLinear(
-						nodes[j].Position[i],
-						nodes[j + 1].Position[i] ) );
+						nodes[j].position[i],
+						nodes[j + 1].position[i] ) );
 				}
 				else
 				{
 					curves[i].Add( CubicCurve.Create().Setup(
-						nodes[j].Position[i],
-						nodes[j + 1].Position[i],
+						nodes[j].position[i],
+						nodes[j + 1].position[i],
 						directions[j][i],
 						directions[j + 1][i] ) );
 				}
@@ -581,7 +586,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	void RegisterOnGround()
 	{
 		var a0 = nodes[0].flag.roadsStartingHere; var i0 = nodes[0].DirectionTo( nodes[1] );
-		var a1 = LastNode.flag.roadsStartingHere; var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
+		var a1 = lastNode.flag.roadsStartingHere; var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
 		assert.IsTrue( a0[i0] == null || a0[i0] == this );
 		assert.IsTrue( a1[i1] == null || a1[i1] == this );
 		a0[i0] = this;
@@ -603,7 +608,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( a0[i0], this );
 			a0[i0] = null;
 
-			var a1 = LastNode.flag.roadsStartingHere;
+			var a1 = lastNode.flag.roadsStartingHere;
 			var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
 			assert.AreEqual( a1[i1], this );
 			a1[i1] = null;
@@ -691,7 +696,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	}
 
 	[JsonIgnore]
-	public GroundNode LastNode { get { return nodes[nodes.Count - 1]; } }
+	public GroundNode lastNode { get { return nodes[nodes.Count - 1]; } }
 
 	public bool OnMovingOverNode( GroundNode node )
  	{
@@ -707,7 +712,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.IsTrue( nodes.Count > 0 );
 
 		PathFinder p = ScriptableObject.CreateInstance<PathFinder>();
-		if ( p.FindPathBetween( LastNode, node, PathFinder.Mode.avoidRoadsAndFlags, true ) )
+		if ( p.FindPathBetween( lastNode, node, PathFinder.Mode.avoidRoadsAndFlags, true ) )
 		{
 			var j = nodes.Count;
 			for ( int i = 1; i < p.path.Count; i++ )
@@ -729,7 +734,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return true;
 		}
 
-		if ( node.DistanceFrom( LastNode ) == 1 )
+		if ( node.DistanceFrom( lastNode ) == 1 )
 		{
 			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.road );
 			return true;
@@ -747,7 +752,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public bool OnNodeClicked( GroundNode node )
 	{
-		if ( node != LastNode )
+		if ( node != lastNode )
 			return true;
 
 		if ( node.road && node.road != this )
@@ -819,7 +824,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return;
 		}
 		var first = nodes[0];
-		var last = LastNode;
+		var last = lastNode;
 		assert.IsNotNull( first.flag );
 		assert.IsNotNull( last.flag );
 		assert.AreEqual( this, first.flag.roadsStartingHere[first.DirectionTo( nodes[1] )] );	
@@ -844,18 +849,18 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( i, 1 );
 			worker.Validate();
 		}
-		if ( workerAtNodes[0] != null && !GetEnd( 0 ).crossing )
-			assert.AreEqual( GetEnd( 0 ).user, workerAtNodes[0] );
-		if ( workerAtNodes[nodes.Count - 1] != null && !GetEnd( 1 ).crossing )
-			assert.AreEqual( GetEnd( 1 ).user, workerAtNodes[nodes.Count - 1] );
+		if ( workerAtNodes[0] != null && !ends[0].crossing )
+			assert.AreEqual( ends[0].user, workerAtNodes[0] );
+		if ( workerAtNodes[nodes.Count - 1] != null && !ends[1].crossing )
+			assert.AreEqual( ends[1].user, workerAtNodes[nodes.Count - 1] );
 		int realJam = 0;
 		for ( int e = 0; e < 2; e++ )
 		{
-			Flag flag = GetEnd( e );
+			Flag flag = ends[e];
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
 				Item t = flag.items[i];
-				if ( t != null && t.flag == flag && t.Road == this )
+				if ( t != null && t.flag == flag && t.road == this )
 					realJam++;
 			}
 		}

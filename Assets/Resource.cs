@@ -138,7 +138,7 @@ public class Resource : HiveObject
     public void Start()
     {
 		transform.SetParent( World.resources.transform );
-		transform.localPosition = node.Position;
+		transform.localPosition = node.position;
 
 		name = type.ToString();
 		GameObject prefab = meshes.GetMediaData( type );
@@ -181,8 +181,8 @@ public class Resource : HiveObject
 				growth /= 2;
 			if ( growth > 1 )
 				growth = 1;
-			var p = node.Position;
-			transform.localPosition = node.Position + Vector3.up * ( -0.4f + 0.4f * growth );
+			var p = node.position;
+			transform.localPosition = node.position + Vector3.up * ( -0.4f + 0.4f * growth );
 		}
 		if ( type == Type.tree )
 		{
@@ -294,7 +294,7 @@ public class Resource : HiveObject
 
 	public void UpdateBody()
 	{
-		transform.localPosition = node.Position;
+		transform.localPosition = node.position;
 	}
 
 	public override void Reset()

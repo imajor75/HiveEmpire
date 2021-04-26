@@ -484,7 +484,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		World.SetLayerRecursive( mapIndicator, World.layerIndexMapOnly );
 		mapIndicatorMaterial = mapIndicator.GetComponent<MeshRenderer>().material = new Material( World.defaultShader );
 		mapIndicatorMaterial.mainTexture = mapIndicatorTexture;
-		mapIndicator.transform.position = node.Position + new Vector3( 0, 2, GroundNode.size * 0.5f );
+		mapIndicator.transform.position = node.position + new Vector3( 0, 2, GroundNode.size * 0.5f );
 		mapIndicator.SetActive( false );
 
 		SetupConfiguration();
@@ -500,7 +500,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			var b = smoke.main;
 			b.simulationSpeed = s;
 		}
-		body.transform.RotateAround( node.Position, Vector3.up, 60 * ( 1 - flagDirection ) );
+		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
 	public new void Update()
@@ -882,12 +882,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			item.SetRawTarget( worker.building );
 			item.worker = worker;
-			worker.SchedulePickupItem( item );
+			worker.SchedulePickupItems( item );
 		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
 		worker.ScheduleWalkToNeighbour( worker.building.node );
 		if ( item != null )
-			worker.ScheduleDeliverItem( item );
+			worker.ScheduleDeliverItems( item );
 		worker.ScheduleCall( worker.building as Workshop );
 	}
 
@@ -944,7 +944,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( Selection.Contains( gameObject ) && resourcePlace != null )
 		{
 			Gizmos.color = Color.red;
-			Gizmos.DrawLine( node.Position + Vector3.up * GroundNode.size, resourcePlace.Position );
+			Gizmos.DrawLine( node.position + Vector3.up * GroundNode.size, resourcePlace.position );
 		}
 #endif
 	}
