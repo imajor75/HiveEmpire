@@ -885,12 +885,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			item.SetRawTarget( worker.building );
 			item.worker = worker;
-			worker.SchedulePickupItems( item );
+			worker.SchedulePickupItem( item );
 		}
 		worker.ScheduleWalkToNode( worker.building.flag.node );
 		worker.ScheduleWalkToNeighbour( worker.building.node );
 		if ( item != null )
-			worker.ScheduleDeliverItems( item );
+			worker.ScheduleDeliverItem( item );
 		worker.ScheduleCall( worker.building as Workshop );
 	}
 

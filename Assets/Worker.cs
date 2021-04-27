@@ -563,27 +563,21 @@ public class Worker : HiveObject
 		static public int pickupTimeStart = 120;
 		static public int pickupReparentTime = 60;
 		public Item[] items = new Item[2];
-		public Path[] paths = new Path[2];  // Save the path just to be able to test if it has been changed
+		public Path path;  // Save the path just to be able to test if it has been changed
 		public bool[] reparented = new bool[2];	// See PickupItem.Cancel. Originally I wanted to save the Transformation reference, but that cannot be serialized
 		public World.Timer timer;
 
 		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 		public Item item { set { items[0] = value; } }
 		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public Path path { set { paths[0] = value; } }
+		public Path[] paths { set { path = value[0]; } }
 
-		public void Setup( Worker boss, Item item, Item secondary = null )
+		public void Setup( Worker boss, Item item )
 		{
 			base.Setup( boss );
 			items[0] = item;
-			paths[0] = item.path;
-			items[1] = secondary;
-			paths[1] = secondary?.path;
-			if ( secondary )
-			{
-				boss.assert.AreEqual( item.road, secondary.road );
-				boss.assert.AreEqual( item.path.stepsLeft == 1, secondary.path.stepsLeft == 1 );
-			}
+			path = item.path;
+			items[1] = null;
 		}
 		public override void Cancel()
 		{
@@ -607,8 +601,57 @@ public class Worker : HiveObject
 			}
 			base.Cancel();
 		}
+		void ConsiderSecondary()
+		{
+			if ( items[1] || boss.type != Type.hauler )
+				return;
+			if ( items[0].path.isFinished || items[0].buddy )
+				return;
+			var deliverTask = boss.FindTaskInQueue<DeliverItem>();
+			if ( deliverTask == null )
+				return;
+			boss.assert.IsNull( deliverTask.items[1] );
+			Flag target = boss.road.OtherEnd( boss.node.flag );
+			if ( target.FreeSpace() == 0 )
+				return;
+			foreach ( var secondary in boss.node.flag.items )
+			{
+				if ( secondary == null || secondary == items[0] )
+					continue;
+				if ( secondary.worker || secondary.buddy )	// Is it possible, that there is a buddy but no worker?
+					continue;
+				if ( secondary.type != items[0].type )
+					continue;
+				if ( secondary.road != boss.road || secondary.path == null )
+					continue;
+				if ( items[0].path.stepsLeft == 1 )
+				{
+					if ( secondary.path.stepsLeft > 1 )
+						continue;
+					else
+						if ( items[0].destination != secondary.destination )
+							continue;
+				}
+				else
+					if ( secondary.path.stepsLeft == 1 )
+						continue;
+
+				// At this point the item secondary seems like a good one to carry
+				target.ReserveItem( secondary );
+				secondary.worker = boss;
+				items[1] = secondary;
+				deliverTask.items[1] = secondary;
+				return;
+			}
+		}
 		public override bool ExecuteFrame()
 		{
+			if ( items[0].path != path )
+				return ResetBossTasks();
+
+			// Considering a second item
+			ConsiderSecondary();
+
 			for ( int i = 0; i < items.Length; i++ )
 			{
 				if ( items[i] == null )
@@ -636,24 +679,6 @@ public class Worker : HiveObject
 
 			if ( !timer.Done )
 				return false;
-
-			bool pathChanged = false;
-			for ( int i = 0; i < items.Length; i++ )
-			{
-				if ( items[i] == null )
-					continue;
-
-				if ( paths[i] != items[i].path )
-				{
-					// This block can run for tinkerers too, if the item lost destination before the tinkerer would pick it up
-					if ( boss.type == Type.hauler )
-						boss.assert.AreEqual( boss.road, paths[i].road );
-					pathChanged = true;
-				}
-			}
-			// If the path of any of the items are changed, cancel the whole thing
-			if ( pathChanged )
-				return ResetBossTasks();
 
 			for ( int i = 0; i < items.Length; i++ )
 			{
@@ -686,13 +711,10 @@ public class Worker : HiveObject
 		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
 		public Item item { set { items[0] = value; } }
 
-		public void Setup( Worker boss, Item item, Item secondaryItem )
+		public void Setup( Worker boss, Item item )
 		{
 			base.Setup( boss );
 			this.items[0] = item;
-			this.items[1] = secondaryItem;
-			if ( secondaryItem )
-				boss.assert.AreEqual( item.type, secondaryItem.type );
 		}
 		public override void Cancel()
 		{
@@ -1393,7 +1415,7 @@ public class Worker : HiveObject
 				ScheduleWalkToNode( building.flag.node );
 			ScheduleWalkToNeighbour( building.node );
 			if ( itemsInHands[0] )
-				ScheduleDeliverItems( itemsInHands[0], itemsInHands[1] );
+				ScheduleDeliverItem( itemsInHands[0], itemsInHands[1] );
 			if ( type == Type.tinkerer )
 				ScheduleCall( building as Workshop );
 			return;
@@ -1485,7 +1507,7 @@ public class Worker : HiveObject
 					}
 				}
 				ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
-				ScheduleDeliverItems( itemsInHands[0] );
+				ScheduleDeliverItem( itemsInHands[0] );
 
 				// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has space
 				// By calling CancelTrip, this expectation is eliminated, and won't cause an assert fail.
@@ -1557,36 +1579,7 @@ public class Worker : HiveObject
 
 		if ( bestItem != null )
 		{
-			bool thereIsEnoughSpaceForTwoItems = true;
-			if ( bestItem.path.stepsLeft > 1 )
-			{
-				Flag flag = road.OtherEnd( bestItem.flag );
-				if ( flag.FreeSpace() < 2 )
-					thereIsEnoughSpaceForTwoItems = false;
-			}
-			if ( thereIsEnoughSpaceForTwoItems )
-			{
-				foreach ( var secondary in bestItem.flag.items )
-				{
-					if ( secondary == bestItem || secondary == null )
-						continue;
-					if ( secondary.type != bestItem.type )
-						continue;
-					if ( secondary.road != bestItem.road )
-						continue;
-					if ( secondary.worker || secondary.destination == null )
-						continue;
-					if ( secondary.buddy || secondary.path == null )
-						continue;
-					if ( !secondary.path.isFinished && secondary.path.road != road )
-						continue;
-					if ( secondary.lastRoad != bestItem.lastRoad )
-						continue;
-					CarryItems( bestItem, secondary );
-					return true;
-				}
-			}
-			CarryItems( bestItem );
+			CarryItem( bestItem );
 			return true;
 		}
 		else
@@ -1594,9 +1587,9 @@ public class Worker : HiveObject
 			if ( bestItemOnSide[0] && bestItemOnSide[1] )
 			{
 				if ( bestScoreOnSide[0] > bestScoreOnSide[1] )
-					CarryItems( bestItemOnSide[0], null, bestItemOnSide[1] );
+					CarryItem( bestItemOnSide[0], bestItemOnSide[1] );
 				else
-					CarryItems( bestItemOnSide[1], null, bestItemOnSide[0] );
+					CarryItem( bestItemOnSide[1], bestItemOnSide[0] );
 				return true;
 			}
 		}
@@ -1685,17 +1678,17 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void SchedulePickupItems( Item item, Item secondary = null, bool first = false )
+	public void SchedulePickupItem( Item item, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<PickupItem>();
-		instance.Setup( this, item, secondary );
+		instance.Setup( this, item );
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleDeliverItems( Item item = null, Item secondaryItem = null, bool first = false )
+	public void ScheduleDeliverItem( Item item = null, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<DeliverItem>();
-		instance.Setup( this, item, secondaryItem );
+		instance.Setup( this, item );
 		ScheduleTask( instance, first );
 	}
 
@@ -1728,18 +1721,12 @@ public class Worker : HiveObject
 			taskQueue.Add( task );
 	}
 
-	public void CarryItems( Item item, Item secondary = null, Item replace = null )
+	public void CarryItem( Item item, Item replace = null )
 	{
-		assert.IsTrue( secondary == null || replace == null );
 		assert.IsNotNull( road );
 		if ( !item.path.isFinished )
 		{
 			assert.AreEqual( road, item.road );
-			if ( secondary )
-			{
-				assert.IsFalse( secondary.path.isFinished );
-				assert.AreEqual( road, secondary.road );
-			}
 		}
 		int itemPoint = road.NodeIndex( item.flag.node ), otherPoint = 0;
 		if ( itemPoint == 0 )
@@ -1752,7 +1739,7 @@ public class Worker : HiveObject
 		if ( item.buddy == null )
 		{
 			ScheduleWalkToRoadPoint( road, itemPoint );
-			SchedulePickupItems( item, secondary );
+			SchedulePickupItem( item );
 		}
 
 		if ( !item.path.isFinished )	// When the path is finished, the item is already at the target flag, the worker only needs to carry it inside a building
@@ -1761,27 +1748,21 @@ public class Worker : HiveObject
 		if ( item.path.stepsLeft <= 1 )	// When the number of steps left is one or zero, the worker also has to carry the item into a building
 		{
 			assert.IsNull( replace );
-			if ( secondary )
-				assert.AreEqual( item.destination, secondary.destination );
 			var destination = item.destination;
 			ScheduleWalkToNeighbour( destination.node );
-			ScheduleDeliverItems( item, secondary );
+			ScheduleDeliverItem( item );
 			ScheduleWalkToNeighbour( destination.flag.node );
 		}
 		else
 		{
 			if ( replace == null )
-				assert.IsTrue( other.FreeSpace() > ( secondary == null ? 0 : 1 ) );
+				assert.IsTrue( other.FreeSpace() > 0 );
 			other.ReserveItem( item, replace );
-			if ( secondary )
-				other.ReserveItem( secondary );
-			ScheduleDeliverItems( item, secondary );
+			ScheduleDeliverItem( item );
 			if ( replace && item.buddy == null )
-				CarryItems( replace, null, item );
+				CarryItem( replace, item );
 		}
 		item.worker = this;
-		if ( secondary )
-			secondary.worker = this;
 	}
 
 	public void ResetTasks()
