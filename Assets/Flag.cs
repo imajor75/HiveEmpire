@@ -393,7 +393,8 @@ public class Flag : HiveObject
 	public override void DestroyThis()
 	{
 		foreach ( var f in frames )
-			assert.AreEqual( f.transform.childCount, 0 );
+			if ( f )
+				assert.AreEqual( f.transform.childCount, 0 );
 		base.DestroyThis();
 	}
 

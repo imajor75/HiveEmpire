@@ -26,6 +26,7 @@ public class Stock : Building
 	public int totalTarget;
 	static public int maxItems = 200;
 	GameObject body;
+	public World.Timer offersSuspended;		// When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
 
 	[Obsolete( "Compatibility for old files", true )]
 	public List<int> target = new List<int>();
@@ -270,7 +271,7 @@ public class Stock : Building
 		}
 		content[(int)Item.Type.plank] = 10;
 		content[(int)Item.Type.fish] = 10;
-		worker = Worker.Create().SetupForBuilding( this );
+		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );
 		return this;
@@ -360,7 +361,7 @@ public class Stock : Building
 					p = ItemDispatcher.Priority.zero;
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
 			}
-			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 1 )
+			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 1 && dispenser.IsIdle() && !offersSuspended.InProgress )
 			{
 				var p = ItemDispatcher.Priority.stock;
 				if ( current < outputMin[itemType] )
@@ -375,8 +376,16 @@ public class Stock : Building
 	new void FixedUpdate()
 	{
 		base.FixedUpdate();
-		if ( worker == null && construction.done && !blueprintOnly )
-			worker = Worker.Create().SetupForBuilding( this );
+		if ( construction.done && !blueprintOnly )
+		{
+			if ( worker == null && construction.done && !blueprintOnly )
+				dispenser = worker = Worker.Create().SetupForBuilding( this );
+			if ( workerMate == null )
+			{
+				workerMate = Worker.Create().SetupForBuilding( this, true );
+				workerMate.ScheduleWait( 100, true );
+			}
+		}
 	}
 
 	public override int Influence( GroundNode node )
@@ -400,7 +409,11 @@ public class Stock : Building
 		assert.IsTrue( content[(int)itemType] > 0 );	// TODO Triggered?
 		Item item = base.SendItem( itemType, destination, priority );
 		if ( item != null )
+		{
 			content[(int)itemType]--;
+			dispenser = worker.IsIdle() ? worker : workerMate;
+			offersSuspended.Start( 50 );	// Cosmetic reasons only
+		}
 
 		return item;
 	}

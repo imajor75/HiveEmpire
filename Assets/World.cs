@@ -276,6 +276,8 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
+				if ( o.dispenser == null )
+					o.dispenser = o.workerMate ?? o.worker;
 				if ( o.construction.done )
 					o.construction.worker = null;
 				o.flagDirection = o.node.DirectionTo( o.flag.node );

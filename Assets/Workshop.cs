@@ -62,8 +62,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
-		public float processSpeed = 0.001f;
+		public float productionTime = 1500;
 		public int outputMax = 6;
+
+		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
+		public float processSpeed { set { productionTime = 1 / value; } }
 
 		public bool commonInputs = false;
 		public Input[] inputs;
@@ -336,7 +339,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			configurations = serializer.Deserialize<Configuration[]>( reader );
 			foreach ( var c in configurations )
 				if ( c.constructionTime == 0 )
-					c.constructionTime = 500 * ( c.plankNeeded + c.stoneNeeded );
+					c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
 		}
 
 		object[] looksData = {
@@ -519,10 +522,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( missing > 0 )
 				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 		}
-		if ( output > 0 && freeSpaceAtFlag > 0 && worker.IsIdle( true ) )
+		if ( output > 0 && freeSpaceAtFlag > 0 && dispenser.IsIdle( true ) )
 			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, outputPriority, outputArea );
 
-		if ( mode == Mode.always && output > 0 && workerMate.IsIdle() && freeSpaceAtFlag > 2 )
+		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
 			SendItem( configuration.outputType, null, ItemDispatcher.Priority.high );
 
 		mapIndicator.SetActive( true );
@@ -615,10 +618,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 
 		if ( worker == null )
-			worker = Worker.Create().SetupForBuilding( this );
+			dispenser = worker = Worker.Create().SetupForBuilding( this );
 		if ( workerMate == null )
 		{
-			workerMate = Worker.Create().SetupForBuilding( this, true );
+			dispenser = workerMate = Worker.Create().SetupForBuilding( this, true );
 			workerMate.ScheduleWait( 100, true );
 		}
 
@@ -786,7 +789,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		if ( working )
 		{
-			progress += configuration.processSpeed * ground.world.timeFactor;
+			progress += ground.world.timeFactor / configuration.productionTime;
 			if ( progress > 1 )
 			{
 				output += configuration.outputStackSize;

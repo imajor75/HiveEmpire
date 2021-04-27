@@ -274,7 +274,7 @@ public class Worker : HiveObject
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( boss.node.flag == target )
+			if ( boss.node.flag == target || target == null )	// Target could be n
 			{
 				if ( exclusive )
 				{
@@ -1722,7 +1722,6 @@ public class Worker : HiveObject
 
 	public void ScheduleTask( Task task, bool first = false )
 	{
-		assert.IsNotSelected(); 
 		if ( first )
 			taskQueue.Insert( 0, task );
 		else

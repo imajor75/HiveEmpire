@@ -9,7 +9,7 @@ abstract public class Building : HiveObject
 {
 	public string title;
 	public Player owner;
-	public Worker worker, workerMate;
+	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;
 	public int flagDirection;
 	public Ground ground;
@@ -475,21 +475,20 @@ abstract public class Building : HiveObject
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
-		Worker worker = workerMate ?? this.worker;
-		if ( worker == null || !worker.IsIdle( true ) || flag.FreeSpace() == 0 )
+		if ( dispenser == null || !dispenser.IsIdle( true ) || flag.FreeSpace() == 0 )
 			return null;
 
-		worker.gameObject.SetActive( true );
+		dispenser.gameObject.SetActive( true );
 		// TODO Don't create the item, if there is no path between this and destination
 		Item item = Item.Create().Setup( itemType, this, destination, priority );
 		if ( item != null )
 		{
 			flag.ReserveItem( item );
-			worker.SchedulePickupItems( item );
-			worker.ScheduleWalkToNeighbour( flag.node );
-			worker.ScheduleDeliverItems( item );
-			worker.ScheduleWalkToNeighbour( node );
-			item.worker = worker;
+			dispenser.SchedulePickupItems( item );
+			dispenser.ScheduleWalkToNeighbour( flag.node );
+			dispenser.ScheduleDeliverItems( item );
+			dispenser.ScheduleWalkToNeighbour( node );
+			item.worker = dispenser;
 		}
 		return item;
 	}
