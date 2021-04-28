@@ -17,8 +17,8 @@ public class Flag : HiveObject
 	public Worker user;
 	public bool crossing;
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
-	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-	public Building building;
+	[Obsolete( "Compatibility with old files", true )]
+	Building building;
 	static GameObject template;
 	static GameObject baseTemplate;
 	public Versioned itemsStored = new Versioned();
@@ -131,7 +131,7 @@ public class Flag : HiveObject
 
 	public void FixedUpdate()
 	{
-		if ( requestFlattening && !flattening.flatteningNeeded && !blueprintOnly )
+		if ( requestFlattening && !flattening.flattened && !blueprintOnly )
 		{
 			requestFlattening = false;
 			if ( flattening == null )	// This should never be null, only after loading old files.

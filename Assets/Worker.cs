@@ -17,8 +17,8 @@ public class Worker : HiveObject
 	public bool walkBackward;
 	public float walkProgress;
 	public GroundNode node;
-	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-	public Item itemInHands { set { itemsInHands[0] = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Item itemInHands { set { itemsInHands[0] = value; } }
 	public Item[] itemsInHands = new Item[2];
 	public Type look;
 	public Resource origin;
@@ -46,8 +46,8 @@ public class Worker : HiveObject
 	public static Act shovelingAct;
 	public static Act constructingAct;
 
-	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-	public bool underControl;
+	[Obsolete( "Compatibility with old files", true )]
+	bool underControl;
 
 	public Road road;
 	public bool onRoad;
@@ -63,8 +63,8 @@ public class Worker : HiveObject
 
 	public List<Task> taskQueue = new List<Task>();
 	protected GameObject body;
-	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-	public GameObject haulingBox;
+	[Obsolete( "Compatibility with old files", true )]
+	GameObject haulingBox;
 	[JsonIgnore]
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
@@ -86,8 +86,8 @@ public class Worker : HiveObject
 		walking
 	}
 
-	[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-	public Color cachedColor;
+	[Obsolete( "Compatibility with old files", true )]
+	Color cachedColor;
 	public SerializableColor currentColor;
 
 	[JsonIgnore]
@@ -567,10 +567,10 @@ public class Worker : HiveObject
 		public bool[] reparented = new bool[2];	// See PickupItem.Cancel. Originally I wanted to save the Transformation reference, but that cannot be serialized
 		public World.Timer timer;
 
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public Item item { set { items[0] = value; } }
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public Path[] paths { set { path = value[0]; } }
+		[Obsolete( "Compatibility with old files", true )]
+		Item item { set { items[0] = value; } }
+		[Obsolete( "Compatibility with old files", true )]
+		Path[] paths { set { path = value[0]; } }
 
 		public void Setup( Worker boss, Item item )
 		{
@@ -612,7 +612,7 @@ public class Worker : HiveObject
 				return;
 			boss.assert.IsNull( deliverTask.items[1] );
 			Flag target = boss.road.OtherEnd( boss.node.flag );
-			if ( target.FreeSpace() == 0 )
+			if ( target.FreeSpace() == 0 || items[0].path.stepsLeft == 1 )
 				return;
 			foreach ( var secondary in boss.node.flag.items )
 			{
@@ -637,7 +637,8 @@ public class Worker : HiveObject
 						continue;
 
 				// At this point the item secondary seems like a good one to carry
-				target.ReserveItem( secondary );
+				if ( secondary.path.stepsLeft != 1 )
+					target.ReserveItem( secondary );
 				secondary.worker = boss;
 				items[1] = secondary;
 				deliverTask.items[1] = secondary;
@@ -708,8 +709,8 @@ public class Worker : HiveObject
 		public Item[] items = new Item[2];
 		public World.Timer timer;
 
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public Item item { set { items[0] = value; } }
+		[Obsolete( "Compatibility with old files", true )]
+		Item item { set { items[0] = value; } }
 
 		public void Setup( Worker boss, Item item )
 		{

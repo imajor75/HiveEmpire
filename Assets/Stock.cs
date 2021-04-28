@@ -17,8 +17,6 @@ public class Stock : Building
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template, mainTemplate;
-	static readonly Configuration configuration = new Configuration();
-	static readonly Configuration mainConfiguration = new Configuration();
 	public Cart cart;
 	public Ground.Area inputArea = new Ground.Area();
 	public Ground.Area outputArea = new Ground.Area();
@@ -26,10 +24,20 @@ public class Stock : Building
 	public int totalTarget;
 	static public int maxItems = 200;
 	GameObject body;
-	public World.Timer offersSuspended;		// When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+	public World.Timer offersSuspended;     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+	static readonly Configuration stockConfiguration = new Configuration
+	{
+		plankNeeded = 3,
+		stoneNeeded = 3,
+		flatteningNeeded = true
+	};
+	static readonly Configuration mainConfiguration = new Configuration
+	{
+		huge = true
+	};
 
 	[Obsolete( "Compatibility for old files", true )]
-	public List<int> target = new List<int>();
+	List<int> target = new List<int>();
 
 	public class Cart : Worker
 	{
@@ -205,11 +213,6 @@ public class Stock : Building
 	{
 		mainTemplate = Resources.Load<GameObject>( "prefabs/buildings/main" );
 		template = Resources.Load<GameObject>( "prefabs/buildings/stock" );
-
-		configuration.plankNeeded = 2;
-		configuration.stoneNeeded = 2;
-		configuration.flatteningNeeded = true;
-		mainConfiguration.huge = true;
 	}
 
 	public static Stock Create()
@@ -219,15 +222,12 @@ public class Stock : Building
 
 	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner, int flagDirection )
 	{
-		return Building.IsNodeSuitable( placeToBuild, owner, configuration, flagDirection );
+		return Building.IsNodeSuitable( placeToBuild, owner, stockConfiguration, flagDirection );
 	}
 
 	public Stock Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
 		title = "stock";
-		construction.plankNeeded = 3;
-		construction.stoneNeeded = 3;
-		construction.flatteningNeeded = true;
 		height = 1.5f;
 
 		while ( content.Count < (int)Item.Type.total )
@@ -250,7 +250,6 @@ public class Stock : Building
 	public Stock SetupMain( GroundNode node, Player owner, int flagDirection )
 	{
 		main = true;
-		huge = true;
 
 		node.owner = owner;
 		if ( !Setup( node, owner, flagDirection ) )
@@ -258,19 +257,12 @@ public class Stock : Building
 
 		title = "headquarter";
 		height = 3;
-		construction = new Construction
-		{
-			boss = this,
-			done = true
-		};
-		if ( construction.flatteningNeeded )
+		if ( configuration.flatteningNeeded )
 		{
 			foreach ( var o in Ground.areas[1] )
 				node.Add( o ).SetHeight( node.height );
-			construction.flatteningNeeded = false;
 		}
 		content[(int)Item.Type.plank] = 10;
-		content[(int)Item.Type.fish] = 10;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );

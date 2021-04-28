@@ -391,7 +391,7 @@ public class GroundNode : HiveObject
 		}
 		if ( building )
 		{
-			if ( !building.huge )
+			if ( !building.configuration.huge )
 				assert.AreEqual( this, building.node );
 			building.Validate();
 		}

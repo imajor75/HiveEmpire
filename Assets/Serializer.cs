@@ -122,17 +122,17 @@ public class Serializer : JsonSerializer
 			}
 			return;
 		}
-		FieldInfo i = type.GetField( name );
+		FieldInfo i = type.GetField( name );	// What if there are multiple ones with the same name
 		PropertyInfo p = type.GetProperty( name );
-		Assert.global.IsTrue( i != null || p != null, "No field with the name " + name + " found in " + type.Name );
+		Assert.global.IsTrue( i != null || p != null, "No field with the name " + name + " found in " + type.FullName );
 		reader.Read();
 
 		try
 		{
-			if ( i != null )
-				i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
-			else
+			if ( p != null && ( i == null || p.DeclaringType.IsSubclassOf( i.DeclaringType ) ) )
 				p.SetValue( Object(), ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
+			else
+				i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
 		}
 		catch ( System.Exception exception )
 		{

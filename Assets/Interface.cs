@@ -1197,10 +1197,10 @@ public class Interface : HiveObject
 			name = "Workshop panel";
 			this.workshop = workshop;
 			bool showOutputBuffer = false, showProgressBar = false;
-			if ( workshop.configuration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
+			if ( workshop.productionConfiguration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
 			{
 				showProgressBar = true;
-				showOutputBuffer = workshop.configuration.outputType != Item.Type.unknown;
+				showOutputBuffer = workshop.productionConfiguration.outputType != Item.Type.unknown;
 			}
 
 			if ( ( contentToShow & Content.progress ) == 0 )
@@ -1237,7 +1237,7 @@ public class Interface : HiveObject
 				if ( showOutputBuffer )
 				{
 					outputs = new Buffer();
-					outputs.Setup( this, workshop.configuration.outputType, workshop.configuration.outputMax, 20, row, iconSize + 5 );
+					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5 );
 					row -= iconSize * 3 / 2;
 				}
 				progressBar = Image( 20, row, ( iconSize + 5 ) * 7, iconSize, iconTable.GetMediaData( Icon.progress ) );
@@ -1330,13 +1330,13 @@ public class Interface : HiveObject
 				void CheckNode( GroundNode node )
 				{
 					var resource = node.resource;
-					if ( resource == null || resource.type != workshop.configuration.gatheredResource )
+					if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource )
 						return;
 					if ( !resource.underGround || node == workshop.node || resource.exposed.InProgress )
 						left++;
 				}
 				CheckNode( workshop.node );
-				foreach ( var o in Ground.areas[workshop.configuration.gatheringRange] )
+				foreach ( var o in Ground.areas[workshop.productionConfiguration.gatheringRange] )
 					CheckNode( workshop.node + o );
 				resourcesLeft.text = "Resources left: " + left;
 			}
@@ -2119,7 +2119,7 @@ public class Interface : HiveObject
 			}
 
 			if ( flag.flattening != null )	// This should never be null unless after loaded old files.
-				shovelingIcon.color = flag.flattening.flatteningNeeded ? Color.grey : Color.white;
+				shovelingIcon.color = flag.flattening.flattened ? Color.grey : Color.white;
 		}
 	}
 
@@ -2238,9 +2238,9 @@ public class Interface : HiveObject
 				Text( 20, -20, 160, 20, workshop.type.ToString() );
 
 			planks = new WorkshopPanel.Buffer();
-			planks.Setup( this, Item.Type.plank, construction.plankNeeded, 20, -40, iconSize + 5 );
+			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, 20, -40, iconSize + 5 );
 			stones = new WorkshopPanel.Buffer();
-			stones.Setup( this, Item.Type.stone, construction.stoneNeeded, 20, -64, iconSize + 5 );
+			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, 20, -64, iconSize + 5 );
 
 			progressBar = Image( 20, -90, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
 
@@ -2330,7 +2330,10 @@ public class Interface : HiveObject
 				return;
 			}
 
-			stats.text = "Age: " + item.life.Age / 50 + " secs, at flag for " + item.atFlag.Age / 50 + " secs";
+			if ( item.flag )
+				stats.text = "Age: " + item.life.Age / 50 + " secs, at flag for " + item.atFlag.Age / 50 + " secs";
+			else
+				stats.text = "Age: " + item.life.Age / 50 + " secs";
 
 			if ( item.destination && route == null )
 			{

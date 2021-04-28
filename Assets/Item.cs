@@ -444,7 +444,12 @@ public class Item : HiveObject
 			if ( !justCreated )
 			{
 				assert.IsNotNull( worker );
-				assert.IsTrue( worker.itemsInHands.Contains( this ) );
+				assert.IsTrue( worker.itemsInHands.Contains( this ) ); // TODO Triggered
+				// Right after loading a saved game which was working previously. The item is a hide whose has flag=null but nextFlag=23:7 that is where validate come from. 
+				// 23,7 is the flag right in front of the bowmaker. The worker has no items in its hand at this moment, as it is just about to leave the building at 23:6 and get
+				// back to the road at 23:7, and has an empty task queue. So it is expected that the worker has no items, as it left them in the building. The question is, why the nextFlag 
+				// pointer is pointing at 23:7, and why the flag was not destroyed.
+
 			}
 		};
 		if ( nextFlag )

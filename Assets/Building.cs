@@ -23,15 +23,29 @@ abstract public class Building : HiveObject
 	public float height = 1.5f;
 	public float levelBrake = 1;
 	public List<Item> itemsOnTheWay = new List<Item>();
-	public GroundNode.Type groundTypeNeeded = GroundNode.Type.land;
-	public bool huge;
 	static List<Ground.Offset> foundationHelper;
+	[HideInInspector]
+	public Configuration configuration;
+
+	[Obsolete( "Compatibility with old files", true )]
+	GroundNode.Type groundTypeNeeded;
+	[Obsolete( "Compatibility with old files", true )]
+	bool huge
+	{
+		set
+		{
+			if ( configuration == null )
+				configuration = new Configuration();
+			configuration.huge = value;
+		}
+	}
+
 	[JsonIgnore]
-	public List<Ground.Offset> Foundation
+	public List<Ground.Offset> foundation
 	{
 		get
 		{
-			return GetFoundation( huge, flagDirection );
+			return GetFoundation( configuration.huge, flagDirection );
 		}
 	}
 	static public List<Ground.Offset> GetFoundation( bool huge, int flagDirection )
@@ -65,27 +79,31 @@ abstract public class Building : HiveObject
 	[System.Serializable]
 	public class Flattening : Worker.Callback.IHandler
 	{
-		public bool flatteningNeeded;
 		public int corner;
 		public bool permanent;
+		public bool flattened = false;	// I would rather call this 'done', but unity gives an error message then
 		public HiveObject ignoreDuringWalking;
 		public World.Timer suspend;
 		public float level;
 		public Worker worker;
 		public List<GroundNode> area;
 
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public bool flatteningCorner;
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public List<GroundNode> flatteningArea;
+		[Obsolete( "Compatibility with old files", true )]
+		bool flatteningCorner;
+		[Obsolete( "Compatibility with old files", true )]
+		List<GroundNode> flatteningArea;
+		[Obsolete( "Compatibility with old files", true )]
+		bool flatteningNeeded;
+		[Obsolete( "Compatibility with old files", true )]
+		bool done;
 
 		public void Setup( List<GroundNode> area, bool permanent = true, HiveObject ignoreDuringWalking = null )
 		{
+			flattened = false;
 			this.area = area;
 			this.ignoreDuringWalking = ignoreDuringWalking;
 			this.permanent = permanent;
-			this.corner = 0;
-			flatteningNeeded = true;
+			corner = 0;
 			level = 0;
 			foreach ( var o in area )
 			{
@@ -107,7 +125,10 @@ abstract public class Building : HiveObject
 		/// <returns>True if the function call was useful</returns>
 		public bool FixedUpdate()
 		{
-			if ( flatteningNeeded == false )
+			if ( area == null )
+				return false;
+
+			if ( flattened )
 			{
 				worker?.Remove( true );
 				worker = null;
@@ -138,7 +159,8 @@ abstract public class Building : HiveObject
 				}
 				return true;
 			}
-			flatteningNeeded = false;
+
+			flattened = true;
 			return false;
 		}
 
@@ -154,19 +176,25 @@ abstract public class Building : HiveObject
 	{
 		public Building boss;
 		public bool done;
-		public int duration = 1000;
 		public float progress;
-		public int plankNeeded;
 		public int plankOnTheWay;
 		public int plankArrived;
-		public int stoneNeeded;
 		public int stoneOnTheWay;
 		public int stoneArrived;
 		public static Shader shader;
 		public static int sliceLevelID;
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public int timeSinceCreated;
 		public Worker.DoAct hammering;
+
+		[Obsolete( "Compatibility with old files", true )]
+		int timeSinceCreated;
+		[Obsolete( "Compatibility with old files", true )]
+		int duration;
+		[Obsolete( "Compatibility with old files", true )]
+		int plankNeeded;
+		[Obsolete( "Compatibility with old files", true )]
+		int stoneNeeded;
+		[Obsolete( "Compatibility with old files", true )]
+		int flatteningNeeded;
 
 		static public void Initialize()
 		{
@@ -178,8 +206,11 @@ abstract public class Building : HiveObject
 		public void Setup( Building boss )
 		{
 			this.boss = boss;
+			if ( !boss.configuration.flatteningNeeded )
+				return;
+			
 			List<GroundNode> flatteningArea = new List<GroundNode>();
-			var area = boss.Foundation;
+			var area = boss.foundation;
 			flatteningArea.Add( boss.node );
 			foreach ( var o in area )
 			{
@@ -192,7 +223,7 @@ abstract public class Building : HiveObject
 				}
 			}
 			boss.assert.IsTrue( flatteningArea.Count == 7 || flatteningArea.Count == 14, "Area has " + flatteningArea.Count + " nodes" );
-			base.Setup( flatteningArea, true, boss );
+			Setup( flatteningArea, true, boss );
 		}
 
 		public bool Remove( bool takeYourTime )
@@ -207,9 +238,9 @@ abstract public class Building : HiveObject
 			if ( done || boss.blueprintOnly )
 				return;
 
-			int plankMissing = plankNeeded - plankOnTheWay - plankArrived;
+			int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
 			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.plankForConstructionWeight.weight );
-			int stoneMissing = stoneNeeded - stoneOnTheWay - stoneArrived;
+			int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
 			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
 		}
 
@@ -231,10 +262,10 @@ abstract public class Building : HiveObject
 				return;
 			};
 
-			if ( flatteningNeeded && base.FixedUpdate() )
+			if ( boss.configuration.flatteningNeeded && !flattened && base.FixedUpdate() )
 				return;
 
-			if ( !worker.IsIdle() )
+		if ( !worker.IsIdle() )
 				return;
 
 			if ( progress == 0 )
@@ -252,8 +283,8 @@ abstract public class Building : HiveObject
 				hammering.Setup( worker, Worker.constructingAct );
 				hammering.Start();
 			}
-			progress += boss.ground.world.timeFactor / duration;
-			float maxProgress = ((float)plankArrived+stoneArrived)/(plankNeeded+stoneNeeded);
+			progress += boss.ground.world.timeFactor / boss.configuration.constructionTime;
+			float maxProgress = ((float)plankArrived+stoneArrived)/(boss.configuration.plankNeeded+boss.configuration.stoneNeeded);
 			if ( progress > maxProgress )
 			{
 				progress = maxProgress;
@@ -286,7 +317,7 @@ abstract public class Building : HiveObject
 				else
 				{
 					plankOnTheWay++;
-					boss.assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
+					boss.assert.IsTrue( plankArrived + plankOnTheWay <= boss.configuration.plankNeeded );
 				}
 				return true;
 			}
@@ -300,7 +331,7 @@ abstract public class Building : HiveObject
 				else
 				{
 					stoneOnTheWay++;
-					boss.assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
+					boss.assert.IsTrue( stoneArrived + stoneOnTheWay <= boss.configuration.stoneNeeded );
 				}
 				return true;			}
 
@@ -318,7 +349,7 @@ abstract public class Building : HiveObject
 				boss.assert.IsTrue( plankOnTheWay > 0 );
 				plankOnTheWay--;
 				plankArrived++;
-				boss.assert.IsTrue( plankArrived + plankOnTheWay <= plankNeeded );
+				boss.assert.IsTrue( plankArrived + plankOnTheWay <= boss.configuration.plankNeeded );
 				return true;
 			}
 			if ( item.type == Item.Type.stone )
@@ -326,7 +357,7 @@ abstract public class Building : HiveObject
 				boss.assert.IsTrue( stoneOnTheWay > 0 );
 				stoneOnTheWay--;
 				stoneArrived++;
-				boss.assert.IsTrue( stoneArrived + stoneOnTheWay <= stoneNeeded );
+				boss.assert.IsTrue( stoneArrived + stoneOnTheWay <= boss.configuration.stoneNeeded );
 				return true;
 			}
 
@@ -389,6 +420,7 @@ abstract public class Building : HiveObject
 
 	public Building Setup( GroundNode node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
 	{
+		this.configuration = configuration;
 		if ( !IsNodeSuitable( node, owner, configuration, flagDirection ) )
 		{
 			DestroyThis();
@@ -413,7 +445,7 @@ abstract public class Building : HiveObject
 
 		this.node = node;
 		construction.Setup( this );
-		var area = Foundation;
+		var area = foundation;
 		foreach ( var o in area )
 		{
 			var basis = node.Add( o );
@@ -569,7 +601,7 @@ abstract public class Building : HiveObject
 		if ( construction.area != null )	// Should never be null, but old saves are having this.
 			foreach ( var o in construction.area )
 				o.fixedHeight = false;
-		var area = Foundation;
+		var area = foundation;
 		foreach ( var o in area )
 		{
 			var basis = node.Add( o );

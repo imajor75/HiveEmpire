@@ -35,8 +35,8 @@ public class Road : HiveObject, Interface.IInputHandler
 	Mesh mapMesh;
 	public bool invalid;
 
-	[JsonIgnore, Obsolete( "Compatibility for old files", true )]
-	public int timeSinceWorkerAdded = 0;
+	[Obsolete( "Compatibility for old files", true )]
+	int timeSinceWorkerAdded = 0;
 
 	public static void Initialize()
 	{
@@ -627,6 +627,8 @@ public class Road : HiveObject, Interface.IInputHandler
 													// Fired when pressing ESC in map mode during road construction. Road had three nodes, 
 													// the one in the middle had the problem, nodes[1].road was null. It seems like the second
 													// node was already finalized, like when you spin down that location.
+													// Triggered again I think while I wanted to find a place for a road, meanwhile the
+													// peasant planted a cornfield in the way.
 			nodes[i].road = null;
 		}
 	}

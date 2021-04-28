@@ -34,30 +34,30 @@ public class World : MonoBehaviour
 	static public GameObject buoys;
 	static public GameObject nodes;
 
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float maxHeight;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float waterLevel;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float hillLevel;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float mountainLevel;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float forestGroundChance;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float rockChance;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float animalSpawnerChance;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float ironChance;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float coalChance;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float stoneChance;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float saltChance;
-	[JsonIgnore, HideInInspector, Obsolete( "Compatibility with old files", true )]
-	public float goldChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float maxHeight;
+	[Obsolete( "Compatibility with old files", true )]
+	float waterLevel;
+	[Obsolete( "Compatibility with old files", true )]
+	float hillLevel;
+	[Obsolete( "Compatibility with old files", true )]
+	float mountainLevel;
+	[Obsolete( "Compatibility with old files", true )]
+	float forestGroundChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float rockChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float animalSpawnerChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float ironChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float coalChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float stoneChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float saltChance;
+	[Obsolete( "Compatibility with old files", true )]
+	float goldChance;
 
 	public Settings settings;
 
@@ -244,20 +244,6 @@ public class World : MonoBehaviour
 			}
 		}
 		{
-			var list = Resources.FindObjectsOfTypeAll<Workshop.GetResource>();
-			foreach ( var o in list )
-			{
-#pragma warning disable CS0612 // Type or member is obsolete
-				if ( o.item )
-				{
-					o.item.nextFlag.CancelItem( o.item );
-					o.item?.Remove( false );
-					o.item = null;
-				}
-#pragma warning restore CS0612 // Type or member is obsolete
-			}
-		}
-		{
 			var list = Resources.FindObjectsOfTypeAll<Worker>();
 			foreach ( var o in list )
 			{
@@ -276,6 +262,8 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
+				if ( o.configuration == null )
+					o.configuration = new Building.Configuration();
 				if ( o.dispenser == null )
 					o.dispenser = o.workerMate ?? o.worker;
 				if ( o.construction.done )

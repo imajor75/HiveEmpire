@@ -28,7 +28,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
 	static Texture2D mapIndicatorTexture;
-	public Configuration configuration;
+	[JsonIgnore, HideInInspector]
+	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	public static Configuration[] configurations;
 
 	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
@@ -65,8 +66,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public float productionTime = 1500;
 		public int outputMax = 6;
 
-		[JsonIgnore, Obsolete( "Compatibility with old files", true )]
-		public float processSpeed { set { productionTime = 1 / value; } }
+		[Obsolete( "Compatibility with old files", true )]
+		float processSpeed { set { productionTime = 1 / value; } }
 
 		public bool commonInputs = false;
 		public Input[] inputs;
@@ -157,8 +158,16 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public GroundNode node;
 		public Resource.Type resourceType;
 		public World.Timer timer;
-		[JsonIgnore, Obsolete]
-		public Item item;
+		[Obsolete( "Compatibility with old files", true )]
+		Item item
+		{
+			set
+			{
+				value.nextFlag.CancelItem( value );
+				value.Remove( false );
+			}
+		}
+
 
 		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
 		{
@@ -396,7 +405,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		title = type.ToString();
 		buffers.Clear();
 
-		SetupConfiguration();
+		RefreshConfiguration();
 
 		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly ) == null )
 			return null;
@@ -414,28 +423,21 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return null;
 	}
 
-	void SetupConfiguration()
+	void RefreshConfiguration()
 	{
 		configuration = GetConfiguration( type );
 		assert.IsNotNull( configuration );
 
-		groundTypeNeeded = configuration.groundTypeNeeded;
-		huge = configuration.huge;
-		construction.plankNeeded = configuration.plankNeeded;
-		construction.stoneNeeded = configuration.stoneNeeded;
-		construction.flatteningNeeded = configuration.flatteningNeeded;
-		construction.duration = configuration.constructionTime;
-
-		if ( configuration.inputs == null )
+		if ( productionConfiguration.inputs == null )
 		{
 			buffers.Clear();
 			return;
 		}
 
 		var newList = new List<Buffer>();
-		for ( int i = 0; i < configuration.inputs.Length; i++ )
+		for ( int i = 0; i < productionConfiguration.inputs.Length; i++ )
 		{
-			var input = configuration.inputs[i];
+			var input = productionConfiguration.inputs[i];
 			int j = 0;
 			while ( j < buffers.Count )
 			{
@@ -455,7 +457,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			foreach ( var b in buffers )
 				b.weight = owner.FindInputWeight( type, b.itemType );
 		}
-		assert.AreEqual( newList.Count, configuration.inputs.Length );
+		assert.AreEqual( newList.Count, productionConfiguration.inputs.Length );
 		buffers = newList;
 	}
 
@@ -490,7 +492,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		mapIndicator.transform.position = node.position + new Vector3( 0, 2, GroundNode.size * 0.5f );
 		mapIndicator.SetActive( false );
 
-		SetupConfiguration();
+		RefreshConfiguration();
 
 		smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
 		if ( working && smoke )
@@ -523,10 +525,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 		}
 		if ( output > 0 && freeSpaceAtFlag > 0 && dispenser.IsIdle( true ) )
-			owner.itemDispatcher.RegisterOffer( this, configuration.outputType, output, outputPriority, outputArea );
+			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea );
 
 		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
-			SendItem( configuration.outputType, null, ItemDispatcher.Priority.high );
+			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
@@ -535,7 +537,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
-		assert.AreEqual( configuration.outputType, itemType );
+		assert.AreEqual( productionConfiguration.outputType, itemType );
 		assert.IsTrue( output > 0 );
 		Item item = base.SendItem( itemType, destination, priority );
 		if ( item != null )
@@ -567,8 +569,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 		}
 		assert.IsTrue( Gatherer );
-		assert.AreEqual( configuration.outputType, item.type );
-		assert.IsTrue( output < configuration.outputMax );
+		assert.AreEqual( productionConfiguration.outputType, item.type );
+		assert.IsTrue( output < productionConfiguration.outputMax );
 	}
 
 	public override void ItemArrived( Item item )
@@ -590,7 +592,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 		}
 
-		assert.AreEqual( configuration.outputType, item.type );
+		assert.AreEqual( productionConfiguration.outputType, item.type );
 		ItemGathered();
 	}
 
@@ -598,14 +600,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		// Gatherer arrived back from harvest
 		assert.IsTrue( Gatherer );
-		assert.IsTrue( output < configuration.outputMax );
+		assert.IsTrue( output < productionConfiguration.outputMax );
 		output++;
-		owner.ItemProduced( configuration.outputType );
+		owner.ItemProduced( productionConfiguration.outputType );
 		SetWorking( false );
 	}
 
 	[JsonIgnore]
-	public bool Gatherer { get { return configuration.gatheredResource != Resource.Type.unknown; } }
+	public bool Gatherer { get { return productionConfiguration.gatheredResource != Resource.Type.unknown; } }
 
 	public new void FixedUpdate()
 	{
@@ -636,7 +638,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				Profiler.BeginSample( "Farm" );
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
-					if ( output < configuration.outputMax )
+					if ( output < productionConfiguration.outputMax )
 					{
 						foreach ( var o in Ground.areas[3] )
 						{
@@ -668,7 +670,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				Profiler.BeginSample( "Forester" );
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
-					var o = Ground.areas[configuration.gatheringRange];
+					var o = Ground.areas[productionConfiguration.gatheringRange];
 					for ( int i = 0; i < o.Count; i++ )
 					{
 						int randomOffset = World.rnd.Next( o.Count );
@@ -727,7 +729,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			{
 				Profiler.BeginSample( "Default" );
 				if ( Gatherer )
-					CollectResource( configuration.gatheredResource, configuration.gatheringRange );
+					CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange );
 				else
 					ProcessInput();
 
@@ -749,7 +751,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	bool UseInput( int count = 1 )
 	{
-		bool common = configuration.commonInputs;
+		bool common = productionConfiguration.commonInputs;
 		if ( count == 0 || buffers.Count == 0 )
 			return true;
 
@@ -779,23 +781,23 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void ProcessInput()
 	{
-		if ( configuration.outputType == Item.Type.unknown )
+		if ( productionConfiguration.outputType == Item.Type.unknown )
 			return;
 
-		if ( !working && output + configuration.outputStackSize <= configuration.outputMax && worker.IsIdle( true ) && mode != Mode.sleeping && UseInput() )
+		if ( !working && output + productionConfiguration.outputStackSize <= productionConfiguration.outputMax && worker.IsIdle( true ) && mode != Mode.sleeping && UseInput() )
 		{
 			SetWorking( true );
 			progress = 0;
 		}
 		if ( working )
 		{
-			progress += ground.world.timeFactor / configuration.productionTime;
+			progress += ground.world.timeFactor / productionConfiguration.productionTime;
 			if ( progress > 1 )
 			{
-				output += configuration.outputStackSize;
+				output += productionConfiguration.outputStackSize;
 				SetWorking( false );
-				itemsProduced += configuration.outputStackSize;
-				owner.ItemProduced( configuration.outputType, configuration.outputStackSize );
+				itemsProduced += productionConfiguration.outputStackSize;
+				owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
 			}
 		}
 	}
@@ -804,7 +806,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		if ( !worker.IsIdle( true ) || mode == Mode.sleeping )
 			return;
-		if ( output >= configuration.outputMax )
+		if ( output >= productionConfiguration.outputMax )
 			return;
 
 		resourcePlace = null;
