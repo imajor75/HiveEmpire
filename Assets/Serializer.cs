@@ -122,8 +122,8 @@ public class Serializer : JsonSerializer
 			}
 			return;
 		}
-		FieldInfo i = type.GetField( name );	// What if there are multiple ones with the same name
-		PropertyInfo p = type.GetProperty( name );
+		FieldInfo i = type.GetField( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );	// What if there are multiple ones with the same name
+		PropertyInfo p = type.GetProperty( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );
 		Assert.global.IsTrue( i != null || p != null, "No field with the name " + name + " found in " + type.FullName );
 		reader.Read();
 
