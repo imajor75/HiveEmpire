@@ -101,7 +101,7 @@ public class Flag : HiveObject
 			frames[i] = new GameObject { name = "Item Frame " + i };
 			var t = frames[i].transform;
 			t.SetParent( transform, false );
-			t.localScale = 0.1f * Vector3.one;
+			t.localScale = 0.15f * Vector3.one;
 			Vector3 pos;
 			float itemBottomHeight = items[i] == null ? 0 : items[i].bottomHeight;
 			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;

@@ -79,8 +79,11 @@ public class Stock : Building
 			ScheduleWalkToFlag( boss.flag, true );
 			ScheduleWalkToNeighbour( node );
 
-			boss.flag.user = this;
-			exclusiveFlag = boss.flag;
+			if ( !boss.flag.crossing )
+			{
+				boss.flag.user = this;
+				exclusiveFlag = boss.flag;
+			}
 			onRoad = true;
 			gameObject.SetActive( true );
 			UpdateLook();
@@ -235,11 +238,11 @@ public class Stock : Building
 			content.Add( 0 );
 			onWay.Add( 0 );
 			inputMin.Add( 0 );
-			inputMax.Add( maxItems / 20 );
+			inputMax.Add( 0 );
 			outputMin.Add( 0 );
-			outputMax.Add( maxItems / 20 );
+			outputMax.Add( maxItems / 4 );
 		}
-		if ( base.Setup( node, owner, main ? mainConfiguration : configuration, flagDirection, blueprintOnly ) == null )
+		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly ) == null )
 			return null;
 
 		owner.RegisterStock( this );
@@ -438,7 +441,7 @@ public class Stock : Building
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
 			inputMin[i] = inputMax[i] = outputMin[i] = 0;
-			outputMax[i] = 50;
+			outputMax[i] = maxItems / 4;
 		}
 
 		inputArea.center = outputArea.center = node;

@@ -576,7 +576,7 @@ abstract public class Building : HiveObject
 
 		if ( Interface.root.highlightType == Interface.HighlightType.area && Interface.root.highlightArea != null && Interface.root.highlightArea.IsInside( node ) )
 		{
-			highlightArrow.transform.localPosition = Vector3.up * ( ( float )( 1.5f + 0.3f * Math.Sin( 2 * Time.time ) ) );
+			highlightArrow.transform.localPosition = Vector3.up * ( ( float )( height + 0.3f * Math.Sin( 2 * Time.time ) ) );
 			highlightArrow.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
 			highlightArrow.SetActive( true );
 		}

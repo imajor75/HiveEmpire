@@ -71,7 +71,7 @@ public class PathFinder : ScriptableObject
 		if ( !ignoreFinalObstacle || node != target )
 		{
 			if ( node.IsBlocking( mode == Mode.avoidRoadsAndFlags ) )
-				if ( ignoreObject == null || ignoreObject == node.building ) 
+				if ( ignoreObject == null || ignoreObject != node.building ) 
 					return;
 
 			if ( mode == Mode.avoidRoadsAndFlags && ( node.owner != target.owner || node.road ) )

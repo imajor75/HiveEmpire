@@ -570,6 +570,10 @@ public class Road : HiveObject, Interface.IInputHandler
 		first.AttachWatches();
 		second.AttachWatches();
 
+		first.ends[0] = ends[0];
+		first.ends[1] = second.ends[0] = flag;
+		second.ends[1] = ends[1];
+
 		if ( first.workers.Count == 0 )
 			first.CallNewWorker();
 		if ( second.workers.Count == 0 )

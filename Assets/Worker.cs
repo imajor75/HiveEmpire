@@ -279,13 +279,16 @@ public class Worker : HiveObject
 				if ( exclusive )
 				{
 					// Leave exclusivity
-					boss.assert.IsTrue( boss.exclusiveFlag );
+
+					if ( boss.node.flag.crossing == false )
+					{
+						boss.assert.IsTrue( boss.exclusiveFlag );
+						boss.assert.AreEqual( boss.exclusiveFlag.user, boss );
+						boss.exclusiveFlag.user = null;
+						boss.exclusiveFlag = null;
+					}
+
 					boss.assert.IsTrue( boss.onRoad );
-
-					boss.assert.AreEqual( boss.exclusiveFlag.user, boss );
-					boss.exclusiveFlag.user = null;
-					boss.exclusiveFlag = null;
-
 					int i = boss.IndexOnRoad();
 					boss.assert.AreEqual( boss, boss.road.workerAtNodes[i] );
 					boss.road.workerAtNodes[i] = null;
@@ -612,7 +615,7 @@ public class Worker : HiveObject
 				return;
 			boss.assert.IsNull( deliverTask.items[1] );
 			Flag target = boss.road.OtherEnd( boss.node.flag );
-			if ( target.FreeSpace() == 0 || items[0].path.stepsLeft == 1 )
+			if ( target.FreeSpace() == 0 && items[0].path.stepsLeft != 1 )
 				return;
 			foreach ( var secondary in boss.node.flag.items )
 			{
@@ -642,6 +645,7 @@ public class Worker : HiveObject
 				secondary.worker = boss;
 				items[1] = secondary;
 				deliverTask.items[1] = secondary;
+				secondary.transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
 				return;
 			}
 		}
@@ -650,36 +654,30 @@ public class Worker : HiveObject
 			if ( items[0].path != path )
 				return ResetBossTasks();
 
-			// Considering a second item
-			ConsiderSecondary();
-
-			for ( int i = 0; i < items.Length; i++ )
-			{
-				if ( items[i] == null )
-					continue;
-
-				boss.assert.AreEqual( items[i].worker, boss );
-				if ( items[i].buddy )
-					boss.assert.AreEqual( items[i].buddy.worker, boss );
+				boss.assert.AreEqual( items[0].worker, boss );
+				if ( items[0].buddy )
+					boss.assert.AreEqual( items[0].buddy.worker, boss );
 				if ( boss.type == Type.hauler )
-					boss.assert.IsNull( boss.itemsInHands[i] );
+					boss.assert.IsNull( boss.itemsInHands[0] );
 				if ( timer.Empty )
 				{
 					timer.Start( pickupTimeStart );
 					boss.animator?.ResetTrigger( putdownID );
-					boss.animator?.SetTrigger( items[1] ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file
+					boss.animator?.SetTrigger( items[1] ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
 				}
 
-				if ( items[i].transform.parent != boss.links[(int)LinkType.haulingBox] && timer.Age > -pickupReparentTime )
+				if ( items[0].transform.parent != boss.links[(int)LinkType.haulingBox] && timer.Age > -pickupReparentTime )
 				{
-					reparented[i] = true;
-					items[i].transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
+					reparented[0] = true;
+					items[0].transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
 					boss.links[(int)LinkType.haulingBox]?.SetActive( true );
 				}
-			}
 
 			if ( !timer.Done )
 				return false;
+
+			// This is the very last moment to pick another item
+			ConsiderSecondary();
 
 			for ( int i = 0; i < items.Length; i++ )
 			{
@@ -1861,7 +1859,7 @@ public class Worker : HiveObject
 		if ( !inBuilding || !( building is Workshop ) )
 			return true;
 		Workshop workshop = building as Workshop;
-		if ( workshop && workshop.working && !workshop.Gatherer )
+		if ( workshop && workshop.working && !workshop.Gatherer && workshop.worker == this )
 			return false;
 		return node == building.node;
 	}
