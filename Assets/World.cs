@@ -311,6 +311,13 @@ public class World : MonoBehaviour
 			foreach ( var o in list )
 				o.Validate();
 		}
+		{
+			var list = Resources.FindObjectsOfTypeAll<Flag>();
+			foreach ( var f in list )
+				if ( f.flattening == null )
+					f.flattening = new Building.Flattening();
+		}
+
 
 		{
 			foreach ( var node in ground.nodes )

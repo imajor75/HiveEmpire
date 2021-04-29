@@ -14,7 +14,8 @@ public class Interface : HiveObject
 {
 	public List<Panel> panels = new List<Panel>();
 	public PostProcessResources postProcessResources;
-	public static int iconSize = 20;
+	public const int iconSize = 20;
+	public static float uiScale = 1.5f;
 	public static Font font;
 	public World world;
 	Canvas canvas;
@@ -60,7 +61,6 @@ public class Interface : HiveObject
 		destroy,
 		newRoad,
 		magnet,
-		dynamite,
 		rightArrow,
 		crosshair,
 		summa,
@@ -140,12 +140,14 @@ public class Interface : HiveObject
 		else
 			focusOnInputField = false;
 
+#if DEBUG
 		if ( --fullValidate < 0 )
 		{
 			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 				ho.Validate();
 			fullValidate = fullValidateInterval;
 		}
+#endif
 
 		if ( --autoSave < 0 )
 		{
@@ -587,7 +589,7 @@ public class Interface : HiveObject
 			backGround = Frame( 0, 0, 200, 40, 3 );
 			text = Text( 15, -10, 270, 60 );
 			additionalText = Text( 20, -30, 150, 60 );
-			additionalText.fontSize = 10;
+			additionalText.fontSize = (int)( 10 * uiScale );
 			image = Image( 20, -20, 100, 100 );
 			gameObject.SetActive( false );
 			FollowMouse();
@@ -716,13 +718,13 @@ public class Interface : HiveObject
 
 			if ( target == null && x == 0 && y == 0 )
 			{
-				x = ( Screen.width - xs ) / 2;
-				y = -( Screen.height - ys ) / 2;
+				x = (int)( Screen.width - xs * uiScale ) / 2;
+				y = -(int)( Screen.height - ys * uiScale ) / 2;
 			}
 			Root.panels.Add( this );
 			name = "Panel";
 			frame = gameObject.AddComponent<Image>();
-			Init( frame.rectTransform, x, y, 100, 100, Root );
+			Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), 100, 100, Root );
 			frame.enabled = false;
 			this.target = target;
 			UpdatePosition();
@@ -755,7 +757,7 @@ public class Interface : HiveObject
 		{
 			Image i = Image( x, y, xs, ys, iconTable.GetMediaData( Icon.frame ) );
 			i.type = UnityEngine.UI.Image.Type.Sliced;
-			i.pixelsPerUnitMultiplier = pixelsPerUnitMultiplier;
+			i.pixelsPerUnitMultiplier = pixelsPerUnitMultiplier / uiScale; 
 			return i;
 
 		}
@@ -780,8 +782,8 @@ public class Interface : HiveObject
 				var t = scrollBar.transform as RectTransform;
 				t.anchorMin = new Vector2( 1, 0 );
 				t.anchorMax = Vector2.one;
-				t.offsetMin = new Vector2( -20, 0 );
-				t.offsetMax = new Vector2( 0, vertical ? -20 : 0 );
+				t.offsetMin = new Vector2( (int)( -20 * uiScale ) , 0 );
+				t.offsetMax = new Vector2( 0, vertical ? (int)( -20 * uiScale ) : 0 );
 			}
 
 			if ( vertical )
@@ -795,8 +797,8 @@ public class Interface : HiveObject
 				var t = scrollBar.transform as RectTransform;
 				t.anchorMin = new Vector2( 1, 0 );
 				t.anchorMax = Vector2.one;
-				t.offsetMin = new Vector2( -20, 0 );
-				t.offsetMax = new Vector2( 0, horizontal ? -20 : 0 );
+				t.offsetMin = new Vector2( (int)(-20 * uiScale ), 0 );
+				t.offsetMax = new Vector2( 0, horizontal ? (int)( -20 * uiScale ) : 0 );
 			}
 			var content = new GameObject().AddComponent<Image>();
 			content.name = "Content";
@@ -885,6 +887,7 @@ public class Interface : HiveObject
 			t.name = "Text";
 			Init( t.rectTransform, x, y, xs, ys, parent );
 			t.font = Interface.font;
+			t.fontSize = (int)( t.fontSize * uiScale );
 			t.text = text;
 			t.color = Color.yellow;
 			return t;
@@ -922,9 +925,9 @@ public class Interface : HiveObject
 				parent = this;
 			t.SetParent( parent.transform );
 			t.anchorMin = t.anchorMax = t.pivot = Vector2.up;
-			t.anchoredPosition = new Vector2( x, y );
+			t.anchoredPosition = new Vector2( x * uiScale, y * uiScale );
 			if ( xs != 0 && ys != 0 )
-				t.sizeDelta = new Vector2( xs, ys );
+				t.sizeDelta = new Vector2( xs * uiScale, ys * uiScale );
 		}
 
 		public virtual void Update()
@@ -1502,7 +1505,7 @@ public class Interface : HiveObject
 			AreaIcon( 250, -30, stock.outputArea );
 			Button( 140, -30, iconSize, iconSize, iconTable.GetMediaData( Icon.reset ) ).onClick.AddListener( stock.ClearSettings );
 			total = Text( 35, 35 - height, 100, 20 );
-			total.fontSize = 16;
+			total.fontSize = (int)( 16 * uiScale );
 
 			int row = -55;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
@@ -2836,7 +2839,7 @@ public class Interface : HiveObject
 
 		public void Open( Player player )
 		{
-			if ( base.Open() )
+			if ( base.Open( null, 0, 0, 400, 320 ) )
 				return;
 			name = "Item list panel";
 			this.player = player;
@@ -2886,7 +2889,7 @@ public class Interface : HiveObject
 				row -= iconSize + 5;
 			}
 			var t = scroll.content.transform as RectTransform;
-			t.sizeDelta = new Vector2( t.sizeDelta.x, sortedItems.Count * ( iconSize + 5 ) );
+			t.sizeDelta = new Vector2( (int)( uiScale * t.sizeDelta.x ), (int)( uiScale * sortedItems.Count * ( iconSize + 5 ) ) );
 			scroll.verticalNormalizedPosition = 1;
 		}
 
@@ -2956,21 +2959,21 @@ public class Interface : HiveObject
 
 		public void Open( Player player )
 		{
-			if ( base.Open() )
+			if ( base.Open( null, 0, 0, 370, 300 ) )
 				return;
 
 			name = "Item stats panel";
 			this.player = player;
 			Frame( 0, 0, 370, 300 );
-			Text( 70, -20, 50, 20, "In stock" ).fontSize = 10;
-			Text( 120, -20, 50, 20, "On Road" ).fontSize = 10;
-			Text( 170, -20, 50, 20, "Surplus" ).fontSize = 10;
-			Text( 220, -20, 50, 20, "Per minute" ).fontSize = 10;
-			Text( 270, -20, 50, 20, "Efficiency" ).fontSize = 10;
+			Text( 70, -20, 50, 20, "In stock" ).fontSize = (int)( uiScale * 10 );
+			Text( 120, -20, 50, 20, "On Road" ).fontSize = (int)( uiScale * 10 );
+			Text( 170, -20, 50, 20, "Surplus" ).fontSize = (int)( uiScale * 10 );
+			Text( 220, -20, 50, 20, "Per minute" ).fontSize = (int)( uiScale * 10 );
+			Text( 270, -20, 50, 20, "Efficiency" ).fontSize = (int)( uiScale * 10 );
 			scroll = ScrollRect( 20, -45, 330, 205 );
 			Button( 340, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			finalEfficiency = Text( 100, -260, 100, 30 );
-			finalEfficiency.fontSize = 16;
+			finalEfficiency.fontSize = (int)( uiScale * 16 );
 
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
@@ -3055,7 +3058,7 @@ public class Interface : HiveObject
 		{
 			this.player = player;
 
-			if ( base.Open() )
+			if ( base.Open( null, 0, 0, 450, 300 ) )
 				return;
 
 			name = "History panel";
@@ -3134,7 +3137,7 @@ public class Interface : HiveObject
 
 		public void Open( bool focusOnMainBuilding = false )
 		{
-			Open( null, ( Screen.width - 300 ) / 2, -Screen.height + 250 );
+			Open( null, ( Screen.width - (int)( 300 * uiScale ) ) / 2, -Screen.height + (int)( 250 * uiScale ) );
 
 			name = "Main Panel";
 			Frame( 0, 0, 300, 210 );
@@ -3142,11 +3145,11 @@ public class Interface : HiveObject
 			Image( 20, -45, 260, 1 );
 
 			Button( 90, -50, 120, 20, "Start New World" ).onClick.AddListener( StartNewGame );
-			Text( 20, -75, 40, 20, "Seed" ).fontSize = 12;
+			Text( 20, -75, 40, 20, "Seed" ).fontSize = (int)( uiScale * 12 );
 			seed = InputField( 60, -70, 100, 25 );
 			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
 			Button( 165, -73, 60, 20, "Randomize" ).onClick.AddListener( RandomizeSeed );
-			Text( 20, -100, 30, 20, "Size" ).fontSize = 12;
+			Text( 20, -100, 30, 20, "Size" ).fontSize = (int)( uiScale * 12 );
 			size = Dropdown( 60, -95, 80, 25 );
 			size.ClearOptions();
 			size.AddOptions( new List<string>() { "Small", "Medium", "Big" } );
