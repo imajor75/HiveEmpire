@@ -1859,7 +1859,7 @@ public class Worker : HiveObject
 		if ( !inBuilding || !( building is Workshop ) )
 			return true;
 		Workshop workshop = building as Workshop;
-		if ( workshop && workshop.working && !workshop.Gatherer && workshop.worker == this )
+		if ( workshop && workshop.working && !workshop.gatherer && workshop.worker == this )
 			return false;
 		return node == building.node;
 	}
@@ -1971,6 +1971,9 @@ public class Worker : HiveObject
 		// Building.itemsOnTheWay. Item still has a flag, which is the one in front of the headquarters. 
 		// The item is still registered there in Flag.items. nextFlag is null, worker is null. Origin is headquarters.
 		// Hopefully fixed.
+		// Triggered again, called from Worker.FindTask. Both items in itemsInHands is null. haulingBox is inactive, and has a child, a beer.
+		// This beer has no worker and nextFlag, but the flag reference is valid (19:10). Has a destination (barrack 19:7) has a path
+		// with two roads (between 20:9 and 19:11 then between 20:9 19:8)
 
 		base.DestroyThis();
 	}
@@ -2045,7 +2048,7 @@ public class Worker : HiveObject
 				assert.AreEqual( road.workerAtNodes[index], this );
 			}
 		}
-		if ( type == Type.tinkerer && building is Workshop workshop && workshop.Gatherer )
+		if ( type == Type.tinkerer && building is Workshop workshop && workshop.gatherer )
 		{
 			if ( IsIdle( true ) )
 				assert.IsNull( itemsInHands[0] );

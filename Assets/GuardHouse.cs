@@ -8,19 +8,19 @@ public class GuardHouse : Building
 	public bool ready;
 	public int influence = 8;
 	public static GameObject template;
-	static readonly Configuration configuration = new Configuration();
+	static readonly Configuration guardHouseConfiguration = new Configuration();
 
 	public static new void Initialize()
 	{
 		template = (GameObject)Resources.Load( "prefabs/buildings/guardhouse" );
-		configuration.plankNeeded = 2;
-		configuration.stoneNeeded = 2;
-		configuration.flatteningNeeded = false;
+		guardHouseConfiguration.plankNeeded = 2;
+		guardHouseConfiguration.stoneNeeded = 2;
+		guardHouseConfiguration.flatteningNeeded = false;
 	}
 
 	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner, int flagDirection )
 	{
-		return Building.IsNodeSuitable( placeToBuild, owner, configuration, flagDirection );
+		return Building.IsNodeSuitable( placeToBuild, owner, guardHouseConfiguration, flagDirection );
 	}
 
 	public static GuardHouse Create()

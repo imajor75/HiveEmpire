@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using System;
 using Newtonsoft.Json;
+using System.Linq;
 
 [SelectionBase]
 public class Road : HiveObject, Interface.IInputHandler
@@ -36,7 +37,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool invalid;
 
 	[Obsolete( "Compatibility for old files", true )]
-	int timeSinceWorkerAdded = 0;
+	int timeSinceWorkerAdded;
 
 	public static void Initialize()
 	{
@@ -818,8 +819,11 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override void Validate()
 	{
-		if ( !ready )
+		if ( !ready && !decorationOnly )
+		{
+			assert.IsTrue( Interface.root.viewport.InputHandler is Road );
 			return;
+		}
 		int length = nodes.Count;
 		assert.IsTrue( length > 1 );
 		if ( decorationOnly )
@@ -829,6 +833,13 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( nodes[1].flag, nodes[0].building.flag );
 			return;
 		}
+		assert.IsNotNull( ends[0] );
+		assert.IsNotNull( ends[1] );
+		assert.AreEqual( ends[0].node, nodes[0] );
+		assert.AreEqual( ends[1].node, lastNode );
+		assert.IsTrue( ends[0].roadsStartingHere.Contains( this ) );
+		assert.IsTrue( ends[1].roadsStartingHere.Contains( this ) );
+
 		var first = nodes[0];
 		var last = lastNode;
 		assert.IsNotNull( first.flag );

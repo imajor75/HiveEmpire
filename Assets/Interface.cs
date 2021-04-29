@@ -1251,7 +1251,7 @@ public class Interface : HiveObject
 					row -= 25;
 				}
 			}
-			if ( workshop.Gatherer && ( contentToShow & Content.resourcesLeft ) > 0 )
+			if ( workshop.gatherer && ( contentToShow & Content.resourcesLeft ) > 0 )
 			{
 				resourcesLeft = Text( 20, row, 150, 20, "Resources left: 0" );
 				row -= 25;
@@ -1309,12 +1309,12 @@ public class Interface : HiveObject
 			{
 				if ( workshop.working )
 				{
-					progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 7 * workshop.progress, iconSize );
+					progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 7 * workshop.GetProgress(), iconSize );
 					progressBar.color = Color.white;
 				}
 				else
 				{
-					if ( workshop.Gatherer && !workshop.working )
+					if ( workshop.gatherer && !workshop.working )
 						progressBar.color = Color.green;
 					else
 						progressBar.color = Color.red;
@@ -2730,7 +2730,7 @@ public class Interface : HiveObject
 					case Construct.workshop:
 					{
 						var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
-						if ( workshop && workshop.Gatherer )
+						if ( workshop && workshop.gatherer )
 						{
 							currentBlueprintPanel = WorkshopPanel.Create();
 							currentBlueprintPanel.offset = new Vector2( 100, 0 );

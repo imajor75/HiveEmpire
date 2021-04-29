@@ -32,7 +32,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	public static Configuration[] configurations;
 
-	public static int[] resourceCutTime = new int[(int)Resource.Type.total];
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 6000;
 	ParticleSystem smoke;
@@ -63,13 +62,13 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
-		public float productionTime = 1500;
+		public int productionTime = 1500;
 		public int outputMax = 6;
 
 		[Obsolete( "Compatibility with old files", true )]
-		float processSpeed { set { productionTime = 1 / value; } }
+		float processSpeed { set { productionTime = (int)( 1 / value ); } }
 
-		public bool commonInputs = false;
+		public bool commonInputs = false;	// If true, the workshop will work with the input buffers separately, if any has any item it will work (f.e. mines). Otherwise each is needed.
 		public Input[] inputs;
 	}
 
@@ -193,7 +192,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public override bool ExecuteFrame()
 		{
 			if ( timer.Empty )
-				timer.Start( resourceCutTime[(int)resourceType] );
+				timer.Start( (boss.building as Workshop).productionConfiguration.productionTime );
 
 			var act = Worker.resourceCollectAct[(int)resourceType];
 			int animHash = -1;
@@ -381,15 +380,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"SAdK/smelter", Type.smelter,
 			"windmill", Type.mill };
 		processingSounds.Fill( sounds );
-		for ( int i = 0; i < resourceCutTime.Length; i++ )
-		{
-			if ( Resource.IsUnderGround( (Resource.Type)i ) )
-				resourceCutTime[i] = 1000;
-			else if ( i == (int)Resource.Type.tree || i == (int)Resource.Type.rock || i == (int)Resource.Type.pasturingAnimal || i == (int)Resource.Type.expose || i == (int)Resource.Type.cornfield )
-				resourceCutTime[i] = 0;
-			else
-				resourceCutTime[i] = 500;
-		}
 		mapIndicatorTexture = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
 	}
 
@@ -568,7 +558,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return;
 			}
 		}
-		assert.IsTrue( Gatherer );
+		assert.IsTrue( gatherer );
 		assert.AreEqual( productionConfiguration.outputType, item.type );
 		assert.IsTrue( output < productionConfiguration.outputMax );
 	}
@@ -599,15 +589,16 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public void ItemGathered()
 	{
 		// Gatherer arrived back from harvest
-		assert.IsTrue( Gatherer );
+		assert.IsTrue( gatherer );
 		assert.IsTrue( output < productionConfiguration.outputMax );
 		output++;
+		itemsProduced++;
 		owner.ItemProduced( productionConfiguration.outputType );
 		SetWorking( false );
 	}
 
 	[JsonIgnore]
-	public bool Gatherer { get { return productionConfiguration.gatheredResource != Resource.Type.unknown; } }
+	public bool gatherer { get { return productionConfiguration.gatheredResource != Resource.Type.unknown; } }
 
 	public new void FixedUpdate()
 	{
@@ -627,7 +618,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			workerMate.ScheduleWait( 100, true );
 		}
 
-		if ( Gatherer && worker.IsIdle() && worker.node == node )
+		if ( gatherer && worker.IsIdle() && worker.node == node )
 			SetWorking( false );
 
 		Profiler.BeginSample( "Internal" );
@@ -728,7 +719,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			default:
 			{
 				Profiler.BeginSample( "Default" );
-				if ( Gatherer )
+				if ( gatherer )
 					CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange );
 				else
 					ProcessInput();
@@ -856,6 +847,22 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 	}
 
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <returns>A number between zero and one, zero means the work just started, one means it is ready.</returns>
+	public float GetProgress()
+	{
+		if ( !gatherer )
+			return progress;
+
+		var getResourceTask = worker.FindTaskInQueue<GetResource>();
+		if ( getResourceTask == null )
+			return 0;
+
+		return ( (float)getResourceTask.timer.Age ) / productionConfiguration.productionTime + 1;
+	}
+
 	void CollectResourceFromNode( GroundNode target, Resource.Type resourceType )
 	{
 		if ( !UseInput() || flag.FreeSpace() == 0 )
@@ -966,7 +973,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public override void Validate()
 	{
-		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && Gatherer );
+		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && gatherer );
 		base.Validate();
 		int itemsOnTheWayCount = 0;
 		foreach ( Buffer b in buffers )
@@ -982,7 +989,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( missing == 1 )
 			{
 				// If an incoming item is missing, then that can only happen if the worker is just gathering it
-				assert.IsTrue( Gatherer );
+				assert.IsTrue( gatherer );
 				assert.IsFalse( worker.IsIdle() );
 			}
 		}

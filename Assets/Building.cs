@@ -411,6 +411,9 @@ abstract public class Building : HiveObject
 						return false;
 				}
 			}
+			foreach ( var p in Ground.areas[1] )
+				if ( basis.Add( p ).building )
+					return false;
 			if ( !basis.CheckType( configuration.groundTypeNeeded ) )
 				return false;
 		}

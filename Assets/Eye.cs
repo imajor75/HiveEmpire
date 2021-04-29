@@ -196,9 +196,9 @@ public class Eye : MonoBehaviour
 		if ( camera == camera.enabled )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
-				targetAltitude += 1;
+				targetAltitude += 0.5f;
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
-				targetAltitude -= 1;
+				targetAltitude -= 0.5f;
 		}
 		if ( targetAltitude < minAltitude )
 			targetAltitude = minAltitude;
