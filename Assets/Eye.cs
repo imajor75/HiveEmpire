@@ -3,7 +3,6 @@ using System;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
-using UnityEngine.SocialPlatforms.GameCenter;
 
 [RequireComponent( typeof( Camera ) )]
 public class Eye : MonoBehaviour
