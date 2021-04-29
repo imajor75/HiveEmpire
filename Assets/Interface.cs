@@ -607,15 +607,15 @@ public class Interface : HiveObject
 			{
 				image.sprite = imageToShow;
 				image.enabled = true;
-				backGround.rectTransform.sizeDelta = new Vector2( 200, 140 );
+				backGround.rectTransform.sizeDelta = new Vector2( (int)( uiScale * 200 ), (int)( uiScale * 140 ) );
 			}
 			else
 			{
 				image.enabled = false;
 				if ( text.Length > 20 ) // TODO Big fat hack
-					backGround.rectTransform.sizeDelta = new Vector2( 300, 70 );
+					backGround.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 300 ), (int)( uiScale * 70 ) );
 				else
-					backGround.rectTransform.sizeDelta = new Vector2( 200, 40 );
+					backGround.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 200 ), (int)( uiScale * 40 ) );
 			}
 			gameObject.SetActive( true );
 			FollowMouse();
@@ -1269,7 +1269,7 @@ public class Interface : HiveObject
 				changeModeImage = changeModeButton.gameObject.GetComponent<Image>();
 			}
 
-			backGround.rectTransform.sizeDelta = new Vector2( 240, -row + 20 );
+			backGround.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 240 ), (int)( uiScale * ( -row + 20 ) ) );
 
 			if ( show )
 				Root.world.eye.FocusOn( workshop );
