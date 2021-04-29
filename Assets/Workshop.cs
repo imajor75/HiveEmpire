@@ -33,7 +33,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public static Configuration[] configurations;
 
 	static MediaTable<GameObject, Type> looks;
-	public static int mineOreRestTime = 6000;
+	public static int mineOreRestTime = 8000;
 	ParticleSystem smoke;
 	public Mode mode = Mode.whenNeeded;
 
@@ -68,7 +68,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }
 
-		public bool commonInputs = false;	// If true, the workshop will work with the input buffers separately, if any has any item it will work (f.e. mines). Otherwise each is needed.
+		public bool commonInputs = false;	// If true, the workshop will work with the input buffers separately, if any has any item it will work (f.e. mines). Otherwise each input is needed.
 		public Input[] inputs;
 	}
 
@@ -756,8 +756,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( ( common && sum < count ) || ( !common && min < count ) )
 			return false;
 
-		foreach ( var b in buffers )
+		int o = World.rnd.Next();
+		for ( int i = 0; i < buffers.Count; i++ )
 		{
+			var b = buffers[(i + o) % buffers.Count];
 			if ( common )
 			{
 				int used = Math.Min( b.stored, count );
