@@ -71,7 +71,8 @@ public class Worker : HiveObject
 
 	public enum LinkType
 	{
-		haulingBox,
+		haulingBoxLight,
+		haulingBoxHeavy,
 		rightHand,
 		leftHand,
 		total
@@ -569,6 +570,7 @@ public class Worker : HiveObject
 		public Path path;  // Save the path just to be able to test if it has been changed
 		public bool[] reparented = new bool[2];	// See PickupItem.Cancel. Originally I wanted to save the Transformation reference, but that cannot be serialized
 		public World.Timer timer;
+		public bool expectingSecondary;
 
 		[Obsolete( "Compatibility with old files", true )]
 		Item item { set { items[0] = value; } }
@@ -604,19 +606,19 @@ public class Worker : HiveObject
 			}
 			base.Cancel();
 		}
-		void ConsiderSecondary()
+		bool ConsiderSecondary( bool checkOnly = false )
 		{
 			if ( items[1] || boss.type != Type.hauler )
-				return;
+				return false;
 			if ( items[0].path.isFinished || items[0].buddy )
-				return;
+				return false;
 			var deliverTask = boss.FindTaskInQueue<DeliverItem>();
 			if ( deliverTask == null )
-				return;
+				return false;
 			boss.assert.IsNull( deliverTask.items[1] );
 			Flag target = boss.road.OtherEnd( boss.node.flag );
 			if ( target.FreeSpace() == 0 && items[0].path.stepsLeft != 1 )
-				return;
+				return false;
 			foreach ( var secondary in boss.node.flag.items )
 			{
 				if ( secondary == null || secondary == items[0] )
@@ -639,15 +641,19 @@ public class Worker : HiveObject
 					if ( secondary.path.stepsLeft == 1 )
 						continue;
 
-				// At this point the item secondary seems like a good one to carry
-				if ( secondary.path.stepsLeft != 1 )
-					target.ReserveItem( secondary );
-				secondary.worker = boss;
-				items[1] = secondary;
-				deliverTask.items[1] = secondary;
-				secondary.transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
-				return;
+				if ( !checkOnly )
+				{
+					// At this point the item secondary seems like a good one to carry
+					if ( secondary.path.stepsLeft != 1 )
+						target.ReserveItem( secondary );
+					secondary.worker = boss;
+					items[1] = secondary;
+					deliverTask.items[1] = secondary;
+					secondary.transform.SetParent( boss.links[(int)LinkType.haulingBoxHeavy]?.transform, false );
+				}
+				return true;
 			}
+			return false;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -663,14 +669,17 @@ public class Worker : HiveObject
 				{
 					timer.Start( pickupTimeStart );
 					boss.animator?.ResetTrigger( putdownID );
-					boss.animator?.SetTrigger( items[1] ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
+				// The ConsiderSecondary call in the next line is only done to foresee if a second item will be picked, it might be different 
+				expectingSecondary = ConsiderSecondary( true );
+					boss.animator?.SetTrigger( expectingSecondary ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
 				}
 
-				if ( items[0].transform.parent != boss.links[(int)LinkType.haulingBox] && timer.Age > -pickupReparentTime )
+			var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
+				if ( items[0].transform.parent != attachAt && timer.Age > -pickupReparentTime )
 				{
 					reparented[0] = true;
-					items[0].transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
-					boss.links[(int)LinkType.haulingBox]?.SetActive( true );
+					items[0].transform.SetParent( attachAt?.transform, false );
+					attachAt?.SetActive( true );
 				}
 
 			if ( !timer.Done )
@@ -745,7 +754,7 @@ public class Worker : HiveObject
 
 					if ( item.buddy )
 					{
-						item.buddy.transform.SetParent( boss.links[(int)LinkType.haulingBox]?.transform, false );
+						item.buddy.transform.SetParent( boss.links[(int)LinkType.haulingBoxLight]?.transform, false );
 						timer.reference -= 30;
 					}
 					else
@@ -764,7 +773,8 @@ public class Worker : HiveObject
 			if ( items[1] )
 				boss.itemsDelivered++;
 			boss.bored.Start( boredTimeBeforeRemove );
-			boss.links[(int)LinkType.haulingBox]?.SetActive( items[0].buddy != null );  // ?
+			boss.links[(int)LinkType.haulingBoxLight]?.SetActive( items[0].buddy != null );
+			boss.links[(int)LinkType.haulingBoxHeavy]?.SetActive( false );
 			for ( int i = 0; i < items.Length; i++ )
 			{
 				if ( items[i] == null )
@@ -1095,7 +1105,8 @@ public class Worker : HiveObject
 			transform.SetParent( node.ground.transform );
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
-		links[(int)LinkType.haulingBox] = World.FindChildRecursive( body.transform, "haulingBox" )?.gameObject;
+		links[(int)LinkType.haulingBoxLight] = World.FindChildRecursive( body.transform, "haulingBoxLight" )?.gameObject;
+		links[(int)LinkType.haulingBoxHeavy] = World.FindChildRecursive( body.transform, "haulingBoxHeavy" )?.gameObject;
 		links[(int)LinkType.rightHand] = World.FindChildRecursive( body.transform, "Hand_R" )?.gameObject;
 		links[(int)LinkType.leftHand] = World.FindChildRecursive( body.transform, "Hand_L" )?.gameObject;
 		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
@@ -1963,9 +1974,13 @@ public class Worker : HiveObject
 
 	public override void DestroyThis()
 	{
-		var box = links[(int)LinkType.haulingBox];
+		var box = links[(int)LinkType.haulingBoxLight];
 		if ( box )
-			assert.AreEqual( box.transform.childCount, 0 ); // TODO Triggered, called from Worker:FindTask() line 1342
+			assert.AreEqual( box.transform.childCount, 0 );
+		box = links[(int)LinkType.haulingBoxHeavy];
+		if ( box )
+			assert.AreEqual( box.transform.childCount, 0 );
+		// TODO Triggered, called from Worker:FindTask() line 1342
 		// Triggered again called from worker.FindTask, worker still has the plank in hand, after entering the headquarters. 
 		// Item is still registered in Player.items, and still has a valid destination (sawmill) where it is still registered in 
 		// Building.itemsOnTheWay. Item still has a flag, which is the one in front of the headquarters. 
