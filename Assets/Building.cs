@@ -418,6 +418,8 @@ abstract public class Building : HiveObject
 				return false;
 		}
 		GroundNode flagLocation = placeToBuild.Neighbour( flagDirection );
+		if ( flagLocation.flag && flagLocation.flag.crossing )
+			return false;
 		return flagLocation.validFlag || Flag.IsNodeSuitable( flagLocation, owner );
 	}
 

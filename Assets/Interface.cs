@@ -2009,7 +2009,7 @@ public class Interface : HiveObject
 		public Flag flag;
 		public ItemImage[] items = new ItemImage[Flag.maxItems];
 		public Image[] itemTimers = new Image[Flag.maxItems];
-		public Image shovelingIcon;
+		public Image shovelingIcon, convertIcon;
 
 		public static FlagPanel Create()
 		{
@@ -2034,8 +2034,9 @@ public class Interface : HiveObject
 			var shovelingButton = Button( 65, -45, 20, 20, iconTable.GetMediaData( Icon.shovel ) );
 			shovelingButton.onClick.AddListener( Flatten );
 			shovelingIcon = shovelingButton.GetComponent<Image>();
-			if ( flag.crossing == false && flag.Buildings().Count == 0 )
-				Button( 85, -45, 20, 20, iconTable.GetMediaData( Icon.crossing ) ).onClick.AddListener( ConvertToCrossing );
+			var convertButton = Button( 85, -45, 20, 20, iconTable.GetMediaData( Icon.crossing ) );
+			convertButton.onClick.AddListener( Convert );
+			convertIcon = convertButton.GetComponent<Image>();
 
 			for ( int i = 0; i < Flag.maxItems; i++ )
 			{
@@ -2083,10 +2084,12 @@ public class Interface : HiveObject
 			}
 		}
 
-		void ConvertToCrossing()
+		void Convert()
 		{
 			if ( !flag.crossing )
 				flag.ConvertToCrossing();
+			else
+				flag.ConvertToNormal();
 		}
 
 		void Flatten()
@@ -2120,6 +2123,7 @@ public class Interface : HiveObject
 
 			if ( flag.flattening != null )	// This should never be null unless after loaded old files.
 				shovelingIcon.color = flag.flattening.flattened ? Color.grey : Color.white;
+			convertIcon.color = flag.crossing ? Color.red : Color.white;
 		}
 	}
 

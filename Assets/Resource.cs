@@ -17,7 +17,7 @@ public class Resource : HiveObject
 	public Worker hunter;
 	public List<Worker> animals = new List<Worker>();
 	public static int treeGrowthMax = 15000;    // 5 minutes
-	public static int cornfieldGrowthMax = 6000;
+	public static int cornfieldGrowthMax = 8000;
 	public static int exposeMax = 50000;
 	public World.Timer silence;
 	AudioClip nextSound;

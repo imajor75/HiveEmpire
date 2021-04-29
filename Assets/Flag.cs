@@ -29,6 +29,7 @@ public class Flag : HiveObject
 	GameObject tiles;
 	const float tilesHeight = 0.03f;
 	public Building.Flattening flattening = new Building.Flattening();
+	GameObject pole;
 
 	static public void Initialize()
 	{
@@ -90,7 +91,7 @@ public class Flag : HiveObject
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		transform.SetParent( node.ground.transform );
 		if ( crossing )
-			Instantiate( template ).transform.SetParent( transform, false );
+			pole = Instantiate( template, transform );
 
 		tiles = Instantiate( baseTemplate );
 		tiles.transform.SetParent( transform, false );
@@ -183,8 +184,21 @@ public class Flag : HiveObject
 
 		crossing = true;
 		requestFlattening = true;
-		Instantiate( template ).transform.SetParent( transform, false );
+		pole = Instantiate( template, transform );
 		return true;
+	}
+
+	public void ConvertToNormal()
+	{
+		if ( !crossing )
+			return;
+
+		crossing = false;
+		if ( pole )
+		{
+			Destroy( pole );
+			pole = null;
+		}
 	}
 
 	public bool ReleaseItem( Item item )

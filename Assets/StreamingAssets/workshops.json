@@ -37,6 +37,7 @@
   {
     "type": "farm",
 	"huge": true,
+	"outputStackSize": 2,
 	"gatheredResource": "cornfield",
 	"gatheringRange": 3,
 	"productionTime": 0,

@@ -591,9 +591,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		// Gatherer arrived back from harvest
 		assert.IsTrue( gatherer );
 		assert.IsTrue( output < productionConfiguration.outputMax );
-		output++;
-		itemsProduced++;
-		owner.ItemProduced( productionConfiguration.outputType );
+		output += productionConfiguration.outputStackSize;
+		itemsProduced += productionConfiguration.outputStackSize;
+		owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
 		SetWorking( false );
 	}
 

@@ -964,7 +964,7 @@ public class Worker : HiveObject
 		{
 			animation = harvestingID,
 			timeToInterrupt = 1.0f,
-			duration = 300
+			duration = 500
 		};
 		resourceCollectAct[(int)Resource.Type.pasturingAnimal] = new Act
 		{
