@@ -66,7 +66,7 @@ public abstract class HiveObject : MonoBehaviour
 	{
 	}
 
-	public virtual void Validate()
+	public virtual void Validate( bool chainCall )
 	{
 	}
 }

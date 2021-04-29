@@ -455,10 +455,11 @@ public class Stock : Building
 			content[i] = 0;
 	}
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
-		base.Validate();
-		cart?.Validate();
+		base.Validate( chain );
+		if ( chain )
+			cart?.Validate( true );
 		if ( cart )
 			assert.AreEqual( cart.building, this );		// TODO Fired
 		int[] onWayCounted = new int[(int)Item.Type.total];

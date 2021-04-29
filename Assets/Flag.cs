@@ -348,7 +348,7 @@ public class Flag : HiveObject
 		assert.IsNull( user );
 	}
 
-	override public void Validate()
+	override public void Validate( bool chain )
     {
 		foreach ( var building in Buildings() )
 			assert.AreEqual( building.flag, this );
@@ -362,12 +362,13 @@ public class Flag : HiveObject
 			if ( i )
 			{
 				assert.IsTrue( i.flag == this || i.nextFlag == this, "Item is here, but both flag and nextFlag pointers are referencing elsewhere (index: " + j + ")" );
-				i.Validate();
+				if ( chain )
+					i.Validate( true );
 			}
 		}
 		for ( int j = 0; j < GroundNode.neighbourCount; j++ )
-			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node )
-				roadsStartingHere[j].Validate();
+			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node && chain )
+				roadsStartingHere[j].Validate( true );
 		if ( user )
 		{
 			assert.IsTrue( user.type == Worker.Type.hauler || user.type == Worker.Type.cart );

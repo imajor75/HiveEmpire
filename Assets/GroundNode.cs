@@ -360,7 +360,7 @@ public class GroundNode : HiveObject
 		building?.Reset();
 		flag?.Reset();
 		resource?.Reset();
-		Validate();
+		Validate( true );		// Be careful not to do circle validation to avoid infinite cycles
 	}
 
 	public override GroundNode Node { get { return this; } }
@@ -370,7 +370,7 @@ public class GroundNode : HiveObject
 		return node.Add( offset );
 	}
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
 		int o = 0;
 		if ( validFlag )
@@ -387,20 +387,23 @@ public class GroundNode : HiveObject
 		if ( flag )
 		{
 			assert.AreEqual( this, flag.node );
-			flag.Validate();
+			if ( chain )
+				flag.Validate( true );
 		}
 		if ( building )
 		{
 			if ( !building.configuration.huge )
 				assert.AreEqual( this, building.node );
-			building.Validate();
+			if ( chain )
+				building.Validate( true );
 		}
 		if ( road )
 			assert.AreEqual( this, road.nodes[roadIndex] );
 		if ( resource )
 		{
 			assert.AreEqual( resource.node, this );
-			resource.Validate();
+			if ( chain )
+				resource.Validate( true );
 		}
 	}
 }

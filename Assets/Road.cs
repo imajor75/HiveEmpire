@@ -583,9 +583,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		invalid = true;
 		DestroyThis();
 
-		first.Validate();
-		second.Validate();
-		flag.Validate();
+		first.Validate( false );
+		second.Validate( false );
+		flag.Validate( false );
 	}
 
 	void RegisterOnGround()
@@ -817,7 +817,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
 		if ( !ready && !decorationOnly )
 		{
@@ -864,7 +864,8 @@ public class Road : HiveObject, Interface.IInputHandler
 				if ( w == worker )
 					i++;
 			assert.AreEqual( i, 1 );
-			worker.Validate();
+			if ( chain )
+				worker.Validate( true );
 		}
 		if ( workerAtNodes[0] != null && !ends[0].crossing )
 			assert.AreEqual( ends[0].user, workerAtNodes[0] );

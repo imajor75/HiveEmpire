@@ -361,7 +361,7 @@ public class Item : HiveObject
 	[Conditional( "Debug" )]
 	public void OnDestroy()
 	{
-		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) );	// TODO Triggered randomly for a beer. 
+		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || World.massDestroy );	// TODO Triggered randomly for a beer. 
 		// It has a destination (butcher) has a valid path, no worker, nextFlag null. 
 		// Current node is 10, 11, butcher is at 11, 9. 
 		// No buddy. Origin: brewery at 8, 14
@@ -386,7 +386,7 @@ public class Item : HiveObject
 
 	public override GroundNode Node { get { return flag ? flag.Node : worker.Node; } }
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
 		if ( worker )
 		{

@@ -306,9 +306,8 @@ public class Resource : HiveObject
 
 	public override GroundNode Node { get { return node; } }
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
-		//assert.IsNotNull( body );
 		if ( type == Type.animalSpawner )
 			foreach ( var w in animals )
 				assert.IsNotNull( w );

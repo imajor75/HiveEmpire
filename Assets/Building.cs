@@ -365,9 +365,10 @@ abstract public class Building : HiveObject
 			return false;
 		}
 
-		public void Validate()
+		public void Validate( bool chain )
 		{
-			worker?.Validate();
+			if ( chain )
+				worker?.Validate( true );
 			if ( !done )
 				boss.assert.AreEqual( plankOnTheWay + stoneOnTheWay, boss.itemsOnTheWay.Count );
 		}
@@ -643,15 +644,11 @@ abstract public class Building : HiveObject
 
 	public override GroundNode Node { get { return node; } }
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
 		assert.IsTrue( flag.Buildings().Contains( this ) );
 		assert.AreEqual( this, node.building );
 		assert.AreEqual( flag, node.Neighbour( flagDirection ).flag );
-		worker?.Validate();
-		workerMate?.Validate();
-		exit?.Validate();
-		construction?.Validate();
 		foreach ( var item in itemsOnTheWay )
 		{
 			assert.IsNotNull( item );	// TODO Triggered for a sawmill (6 items are in the itemsOnTheWay array, one of them is missing. The missing item has a flag and a nextFlag, and a valid path, it also has a worker.
@@ -661,5 +658,12 @@ abstract public class Building : HiveObject
 
 			assert.AreEqual( item.destination, this );
 		}
+		if ( !chain )
+			return;
+
+		worker?.Validate( true );
+		workerMate?.Validate( true );
+		exit?.Validate( true );
+		construction?.Validate( true );
 	}
 }

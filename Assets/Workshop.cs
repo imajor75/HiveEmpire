@@ -973,10 +973,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 		progress = 0;
 	}
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
 		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && gatherer );
-		base.Validate();
+		base.Validate( chain );
 		int itemsOnTheWayCount = 0;
 		foreach ( Buffer b in buffers )
 		{

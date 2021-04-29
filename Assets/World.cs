@@ -13,6 +13,7 @@ public class World : MonoBehaviour
 
 	[JsonProperty]
 	public float timeFactor = 1;
+	public static bool massDestroy;
 	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
 	static public World instance;
@@ -144,6 +145,7 @@ public class World : MonoBehaviour
 
 	void FixedUpdate()
 	{
+		massDestroy = false;
 		time += (int)timeFactor;
 		foreach ( var player in players )
 			player.FixedUpdate();
@@ -215,6 +217,7 @@ public class World : MonoBehaviour
 	{
 		Clear();
 		Prepare();
+		Interface.ValidateAll();
 
 		using ( var sw = new StreamReader( fileName ) )
 		using ( var reader = new JsonTextReader( sw ) )
@@ -237,13 +240,6 @@ public class World : MonoBehaviour
 		}
 
 		{
-			var list = Resources.FindObjectsOfTypeAll<Path>();
-			foreach ( var o in list )
-			{
-				o.Validate();
-			}
-		}
-		{
 			var list = Resources.FindObjectsOfTypeAll<Worker>();
 			foreach ( var o in list )
 			{
@@ -255,7 +251,6 @@ public class World : MonoBehaviour
 					o.owner = players[0];
 				if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 					o.itemsInHands[0].SetRawTarget( o.building );
-				o.Validate();
 			}
 		}
 		{
@@ -285,16 +280,6 @@ public class World : MonoBehaviour
 				var t = o as Stock;
 				if ( t && t.cart == null )
 					t.cart = Stock.Cart.Create().SetupAsCart( t ) as Stock.Cart;
-
-				o.Validate();
-			}
-		}
-		{
-			var list = Resources.FindObjectsOfTypeAll<Item>();
-			foreach ( var o in list )
-			{
-				if ( o.index > -1 )
-					o.Validate();
 			}
 		}
 		{
@@ -303,13 +288,7 @@ public class World : MonoBehaviour
 			{
 				if ( o.life.Empty )
 					o.life.reference = instance.time - 15000;
-				o.Validate();
 			}
-		}
-		{
-			var list = Resources.FindObjectsOfTypeAll<Road>();
-			foreach ( var o in list )
-				o.Validate();
 		}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Flag>();
@@ -325,6 +304,8 @@ public class World : MonoBehaviour
 		}
 		gameInProgress = true;
 		SetTimeFactor( timeFactor );    // Just for the animators
+
+		Interface.ValidateAll();
 	}
 
 	public void Save( string fileName )
@@ -396,13 +377,10 @@ public class World : MonoBehaviour
 		gameInProgress = false;
 		players.Clear();
 		eye = null;
-		foreach ( var item in Resources.FindObjectsOfTypeAll<Item>() )
-			item.destination = null;    // HACK to silence the assert in Item.OnDestroy
 		foreach ( Transform o in transform )
-		{
-			o.name += " - DESTROYED";
 			Destroy( o.gameObject );
-		}
+
+		massDestroy = true;
 		Interface.root.Clear();
 	}
 
@@ -507,7 +485,7 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			Assert.global.AreEqual( player.firstPossibleEmptyItemSlot, 0 );
 
-		Validate();
+		Validate( true );
 	}
 
 	public void GenerateResources()
@@ -548,9 +526,11 @@ public class World : MonoBehaviour
 		}
 	}
 
-	public void Validate()
+	public void Validate( bool chain )
 	{
-		ground.Validate();
+		if ( !chain )
+			return;
+		ground.Validate( true );
 		foreach ( var player in players )
 			player.Validate();
 	}

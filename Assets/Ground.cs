@@ -500,11 +500,15 @@ public class Ground : HiveObject
 
 	public override GroundNode Node { get { return null; } }
 
-	override public void Validate()
+	override public void Validate( bool chain )
  	{
         assert.IsTrue( width > 0 && height > 0, "Map size is not correct (" + width + ", " + height );
         assert.AreEqual( ( width + 1 ) * ( height + 1 ), nodes.Length, "Map layout size is incorrect" );
+
+		if ( !chain )
+			return;
+
         foreach ( var node in nodes )
-            node.Validate();
+            node.Validate( true );
     }
 }

@@ -1177,6 +1177,14 @@ public class Worker : HiveObject
 		itemOnMap.material.renderQueue = 4003;
 
 		Color = currentColor;
+
+		if ( itemsInHands[1] )
+		{
+			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
+			itemsInHands[1].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
+		}
+		else if ( itemsInHands[0] )
+			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxLight].transform, false );
 	}
 
 	// Distance the worker is taking in a single frame (0.02 sec)
@@ -1996,7 +2004,7 @@ public class Worker : HiveObject
 	[JsonIgnore]
 	public bool hasItems { get { return itemsInHands[0] != null; } }
 
-	public override void Validate()
+	public override void Validate( bool chain )
 	{
 		if ( type == Type.wildAnimal )
 		{
@@ -2034,13 +2042,14 @@ public class Worker : HiveObject
 
 			assert.AreEqual( item.worker, this, "Unknown worker " + item.worker );
 			assert.IsTrue( item.destination != null || item.tripCancelled );
-			item.Validate();
+			if ( chain )
+				item.Validate( true );
 			assert.IsNull( item.flag );	// ?
 		}
 		if ( itemsInHands[0] && itemsInHands[1] )
 			assert.AreEqual( itemsInHands[0].type, itemsInHands[1].type );
 		foreach ( Task task in taskQueue )
-			task.Validate();
+			task.Validate();	// Since tasks are not HiveObjects, chain validate them always
 		if ( exclusiveFlag )
 		{
 			assert.IsFalse( exclusiveFlag.crossing );

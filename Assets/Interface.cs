@@ -114,7 +114,7 @@ public class Interface : HiveObject
 
 	public void LateUpdate()
 	{
-		Validate();
+		Validate( true );
 	}
 
 	public static bool GetKey( KeyCode key )
@@ -143,8 +143,7 @@ public class Interface : HiveObject
 #if DEBUG
 		if ( --fullValidate < 0 )
 		{
-			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
-				ho.Validate();
+			ValidateAll();
 			fullValidate = fullValidateInterval;
 		}
 #endif
@@ -549,11 +548,18 @@ public class Interface : HiveObject
 		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 );
 	}
 
-	public override void Validate()
+	public static void ValidateAll()
+	{
+		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
+			ho.Validate( false );
+	}
+
+	public override void Validate( bool chain )
 	{
 #if DEBUG
 		Profiler.BeginSample( "Validate" );
-		world.Validate();
+		if ( chain )
+			world.Validate( true );
 		if ( highlightType == HighlightType.volume )
 			Assert.global.IsNotNull( highlightVolume );
 		if ( highlightType == HighlightType.area )
@@ -1922,7 +1928,7 @@ public class Interface : HiveObject
 		{
 			if ( Flag.Create().Setup( node, node.owner ) != null )
 				Close();
-			World.instance.Validate();
+			ValidateAll();
 		}
 
 		void TargetWorkerCountChanged( int newValue )
