@@ -226,6 +226,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 						resource.exposed.Start( Resource.exposeMax );
 					else
 					{
+						resource.gathered.Start();
 						if ( --resource.charges == 0 )
 							resource.Remove( false );
 						else

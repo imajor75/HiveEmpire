@@ -41,7 +41,7 @@ public class Stock : Building
 
 	public class Cart : Worker
 	{
-		public const int capacity = 20;
+		public const int capacity = 25;
 		public Item.Type itemType;
 		public int itemQuantity;
 		public Stock destination;

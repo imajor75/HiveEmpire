@@ -347,6 +347,10 @@ public class Interface : HiveObject
 		{
 			ItemStats.Create().Open( mainPlayer );
 		}
+		if ( GetKeyDown( KeyCode.K ) )
+		{
+			ResourceList.Create().Open();
+		}
 		if ( GetKeyDown( KeyCode.Escape ) )
 		{
 			if ( !viewport.ResetInputHandler() )
@@ -1690,7 +1694,7 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<NodePanel>();
 		}
 
-		public void Open( GroundNode node )
+		public void Open( GroundNode node, bool show = false )
 		{
 			base.Open( node );
 			this.node = node;
@@ -1714,6 +1718,8 @@ public class Interface : HiveObject
 #endif
 			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
+			if ( show )
+				root.world.eye.FocusOn( node );
 		}
 
 		void BuildButton( int x, int y, string title, bool enabled, UnityEngine.Events.UnityAction action )
@@ -2943,6 +2949,77 @@ public class Interface : HiveObject
 			if ( A.node.Id < B.node.Id )
 				return 1;
 			return -1;
+		}
+	}
+
+	public class ResourceList : Panel
+	{
+		ScrollRect scroll;
+
+		public static ResourceList Create()
+		{
+			return new GameObject().AddComponent<ResourceList>();
+		}
+
+		public void Open()
+		{
+			if ( base.Open( null, 0, 0, 400, 320 ) )
+				return;
+			name = "Resource list panel";
+
+			Frame( 0, 0, 400, 320 );
+			Button( 370, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Text( 50, -20, 100, 20, "Type" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate
+			{ Fill( CompareByType ); } );
+			Text( 150, -20, 100, 20, "Last" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate
+			{ Fill( CompareByLastMined ); } );
+			Text( 250, -20, 100, 20, "Ready" ).gameObject.AddComponent<Button>();
+
+			scroll = ScrollRect( 20, -40, 360, 260 );
+			Fill( CompareByType );
+		}
+
+		void Fill( Comparison<Resource> comparison )
+		{
+			int row = 0;
+			foreach ( Transform child in scroll.content )
+				Destroy( child.gameObject );
+
+			List<Resource> sortedResources = new List<Resource>();
+			foreach ( var resource in Resources.FindObjectsOfTypeAll<Resource>() )
+			{
+				if ( resource.underGround )
+					sortedResources.Add( resource );
+			}
+			sortedResources.Sort( comparison );
+
+			foreach ( var resource in sortedResources )
+			{
+				Text( 30, row, 100, 20, resource.type.ToString(), scroll.content ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { GroundNode node = resource.node; NodePanel.Create().Open( node, true ); } );
+				Text( 130, row, 50, 20, ( resource.gathered.age / 50 ).ToString(), scroll.content );
+				Text( 230, row, 30, 20, resource.keepAway.inProgress ? "no" : "yes", scroll.content );
+				row -= iconSize + 5;
+			}
+			var t = scroll.content.transform as RectTransform;
+			t.sizeDelta = new Vector2( (int)( uiScale * 340 ), (int)( uiScale * sortedResources.Count * ( iconSize + 5 ) ) );
+			scroll.verticalNormalizedPosition = 1;
+		}
+
+		static public int CompareByType( Resource resA, Resource resB )
+		{
+			if ( resA.type == resB.type )
+				return 0;
+			if ( resA.type < resB.type )
+				return -1;
+			return 1;
+		}
+		static public int CompareByLastMined( Resource resA, Resource resB )
+		{
+			if ( resA.gathered.age == resB.gathered.age )
+				return 0;
+			if ( resA.gathered.age > resB.gathered.age )
+				return -1;
+			return 1;
 		}
 	}
 

@@ -12,6 +12,7 @@ public class Resource : HiveObject
 	public World.Timer exposed;
 	public int charges = 1;
 	GameObject body;
+	public World.Timer gathered;
 	public World.Timer keepAway;
 	public World.Timer spawn;
 	public Worker hunter;
