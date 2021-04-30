@@ -221,7 +221,7 @@ public class Item : HiveObject
 		{
 			foreach ( var building in flag.Buildings() )
 			{
-				if ( building as Stock && building.construction.done && destination != building && worker == null && atFlag.Age > timeoutAtFlag )
+				if ( building as Stock && building.construction.done && destination != building && worker == null && atFlag.age > timeoutAtFlag )
 				{
 					SetTarget( building, ItemDispatcher.Priority.high );
 					return;

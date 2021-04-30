@@ -1341,7 +1341,7 @@ public class Interface : HiveObject
 					var resource = node.resource;
 					if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource )
 						return;
-					if ( !resource.underGround || node == workshop.node || resource.exposed.InProgress )
+					if ( !resource.underGround || node == workshop.node || resource.exposed.inProgress )
 						left++;
 				}
 				CheckNode( workshop.node );
@@ -1712,7 +1712,7 @@ public class Interface : HiveObject
 			BuildButton( 200, -120, "Stone patch", true, delegate { AddResourcePatch( Resource.Type.stone ); } );
 			BuildButton( 200, -140, "Salt patch", true, delegate { AddResourcePatch( Resource.Type.salt ); } );
 #endif
-			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.Done ) )
+			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
 		}
 
@@ -2121,7 +2121,7 @@ public class Interface : HiveObject
 					{
 						itemTimers[i].enabled = true;
 						items[i].color = new Color( 1, 1, 1, 1 );
-						int timeAtFlag = flag.items[i].atFlag.Age;
+						int timeAtFlag = flag.items[i].atFlag.age;
 						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / 3000 ), 3 );
 						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / 30000f );
 					}
@@ -2344,9 +2344,9 @@ public class Interface : HiveObject
 			}
 
 			if ( item.flag )
-				stats.text = "Age: " + item.life.Age / 50 + " secs, at flag for " + item.atFlag.Age / 50 + " secs";
+				stats.text = "Age: " + item.life.age / 50 + " secs, at flag for " + item.atFlag.age / 50 + " secs";
 			else
-				stats.text = "Age: " + item.life.Age / 50 + " secs";
+				stats.text = "Age: " + item.life.age / 50 + " secs";
 
 			if ( item.destination && route == null )
 			{
@@ -2889,7 +2889,7 @@ public class Interface : HiveObject
 
 				BuildingIcon( 30, row, item.origin, scroll.content );
 				BuildingIcon( 130, row, item.destination, scroll.content );
-				Text( 230, row, 50, 20, ( item.life.Age / 50 ).ToString(), scroll.content );
+				Text( 230, row, 50, 20, ( item.life.age / 50 ).ToString(), scroll.content );
 				if ( item.path )
 					Text( 280, row, 30, 20, item.path.roadPath.Count.ToString(), scroll.content );
 				row -= iconSize + 5;
@@ -2901,9 +2901,9 @@ public class Interface : HiveObject
 
 		static public int CompareByAge( Item itemA, Item itemB )
 		{
-			if ( itemA.life.Age == itemB.life.Age )
+			if ( itemA.life.age == itemB.life.age )
 				return 0;
-			if ( itemA.life.Age < itemB.life.Age )
+			if ( itemA.life.age < itemB.life.age )
 				return -1;
 			return 1;
 		}

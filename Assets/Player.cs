@@ -201,7 +201,7 @@ public class Player : ScriptableObject
 
 	public void FixedUpdate()
 	{
-		if ( !efficiencyTimer.Done )
+		if ( !efficiencyTimer.done )
 			return;
 		efficiencyTimer.Start( efficiencyUpdateTime );
 

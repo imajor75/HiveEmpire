@@ -356,7 +356,7 @@ public class Stock : Building
 					p = ItemDispatcher.Priority.zero;
 				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
 			}
-			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 1 && dispenser.IsIdle() && !offersSuspended.InProgress )
+			if ( content.Count > itemType && content[itemType] > 0 && flag.FreeSpace() > 1 && dispenser.IsIdle() && !offersSuspended.inProgress )
 			{
 				var p = ItemDispatcher.Priority.stock;
 				if ( current < outputMin[itemType] )

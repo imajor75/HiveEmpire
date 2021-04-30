@@ -176,7 +176,7 @@ public class Resource : HiveObject
 	{
 		if ( type == Type.cornfield )
 		{
-			float growth = (float)life.Age / cornfieldGrowthMax;
+			float growth = (float)life.age / cornfieldGrowthMax;
 			if ( node.type != GroundNode.Type.grass )
 				growth /= 2;
 			if ( growth > 1 )
@@ -186,7 +186,7 @@ public class Resource : HiveObject
 		}
 		if ( type == Type.tree )
 		{
-			float size = (float)life.Age / treeGrowthMax;
+			float size = (float)life.age / treeGrowthMax;
 			if ( node.type != GroundNode.Type.forest )
 				size /= 2;
 			size = Math.Max( size, 0.1f );
@@ -198,8 +198,8 @@ public class Resource : HiveObject
 	public void FixedUpdate()
 	{
 		if ( underGround )
-			body?.SetActive( !exposed.Done && !exposed.Empty );
-		if ( type == Type.animalSpawner && ( spawn.Done || spawn.Empty ) )
+			body?.SetActive( !exposed.done && !exposed.empty );
+		if ( type == Type.animalSpawner && ( spawn.done || spawn.empty ) )
 		{
 			foreach ( var o in Ground.areas[1] )
 			{
@@ -219,7 +219,7 @@ public class Resource : HiveObject
 			}
 			spawn.Start( 1000 );
 		}
-		if ( silence.Done )
+		if ( silence.done )
 		{
 			if ( nextSound )
 			{
@@ -275,19 +275,19 @@ public class Resource : HiveObject
 
 	public bool IsReadyToBeHarvested()
 	{
-		if ( !keepAway.Done && !keepAway.Empty )
+		if ( !keepAway.done && !keepAway.empty )
 			return false;
 		if ( type == Type.tree )
 		{
 			if ( node.type == GroundNode.Type.forest )
-				return life.Age > treeGrowthMax;
-			return life.Age > treeGrowthMax * 2;
+				return life.age > treeGrowthMax;
+			return life.age > treeGrowthMax * 2;
 		}
 		if ( type == Type.cornfield )
 		{
 			if ( node.type == GroundNode.Type.grass )
-				return life.Age > cornfieldGrowthMax;
-			return life.Age > cornfieldGrowthMax * 2;
+				return life.age > cornfieldGrowthMax;
+			return life.age > cornfieldGrowthMax * 2;
 		}
 		return true;
 	}

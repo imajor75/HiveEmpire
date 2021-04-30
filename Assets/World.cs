@@ -286,7 +286,7 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Resource>();
 			foreach ( var o in list )
 			{
-				if ( o.life.Empty )
+				if ( o.life.empty )
 					o.life.reference = instance.time - 15000;
 			}
 		}
@@ -549,21 +549,21 @@ public class World : MonoBehaviour
 			reference = 0;
 		}
 		[JsonIgnore, SerializeField]
-		public int Age
+		public int age
 		{
 			get
 			{
-				if ( Empty )
+				if ( empty )
 					return 0;
 				return instance.time - reference;
 			}
 		}
 		[JsonIgnore]
-		public bool Done { get { return !Empty && Age >= 0; } }
+		public bool done { get { return !empty && age >= 0; } }
 		[JsonIgnore]
-		public bool Empty { get { return reference == 0; } }
+		public bool empty { get { return reference == 0; } }
 		[JsonIgnore]
-		public bool InProgress { get { return !Empty && !Done; } }
+		public bool inProgress { get { return !empty && !done; } }
 	}
 }
 

@@ -84,13 +84,13 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		public void FixedUpdate( Workshop boss )
 		{
-			if ( timer.Empty )
+			if ( timer.empty )
 				timer.Start();
 			if ( boss.IsWorking() )
 				workCounter += (int)World.instance.timeFactor;
-			if ( timer.Age >= timinglength )
+			if ( timer.age >= timinglength )
 			{
-				float p = (float)workCounter/timer.Age;
+				float p = (float)workCounter/timer.age;
 				current = current * ( 1 - weight ) + p * weight;
 				workCounter = 0;
 				timer.Start();
@@ -191,7 +191,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( timer.Empty )
+			if ( timer.empty )
 				timer.Start( (boss.building as Workshop).productionConfiguration.productionTime );
 
 			var act = Worker.resourceCollectAct[(int)resourceType];
@@ -207,7 +207,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.soundSource.Play();
 			}
 
-			if ( !timer.Done )    // TODO Working on the resource
+			if ( !timer.done )    // TODO Working on the resource
 				return false;
 
 			if ( animHash != -1 )
@@ -263,7 +263,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( !wait.Empty && !wait.Done )
+			if ( !wait.empty && !wait.done )
 				return false;
 
 			if ( done )
@@ -835,7 +835,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				continue;
 			if ( resourceType == Resource.Type.expose )
 			{
-				if ( resource.underGround && ( resource.exposed.Done || resource.exposed.Empty ) )
+				if ( resource.underGround && ( resource.exposed.done || resource.exposed.empty ) )
 				{
 					CollectResourceFromNode( target, resourceType );
 					return;
@@ -862,7 +862,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( getResourceTask == null )
 			return 0;
 
-		return ( (float)getResourceTask.timer.Age ) / productionConfiguration.productionTime + 1;
+		return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime + 1;
 	}
 
 	void CollectResourceFromNode( GroundNode target, Resource.Type resourceType )

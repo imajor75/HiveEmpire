@@ -218,10 +218,10 @@ public class Worker : HiveObject
 		{
 			if ( act == null )
 				return false;
-			if ( timer.InProgress )
+			if ( timer.inProgress )
 				return true;
 
-			if ( timer.Done )
+			if ( timer.done )
 			{
 				Stop();
 				act = null;
@@ -241,10 +241,10 @@ public class Worker : HiveObject
 		{
 			if ( act == null )
 				return true;
-			if ( timer.InProgress || act.duration < 0 )
+			if ( timer.inProgress || act.duration < 0 )
 				return false;
 
-			if ( timer.Done )
+			if ( timer.done )
 			{
 				Stop();
 				return true;
@@ -416,7 +416,7 @@ public class Worker : HiveObject
 			if ( road == null )
 				return ResetBossTasks();
 
-			if ( stuck.Done && boss.type == Type.hauler && road.ActiveWorkerCount > 1 )
+			if ( stuck.done && boss.type == Type.hauler && road.ActiveWorkerCount > 1 )
 			{
 				boss.Remove( true );
 				return true;
@@ -466,7 +466,7 @@ public class Worker : HiveObject
 						other.Remove( true );
 					else
 					{
-						if ( stuck.Empty )
+						if ( stuck.empty )
 							stuck.Start( stuckTimeout );
 						return false;
 					}
@@ -665,7 +665,7 @@ public class Worker : HiveObject
 					boss.assert.AreEqual( items[0].buddy.worker, boss );
 				if ( boss.type == Type.hauler )
 					boss.assert.IsNull( boss.itemsInHands[0] );
-				if ( timer.Empty )
+				if ( timer.empty )
 				{
 					timer.Start( pickupTimeStart );
 					boss.animator?.ResetTrigger( putdownID );
@@ -675,14 +675,14 @@ public class Worker : HiveObject
 				}
 
 			var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
-				if ( items[0].transform.parent != attachAt && timer.Age > -pickupReparentTime )
+				if ( items[0].transform.parent != attachAt && timer.age > -pickupReparentTime )
 				{
 					reparented[0] = true;
 					items[0].transform.SetParent( attachAt?.transform, false );
 					attachAt?.SetActive( true );
 				}
 
-			if ( !timer.Done )
+			if ( !timer.done )
 				return false;
 
 			// This is the very last moment to pick another item
@@ -744,7 +744,7 @@ public class Worker : HiveObject
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( timer.Empty )
+			if ( timer.empty )
 			{
 				timer.Start( putdownRelinkTime );
 				foreach ( var item in items )
@@ -766,7 +766,7 @@ public class Worker : HiveObject
 				}
 			}
 
-			if ( !timer.Done )
+			if ( !timer.done )
 				return false;
 
 			boss.itemsDelivered++;
@@ -854,10 +854,10 @@ public class Worker : HiveObject
 
 		public override bool ExecuteFrame()
 		{
-			if ( timer.Empty )
+			if ( timer.empty )
 				timer.Start( time );
 
-			return timer.Done && time >= 0;
+			return timer.done && time >= 0;
 		}
 	}
 
@@ -1487,7 +1487,7 @@ public class Worker : HiveObject
 
 	void FindHaulerTask()
 	{
-		if ( ( bored.Done && road.ActiveWorkerCount > 1 ) || ( road.ActiveWorkerCount > road.targetWorkerCount && road.targetWorkerCount != 0 ) )
+		if ( ( bored.done && road.ActiveWorkerCount > 1 ) || ( road.ActiveWorkerCount > road.targetWorkerCount && road.targetWorkerCount != 0 ) )
 		{
 			Remove( true );
 			return;
@@ -1640,6 +1640,8 @@ public class Worker : HiveObject
 				return (0f, false);
 			return (value, true);
 		}
+
+		value *= 500 + item.atFlag.age;
 
 		return (value, false);
 	}

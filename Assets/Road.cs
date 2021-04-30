@@ -227,7 +227,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( workers.Count >= nodes.Count - 2 )
 			return;
 
-		if ( ( jam > 3 && targetWorkerCount == 0 && workerAdded.Done ) || workers.Count < targetWorkerCount || workers.Count == 0 )
+		if ( ( jam > 3 && targetWorkerCount == 0 && workerAdded.done ) || workers.Count < targetWorkerCount || workers.Count == 0 )
 			CallNewWorker();
 	}
 

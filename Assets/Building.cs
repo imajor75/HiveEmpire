@@ -246,7 +246,7 @@ abstract public class Building : HiveObject
 
 		new public void FixedUpdate()
 		{
-			if ( done || suspend.InProgress || boss.blueprintOnly )
+			if ( done || suspend.inProgress || boss.blueprintOnly )
 				return;
 
 			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
