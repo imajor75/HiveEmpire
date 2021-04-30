@@ -512,11 +512,20 @@ public class Workshop : Building, Worker.Callback.IHandler
 			int missing = b.size-b.stored-b.onTheWay;
 			var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
 			float weight = b.weight != null ? b.weight.weight : 0.5f;
-			if ( missing > 0 )
-				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
+			owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 		}
-		if ( output > 0 && freeSpaceAtFlag > 0 && dispenser.IsIdle( true ) )
-			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea );
+		if ( productionConfiguration.outputType != Item.Type.unknown )
+		{
+			if ( freeSpaceAtFlag > 0 )
+			{
+				if ( dispenser.IsIdle( true ) )
+					owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea );
+				else
+					owner.itemDispatcher.RegisterResult( this, productionConfiguration.outputType, ItemDispatcher.Result.noDispatcher );
+			}
+			else
+				owner.itemDispatcher.RegisterResult( this, productionConfiguration.outputType, ItemDispatcher.Result.flagJam );
+		}
 
 		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
 			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );

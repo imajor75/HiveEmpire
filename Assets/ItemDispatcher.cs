@@ -12,6 +12,18 @@ public class ItemDispatcher : ScriptableObject
 		high
 	};
 
+	public enum Result
+	{
+		match,
+		flagJam,
+		noDispatcher,
+		notInArea,
+		otherAreaExcludes,
+		tooLowPriority,
+		outOfItems,
+		full
+	};
+
 	[System.Serializable]
 	public class Potential
 	{
@@ -33,6 +45,19 @@ public class ItemDispatcher : ScriptableObject
 
 	public Market[] markets;
 	public Player player;
+	public Building queryBuilding;
+	public Item.Type queryItemType;
+
+	[System.Serializable]
+	public class PotentialResult
+	{
+		public Building building;
+		public Result result;
+		public bool incoming;
+		public Priority priority;
+	}
+
+	public List<PotentialResult> results, resultsInThisFrame;
 
 	public void Setup( Player player )
 	{
@@ -57,20 +82,18 @@ public class ItemDispatcher : ScriptableObject
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 	{
 		Assert.global.IsNotNull( area );
-		if ( quantity == 0 || priority == Priority.zero )
+		if ( priority == Priority.zero )
 			return;
 
-		Assert.global.IsTrue( quantity > 0 );
 		markets[(int)itemType].RegisterRequest( building, quantity, priority, area, weight );
 	}
 
 	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 	{
 		Assert.global.IsNotNull( area );
-		if ( quantity == 0 || priority == Priority.zero )
+		if ( priority == Priority.zero )
 			return;
 
-		Assert.global.IsTrue( quantity > 0 );
 		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, weight );
 	}
 
@@ -78,14 +101,62 @@ public class ItemDispatcher : ScriptableObject
 	{
 		if ( priority == Priority.zero )
 			return;
+
 		Assert.global.IsNotNull( area );
 		markets[(int)item.type].RegisterOffer( item, priority, area );
+	}
+
+	public void RegisterResult( Building building, Item.Type itemType, Result result )
+	{
+		if ( resultsInThisFrame == null || building != queryBuilding || itemType != queryItemType )
+			return;
+
+		resultsInThisFrame.Add( new PotentialResult
+		{
+			result = result
+		} );
+	}
+
+	public void RegisterResult( Item.Type itemType, Potential first, Potential second, Result result )
+	{
+		if ( resultsInThisFrame == null || itemType != queryItemType )
+			return;
+
+		if ( first.building == queryBuilding && second.building )
+		{
+			resultsInThisFrame.Add( new PotentialResult
+			{
+				building = second.building,
+				priority = second.priority,
+				incoming = second.type == Potential.Type.offer,
+				result = result
+			} ); ;
+		}
+		//if ( second.building == queryBuilding )
+		//{
+		//	if ( result == Result.notInArea )
+		//		result = Result.otherAreaExcludes;
+		//	else if ( result == Result.otherAreaExcludes )
+		//		result = Result.notInArea;
+
+		//	resultsInThisFrame.Add( new PotentialResult
+		//	{
+		//		building = first.building,
+		//		priority = first.priority,
+		//		incoming = first.type == Potential.Type.offer,
+		//		result = result
+		//	} );
+		//}
 	}
 
 	public void LateUpdate()
 	{
 		foreach ( var market in markets )
 			market.LateUpdate();
+
+		results = resultsInThisFrame;
+		if ( queryBuilding )
+			resultsInThisFrame = new List<PotentialResult>();
 	}
 
 	public class Market : ScriptableObject
@@ -157,6 +228,11 @@ public class ItemDispatcher : ScriptableObject
 			offers.Add( o );
 		}
 
+		void RegisterResult( Potential first, Potential second, Result result )
+		{
+			boss.RegisterResult( itemType, first, second, result );
+		}
+
 		static int ComparePotentials( Potential first, Potential second )
 		{
 			if ( first.priority == second.priority )
@@ -174,15 +250,11 @@ public class ItemDispatcher : ScriptableObject
 
 			Profiler.BeginSample( "Market" );
 			Priority[] priorities = { Priority.high, Priority.low };
+			int nextOffer = 0, nextRequest = 0;
 			foreach ( var priority in priorities )
 			{
 				do
 				{
-					while ( offers.Count > 0 && offers[0].quantity == 0 )
-						offers.RemoveAt( 0 );
-					while ( requests.Count > 0 && requests[0].quantity == 0 )
-						requests.RemoveAt( 0 );
-
 					int offerItemCount = 0, requestItemCount = 0;
 					foreach ( var offer in offers )
 					{
@@ -195,20 +267,14 @@ public class ItemDispatcher : ScriptableObject
 							requestItemCount += request.quantity;
 					}
 
-					if ( offerItemCount < requestItemCount && offers.Count > 0 )
-					{
-						FulfillPotentialFrom( offers[0], requests );
-						offers.RemoveAt( 0 );
-					}
-					else if ( requests.Count > 0 )
-					{
-						FulfillPotentialFrom( requests[0], offers );
-						requests.RemoveAt( 0 );
-					}
+					if ( offerItemCount < requestItemCount && offers.Count > nextOffer )
+						FulfillPotentialFrom( offers[nextOffer++], requests );
+					else if ( requests.Count > nextRequest )
+						FulfillPotentialFrom( requests[nextRequest++], offers );
 					else
 						break;
 				}
-				while ( ( offers.Count > 0 && offers[0].priority > Priority.stock ) || ( requests.Count > 0 && requests[0].priority > Priority.stock ) );
+				while ( ( offers.Count > nextOffer && offers[nextOffer].priority > Priority.stock ) || ( requests.Count > nextRequest && requests[nextRequest].priority > Priority.stock ) );
 			}
 			int surplus = 0;
 			foreach ( var offer in offers )
@@ -239,25 +305,42 @@ public class ItemDispatcher : ScriptableObject
 		{
 			float maxScore = float.MaxValue;
 
-			while ( potential.quantity != 0 )
+			// Let empty potentials have a loop, just to have some statistics show to the user.
+			do
 			{
 				float bestScore = 0;
 				Potential best = null;
 				foreach ( var other in list )
 				{
 					if ( other.quantity == 0 )
+					{
+						if ( other.type == Potential.Type.offer )
+							RegisterResult( potential, other, Result.outOfItems );
+						else
+							RegisterResult( potential, other, Result.full );
 						continue;
+					}
 					if ( potential.priority == Priority.stock && other.priority == Priority.stock )
+					{
+						RegisterResult( potential, other, Result.tooLowPriority );
 						continue;
+					}
 					if ( potential.building == other.building )
 						continue;
 					if ( !potential.area.IsInside( other.location ) )
+					{
+						RegisterResult( potential, other, Result.notInArea );
 						continue;
+					}
 					if ( !other.area.IsInside( potential.location ) )
+					{
+						RegisterResult( potential, other, Result.otherAreaExcludes );
 						continue;
+					}
+					RegisterResult( potential, other, Result.match );
 					int distance = other.location.DistanceFrom( potential.location );
 					float weightedDistance = distance * ( 1 - potential.weight ) * ( 1 - other.weight ) + 1;
-					float score = (int)other.priority * 1000 + 1f / weightedDistance;	// TODO Priorities?
+					float score = (int)other.priority * 1000 + 1f / weightedDistance;   // TODO Priorities?
 					if ( score >= maxScore )
 						continue;
 					if ( score > bestScore )
@@ -269,12 +352,14 @@ public class ItemDispatcher : ScriptableObject
 				if ( best != null )
 				{
 					maxScore = bestScore;
+					if ( potential.quantity == 0 )
+						return true;
 					if ( Attach( best, potential ) )
 						continue;
 				}
 				else
 					return false;
-			}
+			} while ( potential.quantity != 0 );
 			return true;
 		}
 

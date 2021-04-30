@@ -815,7 +815,10 @@ public class Interface : HiveObject
 			content.transform.SetParent( scroll.transform, false );
 			scroll.content = content.rectTransform;
 			content.enabled = false;
-			content.rectTransform.sizeDelta = new Vector2( xs - ( vertical ? 20 : 0 ), ys - ( horizontal ? 20 : 0 ) );
+			content.rectTransform.anchorMin = Vector2.zero;
+			content.rectTransform.anchorMax = new Vector2( 1, 0 );
+			content.rectTransform.offsetMax = new Vector2( horizontal ? (int)( uiScale * 20 ) : 0, vertical ? (int)( uiScale * 20 ) : 0 );
+
 			return scroll;
 		}
 
@@ -1250,11 +1253,10 @@ public class Interface : HiveObject
 				if ( showOutputBuffer )
 				{
 					outputs = new Buffer();
-					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5 );
+					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5, workshop.outputArea );
 					row -= iconSize * 3 / 2;
 				}
 				progressBar = Image( 20, row, ( iconSize + 5 ) * 7, iconSize, iconTable.GetMediaData( Icon.progress ) );
-				AreaIcon( 200, row, workshop.outputArea );
 				row -= 25;
 
 				if ( ( contentToShow & Content.itemsProduced ) > 0 )
@@ -1384,8 +1386,9 @@ public class Interface : HiveObject
 					items[i] = boss.ItemIcon( x, y, iconSize, iconSize, itemType );
 					x += xi;
 				}
+				boss.Text( x, y, 20, 20, "?" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { PotentialList.Create().Open( boss.building, itemType ); } );
 				if ( area != null )
-					boss.AreaIcon( x, y, area );
+					boss.AreaIcon( x + 15, y, area );
 			}
 
 			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int x, int y, int xi )
@@ -1499,6 +1502,11 @@ public class Interface : HiveObject
 				stock.content[(int)itemType]++;
 				return;
 			}
+			if ( GetKey( KeyCode.LeftShift ) )
+			{
+				PotentialList.Create().Open( stock, itemType );
+				return;
+			}
 			selectedItemType = itemType;
 		}
 
@@ -1523,7 +1531,7 @@ public class Interface : HiveObject
 				int offset = j % 2 > 0 ? 140 : 0;
 				var t = (Item.Type)j;
 				var i = ItemIcon( 20 + offset, row, iconSize, iconSize, (Item.Type)j );
-				i.additionalTooltip = "Shift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
+				i.additionalTooltip = "Shift+LMB Show potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
 				if ( stock.destinations[j] )
 				{
 					Image( 35 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
@@ -3020,6 +3028,103 @@ public class Interface : HiveObject
 			if ( resA.gathered.age > resB.gathered.age )
 				return -1;
 			return 1;
+		}
+	}
+	public class PotentialList : Panel
+	{
+		ScrollRect scroll;
+		Building building;
+		Item.Type itemType;
+		float timeSpeedToRestore;
+		bool filled;
+
+		public static PotentialList Create()
+		{
+			return new GameObject().AddComponent<PotentialList>();
+		}
+
+		public void Open( Building building, Item.Type itemType )
+		{
+			timeSpeedToRestore = World.instance.timeFactor;
+			World.instance.SetTimeFactor( 0 );
+			root.mainPlayer.itemDispatcher.queryBuilding = this.building = building;
+			root.mainPlayer.itemDispatcher.queryItemType = this.itemType = itemType;
+
+			if ( base.Open( null, 0, 0, 500, 320 ) )
+				return;
+			name = "Potential list panel";
+
+			Frame( 0, 0, 500, 320 );
+			Button( 470, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+
+			Text( 20, -20, 250, 20, "List of potentials for       at" );
+			ItemIcon( 150, -20, 0, 0, itemType );
+			BuildingIcon( 190, -20, building );
+
+			Text( 20, -40, 100, 20, "Building" ).fontSize = (int)( uiScale * 10 );
+			Text( 100, -40, 100, 20, "Distance" ).fontSize = (int)( uiScale * 10 );
+			Text( 140, -40, 100, 20, "Direction" ).fontSize = (int)( uiScale * 10 );
+			Text( 190, -40, 100, 20, "Priority" ).fontSize = (int)( uiScale * 10 );
+			Text( 230, -40, 100, 20, "Result" ).fontSize = (int)( uiScale * 10 );
+
+			scroll = ScrollRect( 20, -60, 460, 240 );
+			Fill();
+		}
+
+		public void OnDestroy()
+		{
+			base.OnDestroy();
+			root.mainPlayer.itemDispatcher.queryBuilding = null;
+			root.mainPlayer.itemDispatcher.queryItemType = Item.Type.unknown;
+			World.instance.SetTimeFactor( timeSpeedToRestore );
+		}
+
+		public void Update()
+		{
+			if ( root.mainPlayer.itemDispatcher.results != null && !filled )
+			{
+				filled = true;
+				Fill();
+			}
+		}
+
+		void Fill()
+		{
+			int row = 0;
+			foreach ( Transform child in scroll.content )
+				Destroy( child.gameObject );
+
+			foreach ( var result in root.mainPlayer.itemDispatcher.results )
+			{
+				if ( result.building )
+				{
+					BuildingIcon( 0, row, result.building, scroll.content );
+					Text( 100, row, 50, 20, result.building.node.DistanceFrom( building.node ).ToString(), scroll.content );
+					Text( 130, row, 50, 20, result.incoming ? "Out" : "In", scroll.content );
+					Text( 170, row, 50, 20, result.priority.ToString(), scroll.content );
+				}
+				string message = result.result switch
+				{
+					ItemDispatcher.Result.flagJam => "Jam at outpit flag",
+					ItemDispatcher.Result.match => "Matched",
+					ItemDispatcher.Result.noDispatcher => "Dispatcher is not free",
+					ItemDispatcher.Result.notInArea => "Outside of area",
+					ItemDispatcher.Result.otherAreaExcludes => "Their area excludes this",
+					ItemDispatcher.Result.tooLowPriority => "Combined priority is too low",
+					ItemDispatcher.Result.outOfItems => "Out of items",
+					ItemDispatcher.Result.full => "Full",
+					_ => "Unknown"
+
+				};				
+				Text( 210, row, 200, 40, message, scroll.content );
+				row -= iconSize + 5;
+			}
+			var t = scroll.content.transform as RectTransform;
+			var y = t.offsetMax;
+			y.y = (int)( uiScale * root.mainPlayer.itemDispatcher.results.Count * ( iconSize + 5 ) );
+			t.offsetMax = y;
+			t.offsetMin = Vector2.zero;
+			scroll.verticalNormalizedPosition = 1;
 		}
 	}
 
