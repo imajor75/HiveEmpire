@@ -2895,7 +2895,7 @@ public class Interface : HiveObject
 				row -= iconSize + 5;
 			}
 			var t = scroll.content.transform as RectTransform;
-			t.sizeDelta = new Vector2( (int)( uiScale * t.sizeDelta.x ), (int)( uiScale * sortedItems.Count * ( iconSize + 5 ) ) );
+			t.sizeDelta = new Vector2( (int)( uiScale * 340 ), (int)( uiScale * sortedItems.Count * ( iconSize + 5 ) ) );
 			scroll.verticalNormalizedPosition = 1;
 		}
 
@@ -3094,16 +3094,25 @@ public class Interface : HiveObject
 			var a = player.averageEfficiencyHistory;
 			if ( selected < Item.Type.total )
 				a = player.itemEfficiencyHistory[(int)selected];
+			float max = float.MinValue;
+			for ( int i = a.data.Count - t.width; i < a.data.Count; i++ )
+			{
+				if ( i < 0 )
+					continue;
+				if ( a.data[i] > max )
+					max = a.data[i];
+			}
+			float scale = t.height / max;
 			int row = -1;
 			for ( int x = t.width - 1; x >= 0; x-- )
 			{
 				int index = a.data.Count - t.width + x;
-				int recordRow = (int)(100 * a.record);
+				int recordRow = (int)(scale * a.record);
 				for ( int y = 0; y < t.height; y++ )
 					t.SetPixel( x, y, index == a.recordIndex ? Color.yellow : y == recordRow ? Color.grey : Color.black );
 				if ( 0 <= index )
 				{
-					int newRow = (int)Math.Min( (float)t.height - 1, 100 * a.data[index] );
+					int newRow = (int)Math.Min( (float)t.height - 1, scale * a.data[index] );
 					if ( row < 0 )
 						row = newRow;
 					var step = row < newRow ? 1 : -1;
@@ -3120,7 +3129,7 @@ public class Interface : HiveObject
 			chart.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
 			Assert.global.IsNotNull( chart.sprite );
 			record.text = "Record: " + a.record;
-			itemFrame.rectTransform.anchoredPosition = new Vector2( 17 + iconSize * (int)selected, -17 );
+			itemFrame.rectTransform.anchoredPosition = new Vector2( (int)( uiScale * ( 17 + iconSize * (int)selected ) ), (int)( uiScale * -17 ) );
 			lastAverageEfficiency = player.averageEfficiencyHistory.current;
 		}
 	}
