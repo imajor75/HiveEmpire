@@ -1297,7 +1297,7 @@ public class Interface : HiveObject
 			backGround.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 240 ), (int)( uiScale * ( -row + 20 ) ) );
 
 			if ( show )
-				Root.world.eye.FocusOn( workshop );
+				Root.world.eye.FocusOn( workshop, true );
 		}
 
 		void Remove()
@@ -1464,7 +1464,7 @@ public class Interface : HiveObject
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 270, -160, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			if ( show )
-				Root.world.eye.FocusOn( guardHouse );
+				Root.world.eye.FocusOn( guardHouse, true );
 		}
 		void Remove()
 		{
@@ -1500,7 +1500,7 @@ public class Interface : HiveObject
 			name = "Stock panel";
 			RecreateControls();
 			if ( show )
-				Root.world.eye.FocusOn( stock );
+				Root.world.eye.FocusOn( stock, true );
 		}
 
 		void SelectItemType( Item.Type itemType )
@@ -1740,7 +1740,7 @@ public class Interface : HiveObject
 			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.done ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
 			if ( show )
-				root.world.eye.FocusOn( node );
+				root.world.eye.FocusOn( node, true );
 		}
 
 		void BuildButton( int x, int y, string title, bool enabled, UnityEngine.Events.UnityAction action )
@@ -2084,7 +2084,7 @@ public class Interface : HiveObject
 			}
 			name = "Flag panel";
 			if ( show )
-				Root.world.eye.FocusOn( flag );
+				Root.world.eye.FocusOn( flag, true );
 			Update();
 		}
 
@@ -2285,7 +2285,7 @@ public class Interface : HiveObject
 			progressBar = Image( 20, -90, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
 
 			if ( show )
-				Root.world.eye.FocusOn( workshop );
+				Root.world.eye.FocusOn( construction.boss, true );
 		}
 
 		public new void Update()

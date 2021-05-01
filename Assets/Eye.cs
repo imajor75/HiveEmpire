@@ -157,30 +157,40 @@ public class Eye : MonoBehaviour
 		if ( Interface.GetKey( KeyCode.A ) )
 		{
 			movement += transform.right * -0.1f * altitude / 6;
+			rotateAround = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.D ) )
 		{
 			movement += transform.right * 0.1f * altitude / 6;
+			rotateAround = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.W ) )
 		{
 			movement += transform.forward * 0.13f * altitude / 6;
+			rotateAround = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.S ) )
 		{
 			movement += transform.forward * -0.13f * altitude / 6;
+			rotateAround = false;
 			director = null;
 		}
 		x += movement.x;
 		y += movement.z;
 
 		if ( Interface.GetKey( KeyCode.Q ) )
+		{
+			rotateAround = false;
 			direction += 0.03f;
+		}
 		if ( Interface.GetKey( KeyCode.E ) )
+		{
+			rotateAround = false;
 			direction -= 0.03f;
+		}
 		if ( rotateAround )
 			direction += 0.001f;
 		if ( direction >= Math.PI * 2 )
