@@ -822,6 +822,19 @@ public class Interface : HiveObject
 			return scroll;
 		}
 
+		public void SetScrollRectContentSize( ScrollRect scroll, int x = 0, int y = 0 )
+		{
+			var t = scroll.content.transform as RectTransform;
+			var m = t.offsetMax;
+			if ( y != 0 )
+				m.y = (int)( uiScale * y );
+			if ( x != 0 )
+				m.x = (int)( uiScale * x );
+			t.offsetMax = m;
+			t.offsetMin = Vector2.zero;
+			scroll.verticalNormalizedPosition = 1;
+		}
+
 		public ItemImage ItemIcon( int x, int y, int xs = 0, int ys = 0, Item.Type type = Item.Type.unknown, Component parent = null )
 		{
 			if ( xs == 0 )
@@ -2851,6 +2864,7 @@ public class Interface : HiveObject
 	{
 		ScrollRect scroll;
 		Player player;
+		float timeSpeedToRestore;
 
 		public static ItemList Create()
 		{
@@ -2863,6 +2877,7 @@ public class Interface : HiveObject
 				return;
 			name = "Item list panel";
 			this.player = player;
+			timeSpeedToRestore = World.instance.timeFactor;
 			World.instance.SetTimeFactor( 0 );
 
 			Frame( 0, 0, 400, 320 );
@@ -2879,7 +2894,7 @@ public class Interface : HiveObject
 		public new void OnDestroy()
 		{
 			base.OnDestroy();
-			World.instance.SetTimeFactor( 1 );
+			World.instance.SetTimeFactor( timeSpeedToRestore );
 		}
 
 		void Fill( Comparison<Item> comparison )
@@ -2908,9 +2923,7 @@ public class Interface : HiveObject
 					Text( 280, row, 30, 20, item.path.roadPath.Count.ToString(), scroll.content );
 				row -= iconSize + 5;
 			}
-			var t = scroll.content.transform as RectTransform;
-			t.sizeDelta = new Vector2( (int)( uiScale * 340 ), (int)( uiScale * sortedItems.Count * ( iconSize + 5 ) ) );
-			scroll.verticalNormalizedPosition = 1;
+			SetScrollRectContentSize( scroll, 0, sortedItems.Count * ( iconSize + 5 ) );
 		}
 
 		static public int CompareByAge( Item itemA, Item itemB )
@@ -3008,9 +3021,7 @@ public class Interface : HiveObject
 				Text( 230, row, 30, 20, resource.keepAway.inProgress ? "no" : "yes", scroll.content );
 				row -= iconSize + 5;
 			}
-			var t = scroll.content.transform as RectTransform;
-			t.sizeDelta = new Vector2( (int)( uiScale * 340 ), (int)( uiScale * sortedResources.Count * ( iconSize + 5 ) ) );
-			scroll.verticalNormalizedPosition = 1;
+			SetScrollRectContentSize( scroll, 0, sortedResources.Count * ( iconSize + 5 ) );
 		}
 
 		static public int CompareByType( Resource resA, Resource resB )
@@ -3119,12 +3130,7 @@ public class Interface : HiveObject
 				Text( 210, row, 200, 40, message, scroll.content );
 				row -= iconSize + 5;
 			}
-			var t = scroll.content.transform as RectTransform;
-			var y = t.offsetMax;
-			y.y = (int)( uiScale * root.mainPlayer.itemDispatcher.results.Count * ( iconSize + 5 ) );
-			t.offsetMax = y;
-			t.offsetMin = Vector2.zero;
-			scroll.verticalNormalizedPosition = 1;
+			SetScrollRectContentSize( scroll, 0, root.mainPlayer.itemDispatcher.results.Count * ( iconSize + 5 ) );
 		}
 	}
 
@@ -3175,7 +3181,7 @@ public class Interface : HiveObject
 				efficiency[i] = Text( 230, row, 40, iconSize, "0", scroll.content );
 			}
 
-			( scroll.content.transform as RectTransform).sizeDelta = new Vector2( 280, (int)Item.Type.total * ( iconSize + 5 ) );
+			SetScrollRectContentSize( scroll, 0, (int)Item.Type.total * ( iconSize + 5 ) );
 		}
 
 		public new void Update()
