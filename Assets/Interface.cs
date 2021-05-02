@@ -1399,7 +1399,7 @@ public class Interface : HiveObject
 					items[i] = boss.ItemIcon( x, y, iconSize, iconSize, itemType );
 					x += xi;
 				}
-				boss.Text( x, y, 20, 20, "?" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { PotentialList.Create().Open( boss.building, itemType ); } );
+				boss.Text( x, y, 20, 20, "?" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { LogisticList.Create().Open( boss.building, itemType ); } );
 				if ( area != null )
 					boss.AreaIcon( x + 15, y, area );
 			}
@@ -1517,7 +1517,7 @@ public class Interface : HiveObject
 			}
 			if ( GetKey( KeyCode.LeftShift ) )
 			{
-				PotentialList.Create().Open( stock, itemType );
+				LogisticList.Create().Open( stock, itemType );
 				return;
 			}
 			selectedItemType = itemType;
@@ -3041,7 +3041,7 @@ public class Interface : HiveObject
 			return 1;
 		}
 	}
-	public class PotentialList : Panel
+	public class LogisticList : Panel
 	{
 		ScrollRect scroll;
 		Building building;
@@ -3049,9 +3049,9 @@ public class Interface : HiveObject
 		float timeSpeedToRestore;
 		bool filled;
 
-		public static PotentialList Create()
+		public static LogisticList Create()
 		{
-			return new GameObject().AddComponent<PotentialList>();
+			return new GameObject().AddComponent<LogisticList>();
 		}
 
 		public void Open( Building building, Item.Type itemType )
@@ -3061,12 +3061,12 @@ public class Interface : HiveObject
 			root.mainPlayer.itemDispatcher.queryBuilding = this.building = building;
 			root.mainPlayer.itemDispatcher.queryItemType = this.itemType = itemType;
 
-			if ( base.Open( null, 0, 0, 500, 320 ) )
+			if ( base.Open( null, 0, 0, 540, 320 ) )
 				return;
-			name = "Potential list panel";
+			name = "Logistic list panel";
 
-			Frame( 0, 0, 500, 320 );
-			Button( 470, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			Frame( 0, 0, 540, 320 );
+			Button( 510, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 			Text( 20, -20, 250, 20, "List of potentials for       at" );
 			ItemIcon( 150, -20, 0, 0, itemType );
@@ -3076,13 +3076,13 @@ public class Interface : HiveObject
 			Text( 100, -40, 100, 20, "Distance" ).fontSize = (int)( uiScale * 10 );
 			Text( 140, -40, 100, 20, "Direction" ).fontSize = (int)( uiScale * 10 );
 			Text( 190, -40, 100, 20, "Priority" ).fontSize = (int)( uiScale * 10 );
-			Text( 230, -40, 100, 20, "Result" ).fontSize = (int)( uiScale * 10 );
+			Text( 230, -40, 100, 20, "Quantity" ).fontSize = (int)( uiScale * 10 );
+			Text( 270, -40, 100, 20, "Result" ).fontSize = (int)( uiScale * 10 );
 
-			scroll = ScrollRect( 20, -60, 460, 240 );
-			Fill();
+			scroll = ScrollRect( 20, -60, 500, 240 );
 		}
 
-		public void OnDestroy()
+		new public void OnDestroy()
 		{
 			base.OnDestroy();
 			root.mainPlayer.itemDispatcher.queryBuilding = null;
@@ -3090,12 +3090,15 @@ public class Interface : HiveObject
 			World.instance.SetTimeFactor( timeSpeedToRestore );
 		}
 
-		public void Update()
+		new public void Update()
 		{
+			base.Update();
 			if ( root.mainPlayer.itemDispatcher.results != null && !filled )
 			{
 				filled = true;
 				Fill();
+				root.mainPlayer.itemDispatcher.queryBuilding = this.building = null;
+				root.mainPlayer.itemDispatcher.queryItemType = this.itemType = Item.Type.unknown;
 			}
 		}
 
@@ -3113,21 +3116,30 @@ public class Interface : HiveObject
 					Text( 100, row, 50, 20, result.building.node.DistanceFrom( building.node ).ToString(), scroll.content );
 					Text( 130, row, 50, 20, result.incoming ? "Out" : "In", scroll.content );
 					Text( 170, row, 50, 20, result.priority.ToString(), scroll.content );
+					Text( 210, row, 50, 20, result.quantity.ToString(), scroll.content );
 				}
 				string message = result.result switch
 				{
-					ItemDispatcher.Result.flagJam => "Jam at outpit flag",
+					ItemDispatcher.Result.flagJam => "Jam at output flag",
 					ItemDispatcher.Result.match => "Matched",
 					ItemDispatcher.Result.noDispatcher => "Dispatcher is not free",
 					ItemDispatcher.Result.notInArea => "Outside of area",
-					ItemDispatcher.Result.otherAreaExcludes => "Their area excludes this",
 					ItemDispatcher.Result.tooLowPriority => "Combined priority is too low",
 					ItemDispatcher.Result.outOfItems => "Out of items",
-					ItemDispatcher.Result.full => "Full",
 					_ => "Unknown"
-
-				};				
-				Text( 210, row, 200, 40, message, scroll.content );
+				};
+				if ( result.remote )
+				{
+					message = result.result switch
+					{
+						ItemDispatcher.Result.flagJam => "Jam at their output flag",
+						ItemDispatcher.Result.noDispatcher => "Their dispatcher is not free",
+						ItemDispatcher.Result.notInArea => "Their area excludes this",
+						ItemDispatcher.Result.outOfItems => "They are out of items",
+						_ => message
+					};
+				}
+				Text( 250, row, 200, 40, message, scroll.content );
 				row -= iconSize + 5;
 			}
 			SetScrollRectContentSize( scroll, 0, root.mainPlayer.itemDispatcher.results.Count * ( iconSize + 5 ) );

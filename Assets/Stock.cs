@@ -358,25 +358,12 @@ public class Stock : Building
 			}
 			if ( content.Count > itemType )
 			{
-				if ( flag.FreeSpace() <= 1 )
-				{
-					owner.itemDispatcher.RegisterResult( this, (Item.Type)itemType, ItemDispatcher.Result.flagJam );
-					continue;
-				}
-				if ( !dispenser.IsIdle() )
-				{
-					owner.itemDispatcher.RegisterResult( this, (Item.Type)itemType, ItemDispatcher.Result.noDispatcher );
-					continue;
-				}
-				if ( offersSuspended.inProgress )
-					continue;
-
 				var p = ItemDispatcher.Priority.stock;
 				if ( current < outputMin[itemType] )
 					p = ItemDispatcher.Priority.zero;
 				if ( current > outputMax[itemType] )
 					p = ItemDispatcher.Priority.high;
-				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea );
+				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea, 0.5f, flag.FreeSpace() == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
     }

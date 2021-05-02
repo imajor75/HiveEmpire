@@ -18,10 +18,8 @@ public class ItemDispatcher : ScriptableObject
 		flagJam,
 		noDispatcher,
 		notInArea,
-		otherAreaExcludes,
 		tooLowPriority,
-		outOfItems,
-		full
+		outOfItems
 	};
 
 	[System.Serializable]
@@ -41,6 +39,8 @@ public class ItemDispatcher : ScriptableObject
 		public Type type;
 		public Ground.Area area;
 		public float weight = 0.5f;
+		public bool flagJammed;
+		public bool noDispenser;
 	}
 
 	public Market[] markets;
@@ -49,15 +49,17 @@ public class ItemDispatcher : ScriptableObject
 	public Item.Type queryItemType;
 
 	[System.Serializable]
-	public class PotentialResult
+	public class LogisticResult
 	{
 		public Building building;
 		public Result result;
 		public bool incoming;
+		public bool remote; // This is true if the result is determined by the remote building, not queryBuilding
+		public int quantity;
 		public Priority priority;
 	}
 
-	public List<PotentialResult> results, resultsInThisFrame;
+	public List<LogisticResult> results, resultsInThisFrame;
 
 	public void Setup( Player player )
 	{
@@ -88,13 +90,13 @@ public class ItemDispatcher : ScriptableObject
 		markets[(int)itemType].RegisterRequest( building, quantity, priority, area, weight );
 	}
 
-	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
+	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f, bool flagJammed = false, bool noDispenser = false )
 	{
 		Assert.global.IsNotNull( area );
 		if ( priority == Priority.zero )
 			return;
 
-		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, weight );
+		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, weight, flagJammed, noDispenser );
 	}
 
 	public void RegisterOffer( Item item, Priority priority, Ground.Area area )
@@ -106,49 +108,6 @@ public class ItemDispatcher : ScriptableObject
 		markets[(int)item.type].RegisterOffer( item, priority, area );
 	}
 
-	public void RegisterResult( Building building, Item.Type itemType, Result result )
-	{
-		if ( resultsInThisFrame == null || building != queryBuilding || itemType != queryItemType )
-			return;
-
-		resultsInThisFrame.Add( new PotentialResult
-		{
-			result = result
-		} );
-	}
-
-	public void RegisterResult( Item.Type itemType, Potential first, Potential second, Result result )
-	{
-		if ( resultsInThisFrame == null || itemType != queryItemType )
-			return;
-
-		if ( first.building == queryBuilding && second.building )
-		{
-			resultsInThisFrame.Add( new PotentialResult
-			{
-				building = second.building,
-				priority = second.priority,
-				incoming = second.type == Potential.Type.offer,
-				result = result
-			} ); ;
-		}
-		//if ( second.building == queryBuilding )
-		//{
-		//	if ( result == Result.notInArea )
-		//		result = Result.otherAreaExcludes;
-		//	else if ( result == Result.otherAreaExcludes )
-		//		result = Result.notInArea;
-
-		//	resultsInThisFrame.Add( new PotentialResult
-		//	{
-		//		building = first.building,
-		//		priority = first.priority,
-		//		incoming = first.type == Potential.Type.offer,
-		//		result = result
-		//	} );
-		//}
-	}
-
 	public void LateUpdate()
 	{
 		foreach ( var market in markets )
@@ -156,7 +115,9 @@ public class ItemDispatcher : ScriptableObject
 
 		results = resultsInThisFrame;
 		if ( queryBuilding )
-			resultsInThisFrame = new List<PotentialResult>();
+			resultsInThisFrame = new List<LogisticResult>();
+		else
+			resultsInThisFrame = null;
 	}
 
 	public class Market : ScriptableObject
@@ -194,7 +155,7 @@ public class ItemDispatcher : ScriptableObject
 			requests.Add( r );
 		}
 
-		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
+		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f, bool flagJammed = false, bool noDispenser = false )
 		{
 			var o = new Potential
 			{
@@ -204,6 +165,8 @@ public class ItemDispatcher : ScriptableObject
 				location = building.node,
 				type = Potential.Type.offer,
 				area = area,
+				flagJammed = flagJammed,
+				noDispenser = noDispenser,
 				weight = weight
 			};
 			offers.Add( o );
@@ -226,11 +189,6 @@ public class ItemDispatcher : ScriptableObject
 			o.weight = weight;
 
 			offers.Add( o );
-		}
-
-		void RegisterResult( Potential first, Potential second, Result result )
-		{
-			boss.RegisterResult( itemType, first, second, result );
 		}
 
 		static int ComparePotentials( Potential first, Potential second )
@@ -268,9 +226,9 @@ public class ItemDispatcher : ScriptableObject
 					}
 
 					if ( offerItemCount < requestItemCount && offers.Count > nextOffer )
-						FulfillPotentialFrom( offers[nextOffer++], requests );
+						FulfillPotentialFrom( offers[nextOffer++], requests, nextRequest );
 					else if ( requests.Count > nextRequest )
-						FulfillPotentialFrom( requests[nextRequest++], offers );
+						FulfillPotentialFrom( requests[nextRequest++], offers, nextOffer );
 					else
 						break;
 				}
@@ -301,7 +259,7 @@ public class ItemDispatcher : ScriptableObject
 
 		// This function is trying to fulfill a request or offer from a list of offers/requests. Returns true, if the request/offer
 		// was fully fulfilled.
-		public bool FulfillPotentialFrom( Potential potential, List<Potential> list )
+		public bool FulfillPotentialFrom( Potential potential, List<Potential> list, int startIndex = 0 )
 		{
 			float maxScore = float.MaxValue;
 
@@ -310,34 +268,21 @@ public class ItemDispatcher : ScriptableObject
 			{
 				float bestScore = 0;
 				Potential best = null;
-				foreach ( var other in list )
+				for ( int i = startIndex; i < list.Count; i++ )
 				{
-					if ( other.quantity == 0 )
-					{
-						if ( other.type == Potential.Type.offer )
-							RegisterResult( potential, other, Result.outOfItems );
-						else
-							RegisterResult( potential, other, Result.full );
-						continue;
-					}
-					if ( potential.priority == Priority.stock && other.priority == Priority.stock )
-					{
-						RegisterResult( potential, other, Result.tooLowPriority );
-						continue;
-					}
+					var other = list[i];
 					if ( potential.building == other.building )
 						continue;
-					if ( !potential.area.IsInside( other.location ) )
+					if ( !IsGoodFor( other, potential ) )
+						continue;
+					if ( !IsGoodFor( potential, other ) )
+						continue;
+					if ( potential.priority <= Priority.stock && other.priority <= Priority.stock )
 					{
-						RegisterResult( potential, other, Result.notInArea );
+						ConsiderResult( potential, other, Result.tooLowPriority );
 						continue;
 					}
-					if ( !other.area.IsInside( potential.location ) )
-					{
-						RegisterResult( potential, other, Result.otherAreaExcludes );
-						continue;
-					}
-					RegisterResult( potential, other, Result.match );
+					ConsiderResult( potential, other, Result.match );
 					int distance = other.location.DistanceFrom( potential.location );
 					float weightedDistance = distance * ( 1 - potential.weight ) * ( 1 - other.weight ) + 1;
 					float score = (int)other.priority * 1000 + 1f / weightedDistance;   // TODO Priorities?
@@ -361,6 +306,50 @@ public class ItemDispatcher : ScriptableObject
 					return false;
 			} while ( potential.quantity != 0 );
 			return true;
+		}
+
+		bool IsGoodFor( Potential first, Potential second )
+		{
+			Result r = Result.match;
+			if ( first.flagJammed )
+				r = Result.flagJam;
+			else if ( first.noDispenser )
+				r = Result.noDispatcher;
+			else if ( first.quantity == 0 )
+				r = Result.outOfItems;
+			else if ( !first.area.IsInside( second.location ) )
+				r = Result.notInArea;
+
+			if ( r != Result.match )
+				ConsiderResult( first, second, r );
+
+			return r == Result.match;
+		}
+
+		void AddResult( Potential potential, Result result, bool remote )
+		{
+			if ( potential.building == null )
+				return;
+
+			boss.resultsInThisFrame.Add( new LogisticResult
+			{
+				building = potential.building,
+				incoming = potential.type == Potential.Type.offer,
+				priority = potential.priority,
+				quantity = potential.quantity,
+				result = result,
+				remote = remote
+			} );
+		}
+
+		void ConsiderResult( Potential first, Potential second, Result result )
+		{
+			if ( boss.resultsInThisFrame == null || boss.queryItemType != itemType )
+				return;
+			if ( boss.queryBuilding == first.building )
+				AddResult( second, result, false );
+			if ( boss.queryBuilding == second.building )
+				AddResult( first, result, true );
 		}
 
 		// This function is trying to send an item from an offer to a request. Returns true if the item was sent, otherwise false.

@@ -515,17 +515,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 		}
 		if ( productionConfiguration.outputType != Item.Type.unknown )
-		{
-			if ( freeSpaceAtFlag > 0 )
-			{
-				if ( dispenser.IsIdle( true ) )
-					owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea );
-				else
-					owner.itemDispatcher.RegisterResult( this, productionConfiguration.outputType, ItemDispatcher.Result.noDispatcher );
-			}
-			else
-				owner.itemDispatcher.RegisterResult( this, productionConfiguration.outputType, ItemDispatcher.Result.flagJam );
-		}
+			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, !dispenser.IsIdle( true ) );
 
 		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
 			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
