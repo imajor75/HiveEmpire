@@ -233,21 +233,15 @@ abstract public class Building : HiveObject
 			return true;
 		}
 
-		public void Update( Building building )
-		{
-			if ( done || boss.blueprintOnly )
-				return;
-
-			int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.plankForConstructionWeight.weight );
-			int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
-			boss.owner.itemDispatcher.RegisterRequest( building, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
-		}
-
 		new public void FixedUpdate()
 		{
 			if ( done || suspend.inProgress || boss.blueprintOnly )
 				return;
+
+			int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
+			boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.plankForConstructionWeight.weight );
+			int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
+			boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
 
 			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
@@ -502,13 +496,8 @@ abstract public class Building : HiveObject
 	{
 		Profiler.BeginSample( "Construction" );
 		construction.FixedUpdate();
-		Profiler.EndSample();
-	}
-
-	public void Update()
-	{
-		construction.Update( this );
 		UpdateLook();
+		Profiler.EndSample();
 	}
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )

@@ -46,9 +46,9 @@ public class GuardHouse : Building
 		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
-	public new void Update()
+	public new void FixedUpdate()
 	{
-		base.Update();
+		base.FixedUpdate();
 		if ( construction.done && soldiers.Count == 0 && !blueprintOnly )
 		{
 			Worker soldier = Worker.Create().SetupAsSoldier( this );

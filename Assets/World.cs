@@ -151,12 +151,6 @@ public class World : MonoBehaviour
 			player.FixedUpdate();
 	}
 
-	public void LateUpdate()
-	{
-		foreach ( var player in players )
-			player.LateUpdate();
-	}
-
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
 		var oldEye = ( eye.x, eye.y, eye.direction, eye.altitude, eye.targetAltitude, eye.viewDistance );

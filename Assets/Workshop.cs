@@ -488,32 +488,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
-	public new void Update()
-	{
-		base.Update();
-
-		if ( !construction.done )
-			return;
-
-		int freeSpaceAtFlag = flag.FreeSpace();
-		foreach ( Buffer b in buffers )
-		{
-			int missing = b.size-b.stored-b.onTheWay;
-			var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
-			float weight = b.weight != null ? b.weight.weight : 0.5f;
-			owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
-		}
-		if ( productionConfiguration.outputType != Item.Type.unknown )
-			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, !dispenser.IsIdle( true ) );
-
-		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
-			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
-
-		mapIndicator.SetActive( true );
-		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
-		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
-	}
-
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
 		assert.AreEqual( productionConfiguration.outputType, itemType );
@@ -598,6 +572,27 @@ public class Workshop : Building, Worker.Callback.IHandler
 			base.FixedUpdate();
 			return;
 		}
+
+		Profiler.BeginSample( "Logistics" );
+		int freeSpaceAtFlag = flag.FreeSpace();
+		foreach ( Buffer b in buffers )
+		{
+			int missing = b.size-b.stored-b.onTheWay;
+			var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
+			float weight = b.weight != null ? b.weight.weight : 0.5f;
+			owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
+		}
+		if ( productionConfiguration.outputType != Item.Type.unknown )
+			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, !dispenser.IsIdle( true ) );
+
+		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
+			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
+		Profiler.EndSample();
+
+		mapIndicator.SetActive( true );
+		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
+		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
+
 
 		if ( worker == null )
 			dispenser = worker = Worker.Create().SetupForBuilding( this );

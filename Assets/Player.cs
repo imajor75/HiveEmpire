@@ -130,7 +130,7 @@ public class Player : ScriptableObject
 				itemHaulPriorities.Add( 1 );
 		}
 
-		itemDispatcher = CreateInstance<ItemDispatcher>();
+		itemDispatcher = ItemDispatcher.Create();
 		itemDispatcher.Setup( this );
 		if ( !CreateMainBuilding() )
 		{
@@ -193,7 +193,6 @@ public class Player : ScriptableObject
 			averageEfficiencyHistory = Chart.Create().Setup( Item.Type.total );
 		while ( itemEfficiencyHistory.Count < (int)Item.Type.total )
 			itemEfficiencyHistory.Add( Chart.Create().Setup( (Item.Type)itemEfficiencyHistory.Count ) );
-		itemDispatcher.Start();
 
 		if ( inputWeights == null )
 			CreateInputWeights();	// For compatibility with old files
@@ -223,11 +222,6 @@ public class Player : ScriptableObject
 		}
 		averageEfficiency /= count;
 		averageEfficiencyHistory.Advance( averageEfficiency );
-	}
-
-	public void LateUpdate()
-	{
-		itemDispatcher.LateUpdate();
 	}
 
 	bool CreateMainBuilding()

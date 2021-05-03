@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Profiling;
 
-public class ItemDispatcher : ScriptableObject
+public class ItemDispatcher : MonoBehaviour
 {
 	public enum Priority
 	{
@@ -62,6 +62,11 @@ public class ItemDispatcher : ScriptableObject
 
 	public List<LogisticResult> results, resultsInThisFrame;
 
+	static public ItemDispatcher Create()
+	{
+		return new GameObject().AddComponent<ItemDispatcher>();
+	}
+
 	public void Setup( Player player )
 	{
 		this.player = player;
@@ -69,6 +74,9 @@ public class ItemDispatcher : ScriptableObject
 
 	public void Start()
 	{
+		name = "Item displatcher";
+		transform.SetParent( World.instance.transform );
+
 		if ( markets == null || markets.Length != (int)Item.Type.total )
 		{
 			markets = new Market[(int)Item.Type.total];
@@ -109,10 +117,10 @@ public class ItemDispatcher : ScriptableObject
 		markets[(int)item.type].RegisterOffer( item, priority, area );
 	}
 
-	public void LateUpdate()
+	public void FixedUpdate()
 	{
 		foreach ( var market in markets )
-			market.LateUpdate();
+			market.FixedUpdate();
 
 		results = resultsInThisFrame;
 		if ( queryBuilding )
@@ -202,7 +210,7 @@ public class ItemDispatcher : ScriptableObject
 			return 1;
 		}
 
-		public void LateUpdate()
+		public void FixedUpdate()
 		{
 			offers.Sort( ComparePotentials );
 			requests.Sort( ComparePotentials );

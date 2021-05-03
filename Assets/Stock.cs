@@ -310,16 +310,21 @@ public class Stock : Building
 		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
-	new public void Update()
+	new void FixedUpdate()
 	{
-		base.Update();
-
+		base.FixedUpdate();
 		if ( !construction.done || blueprintOnly )
 			return;
 
+		if ( worker == null && construction.done && !blueprintOnly )
+			dispenser = worker = Worker.Create().SetupForBuilding( this );
+		if ( workerMate == null )
+		{
+			workerMate = Worker.Create().SetupForBuilding( this, true );
+			workerMate.ScheduleWait( 100, true );
+		}
 		if ( cart == null )
 			cart = Cart.Create().SetupAsCart( this ) as Cart;
-
 
 		total = totalTarget = 0;
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
@@ -364,21 +369,6 @@ public class Stock : Building
 				if ( current > outputMax[itemType] )
 					p = ItemDispatcher.Priority.high;
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea, 0.5f, flag.FreeSpace() == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
-			}
-		}
-    }
-
-	new void FixedUpdate()
-	{
-		base.FixedUpdate();
-		if ( construction.done && !blueprintOnly )
-		{
-			if ( worker == null && construction.done && !blueprintOnly )
-				dispenser = worker = Worker.Create().SetupForBuilding( this );
-			if ( workerMate == null )
-			{
-				workerMate = Worker.Create().SetupForBuilding( this, true );
-				workerMate.ScheduleWait( 100, true );
 			}
 		}
 	}
