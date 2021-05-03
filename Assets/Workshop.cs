@@ -14,6 +14,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
 	public float progress;
 	public bool working;
+	public bool soldierWasCreatedLastTime;	// Only used by the barack
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
 	GameObject body;
@@ -676,21 +677,23 @@ public class Workshop : Building, Worker.Callback.IHandler
 					return;
 
 				Profiler.BeginSample( "Barrack" );
-				while ( buffers[0].stored > 0 && buffers[1].stored > 0 )
+				if ( buffers[0].stored > 0 && buffers[1].stored > 0 && ( soldierWasCreatedLastTime == false || buffers[2].stored == 0 ) )
 				{
 					buffers[0].stored--;
 					buffers[1].stored--;
 					owner.soldiersProduced++;
 					print( "Soldier produced" );
+					soldierWasCreatedLastTime = true;
 				}
-				while ( buffers[0].stored > 0 && buffers[2].stored > 0 )
+				if ( buffers[0].stored > 0 && buffers[2].stored > 0 && ( soldierWasCreatedLastTime || buffers[1].stored == 0 ) )
 				{
 					buffers[0].stored--;
 					buffers[2].stored--;
 					owner.bowmansProduced++;
 					print( "Bowman produced" );
+					soldierWasCreatedLastTime = false;
 				}
-				while ( buffers[3].stored > 0 )
+				if ( buffers[3].stored > 0 )
 				{
 					buffers[3].stored--;
 					owner.coinsProduced++;
