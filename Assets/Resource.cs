@@ -100,7 +100,7 @@ public class Resource : HiveObject
 
 		if ( charges < 1 )
 		{
-			if ( underGround )
+			if ( underGround || type == Type.fish )
 				charges = int.MaxValue;
 			else
 				charges = 1;
@@ -314,5 +314,11 @@ public class Resource : HiveObject
 				assert.IsNotNull( w );
 		if ( type == Type.pasturingAnimal )
 			assert.AreEqual( animals.Count, 1 );
+		if ( hunter )
+		{
+			var hunterTask = hunter.FindTaskInQueue<Workshop.GetResource>();
+			assert.IsNotNull( hunterTask );
+			assert.AreEqual( node, hunterTask.node );
+		}
 	}
 }

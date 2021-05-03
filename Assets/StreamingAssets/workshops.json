@@ -31,7 +31,7 @@
     "type": "fishingHut",
 	"flatteningNeeded": true,
     "gatheredResource": "fish",
-	"productionTime": 500,
+	"productionTime": 0,
     "outputType": "fish",
   },
   {

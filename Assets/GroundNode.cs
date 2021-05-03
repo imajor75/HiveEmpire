@@ -240,7 +240,10 @@ public class GroundNode : HiveObject
 		}
 		assert.IsNull( this.resource );
 
-		if ( type == Resource.Type.coal || type == Resource.Type.iron || type == Resource.Type.stone || type == Resource.Type.gold || type == Resource.Type.salt )
+		if ( building || flag || road )
+			return;
+
+		if ( Resource.IsUnderGround( type ) )
 		{
 			if ( this.type != Type.hill && this.type != Type.mountain )
 				return;
@@ -347,7 +350,7 @@ public class GroundNode : HiveObject
 		}
 	}
 
-	public bool CheckType( GroundNode.Type type )
+	public bool CheckType( Type type )
 	{
 		if ( ( this.type & type ) > 0 )
 			return true;

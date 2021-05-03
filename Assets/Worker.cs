@@ -955,6 +955,14 @@ public class Worker : HiveObject
 			timeToInterrupt = 0.7f,
 			duration = 500
 		};
+		resourceCollectAct[(int)Resource.Type.fish] = new Act
+		{
+			animation = fishingID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/stick" ),
+			toolSlot = LinkType.rightHand,
+			timeToInterrupt = 1.0f,
+			duration = 500
+		};
 		resourceCollectAct[(int)Resource.Type.expose] = new Act
 		{
 			animation = hammeringID,

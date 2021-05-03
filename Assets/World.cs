@@ -230,6 +230,8 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
+		GenerateResources( true );	// For old files
+
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
@@ -488,27 +490,42 @@ public class World : MonoBehaviour
 		Validate( true );
 	}
 
-	public void GenerateResources()
+	public void GenerateResources( bool fishOnly = false )
 	{
 		foreach ( var node in ground.nodes )
 		{
-			var r = new System.Random( World.rnd.Next() );
-			if ( r.NextDouble() < settings.forestChance )
-				node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
-			if ( r.NextDouble() < settings.rocksChance )
-				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
-			if ( r.NextDouble() < settings.animalSpawnerChance )
-				node.AddResource( Resource.Type.animalSpawner );
-			if ( r.NextDouble() < settings.ironChance )
-				node.AddResourcePatch( Resource.Type.iron, 5, 10 );
-			if ( r.NextDouble() < settings.coalChance )
-				node.AddResourcePatch( Resource.Type.coal, 5, 10 );
-			if ( r.NextDouble() < settings.stoneChance )
-				node.AddResourcePatch( Resource.Type.stone, 3, 10 );
-			if ( r.NextDouble() < settings.saltChance )
-				node.AddResourcePatch( Resource.Type.salt, 3, 10 );
-			if ( r.NextDouble() < settings.goldChance )
-				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
+			if ( !fishOnly )
+			{
+				var r = new System.Random( World.rnd.Next() );
+				if ( r.NextDouble() < settings.forestChance )
+					node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
+				if ( r.NextDouble() < settings.rocksChance )
+					node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
+				if ( r.NextDouble() < settings.animalSpawnerChance )
+					node.AddResource( Resource.Type.animalSpawner );
+				if ( r.NextDouble() < settings.ironChance )
+					node.AddResourcePatch( Resource.Type.iron, 5, 10 );
+				if ( r.NextDouble() < settings.coalChance )
+					node.AddResourcePatch( Resource.Type.coal, 5, 10 );
+				if ( r.NextDouble() < settings.stoneChance )
+					node.AddResourcePatch( Resource.Type.stone, 3, 10 );
+				if ( r.NextDouble() < settings.saltChance )
+					node.AddResourcePatch( Resource.Type.salt, 3, 10 );
+				if ( r.NextDouble() < settings.goldChance )
+					node.AddResourcePatch( Resource.Type.gold, 3, 10 );
+			}
+
+			if ( node.CheckType( GroundNode.Type.land ) )
+			{
+				foreach ( var o in Ground.areas[1] )
+				{
+					if ( node.Add( o ).type == GroundNode.Type.underWater )
+					{
+						node.AddResource( Resource.Type.fish );
+						break;
+					}
+				}
+			}
 		}
 	}
 
@@ -548,7 +565,7 @@ public class World : MonoBehaviour
 		{
 			reference = 0;
 		}
-		[JsonIgnore, SerializeField]
+		[JsonIgnore]
 		public int age
 		{
 			get

@@ -597,10 +597,10 @@ public class Interface : HiveObject
 			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
 
 			backGround = Frame( 0, 0, 200, 40, 3 );
+			image = Image( 20, -20, 100, 100 );
 			text = Text( 15, -10, 270, 60 );
 			additionalText = Text( 20, -30, 150, 60 );
 			additionalText.fontSize = (int)( 10 * uiScale );
-			image = Image( 20, -20, 100, 100 );
 			gameObject.SetActive( false );
 			FollowMouse();
 		}
@@ -1266,7 +1266,7 @@ public class Interface : HiveObject
 				if ( showOutputBuffer )
 				{
 					outputs = new Buffer();
-					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5, workshop.outputArea );
+					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5, workshop.outputArea, false );
 					row -= iconSize * 3 / 2;
 				}
 				progressBar = Image( 20, row, ( iconSize + 5 ) * 7, iconSize, iconTable.GetMediaData( Icon.progress ) );
@@ -1389,7 +1389,7 @@ public class Interface : HiveObject
 			public Item.Type itemType;
 			Workshop.Buffer buffer;
 
-			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null )
+			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null, bool input = true )
 			{
 				items = new ItemImage[itemCount];
 				this.boss = boss;
@@ -1399,7 +1399,7 @@ public class Interface : HiveObject
 					items[i] = boss.ItemIcon( x, y, iconSize, iconSize, itemType );
 					x += xi;
 				}
-				boss.Text( x, y, 20, 20, "?" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { LogisticList.Create().Open( boss.building, itemType ); } );
+				boss.Text( x, y, 20, 20, "?" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } );
 				if ( area != null )
 					boss.AreaIcon( x + 15, y, area );
 			}
@@ -1517,7 +1517,12 @@ public class Interface : HiveObject
 			}
 			if ( GetKey( KeyCode.LeftShift ) )
 			{
-				LogisticList.Create().Open( stock, itemType );
+				LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.request );
+				return;
+			}
+			if ( GetKey( KeyCode.LeftControl ) )
+			{
+				LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.offer );
 				return;
 			}
 			selectedItemType = itemType;
@@ -1544,7 +1549,7 @@ public class Interface : HiveObject
 				int offset = j % 2 > 0 ? 140 : 0;
 				var t = (Item.Type)j;
 				var i = ItemIcon( 20 + offset, row, iconSize, iconSize, (Item.Type)j );
-				i.additionalTooltip = "Shift+LMB Show potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
+				i.additionalTooltip = "Shift+LMB Show input potentials\nCtrl+LMB Show output potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
 				if ( stock.destinations[j] )
 				{
 					Image( 35 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
@@ -3046,6 +3051,7 @@ public class Interface : HiveObject
 		ScrollRect scroll;
 		Building building;
 		Item.Type itemType;
+		ItemDispatcher.Potential.Type direction;
 		float timeSpeedToRestore;
 		bool filled;
 
@@ -3054,12 +3060,13 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<LogisticList>();
 		}
 
-		public void Open( Building building, Item.Type itemType )
+		public void Open( Building building, Item.Type itemType, ItemDispatcher.Potential.Type direction )
 		{
 			timeSpeedToRestore = World.instance.timeFactor;
 			World.instance.SetTimeFactor( 0 );
 			root.mainPlayer.itemDispatcher.queryBuilding = this.building = building;
 			root.mainPlayer.itemDispatcher.queryItemType = this.itemType = itemType;
+			root.mainPlayer.itemDispatcher.queryType = this.direction = direction;
 
 			if ( base.Open( null, 0, 0, 540, 320 ) )
 				return;
@@ -3138,6 +3145,15 @@ public class Interface : HiveObject
 						ItemDispatcher.Result.outOfItems => "They are out of items",
 						_ => message
 					};
+				}
+				if ( result.remote && !result.incoming && result.result == ItemDispatcher.Result.outOfItems )
+					message = "Full";
+				if ( !result.remote && result.result == ItemDispatcher.Result.outOfItems )
+				{
+					if ( direction == ItemDispatcher.Potential.Type.offer )
+						message = "Out of items";
+					else
+						message = "Full";
 				}
 				Text( 250, row, 200, 40, message, scroll.content );
 				row -= iconSize + 5;

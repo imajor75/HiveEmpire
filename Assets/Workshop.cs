@@ -34,6 +34,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 8000;
+	public static int fishRestTime = 8000;
 	ParticleSystem smoke;
 	public Mode mode = Mode.whenNeeded;
 
@@ -176,7 +177,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		public override void Validate()
 		{
-			if ( node.resource && resourceType != Resource.Type.fish )
+			if ( node.resource )
 				boss.assert.AreEqual( boss, node.resource.hunter );
 			base.Validate();
 		}
@@ -191,56 +192,44 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		public override bool ExecuteFrame()
 		{
+			if ( boss.node != node && !Resource.IsUnderGround( resourceType ) )
+			{
+				Cancel();
+				return true;
+			}
 			if ( timer.empty )
 				timer.Start( (boss.building as Workshop).productionConfiguration.productionTime );
-
-			var act = Worker.resourceCollectAct[(int)resourceType];
-			int animHash = -1;
-			if ( act != null )
-				animHash = act.animation;
-			if ( !boss.soundSource.isPlaying )
-			{
-				if ( animHash != -1 )	// TODO Is this executed in every frame?
-					boss.animator?.SetBool( animHash, true );
-				boss.soundSource.clip = act?.sound;
-				boss.soundSource.loop = true;
-				boss.soundSource.Play();
-			}
 
 			if ( !timer.done )    // TODO Working on the resource
 				return false;
 
-			if ( animHash != -1 )
-				boss.animator?.SetBool( animHash, false );
-			boss.soundSource.Stop();
 			Resource resource = node.resource;
 			bool underGround = Resource.IsUnderGround( resourceType );
-			if ( resource && resourceType != Resource.Type.fish )
+			if ( resourceType != Resource.Type.expose )
+				boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting " + resourceType.ToString() + " but was " + resource.type.ToString() + ")" );   // TODO Fired once (maybe fisherman met a tree?)
+			boss.assert.AreEqual( boss, resource.hunter );
+			if ( underGround || node == boss.node )
 			{
-				if ( resourceType != Resource.Type.expose )
-					boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting " + resourceType.ToString() + " but was " + resource.type.ToString() + ")" );   // TODO Fired once (maybe fisherman met a tree?)
-				boss.assert.AreEqual( boss, resource.hunter );
-				if ( underGround || node == boss.node )
+				if ( resourceType == Resource.Type.expose )
+					resource.exposed.Start( Resource.exposeMax );
+				else
 				{
-					if ( resourceType == Resource.Type.expose )
-						resource.exposed.Start( Resource.exposeMax );
+					resource.gathered.Start();
+					if ( --resource.charges == 0 )
+						resource.Remove( false );
 					else
 					{
-						resource.gathered.Start();
-						if ( --resource.charges == 0 )
-							resource.Remove( false );
-						else
-						{
-							if ( resource.underGround )
-								resource.keepAway.Start( mineOreRestTime );
-						}
+						if ( resource.underGround )
+							resource.keepAway.Start( mineOreRestTime );
+						if ( resource.type == Resource.Type.fish )
+							resource.keepAway.Start( fishRestTime );
 					}
 				}
-				else
-					resource.keepAway.Start( 500 );   // TODO Settings
-				boss.assert.AreEqual( resource.hunter, boss );
-				resource.hunter = null;
 			}
+			else
+				resource.keepAway.Start( 500 );   // TODO Settings
+			boss.assert.AreEqual( resource.hunter, boss );
+			resource.hunter = null;
 			if ( underGround )
 				( boss.building as Workshop )?.ItemGathered();
 			else
@@ -816,20 +805,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 				target = node;
 			else
 				target = node.Add( Ground.areas[range][(j+r)%t] );
-			if ( resourceType == Resource.Type.fish )
-			{
-				int water = 0;
-				for ( int i = 0; i < GroundNode.neighbourCount; i++ )
-					if ( target.Neighbour( i ).type == GroundNode.Type.underWater )
-						water++;
-
-				if ( water > 0 && target.type != GroundNode.Type.underWater && target.resource == null )
-				{
-					CollectResourceFromNode( target, resourceType );
-					return;
-				}
+			if ( target.DistanceFrom( Node ) > range )	// This check is needed because the Add function might overflow to the other edge of the map, sending the worker to a long walk
 				continue;
-			}
 			Resource resource = target.resource;
 			if ( resource == null || resource.hunter != null )
 				continue;

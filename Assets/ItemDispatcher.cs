@@ -47,6 +47,7 @@ public class ItemDispatcher : ScriptableObject
 	public Player player;
 	public Building queryBuilding;
 	public Item.Type queryItemType;
+	public Potential.Type queryType;
 
 	[System.Serializable]
 	public class LogisticResult
@@ -346,9 +347,9 @@ public class ItemDispatcher : ScriptableObject
 		{
 			if ( boss.resultsInThisFrame == null || boss.queryItemType != itemType )
 				return;
-			if ( boss.queryBuilding == first.building )
+			if ( boss.queryBuilding == first.building && boss.queryType == first.type )
 				AddResult( second, result, false );
-			if ( boss.queryBuilding == second.building )
+			if ( boss.queryBuilding == second.building && boss.queryType == second.type )
 				AddResult( first, result, true );
 		}
 
