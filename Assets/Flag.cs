@@ -99,7 +99,7 @@ public class Flag : HiveObject
 		UpdateBody();
 		for ( int i = 0; i < maxItems; i++ )
 		{
-			frames[i] = new GameObject { name = "Item Frame " + i };
+			frames[i] = new GameObject( "Item Frame " + i );
 			var t = frames[i].transform;
 			t.SetParent( transform, false );
 			t.localScale = 0.15f * Vector3.one;

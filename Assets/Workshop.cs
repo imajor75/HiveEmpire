@@ -375,8 +375,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public static Workshop Create()
 	{
-		var buildingObject = new GameObject();
-		return buildingObject.AddComponent<Workshop>();
+		return new GameObject().AddComponent<Workshop>();
 	}
 
 	public Workshop Setup( GroundNode node, Player owner, Type type, int flagDirection, bool blueprintOnly = false )

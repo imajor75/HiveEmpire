@@ -85,8 +85,7 @@ public class Resource : HiveObject
 
 	static public Resource Create()
 	{
-		GameObject obj = new GameObject();
-		return obj.AddComponent<Resource>();
+		return new GameObject().AddComponent<Resource>();
 	}
 
 	public static bool IsUnderGround( Type type )

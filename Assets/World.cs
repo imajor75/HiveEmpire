@@ -153,7 +153,7 @@ public class World : MonoBehaviour
 
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
-		var oldEye = ( eye.x, eye.y, eye.direction, eye.altitude, eye.targetAltitude, eye.viewDistance );
+		var oldEye = eye;
 
 		Debug.Log( "Starting new game with seed " + seed );
 
@@ -224,7 +224,7 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
-		GenerateResources( true );	// For old files
+		GenerateResources( true );  // For old files
 
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
@@ -293,7 +293,6 @@ public class World : MonoBehaviour
 					f.flattening = new Building.Flattening();
 		}
 
-
 		{
 			foreach ( var node in ground.nodes )
 				node.AlignType();
@@ -340,10 +339,7 @@ public class World : MonoBehaviour
 			// HACK The event system needs to be recreated after the main camera is destroyed,
 			// otherwise there is a crash in unity
 			Destroy( GameObject.FindObjectOfType<EventSystem>().gameObject );
-			var esObject = new GameObject
-			{
-				name = "Event System"
-			};
+			var esObject = new GameObject( "Event System" );
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();
 		}
@@ -355,17 +351,14 @@ public class World : MonoBehaviour
 		water.transform.localPosition = Vector3.up * settings.waterLevel * settings.maxHeight;
 		water.transform.localScale = Vector3.one * 1000 * GroundNode.size;
 
-		resources = new GameObject();
+		resources = new GameObject( "Resources" );
 		resources.transform.SetParent( transform );
-		resources.name = "Resources";
 
-		buoys = new GameObject();
+		buoys = new GameObject( "Buoys" );
 		buoys.transform.SetParent( transform );
-		buoys.name = "Buoys";
 
-		nodes = new GameObject();
+		nodes = new GameObject( "Nodes" );
 		nodes.transform.SetParent( transform );
-		nodes.name = "Nodes";
 	}
 
 	public void Clear()

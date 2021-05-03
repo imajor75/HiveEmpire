@@ -1003,9 +1003,7 @@ public class Worker : HiveObject
 
 	static public Worker Create()
 	{
-		GameObject workerBody = new GameObject();
-		Worker worker = workerBody.AddComponent<Worker>();
-		return worker;
+		return new GameObject().AddComponent<Worker>();
 	}
 
 	public Worker SetupForRoad( Road road )
@@ -1172,7 +1170,7 @@ public class Worker : HiveObject
 		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapMaterial.renderQueue = 4002;
 
-		arrowObject = new GameObject();
+		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
 		arrowObject.transform.SetParent( transform, false );
 		arrowObject.AddComponent<SpriteRenderer>().sprite = arrowSprite;

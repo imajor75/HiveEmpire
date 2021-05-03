@@ -18,7 +18,7 @@ public class Map : Interface.Panel
 
 	public void Open( bool fullScreen = false )
 	{
-		Transform dialog = new GameObject().transform;
+		Transform dialog = new GameObject( "Map dialog" ).transform;
 		dialog.transform.SetParent( transform );
 		this.fullScreen = fullScreen;
 		base.Open();

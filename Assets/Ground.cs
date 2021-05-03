@@ -25,8 +25,7 @@ public class Ground : HiveObject
 
 	public static Ground Create()
 	{
-		var groundObject = new GameObject();
-		return groundObject.AddComponent<Ground>();
+		return new GameObject().AddComponent<Ground>();
 	}
 
 	public class Offset

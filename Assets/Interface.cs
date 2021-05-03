@@ -240,22 +240,13 @@ public class Interface : HiveObject
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 		gameObject.AddComponent<GraphicRaycaster>();
 
-		var viewport = new GameObject();
-		this.viewport = viewport.AddComponent<Viewport>();
-		viewport.transform.SetParent( transform );
-		viewport.name = "Viewport";
+		viewport = Viewport.Create();
 
-		var esObject = new GameObject
-		{
-			name = "Event System"
-		};
+		var esObject = new GameObject( "Event System" );
 		esObject.AddComponent<EventSystem>();
 		esObject.AddComponent<StandaloneInputModule>();
 
-		debug = new GameObject
-		{
-			name = "Debug"
-		};
+		debug = new GameObject( "Debug" );
 		debug.transform.SetParent( transform );
 
 		tooltip = Tooltip.Create();
@@ -2349,7 +2340,7 @@ public class Interface : HiveObject
 			Text( 15, -75, 170, 20, "Destination:" );
 			BuildingIcon( 100, -75, item.destination );
 
-			mapIcon = new GameObject();
+			mapIcon = new GameObject( "Map icon" );
 			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
 			mapIcon.AddComponent<SpriteRenderer>().sprite = Item.sprites[(int)item.type];
 			mapIcon.transform.SetParent( transform );
@@ -2465,6 +2456,27 @@ public class Interface : HiveObject
 				inputHandler = value;
 			}
 
+		}
+
+		static public Viewport Create()
+		{
+			return new GameObject().AddComponent<Viewport>();
+		}
+
+
+		public void Start()
+		{
+			transform.SetParent( root.transform );
+			transform.SetSiblingIndex( 0 );
+			name = "Viewport";
+
+			Image image = gameObject.AddComponent<Image>();
+			image.rectTransform.anchorMin = Vector2.zero;
+			image.rectTransform.anchorMax = Vector2.one;
+			image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
+			image.color = new Color( 1, 1, 1, 0 );
+
+			inputHandler = this;
 		}
 
 		public bool ResetInputHandler()
@@ -2664,17 +2676,6 @@ public class Interface : HiveObject
 		public void OnPointerExit( PointerEventData eventData )
 		{
 			mouseOver = false;
-		}
-
-		public void Start()
-		{
-			Image image = gameObject.AddComponent<Image>();
-			image.rectTransform.anchorMin = Vector2.zero;
-			image.rectTransform.anchorMax = Vector2.one;
-			image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
-			image.color = new Color( 1, 1, 1, 0 );
-
-			inputHandler = this;
 		}
 
 		public void Update()

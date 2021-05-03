@@ -196,10 +196,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
 
-		GameObject mapObject = new GameObject
-		{
-			name = "Map"
-		};
+		GameObject mapObject = new GameObject( "Map" );
 		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new Mesh();
 		var r = mapObject.AddComponent<MeshRenderer>();
 		mapMaterial = r.material = new Material( World.defaultMapShader );

@@ -28,9 +28,7 @@ public class Eye : MonoBehaviour
 
 	public static Eye Create()
 	{
-		var eyeObject = new GameObject();
-		Eye eye = eyeObject.AddComponent<Eye>();
-		return eye;
+		return new GameObject().AddComponent<Eye>();
 	}
 
 	public Eye Setup( World world )
@@ -55,9 +53,8 @@ public class Eye : MonoBehaviour
 		// Disable temprarily, as unity is crashing at the moment with it.
 		ppl.enabled = false;
 
-		ear = new GameObject().transform;
+		ear = new GameObject( "Ear" ).transform;
 		ear.gameObject.AddComponent<AudioListener>();
-		ear.name = "Ear";
 		ear.transform.SetParent( World.instance.transform );
 	}
 

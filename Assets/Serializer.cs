@@ -27,6 +27,15 @@ public class Serializer : JsonSerializer
 		{
 			JsonProperty property = base.CreateProperty( member, memberSerialization );
 
+			// If the type of the member is a unity type (for example a mesh) we ignore it
+			if ( member is FieldInfo t && t.FieldType.Module == typeof( MonoBehaviour ).Module )
+				property.ShouldSerialize = instance => false;
+
+			// We ignore every property
+			if ( member is PropertyInfo )
+				property.ShouldSerialize = instance => false;
+
+			// We ignore every member which is declared in a unity base class
 			if ( member.DeclaringType.Module != GetType().Module )
 				property.ShouldSerialize = instance => false;
 
@@ -90,6 +99,7 @@ public class Serializer : JsonSerializer
 		}
 		return instance;
 	}
+
 	void ProcessField()
 	{
 		Assert.global.AreEqual( reader.TokenType, JsonToken.PropertyName );

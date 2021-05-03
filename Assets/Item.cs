@@ -108,7 +108,7 @@ public class Item : HiveObject
 		};
 		looks.Fill( looksData );
 
-		var dl = new GameObject();
+		var dl = new GameObject( "Temporary directional light" );
 		var l = dl.AddComponent<Light>();
 		l.type = LightType.Directional;
 		l.color = new Color( .7f, .7f, .7f );
@@ -127,8 +127,7 @@ public class Item : HiveObject
 
 	public static Item Create()
 	{
-		GameObject itemBody = new GameObject();
-		return itemBody.AddComponent<Item>();
+		return new GameObject().AddComponent<Item>();
 	}
 
 	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Priority priority = ItemDispatcher.Priority.zero )
