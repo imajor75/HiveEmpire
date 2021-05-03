@@ -137,6 +137,7 @@ public class Item : HiveObject
 		ground = origin.ground;
 		owner = origin.owner;
 		justCreated = true;
+		transform.SetParent( World.itemsJustCreated.transform, false );
 		watchRoadDelete.Attach( owner.versionedRoadDelete );
 		watchBuildingDelete.Attach( owner.versionedBuildingDelete );
 		this.type = type;
@@ -154,6 +155,8 @@ public class Item : HiveObject
 
 	public void Start()
 	{
+		if ( transform.parent == null )
+			transform.SetParent( World.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
 		body = Instantiate( looks.GetMediaData( type ) );
 		bottomHeight = body.GetComponent<MeshRenderer>().bounds.min.y;
 		body.transform.SetParent( transform, false );

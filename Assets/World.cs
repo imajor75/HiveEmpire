@@ -34,6 +34,7 @@ public class World : MonoBehaviour
 	static public GameObject resources;
 	static public GameObject buoys;
 	static public GameObject nodes;
+	static public GameObject itemsJustCreated;
 
 	[Obsolete( "Compatibility with old files", true )]
 	float maxHeight;
@@ -361,6 +362,9 @@ public class World : MonoBehaviour
 
 		nodes = new GameObject( "Nodes" );
 		nodes.transform.SetParent( transform );
+
+		itemsJustCreated = new GameObject( "Items just created" );		// Temporary parent for items until they enter the logistic network. If they are just root in the scene, World.Clear would not destroy them.
+		itemsJustCreated.transform.SetParent( transform );
 	}
 
 	public void Clear()
