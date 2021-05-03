@@ -674,14 +674,7 @@ public class Road : HiveObject, Interface.IInputHandler
 					cachedCost += 0.01f / Worker.SpeedBetween( nodes[i], nodes[i + 1] );
 			}
 
-			// This gives:
-			// 0 => 1
-			// 4 => 1.25
-			// 8 => 2
-			// 12 => 3.25
-			// 16 => 5
-			float jamBase = Jam/8f;
-			float jamMultiplier = 1 + (jamBase * jamBase);
+			float jamMultiplier = 1 + Jam / 2f;
 			return cachedCost * jamMultiplier;
 		}
 	}

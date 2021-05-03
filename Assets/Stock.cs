@@ -29,7 +29,8 @@ public class Stock : Building
 	{
 		plankNeeded = 3,
 		stoneNeeded = 3,
-		flatteningNeeded = true
+		flatteningNeeded = true,
+		constructionTime = 6000
 	};
 	static readonly Configuration mainConfiguration = new Configuration
 	{
