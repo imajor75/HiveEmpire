@@ -175,6 +175,7 @@ public class World : MonoBehaviour
 
 		Clear();
 		Prepare();
+		Interface.ValidateAll();
 
 		eye = Eye.Create().Setup( this );
 		ground = Ground.Create().Setup( this, heightMap, forestMap, settings.size, settings.size );
@@ -197,6 +198,7 @@ public class World : MonoBehaviour
 			eye.direction = oldEye.direction;
 			eye.viewDistance = oldEye.viewDistance;
 		}
+		Interface.ValidateAll();
 	}
 
 	void Start()

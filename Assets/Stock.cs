@@ -265,6 +265,7 @@ public class Stock : Building
 			foreach ( var o in Ground.areas[1] )
 				node.Add( o ).SetHeight( node.height );
 		}
+		construction.done = true;
 		content[(int)Item.Type.plank] = 10;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
