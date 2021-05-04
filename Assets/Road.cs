@@ -857,9 +857,9 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( chain )
 				worker.Validate( true );
 		}
-		if ( workerAtNodes[0] != null && !ends[0].crossing )
+		if ( workerAtNodes[0] != null && !ends[0].crossing && !ends[0].recentlyLeftCrossing )
 			assert.AreEqual( ends[0].user, workerAtNodes[0] );
-		if ( workerAtNodes[nodes.Count - 1] != null && !ends[1].crossing )
+		if ( workerAtNodes[nodes.Count - 1] != null && !ends[1].crossing && !ends[1].recentlyLeftCrossing )
 			assert.AreEqual( ends[1].user, workerAtNodes[nodes.Count - 1] );
 		int realJam = 0;
 		for ( int e = 0; e < 2; e++ )

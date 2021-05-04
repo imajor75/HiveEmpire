@@ -24,7 +24,6 @@ abstract public class Building : HiveObject
 	public float levelBrake = 1;
 	public List<Item> itemsOnTheWay = new List<Item>();
 	static List<Ground.Offset> foundationHelper;
-	[HideInInspector]
 	public Configuration configuration;
 
 	[Obsolete( "Compatibility with old files", true )]

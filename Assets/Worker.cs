@@ -501,6 +501,7 @@ public class Worker : HiveObject
 					if ( !ignoreOtherWorkers )
 						boss.assert.IsNull( boss.walkTo.flag.user, "Worker still in way at flag." );
 					boss.walkTo.flag.user = boss;
+					boss.walkTo.flag.recentlyLeftCrossing = false;
 					boss.exclusiveFlag = boss.walkTo.flag;
 				}
 				if ( boss.walkFrom.validFlag && !boss.walkFrom.validFlag.crossing )

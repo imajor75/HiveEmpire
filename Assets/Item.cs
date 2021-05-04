@@ -266,6 +266,8 @@ public class Item : HiveObject
 			start = nextFlag;
 		if ( flag )
 			start = flag;
+		if ( start == null )
+			return false;
 
 		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad, this );
 		// TODO Exception happened here, start was null after I left the computer running for a long time

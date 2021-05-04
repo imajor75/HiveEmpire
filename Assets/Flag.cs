@@ -16,6 +16,7 @@ public class Flag : HiveObject
 	public GameObject[] frames = new GameObject[maxItems];
 	public Worker user;
 	public bool crossing;
+	public bool recentlyLeftCrossing;	// Only for validaion, debug purposes
 	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
 	[Obsolete( "Compatibility with old files", true )]
 	Building building;
@@ -171,8 +172,9 @@ public class Flag : HiveObject
 
 		if ( checkConditions )
 		{
-			if ( Buildings().Count > 0 )
-				return false;
+			foreach ( var building in Buildings() )
+				if ( !(building is Stock) )
+					return false;
 		}
 
 		if ( user )
@@ -194,6 +196,7 @@ public class Flag : HiveObject
 			return;
 
 		crossing = false;
+		recentlyLeftCrossing = true;
 		if ( pole )
 		{
 			Destroy( pole );
