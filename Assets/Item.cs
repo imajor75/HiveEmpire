@@ -164,7 +164,7 @@ public class Item : HiveObject
 		name = type.ToString();
 	}
 
-	public void Update()
+	public void FixedUpdate()
 	{
 		// This is dirty. When the origin of an item is destroyed, unity will return true when comparing it to null, however the object is still there, because the 
 		// reference keeps it alive. The problem occurs when the game is saved, the destroyed building is also serialized into the file, and when the file is loaded,
@@ -268,6 +268,9 @@ public class Item : HiveObject
 			start = flag;
 
 		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad, this );
+		// TODO Exception happened here, start was null after I left the computer running for a long time
+		// item was a beer, destination is null. Item is in the hand of a worker, but it is only second in the hand
+		// Trip cancelled for the item (tripCancelled is true)
 		if ( path != null )
 		{
 			flag?.itemsStored.Trigger();

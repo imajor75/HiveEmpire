@@ -16,6 +16,7 @@ public class GuardHouse : Building
 		guardHouseConfiguration.plankNeeded = 2;
 		guardHouseConfiguration.stoneNeeded = 2;
 		guardHouseConfiguration.flatteningNeeded = false;
+		guardHouseConfiguration.constructionTime = 5000;
 	}
 
 	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner, int flagDirection )
