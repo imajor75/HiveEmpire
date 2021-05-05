@@ -33,7 +33,7 @@ public class GuardHouse : Building
 	{
 		title = "guardhouse";
 		height = 2;
-		if ( base.Setup( node, owner, configuration, flagDirection, blueprintOnly ) == null )
+		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly ) == null )
 			return null;
 
 		return this;

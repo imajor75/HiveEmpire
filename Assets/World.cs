@@ -31,8 +31,6 @@ public class World : MonoBehaviour
 	public int time;
 
 	static public GameObject water;
-	static public GameObject resources;
-	static public GameObject buoys;
 	static public GameObject nodes;
 	static public GameObject itemsJustCreated;
 
@@ -179,7 +177,7 @@ public class World : MonoBehaviour
 		Interface.ValidateAll();
 
 		eye = Eye.Create().Setup( this );
-		ground = Ground.Create().Setup( this, heightMap, forestMap, settings.size, settings.size );
+		ground = Ground.Create().Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
 		var mainPlayer = Player.Create().Setup();
 		if ( mainPlayer )
@@ -353,12 +351,6 @@ public class World : MonoBehaviour
 		water.name = "Water";
 		water.transform.localPosition = Vector3.up * settings.waterLevel * settings.maxHeight;
 		water.transform.localScale = Vector3.one * 1000 * GroundNode.size;
-
-		resources = new GameObject( "Resources" );
-		resources.transform.SetParent( transform );
-
-		buoys = new GameObject( "Buoys" );
-		buoys.transform.SetParent( transform );
 
 		nodes = new GameObject( "Nodes" );
 		nodes.transform.SetParent( transform );

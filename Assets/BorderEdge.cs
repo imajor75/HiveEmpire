@@ -31,7 +31,7 @@ public class BorderEdge : HiveObject
 	void Start()
 	{
 		transform.localScale = Vector3.one * 0.2f;
-		transform.SetParent( World.buoys.transform );
+		node.ground.Link( this );
 		UpdateBody();
 	}
 
@@ -43,6 +43,6 @@ public class BorderEdge : HiveObject
 		transform.localPosition = position;
 	}
 
-	public override GroundNode Node { get { return null; } }
+	public override GroundNode Node { get { return node; } }
 
 }

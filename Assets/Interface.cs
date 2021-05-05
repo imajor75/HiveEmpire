@@ -957,7 +957,7 @@ public class Interface : HiveObject
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.Node.position + Vector3.up * GroundNode.size );
+			MoveTo( target.Node.GetPositionRelativeTo( new Vector3( root.world.eye.x, 0, root.world.eye.y ) ) + Vector3.up * GroundNode.size );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -2423,6 +2423,7 @@ public class Interface : HiveObject
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
 		public WorkshopPanel currentBlueprintPanel;
+		public GroundNode currentNode;	// Node currently under the cursor
 
 		public enum Construct
 		{
@@ -2601,7 +2602,7 @@ public class Interface : HiveObject
 			if ( b && !b.construction.done )
 				hiveObject = ground;
 
-			if ( hiveObject == ground )
+			if ( hiveObject is Ground.Block )
 			{
 				Vector3 localPosition = ground.transform.InverseTransformPoint( hit.point );
 				return GroundNode.FromPosition( localPosition, ground );
@@ -2612,14 +2613,22 @@ public class Interface : HiveObject
 
 		public GroundNode FindNodeAt( Vector3 screenPosition )
 		{
-			var c = World.instance.ground.collider;
-			if ( c == null )
-				return null;
-
+			RaycastHit hit = new RaycastHit();
 			if ( camera == null )
 				camera = World.instance.eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			if ( !c.Raycast( ray, out RaycastHit hit, 1000 ) ) // TODO How long the ray should really be?
+
+			foreach ( var block in World.instance.ground.blocks )
+			{
+				var c = block.collider;
+				if ( c == null )
+					continue;
+
+				if ( c.Raycast( ray, out hit, 1000 ) ) // TODO How long the ray should really be?
+					break;
+			}
+
+			if ( hit.collider == null )
 				return null;
 
 			var ground = World.instance.ground;
@@ -2707,22 +2716,25 @@ public class Interface : HiveObject
 				inputHandler = this;
 			if ( !mouseOver )
 				return;
-			GroundNode node = FindNodeAt( Input.mousePosition );
-			if ( cursor && node )
-				cursor.transform.localPosition = node.position;
-			if ( !inputHandler.OnMovingOverNode( node ) )
+			currentNode = FindNodeAt( Input.mousePosition );
+			if ( cursor && currentNode )
+			{
+				cursor.transform.localPosition = currentNode.position;
+				cursor.transform.SetParent( currentNode.ground.FindClosestBlock( currentNode ).transform, false );
+			}
+			if ( !inputHandler.OnMovingOverNode( currentNode ) )
 				inputHandler = this;
 #if DEBUG
-			if ( GetKeyDown( KeyCode.PageUp ) && node )
-				node.SetHeight( node.height + 0.05f );
-			if ( GetKeyDown( KeyCode.PageDown ) && node )
-				node.SetHeight( node.height - 0.05f );
+			if ( GetKeyDown( KeyCode.PageUp ) && currentNode )
+				currentNode.SetHeight( currentNode.height + 0.05f );
+			if ( GetKeyDown( KeyCode.PageDown ) && currentNode )
+				currentNode.SetHeight( currentNode.height - 0.05f );
 #endif
-			if ( showPossibleBuildings && node )
+			if ( showPossibleBuildings && currentNode )
 			{
 				foreach ( var o in Ground.areas[6] )
 				{
-					var n = node + o;
+					var n = currentNode + o;
 					foreach ( var p in buildCategories )
 					{
 						if ( p.configuration != null )

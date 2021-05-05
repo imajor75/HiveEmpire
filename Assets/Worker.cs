@@ -480,8 +480,8 @@ public class Worker : HiveObject
 				road.workerAtNodes[currentPoint] = null;
 
 			boss.assert.AreEqual( boss.node, road.nodes[currentPoint] );
-			boss.Walk( road.nodes[nextPoint] );
 			boss.walkBase = road;
+			boss.Walk( road.nodes[nextPoint] );
 			if ( nextPoint > currentPoint )
 			{
 				boss.walkBlock = currentPoint;
@@ -1015,7 +1015,7 @@ public class Worker : HiveObject
 		ground = road.ground;
 		currentColor = Color.grey;
 		Building main = road.owner.mainBuilding;
-		node = main.node;
+		SetNode( main.node );
 		this.road = road;
 		onRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
@@ -1053,7 +1053,7 @@ public class Worker : HiveObject
 		ground = flag.node.ground;
 		owner = flag.owner;
 		Building main = owner.mainBuilding;
-		node = main.node;
+		SetNode( main.node );
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( flag );
 		return this;
@@ -1075,20 +1075,20 @@ public class Worker : HiveObject
 		Building main = owner.mainBuilding;
 		if ( main && main != building )
 		{
-			node = main.node;
+			SetNode( main.node );
 			ScheduleWalkToNeighbour( main.flag.node );
 			ScheduleWalkToFlag( building.flag );
 			ScheduleWalkToNeighbour( building.node );
 		}
 		else
-			node = building.node;
+			SetNode( building.node );
 		return this;
 	}
 
 	public Worker SetupAsAnimal( Resource origin, GroundNode node )
 	{
 		look = type = Type.wildAnimal;
-		this.node = node;
+		SetNode( node );
 		this.origin = origin;
 		this.ground = node.ground;
 		return this;
@@ -1098,7 +1098,7 @@ public class Worker : HiveObject
 	{
 		look = type = Type.cart;
 		building = stock;
-		node = stock.node;
+		SetNode( stock.node );
 		speed = 1.25f;
 		ground = stock.ground;
 		owner = stock.owner;
@@ -1106,14 +1106,15 @@ public class Worker : HiveObject
 		return this;
 	}
 
+	public void SetNode( GroundNode node )
+	{
+		this.node = node;
+		node.ground.Link( this, walkBase?.Node );
+	}
+
 	public void Start()
 	{
-		if ( road != null )
-			transform.SetParent( road.ground.transform );
-		if ( building != null )
-			transform.SetParent( building.ground.transform );
-		if ( node != null )
-			transform.SetParent( node.ground.transform );
+		node.ground.Link( this, walkBase?.Node );
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
 		links[(int)LinkType.haulingBoxLight] = World.FindChildRecursive( body.transform, "haulingBoxLight" )?.gameObject;
@@ -1211,7 +1212,7 @@ public class Worker : HiveObject
 		assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
 		currentSpeed = speed * SpeedBetween( target, node );
 		walkFrom = node;
-		node = walkTo = target;
+		SetNode( walkTo = target );
 	}
 
 	// Update is called once per frame
@@ -1484,7 +1485,7 @@ public class Worker : HiveObject
 			}
 			if ( recalled )
 			{
-				node = owner.mainBuilding.flag.node;    // Hack, teleport to the main building flag, if there is no path
+				SetNode( owner.mainBuilding.flag.node );    // Hack, teleport to the main building flag, if there is no path
 				return;
 			}
 
@@ -1821,6 +1822,7 @@ public class Worker : HiveObject
 			{
 				animator?.SetBool( walkingID, false );
 				soundSource?.Stop();
+				node.ground.Link( this );
 				transform.localPosition = node.position;
 				if ( taskQueue.Count > 0 )
 				{
@@ -1859,7 +1861,7 @@ public class Worker : HiveObject
 		}
 		else
 		{
-			transform.localPosition = Vector3.Lerp( walkFrom.position, walkTo.position, walkProgress ) + Vector3.up * GroundNode.size * Road.height;
+			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * GroundNode.size * Road.height;
 			TurnTo( walkTo, walkFrom );
 		}
 
@@ -1975,12 +1977,12 @@ public class Worker : HiveObject
 		{
 			assert.IsNotNull( road );
 			int newIndex = road.nodes.Count / 2;
-			node = road.nodes[newIndex];
+			SetNode( road.nodes[newIndex] );
 			road.workerAtNodes[newIndex] = this;
 			onRoad = true;
 		}
 		if ( type == Type.tinkerer || type == Type.tinkererMate || type == Type.cart )
-			node = building.node;
+			SetNode( building.node );
 		if ( type == Type.constructor || type == Type.unemployed )
 			Remove( false );
 		if ( exclusiveFlag )

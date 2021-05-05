@@ -179,7 +179,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public void Start()
 	{
-		transform.SetParent( ground.transform, false );
+		ground.Link( this );
 		if ( nodes.Count > 0 )
 			transform.localPosition = nodes[nodes.Count / 2].position;
 		if ( invalid )
@@ -442,6 +442,11 @@ public class Road : HiveObject, Interface.IInputHandler
 		watchEndFlag.Attach( lastNode.flag.itemsStored );
 	}
 
+	Vector3 NodePosition( int index )
+	{
+		return nodes[index].GetPositionRelativeTo( Node );
+	}
+
 	public void CreateCurves()
 	{
 		if ( curves[0] != null && curves[0].Count == nodes.Count - 1 )
@@ -452,7 +457,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			int p = Math.Max( j - 1, 0 );
 			int n = Math.Min( j + 1, nodes.Count - 1 );
-			directions.Add( ( nodes[n].position - nodes[p].position ).normalized );
+			directions.Add( ( NodePosition( n ) - NodePosition( p ) ).normalized );
 		}
 		for ( int i = 0; i < 3; i++ )
 		{
@@ -462,14 +467,14 @@ public class Road : HiveObject, Interface.IInputHandler
 				if ( i == 1 )
 				{
 					curves[i].Add( CubicCurve.Create().SetupAsLinear(
-						nodes[j].position[i],
-						nodes[j + 1].position[i] ) );
+						NodePosition( j )[i],
+						NodePosition( j + 1 )[i] ) );
 				}
 				else
 				{
 					curves[i].Add( CubicCurve.Create().Setup(
-						nodes[j].position[i],
-						nodes[j + 1].position[i],
+						NodePosition( j )[i],
+						NodePosition( j + 1 )[i],
 						directions[j][i],
 						directions[j + 1][i] ) );
 				}

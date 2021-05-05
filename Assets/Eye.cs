@@ -15,7 +15,6 @@ public class Eye : MonoBehaviour
 	public float viewDistance = 5.0f;
 	public World world;
 	public float x, y;
-	float lastGoodX, lastGoodY;
 	public float direction;
 	public bool rotateAround;
 	float storedX, storedY, storedDirection;
@@ -50,7 +49,7 @@ public class Eye : MonoBehaviour
 		ppl.Init( Interface.root.postProcessResources );
 		ppl.volumeLayer = 1 << World.layerIndexPPVolume;
 
-		// Disable temprarily, as unity is crashing at the moment with it.
+		// Disable temporarily, as unity is crashing at the moment with it.
 		ppl.enabled = false;
 
 		ear = new GameObject( "Ear" ).transform;
@@ -61,23 +60,13 @@ public class Eye : MonoBehaviour
 	private void Update()
 	{
 		var h = World.instance.ground.GetHeightAt( x, y );
-		if ( h != -1 )
-		{
-			lastGoodX = x;
-			lastGoodY = y;
-			if ( h < World.instance.settings.waterLevel * World.instance.settings.maxHeight )
-				h = World.instance.settings.waterLevel * World.instance.settings.maxHeight;
-			var p = new Vector3( x, h, y );
-			ear.position = p;
-			Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
-			transform.position = p - viewer;
-			transform.LookAt( ear );
-		}
-		else
-		{
-			x = lastGoodX;
-			y = lastGoodY;
-		}
+		if ( h < World.instance.settings.waterLevel * World.instance.settings.maxHeight )
+			h = World.instance.settings.waterLevel * World.instance.settings.maxHeight;
+		var p = new Vector3( x, h, y );
+		ear.position = p;
+		Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
+		transform.position = p - viewer;
+		transform.LookAt( ear );
 		if ( director == null )
 		{
 			director = null;
@@ -177,6 +166,23 @@ public class Eye : MonoBehaviour
 		}
 		x += movement.x;
 		y += movement.z;
+
+		if ( y < -World.instance.ground.dimension * GroundNode.size / 2 )
+		{
+			y += World.instance.ground.dimension * GroundNode.size;
+			x += World.instance.ground.dimension * GroundNode.size / 2;
+		}
+		if ( y > World.instance.ground.dimension * GroundNode.size / 2 )
+		{
+			y -= World.instance.ground.dimension * GroundNode.size;
+			x -= World.instance.ground.dimension * GroundNode.size / 2;
+		}
+		if ( x < -World.instance.ground.dimension * GroundNode.size / 2 + y / 2 )
+			x += World.instance.ground.dimension * GroundNode.size;
+		if ( x > World.instance.ground.dimension * GroundNode.size / 2 + y / 2 )
+			x -= World.instance.ground.dimension * GroundNode.size;
+
+		World.instance.ground.UpdateBlockOffsets( new Vector3( x, 0, y ) );
 
 		if ( Interface.GetKey( KeyCode.Q ) )
 		{

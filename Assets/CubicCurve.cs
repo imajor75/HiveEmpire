@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class CubicCurve : ScriptableObject
 {
 	public float a, b, c, d;

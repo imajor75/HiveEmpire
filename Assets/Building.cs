@@ -464,7 +464,7 @@ abstract public class Building : HiveObject
 	public void Start()
 	{
 		name = "Building " + node.x + ", " + node.y;
-		transform.SetParent( ground.transform );
+		ground.Link( this );
 		UpdateBody();
 		renderers = new List<MeshRenderer>();
 

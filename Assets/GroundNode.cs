@@ -121,7 +121,7 @@ public class GroundNode : HiveObject
 			if ( decoration )
 			{
 				var d = Instantiate( decoration ).transform;
-				d.SetParent( transform, false );
+				d.SetParent( ground.FindClosestBlock( this ).transform );
 				var o = Neighbour( i );
 				var l = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
 				d.position = position * ( 1 - l ) + o.position * l;
@@ -151,23 +151,70 @@ public class GroundNode : HiveObject
 #endif
 	}
 
-	[JsonIgnore]
-	public Vector3 position
+	public Vector3 GetPositionRelativeTo( Vector3 reference )
 	{
-		get
+		var position = this.position;
+		Vector3 offset = new Vector3();
+		if ( reference.x - position.x > size * ground.dimension / 2 )
+			offset.x += ground.dimension * size;
+		if ( position.x - reference.x > size * ground.dimension / 2 )
+			offset.x -= ground.dimension * size;
+		if ( reference.z - position.z > size * ground.dimension / 2 )
 		{
-			int rx = x-ground.width/2;
-			int ry = y-ground.height/2;
-			Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
-			return position;
+			offset.z += ground.dimension * size;
+			offset.x += ground.dimension * size / 2;
 		}
+		if ( position.z - reference.z > size * ground.dimension / 2 )
+		{
+			offset.z -= ground.dimension * size;
+			offset.x -= ground.dimension * size / 2;
+		}
+		return position + offset;
 	}
+
+	/// <summary>
+	/// This function returns the position of the node when another node is used as a reference. This might give different result than normal position close to the edge of the map.
+	/// </summary>
+	/// <param name="reference"></param>
+	/// <returns></returns>
+	public Vector3 GetPositionRelativeTo( GroundNode reference )
+	{
+		var position = this.position;
+		if ( reference )
+		{
+			if ( reference.x - x > ground.dimension / 2 )
+				position.x += ground.dimension * size;
+			if ( x - reference.x > ground.dimension / 2 )
+				position.x -= ground.dimension * size;
+			if ( reference.y - y > ground.dimension / 2 )
+			{
+				position.z += ground.dimension * size;
+				position.x += ground.dimension * size / 2;
+			}
+			if ( y - reference.y > ground.dimension / 2 )
+			{
+				position.z -= ground.dimension * size;
+				position.x -= ground.dimension * size / 2;
+			}
+		}
+		return position;
+	}
+
+	public Vector3 GetPosition( int x, int y )
+	{
+		int rx = x-ground.dimension/2;
+		int ry = y-ground.dimension/2;
+		Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
+		return position;
+	}
+
+	public Vector3 position { get { 	return GetPosition( x, y );	} }
 
 	public static GroundNode FromPosition( Vector3 position, Ground ground )
 	{
 		int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
 		int x = Mathf.FloorToInt( ( position.x - y * size / 2 + ( size / 2 ) ) / size );
-		return ground.GetNode( x + ground.width / 2, y + ground.height / 2 );
+		return ground.GetNode( x + ground.dimension / 2, y + ground.dimension / 2 );
 	}
 
 	public int DirectionTo( GroundNode another )
@@ -196,20 +243,18 @@ public class GroundNode : HiveObject
 
 	public int DistanceFrom( GroundNode o )
 	{
-		//int e = ground.height, w = ground.width;
-
+		int a = ground.dimension / 2;
 		int h = Mathf.Abs( x - o.x );
-		//int h1 = Mathf.Abs(x-o.x-w);
-		//int h2 = Mathf.Abs(x-o.x+w);
-		//int h = Mathf.Min(Mathf.Min(h0,h1),h2);
+		if ( h >= a )
+			h = a * 2 - h;
 
 		int v = Mathf.Abs( y - o.y );
-		//int v1 = Mathf.Abs(y-o.y-e);
-		//int v2 = Mathf.Abs(y-o.y+e);
-		//int v = Mathf.Min(Mathf.Min(v0,v1),v2);
+		if ( v >= a )
+			v = a * 2 - v;
 
-		//int d = Mathf.Max(h,v);
 		int d = Mathf.Abs( ( x - o.x ) + ( y - o.y ) );
+		if ( d >= a )
+			d = a * 2 - d;
 
 		return Mathf.Max( h, Mathf.Max( v, d ) );
 	}
@@ -283,7 +328,7 @@ public class GroundNode : HiveObject
 
 		AlignType();
 
-		ground.layoutVersion++;
+		ground.SetDirty( this );
 		if ( flag )
 		{
 			flag.UpdateBody();
@@ -346,7 +391,7 @@ public class GroundNode : HiveObject
 	{
 		get
 		{
-			return x + y * ground.width;
+			return x + y * ground.dimension;
 		}
 	}
 
@@ -385,8 +430,9 @@ public class GroundNode : HiveObject
 		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal )
 			o++;
 		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
-		for ( int i = 0; i < 6; i++ )
-			assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
+		if ( x != ground.dimension && y != ground.dimension )
+			for ( int i = 0; i < 6; i++ )
+				assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
 		if ( flag )
 		{
 			assert.AreEqual( this, flag.node );

@@ -583,7 +583,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 			owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 		}
 		if ( productionConfiguration.outputType != Item.Type.unknown )
-			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, !dispenser.IsIdle( true ) );
+		{
+			bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
+			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
+		}
 
 		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
 			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
@@ -802,8 +805,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 				target = node;
 			else
 				target = node.Add( Ground.areas[range][(j+r)%t] );
-			if ( target.DistanceFrom( Node ) > range )	// This check is needed because the Add function might overflow to the other edge of the map, sending the worker to a long walk
-				continue;
 			Resource resource = target.resource;
 			if ( resource == null || resource.hunter != null )
 				continue;

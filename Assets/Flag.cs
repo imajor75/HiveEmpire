@@ -90,7 +90,7 @@ public class Flag : HiveObject
 	public void Start()
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
-		transform.SetParent( node.ground.transform );
+		node.ground.Link( this );
 		if ( crossing )
 			pole = Instantiate( template, transform );
 

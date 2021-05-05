@@ -137,7 +137,7 @@ public class Resource : HiveObject
     // Start is called before the first frame update
     public void Start()
     {
-		transform.SetParent( World.resources.transform );
+		node.ground.Link( this );
 		transform.localPosition = node.position;
 
 		name = type.ToString();
