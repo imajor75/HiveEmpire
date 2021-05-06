@@ -2056,7 +2056,7 @@ public class Worker : HiveObject
 				continue;
 
 			assert.AreEqual( item.worker, this, "Unknown worker " + item.worker );
-			assert.IsTrue( item.destination != null || item.tripCancelled );
+			assert.IsTrue( item.destination != null || item.tripCancelled || type == Type.tinkerer );	// destination is also null if a workshop is set to work "always"
 			if ( chain )
 				item.Validate( true );
 			assert.IsNull( item.flag );	// ?
