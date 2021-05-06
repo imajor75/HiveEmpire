@@ -30,6 +30,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public int targetWorkerCount;   // Zero means automaic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
+	public GroundNode referenceLocation;
 	[JsonIgnore]
 	Material mapMaterial;
 	[JsonIgnore]
@@ -152,7 +153,8 @@ public class Road : HiveObject, Interface.IInputHandler
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
 			workerAtNodes.Add( null );
 		CallNewWorker();
-		transform.localPosition = nodes[nodes.Count / 2].position;
+		transform.localPosition = CenterNode.position;
+		referenceLocation = CenterNode;
 		CreateCurves();
 		RebuildMesh();
 		AttachWatches();
@@ -181,7 +183,10 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		ground.Link( this );
 		if ( nodes.Count > 0 )
+		{
 			transform.localPosition = CenterNode.position;
+			referenceLocation = CenterNode;
+		}
 		if ( invalid )
 			return;
 
@@ -287,7 +292,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			}
 		}
 
-		var position = CenterNode.position;
+		var position = referenceLocation.position;
 		for ( int i = 0; i < vertices.Length; i++ )
 		{
 			vertices[i].y = ground.GetHeightAt( vertices[i].x, vertices[i].z ) + 0.02f;	// Add 0.02f to avoid z fight.
