@@ -318,7 +318,7 @@ public class GroundNode : HiveObject
 	{
 		if ( building )
 			return true;
-		if ( resource && !resource.underGround && resource.type != Resource.Type.cornfield )
+		if ( resource && !resource.underGround && resource.type != Resource.Type.cornfield && resource.type != Resource.Type.fish )		// TODO There should be a bool called blocking in the resource class. Or even an enum, cornfields should block sometimes.
 			return true;
 		if ( !roadsBlocking )
 			return false;
@@ -435,7 +435,7 @@ public class GroundNode : HiveObject
 			o++;
 		if ( building )
 			o++;
-		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal )
+		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal && resource.type != Resource.Type.fish )
 			o++;
 		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 		if ( x != ground.dimension && y != ground.dimension )
