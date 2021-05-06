@@ -11,6 +11,7 @@ public class HeightMap
 	[Range(0, 10000)]
 	public int seed;
 	public float averageValue;
+	public CubicCurve randomCurve;
 
 	public class Settings : ScriptableObject
 	{
@@ -22,9 +23,11 @@ public class HeightMap
 		public float borderLevel = 0.5f;
 
 		[Range(0.0f, 4.0f)]
-		public float randomness = 1;
-		[Range(0.0f, 2.0f)]
-		public float noise = 1;
+		public float randomness = 1.2f;
+		[Range(-1.0f, 1.0f)]
+		public float noise = -0.15f;
+		[Range(-1.0f, 1.0f)]
+		public float randomnessDistribution = -0.3f;
 
 		public bool normalize = true;
 		[Range(-1.0f, 1.0f)]
@@ -51,6 +54,9 @@ public class HeightMap
 	public void Fill()
 	{
 		random = new System.Random( seed );
+		float derivative = (float)Math.Pow( 2, settings.randomnessDistribution );
+		Assert.global.IsFalse( float.IsNaN( derivative ) );
+		randomCurve = CubicCurve.Create().SetupAsQuadric( settings.randomness, settings.noise, -derivative );
 		averageValue = 0;
 		data = new float[sizeX, sizeY];
 		Randomize( ref data[0, 0], 1 );
@@ -62,7 +68,6 @@ public class HeightMap
 			Randomize( ref data[0, sizeY - 1], 1 );
 			Randomize( ref data[sizeX - 1, sizeY - 1], 1 );
 		}
-		float randomWeight = settings.randomness;
 		int i = sizeX - 1;
 		float step = 0;
 		while ( i > 1 )
@@ -78,7 +83,9 @@ public class HeightMap
 					data[sizeX - 1, j] = settings.borderLevel;
 				}
 			}
-			ProcessLevel( i, Math.Min( randomWeight, 1 ) );
+			float randomWeight = randomCurve.PositionAt( (float)( sizeX - 1 - i ) / ( sizeX - 1 ) );
+			Assert.global.IsFalse( float.IsNaN( randomWeight ) );
+			ProcessLevel( i, Math.Max( 0, Math.Min( randomWeight, 1 ) ) );
 			if ( settings.tileable )
 			{
 				Assert.global.AreEqual( sizeX, sizeY );
@@ -91,8 +98,6 @@ public class HeightMap
 
 			i /= 2;
 			step += 1f/size;
-			randomWeight /= 2;
-			randomWeight *= settings.noise;
 		}
 
 		PostProcess();
@@ -219,6 +224,7 @@ public class HeightMap
 	{
 		float randomValue = (float)random.NextDouble();
 		value = value * ( 1 - weight ) + randomValue * weight;
+		Assert.global.IsFalse( float.IsNaN( value ) );
 	}
 
 	Texture2D AsTexture()

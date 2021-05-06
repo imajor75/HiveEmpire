@@ -244,7 +244,7 @@ public class World : MonoBehaviour
 					o.currentColor = Color.cyan;
 				if ( o.type == Worker.Type.cart )
 					o.currentColor = Color.white;
-				if ( o.owner == null )
+				if ( o.owner == null && players.Count > 0 )
 					o.owner = players[0];
 				if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 					o.itemsInHands[0].SetRawTarget( o.building );

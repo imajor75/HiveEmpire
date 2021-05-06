@@ -22,6 +22,15 @@ public class CubicCurve : ScriptableObject
 		return this;
 	}
 
+	public CubicCurve SetupAsQuadric( float position0, float position1, float direction0 )
+	{
+		a = 0;
+		d = position0;
+		c = direction0;
+		b = position1 - c - d;
+		return this;
+	}
+
 	public CubicCurve SetupAsLinear( float position0, float position1 )
 	{
 		a = b = 0;

@@ -366,7 +366,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		if ( node.road )
 		{
-			assert.AreEqual( nodes[node.roadIndex], node );
+			assert.AreEqual( nodes[node.roadIndex], node );	// TODO Triggered
 			return node.roadIndex;
 		}
 		if ( node.validFlag )
