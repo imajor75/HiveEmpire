@@ -181,7 +181,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		ground.Link( this );
 		if ( nodes.Count > 0 )
-			transform.localPosition = nodes[nodes.Count / 2].position;
+			transform.localPosition = CenterNode.position;
 		if ( invalid )
 			return;
 
@@ -209,7 +209,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 	}
 
-	public void Update()
+	public void FixedUpdate()
 	{
 		if ( !ready )
 			return;
@@ -287,10 +287,11 @@ public class Road : HiveObject, Interface.IInputHandler
 			}
 		}
 
+		var position = CenterNode.position;
 		for ( int i = 0; i < vertices.Length; i++ )
 		{
 			vertices[i].y = ground.GetHeightAt( vertices[i].x, vertices[i].z ) + 0.02f;	// Add 0.02f to avoid z fight.
-			vertices[i] = transform.InverseTransformPoint( vertices[i] );
+			vertices[i] -= position;
 		}
 
 		assert.AreEqual( v, vertexRows * 3 );
