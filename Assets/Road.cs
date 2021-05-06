@@ -154,6 +154,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			workerAtNodes.Add( null );
 		CallNewWorker();
 		transform.localPosition = CenterNode.position;
+		ground.Link( this );
 		referenceLocation = CenterNode;
 		CreateCurves();
 		RebuildMesh();
