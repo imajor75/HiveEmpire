@@ -156,6 +156,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		transform.localPosition = CenterNode.position;
 		ground.Link( this );
 		referenceLocation = CenterNode;
+		curves = new List<CubicCurve>[3];
 		CreateCurves();
 		RebuildMesh();
 		AttachWatches();
@@ -451,7 +452,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	Vector3 NodePosition( int index )
 	{
-		return nodes[index].GetPositionRelativeTo( Node );
+		return nodes[index].GetPositionRelativeTo( referenceLocation );
 	}
 
 	public void CreateCurves()
@@ -643,6 +644,8 @@ public class Road : HiveObject, Interface.IInputHandler
 													// node was already finalized, like when you spin down that location.
 													// Triggered again I think while I wanted to find a place for a road, meanwhile the
 													// peasant planted a cornfield in the way.
+													// Again
+													// Again when interruping road construction
 			nodes[i].road = null;
 		}
 	}
