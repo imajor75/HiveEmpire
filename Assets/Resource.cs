@@ -11,6 +11,7 @@ public class Resource : HiveObject
 	public World.Timer life;
 	public World.Timer exposed;
 	public int charges = 1;
+	public bool infinite;
 	GameObject body;
 	public World.Timer gathered;
 	public World.Timer keepAway;
@@ -102,7 +103,12 @@ public class Resource : HiveObject
 			if ( underGround || type == Type.fish )
 				charges = int.MaxValue;
 			else
-				charges = 1;
+			{
+				if ( type == Type.rock )
+					charges = 6;
+				else
+					charges = 1;
+			}
 		}
 
 		if ( ( underGround && node.type != GroundNode.Type.hill ) || ( !underGround && !node.CheckType( GroundNode.Type.land ) ) )
@@ -119,7 +125,13 @@ public class Resource : HiveObject
 
 		node.resource = this;
 		this.type = type;
-		this.charges = charges;
+		if ( charges != int.MaxValue )
+		{
+			this.charges = charges;
+			this.infinite = false;
+		}
+		else
+			this.infinite = true;
 		this.node = node;
 		life.Start();
 		return this;

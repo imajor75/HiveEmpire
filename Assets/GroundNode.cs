@@ -153,23 +153,31 @@ public class GroundNode : HiveObject
 
 	public Vector3 GetPositionRelativeTo( Vector3 reference )
 	{
-		var position = this.position;
-		Vector3 offset = new Vector3();
-		if ( reference.x - position.x > size * ground.dimension / 2 )
-			offset.x += ground.dimension * size;
-		if ( position.x - reference.x > size * ground.dimension / 2 )
-			offset.x -= ground.dimension * size;
-		if ( reference.z - position.z > size * ground.dimension / 2 )
+		float limit = ground.dimension * size / 2;
+		var position = this.position;	// cache
+		var difference = position - reference;
+		float dv0 = difference.z, dv1 = -dv0, dh0 = difference.x - difference.z / 2, dh1 = -dh0;
+		if ( dh0 > dh1 && dh0 > dv0 && dh0 > dv1 )
 		{
-			offset.z += ground.dimension * size;
-			offset.x += ground.dimension * size / 2;
+			if ( dh0 > limit )
+				return position - new Vector3( limit * 2, 0, 0 );
 		}
-		if ( position.z - reference.z > size * ground.dimension / 2 )
+		else if ( dh1 > dv0 && dh1 > dv1 )
 		{
-			offset.z -= ground.dimension * size;
-			offset.x -= ground.dimension * size / 2;
+			if ( dh1 > limit )
+				return position + new Vector3( limit * 2, 0, 0 );
 		}
-		return position + offset;
+		else if ( dv0 > dv1 )
+		{
+			if ( dv0 > limit )
+				return position - new Vector3( limit, 0, limit * 2 );
+		}
+		else
+		{
+			if ( dv1 > limit )
+				return position + new Vector3( limit, 0, limit * 2 );
+		}
+		return position;
 	}
 
 	/// <summary>

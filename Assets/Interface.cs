@@ -1352,7 +1352,12 @@ public class Interface : HiveObject
 					if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource )
 						return;
 					if ( !resource.underGround || node == workshop.node || resource.exposed.inProgress )
-						left++;
+					{
+						if ( resource.infinite )
+							left++;
+						else
+							left += resource.charges;
+					}
 				}
 				CheckNode( workshop.node );
 				foreach ( var o in Ground.areas[workshop.productionConfiguration.gatheringRange] )
@@ -2423,7 +2428,7 @@ public class Interface : HiveObject
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
 		public WorkshopPanel currentBlueprintPanel;
-		public GroundNode currentNode;	// Node currently under the cursor
+		public GroundNode currentNode;  // Node currently under the cursor
 
 		public enum Construct
 		{
@@ -2436,7 +2441,7 @@ public class Interface : HiveObject
 		}
 		public Construct constructionMode = Construct.nothing;
 		public Workshop.Type workshopType;
-		public int currentFlagDirection = 1;	// 1 is a legacy value.
+		public int currentFlagDirection = 1;    // 1 is a legacy value.
 
 		struct BuildPossibility
 		{
@@ -2527,11 +2532,11 @@ public class Interface : HiveObject
 			gridMaskXID = Shader.PropertyToID( "_GridMaskX" );
 			gridMaskZID = Shader.PropertyToID( "_GridMaskZ" );
 
-			var greenMaterial = new Material( World.defaultShader )		{ color = new Color( 0.5f, 0.5f, 0.35f ) };
-			var blueMaterial = new Material( World.defaultShader )		{ color = new Color( 0.3f, 0.45f, 0.6f ) };
-			var yellowMaterial = new Material( World.defaultShader )	{ color = new Color( 177 / 255f, 146 / 255f, 97 / 255f ) };
-			var orangeMaterial = new Material( World.defaultShader )	{ color = new Color( 191 / 255f, 134 / 255f, 91 / 255f ) };
-			var greyMaterial = new Material( World.defaultShader )		{ color = Color.grey };
+			var greenMaterial = new Material( World.defaultShader )     { color = new Color( 0.5f, 0.5f, 0.35f ) };
+			var blueMaterial = new Material( World.defaultShader )      { color = new Color( 0.3f, 0.45f, 0.6f ) };
+			var yellowMaterial = new Material( World.defaultShader )    { color = new Color( 177 / 255f, 146 / 255f, 97 / 255f ) };
+			var orangeMaterial = new Material( World.defaultShader )    { color = new Color( 191 / 255f, 134 / 255f, 91 / 255f ) };
+			var greyMaterial = new Material( World.defaultShader )      { color = Color.grey };
 			buildCategories.Add( new BuildPossibility
 			{
 				configuration = Workshop.GetConfiguration( Workshop.Type.farm ),
@@ -2602,7 +2607,7 @@ public class Interface : HiveObject
 			if ( b && !b.construction.done )
 				hiveObject = ground;
 
-			if ( hiveObject is Ground.Block )
+			if ( hiveObject is Ground.Block || hiveObject == ground )
 			{
 				Vector3 localPosition = ground.transform.InverseTransformPoint( hit.point );
 				return GroundNode.FromPosition( localPosition, ground );

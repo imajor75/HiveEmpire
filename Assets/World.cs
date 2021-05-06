@@ -283,6 +283,8 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Resource>();
 			foreach ( var o in list )
 			{
+				if ( o.charges > 1000 )
+					o.infinite = true;
 				if ( o.life.empty )
 					o.life.reference = instance.time - 15000;
 			}

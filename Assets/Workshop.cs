@@ -216,7 +216,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				else
 				{
 					resource.gathered.Start();
-					if ( --resource.charges == 0 )
+					if ( !resource.infinite && --resource.charges == 0 )
 						resource.Remove( false );
 					else
 					{

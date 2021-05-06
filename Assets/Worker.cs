@@ -519,7 +519,7 @@ public class Worker : HiveObject
 		public override void Validate()
 		{
 			base.Validate();
-			if ( this != boss.taskQueue[0] )
+			if ( this != boss.taskQueue[0] || road == null )	// road might be unity null here
 				return;
 
 			boss.assert.IsTrue( currentPoint >= -1 && currentPoint < road.nodes.Count );
