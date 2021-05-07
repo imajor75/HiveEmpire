@@ -122,7 +122,7 @@ public class Ground : HiveObject
 
 	public void Link( HiveObject hiveObject, GroundNode location = null )
 	{
-		var bestBlock = FindClosestBlock( location ?? hiveObject.Node );
+		var bestBlock = FindClosestBlock( location ?? hiveObject.location );
 		if ( bestBlock )
 			hiveObject.transform.SetParent( bestBlock.transform, false );
 		else
@@ -385,7 +385,7 @@ public class Ground : HiveObject
 		}
 	}
 
-	public override GroundNode Node { get { return null; } }
+	public override GroundNode location { get { return null; } }
 
 	override public void Validate( bool chain )
  	{
@@ -447,7 +447,7 @@ public class Ground : HiveObject
 			}
 		}
 
-		public override GroundNode Node
+		public override GroundNode location
 		{
 			get
 			{

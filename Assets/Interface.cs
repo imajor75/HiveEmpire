@@ -566,7 +566,7 @@ public class Interface : HiveObject
 #endif
 	}
 
-	public override GroundNode Node { get { return null; } }
+	public override GroundNode location { get { return null; } }
 
 	public class Tooltip : Panel
 	{
@@ -677,7 +677,6 @@ public class Interface : HiveObject
 		public HiveObject target;
 		public bool followTarget = true;
 		public Image frame;
-		public Interface cachedRoot;
 		public bool escCloses = true;
 		public bool disableDrag;
 		public Vector2 offset;
@@ -691,21 +690,11 @@ public class Interface : HiveObject
 			same
 		}
 
-		public Interface Root
-		{
-			get
-			{
-				if ( cachedRoot == null )
-					cachedRoot = GameObject.FindObjectOfType<Interface>();
-				return cachedRoot;
-			}
-		}
-
 		// Summary:
 		// Return true if the caller should give
 		public bool Open( HiveObject target = null, int x = 0, int y = 0, int xs = 100, int ys = 100 )
 		{
-			foreach ( var panel in Root.panels )
+			foreach ( var panel in root.panels )
 			{
 				var r = IsTheSame( panel );
 				if ( r != CompareResult.different )
@@ -722,10 +711,10 @@ public class Interface : HiveObject
 				x = (int)( Screen.width - xs * uiScale ) / 2;
 				y = -(int)( Screen.height - ys * uiScale ) / 2;
 			}
-			Root.panels.Add( this );
+			root.panels.Add( this );
 			name = "Panel";
 			frame = gameObject.AddComponent<Image>();
-			Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), 100, 100, Root );
+			Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), 100, 100, root );
 			frame.enabled = false;
 			this.target = target;
 			UpdatePosition();
@@ -742,7 +731,7 @@ public class Interface : HiveObject
 
 		public void OnDestroy()
 		{
-			Root.panels.Remove( this );
+			root.panels.Remove( this );
 		}
 
 		public Image Image( int x, int y, int xs, int ys, Sprite picture = null, Component parent = null )
@@ -957,7 +946,7 @@ public class Interface : HiveObject
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.Node.GetPositionRelativeTo( new Vector3( root.world.eye.x, 0, root.world.eye.y ) ) + Vector3.up * GroundNode.size );
+			MoveTo( target.location.GetPositionRelativeTo( new Vector3( root.world.eye.x, 0, root.world.eye.y ) ) + Vector3.up * GroundNode.size );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -966,7 +955,7 @@ public class Interface : HiveObject
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.Node.position - Vector3.up * GroundNode.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * GroundNode.size );
 			screenPosition.y -= Screen.height;
 			Rect size = new Rect();
 			foreach ( RectTransform t in frame.rectTransform )
@@ -1044,7 +1033,7 @@ public class Interface : HiveObject
 				root.highlightType = HighlightType.area;
 				root.highlightArea = area;
 				root.highlightOwner = gameObject;
-				root.viewport.InputHandler = this;
+				root.viewport.inputHandler = this;
 			}
 
 			public void OnPointerEnter( PointerEventData eventData )
@@ -1059,7 +1048,7 @@ public class Interface : HiveObject
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
-				if ( root.viewport.InputHandler != this as IInputHandler && root.highlightArea == area )
+				if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == area )
 					root.highlightType = HighlightType.none;
 			}
 
@@ -1086,7 +1075,7 @@ public class Interface : HiveObject
 
 			public bool OnObjectClicked( HiveObject target )
 			{
-				return OnNodeClicked( target.Node );
+				return OnNodeClicked( target.location );
 			}
 		}
 
@@ -1288,7 +1277,7 @@ public class Interface : HiveObject
 			backGround.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 240 ), (int)( uiScale * ( -row + 20 ) ) );
 
 			if ( show )
-				Root.world.eye.FocusOn( workshop, true );
+				root.world.eye.FocusOn( workshop, true );
 		}
 
 		void Remove()
@@ -1460,7 +1449,7 @@ public class Interface : HiveObject
 			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 270, -160, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			if ( show )
-				Root.world.eye.FocusOn( guardHouse, true );
+				root.world.eye.FocusOn( guardHouse, true );
 		}
 		void Remove()
 		{
@@ -1496,7 +1485,7 @@ public class Interface : HiveObject
 			name = "Stock panel";
 			RecreateControls();
 			if ( show )
-				Root.world.eye.FocusOn( stock, true );
+				root.world.eye.FocusOn( stock, true );
 		}
 
 		void SelectItemType( Item.Type itemType )
@@ -1593,9 +1582,9 @@ public class Interface : HiveObject
 			}
 
 			itemTypeForRetarget = selectedItemType;
-			Root.highlightOwner = gameObject;
-			Root.viewport.InputHandler = this;
-			Root.highlightType = HighlightType.stocks;
+			root.highlightOwner = gameObject;
+			root.viewport.inputHandler = this;
+			root.highlightType = HighlightType.stocks;
 		}
 
 		void Remove()
@@ -1696,14 +1685,14 @@ public class Interface : HiveObject
 				return true;
 
 			stock.destinations[(int)itemTypeForRetarget] = destination;
-			Root.highlightType = HighlightType.none;
+			root.highlightType = HighlightType.none;
 			RecreateControls();
 			return false;
 		}
 
 		public void OnLostInput()
 		{
-			Root.highlightType = HighlightType.none;
+			root.highlightType = HighlightType.none;
 		}
 	}
 
@@ -1835,28 +1824,28 @@ public class Interface : HiveObject
 		void AddFlag()
 		{
 			root.viewport.constructionMode = Viewport.Construct.flag;
-			Root.viewport.showPossibleBuildings = true;
+			root.viewport.showPossibleBuildings = true;
 			Close();
 		}
 
 		void AddCrossing()
 		{
 			root.viewport.constructionMode = Viewport.Construct.crossing;
-			Root.viewport.showPossibleBuildings = true;
+			root.viewport.showPossibleBuildings = true;
 			Close();
 		}
 
 		void AddStock()
 		{
 			root.viewport.constructionMode = Viewport.Construct.stock;
-			Root.viewport.showPossibleBuildings = true;
+			root.viewport.showPossibleBuildings = true;
 			Close();
 		}
 
 		void AddGuardHouse()
 		{
 			root.viewport.constructionMode = Viewport.Construct.guardHouse;
-			Root.viewport.showPossibleBuildings = true;
+			root.viewport.showPossibleBuildings = true;
 			Close();
 		}
 
@@ -1881,8 +1870,8 @@ public class Interface : HiveObject
 				return;
 			}
 			root.viewport.constructionMode = Viewport.Construct.workshop;
-			Root.viewport.workshopType = type;
-			Root.viewport.showPossibleBuildings = true;
+			root.viewport.workshopType = type;
+			root.viewport.showPossibleBuildings = true;
 			Close();
 		}
 	}
@@ -1968,7 +1957,7 @@ public class Interface : HiveObject
 		public override void Update()
 		{
 			base.Update();
-			jam.text = "Items waiting: " + road.Jam;
+			jam.text = "Items waiting: " + road.jam;
 			workers.text = "Worker count: " + road.workers.Count;
 
 			bool reversed = false;
@@ -2085,7 +2074,7 @@ public class Interface : HiveObject
 			}
 			name = "Flag panel";
 			if ( show )
-				Root.world.eye.FocusOn( flag, true );
+				root.world.eye.FocusOn( flag, true );
 			Update();
 		}
 
@@ -2100,8 +2089,8 @@ public class Interface : HiveObject
 			if ( flag )
 			{
 				Road road = Road.Create().Setup( flag );
-				Root.viewport.InputHandler = road;
-				Root.viewport.showGridAtMouse = true;
+				root.viewport.inputHandler = road;
+				root.viewport.showGridAtMouse = true;
 			}
 			Close();
 		}
@@ -2286,7 +2275,7 @@ public class Interface : HiveObject
 			progressBar = Image( 20, -90, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
 
 			if ( show )
-				Root.world.eye.FocusOn( construction.boss, true );
+				root.world.eye.FocusOn( construction.boss, true );
 		}
 
 		public new void Update()
@@ -2379,7 +2368,7 @@ public class Interface : HiveObject
 			if ( item.destination && route == null )
 			{
 				route = CreateUIPath( item.path );
-				route?.transform.SetParent( Root.transform );
+				route?.transform.SetParent( root.transform );
 			}
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
@@ -2415,7 +2404,7 @@ public class Interface : HiveObject
 	{
 		public bool mouseOver;
 		public GameObject cursor;
-		IInputHandler inputHandler;
+		IInputHandler inputHandlerData;
 		readonly GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
 		//readonly GameObject cursorFlag;
 		//readonly GameObject cursorBuilding;
@@ -2451,15 +2440,15 @@ public class Interface : HiveObject
 			public float scale;
 		}
 
-		public IInputHandler InputHandler
+		public IInputHandler inputHandler
 		{
-			get { return inputHandler; }
+			get { return inputHandlerData; }
 			set
 			{
-				if ( inputHandler == value )
+				if ( inputHandlerData == value )
 					return;
-				inputHandler?.OnLostInput();
-				inputHandler = value;
+				inputHandlerData?.OnLostInput();
+				inputHandlerData = value;
 			}
 
 		}
@@ -2498,7 +2487,7 @@ public class Interface : HiveObject
 				}
 				return false;
 			}
-			InputHandler = this;
+			inputHandler = this;
 			return true;
 		}
 
@@ -2785,7 +2774,7 @@ public class Interface : HiveObject
 				}
 
 				SetCursorType( CursorType.building, currentFlagDirection );
-				if ( currentBlueprint && currentBlueprint.Node != node )
+				if ( currentBlueprint && currentBlueprint.location != node )
 					CancelBlueprint();
 				if ( currentBlueprint )
 					return true;
@@ -2989,9 +2978,9 @@ public class Interface : HiveObject
 			if ( B == null )
 				return -1;
 
-			if ( A.node.Id == B.node.Id )
+			if ( A.node.id == B.node.id )
 				return 0;
-			if ( A.node.Id < B.node.Id )
+			if ( A.node.id < B.node.id )
 				return 1;
 			return -1;
 		}

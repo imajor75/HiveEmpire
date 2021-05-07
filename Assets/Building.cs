@@ -629,7 +629,7 @@ abstract public class Building : HiveObject
 		workerMate?.Reset();
 	}
 
-	public override GroundNode Node { get { return node; } }
+	public override GroundNode location { get { return node; } }
 
 	public override void Validate( bool chain )
 	{

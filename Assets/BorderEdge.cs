@@ -41,6 +41,6 @@ public class BorderEdge : HiveObject
 		transform.localPosition = position;
 	}
 
-	public override GroundNode Node { get { return node; } }
+	public override GroundNode location { get { return node; } }
 
 }

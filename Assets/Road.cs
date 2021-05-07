@@ -23,8 +23,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	public World.Timer workerAdded;
 	public bool decorationOnly;
 	public static float height = 1.0f/20;
-	[JsonIgnore]
-	public float cost = 0;
 	public float cachedCost = 0;
 	public int targetWorkerCount;   // Zero means automaic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
@@ -149,9 +147,9 @@ public class Road : HiveObject, Interface.IInputHandler
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
 			workerAtNodes.Add( null );
 		CallNewWorker();
-		transform.localPosition = CenterNode.position;
+		transform.localPosition = centerNode.position;
 		ground.Link( this );
-		referenceLocation = CenterNode;
+		referenceLocation = centerNode;
 		curves = new List<CubicCurve>[3];
 		CreateCurves();
 		RebuildMesh();
@@ -182,8 +180,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		ground.Link( this );
 		if ( nodes.Count > 0 )
 		{
-			transform.localPosition = CenterNode.position;
-			referenceLocation = CenterNode;
+			transform.localPosition = centerNode.position;
+			referenceLocation = centerNode;
 		}
 		if ( invalid )
 			return;
@@ -217,7 +215,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( !ready )
 			return;
 
-		int jam = Jam;
+		int jam = this.jam;
 		const int maxJam = 2 * Flag.maxItems;
 		float weight = (float)( jam - 2 ) / ( maxJam - 6 );
 		mapMaterial.color = Color.Lerp( Color.green, Color.red, weight );
@@ -404,7 +402,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	}
 
 	public int cachedJam;
-	public int Jam
+	public int jam
 	{
 		get
 		{
@@ -665,7 +663,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
-	public GroundNode CenterNode
+	public GroundNode centerNode
 	{
 		get
 		{
@@ -673,7 +671,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public float Cost
+	public float cost
 	{
 		get
 		{
@@ -683,7 +681,7 @@ public class Road : HiveObject, Interface.IInputHandler
 					cachedCost += 0.01f / Worker.SpeedBetween( nodes[i], nodes[i + 1] );
 			}
 
-			float jamMultiplier = 1 + Jam / 2f;
+			float jamMultiplier = 1 + jam / 2f;
 			return cachedCost * jamMultiplier;
 		}
 	}
@@ -806,11 +804,11 @@ public class Road : HiveObject, Interface.IInputHandler
 		workers[0].Reset();
 	}
 
-	public override GroundNode Node
+	public override GroundNode location
 	{
 		get
 		{
-			return CenterNode;
+			return centerNode;
 		}
 	}
 
@@ -820,7 +818,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return;
 		if ( !ready && !decorationOnly )
 		{
-			assert.IsTrue( Interface.root.viewport.InputHandler is Road );
+			assert.IsTrue( Interface.root.viewport.inputHandler is Road );
 			return;
 		}
 		int length = nodes.Count;
@@ -882,7 +880,7 @@ public class Road : HiveObject, Interface.IInputHandler
 					realJam++;
 			}
 		}
-		assert.AreEqual( realJam, Jam );	// TODO Triggered (realJam=7, Jam=8), triggered again (realJam=10, Jam=11, max=12) and again (realJam==3, Jam==4). Potential fix was made. Triggered again (4, 5)(2, 3).
+		assert.AreEqual( realJam, jam );	// TODO Triggered (realJam=7, Jam=8), triggered again (realJam=10, Jam=11, max=12) and again (realJam==3, Jam==4). Potential fix was made. Triggered again (4, 5)(2, 3).
 			for ( int i = 0; i < nodes.Count - 1; i++ )
 			assert.AreEqual( nodes[i].DistanceFrom( nodes[i + 1] ), 1 );
 		if ( !ready )
@@ -893,7 +891,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.IsTrue( nodes.Count > 1 );
 		}
 		if ( !ready )
-			assert.AreEqual( Interface.root.viewport.InputHandler, this );
+			assert.AreEqual( Interface.root.viewport.inputHandler, this );
 	}
 
 	public void OnLostInput()

@@ -49,7 +49,7 @@ public abstract class HiveObject : MonoBehaviour
 		return false;
 	}
 
-	public abstract GroundNode Node { get; }
+	public abstract GroundNode location { get; }
 
 	public virtual void Reset()
 	{ 

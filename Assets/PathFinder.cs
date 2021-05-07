@@ -144,11 +144,11 @@ public class PathFinder : ScriptableObject
 					continue;
 				int index = road.NodeIndex( r.node );
 				if ( index == 0 )
-					VisitNode( road.lastNode, r.costG + road.Cost, r, road, false );
+					VisitNode( road.lastNode, r.costG + road.cost, r, road, false );
 				else
 				{
 					Assert.global.AreEqual( index, road.nodes.Count - 1 );
-					VisitNode( road.nodes[0], r.costG + road.Cost, r, road, true );
+					VisitNode( road.nodes[0], r.costG + road.cost, r, road, true );
 				}
 			}
 		}
@@ -254,7 +254,7 @@ public class Path : PathFinder
 		return roadPath[progress++];
 	}
 
-	public GroundNode Node
+	public GroundNode location
 	{
 		get
 		{

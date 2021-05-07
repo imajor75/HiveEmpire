@@ -367,7 +367,7 @@ public class Flag : HiveObject
 			assert.IsNull( user );
 	}
 
-	public override GroundNode Node
+	public override GroundNode location
 	{
 		get
 		{

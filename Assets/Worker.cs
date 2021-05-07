@@ -1016,7 +1016,7 @@ public class Worker : HiveObject
 		onRoad = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.ends[0] ); // TODO Pick the end closest to the main building
-		ScheduleWalkToRoadNode( road, road.CenterNode, false );
+		ScheduleWalkToRoadNode( road, road.centerNode, false );
 		ScheduleStartWorkingOnRoad( road );
 		return this;
 	}
@@ -1105,12 +1105,12 @@ public class Worker : HiveObject
 	public void SetNode( GroundNode node )
 	{
 		this.node = node;
-		node.ground.Link( this, walkBase?.Node );
+		node.ground.Link( this, walkBase?.location );
 	}
 
 	public void Start()
 	{
-		node.ground.Link( this, walkBase?.Node );
+		node.ground.Link( this, walkBase?.location );
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
 		links[(int)LinkType.haulingBoxLight] = World.FindChildRecursive( body.transform, "haulingBoxLight" )?.gameObject;
@@ -1504,7 +1504,7 @@ public class Worker : HiveObject
 		if ( !onRoad )
 		{
 			Profiler.BeginSample( "BackToRoad" );
-			ScheduleWalkToNode( road.CenterNode, false );
+			ScheduleWalkToNode( road.centerNode, false );
 			ScheduleStartWorkingOnRoad( road );
 			Profiler.EndSample();
 			return;
@@ -1989,7 +1989,7 @@ public class Worker : HiveObject
 		}
 	}
 
-	public override GroundNode Node { get { return node; } }
+	public override GroundNode location { get { return node; } }
 
 	public override void DestroyThis()
 	{

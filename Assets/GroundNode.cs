@@ -347,7 +347,7 @@ public class GroundNode : HiveObject
 			}
 		}
 		foreach ( var n in Ground.areas[1] )
-			Node.Add( n ).flag?.UpdateBody();
+			location.Add( n ).flag?.UpdateBody();
 		road?.RebuildMesh( true );
 		resource?.UpdateBody();
 		foreach ( var border in borders )
@@ -392,14 +392,6 @@ public class GroundNode : HiveObject
 		Interface.NodePanel.Create().Open( this );
 	}
 
-	public int Id
-	{
-		get
-		{
-			return x + y * ground.dimension;
-		}
-	}
-
 	public bool CheckType( Type type )
 	{
 		if ( ( this.type & type ) > 0 )
@@ -416,7 +408,7 @@ public class GroundNode : HiveObject
 		Validate( true );		// Be careful not to do circle validation to avoid infinite cycles
 	}
 
-	public override GroundNode Node { get { return this; } }
+	public override GroundNode location { get { return this; } }
 
 	public static GroundNode operator +( GroundNode node, Ground.Offset offset )
 	{

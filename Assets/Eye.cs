@@ -281,6 +281,6 @@ public class CameraHighlight : HiveObject
 		RenderTexture.ReleaseTemporary( tempRT );
 	}
 
-	public override GroundNode Node { get { return null; } }
+	public override GroundNode location { get { return null; } }
 }
 
