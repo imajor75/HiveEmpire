@@ -203,7 +203,7 @@ public class Ground : HiveObject
 				if ( x == 0 && y == 0 )
 					continue;
 				foreach ( var block in blocks )
-					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * GroundNode.size, 0, y * dimension * GroundNode.size ), Quaternion.identity, material, 0 );
+					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * GroundNode.size, 0, y * dimension * GroundNode.size ) + block.transform.position, Quaternion.identity, material, 0 );
 			}
 		}
 	}
