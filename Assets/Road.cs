@@ -17,7 +17,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<GroundNode> nodes = new List<GroundNode>();
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
-	[JsonIgnore]
 	public Mesh mesh;
 	public static Material material;
 	public static int timeBetweenWorkersAdded = 3000;
@@ -31,9 +30,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	public GroundNode referenceLocation;
-	[JsonIgnore]
 	Material mapMaterial;
-	[JsonIgnore]
 	Mesh mapMesh;
 	public bool invalid;
 

@@ -15,6 +15,7 @@ public class Eye : MonoBehaviour
 	public float viewDistance = 5.0f;
 	public World world;
 	public float x, y;
+	public float forwardForGroundBlocks = 10;
 	public float direction;
 	public bool rotateAround;
 	float storedX, storedY, storedDirection;
@@ -79,6 +80,7 @@ public class Eye : MonoBehaviour
 			director.SetCameraTarget( this );
 			this.director = director;
 		}
+		World.instance.ground.UpdateBlockOffsets( transform.position + transform.forward * forwardForGroundBlocks );
 	}
 
 	public void GrabFocus( IDirector director )
@@ -181,8 +183,6 @@ public class Eye : MonoBehaviour
 			x += World.instance.ground.dimension * GroundNode.size;
 		if ( x > World.instance.ground.dimension * GroundNode.size / 2 + y / 2 )
 			x -= World.instance.ground.dimension * GroundNode.size;
-
-		World.instance.ground.UpdateBlockOffsets( new Vector3( x, 0, y ) );
 
 		if ( Interface.GetKey( KeyCode.Q ) )
 		{
