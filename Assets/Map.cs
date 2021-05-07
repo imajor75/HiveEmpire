@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Design.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 

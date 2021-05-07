@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -17,6 +16,7 @@ public class Eye : MonoBehaviour
 	public float x, y;
 	public float forwardForGroundBlocks = 10;
 	public float direction;
+	public Vector3 autoMovement;
 	public bool rotateAround;
 	float storedX, storedY, storedDirection;
 	bool hasStoredValues;
@@ -142,7 +142,7 @@ public class Eye : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		Vector3 movement = new Vector3();
+		Vector3 movement = autoMovement;
 		if ( Interface.GetKey( KeyCode.A ) )
 		{
 			movement += transform.right * -0.1f * altitude / 6;
