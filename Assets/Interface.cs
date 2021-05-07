@@ -977,7 +977,7 @@ public class Interface : HiveObject
 				size.yMax = Math.Max( size.yMax, t.rect.yMax );
 			}
 			if ( screenPosition.x + size.width > Screen.width )
-				screenPosition.x -= size.width;
+				screenPosition.x -= size.width + 2 * offset.x;
 			frame.rectTransform.anchoredPosition = screenPosition;
 		}
 
