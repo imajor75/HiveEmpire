@@ -896,8 +896,11 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public void OnLostInput()
 	{
-		bool removed = Remove( false );
+		if ( !ready )
+		{
+			bool removed = Remove( false );
+			assert.IsTrue( removed );
+		}
 		Interface.root.viewport.showGridAtMouse = false;
-		assert.IsTrue( removed );
 	}
 }

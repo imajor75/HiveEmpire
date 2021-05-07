@@ -1015,7 +1015,10 @@ public class Interface : HiveObject
 			public bool OnNodeClicked( GroundNode node )
 			{
 				if ( root.highlightArea == area )
+				{
 					root.highlightType = HighlightType.none;
+					root.highlightArea = null;
+				}
 				return false;
 			}
 
@@ -1069,6 +1072,8 @@ public class Interface : HiveObject
 
 			public void OnLostInput()
 			{
+				if ( root.highlightArea != area )
+					return;
 				area.center = null;
 				root.highlightType = HighlightType.none;
 			}
