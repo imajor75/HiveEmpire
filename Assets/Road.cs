@@ -59,7 +59,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		nodes.Add( building.node );
 		nodes.Add( building.flag.node );
 		ground = building.ground;
-		CreateCurves();
 		return this;
 	}
 
