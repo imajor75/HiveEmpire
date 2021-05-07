@@ -367,9 +367,19 @@ public class Ground : HiveObject
 	{
 		foreach ( var block in blocks )
 		{
-			if ( Math.Abs( node.x - block.center.x ) > block.dimension / 2 + 2 )
+			var xDif = Math.Abs( node.x - block.center.x );
+			if ( xDif > dimension / 2 )
+				xDif = dimension - xDif;
+			if ( xDif > block.dimension / 2 + 2 )
 				continue;
-			if ( Math.Abs( node.y - block.center.y ) > block.dimension / 2 + 2 )
+
+			var yDif = Math.Abs( node.y - block.center.y );
+			if ( yDif > dimension / 2 )
+				yDif = dimension - yDif;
+			if ( yDif > block.dimension / 2 + 2 )
+				continue;
+
+			if ( yDif > block.dimension / 2 + 2 )
 				continue;
 			block.layoutVersion++;
 		}
