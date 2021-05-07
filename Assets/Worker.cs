@@ -30,9 +30,7 @@ public class Worker : HiveObject
 	public World.Timer bored;
 	public static int boredTimeBeforeRemove = 6000;
 	static public MediaTable<AudioClip, Type> walkSounds;
-	[JsonIgnore]
 	public AudioSource soundSource;
-	[JsonIgnore]
 	public GameObject mapObject;
 	Material mapMaterial;
 	GameObject arrowObject;
@@ -55,7 +53,6 @@ public class Worker : HiveObject
 
 	public Building building;
 
-	[JsonIgnore]
 	public Animator animator;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
@@ -92,7 +89,6 @@ public class Worker : HiveObject
 	Color cachedColor;
 	public SerializableColor currentColor;
 
-	[JsonIgnore]
 	public Color Color
 	{
 		set
@@ -2016,7 +2012,6 @@ public class Worker : HiveObject
 		base.DestroyThis();
 	}
 
-	[JsonIgnore]
 	public bool hasItems { get { return itemsInHands[0] != null; } }
 
 	public override void Validate( bool chain )

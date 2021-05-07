@@ -404,7 +404,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	}
 
 	public int cachedJam;
-	[JsonIgnore]
 	public int Jam
 	{
 		get
@@ -666,7 +665,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
-	[JsonIgnore]
 	public GroundNode CenterNode
 	{
 		get
@@ -675,7 +673,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	[JsonIgnore]
 	public float Cost
 	{
 		get
@@ -691,7 +688,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	[JsonIgnore]
 	public int ActiveWorkerCount
 	{
 		get
@@ -704,7 +700,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	[JsonIgnore]
 	public GroundNode lastNode { get { return nodes[nodes.Count - 1]; } }
 
 	public bool OnMovingOverNode( GroundNode node )

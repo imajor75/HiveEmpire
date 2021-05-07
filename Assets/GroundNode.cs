@@ -21,7 +21,6 @@ public class GroundNode : HiveObject
 	public Player owner;
 	public int influence;
 	public BorderEdge[] borders = new BorderEdge[neighbourCount];
-	[JsonIgnore]
 	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
 	public float staticHeight = -1;
 	public Type type;
@@ -30,7 +29,6 @@ public class GroundNode : HiveObject
 	const float decorationSpreadMax = 0.6f;
 	const float decorationDensity = 0.08f;
 
-	[JsonIgnore]
 	public Flag validFlag
 	{
 		get
@@ -394,7 +392,6 @@ public class GroundNode : HiveObject
 		Interface.NodePanel.Create().Open( this );
 	}
 
-	[JsonIgnore]
 	public int Id
 	{
 		get

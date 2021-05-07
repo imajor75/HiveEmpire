@@ -18,7 +18,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
 	GameObject body;
-	[JsonIgnore]
 	public Transform millWheel;
 	public float millWheelSpeed = 0;
 	public GroundNode resourcePlace;
@@ -29,7 +28,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
 	static Texture2D mapIndicatorTexture;
-	[JsonIgnore, HideInInspector]
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	public static Configuration[] configurations;
 
@@ -560,7 +558,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		SetWorking( false );
 	}
 
-	[JsonIgnore]
 	public bool gatherer { get { return productionConfiguration.gatheredResource != Resource.Type.unknown; } }
 
 	public new void FixedUpdate()

@@ -241,7 +241,6 @@ public class Path : PathFinder
 		return null;
 	}
 
-	[JsonIgnore]
 	public Road road
 	{
 		get
@@ -255,7 +254,6 @@ public class Path : PathFinder
 		return roadPath[progress++];
 	}
 
-	[JsonIgnore]
 	public GroundNode Node
 	{
 		get
@@ -269,7 +267,6 @@ public class Path : PathFinder
 		return path[progress++];
 	}
 
-	[JsonIgnore]
 	public bool isFinished
 	{
 		get
@@ -281,7 +278,6 @@ public class Path : PathFinder
 		}
 	}
 
-	[JsonIgnore]
 	public int stepsLeft
 	{
 		get

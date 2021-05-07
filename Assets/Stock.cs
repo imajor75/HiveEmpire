@@ -46,7 +46,6 @@ public class Stock : Building
 		public int itemQuantity;
 		public Stock destination;
 		public const int frameCount = 8;
-		[JsonIgnore]
 		public Stock boss { get { return building as Stock; } }
 		readonly GameObject[] frames = new GameObject[8];
 		new public static Cart Create()

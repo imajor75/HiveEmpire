@@ -552,7 +552,6 @@ public class World : MonoBehaviour
 		{
 			reference = 0;
 		}
-		[JsonIgnore]
 		public int age
 		{
 			get
@@ -562,11 +561,8 @@ public class World : MonoBehaviour
 				return instance.time - reference;
 			}
 		}
-		[JsonIgnore]
 		public bool done { get { return !empty && age >= 0; } }
-		[JsonIgnore]
 		public bool empty { get { return reference == 0; } }
-		[JsonIgnore]
 		public bool inProgress { get { return !empty && !done; } }
 	}
 }

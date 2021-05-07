@@ -39,7 +39,6 @@ abstract public class Building : HiveObject
 		}
 	}
 
-	[JsonIgnore]
 	public List<Ground.Offset> foundation
 	{
 		get

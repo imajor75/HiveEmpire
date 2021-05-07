@@ -46,7 +46,6 @@ public class Item : HiveObject
 						// 3. A is already delivered, the worker is now carrying B as normal. Both A.buddy and B.buddy is null. The latter got cleared in Flag.FinalizeItem
 	public int index = -1;
 	public static bool creditOnRemove = true;
-	[JsonIgnore]
 	public GameObject body;
 
 	[JsonIgnore]
@@ -54,9 +53,6 @@ public class Item : HiveObject
 
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	public static MediaTable<GameObject, Type> looks;
-
-	[JsonIgnore]
-	public bool Heavy { get { return true; } }
 
 	public enum Type
 	{
@@ -332,7 +328,6 @@ public class Item : HiveObject
 		DestroyThis();
 	}
 
-	[JsonIgnore]
 	public Road road
 	{
 		get
@@ -345,7 +340,6 @@ public class Item : HiveObject
 		}
 	}
 
-	[JsonIgnore]
 	public bool lastRoad { get { return path != null && path.stepsLeft == 1; } }
 
 	public override bool Remove( bool takeYourTime )

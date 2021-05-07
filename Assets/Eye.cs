@@ -20,7 +20,6 @@ public class Eye : MonoBehaviour
 	public bool rotateAround;
 	float storedX, storedY, storedDirection;
 	bool hasStoredValues;
-	[JsonIgnore]
 	public new Camera camera;
 	[JsonIgnore]
 	public IDirector director;

@@ -22,8 +22,6 @@ public class Flag : HiveObject
 	static GameObject template;
 	static GameObject baseTemplate;
 	public Versioned itemsStored = new Versioned();
-	[JsonIgnore]
-	public bool debugSpawnPlank;
 	public bool requestFlattening;
 	public const float itemSpread = 0.25f;
 	GameObject tiles;
@@ -113,20 +111,6 @@ public class Flag : HiveObject
 			t.LookAt( transform );
 			if ( items[i] != null )
 				items[i].transform.SetParent( frames[i].transform, false );
-		}
-	}
-
-	public void Update()
-	{
-		if ( debugSpawnPlank )
-		{
-			if ( FreeSpace() > 0 )
-			{
-				Item item = Item.Create().Setup( Item.Type.plank, owner.mainBuilding );
-				ReserveItem( item );
-				FinalizeItem( item );
-			}
-			debugSpawnPlank = false;
 		}
 	}
 

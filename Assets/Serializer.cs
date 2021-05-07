@@ -23,10 +23,14 @@ public class Serializer : JsonSerializer
 
 		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
 		{
+			if ( member.Name == "soundSource" )
+			{ 
+			// belapat
+			}
 			JsonProperty property = base.CreateProperty( member, memberSerialization );
 
 			// If the type of the member is a unity type (for example a mesh) we ignore it
-			if ( member is FieldInfo t && t.FieldType.Module == typeof( MonoBehaviour ).Module )
+			if ( member is FieldInfo t && t.FieldType.Namespace == "UnityEngine" )
 				property.ShouldSerialize = instance => false;
 
 			// We ignore every property
