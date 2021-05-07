@@ -2523,7 +2523,8 @@ public class Interface : HiveObject
 		{
 			currentBlueprint?.Remove();
 			currentBlueprint = null;
-			currentBlueprintPanel?.Close();
+			if ( currentBlueprintPanel )
+				currentBlueprintPanel.Close();
 			currentBlueprintPanel = null;
 		}
 
