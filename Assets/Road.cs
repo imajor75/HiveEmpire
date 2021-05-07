@@ -824,6 +824,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override void Validate( bool chain )
 	{
+		if ( invalid )	// Already destroyed, should not be validated
+			return;
 		if ( !ready && !decorationOnly )
 		{
 			assert.IsTrue( Interface.root.viewport.InputHandler is Road );
@@ -842,7 +844,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.IsNotNull( ends[1] );
 		assert.AreEqual( ends[0].node, nodes[0] );
 		assert.AreEqual( ends[1].node, lastNode );
-		assert.IsTrue( ends[0].roadsStartingHere.Contains( this ) );
+		assert.IsTrue( ends[0].roadsStartingHere.Contains( this ) );	// TODO Triggered whe trying to add a flag to an existing road
+		// Called from RoadPanel.Split
 		assert.IsTrue( ends[1].roadsStartingHere.Contains( this ) );
 
 		var first = nodes[0];
