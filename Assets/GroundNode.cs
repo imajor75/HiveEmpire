@@ -122,7 +122,7 @@ public class GroundNode : HiveObject
 				d.SetParent( ground.FindClosestBlock( this ).transform );
 				var o = Neighbour( i );
 				var l = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
-				d.position = position * ( 1 - l ) + o.position * l;
+				d.position = position * ( 1 - l ) + o.GetPositionRelativeTo( this ) * l;
 			}
 		}
 	}
