@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
@@ -525,6 +526,10 @@ public class World : MonoBehaviour
 		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
 		foreach ( var o in list2 )
 		{
+#if UNITY_EDITOR
+			if ( PrefabUtility.IsPartOfAnyPrefab( o ) )
+				continue;
+#endif
 			var mainModule = o.main;
 			mainModule.simulationSpeed = factor;
 		}

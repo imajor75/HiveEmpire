@@ -476,12 +476,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( working && smoke )
 		{
 			var a = smoke.main;
-			var s = a.simulationSpeed;
 			a.simulationSpeed = 1;
 			smoke.Simulate( 10 );
 			smoke.Play();
 			var b = smoke.main;
-			b.simulationSpeed = s;
+			b.simulationSpeed = World.instance.timeFactor;
 		}
 		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
