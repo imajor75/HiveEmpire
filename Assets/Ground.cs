@@ -14,12 +14,13 @@ public class Ground : HiveObject
 	public float sharpRendering = 0.5f;
 	public List<Block> blocks = new List<Block>();
 	public Material material;
-	public int overseas = 2;
 
 	[Obsolete( "Compatibility with old files", true )]
 	int width { set { if ( dimension == 0 ) dimension = value; assert.AreEqual( dimension, value ); } }
 	[Obsolete( "Compatibility with old files", true )]
 	int height { set { if ( dimension == 0 ) dimension = value; assert.AreEqual( dimension, value ); } }
+	[Obsolete( "Compatibility with old files", true )]
+	int overseas { set { world.overseas = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	int layoutVersion, meshVersion;
 
@@ -196,6 +197,7 @@ public class Ground : HiveObject
 
 	void Update()
 	{
+		var overseas = world.overseas;
 		for ( int x = -overseas; x <= overseas; x++ )
 		{
 			for ( int y = -overseas; y <= overseas; y++ )

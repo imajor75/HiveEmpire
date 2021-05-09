@@ -233,6 +233,7 @@ public class Interface : HiveObject
 		GuardHouse.Initialize();
 		CameraHighlight.Initialize();
 		Viewport.Initialize();
+		Water.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 

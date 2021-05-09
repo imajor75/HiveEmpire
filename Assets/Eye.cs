@@ -60,8 +60,8 @@ public class Eye : MonoBehaviour
 	private void Update()
 	{
 		var h = World.instance.ground.GetHeightAt( x, y );
-		if ( h < World.instance.settings.waterLevel * World.instance.settings.maxHeight )
-			h = World.instance.settings.waterLevel * World.instance.settings.maxHeight;
+		if ( h < World.instance.waterLevel )
+			h = World.instance.waterLevel;
 		h += ( ear.position.y - h ) * 0.96f;
 		var p = new Vector3( x, h, y );
 		ear.position = p;

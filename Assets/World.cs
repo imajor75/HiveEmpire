@@ -30,15 +30,14 @@ public class World : MonoBehaviour
 	static public Shader defaultTextureShader;
 	public bool gameInProgress;
 	public int time;
+	public int overseas = 2;
 
-	static public GameObject water;
+	static public Water water;
 	static public GameObject nodes;
 	static public GameObject itemsJustCreated;
 
 	[Obsolete( "Compatibility with old files", true )]
 	float maxHeight;
-	[Obsolete( "Compatibility with old files", true )]
-	float waterLevel;
 	[Obsolete( "Compatibility with old files", true )]
 	float hillLevel;
 	[Obsolete( "Compatibility with old files", true )]
@@ -180,6 +179,7 @@ public class World : MonoBehaviour
 		eye = Eye.Create().Setup( this );
 		ground = Ground.Create().Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
+		water = Water.Create().Setup( ground );
 		var mainPlayer = Player.Create().Setup();
 		if ( mainPlayer )
 			players.Add( mainPlayer );
@@ -206,7 +206,7 @@ public class World : MonoBehaviour
 		name = "World";
 		foreach ( var player in players )
 			player.Start();
-		water.transform.localPosition = Vector3.up * settings.waterLevel * settings.maxHeight;
+		water.transform.localPosition = Vector3.up * waterLevel;
 	}
 
 	public void Load( string fileName )
@@ -227,6 +227,8 @@ public class World : MonoBehaviour
 			player.Start();
 
 		GenerateResources( true );  // For old files
+		if ( water == null )
+			water = Water.Create().Setup( ground );
 
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
@@ -347,13 +349,6 @@ public class World : MonoBehaviour
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();
 		}
-
-		water = GameObject.CreatePrimitive( PrimitiveType.Plane );
-		water.transform.SetParent( transform );
-		water.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
-		water.name = "Water";
-		water.transform.localPosition = Vector3.up * settings.waterLevel * settings.maxHeight;
-		water.transform.localScale = Vector3.one * 1000 * GroundNode.size;
 
 		nodes = new GameObject( "Nodes" );
 		nodes.transform.SetParent( transform );
@@ -532,6 +527,21 @@ public class World : MonoBehaviour
 #endif
 			var mainModule = o.main;
 			mainModule.simulationSpeed = factor;
+		}
+	}
+
+	public float waterLevel
+	{
+		get
+		{	
+			return settings.waterLevel * settings.maxHeight;
+		}
+
+		[Obsolete( "Compatibility with old files", true )]
+		set
+		{
+			// Compatibility with old files
+			settings.waterLevel = value;
 		}
 	}
 
