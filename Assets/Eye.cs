@@ -75,7 +75,7 @@ public class Eye : MonoBehaviour
 	}
 
 	// Approximation only
-	public Vector3 viewCubeCenter
+	public Vector3 visibleAreaCenter
 	{
 		get
 		{

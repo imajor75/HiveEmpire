@@ -2624,6 +2624,18 @@ public class Interface : HiveObject
 			}
 		}
 
+		public Vector3 visibleAreaCenter
+		{
+			// TODO This should be way cleaner
+			get
+			{
+				if ( World.instance.eye.camera.enabled )
+					return World.instance.eye.visibleAreaCenter;
+				else
+					return camera.transform.position;
+			}
+		}
+
 		public HiveObject FindObjectAt( Vector3 screenPosition )
 		{
 			if ( camera == null )

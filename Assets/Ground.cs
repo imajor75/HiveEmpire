@@ -132,7 +132,7 @@ public class Ground : HiveObject
 
 	public void LateUpdate()
 	{
-		var camera = world.eye.viewCubeCenter;
+		var camera = Interface.root.viewport.visibleAreaCenter;
 		foreach ( var block in blocks )
 			block.UpdateOffset( camera );
 	}
