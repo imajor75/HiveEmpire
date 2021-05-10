@@ -485,59 +485,6 @@ public class Interface : HiveObject
 		highlightVolume.GetComponent<MeshCollider>().sharedMesh = m;
 	}
 
-	public static GameObject CreateUIPath( Path path )
-	{
-		if ( path == null )
-			return null;
-
-		GameObject routeOnMap = new GameObject
-		{
-			name = "Path on map"
-		};
-		var renderer = routeOnMap.AddComponent<MeshRenderer>();
-		renderer.material = materialUIPath;
-		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		var route = routeOnMap.AddComponent<MeshFilter>().mesh = new Mesh();
-
-		List<Vector3> vertices = new List<Vector3>();
-		List<Vector2> uvs = new List<Vector2>();
-		List<int> triangles = new List<int>();
-		for ( int j = 0; j < path.roadPath.Count; j++ )
-		{
-			Road road = path.roadPath[j];
-			float uvDir = path.roadPathReversed[j] ? 1f : 0f;
-			for ( int i = 0; i < road.nodes.Count - 1; i++ )
-			{
-				Vector3 start = road.nodes[i].position + Vector3.up * 0.1f;
-				Vector3 end = road.nodes[i + 1].position + Vector3.up * 0.1f;
-				Vector3 side = (end - start) * 0.1f;
-				side = new Vector3( -side.z, side.y, side.x );
-
-				triangles.Add( vertices.Count + 0 );
-				triangles.Add( vertices.Count + 1 );
-				triangles.Add( vertices.Count + 2 );
-				triangles.Add( vertices.Count + 1 );
-				triangles.Add( vertices.Count + 3 );
-				triangles.Add( vertices.Count + 2 );
-
-				vertices.Add( start - side );
-				vertices.Add( start + side );
-				vertices.Add( end - side );
-				vertices.Add( end + side );
-
-				uvs.Add( new Vector2( 0, 6 * uvDir ) );
-				uvs.Add( new Vector2( 1, 6 * uvDir ) );
-				uvs.Add( new Vector2( 0, 6 * ( 1 - uvDir ) ) );
-				uvs.Add( new Vector2( 1, 6 * ( 1 - uvDir ) ) );
-			}
-		}
-
-		route.vertices = vertices.ToArray();
-		route.triangles = triangles.ToArray();
-		route.uv = uvs.ToArray();
-		return routeOnMap;
-	}
-
 	void SetHeightStrips( bool value )
 	{
 		this.heightStrips = value;
@@ -569,9 +516,103 @@ public class Interface : HiveObject
 
 	public override GroundNode location { get { return null; } }
 
+	public class PathVisualization : MonoBehaviour
+	{
+		GroundNode start;
+
+		public static PathVisualization Create()
+		{
+			return new GameObject().AddComponent<PathVisualization>();
+		}
+
+		public PathVisualization Setup( Path path )
+		{
+			if ( path == null )
+			{
+				Destroy( this );
+				return null;
+			}
+
+			var renderer = gameObject.AddComponent<MeshRenderer>();
+			renderer.material = materialUIPath;
+			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			var route = gameObject.AddComponent<MeshFilter>().mesh = new Mesh();
+
+			List<Vector3> vertices = new List<Vector3>();
+			List<Vector2> uvs = new List<Vector2>();
+			List<int> triangles = new List<int>();
+			Vector3? currentPosition = null;
+			for ( int j = 0; j < path.roadPath.Count; j++ )
+			{
+				Road road = path.roadPath[j];
+				for ( int i = 0; i < road.nodes.Count - 1; i++ )
+				{
+					int c = i, n = i + 1;
+					if ( path.roadPathReversed[j] )
+					{
+						c = road.nodes.Count - i - 1;
+						n = c - 1;
+					}
+					if ( currentPosition == null )
+					{
+						start = road.nodes[c];
+						currentPosition = road.nodes[c].position + Vector3.up * 0.1f;
+					}
+					Vector3 dif = road.nodes[n].GetPositionRelativeTo( road.nodes[c] ) - road.nodes[c].position;
+
+					Vector3 side = dif * 0.1f;
+					side = new Vector3( -side.z, side.y, side.x );
+
+					triangles.Add( vertices.Count + 0 );
+					triangles.Add( vertices.Count + 1 );
+					triangles.Add( vertices.Count + 2 );
+					triangles.Add( vertices.Count + 1 );
+					triangles.Add( vertices.Count + 3 );
+					triangles.Add( vertices.Count + 2 );
+
+					vertices.Add( currentPosition.Value - side );
+					vertices.Add( currentPosition.Value + side );
+					vertices.Add( currentPosition.Value + dif - side );
+					vertices.Add( currentPosition.Value + dif + side );
+					currentPosition = currentPosition.Value + dif;
+
+					uvs.Add( new Vector2( 0, 0 ) );
+					uvs.Add( new Vector2( 1, 0 ) );
+					uvs.Add( new Vector2( 0, 6 ) );
+					uvs.Add( new Vector2( 1, 6 ) );
+				}
+			}
+
+			route.vertices = vertices.ToArray();
+			route.triangles = triangles.ToArray();
+			route.uv = uvs.ToArray();
+			return this;
+		}
+
+		public void Start()
+		{
+			name = "Path visualization";
+			transform.SetParent( World.instance.transform );
+		}
+
+		public void Update()
+		{
+			if ( start )
+			{
+				var offset = start.GetPositionRelativeTo( World.instance.eye.position ) - start.position;
+				transform.localPosition = offset;
+			}
+		}
+
+		public void OnDestroy()
+		{
+			Destroy( gameObject );
+		}
+
+	}
+
 	public class Tooltip : Panel
 	{
-		GameObject objectToShow;
 		Component origin;
 		Text text, additionalText;
 		Image image, backGround;
@@ -597,14 +638,11 @@ public class Interface : HiveObject
 			FollowMouse();
 		}
 
-		public void SetText( Component origin, string text = "", Sprite imageToShow = null, GameObject objectToShow = null, string additionalText = "" )
+		public void SetText( Component origin, string text = "", Sprite imageToShow = null, string additionalText = "" )
 		{
 			this.origin = origin;
 			this.text.text = text;
 			this.additionalText.text = additionalText;
-			if ( this.objectToShow != null && this.objectToShow != objectToShow )
-				Destroy( this.objectToShow );
-			this.objectToShow = objectToShow;
 			if ( imageToShow )
 			{
 				image.sprite = imageToShow;
@@ -655,7 +693,7 @@ public class Interface : HiveObject
 
 		public void OnPointerEnter( PointerEventData eventData )
 		{
-			tooltip.SetText( this, text, image, null, additionalText );
+			tooltip.SetText( this, text, image, additionalText );
 		}
 
 		public void OnPointerExit( PointerEventData eventData )
@@ -1090,7 +1128,7 @@ public class Interface : HiveObject
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
 			public string additionalTooltip;
-			GameObject path;
+			PathVisualization pathVisualization;
 
 			public void Track()
 			{
@@ -1105,8 +1143,8 @@ public class Interface : HiveObject
 				if ( this.itemType == itemType )
 					return;
 
-				Destroy( path );
-				path = null;
+				Destroy( pathVisualization );
+				pathVisualization = null;
 
 				this.itemType = itemType;
 				if ( itemType == Item.Type.unknown )
@@ -1121,8 +1159,8 @@ public class Interface : HiveObject
 			public new void OnDestroy()
 			{
 				base.OnDestroy();
-				Destroy( path );
-				path = null;
+				Destroy( pathVisualization );
+				pathVisualization = null;
 			}
 
 			public void SetItem( Item item )
@@ -1137,13 +1175,18 @@ public class Interface : HiveObject
 			public void OnPointerEnter( PointerEventData eventData )
 			{
 				if ( item != null )
-					tooltip.SetText( this, item.type.ToString(), Item.sprites[(int)item.type], path = CreateUIPath( item.path ), additionalTooltip );
+				{
+					pathVisualization = PathVisualization.Create().Setup( item.path );
+					tooltip.SetText( this, item.type.ToString(), Item.sprites[(int)item.type], additionalTooltip );
+				}
 				else
-					tooltip.SetText( this, itemType.ToString(), Item.sprites[(int)itemType], null, additionalTooltip );
+					tooltip.SetText( this, itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip );
 			}
 
 			public void OnPointerExit( PointerEventData eventData )
 			{
+				Destroy( pathVisualization );
+				pathVisualization = null;
 				tooltip.Clear();
 			}
 		}
@@ -2167,7 +2210,7 @@ public class Interface : HiveObject
 		Text itemsInCart;
 		public Stock cartDestination;
 		Component destinationBuilding;
-		GameObject cartPath;
+		PathVisualization cartPath;
 
 		public static WorkerPanel Create()
 		{
@@ -2231,7 +2274,7 @@ public class Interface : HiveObject
 						destinationBuilding = BuildingIcon( 70, -95, cart.destination );
 					var path = cart.FindTaskInQueue<Worker.WalkToFlag>()?.path;
 					Destroy( cartPath );
-					cartPath = CreateUIPath( path );
+					cartPath = PathVisualization.Create().Setup( path );
 				}
 			}
 			else
@@ -2313,7 +2356,7 @@ public class Interface : HiveObject
 	public class ItemPanel : Panel, Eye.IDirector
 	{
 		public Item item;
-		public GameObject route;
+		public PathVisualization route;
 		public Text stats;
 		GameObject mapIcon;
 
@@ -2372,10 +2415,7 @@ public class Interface : HiveObject
 				stats.text = "Age: " + item.life.age / 50 + " secs";
 
 			if ( item.destination && route == null )
-			{
-				route = CreateUIPath( item.path );
-				route?.transform.SetParent( root.transform );
-			}
+				route = PathVisualization.Create().Setup( item.path );
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
 			else

@@ -57,6 +57,14 @@ public class Eye : MonoBehaviour
 		ear.transform.SetParent( World.instance.transform );
 	}
 
+	public Vector3 position
+	{
+		get
+		{
+			return new Vector3( x, 0, y );
+		}
+	}
+
 	private void Update()
 	{
 		var h = World.instance.ground.GetHeightAt( x, y );
