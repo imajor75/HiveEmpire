@@ -518,6 +518,7 @@ public class Interface : HiveObject
 
 	public class PathVisualization : MonoBehaviour
 	{
+	    Vector3 lastAbsoluteEyePosition;
 		GroundNode start;
 
 		public static PathVisualization Create()
@@ -586,6 +587,7 @@ public class Interface : HiveObject
 			route.vertices = vertices.ToArray();
 			route.triangles = triangles.ToArray();
 			route.uv = uvs.ToArray();
+		    lastAbsoluteEyePosition = World.instance.eye.absolutePosition;
 			return this;
 		}
 
@@ -597,11 +599,9 @@ public class Interface : HiveObject
 
 		public void Update()
 		{
-			if ( start )
-			{
-				var offset = start.GetPositionRelativeTo( World.instance.eye.position ) - start.position;
-				transform.localPosition = offset;
-			}
+			var currentAbsoluteEyePosition = World.instance.eye.absolutePosition;
+			transform.localPosition -= currentAbsoluteEyePosition - lastAbsoluteEyePosition;
+			lastAbsoluteEyePosition = currentAbsoluteEyePosition;
 		}
 
 		public void OnDestroy()

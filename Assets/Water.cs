@@ -76,7 +76,7 @@ public class Water : MonoBehaviour
 
     public void Update()
     {
-		var overseas = World.instance.overseas;
+		var overseas = World.instance.overseas + 1;
 		for ( int x = -overseas; x <= overseas; x++ )
 		{
 			for ( int y = -overseas; y <= overseas; y++ )

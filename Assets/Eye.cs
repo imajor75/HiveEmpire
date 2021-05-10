@@ -14,6 +14,7 @@ public class Eye : MonoBehaviour
 	public float viewDistance = 5.0f;
 	public World world;
 	public float x, y;
+	public float absoluteX, absoluteY;
 	public float forwardForGroundBlocks = 10;
 	public float direction;
 	public Vector3 autoMovement;
@@ -62,6 +63,14 @@ public class Eye : MonoBehaviour
 		get
 		{
 			return new Vector3( x, 0, y );
+		}
+	}
+
+	public Vector3 absolutePosition
+	{
+		get
+		{
+			return new Vector3( absoluteX, 0, absoluteY );
 		}
 	}
 
@@ -181,16 +190,26 @@ public class Eye : MonoBehaviour
 		{
 			y += World.instance.ground.dimension * GroundNode.size;
 			x += World.instance.ground.dimension * GroundNode.size / 2;
+			absoluteY -= World.instance.ground.dimension * GroundNode.size;
+			absoluteX -= World.instance.ground.dimension * GroundNode.size / 2;
 		}
 		if ( y > World.instance.ground.dimension * GroundNode.size / 2 )
 		{
 			y -= World.instance.ground.dimension * GroundNode.size;
 			x -= World.instance.ground.dimension * GroundNode.size / 2;
+			absoluteY += World.instance.ground.dimension * GroundNode.size;
+			absoluteX += World.instance.ground.dimension * GroundNode.size / 2;
 		}
 		if ( x < -World.instance.ground.dimension * GroundNode.size / 2 + y / 2 )
+		{
 			x += World.instance.ground.dimension * GroundNode.size;
+			absoluteX -= World.instance.ground.dimension * GroundNode.size;
+		}
 		if ( x > World.instance.ground.dimension * GroundNode.size / 2 + y / 2 )
+		{
 			x -= World.instance.ground.dimension * GroundNode.size;
+			absoluteX += World.instance.ground.dimension * GroundNode.size;
+		}
 
 		if ( Interface.GetKey( KeyCode.Q ) )
 		{
