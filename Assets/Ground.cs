@@ -130,8 +130,9 @@ public class Ground : HiveObject
 			hiveObject.transform.SetParent( transform, false );
 	}
 
-	public void UpdateBlockOffsets( Vector3 camera )
+	public void LateUpdate()
 	{
+		var camera = world.eye.viewCubeCenter;
 		foreach ( var block in blocks )
 			block.UpdateOffset( camera );
 	}

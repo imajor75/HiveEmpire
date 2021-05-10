@@ -32,10 +32,12 @@ Shader "Unlit/Water"
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
+                float2 uv0 : TEXCOORD0;
+                float2 uv1 : TEXCOORD1;
+                float depth : TEXCOORD3;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
-                float2 localPos : TEXCOORD1;
+                float2 localPos : TEXCOORD2;
             };
 
             sampler2D _MainTex;
@@ -49,7 +51,9 @@ Shader "Unlit/Water"
                 v2f o;
                 o.localPos = v.vertex.xz;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
+                o.depth = v.uv.x;
+                o.uv0 = TRANSFORM_TEX( ( ( v.vertex.xz + float2( Offset0, 0 ) ) / 20 ), _MainTex );
+                o.uv1 = TRANSFORM_TEX( ( ( v.vertex.xz + float2( Offset1, Offset1 ) ) / 20 ), _MainTex );
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
@@ -57,15 +61,14 @@ Shader "Unlit/Water"
             fixed4 frag (v2f i) : SV_Target
             {
                 // sample the texture
-                fixed3 col0 = tex2D( _MainTex, ( i.localPos + float2( Offset0, 0 ) ) / 20 );
-                fixed3 col1 = tex2D( _MainTex, ( i.localPos + float2( Offset1, Offset1 ) ) / 20 );
-                half depth = i.uv.x;
+                fixed3 col0 = tex2D( _MainTex, i.uv0 );
+                fixed3 col1 = tex2D( _MainTex, i.uv1 );
                 // apply fog
                 //UNITY_APPLY_FOG(i.fogCoord, col);
-                fixed innerAlpha = saturate( depth * 2 );
+                fixed innerAlpha = saturate( i.depth * 2 );
                 fixed4 inner = fixed4( lerp( col0, col1, 0.5), innerAlpha );
                 fixed4 outer = tex2D( _FoamTex, i.localPos / 20 );
-                fixed foamWeight = frac( 1 - Iter - depth * 8 ) * saturate( 1 - depth * 8 );
+                fixed foamWeight = frac( 1 - Iter - i.depth * 8 ) * saturate( 1 - i.depth * 8 );
                 return lerp( inner, outer, foamWeight );
             }
             ENDCG

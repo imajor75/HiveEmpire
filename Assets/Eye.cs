@@ -13,7 +13,7 @@ public class Eye : MonoBehaviour
 	[JsonIgnore]
 	public float viewDistance = 5.0f;
 	public World world;
-	public float x, y;
+	public float x, y, height;
 	public float absoluteX, absoluteY;
 	public float forwardForGroundBlocks = 10;
 	public float direction;
@@ -74,16 +74,27 @@ public class Eye : MonoBehaviour
 		}
 	}
 
+	// Approximation only
+	public Vector3 viewCubeCenter
+	{
+		get
+		{
+			return transform.position + transform.forward * forwardForGroundBlocks;
+		}
+	}
+
 	private void Update()
 	{
 		var h = World.instance.ground.GetHeightAt( x, y );
 		if ( h < World.instance.waterLevel )
 			h = World.instance.waterLevel;
-		h += ( ear.position.y - h ) * 0.96f;
-		var p = new Vector3( x, h, y );
-		ear.position = p;
+		if ( height > 0 )
+			height += ( h - height ) * 0.04f;
+		else
+			height = h;
+		ear.position = new Vector3( x, height, y );
 		Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
-		transform.position = p - viewer;
+		transform.position = ear.position - viewer;
 		transform.LookAt( ear );
 		if ( director == null )
 		{
@@ -97,7 +108,6 @@ public class Eye : MonoBehaviour
 			director.SetCameraTarget( this );
 			this.director = director;
 		}
-		World.instance.ground.UpdateBlockOffsets( transform.position + transform.forward * forwardForGroundBlocks );
 	}
 
 	public void GrabFocus( IDirector director )
@@ -118,6 +128,7 @@ public class Eye : MonoBehaviour
 		{
 			x = storedX;
 			y = storedY;
+			height = -1;
 			direction = storedDirection;
 			hasStoredValues = false;
 		}
@@ -137,8 +148,10 @@ public class Eye : MonoBehaviour
 		var p = node.position;
 		x = p.x;
 		y = p.z;
+		height = -1;
 		director = null;
 		this.rotateAround = rotateAround;
+		
 	}
 
 	public void FocusOn( Component component, bool rotateAround = false )
@@ -152,6 +165,7 @@ public class Eye : MonoBehaviour
 
 		x = component.transform.position.x;
 		y = component.transform.position.z;
+		height = -1;
 		director = null;
 		this.rotateAround = rotateAround;
 	}

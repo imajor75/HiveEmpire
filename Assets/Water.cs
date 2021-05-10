@@ -28,16 +28,15 @@ public class Water : MonoBehaviour
         return this;
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         name = "Water";
+        transform.SetParent( ground.transform.parent );
         mesh = GetComponent<MeshFilter>().mesh = new Mesh();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
         if ( mesh.triangles.Length != ground.dimension * ground.dimension * 3 * 2 )
         {
@@ -72,10 +71,7 @@ public class Water : MonoBehaviour
         material.SetFloat( offset0ID, (float)Math.Sin( t ) );
         material.SetFloat( offset1ID, (float)Math.Cos( t ) );
         material.SetFloat( iterID, (float)( t - Math.Floor( t ) ) );
-    }
-
-    public void Update()
-    {
+        
 		var overseas = World.instance.overseas + 1;
 		for ( int x = -overseas; x <= overseas; x++ )
 		{
