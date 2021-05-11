@@ -411,7 +411,7 @@ public class Interface : HiveObject
 			CreateHighLightVolumeMesh( m );
 		}
 
-		highlightVolume.transform.localPosition = highlightVolumeCenter.position;
+		highlightVolume.transform.localPosition = highlightVolumeCenter.GetPositionRelativeTo( viewport.visibleAreaCenter );
 		float scale = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
 		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
 		Destroy( highlightVolume.GetComponent<MeshCollider>() );
