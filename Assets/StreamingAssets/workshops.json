@@ -3,7 +3,7 @@
     "type": "woodcutter",
     "flatteningNeeded": false,
     "gatheredResource": "tree",
-	"productionTime": 0,
+	  "productionTime": 0,
     "outputType": "log"
   },
   {
@@ -17,32 +17,32 @@
   },
   {
     "type": "forester",
-	"gatheredResource": "soil",
-	"productionTime": 0,
+  	"gatheredResource": "soil",
+	  "productionTime": 0,
     "flatteningNeeded": false
   },
   {
     "type": "stonemason",
     "gatheredResource": "rock",
-	"productionTime": 0,
+  	"productionTime": 0,
     "outputType": "stone"
   },
   {
     "type": "fishingHut",
-	"flatteningNeeded": true,
+  	"flatteningNeeded": true,
     "gatheredResource": "fish",
-	"productionTime": 0,
-    "outputType": "fish",
+	  "productionTime": 0,
+    "outputType": "fish"
   },
   {
     "type": "farm",
-	"huge": true,
-	"outputStackSize": 2,
-	"gatheredResource": "cornfield",
-	"gatheringRange": 3,
-	"productionTime": 0,
-	"stoneNeeded": 2,
-    "outputType": "grain",
+    "huge": true,
+    "outputStackSize": 2,
+    "gatheredResource": "cornfield",
+    "gatheringRange": 3,
+    "productionTime": 0,
+    "stoneNeeded": 2,
+    "outputType": "grain"
   },
   {
     "type": "mill",
@@ -57,7 +57,7 @@
   {
     "type": "bakery",
     "stoneNeeded": 2,
-	"outputStackSize": 2,
+	  "outputStackSize": 2,
     "flatteningNeeded": true,
     "outputType": "pretzel",
     "inputs": [
@@ -73,7 +73,7 @@
     "type": "hunter",
     "plankNeeded": 1,
     "flatteningNeeded": true,
-	"productionTime": 0,
+	  "productionTime": 0,
     "gatheredResource": "pasturingAnimal",
     "outputType": "hide"
   },
@@ -81,7 +81,7 @@
     "type": "coalmine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
-	"groundTypeNeeded": "hill",
+	  "groundTypeNeeded": "hill",
     "gatheredResource": "coal",
     "outputType": "coal",
     "commonInputs": true,
@@ -104,7 +104,7 @@
     "type": "saltmine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
-	"groundTypeNeeded": "hill",
+	  "groundTypeNeeded": "hill",
     "gatheredResource": "salt",
     "outputType": "salt",
     "commonInputs": true,
@@ -119,7 +119,7 @@
     "type": "ironmine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
-	"groundTypeNeeded": "hill",
+	  "groundTypeNeeded": "hill",
     "gatheredResource": "iron",
     "outputType": "iron",
     "commonInputs": true,
@@ -142,7 +142,7 @@
     "type": "goldmine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
-	"groundTypeNeeded": "hill",
+	  "groundTypeNeeded": "hill",
     "gatheredResource": "gold",
     "outputType": "gold",
     "commonInputs": true,
@@ -161,7 +161,7 @@
     "type": "stonemine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
-	"groundTypeNeeded": "hill",
+	  "groundTypeNeeded": "hill",
     "gatheredResource": "stone",
     "outputType": "stone",
     "commonInputs": true,
@@ -179,12 +179,13 @@
   {
     "type": "geologist",
     "flatteningNeeded": false,
-    "gatheredResource": "expose",
+    "productionTime": 0,
+    "gatheredResource": "expose"
   },
   {
     "type": "bowmaker",
-	"huge": true,
-	"productionTime": 2500,
+	  "huge": true,
+	  "productionTime": 2500,
     "outputType": "bow",
     "inputs": [
       {
@@ -198,7 +199,7 @@
   {
     "type": "smelter",
     "outputType": "steel",
-	"productionTime": 2500,
+	  "productionTime": 2500,
     "inputs": [
       {
         "itemType": "coal"
@@ -211,8 +212,8 @@
   {
     "type": "weaponmaker",
     "outputType": "weapon",
-	"productionTime": 2500,
-	"huge": true,
+	  "productionTime": 2500,
+	  "huge": true,
     "inputs": [
       {
         "itemType": "coal"
@@ -231,10 +232,10 @@
   },
   {
     "type": "brewery",
-	"huge": true,
+	  "huge": true,
     "stoneNeeded": 2,
     "outputType": "beer",
-	"outputStackSize": 2,
+  	"outputStackSize": 2,
     "inputs": [
       {
         "itemType": "water"
@@ -246,9 +247,9 @@
   },
   {
     "type": "butcher",
-	"huge": true,
+	  "huge": true,
     "stoneNeeded": 2,
-	"productionTime": 1000,
+	  "productionTime": 1000,
     "outputType": "pork",
     "inputs": [
       {

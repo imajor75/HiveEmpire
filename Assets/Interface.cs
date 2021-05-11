@@ -526,7 +526,7 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<PathVisualization>();
 		}
 
-		public PathVisualization Setup( Path path )
+		public PathVisualization Setup( Path path, Vector3 view )
 		{
 			if ( path == null )
 			{
@@ -557,7 +557,7 @@ public class Interface : HiveObject
 					if ( currentPosition == null )
 					{
 						start = road.nodes[c];
-						currentPosition = road.nodes[c].position + Vector3.up * 0.1f;
+						currentPosition = road.nodes[c].GetPositionRelativeTo( view ) + Vector3.up * 0.1f;
 					}
 					Vector3 dif = road.nodes[n].GetPositionRelativeTo( road.nodes[c] ) - road.nodes[c].position;
 
@@ -886,14 +886,15 @@ public class Interface : HiveObject
 			return a;
 		}
 
-		public Component BuildingIcon( int x, int y, Building building, Component parent = null )
+		public Button BuildingIcon( int x, int y, Building building, Component parent = null )
 		{
 			if ( building == null )
 				return null;
 
 			var text = Text( x, y, 150, 20, building.title, parent );
-			text.gameObject.AddComponent<Button>().onClick.AddListener( delegate { SelectBuilding( building ); } );
-			return text;
+			var button = text.gameObject.AddComponent<Button>();
+			button.onClick.AddListener( delegate { SelectBuilding( building ); } );
+			return button;
 		}
 
 		public static void SelectBuilding( Building building )
@@ -1176,7 +1177,7 @@ public class Interface : HiveObject
 			{
 				if ( item != null )
 				{
-					pathVisualization = PathVisualization.Create().Setup( item.path );
+					pathVisualization = PathVisualization.Create().Setup( item.path, Interface.root.viewport.visibleAreaCenter );
 					tooltip.SetText( this, item.type.ToString(), Item.sprites[(int)item.type], additionalTooltip );
 				}
 				else
@@ -2209,7 +2210,7 @@ public class Interface : HiveObject
 		ItemImage item;
 		Text itemsInCart;
 		public Stock cartDestination;
-		Component destinationBuilding;
+		Button destinationBuilding;
 		PathVisualization cartPath;
 
 		public static WorkerPanel Create()
@@ -2269,12 +2270,12 @@ public class Interface : HiveObject
 				if ( cart.destination != cartDestination )
 				{
 					cartDestination = cart.destination;
-					Destroy( destinationBuilding );
+					Destroy( destinationBuilding.gameObject );
 					if ( cart.destination )
 						destinationBuilding = BuildingIcon( 70, -95, cart.destination );
 					var path = cart.FindTaskInQueue<Worker.WalkToFlag>()?.path;
 					Destroy( cartPath );
-					cartPath = PathVisualization.Create().Setup( path );
+					cartPath = PathVisualization.Create().Setup( path, Interface.root.viewport.visibleAreaCenter );
 				}
 			}
 			else
@@ -2379,7 +2380,7 @@ public class Interface : HiveObject
 			Text( 15, -15, 100, 20, item.type.ToString() );
 			stats = Text( 15, -35, 250, 20 );
 			Text( 15, -55, 170, 20, "Origin:" );
-			BuildingIcon( 100, -55, item.origin );
+			BuildingIcon( 100, -55, item.origin ).onClick.AddListener( delegate { Destroy( route ); route = null; } );
 			Text( 15, -75, 170, 20, "Destination:" );
 			BuildingIcon( 100, -75, item.destination );
 
@@ -2415,7 +2416,7 @@ public class Interface : HiveObject
 				stats.text = "Age: " + item.life.age / 50 + " secs";
 
 			if ( item.destination && route == null )
-				route = PathVisualization.Create().Setup( item.path );
+				route = PathVisualization.Create().Setup( item.path, Interface.root.viewport.visibleAreaCenter );
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
 			else

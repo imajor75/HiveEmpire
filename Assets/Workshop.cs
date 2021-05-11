@@ -367,7 +367,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		object[] sounds = {
 			"handsaw", Type.sawmill,
 			"SAdK/smelter", Type.smelter,
-			"windmill", Type.mill };
+			"windmill", Type.mill,
+			"brewery", Type.brewery
+ 		};
 		processingSounds.Fill( sounds );
 		mapIndicatorTexture = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
 	}
