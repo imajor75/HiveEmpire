@@ -653,12 +653,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 						int x = (i + randomOffset) % o.Count;
 						GroundNode place = node.Add( o[x] );
 						{
-							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.forest ) || place.fixedHeight )
+							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.forest ) || place.fixedHeight || place.resource )
 								continue;
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
 							{
-								if ( place.Add( j ).IsBlocking() )
+								if ( place.Add( j ).IsBlocking( false ) )
 									blockedAdjacentNodes++;
 							}
 							if ( blockedAdjacentNodes >= 2 )
