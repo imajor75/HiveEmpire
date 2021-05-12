@@ -2747,6 +2747,8 @@ public class Interface : HiveObject
 				BuildPanel.Create().Open();
 			if ( GetKeyDown( KeyCode.Alpha2 ) )
 				showGridAtMouse = !showGridAtMouse;
+			if ( GetKeyDown( KeyCode.Alpha4 ) )
+				ShowNearestPossibleConstructionSite();
 			if ( GetKeyDown( KeyCode.Comma ) )
 			{
 				if ( currentFlagDirection == 0 )
@@ -2806,6 +2808,58 @@ public class Interface : HiveObject
 						break;
 					}
 				}
+			}
+		}
+
+		void ShowNearestPossibleConstructionSite()
+		{
+			GroundNode bestSite = null;
+			int bestDistance = int.MaxValue;
+			int bestFlagDirection = -1;
+			foreach ( var o in Ground.areas[Ground.maxArea - 1] )
+			{
+				GroundNode node = currentNode + o;
+				for ( int flagDirection = 0; flagDirection < GroundNode.neighbourCount; flagDirection++ )
+				{
+					bool suitable = false;
+					switch ( constructionMode )
+					{
+						case Construct.workshop:
+						{
+							suitable = Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), flagDirection );
+							break;
+						}
+						case Construct.stock:
+						{
+							suitable = Stock.IsNodeSuitable( node, root.mainPlayer, flagDirection );
+							break;
+						}
+						case Construct.guardHouse:
+						{
+							suitable = GuardHouse.IsNodeSuitable( node, root.mainPlayer, flagDirection );
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					if ( suitable )
+					{
+						int distance = node.DistanceFrom( currentNode );
+						if ( distance < bestDistance )
+						{
+							bestDistance = distance;
+							bestSite = node;
+							bestFlagDirection = flagDirection;
+						}
+					}
+				}
+			}
+			if ( bestSite )
+			{
+				root.world.eye.FocusOn( bestSite, true );
+				currentFlagDirection = bestFlagDirection;
 			}
 		}
 

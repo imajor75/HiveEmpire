@@ -490,11 +490,15 @@ abstract public class Building : HiveObject
 		highlightArrow.transform.localScale = Vector3.one * 3f;
 	}
 
+	public void Update()
+	{
+		UpdateLook();
+	}
+
 	public void FixedUpdate()
 	{
 		Profiler.BeginSample( "Construction" );
 		construction.FixedUpdate();
-		UpdateLook();
 		Profiler.EndSample();
 	}
 
