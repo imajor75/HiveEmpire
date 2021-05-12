@@ -10,9 +10,7 @@ Shader "Custom/cursor"
     SubShader
     {
         Tags { "RenderType"="Opaque" }
-		//ZTest Always
         LOD 200
-		//Cull Off
 		Offset 0, -1000
 
         CGPROGRAM
