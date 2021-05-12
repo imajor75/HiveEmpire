@@ -594,7 +594,9 @@ public class Worker : HiveObject
 				// It is possible in rare cases, that the worker was reset AFTER relinking the item to its hand, but before this task would actually take the item in hands. This leads to a crash when the worker arrives back at the HQ, as the 
 				// worker object gets destroyed, the item gets destroyed too, because it is linked to the hauling box of the worker, but still sitting at the flag. In this case the item should be linked back to the previous parent (the frame at the flag)
 				if ( reparented[i] )
-					items[i].transform.SetParent( items[i].flag.transform, false );	// TODO Should be reparented to the correct object	
+					items[i].transform.SetParent( items[i].flag?.transform, false );	// TODO Should be reparented to the correct object	
+				// items[i].flag should never be zero here, but it was after a global reset
+
 				// TODO Exception was thrown here, items[0].flag was null. This happened after I removed a road.
 				// The whole reset thing was called from PickupItem.executeFrame where it realized that there is no path for the item
 				if ( items[i].justCreated )
@@ -1959,7 +1961,8 @@ public class Worker : HiveObject
 		ResetTasks();
 		foreach ( var item in itemsInHands )
 			item?.Remove( false );
-		assert.IsNull( itemsInHands );
+		assert.IsNull( itemsInHands[0] );
+		assert.IsNull( itemsInHands[1] );
 		walkTo = walkFrom = null;
 		walkProgress = 0;
 		if ( onRoad )

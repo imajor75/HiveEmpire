@@ -344,6 +344,7 @@ public class Item : HiveObject
 
 	public override bool Remove( bool takeYourTime )
 	{
+		transform.SetParent( null );
 		if ( worker )
 		{
 			for ( int i = 0; i < worker.itemsInHands.Length; i++ )
@@ -455,7 +456,7 @@ public class Item : HiveObject
 		};
 		if ( nextFlag )
 		{
-			assert.IsNotNull( worker );
+			assert.IsNotNull( worker );		// TODO Triggered after the second global reset, in the Validate call, which is happening in every frame. Hide, destination=headquarters
 			assert.IsTrue( nextFlag.items.Contains( this ) || nextFlag.items.Contains( buddy ) );
 		}
 		else
