@@ -336,6 +336,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		mesh.RecalculateNormals();
 		mapMesh.RecalculateNormals();
+		transform.localPosition = centerNode.position;
 	}
 
 	public Vector3 PositionAt( int block, float fraction )

@@ -116,7 +116,7 @@ public class Flag : HiveObject
 
 	public void FixedUpdate()
 	{
-		if ( requestFlattening && !flattening.flattened && !blueprintOnly )
+		if ( requestFlattening && !flattening.worker && !blueprintOnly )
 		{
 			requestFlattening = false;
 			if ( flattening == null )	// This should never be null, only after loading old files.

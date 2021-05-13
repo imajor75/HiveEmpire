@@ -683,7 +683,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 					buffers[0].stored--;
 					buffers[1].stored--;
 					owner.soldiersProduced++;
-					print( "Soldier produced" );
 					soldierWasCreatedLastTime = true;
 				}
 				if ( buffers[0].stored > 0 && buffers[2].stored > 0 && ( soldierWasCreatedLastTime || buffers[1].stored == 0 ) )
@@ -691,14 +690,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 					buffers[0].stored--;
 					buffers[2].stored--;
 					owner.bowmansProduced++;
-					print( "Bowman produced" );
 					soldierWasCreatedLastTime = false;
 				}
 				if ( buffers[3].stored > 0 )
 				{
 					buffers[3].stored--;
 					owner.coinsProduced++;
-					print( "Coin produced" );
 				};
 				Profiler.EndSample();
 				break;

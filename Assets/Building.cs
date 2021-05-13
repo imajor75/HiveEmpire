@@ -147,6 +147,8 @@ abstract public class Building : HiveObject
 					GroundNode node = area[corner++];
 					if ( node.fixedHeight && node.staticHeight != level )
 						return true;
+					if ( node.type == GroundNode.Type.underWater )
+						return true;
 					float dif = node.height - level;
 					if ( Math.Abs( dif ) > 0.001f )
 					{

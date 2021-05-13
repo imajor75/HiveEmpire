@@ -135,7 +135,7 @@ public class Eye : MonoBehaviour
 		rotateAround = false;
 	}
 
-	public void FocusOn( GroundNode node, bool rotateAround = false )
+	public void FocusOn( GroundNode node, bool rotateAround = false, bool mark = false )
 	{
 		if ( node == null )
 			return;
@@ -151,7 +151,7 @@ public class Eye : MonoBehaviour
 		height = -1;
 		director = null;
 		this.rotateAround = rotateAround;
-		
+		Interface.root.viewport.markEyePosition = mark;
 	}
 
 	public void FocusOn( Component component, bool rotateAround = false )
@@ -177,24 +177,28 @@ public class Eye : MonoBehaviour
 		{
 			movement += transform.right * -0.1f * altitude / 6;
 			rotateAround = false;
+			Interface.root.viewport.markEyePosition = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.D ) )
 		{
 			movement += transform.right * 0.1f * altitude / 6;
 			rotateAround = false;
+			Interface.root.viewport.markEyePosition = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.W ) )
 		{
 			movement += transform.forward * 0.13f * altitude / 6;
 			rotateAround = false;
+			Interface.root.viewport.markEyePosition = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.S ) )
 		{
 			movement += transform.forward * -0.13f * altitude / 6;
 			rotateAround = false;
+			Interface.root.viewport.markEyePosition = false;
 			director = null;
 		}
 		x += movement.x;

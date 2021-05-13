@@ -2011,6 +2011,7 @@ public class Worker : HiveObject
 		// Triggered again, called from Worker.FindTask. Both items in itemsInHands is null. haulingBox is inactive, and has a child, a beer.
 		// This beer has no worker and nextFlag, but the flag reference is valid (19:10). Has a destination (barrack 19:7) has a path
 		// with two roads (between 20:9 and 19:11 then between 20:9 19:8)
+		// Triggered again
 
 		base.DestroyThis();
 	}

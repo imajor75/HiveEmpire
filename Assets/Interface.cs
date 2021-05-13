@@ -1305,7 +1305,8 @@ public class Interface : HiveObject
 				if ( ( contentToShow & Content.itemsProduced ) > 0 )
 				{
 					itemsProduced = Text( 20, row, 200, 20 );
-					productivity = Text( 180, -20, 30, 20 );
+					productivity = Text( 150, -20, 50, 20 );
+					productivity.alignment = TextAnchor.MiddleRight;
 					row -= 25;
 				}
 			}
@@ -1378,7 +1379,14 @@ public class Interface : HiveObject
 						progressBar.color = Color.red;
 				}
 				if ( productivity )
-					productivity.text = ( (int)( workshop.productivity.current * 100 ) ).ToString() + "%";
+				{
+					var percentage = (int)Math.Min( workshop.productivity.current * 101, 100 );
+					productivity.text = percentage.ToString() + "%";
+					if ( percentage == 100 )
+						productivity.color = Color.green;
+					else
+						productivity.color = Color.yellow;
+				}
 				if ( itemsProduced )
 					itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 			}
@@ -2198,7 +2206,7 @@ public class Interface : HiveObject
 			}
 
 			if ( flag.flattening != null )	// This should never be null unless after loaded old files.
-				shovelingIcon.color = flag.flattening.flattened ? Color.grey : Color.white;
+				shovelingIcon.color = flag.flattening.worker ? Color.grey : Color.white;
 			convertIcon.color = flag.crossing ? Color.red : Color.white;
 		}
 	}
@@ -2465,6 +2473,8 @@ public class Interface : HiveObject
 		public HiveObject currentBlueprint;
 		public WorkshopPanel currentBlueprintPanel;
 		public GroundNode currentNode;  // Node currently under the cursor
+		static GameObject marker;
+		public bool markEyePosition;
 
 		public enum Construct
 		{
@@ -2519,6 +2529,7 @@ public class Interface : HiveObject
 			image.color = new Color( 1, 1, 1, 0 );
 
 			inputHandler = this;
+			marker.transform.SetParent( transform );
 		}
 
 		public bool ResetInputHandler()
@@ -2611,6 +2622,10 @@ public class Interface : HiveObject
 			} );
 			foreach ( var c in buildCategories )
 				Assert.global.IsNotNull( c.mesh );
+
+			marker = Instantiate<GameObject>( Resources.Load<GameObject>( "prefabs/others/marker" ) );
+			marker.name = "Viewport center marker";
+			marker.transform.localScale = Vector3.one * 2;
 		}
 
 		public void SetCamera( Camera camera )
@@ -2770,6 +2785,17 @@ public class Interface : HiveObject
 				showPossibleBuildings = !showPossibleBuildings;
 			if ( inputHandler == null || inputHandler.Equals( null ) )
 				inputHandler = this;
+
+			if ( markEyePosition && mouseOver )
+			{
+				marker.SetActive( true );
+				var eye = root.world.eye;
+				marker.transform.position = eye.position + Vector3.up * ( ( float )( root.world.ground.GetHeightAt( eye.x, eye.y ) + 1.5f * Math.Sin( 2 * Time.time ) ) );
+				marker.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
+			}
+			else
+				marker.SetActive( false );
+
 			if ( !mouseOver )
 				return;
 			currentNode = FindNodeAt( Input.mousePosition );
@@ -2858,7 +2884,7 @@ public class Interface : HiveObject
 			}
 			if ( bestSite )
 			{
-				root.world.eye.FocusOn( bestSite, true );
+				root.world.eye.FocusOn( bestSite, true, true );
 				currentFlagDirection = bestFlagDirection;
 			}
 		}
