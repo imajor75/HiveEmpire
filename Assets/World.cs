@@ -567,6 +567,7 @@ public class World : MonoBehaviour
 		{
 			reference = 0;
 		}
+		[SerializeField]
 		public int age
 		{
 			get
@@ -577,6 +578,7 @@ public class World : MonoBehaviour
 			}
 		}
 		public bool done { get { return !empty && age >= 0; } }
+		[SerializeField]
 		public bool empty { get { return reference == 0; } }
 		public bool inProgress { get { return !empty && !done; } }
 	}

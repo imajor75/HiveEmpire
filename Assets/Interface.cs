@@ -1593,6 +1593,8 @@ public class Interface : HiveObject
 				var t = (Item.Type)j;
 				var i = ItemIcon( 20 + offset, row, iconSize, iconSize, (Item.Type)j );
 				i.additionalTooltip = "Shift+LMB Show input potentials\nCtrl+LMB Show output potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
+				if ( stock.GetSubcontractors( (Item.Type)j ).Count > 0 )
+					Image( 10 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
 				if ( stock.destinations[j] )
 				{
 					Image( 35 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
@@ -1612,7 +1614,7 @@ public class Interface : HiveObject
 
 			int ipx = 165, ipy = -280;
 			selected = ItemIcon( ipx, ipy, 2 * iconSize, 2 * iconSize, selectedItemType );
-			selected.additionalTooltip = "LMB Set cart target\nShift+LMB Show current target\nCtrl+LMB Clear target";
+			selected.additionalTooltip = "LMB Set cart target\nShift+LMB Show current target\nCtrl+LMB Clear target\nAlt+LMB Show inputs";
 			selected.GetComponent<Button>().onClick.RemoveAllListeners();
 			selected.GetComponent<Button>().onClick.AddListener( SetTarget );
 			inputMin = Text( ipx - 40, ipy, 40, 20 );
@@ -1638,7 +1640,13 @@ public class Interface : HiveObject
 				RecreateControls();
 				return;
 			}
-
+			if ( GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) )
+			{
+				var sources = stock.GetSubcontractors( selectedItemType );
+				if ( sources.Count > 0 )
+					SelectBuilding( sources[0] );	// TODO Show the rest?
+				return;
+			}
 			itemTypeForRetarget = selectedItemType;
 			root.highlightOwner = gameObject;
 			root.viewport.inputHandler = this;

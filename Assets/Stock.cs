@@ -272,6 +272,20 @@ public class Stock : Building
 		return this;
 	}
 
+	public List<Stock> GetSubcontractors( Item.Type itemType )
+	{
+		int typeIndex = (int)itemType;
+		List<Stock> list = new List<Stock>();
+		foreach ( var stock in owner.stocks )
+		{
+			if ( stock == this )
+				continue;
+			if ( stock.destinations[typeIndex] == this )
+			list.Add( stock );
+		}
+		return list;
+	}
+
 	public override bool Remove( bool takeYourTime )
 	{
 		if ( main )
