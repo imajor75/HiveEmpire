@@ -571,7 +571,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 		}
 
-		Profiler.BeginSample( "Logistics" );
 		int freeSpaceAtFlag = flag.FreeSpace();
 		foreach ( Buffer b in buffers )
 		{
@@ -588,7 +587,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
 			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
-		Profiler.EndSample();
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
@@ -606,12 +604,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( gatherer && worker.IsIdle() && worker.node == node )
 			SetWorking( false );
 
-		Profiler.BeginSample( "Internal" );
 		switch ( type )
 		{
 			case Type.farm:
 			{
-				Profiler.BeginSample( "Farm" );
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
 					if ( output < productionConfiguration.outputMax )
@@ -638,12 +634,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 					}
 					worker.ScheduleWait( 300 );
 				}
-				Profiler.EndSample();
 				break;
 			}
 			case Type.forester:
 			{
-				Profiler.BeginSample( "Forester" );
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
 					var o = Ground.areas[productionConfiguration.gatheringRange];
@@ -669,7 +663,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 					}
 					worker.ScheduleWait( 300 );
 				}
-				Profiler.EndSample();
 				break;
 			}
 			case Type.barrack:
@@ -677,7 +670,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 				if ( mode == Mode.sleeping )
 					return;
 
-				Profiler.BeginSample( "Barrack" );
 				if ( buffers[0].stored > 0 && buffers[1].stored > 0 && ( soldierWasCreatedLastTime == false || buffers[2].stored == 0 ) )
 				{
 					buffers[0].stored--;
@@ -697,12 +689,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 					buffers[3].stored--;
 					owner.coinsProduced++;
 				};
-				Profiler.EndSample();
 				break;
 			}
 			default:
 			{
-				Profiler.BeginSample( "Default" );
 				if ( gatherer )
 					CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange );
 				else
@@ -717,11 +707,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 				if ( millWheelSpeed < 0 )
 					millWheelSpeed = 0;
 				millWheel?.Rotate( 0, 0, World.instance.timeFactor * millWheelSpeed );
-				Profiler.EndSample();
 				break;
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	bool UseInput( int count = 1 )

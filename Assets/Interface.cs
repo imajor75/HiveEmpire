@@ -500,7 +500,6 @@ public class Interface : HiveObject
 	public override void Validate( bool chain )
 	{
 #if DEBUG
-		Profiler.BeginSample( "Validate" );
 		if ( chain )
 			world.Validate( true );
 		if ( highlightType == HighlightType.volume )
@@ -510,7 +509,6 @@ public class Interface : HiveObject
 			Assert.global.IsNotNull( highlightArea );
 			Assert.global.IsNotNull( highlightArea.center );
 		}
-		Profiler.EndSample();
 #endif
 	}
 

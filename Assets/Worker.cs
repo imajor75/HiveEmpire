@@ -1243,7 +1243,6 @@ public class Worker : HiveObject
 
 		if ( walkTo == null )
 		{
-			Profiler.BeginSample( "Tasks" );
 			if ( taskQueue.Count > 0 )
 			{
 				// We need to remember the task, because during the call to ExecuteFrame the task might be removed from the queue
@@ -1251,21 +1250,15 @@ public class Worker : HiveObject
 				if ( task.ExecuteFrame() )
 					taskQueue.Remove( task );
 			}
-			Profiler.EndSample();
 		}
 		if ( IsIdle() )
-		{
-			Profiler.BeginSample( "FindTask" );
 			FindTask();
-			Profiler.EndSample();
-		}
 		UpdateBody();
 		UpdateOnMap();
 	}
 
 	void UpdateOnMap()
 	{
-		Profiler.BeginSample( "UpdateOnMap" );
 		arrowObject.SetActive( false );
 		if ( type == Type.hauler || type == Type.cart )
 		{
@@ -1299,7 +1292,6 @@ public class Worker : HiveObject
 			else
 				itemOnMap.enabled = false;
 		}
-		Profiler.EndSample();
 	}
 
 	public override bool Remove( bool returnToMainBuilding = true )
@@ -1378,9 +1370,7 @@ public class Worker : HiveObject
 
 		if ( type == Type.hauler )
 		{
-			Profiler.BeginSample( "Hauler" );
 			FindHaulerTask();
-			Profiler.EndSample();
 			return;
 		}
 
@@ -1505,10 +1495,8 @@ public class Worker : HiveObject
 
 		if ( !onRoad )
 		{
-			Profiler.BeginSample( "BackToRoad" );
 			ScheduleWalkToNode( road.centerNode, false );
 			ScheduleStartWorkingOnRoad( road );
-			Profiler.EndSample();
 			return;
 		}
 		if ( itemsInHands[0] == null )
@@ -1545,27 +1533,21 @@ public class Worker : HiveObject
 			return;
 		}
 
-		Profiler.BeginSample( "FindItemToCarry" );
 		if ( FindItemToCarry() )
 		{
 			Color = Color.white;
-			Profiler.EndSample();
 			return;
 		}
-		Profiler.EndSample();
 		Color = Color.green;
 
-		Profiler.BeginSample( "GoToCenter" );
 		if ( node == road.nodes[0] || node == road.lastNode )
 		{
 			int center = ( road.nodes.Count - 1 ) / 2;
 			if ( node == road.nodes[0] )
 				center = road.nodes.Count / 2;
 			ScheduleWalkToRoadPoint( road, center );
-			Profiler.EndSample();
 			return;
 		}
-		Profiler.EndSample();
 	}
 
 	/// <summary>
@@ -1813,7 +1795,6 @@ public class Worker : HiveObject
 
 	public void UpdateBody()
 	{
-		Profiler.BeginSample( "UpdateBody" );
 		if ( walkTo == null )
 		{
 			if ( bodyState != BodyState.standing )
@@ -1826,16 +1807,12 @@ public class Worker : HiveObject
 				{
 					WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;
 					if ( task == null || task.wishedPoint < 0 )
-					{
-						Profiler.EndSample();
 						return;
-					}
 
 					TurnTo( task.road.nodes[task.wishedPoint] );
 				}
 				bodyState = BodyState.standing;
 			}
-			Profiler.EndSample();
 			return;
 		}
 
@@ -1881,7 +1858,6 @@ public class Worker : HiveObject
 				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	public bool IsIdle( bool inBuilding = false )

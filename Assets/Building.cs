@@ -499,9 +499,7 @@ abstract public class Building : HiveObject
 
 	public void FixedUpdate()
 	{
-		Profiler.BeginSample( "Construction" );
 		construction.FixedUpdate();
-		Profiler.EndSample();
 	}
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )

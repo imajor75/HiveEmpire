@@ -215,7 +215,6 @@ public class ItemDispatcher : MonoBehaviour
 			offers.Sort( ComparePotentials );
 			requests.Sort( ComparePotentials );
 
-			Profiler.BeginSample( "Market" );
 			Priority[] priorities = { Priority.high, Priority.low };
 			int nextOffer = 0, nextRequest = 0;
 			foreach ( var priority in priorities )
@@ -263,7 +262,6 @@ public class ItemDispatcher : MonoBehaviour
 			requests = new List<Potential>();
 			offers = new List<Potential>();
 
-			Profiler.EndSample();
 		}
 
 		// This function is trying to fulfill a request or offer from a list of offers/requests. Returns true, if the request/offer
