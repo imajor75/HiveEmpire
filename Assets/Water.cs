@@ -67,7 +67,7 @@ public class Water : MonoBehaviour
             }
             mesh.triangles = indices.ToArray();
         }
-        var t = ground.world.time * 0.005f;
+        var t = ( ground.world.time % 400 ) * 0.005f;
         material.SetFloat( offset0ID, (float)Math.Sin( t ) );
         material.SetFloat( offset1ID, (float)Math.Cos( t ) );
         material.SetFloat( iterID, (float)( t - Math.Floor( t ) ) );

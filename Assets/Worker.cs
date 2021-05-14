@@ -1682,7 +1682,7 @@ public class Worker : HiveObject
 		instance.Setup( this, road, target, exclusive );
 		ScheduleTask( instance, first );
 	}
-
+	
 	public void ScheduleWalkToRoadNode( Road road, GroundNode target, bool exclusive = true, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
