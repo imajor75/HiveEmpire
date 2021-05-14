@@ -260,7 +260,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.animator?.SetBool( Worker.sowingID, false );
 				return true;
 			}
-			if ( boss.node != node || node.building || node.flag || node.road || node.fixedHeight || node.resource || !node.CheckType( GroundNode.Type.land ) )
+			if ( boss.node != node || node.building || node.flag || node.road || node.resource || !node.CheckType( GroundNode.Type.land ) )
 			{
 				( boss.building as Workshop ).SetWorking( false );
 				return true;
@@ -627,7 +627,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
-						if ( place.IsBlocking( true ) || place.fixedHeight || !place.CheckType( GroundNode.Type.grass ) )
+						if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.grass ) || place.resource )
 							continue;
 						PlantAt( place, Resource.Type.cornfield );
 						return;
