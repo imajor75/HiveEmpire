@@ -26,11 +26,12 @@ public class BorderEdge : HiveObject
 		return this;
     }
 
-	void Start()
+	new public void Start()
 	{
 		transform.localScale = Vector3.one * 0.2f;
 		node.ground.Link( this );
 		UpdateBody();
+		base.Start();
 	}
 
 	public void UpdateBody()

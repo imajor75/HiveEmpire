@@ -84,7 +84,7 @@ public class Stock : Building
 				exclusiveFlag = boss.flag;
 			}
 			onRoad = true;
-			gameObject.SetActive( true );
+			SetActive( true );
 			UpdateLook();
 		}
 
@@ -133,7 +133,7 @@ public class Stock : Building
 			}
 			assert.IsTrue( itemQuantity == 0 );
 			destination = null;	// Theoretically not needed
-			gameObject.SetActive( false );
+			SetActive( false );
 		}
 
 		public void UpdateLook()

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -52,18 +53,21 @@ public class Serializer : JsonSerializer
 		this.boss = boss;
 	}
 
+	static object CreateSceneObject( Type type )
+	{
+		var m = type.GetMethod( "Create" );
+		Assert.global.IsNotNull( m, $"No Create method in {type.FullName}" );
+		Assert.global.AreEqual( m.IsStatic, true );
+		object[] empty = new object[0];
+		return m.Invoke( null, empty );
+	}
+
 	static object CreateObject( Type type )
 	{
 		if ( type == typeof( World ) )
 			return World.instance;
 		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
-		{
-			var m = type.GetMethod( "Create" );
-			Assert.global.IsNotNull( m, "No Create method in " + type.FullName );
-			Assert.global.AreEqual( m.IsStatic, true );
-			object[] empty = new object[0];
-			return m.Invoke( null, empty );
-		}
+			return CreateSceneObject( type ) as HiveObject;
 		if ( typeof( ScriptableObject ).IsAssignableFrom( type ) )
 		{
 			if ( scriptableObjectCreator == null )
@@ -132,7 +136,7 @@ public class Serializer : JsonSerializer
 		}
 		FieldInfo i = type.GetField( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );	// What if there are multiple ones with the same name
 		PropertyInfo p = type.GetProperty( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );
-		Assert.global.IsTrue( i != null || p != null, "No field with the name " + name + " found in " + type.FullName );
+		Assert.global.IsTrue( i != null || p != null, $"No field with the name {name} found in {type.FullName}" );
 		reader.Read();
 
 		try
@@ -145,7 +149,7 @@ public class Serializer : JsonSerializer
 		catch ( System.Exception exception )
 		{
 			Debug.Log( exception.Message );
-			Assert.global.Fail( "Field type mismatch with " + type.Name + "." + i.Name );
+			Assert.global.Fail( $"Field type mismatch with {type.Name}.{i.Name}" );
 		}
 	}
 
@@ -170,7 +174,7 @@ public class Serializer : JsonSerializer
 				}
 				catch ( SystemException exception )
 				{
-					Assert.global.Fail( "Error creating object of type " + type.FullName + " for " + owner );
+					Assert.global.Fail( $"Error creating object of type {type.FullName} for {owner}" );
 					throw exception;
 				}
 			}
@@ -182,7 +186,7 @@ public class Serializer : JsonSerializer
 					elementType = type.GetElementType();
 				if ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( List<> ) )
 					elementType = type.GetGenericArguments()[0];
-				Assert.global.IsNotNull( elementType, "Unknown element type of " + type.ToString() );
+				Assert.global.IsNotNull( elementType, $"Unknown element type of {type.ToString()} for {owner}" );
 
 				Type listType = typeof( List<> ).MakeGenericType( new [] { elementType } );
 				IList list = (IList)Activator.CreateInstance( listType );
@@ -226,12 +230,31 @@ public class Serializer : JsonSerializer
 		return Object();
 	}
 
-	new public T Deserialize<T>( JsonReader r )
+	static public T Read<T>( string fileName )
 	{
-		reader = r;
-		r.Read();
-		T root = (T)Deserialize( typeof( T ) );
-		return root;
+		using ( var sw = new StreamReader( fileName ) )
+		using ( var reader = new JsonTextReader( sw ) )
+		{
+			reader.Read();
+			var serializer = new Serializer( reader );
+			return (T)serializer.Deserialize( typeof( T ) );
+		}
+	}
+
+	static public void Write( string fileName, object source, bool intended = true )
+	{
+		JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+		{
+			TypeNameHandling = TypeNameHandling.Auto,
+			PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+			ContractResolver = Serializer.SkipUnityContractResolver.Instance
+		};
+		var serializer = JsonSerializer.Create( jsonSettings );
+
+		using var sw = new StreamWriter( fileName );
+		using JsonTextWriter writer = new JsonTextWriter( sw );
+		if ( intended )
+			writer.Formatting = Formatting.Indented;
+		serializer.Serialize( writer, source );
 	}
 }
-

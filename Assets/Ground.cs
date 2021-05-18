@@ -50,7 +50,7 @@ public class Ground : HiveObject
 		}
 	}
 
-	void Start()
+	new public void Start()
 	{
 		gameObject.name = "Ground";
 		transform.SetParent( World.instance.transform );
@@ -58,6 +58,7 @@ public class Ground : HiveObject
 
 		if ( blocks.Count == 0 )
 			CreateBlocks();		// Compatibility with old files
+		base.Start();
 	}
 
 	static public void Initialize()
@@ -425,7 +426,7 @@ public class Ground : HiveObject
 			return this;
 		}
 
-		public void Start()
+		new public void Start()
 		{
 			gameObject.layer = World.layerIndexPickable;
 			MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
@@ -439,6 +440,7 @@ public class Ground : HiveObject
 
 			transform.SetParent( boss.transform );
 			name = $"Ground block {center.x}:{center.y}";
+			base.Start();
 		}
 
 		void Update()

@@ -56,7 +56,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		}
 	}
 
-	public Media GetMedia( Key key )
+	public Media GetMedia( Key key, int randomNumber = -1 )
 	{
 		List<Media> candidates = new List<Media>();
 		foreach ( Media media in table )
@@ -77,11 +77,12 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		if ( candidates.Count == 1 )
 			return candidates[0];
 		
-		return candidates[World.rnd.Next( candidates.Count )];
+		Assert.global.AreNotEqual( randomNumber, -1 );
+		return candidates[randomNumber % candidates.Count];
 	}
 
-	public MediaType GetMediaData( Key key )
+	public MediaType GetMediaData( Key key, int randomNumber = -1 )
 	{
-		return GetMedia( key )?.data;
+		return GetMedia( key, randomNumber )?.data;
 	}
 }

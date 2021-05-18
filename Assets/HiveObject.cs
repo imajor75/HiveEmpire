@@ -13,6 +13,8 @@ public abstract class HiveObject : MonoBehaviour
 	public bool blueprintOnly;
 	static System.Random idSource = new System.Random();
 	public int id = idSource.Next();		// Only to help debugging
+	public bool noAssert;
+	public bool inactive;
 
 	public HiveObject()
 	{
@@ -38,8 +40,9 @@ public abstract class HiveObject : MonoBehaviour
 		return nice;
 	}
 
-	public virtual void DestroyThis()
+	public virtual void DestroyThis( bool noAssert = false )
 	{
+		this.noAssert = noAssert;
 		Destroy( gameObject );
 	}
 
@@ -53,6 +56,18 @@ public abstract class HiveObject : MonoBehaviour
 
 	public virtual void Reset()
 	{ 
+	}
+
+	// The only reason for this function is to save the status
+	public void SetActive( bool active )
+	{
+		inactive = !active;
+		gameObject.SetActive( active );
+	}
+
+	public void Start()
+	{
+		gameObject.SetActive( !inactive );
 	}
 
 	public virtual void Materialize()

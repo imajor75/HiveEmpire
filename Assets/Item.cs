@@ -149,7 +149,7 @@ public class Item : HiveObject
 		return this;
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		if ( transform.parent == null )
 			transform.SetParent( World.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
@@ -158,6 +158,7 @@ public class Item : HiveObject
 		body.transform.SetParent( transform, false );
 		assert.IsNotNull( body );
 		name = type.ToString();
+		base.Start();
 	}
 
 	public void FixedUpdate()
@@ -363,7 +364,7 @@ public class Item : HiveObject
 	[Conditional( "Debug" )]
 	public void OnDestroy()
 	{
-		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || World.massDestroy );	// TODO Triggered randomly for a beer. 
+		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || World.massDestroy || noAssert );	// TODO Triggered randomly for a beer. 
 		// It has a destination (butcher) has a valid path, no worker, nextFlag null. 
 		// Current node is 10, 11, butcher is at 11, 9. 
 		// No buddy. Origin: brewery at 8, 14

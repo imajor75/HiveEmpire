@@ -829,7 +829,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 
 		assert.IsTrue( worker.IsIdle() );
-		worker.gameObject.SetActive( true );
+		worker.SetActive( true );
 		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
@@ -893,7 +893,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	void PlantAt( GroundNode place, Resource.Type resourceType )
 	{
 		assert.IsTrue( worker.IsIdle() );
-		worker.gameObject.SetActive( true );
+		worker.SetActive( true );
 		worker.ScheduleWalkToNeighbour( flag.node );
 		worker.ScheduleWalkToNode( place, true );
 		var task = ScriptableObject.CreateInstance<Plant>();

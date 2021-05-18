@@ -1110,7 +1110,7 @@ public class Worker : HiveObject
 		node.ground.Link( this, walkBase?.location );
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		node.ground.Link( this, walkBase?.location );
 
@@ -1195,6 +1195,8 @@ public class Worker : HiveObject
 		}
 		else if ( itemsInHands[0] )
 			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxLight].transform, false );
+
+		base.Start();
 	}
 
 	// Distance the worker is taking in a single frame (0.02 sec)
@@ -1218,7 +1220,7 @@ public class Worker : HiveObject
 	{
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
-			gameObject.SetActive( false );
+			SetActive( false );
 			return;
 		}
 		if ( debugReset )
@@ -1339,7 +1341,7 @@ public class Worker : HiveObject
 			return true;
 		}
 
-		gameObject.SetActive( true );       // Tinkerers are not active when they are idle
+		SetActive( true );       // Tinkerers are not active when they are idle
 
 		// Try to get to a flag, so that we could walk on the road network to the main building
 		// In case of haulers, node.road should be nonzero, except for the ends, but those already 
@@ -1682,7 +1684,7 @@ public class Worker : HiveObject
 		instance.Setup( this, road, target, exclusive );
 		ScheduleTask( instance, first );
 	}
-	
+
 	public void ScheduleWalkToRoadNode( Road road, GroundNode target, bool exclusive = true, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
@@ -1970,14 +1972,17 @@ public class Worker : HiveObject
 
 	public override GroundNode location { get { return node; } }
 
-	public override void DestroyThis()
+	public override void DestroyThis( bool noAssert = false )
 	{
-		var box = links[(int)LinkType.haulingBoxLight];
-		if ( box )
-			assert.AreEqual( box.transform.childCount, 0 );
-		box = links[(int)LinkType.haulingBoxHeavy];
-		if ( box )
-			assert.AreEqual( box.transform.childCount, 0 );
+		if ( noAssert == false )
+		{
+			var box = links[(int)LinkType.haulingBoxLight];
+			if ( box )
+				assert.AreEqual( box.transform.childCount, 0 );
+			box = links[(int)LinkType.haulingBoxHeavy];
+			if ( box )
+				assert.AreEqual( box.transform.childCount, 0 );
+		}
 		// TODO Triggered, called from Worker:FindTask() line 1342
 		// Triggered again called from worker.FindTask, worker still has the plank in hand, after entering the headquarters. 
 		// Item is still registered in Player.items, and still has a valid destination (sawmill) where it is still registered in 
@@ -1989,7 +1994,7 @@ public class Worker : HiveObject
 		// with two roads (between 20:9 and 19:11 then between 20:9 19:8)
 		// Triggered again
 
-		base.DestroyThis();
+		base.DestroyThis( noAssert );
 	}
 
 	public bool hasItems { get { return itemsInHands[0] != null; } }

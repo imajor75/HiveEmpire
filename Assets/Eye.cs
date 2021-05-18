@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
 [RequireComponent( typeof( Camera ) )]
-public class Eye : MonoBehaviour
+public class Eye : HiveObject
 {
 	public float altitude = 4.0f;
 	public float targetAltitude = 4.0f;
@@ -37,7 +37,7 @@ public class Eye : MonoBehaviour
 		return this;
 	}
 
-	void Start()
+	new public void Start()
 	{
 		name = "Eye";
 		camera = GetComponent<Camera>();
@@ -56,6 +56,7 @@ public class Eye : MonoBehaviour
 		ear = new GameObject( "Ear" ).transform;
 		ear.gameObject.AddComponent<AudioListener>();
 		ear.transform.SetParent( World.instance.transform );
+		base.Start();
 	}
 
 	public Vector3 position
@@ -83,7 +84,9 @@ public class Eye : MonoBehaviour
 		}
 	}
 
-	private void Update()
+    public override GroundNode location => throw new NotImplementedException();
+
+    private void Update()
 	{
 		var h = World.instance.ground.GetHeightAt( x, y );
 		if ( h < World.instance.waterLevel )

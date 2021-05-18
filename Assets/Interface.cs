@@ -215,7 +215,7 @@ public class Interface : HiveObject
 		};
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		GroundNode.Initialize();
 		Assert.Initialize();
@@ -276,7 +276,7 @@ public class Interface : HiveObject
 			mainPlayer = null;
 	}
 
-	void Load( string fileName )
+	public void Load( string fileName )
 	{
 		print( "Loading " + fileName );
 		world.Load( fileName );
@@ -284,7 +284,7 @@ public class Interface : HiveObject
 			mainPlayer = world.players[0];
 	}
 
-	void Save( string fileName = "" )
+	public void Save( string fileName = "" )
 	{
 		viewport.ResetInputHandler();
 		if ( fileName == "" )

@@ -25,9 +25,13 @@ public class GroundNode : HiveObject
 	public float staticHeight = -1;
 	public Type type;
 	static MediaTable<GameObject, Type> decorations;
+	public bool hasDecoration { get { return decorationDirection != -1; } }
+	public float decorationPosition;
+	public int decorationDirection = -1;
+	public int decorationType;
 	const float decorationSpreadMin = 0.3f;
 	const float decorationSpreadMax = 0.6f;
-	const float decorationDensity = 0.08f;
+	const float decorationDensity = 0.4f;
 
 	public Flag validFlag
 	{
@@ -99,32 +103,37 @@ public class GroundNode : HiveObject
 		this.x = x;
 		this.y = y;
 
+		if ( World.rnd.NextDouble() <= decorationDensity )
+		{
+			decorationPosition = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
+			decorationDirection = World.rnd.Next( GroundNode.neighbourCount );
+			decorationType = World.rnd.Next( 1000000 );		// TODO not so nice
+			// At this moment we don't really know the count for the different decorations, so a big random number is generated. MediaTable is doing a %, so it is ok
+			// The reason why we use an upper limit here is to avoid the value -1, which is OK, but gives an assert fail
+		}
+
 		return this;
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		name = "GroundNode (" + x + ", " + y + ")";
 		transform.SetParent( World.nodes.transform );
 		transform.localPosition = position;
 
 		// Decoration
-		World.rnd = new System.Random( 1000 * x + y );
-		for ( int i = 0; i < neighbourCount / 2; i++ )
+		if ( hasDecoration )
 		{
-			if ( World.rnd.NextDouble() > decorationDensity )
-				continue;
-
-			var decoration = decorations.GetMediaData( type );
+			var decoration = decorations.GetMediaData( type, decorationType );
 			if ( decoration )
 			{
 				var d = Instantiate( decoration ).transform;
 				d.SetParent( ground.FindClosestBlock( this ).transform );
-				var o = Neighbour( i );
-				var l = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
-				d.position = position * ( 1 - l ) + o.GetPositionRelativeTo( this ) * l;
+				var o = Neighbour( decorationDirection );
+				d.position = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
 			}
 		}
+		base.Start();
 	}
 
 	public void OnDrawGizmos()

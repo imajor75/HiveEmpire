@@ -462,7 +462,7 @@ abstract public class Building : HiveObject
 		base.Materialize();
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		name = $"Building {node.x}:{node.y}";
 		ground.Link( this );
@@ -490,6 +490,7 @@ abstract public class Building : HiveObject
 		highlightArrow = Instantiate( Resources.Load<GameObject>( "prefabs/others/gem" ) );
 		highlightArrow.transform.SetParent( transform );
 		highlightArrow.transform.localScale = Vector3.one * 3f;
+		base.Start();
 	}
 
 	public void Update()
@@ -507,7 +508,7 @@ abstract public class Building : HiveObject
 		if ( dispenser == null || !dispenser.IsIdle( true ) || flag.FreeSpace() == 0 )
 			return null;
 
-		dispenser.gameObject.SetActive( true );
+		dispenser.SetActive( true );
 		// TODO Don't create the item, if there is no path between this and destination
 		Item item = Item.Create().Setup( itemType, this, destination, priority );
 		if ( item != null )

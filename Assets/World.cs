@@ -30,6 +30,7 @@ public class World : MonoBehaviour
 	static public Shader defaultTextureShader;
 	public bool gameInProgress;
 	public int time;
+	public int randomSeed;
 	public int overseas = 2;
 
 	static public Water water;
@@ -149,7 +150,7 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.FixedUpdate();
 	}
-
+		
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
 		var oldEye = eye;
@@ -211,22 +212,18 @@ public class World : MonoBehaviour
 
 	public void Load( string fileName )
 	{
-		Clear();
+   		Clear();
 		Prepare();
 		Interface.ValidateAll();
 
-		using ( var sw = new StreamReader( fileName ) )
-		using ( var reader = new JsonTextReader( sw ) )
-		{
-			var serializer = new Serializer( reader );
-			World world = serializer.Deserialize<World>( reader );
-			Assert.global.AreEqual( world, this );
-		}
+		World world = Serializer.Read<World>( fileName );
+		Assert.global.AreEqual( world, this );
+
+		rnd = new System.Random( randomSeed );
 
 		foreach ( var player in players )
 			player.Start();
 
-		GenerateResources( true );  // For old files
 		if ( water == null )
 			water = Water.Create().Setup( ground );
 
@@ -311,19 +308,10 @@ public class World : MonoBehaviour
 
 	public void Save( string fileName )
 	{
-		JsonSerializerSettings jsonSettings = new JsonSerializerSettings
-		{
-			
-			TypeNameHandling = TypeNameHandling.Auto,
-			PreserveReferencesHandling = PreserveReferencesHandling.Objects,
-			ContractResolver = Serializer.SkipUnityContractResolver.Instance
-		};
-		var serializer = JsonSerializer.Create( jsonSettings );
+		randomSeed = rnd.Next();
+		rnd = new System.Random( randomSeed );
 
-		using var sw = new StreamWriter( fileName );
-		using JsonTextWriter writer = new JsonTextWriter( sw );
-		//writer.Formatting = Formatting.Indented;
-		serializer.Serialize( writer, this );
+		Serializer.Write( fileName, this, false );
 	}
 
 	public void Prepare()
@@ -473,30 +461,27 @@ public class World : MonoBehaviour
 		Validate( true );
 	}
 
-	public void GenerateResources( bool fishOnly = false )
+	public void GenerateResources()
 	{
 		foreach ( var node in ground.nodes )
 		{
-			if ( !fishOnly )
-			{
-				var r = new System.Random( World.rnd.Next() );
-				if ( r.NextDouble() < settings.forestChance )
-					node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
-				if ( r.NextDouble() < settings.rocksChance )
-					node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
-				if ( r.NextDouble() < settings.animalSpawnerChance )
-					node.AddResource( Resource.Type.animalSpawner );
-				if ( r.NextDouble() < settings.ironChance )
-					node.AddResourcePatch( Resource.Type.iron, 5, 10 );
-				if ( r.NextDouble() < settings.coalChance )
-					node.AddResourcePatch( Resource.Type.coal, 5, 10 );
-				if ( r.NextDouble() < settings.stoneChance )
-					node.AddResourcePatch( Resource.Type.stone, 3, 10 );
-				if ( r.NextDouble() < settings.saltChance )
-					node.AddResourcePatch( Resource.Type.salt, 3, 10 );
-				if ( r.NextDouble() < settings.goldChance )
-					node.AddResourcePatch( Resource.Type.gold, 3, 10 );
-			}
+			var r = new System.Random( World.rnd.Next() );
+			if ( r.NextDouble() < settings.forestChance )
+				node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
+			if ( r.NextDouble() < settings.rocksChance )
+				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
+			if ( r.NextDouble() < settings.animalSpawnerChance )
+				node.AddResource( Resource.Type.animalSpawner );
+			if ( r.NextDouble() < settings.ironChance )
+				node.AddResourcePatch( Resource.Type.iron, 5, 10 );
+			if ( r.NextDouble() < settings.coalChance )
+				node.AddResourcePatch( Resource.Type.coal, 5, 10 );
+			if ( r.NextDouble() < settings.stoneChance )
+				node.AddResourcePatch( Resource.Type.stone, 3, 10 );
+			if ( r.NextDouble() < settings.saltChance )
+				node.AddResourcePatch( Resource.Type.salt, 3, 10 );
+			if ( r.NextDouble() < settings.goldChance )
+				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
 
 			if ( node.CheckType( GroundNode.Type.land ) )
 			{

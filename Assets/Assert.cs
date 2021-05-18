@@ -63,7 +63,7 @@ public class Assert
 		if ( a == b )
 			return;
 
-		message += "(" + a + " == " + b + ")";
+		message += $" ({a}=={b})";
 		Fail( message );
 	}
 
@@ -73,7 +73,7 @@ public class Assert
 		if ( a == b )
 			return;
 
-		message += "(" + a + " == " + b + ")";
+		message += $" ({a}=={b})";
 		Fail( message );
 	}
 
@@ -98,7 +98,7 @@ public class Assert
 		if ( a != b )
 			return;
 
-		message += "(" + a + " == " + b + ")";
+		message += $" ({a}=={b})";
 		Fail( message );
 	}
 
@@ -108,7 +108,7 @@ public class Assert
 		if ( a != b )
 			return;
 
-		message += "(" + a + " == " + b + ")";
+		message += $" ({a}=={b})";
 		Fail( message );
 	}
 

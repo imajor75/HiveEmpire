@@ -84,7 +84,7 @@ public class Flag : HiveObject
 		}
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		gameObject.name = "Flag " + node.x + ", " + node.y;
 		node.ground.Link( this );
@@ -112,6 +112,7 @@ public class Flag : HiveObject
 			if ( items[i] != null )
 				items[i].transform.SetParent( frames[i].transform, false );
 		}
+		base.Start();
 	}
 
 	public void FixedUpdate()
@@ -391,12 +392,15 @@ public class Flag : HiveObject
 		return list;
 	}
 
-	public override void DestroyThis()
+	public override void DestroyThis( bool noAssert = false )
 	{
-		foreach ( var f in frames )
-			if ( f )
-				assert.AreEqual( f.transform.childCount, 0 );
-		base.DestroyThis();
+		if ( noAssert == false )
+		{
+			foreach ( var f in frames )
+				if ( f )
+					assert.AreEqual( f.transform.childCount, 0 );
+		}
+		base.DestroyThis( noAssert );
 	}
 
 	static public bool IsNodeSuitable( GroundNode placeToBuildOn, Player owner )

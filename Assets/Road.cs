@@ -175,7 +175,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return ends[0];
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		ground.Link( this );
 		if ( nodes.Count > 0 )
@@ -208,6 +208,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		World.SetRenderMode( mapMaterial, World.BlendMode.Transparent );
 
 		RebuildMesh();
+		base.Start();
 	}
 
 	public void FixedUpdate()

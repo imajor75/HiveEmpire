@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311956, g: 0.3807402, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -154,6 +154,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blueprintOnly: 0
   id: 270383065
+  createIndex: 0
+  noAssert: 0
+  inactive: 0
+  createOrigin: 0
   panels: []
   postProcessResources: {fileID: 0}
   world: {fileID: 0}
@@ -162,7 +166,7 @@ MonoBehaviour:
   debug: {fileID: 0}
   heightStrips: 0
   mainPlayer: {fileID: 0}
-  autoSave: 15000
+  autoSave: 100
   fullValidate: 500
   highlightType: 0
   highlightArea:

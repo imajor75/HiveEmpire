@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Profiling;
 
-public class ItemDispatcher : MonoBehaviour
+public class ItemDispatcher : HiveObject
 {
 	public enum Priority
 	{
@@ -62,7 +62,9 @@ public class ItemDispatcher : MonoBehaviour
 
 	public List<LogisticResult> results, resultsInThisFrame;
 
-	static public ItemDispatcher Create()
+    public override GroundNode location => throw new System.NotImplementedException();
+
+    static public ItemDispatcher Create()
 	{
 		return new GameObject().AddComponent<ItemDispatcher>();
 	}
@@ -72,7 +74,7 @@ public class ItemDispatcher : MonoBehaviour
 		this.player = player;
 	}
 
-	public void Start()
+	new public void Start()
 	{
 		name = "Item displatcher";
 		transform.SetParent( World.instance.transform );
@@ -88,6 +90,8 @@ public class ItemDispatcher : MonoBehaviour
 		}
 		foreach ( var market in markets )
 			market.Start();
+			
+		base.Start();
 	}
 
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )

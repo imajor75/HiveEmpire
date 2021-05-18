@@ -13,6 +13,7 @@ public class Resource : HiveObject
 	public int charges = 1;
 	public bool infinite;
 	GameObject body;
+	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
 	public World.Timer gathered;
 	public World.Timer keepAway;
 	public World.Timer spawn;
@@ -134,6 +135,7 @@ public class Resource : HiveObject
 			this.infinite = true;
 		this.node = node;
 		life.Start();
+		bodyRandom = World.rnd.Next();
 		return this;
 	}
 
@@ -147,13 +149,13 @@ public class Resource : HiveObject
 	}
 
     // Start is called before the first frame update
-    public void Start()
+    new public void Start()
     {
 		node.ground.Link( this );
 		transform.localPosition = node.position;
 
 		name = type.ToString();
-		GameObject prefab = meshes.GetMediaData( type );
+		GameObject prefab = meshes.GetMediaData( type, bodyRandom );
 		if ( prefab )
 			body = Instantiate( prefab );
 		if ( type == Type.pasturingAnimal )
@@ -161,7 +163,7 @@ public class Resource : HiveObject
 		if ( body != null )
 		{
 			if ( type == Type.tree || type == Type.rock )
-				body.transform.Rotate( Vector3.up * World.rnd.Next( 360 ) );
+				body.transform.Rotate( Vector3.up * ( bodyRandom % 360 ) );
 			body.transform.SetParent( transform );
 			body.transform.localPosition = Vector3.zero;
 
@@ -182,6 +184,7 @@ public class Resource : HiveObject
 		}
 
 		soundSource = World.CreateSoundSource( this );
+		base.Start();
 	}
 
 	public void Update()
