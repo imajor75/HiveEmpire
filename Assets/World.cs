@@ -452,6 +452,17 @@ public class World : MonoBehaviour
 		}
 	}
 
+	public static void DrawObject( GameObject prefab, Matrix4x4 transform )
+	{
+		MeshFilter filter = prefab.GetComponent<MeshFilter>();
+		MeshRenderer renderer = prefab.GetComponent<MeshRenderer>();
+		var local = Matrix4x4.TRS( prefab.transform.localPosition, prefab.transform.localRotation, prefab.transform.localScale );
+		if ( filter && renderer )
+			Graphics.DrawMesh( filter.sharedMesh, transform * local, renderer.sharedMaterial, 0 );
+		foreach ( Transform c in prefab.transform )
+			DrawObject( c.gameObject, transform * local );
+	}
+
 	public void Reset()
 	{
 		ground.Reset();

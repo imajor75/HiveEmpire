@@ -1396,7 +1396,7 @@ public class Interface : HiveObject
 					var resource = node.resource;
 					if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource )
 						return;
-					if ( !resource.underGround || node == workshop.node || resource.exposed.inProgress )
+					if ( !resource.underGround || node == workshop.node || resource.node.owner == workshop.owner )
 					{
 						if ( resource.infinite )
 							left++;
@@ -1791,7 +1791,7 @@ public class Interface : HiveObject
 			BuildButton( 200, -120, "Stone patch", true, delegate { AddResourcePatch( Resource.Type.stone ); } );
 			BuildButton( 200, -140, "Salt patch", true, delegate { AddResourcePatch( Resource.Type.salt ); } );
 #endif
-			if ( node.resource && ( !node.resource.underGround || !node.resource.exposed.done ) )
+			if ( node.resource && ( !node.resource.underGround || !node.owner != root.mainPlayer ) )
 				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
 			if ( show )
 				root.world.eye.FocusOn( node, true );
@@ -1811,7 +1811,7 @@ public class Interface : HiveObject
 
 		void AddResourcePatch( Resource.Type resourceType )
 		{
-			node.AddResourcePatch( resourceType, 3, 10, true, true );
+			node.AddResourcePatch( resourceType, 3, 10, true );
 		}
 
 		void AddTree()
@@ -1858,6 +1858,8 @@ public class Interface : HiveObject
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				var type = (Workshop.Type)i;
+				if ( type.ToString().StartsWith( "_" ) )
+					continue;
 				int c = 0;
 				foreach ( var workshop in workshops )
 					if ( workshop.type == type && workshop.owner == root.mainPlayer )
@@ -1888,28 +1890,28 @@ public class Interface : HiveObject
 		void AddFlag()
 		{
 			root.viewport.constructionMode = Viewport.Construct.flag;
-			root.viewport.showPossibleBuildings = true;
+			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
 			Close();
 		}
 
 		void AddCrossing()
 		{
 			root.viewport.constructionMode = Viewport.Construct.crossing;
-			root.viewport.showPossibleBuildings = true;
+			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
 			Close();
 		}
 
 		void AddStock()
 		{
 			root.viewport.constructionMode = Viewport.Construct.stock;
-			root.viewport.showPossibleBuildings = true;
+			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
 			Close();
 		}
 
 		void AddGuardHouse()
 		{
 			root.viewport.constructionMode = Viewport.Construct.guardHouse;
-			root.viewport.showPossibleBuildings = true;
+			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
 			Close();
 		}
 
@@ -1935,7 +1937,7 @@ public class Interface : HiveObject
 			}
 			root.viewport.constructionMode = Viewport.Construct.workshop;
 			root.viewport.workshopType = type;
-			root.viewport.showPossibleBuildings = true;
+			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
 			Close();
 		}
 	}
@@ -2474,7 +2476,7 @@ public class Interface : HiveObject
 		static int gridMaskXID;
 		static int gridMaskZID;
 		public bool showGridAtMouse;
-		public bool showPossibleBuildings;
+		public NodeInfoType nodeInfoToShow;
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
 		public WorkshopPanel currentBlueprintPanel;
@@ -2491,6 +2493,14 @@ public class Interface : HiveObject
 			flag,
 			crossing
 		}
+
+		public enum NodeInfoType
+		{
+			none,
+			possibleBuildings,
+			undergroundResources
+		}
+
 		public Construct constructionMode = Construct.nothing;
 		public Workshop.Type workshopType;
 		public int currentFlagDirection = 1;    // 1 is a legacy value.
@@ -2546,7 +2556,7 @@ public class Interface : HiveObject
 				{
 					constructionMode = Construct.nothing;
 					CancelBlueprint();
-					showPossibleBuildings = false;
+					nodeInfoToShow = NodeInfoType.none;
 					return true;
 				}
 				return false;
@@ -2731,7 +2741,7 @@ public class Interface : HiveObject
 				currentBlueprintPanel?.Close();
 				currentBlueprintPanel = null;
 				constructionMode = Construct.nothing;
-				showPossibleBuildings = false;
+				nodeInfoToShow = NodeInfoType.none;
 				return;
 			}
 
@@ -2788,7 +2798,19 @@ public class Interface : HiveObject
 			}
 
 			if ( GetKeyDown( KeyCode.Alpha3 ) )
-				showPossibleBuildings = !showPossibleBuildings;
+			{
+				if ( nodeInfoToShow == NodeInfoType.possibleBuildings )
+					nodeInfoToShow = NodeInfoType.none;
+				else
+					nodeInfoToShow = NodeInfoType.possibleBuildings;
+			}
+			if ( GetKeyDown( KeyCode.Alpha4 ) )
+			{
+				if ( nodeInfoToShow == NodeInfoType.undergroundResources )
+					nodeInfoToShow = NodeInfoType.none;
+				else
+					nodeInfoToShow = NodeInfoType.undergroundResources;
+			}
 			if ( inputHandler == null || inputHandler.Equals( null ) )
 				inputHandler = this;
 
@@ -2818,26 +2840,39 @@ public class Interface : HiveObject
 			if ( GetKeyDown( KeyCode.PageDown ) && currentNode )
 				currentNode.SetHeight( currentNode.height - 0.05f );
 #endif
-			if ( showPossibleBuildings && currentNode )
+			if ( nodeInfoToShow != NodeInfoType.none && currentNode )
 			{
 				foreach ( var o in Ground.areas[6] )
 				{
 					var n = currentNode + o;
-					foreach ( var p in buildCategories )
+					if ( nodeInfoToShow == NodeInfoType.possibleBuildings )
 					{
-						if ( p.configuration != null )
+						foreach ( var p in buildCategories )
 						{
-							if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration, currentFlagDirection ) )
-								continue;
-						}
-						else
-						{
-							if ( !Flag.IsNodeSuitable( n, root.mainPlayer ) )
-								continue;
-						}
+							if ( p.configuration != null )
+							{
+								if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration, currentFlagDirection ) )
+									continue;
+							}
+							else
+							{
+								if ( !Flag.IsNodeSuitable( n, root.mainPlayer ) )
+									continue;
+							}
 
-						Graphics.DrawMesh( p.mesh, Matrix4x4.TRS( n.position, Quaternion.identity, new Vector3( p.scale, p.scale, p.scale ) ), p.material, 0 );
-						break;
+							Graphics.DrawMesh( p.mesh, Matrix4x4.TRS( n.position, Quaternion.identity, new Vector3( p.scale, p.scale, p.scale ) ), p.material, 0 );
+							break;
+						}
+					}
+					if ( nodeInfoToShow == NodeInfoType.undergroundResources )
+					{
+						if ( n.resource == null || n.owner != root.mainPlayer || !n.resource.underGround )
+							continue;
+						var itemType = Resource.ItemType( n.resource.type );
+						var body = Item.looks.GetMediaData( itemType );
+						var renderer = body.GetComponent<MeshRenderer>();
+						var meshFilter = body.GetComponent<MeshFilter>();
+						World.DrawObject( body, Matrix4x4.TRS( n.position + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.3f ) );
 					}
 				}
 			}

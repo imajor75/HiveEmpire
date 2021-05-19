@@ -9,7 +9,8 @@ public class Resource : HiveObject
 	public bool underGround;
 	public Type type;
 	public World.Timer life;
-	public World.Timer exposed;
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer exposed;
 	public int charges = 1;
 	public bool infinite;
 	GameObject body;
@@ -21,7 +22,6 @@ public class Resource : HiveObject
 	public List<Worker> animals = new List<Worker>();
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 8000;
-	public static int exposeMax = 50000;
 	public World.Timer silence;
 	AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;
@@ -41,7 +41,7 @@ public class Resource : HiveObject
 		iron,
 		gold,
 		stone,
-		expose,
+		expose,	// Obsolete, kept only to be able to load old saves
 		soil,
 		total,
 		unknown = -1	
@@ -68,11 +68,6 @@ public class Resource : HiveObject
 		"prefabs/rocks/rock03", Type.rock,
 		"prefabs/rocks/rock04", Type.rock,
 
-		"Ores/coaltable_final" , Type.coal,
-		"Ores/goldtable_final" , Type.gold,
-		"Ores/irontable_final" , Type.iron,
-		"Ores/salttable_final" , Type.salt,
-		"Ores/stonetable_final" , Type.stone,
 		"AnimalCave/animRock(Clone)", Type.animalSpawner,
 		"grainfield_final", Type.cornfield };
 		Resource.meshes.Fill( meshes );
@@ -212,8 +207,6 @@ public class Resource : HiveObject
 
 	public void FixedUpdate()
 	{
-		if ( underGround )
-			body?.SetActive( !exposed.done && !exposed.empty );
 		if ( type == Type.animalSpawner && ( spawn.done || spawn.empty ) )
 		{
 			foreach ( var o in Ground.areas[1] )

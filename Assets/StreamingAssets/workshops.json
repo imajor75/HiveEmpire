@@ -177,12 +177,6 @@
     ]
   },
   {
-    "type": "geologist",
-    "flatteningNeeded": false,
-    "productionTime": 0,
-    "gatheredResource": "expose"
-  },
-  {
     "type": "bowmaker",
 	  "huge": true,
 	  "productionTime": 2500,

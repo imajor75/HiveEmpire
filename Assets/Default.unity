@@ -154,10 +154,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blueprintOnly: 0
   id: 270383065
-  createIndex: 0
   noAssert: 0
   inactive: 0
-  createOrigin: 0
   panels: []
   postProcessResources: {fileID: 0}
   world: {fileID: 0}
@@ -166,7 +164,7 @@ MonoBehaviour:
   debug: {fileID: 0}
   heightStrips: 0
   mainPlayer: {fileID: 0}
-  autoSave: 100
+  autoSave: 15000
   fullValidate: 500
   highlightType: 0
   highlightArea:

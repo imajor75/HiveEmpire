@@ -274,7 +274,7 @@ public class GroundNode : HiveObject
 		return Mathf.Max( h, Mathf.Max( v, d ) );
 	}
 
-	public void AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false, bool expose = false )
+	public void AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false )
 	{
 		for ( int x = -size; x < size; x++ )
 		{
@@ -284,12 +284,12 @@ public class GroundNode : HiveObject
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > World.rnd.Next( 100 ) )
-					n.AddResource( type, overwrite, expose );
+					n.AddResource( type, overwrite );
 			}
 		}
 	}
 
-	public void AddResource( Resource.Type type, bool overwrite = false, bool expose = false )
+	public void AddResource( Resource.Type type, bool overwrite = false )
 	{
 		if ( this.resource != null )
 		{
@@ -311,9 +311,6 @@ public class GroundNode : HiveObject
 		Resource resource = Resource.Create().Setup( this, type );
 		if ( resource && type == Resource.Type.tree )
 			resource.life.Start( -2 * Resource.treeGrowthMax );
-
-		if ( resource && expose )
-			resource.exposed.Start( Resource.exposeMax );
 	}
 
 	public GroundNode Add( Ground.Offset o )
@@ -397,7 +394,7 @@ public class GroundNode : HiveObject
 
 	public override void OnClicked()
 	{
-		Interface.root.viewport.showPossibleBuildings = false;
+		Interface.root.viewport.nodeInfoToShow = Interface.Viewport.NodeInfoType.none;
 		Interface.NodePanel.Create().Open( this );
 	}
 

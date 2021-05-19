@@ -57,7 +57,7 @@ public class Worker : HiveObject
 	static public List<GameObject> templates = new List<GameObject>();
 	static public RuntimeAnimatorController animationController;
 	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
-	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID, hammeringID;
+	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
 
 	public List<Task> taskQueue = new List<Task>();
 	protected GameObject body;
@@ -903,7 +903,6 @@ public class Worker : HiveObject
 		shovelingID = Animator.StringToHash( "shoveling" );
 		harvestingID = Animator.StringToHash( "harvesting" );
 		sowingID = Animator.StringToHash( "sowing" );
-		hammeringID = Animator.StringToHash( "hammering" );
 
 		//object[] sounds = {
 		//	"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
@@ -958,14 +957,6 @@ public class Worker : HiveObject
 		{
 			animation = fishingID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/stick" ),
-			toolSlot = LinkType.rightHand,
-			timeToInterrupt = 1.0f,
-			duration = 500
-		};
-		resourceCollectAct[(int)Resource.Type.expose] = new Act
-		{
-			animation = hammeringID,
-			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/hammer" ),
 			toolSlot = LinkType.rightHand,
 			timeToInterrupt = 1.0f,
 			duration = 500

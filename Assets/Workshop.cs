@@ -139,7 +139,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		stonemine,
 		goldmine,
 		forester,
-		geologist,
+		_geologistObsolete,	// Obsolete, kept here only to remain compatible with old files
 		bowmaker,
 		smelter,
 		weaponmaker,
@@ -204,25 +204,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 			Resource resource = node.resource;
 			bool underGround = Resource.IsUnderGround( resourceType );
-			if ( resourceType != Resource.Type.expose )
-				boss.assert.AreEqual( resourceType, resource.type, "Resource types are different (expecting " + resourceType.ToString() + " but was " + resource.type.ToString() + ")" );   // TODO Fired once (maybe fisherman met a tree?)
 			boss.assert.AreEqual( boss, resource.hunter );
 			if ( underGround || node == boss.node )
 			{
-				if ( resourceType == Resource.Type.expose )
-					resource.exposed.Start( Resource.exposeMax );
+				resource.gathered.Start();
+				if ( !resource.infinite && --resource.charges == 0 )
+					resource.Remove( false );
 				else
 				{
-					resource.gathered.Start();
-					if ( !resource.infinite && --resource.charges == 0 )
-						resource.Remove( false );
-					else
-					{
-						if ( resource.underGround )
-							resource.keepAway.Start( mineOreRestTime );
-						if ( resource.type == Resource.Type.fish )
-							resource.keepAway.Start( fishRestTime );
-					}
+					if ( resource.underGround )
+						resource.keepAway.Start( mineOreRestTime );
+					if ( resource.type == Resource.Type.fish )
+						resource.keepAway.Start( fishRestTime );
 				}
 			}
 			else
@@ -354,7 +347,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"Mines/stonemine_final", 1.5f, Type.stonemine,
 			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
 			"Forest/forester_final", 1.33f, Type.forester,
-			"prefabs/buildings/geologist", 0.8f, Type.geologist,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponmaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowmaker,
@@ -791,14 +783,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 			Resource resource = target.resource;
 			if ( resource == null || resource.hunter != null )
 				continue;
-			if ( resourceType == Resource.Type.expose )
-			{
-				if ( resource.underGround && ( resource.exposed.done || resource.exposed.empty ) )
-				{
-					CollectResourceFromNode( target, resourceType );
-					return;
-				}
-			}
 			if ( resource.type == resourceType && resource.IsReadyToBeHarvested() )
 			{
 				CollectResourceFromNode( target, resourceType );
@@ -830,7 +814,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		assert.IsTrue( worker.IsIdle() );
 		worker.SetActive( true );
-		assert.IsTrue( resourceType == Resource.Type.expose || resourceType == Resource.Type.fish || target.resource.type == resourceType );
+		assert.IsTrue( resourceType == Resource.Type.fish || target.resource.type == resourceType );
 		if ( !Resource.IsUnderGround( resourceType ) )
 		{
 			worker.ScheduleWalkToNeighbour( flag.node );
