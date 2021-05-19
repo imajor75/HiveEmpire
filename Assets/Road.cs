@@ -92,6 +92,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public Road Setup( Flag flag )
 	{
+		if ( flag == null )
+			return null;
 		this.ground = flag.node.ground;
 		nodes.Add( flag.node );
 		owner = flag.owner;
@@ -787,6 +789,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			if ( !Finish() )
 				Remove( false );
+			Interface.root.RegisterCreateRoad( this );
 			Interface.root.viewport.showGridAtMouse = false;
 			return false;
 		}

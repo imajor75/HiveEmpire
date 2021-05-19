@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -10,7 +9,7 @@ using UnityEngine.Profiling;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 
-public class Interface : HiveObject
+public class Interface : OperationHandler
 {
 	public List<Panel> panels = new List<Panel>();
 	public PostProcessResources postProcessResources;
@@ -327,6 +326,10 @@ public class Interface : HiveObject
 			else
 				world.SetTimeFactor( 1 );
 		}
+		if ( GetKeyDown( KeyCode.Z ) && ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) ) )
+			Undo();
+		if ( GetKeyDown( KeyCode.Y ) && ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) ) )
+			Redo();
 		if ( GetKeyDown( KeyCode.H ) )
 		{
 			History.Create().Open( mainPlayer );
@@ -1035,6 +1038,8 @@ public class Interface : HiveObject
 		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IInputHandler
 		{
 			public Ground.Area area;
+			public GroundNode oldCenter;
+			public int oldRadius;
 			public Image image;
 
 			public void Setup( Ground.Area area )
@@ -1057,6 +1062,7 @@ public class Interface : HiveObject
 					root.highlightType = HighlightType.none;
 					root.highlightArea = null;
 				}
+				root.RegisterChangeArea( area, oldCenter, oldRadius );
 				return false;
 			}
 
@@ -1069,6 +1075,8 @@ public class Interface : HiveObject
 						root.highlightType = HighlightType.none;
 					return;
 				}
+				oldCenter = area.center;
+				oldRadius = area.radius;
 				area.center = World.instance.ground.nodes[0];
 				area.radius = 4;
 				root.highlightType = HighlightType.area;
@@ -1112,7 +1120,8 @@ public class Interface : HiveObject
 			{
 				if ( root.highlightArea != area )
 					return;
-				area.center = null;
+				area.center = oldCenter;
+				area.radius = oldRadius;
 				root.highlightType = HighlightType.none;
 			}
 
@@ -1331,8 +1340,10 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( workshop && workshop.Remove( false ) )
-				Close();
+			if ( workshop )
+				root.ExecuteRemoveBuilding( workshop );
+
+			Close();
 		}
 
 		void ShowWorker()
@@ -1509,8 +1520,9 @@ public class Interface : HiveObject
 		}
 		void Remove()
 		{
-			if ( guardHouse && guardHouse.Remove( false ) )
-				Close();
+			if ( guardHouse )
+				root.ExecuteRemoveBuilding( guardHouse );
+			Close();
 		}
 	}
 
@@ -1653,8 +1665,9 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( stock && stock.Remove( false ) )
-				Close();
+			if ( stock )
+				root.ExecuteRemoveBuilding( stock );
+			Close();
 		}
 
 		public override void Update()
@@ -1949,6 +1962,7 @@ public class Interface : HiveObject
 		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>(), centerItems = new List<ItemImage>();
 		public List<Text> leftNumbers = new List<Text>(), rightNumbers = new List<Text>(), centerDirections = new List<Text>();
 		public GroundNode node;
+		public Dropdown targetWorkerCount;
 		public Text jam;
 		public Text workers;
 
@@ -1972,11 +1986,11 @@ public class Interface : HiveObject
 			jam = Text( 12, -4, 120, 20, "Jam" );
 			workers = Text( 12, -28, 120, 20, "Worker count" );
 			name = "Road panel";
-			var t = Dropdown( 20, -44, 150, 25 );
-			t.ClearOptions();
-			t.AddOptions( new List<string> { "Auto", "1", "2", "3", "4" } );
-			t.value = road.targetWorkerCount;
-			t.onValueChanged.AddListener( TargetWorkerCountChanged );
+			targetWorkerCount = Dropdown( 20, -44, 150, 25 );
+			targetWorkerCount.ClearOptions();
+			targetWorkerCount.AddOptions( new List<string> { "Auto", "1", "2", "3", "4" } );
+			targetWorkerCount.value = road.targetWorkerCount;
+			targetWorkerCount.onValueChanged.AddListener( TargetWorkerCountChanged );
 
 			for ( int i = 0; i < itemsDisplayed; i++ )
 			{
@@ -1995,8 +2009,9 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( road && road.Remove( false ) )
-				Close();
+			if ( road )
+				root.ExecuteRemoveRoad( road );
+			Close();
 		}
 
 		void Hauler()
@@ -2016,8 +2031,8 @@ public class Interface : HiveObject
 
 		void TargetWorkerCountChanged( int newValue )
 		{
-			if ( road )
-				road.targetWorkerCount = newValue;
+			if ( road && road.targetWorkerCount != newValue )
+				root.ExecuteChangeRoadWorkerCount( road, newValue );
 		}
 
 		public override void Update()
@@ -2092,8 +2107,9 @@ public class Interface : HiveObject
 						itemTexts[j].text = "-";
 					}
 				}
-
 			}
+			if ( road )
+				targetWorkerCount.value = road.targetWorkerCount;
 		}
 	}
 	public class FlagPanel : Panel
@@ -2146,8 +2162,9 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( flag && flag.Remove( false ) )
-				Close();
+			if ( flag )
+				root.ExecuteRemoveFlag( flag );
+			Close();
 		}
 
 		void StartRoad()
@@ -2737,6 +2754,10 @@ public class Interface : HiveObject
 			if ( currentBlueprint )
 			{
 				currentBlueprint.Materialize();
+				if ( currentBlueprint is Building building )
+					root.RegisterCreateBuilding( building );
+				if ( currentBlueprint is Flag flag )
+					root.RegisterCreateFlag( flag );
 				currentBlueprint = null;
 				currentBlueprintPanel?.Close();
 				currentBlueprintPanel = null;

@@ -249,7 +249,7 @@ public class Eye : HiveObject
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
 
-		if ( Interface.GetKey( KeyCode.Z ) )
+		if ( Interface.GetKey( KeyCode.Z ) && !Interface.GetKey( KeyCode.LeftControl ) && !Interface.GetKey( KeyCode.RightControl ) )
 			targetAltitude *= 1.01f;
 		if ( Interface.GetKey( KeyCode.X ) )
 			targetAltitude *= 0.99f;
