@@ -19,8 +19,8 @@ public class Eye : HiveObject
 	public float direction;
 	public Vector3 autoMovement;
 	public bool rotateAround;
-	float storedX, storedY, storedDirection;
-	bool hasStoredValues;
+	public float storedX, storedY, storedDirection;
+	public bool hasStoredValues;
 	public new Camera camera;
 	[JsonIgnore]
 	public IDirector director;
@@ -115,10 +115,13 @@ public class Eye : HiveObject
 
 	public void GrabFocus( IDirector director )
 	{
-		storedX = x;
-		storedY = y;
-		storedDirection = direction;
-		hasStoredValues = true;
+		if ( !hasStoredValues )
+		{
+			storedX = x;
+			storedY = y;
+			storedDirection = direction;
+			hasStoredValues = true;
+		}
 		this.director = director;
 	}
 
@@ -143,10 +146,13 @@ public class Eye : HiveObject
 		if ( node == null )
 			return;
 
-		storedX = x;
-		storedY = y;
-		storedDirection = direction;
-		hasStoredValues = true;
+		if ( !hasStoredValues )
+		{
+			storedX = x;
+			storedY = y;
+			storedDirection = direction;
+			hasStoredValues = true;
+		}
 
 		var p = node.position;
 		x = p.x;
@@ -161,10 +167,13 @@ public class Eye : HiveObject
 	{
 		if ( component == null )
 			return;
-		storedX = x;
-		storedY = y;
-		storedDirection = direction;
-		hasStoredValues = true;
+		if ( !hasStoredValues )
+		{
+			storedX = x;
+			storedY = y;
+			storedDirection = direction;
+			hasStoredValues = true;
+		}
 
 		x = component.transform.position.x;
 		y = component.transform.position.z;
