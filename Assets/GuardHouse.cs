@@ -41,9 +41,10 @@ public class GuardHouse : Building
 
 	new void Start()
 	{
+		base.Start();
+		name = $"Guardhouse {node.x}:{node.y}";
 		var body = Instantiate( template, transform );
 		body.layer = World.layerIndexPickable;
-		base.Start();
 		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
 
@@ -65,11 +66,11 @@ public class GuardHouse : Building
 		}
 	}
 
-	public override void OnClicked()
+	public override void OnClicked( bool show = false )
 	{
-		base.OnClicked();
+		base.OnClicked( show );
 		if ( construction.done )
-			Interface.GuardHousePanel.Create().Open( this );
+			Interface.GuardHousePanel.Create().Open( this, show );
 	}
 
 	public override bool Remove( bool takeYourTime )

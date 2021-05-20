@@ -189,7 +189,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return;
 
 		if ( nodes.Count > 1 )
-			name = "Road " + nodes[1].x + ", " + nodes[1].y;
+			name = $"Road {nodes[1].x}:{nodes[1].y}";
 		else
 			name = "Road";
 

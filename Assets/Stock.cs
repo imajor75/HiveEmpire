@@ -395,12 +395,11 @@ public class Stock : Building
 		return Stock.mainBuildingInfluence - node.DistanceFrom( this.node );
 	}
 
-	public override void OnClicked()
+	public override void OnClicked( bool show = false )
 	{
+		base.OnClicked( show );
 		if ( construction.done )
-			Interface.StockPanel.Create().Open( this );
-		else
-			Interface.ConstructionPanel.Create().Open( construction );
+			Interface.StockPanel.Create().Open( this, show );
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )

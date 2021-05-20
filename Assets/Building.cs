@@ -7,7 +7,8 @@ using UnityEngine.Profiling;
 [SelectionBase]
 abstract public class Building : HiveObject
 {
-	public string title;
+	public string 
+	title;
 	public Player owner;
 	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;
@@ -542,10 +543,10 @@ abstract public class Building : HiveObject
 		construction.ItemArrived( item );
 	}
 
-	public override void OnClicked()
+	public override void OnClicked( bool show = false )
 	{
 		if ( !construction.done )
-			Interface.ConstructionPanel.Create().Open( construction );
+			Interface.ConstructionPanel.Create().Open( construction, show );
 	}
 
 	public void UpdateLook()

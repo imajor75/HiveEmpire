@@ -86,7 +86,7 @@ public class Flag : HiveObject
 
 	new public void Start()
 	{
-		gameObject.name = "Flag " + node.x + ", " + node.y;
+		name = $"Flag {node.x}:{node.y}";
 		node.ground.Link( this );
 		if ( crossing )
 			pole = Instantiate( template, transform );
@@ -290,9 +290,9 @@ public class Flag : HiveObject
 		return null;
 	}
 
-	public override void OnClicked()
+	public override void OnClicked( bool show = false )
 	{
-		Interface.FlagPanel.Create().Open( this );
+		Interface.FlagPanel.Create().Open( this, show );
 	}
 
 	public override bool Remove( bool takeYourTime = false )

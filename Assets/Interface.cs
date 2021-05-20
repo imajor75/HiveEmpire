@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -904,12 +904,7 @@ public class Interface : OperationHandler
 
 		public static void SelectBuilding( Building building )
 		{
-			var workshop = building as Workshop;
-			if ( workshop )
-				WorkshopPanel.Create().Open( workshop, WorkshopPanel.Content.everything, true );
-			var stock = building as Stock;
-			if ( stock )
-				StockPanel.Create().Open( stock, true );
+			building.OnClicked( true );
 		}
 
 		public Button Button( int x, int y, int xs, int ys, Sprite picture, Component parent = null )
@@ -1141,6 +1136,7 @@ public class Interface : OperationHandler
 			public Item.Type itemType = Item.Type.unknown;
 			public string additionalTooltip;
 			PathVisualization pathVisualization;
+			public Image inTransit;
 
 			public void Track()
 			{
@@ -1166,6 +1162,20 @@ public class Interface : OperationHandler
 				}
 				enabled = true;
 				sprite = Item.sprites[(int)itemType];
+			}
+
+			public void SetInTransit( bool show )
+			{
+				if ( inTransit == null )
+				{
+					inTransit = new GameObject().AddComponent<Image>();
+					inTransit.transform.SetParent( transform, false );
+					inTransit.sprite = Worker.arrowSprite;
+					inTransit.rectTransform.anchorMin = new Vector2( 0.5f, 0.0f );
+					inTransit.rectTransform.anchorMax = new Vector2( 1.0f, 0.5f );
+					inTransit.rectTransform.offsetMin = inTransit.rectTransform.offsetMax = Vector2.zero;
+				}
+				inTransit.gameObject.SetActive( show );
 			}
 
 			public new void OnDestroy()
@@ -1477,23 +1487,24 @@ public class Interface : OperationHandler
 				int k = 0;
 				for ( int i = 0; i < items.Length; i++ )
 				{
+					items[i].color = Color.white;
 					items[i].SetType( itemType );
 					if ( i < inStock )
 					{
-						items[i].color = Color.white;
+						items[i].SetInTransit( false );
 						items[i].item = null;
 					}
 					else
 					{
 						if ( i < inStock + onTheWay )
 						{
-							items[i].color = new Color( 1, 1, 1, 0.4f );
+							items[i].SetInTransit( true );
 							while ( itemsOnTheWay[k].type != itemType )
 								k++;
 							items[i].item = itemsOnTheWay[k++];
 						}
 						else
-							items[i].color = new Color( 1, 1, 1, 0 );
+							items[i].color = new Color( 1, 1, 1, 0  );
 					}
 				}
 			}
@@ -2229,13 +2240,13 @@ public class Interface : OperationHandler
 					if ( flag.items[i].flag && flag.items[i].flag == flag )
 					{
 						itemTimers[i].enabled = true;
-						items[i].color = new Color( 1, 1, 1, 1 );
+						items[i].SetInTransit( false );
 						int timeAtFlag = flag.items[i].atFlag.age;
 						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / 3000 ), 3 );
 						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / 30000f );
 					}
 					else
-						items[i].color = new Color( 1, 1, 1, 0.4f );
+						items[i].SetInTransit( true );
 				}
 			}
 
@@ -2946,7 +2957,7 @@ public class Interface : OperationHandler
 				BuildPanel.Create().Open();
 			if ( GetKeyDown( KeyCode.Alpha2 ) )
 				showGridAtMouse = !showGridAtMouse;
-			if ( GetKeyDown( KeyCode.Alpha4 ) )
+			if ( GetKeyDown( KeyCode.Alpha5 ) )
 				ShowNearestPossibleConstructionSite();
 			if ( GetKeyDown( KeyCode.Comma ) )
 			{

@@ -392,10 +392,10 @@ public class GroundNode : HiveObject
 			type = Type.grass;
 	}
 
-	public override void OnClicked()
+	public override void OnClicked( bool show = false )
 	{
 		Interface.root.viewport.nodeInfoToShow = Interface.Viewport.NodeInfoType.none;
-		Interface.NodePanel.Create().Open( this );
+		Interface.NodePanel.Create().Open( this, show );
 	}
 
 	public bool CheckType( Type type )

@@ -35,7 +35,7 @@ public class Worker : HiveObject
 	Material mapMaterial;
 	GameObject arrowObject;
 	SpriteRenderer itemOnMap;
-	static Sprite arrowSprite;
+	static public Sprite arrowSprite;
 	Material shirtMaterial;
 	[JsonIgnore]
 	public bool debugReset;
@@ -1889,9 +1889,9 @@ public class Worker : HiveObject
 		return true;
 	}
 
-	public override void OnClicked()
+	public override void OnClicked( bool show = false )
 	{
-		Interface.WorkerPanel.Create().Open( this, false );
+		Interface.WorkerPanel.Create().Open( this, show );
 	}
 
 	public T FindTaskInQueue<T>() where T : class

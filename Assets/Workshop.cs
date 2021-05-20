@@ -452,7 +452,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			millWheel = body.transform.Find( "SM_Bld_Preset_House_Windmill_01_Blades_Optimized" );
 		base.Start();
 		string name = type.ToString();
-		this.name = name.First().ToString().ToUpper() + name.Substring( 1 );
+		this.name = name.First().ToString().ToUpper() + name.Substring( 1 ) + $" {node.x}:{node.y}";
 
 		soundSource = World.CreateSoundSource( this );
 
@@ -886,12 +886,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 		SetWorking( true );
 	}
 
-	public override void OnClicked()
+	public override void OnClicked( bool show = false )
 	{
+		base.OnClicked( show );
 		if ( construction.done )
-			Interface.WorkshopPanel.Create().Open( this );
-		else
-			Interface.ConstructionPanel.Create().Open( this.construction );
+			Interface.WorkshopPanel.Create().Open( this, Interface.WorkshopPanel.Content.everything, show );
 	}
 
 	public void OnDrawGizmos()

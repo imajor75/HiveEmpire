@@ -76,7 +76,7 @@ public abstract class HiveObject : MonoBehaviour
 		blueprintOnly = false;
 	}
 
-	public virtual void OnClicked()
+	public virtual void OnClicked( bool show = false )
 	{
 	}
 
