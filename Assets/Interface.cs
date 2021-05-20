@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -345,6 +345,10 @@ public class Interface : OperationHandler
 		if ( GetKeyDown( KeyCode.K ) )
 		{
 			ResourceList.Create().Open();
+		}
+		if ( GetKeyDown( KeyCode.B ) )
+		{
+			BuildingList.Create().Open();
 		}
 		if ( GetKeyDown( KeyCode.Escape ) )
 		{
@@ -1388,14 +1392,7 @@ public class Interface : OperationHandler
 						progressBar.color = Color.red;
 				}
 				if ( productivity )
-				{
-					var percentage = (int)Math.Min( workshop.productivity.current * 101, 100 );
-					productivity.text = percentage.ToString() + "%";
-					if ( percentage == 100 )
-						productivity.color = Color.green;
-					else
-						productivity.color = Color.yellow;
-				}
+					UpdateProductivity( productivity, workshop );
 				if ( itemsProduced )
 					itemsProduced.text = "Items produced: " + workshop.itemsProduced;
 			}
@@ -1422,6 +1419,18 @@ public class Interface : OperationHandler
 			}
 			if ( changeModeImage )
 				changeModeImage.sprite = GetModeIcon();
+		}
+
+		static public void UpdateProductivity( Text text, Workshop workshop )
+		{
+			var percentage = (int)Math.Min( workshop.productivity.current * 101, 100 );
+			text.text = percentage.ToString() + "%";
+			if ( percentage == 100 )
+				text.color = Color.green;
+			else if ( percentage < 20 )
+				text.color = Color.red;
+			else
+				text.color = Color.yellow;
 		}
 
 		void ChangeMode()
@@ -2480,6 +2489,144 @@ public class Interface : OperationHandler
 		}
 	}
 
+	public class BuildingList : Panel
+	{
+		ScrollRect scroll;
+		List<Building> buildings = new List<Building>();
+		List<Text> productivities = new List<Text>();
+		List<Text> outputs = new List<Text>();
+		List<List<Text>> inputs = new List<List<Text>>();
+		bool reversed;
+		Comparison<Building> lastComparisonUsed;
+
+		static public BuildingList Create()
+		{
+			return new GameObject().AddComponent<BuildingList>();
+		}
+
+		public void Open()
+		{
+			base.Open( null, 0, 0, 500, 400 );
+
+			Frame( 0, 0, 500, 400 );
+			Button( 470, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			var t = Text( 20, -20, 150, iconSize, "type" );
+			t.fontSize = (int)( uiScale * 10 );
+			t.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareTypes ); } );
+			var p = Text( 170, -20, 150, iconSize, "productivity" );
+			p.fontSize = (int)( uiScale * 10 );
+			p.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareProductivities ); } );
+			var o = Text( 380, -20, 150, iconSize, "output" );
+			o.fontSize = (int)( uiScale * 10 );
+			o.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareOutputs ); } );
+			var i = Text( 235, -20, 150, iconSize, "input" );
+			i.fontSize = (int)( uiScale * 10 );
+			i.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareInputs ); } );
+			scroll = ScrollRect( 20, -40, 460, 340 );
+
+			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
+			{
+				if ( building.owner != root.mainPlayer || building.blueprintOnly )
+					continue;
+				buildings.Add( building );
+			}
+			Fill( CompareTypes );
+		}
+
+		void Fill( Comparison<Building> comparison )
+		{
+			if ( lastComparisonUsed == comparison )
+				reversed = !reversed;
+			else
+				reversed = true;
+			lastComparisonUsed = comparison;
+
+			buildings.Sort( comparison );
+			if ( reversed )
+				buildings.Reverse();
+			productivities.Clear();
+			outputs.Clear();
+			inputs.Clear();
+
+			foreach ( Transform child in scroll.content )
+				Destroy( child.gameObject );
+
+			for ( int i = 0; i < buildings.Count; i++ )
+			{
+				BuildingIcon( 0, -iconSize * i, buildings[i], scroll.content );
+				productivities.Add( Text( 150, -iconSize * i, 100, iconSize, "", scroll.content ) );
+				outputs.Add( Text( 385, -iconSize * i, 50, iconSize, "", scroll.content ) );
+				inputs.Add( new List<Text>() );
+				if ( buildings[i] is Workshop workshop )
+				{
+					ItemIcon( 360, -iconSize * i, 0, 0, workshop.productionConfiguration.outputType, scroll.content	);
+					int bi = 0;
+					foreach ( var buffer in workshop.buffers )
+					{
+						ItemIcon( 215 + bi * 35, -iconSize * i, 0, 0, buffer.itemType, scroll.content	);
+						inputs[i].Add( Text( 240 + bi * 35, -iconSize * i, 50, iconSize, "0", scroll.content ) );
+						bi++;
+					}
+				}
+			}
+			SetScrollRectContentSize( scroll, 0, iconSize * buildings.Count );
+		}
+
+		new public void Update()
+		{
+			for ( int i = 0; i < buildings.Count; i++ )
+			{
+				if ( buildings[i] is Workshop workshop )
+				{
+					WorkshopPanel.UpdateProductivity( productivities[i], workshop );
+					outputs[i].text = workshop.output.ToString();
+					for ( int j = 0; j < workshop.buffers.Count; j++ )
+						inputs[i][j].text = workshop.buffers[j].stored.ToString();
+				}
+			}
+			base.Update();
+		}
+
+		static int CompareProductivities( Building a, Building b )
+		{
+			float ap = a is Workshop workshopA ? workshopA.productivity.current : -1;
+			float bp = b is Workshop workshopB ? workshopB.productivity.current : -1;
+			return ap.CompareTo( bp );
+		}
+
+		static int CompareOutputs( Building a, Building b )
+		{
+			int ao = a is Workshop workshopA ? workshopA.output : -1;
+			int bo = b is Workshop workshopB ? workshopB.output : -1;
+			return ao.CompareTo( bo );
+		}
+
+		static int CompareInputs( Building a, Building b )
+		{
+			int ai = 0, bi = 0;
+			if ( a is Workshop workshopA )
+			{
+				foreach ( var buffer in workshopA.buffers )
+					ai += buffer.stored;
+			}
+			else
+				ai = -1;
+			if ( b is Workshop workshopB )
+			{
+				foreach ( var buffer in workshopB.buffers )
+					bi += buffer.stored;
+			}
+			else
+				bi = -1;
+			return ai.CompareTo( bi );
+		}
+
+		static int CompareTypes( Building a, Building b )
+		{
+			return a.name.CompareTo( b.name );
+		}
+	}
+
 	public class Viewport : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IInputHandler
 	{
 		public bool mouseOver;
@@ -3079,6 +3226,8 @@ public class Interface : OperationHandler
 		ScrollRect scroll;
 		Player player;
 		float timeSpeedToRestore;
+		Comparison<Item> lastComparison;
+		bool reversed;
 
 		public static ItemList Create()
 		{
@@ -3117,6 +3266,12 @@ public class Interface : OperationHandler
 			foreach ( Transform child in scroll.content )
 				Destroy( child.gameObject );
 
+			if ( comparison == lastComparison )
+				reversed = !reversed;
+			else
+				reversed = true;
+			lastComparison = comparison;
+
 			List<Item> sortedItems = new List<Item>();
 			foreach ( var item in player.items )
 			{
@@ -3124,6 +3279,8 @@ public class Interface : OperationHandler
 					sortedItems.Add( item );
 			}
 			sortedItems.Sort( comparison );
+			if ( reversed )
+				sortedItems.Reverse();
 
 			foreach ( var item in sortedItems )
 			{

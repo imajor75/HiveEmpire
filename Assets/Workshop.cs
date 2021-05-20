@@ -78,8 +78,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			this.current = current;
 			workCounter = 0;
-			weight = 0.5f;
-			timinglength = 3000;
+			weight = 0.1f;
+			timinglength = 300;
 			timer.reference = 0;
 		}
 		public void FixedUpdate( Workshop boss )
@@ -90,7 +90,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				workCounter += (int)World.instance.timeFactor;
 			if ( timer.age >= timinglength )
 			{
-				float p = (float)workCounter/timer.age;
+				float p = (float)workCounter / timer.age;
 				current = current * ( 1 - weight ) + p * weight;
 				workCounter = 0;
 				timer.Start();
