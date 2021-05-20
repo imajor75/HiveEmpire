@@ -3668,11 +3668,17 @@ public class Interface : OperationHandler
 
 		new public void Update()
 		{
+			// TODO Clean up this function, its a mess
 			base.Update();
 			if ( lastAverageEfficiency == player.averageEfficiencyHistory.current )
 				return;
 
 			var t = new Texture2D( 400, 260 );
+			for ( int x = 0; x < t.width; x++ )
+			{
+				for ( int y = 0; y < t.height; y++ )
+					t.SetPixel( x, y, Color.black );
+			}
 			var a = player.averageEfficiencyHistory;
 			if ( selected < Item.Type.total )
 				a = player.itemEfficiencyHistory[(int)selected];
@@ -3684,14 +3690,61 @@ public class Interface : OperationHandler
 				if ( a.data[i] > max )
 					max = a.data[i];
 			}
+			max = Math.Max( max, 0.0001f );
+			int tickPerBuilding = 2000, workshopCount = 0;
+			foreach ( var c in Workshop.configurations )
+			{
+				if ( c.outputType == selected && c.productionTime != 0 )
+				{
+					tickPerBuilding = c.productionTime / c.outputStackSize;
+					foreach ( var w in Resources.FindObjectsOfTypeAll<Workshop>() ) 
+					if ( w.owner == root.mainPlayer && w.type == c.type )
+						workshopCount++;
+					break;
+				}
+			}
+			float itemsPerEfficiencyUpdate = (float)( Player.efficiencyUpdateTime ) / tickPerBuilding;
 			float scale = t.height / max;
+			if ( workshopCount * itemsPerEfficiencyUpdate != 0 )
+				scale = t.height / ( workshopCount * itemsPerEfficiencyUpdate );
+			int hi = (int)( itemsPerEfficiencyUpdate * scale );
+			Color hl = Color.grey;
+			if ( hi >= t.height - 1 )
+			{
+				hl = Color.Lerp( Color.grey, Color.black, 0.5f );
+				hi = hi / 4;
+			}
+			int yb = hi;
+			while ( yb < t.height )
+			{
+				HorizontalLine( yb, hl );
+				yb += hi;
+			}
 			int row = -1;
+			void VerticalLine( int x, Color c )
+			{
+				for ( int y = 0; y < t.height; y++ )
+					t.SetPixel( x, y, c );
+			}
+			void HorizontalLine( int y, Color c )
+			{
+				for ( int x = 0; x < t.width; x++ )
+					t.SetPixel( x, y, c );
+			}
+			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Player.efficiencyUpdateTime;
+			while ( xh >= 0 )
+			{
+				VerticalLine( xh, Color.grey );
+				xh -= World.hourTickCount / Player.efficiencyUpdateTime;
+			}
+
+			int recordColumn = t.width - ( a.data.Count - a.recordIndex );
+			if ( recordColumn >= 0 )
+				VerticalLine( recordColumn, Color.Lerp( Color.grey, Color.white, 0.5f ) );
+
 			for ( int x = t.width - 1; x >= 0; x-- )
 			{
 				int index = a.data.Count - t.width + x;
-				int recordRow = (int)(scale * a.record);
-				for ( int y = 0; y < t.height; y++ )
-					t.SetPixel( x, y, index == a.recordIndex ? Color.yellow : y == recordRow ? Color.grey : Color.black );
 				if ( 0 <= index )
 				{
 					int newRow = (int)Math.Min( (float)t.height - 1, scale * a.data[index] );

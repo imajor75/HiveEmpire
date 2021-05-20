@@ -78,7 +78,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			this.current = current;
 			workCounter = 0;
-			weight = 0.1f;
+			weight = 0.05f;
 			timinglength = 300;
 			timer.reference = 0;
 		}

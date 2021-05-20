@@ -10,7 +10,7 @@ public class Player : ScriptableObject
 	public Versioned versionedRoadDelete = new Versioned();
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
-	const int efficiencyUpdateTime = 3000;
+	public const int efficiencyUpdateTime = 3000;
 	public float totalEfficiency;
 	public World.Timer efficiencyTimer;
 	public Chart averageEfficiencyHistory;

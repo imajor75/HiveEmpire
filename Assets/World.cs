@@ -526,6 +526,8 @@ public class World : MonoBehaviour
 		}
 	}
 
+	public static int hourTickCount { get { return (int)( 60 * 60 / UnityEngine.Time.fixedDeltaTime ); } }
+
 	public float waterLevel
 	{
 		get
