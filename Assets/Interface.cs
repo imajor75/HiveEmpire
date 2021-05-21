@@ -1320,7 +1320,15 @@ public class Interface : OperationHandler
 					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5, workshop.outputArea, false );
 					row -= iconSize * 3 / 2;
 				}
-				progressBar = Image( 20, row, ( iconSize + 5 ) * 7, iconSize, iconTable.GetMediaData( Icon.progress ) );
+				int progressWidth = ( iconSize + 5 ) * 7;
+				var progressFrame = Frame( 20, row, progressWidth, iconSize, 8 );
+				progressBar = new GameObject( "Progress" ).AddComponent<Image>();
+				progressBar.rectTransform.SetParent( progressFrame.transform );
+				progressBar.rectTransform.anchorMin = Vector2.zero;
+				progressBar.rectTransform.anchorMax = Vector2.one;
+				progressBar.rectTransform.offsetMin = Vector2.one * uiScale * 4;
+				progressBar.rectTransform.offsetMax = -Vector2.one * uiScale * 4;
+				progressBar.color = Color.yellow;
 				row -= 25;
 
 				if ( ( contentToShow & Content.itemsProduced ) > 0 )
@@ -1391,8 +1399,8 @@ public class Interface : OperationHandler
 			{
 				if ( workshop.working )
 				{
-					progressBar.rectTransform.sizeDelta = new Vector2( iconSize * 7 * workshop.GetProgress(), iconSize );
-					progressBar.color = Color.white;
+					progressBar.rectTransform.anchorMax = new Vector2( workshop.GetProgress(), 1 );
+					progressBar.color = Color.yellow;
 				}
 				else
 				{
