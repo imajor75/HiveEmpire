@@ -18,7 +18,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
 	public Mesh mesh;
-	public static Material material;
+	public static Material material, materialWithHighlight;
 	public static int timeBetweenWorkersAdded = 3000;
 	public World.Timer workerAdded;
 	public bool decorationOnly;
@@ -38,6 +38,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public static void Initialize()
 	{
 		material = Resources.Load<Material>( "Road" );
+		materialWithHighlight = Resources.Load<Material>( "RoadHighlighted" );
 	}
 
 	public static Road Create()
@@ -157,6 +158,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 		AttachWatches();
 		RegisterOnGround();
+		gameObject.GetComponent<MeshRenderer>().material = material;
 		ends[0] = nodes[0].flag;
 		ends[1] = lastNode.flag;
 		ready = true;
@@ -194,7 +196,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			name = "Road";
 
 		var renderer = gameObject.AddComponent<MeshRenderer>();
-		renderer.material = material;
+		renderer.material = ( ready || decorationOnly ) ? material : materialWithHighlight;
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
@@ -339,7 +341,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		mesh.RecalculateNormals();
 		mapMesh.RecalculateNormals();
-		transform.localPosition = centerNode.position;
+		transform.localPosition = referenceLocation.position;
 	}
 
 	public Vector3 PositionAt( int block, float fraction )

@@ -408,7 +408,7 @@ public class Flag : HiveObject
 		if ( placeToBuildOn.type == GroundNode.Type.underWater )
 			return false;
 
-		if ( placeToBuildOn.IsBlocking( false ) || placeToBuildOn.flag )
+		if ( ( placeToBuildOn.IsBlocking() && placeToBuildOn.road == null ) || placeToBuildOn.flag )
 			return false;
 
 		foreach ( var o in Ground.areas[1] )

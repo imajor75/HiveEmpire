@@ -334,7 +334,7 @@ public class World : MonoBehaviour
 		var light = lightObject.AddComponent<Light>();
 		light.type = UnityEngine.LightType.Directional;
 		lightObject.name = "Sun";
-		light.transform.Rotate( new Vector3( 40, -60, 0 ) );
+		light.transform.Rotate( new Vector3( 60, 0, 0 ) );
 		light.shadows = LightShadows.Soft;
 		light.color = new Color( 1, 1, 1 );
 		light.transform.SetParent( transform );
