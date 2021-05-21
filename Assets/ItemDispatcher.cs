@@ -373,8 +373,8 @@ public class ItemDispatcher : HiveObject
 				first = second;
 				second = temp;
 			}
-			Assert.global.AreEqual( first.type, Potential.Type.offer, "Potential types: " + first.type + ", " + second.type );
-			Assert.global.AreEqual( second.type, Potential.Type.request, "Potential types: " + first.type + ", " + second.type );
+			Assert.global.AreEqual( first.type, Potential.Type.offer, $"Potential types: {first.type}, {second.type}" );
+			Assert.global.AreEqual( second.type, Potential.Type.request, $"Potential types: {first.type}, {second.type}" );
 
 			bool success = false;
 			if ( first.building != null )

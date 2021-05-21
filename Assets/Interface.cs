@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1411,15 +1411,17 @@ public class Interface : OperationHandler
 				int left = 0;
 				void CheckNode( GroundNode node )
 				{
-					var resource = node.resource;
-					if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource )
-						return;
-					if ( !resource.underGround || node == workshop.node || resource.node.owner == workshop.owner )
+					foreach ( var resource in node.resources )
 					{
-						if ( resource.infinite )
-							left++;
-						else
-							left += resource.charges;
+						if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource )
+							return;
+						if ( !resource.underGround || node == workshop.node || resource.node.owner == workshop.owner )
+						{
+							if ( resource.infinite )
+								left++;
+							else
+								left += resource.charges;
+						}
 					}
 				}
 				CheckNode( workshop.node );
@@ -1824,8 +1826,16 @@ public class Interface : OperationHandler
 			BuildButton( 200, -120, "Stone patch", true, delegate { AddResourcePatch( Resource.Type.stone ); } );
 			BuildButton( 200, -140, "Salt patch", true, delegate { AddResourcePatch( Resource.Type.salt ); } );
 #endif
-			if ( node.resource && ( !node.resource.underGround || !node.owner != root.mainPlayer ) )
-				Text( 20, -40, 160, 20, "Resource: " + node.resource.type );
+			string resources = "";
+			foreach ( var resource in node.resources )
+			{
+				if ( resources != "" )
+					resources += ", ";
+				resources += resource.type;
+
+			}
+			if ( resources != "" )
+				Text( 20, -40, 160, 20, "Resource: " + resources );
 			if ( show )
 				root.world.eye.FocusOn( node, true );
 		}
@@ -1859,7 +1869,8 @@ public class Interface : OperationHandler
 
 		void Remove()
 		{
-			node.resource?.Remove( false );
+			if ( node.resources.Count > 0 )
+				node.resources[0].Remove( false );
 		}
 
 		void AlignHeight( float change )
@@ -3045,13 +3056,18 @@ public class Interface : OperationHandler
 					}
 					if ( nodeInfoToShow == NodeInfoType.undergroundResources )
 					{
-						if ( n.resource == null || n.owner != root.mainPlayer || !n.resource.underGround )
-							continue;
-						var itemType = Resource.ItemType( n.resource.type );
-						var body = Item.looks.GetMediaData( itemType );
-						var renderer = body.GetComponent<MeshRenderer>();
-						var meshFilter = body.GetComponent<MeshFilter>();
-						World.DrawObject( body, Matrix4x4.TRS( n.position + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.3f ) );
+						foreach ( var resource in n.resources )
+						{
+
+							if ( n.owner != root.mainPlayer || !resource.underGround )
+								continue;
+							var itemType = Resource.ItemType( resource.type );
+							var body = Item.looks.GetMediaData( itemType );
+							var renderer = body.GetComponent<MeshRenderer>();
+							var meshFilter = body.GetComponent<MeshFilter>();
+							World.DrawObject( body, Matrix4x4.TRS( n.position + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.3f ) );
+							break;
+						}
 					}
 				}
 			}

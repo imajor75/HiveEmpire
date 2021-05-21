@@ -1374,7 +1374,7 @@ public class Worker : HiveObject
 			for ( int i = 0; i < d.Count; i++ )
 			{
 				GroundNode t = node.Add( d[(i+r)%d.Count] );
-				if ( t.building || t.resource || t.type == GroundNode.Type.underWater )
+				if ( t.IsBlocking() )
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;

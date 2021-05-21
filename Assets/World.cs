@@ -210,7 +210,7 @@ public class World : MonoBehaviour
 		water.transform.localPosition = Vector3.up * waterLevel;
 	}
 
-	public void Load( string fileName )
+    public void Load( string fileName )
 	{
    		Clear();
 		Prepare();
@@ -287,6 +287,20 @@ public class World : MonoBehaviour
 					o.infinite = true;
 				if ( o.life.empty )
 					o.life.reference = instance.time - 15000;
+			}
+		}
+		{
+			var list = Resources.FindObjectsOfTypeAll<Workshop.GetResource>();
+			foreach ( var o in list )
+			{
+#pragma warning disable 0618
+				if ( o.node != null )
+				{
+					foreach ( var resource in o.node.resources )
+						if ( resource.type == o.resourceType )
+							o.resource = resource;
+				}
+#pragma warning restore 0618
 			}
 		}
 		{

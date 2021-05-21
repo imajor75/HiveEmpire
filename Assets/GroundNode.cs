@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 [System.Serializable]
 public class GroundNode : HiveObject
@@ -13,7 +12,9 @@ public class GroundNode : HiveObject
 	public Building building;
 	public Flag flag;
 	public Road road;
-	public Resource resource;
+	public List<Resource> resources = new List<Resource>();
+	[Obsolete( "Compatibility with old files", true )]
+	Resource resource { set { if ( value ) resources.Add( value ); } }
 	public int roadIndex;
 	public float height = 0;
 	public int index = -1;
@@ -145,7 +146,7 @@ public class GroundNode : HiveObject
 		Gizmos.color = Color.blue;
 		if ( !fixedHeight )
 			Gizmos.color = Color.Lerp( Color.blue, Color.white, 0.5f );
-		if ( resource )
+		if ( resources.Count > 0 )
 			Gizmos.color = Color.magenta;
 		if ( building )
 			Gizmos.color = Color.green;
@@ -291,14 +292,14 @@ public class GroundNode : HiveObject
 
 	public void AddResource( Resource.Type type, bool overwrite = false )
 	{
-		if ( this.resource != null )
+		if ( resources.Count > 0  )
 		{
-			if ( overwrite )
-				this.resource.Remove( false );
-			else
+			if ( !overwrite )
 				return;
+			while ( resources.Count > 0 )
+				resources[0].Remove( false );
 		}
-		assert.IsNull( this.resource );
+		assert.AreEqual( resources.Count, 0 );
 
 		if ( building || flag || road )
 			return;
@@ -318,17 +319,19 @@ public class GroundNode : HiveObject
 		return ground.GetNode( x + o.x, y + o.y );
 	}
 
-	public bool IsBlocking( bool roadsBlocking = true )
+	public bool IsBlocking( bool hard = true )
 	{
 		if ( building )
 			return true;
-		if ( resource && !resource.underGround && resource.type != Resource.Type.cornfield && resource.type != Resource.Type.fish )		// TODO There should be a bool called blocking in the resource class. Or even an enum, cornfields should block sometimes.
-			return true;
-		if ( !roadsBlocking )
+		foreach ( var resource in resources )
+			if ( resource.isBlocking == Resource.Blocking.all )
+				return true;
+		if ( !hard )
 			return false;
 
-		if ( resource && resource.type == Resource.Type.cornfield )
-			return true;
+		foreach ( var resource in resources )
+			if ( resource.isBlocking == Resource.Blocking.everythingButWorkers )
+				return true;
 
 		return flag || road;
 	}
@@ -355,7 +358,8 @@ public class GroundNode : HiveObject
 		foreach ( var n in Ground.areas[1] )
 			location.Add( n ).flag?.UpdateBody();
 		road?.RebuildMesh( true );
-		resource?.UpdateBody();
+		foreach ( var resource in resources )
+			resource?.UpdateBody();
 		foreach ( var border in borders )
 			border?.UpdateBody();
 		building?.UpdateBody();
@@ -410,7 +414,8 @@ public class GroundNode : HiveObject
 	{
 		building?.Reset();
 		flag?.Reset();
-		resource?.Reset();
+		foreach ( var resource in resources )
+			resource?.Reset();
 		Validate( true );		// Be careful not to do circle validation to avoid infinite cycles
 	}
 
@@ -430,8 +435,9 @@ public class GroundNode : HiveObject
 			o++;
 		if ( building )
 			o++;
-		if ( resource && !resource.underGround && resource.type != Resource.Type.pasturingAnimal && resource.type != Resource.Type.fish )
-			o++;
+		foreach ( var resource in resources )
+			if ( resource.isBlocking == Resource.Blocking.all )
+				o++;
 		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 		if ( x != ground.dimension && y != ground.dimension )
 			for ( int i = 0; i < 6; i++ )
@@ -451,7 +457,7 @@ public class GroundNode : HiveObject
 		}
 		if ( road )
 			assert.AreEqual( this, road.nodes[roadIndex] );
-		if ( resource )
+		foreach ( var resource in resources )
 		{
 			assert.AreEqual( resource.node, this );
 			if ( chain )

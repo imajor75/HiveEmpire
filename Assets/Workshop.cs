@@ -154,7 +154,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public class GetResource : Worker.Task
 	{
+		public Resource resource;
+		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public GroundNode node;
+		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public Resource.Type resourceType;
 		public World.Timer timer;
 		[Obsolete( "Compatibility with old files", true )]
@@ -168,30 +171,25 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 
 
-		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
+		public void Setup( Worker boss, Resource resource )
 		{
 			base.Setup( boss );
-			this.node = node;
-			this.resourceType = resourceType;
+			this.resource = resource;
 		}
 		public override void Validate()
 		{
-			if ( node.resource )
-				boss.assert.AreEqual( boss, node.resource.hunter );
+			boss.assert.AreEqual( boss, resource.hunter );
 			base.Validate();
 		}
 		public override void Cancel()
 		{
-			if ( node.resource )
-			{
-				boss.assert.AreEqual( boss, node.resource.hunter );
-				node.resource.hunter = null;
-			}
+			boss.assert.AreEqual( resource.hunter, boss );
+			resource.hunter = null;
 			base.Cancel();
 		}
 		public override bool ExecuteFrame()
 		{
-			if ( boss.node != node && !Resource.IsUnderGround( resourceType ) )
+			if ( boss.node != resource.node && !resource.underGround )
 			{
 				Cancel();
 				return true;
@@ -202,10 +200,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( !timer.done )    // TODO Working on the resource
 				return false;
 
-			Resource resource = node.resource;
-			bool underGround = Resource.IsUnderGround( resourceType );
+			ProcessResource( resource );
+			return true;
+		}
+
+		void ProcessResource( Resource resource )
+		{
 			boss.assert.AreEqual( boss, resource.hunter );
-			if ( underGround || node == boss.node )
+			if ( resource.underGround || resource.node == boss.node )
 			{
 				resource.gathered.Start();
 				if ( !resource.infinite && --resource.charges == 0 )
@@ -222,11 +224,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 				resource.keepAway.Start( 500 );   // TODO Settings
 			boss.assert.AreEqual( resource.hunter, boss );
 			resource.hunter = null;
-			if ( underGround )
+			if ( resource.underGround )
 				( boss.building as Workshop )?.ItemGathered();
 			else
-				FinishJob( boss, Resource.ItemType( resourceType ) );
-			return true;
+				FinishJob( boss, Resource.ItemType( resource.type ) );
 		}
 	}
 
@@ -253,15 +254,17 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.animator?.SetBool( Worker.sowingID, false );
 				return true;
 			}
-			if ( boss.node != node || node.building || node.flag || node.road || node.resource || !node.CheckType( GroundNode.Type.land ) )
+			if ( boss.node != node || node.building || node.flag || node.road || !node.CheckType( GroundNode.Type.land ) )
 			{
 				( boss.building as Workshop ).SetWorking( false );
 				return true;
 			}
 
+			if ( node.IsBlocking() )
+				return true;
+
 			Resource.Create().Setup( node, resourceType );
 			done = true;
-			boss.assert.IsNotNull( node.resource );
 			wait.Start( 300 );
 			boss.animator?.SetBool( Worker.sowingID, true );
 			boss.ScheduleWalkToNode( boss.building.flag.node );
@@ -609,17 +612,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 							GroundNode place = node.Add( o );
 							if ( place.building || place.flag || place.road || place.fixedHeight )
 								continue;
-							Resource cornfield = place.resource;
-							if ( cornfield == null || cornfield.type != Resource.Type.cornfield || cornfield.hunter || !cornfield.IsReadyToBeHarvested() )
-								continue;
-							CollectResourceFromNode( place, Resource.Type.cornfield );
-							return;
+							foreach ( var resource in place.resources )
+							{
+								if ( resource.type != Resource.Type.cornfield || resource.hunter || !resource.IsReadyToBeHarvested() )
+									continue;
+								CollectResourceFromNode( resource );
+								return;
+							}
 						}
 					}
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
-						if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.grass ) || place.resource )
+						if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.grass ) )
 							continue;
 						PlantAt( place, Resource.Type.cornfield );
 						return;
@@ -639,7 +644,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 						int x = (i + randomOffset) % o.Count;
 						GroundNode place = node.Add( o[x] );
 						{
-							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.forest ) || place.fixedHeight || place.resource )
+							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.forest ) || place.fixedHeight )
 								continue;
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
@@ -780,13 +785,15 @@ public class Workshop : Building, Worker.Callback.IHandler
 				target = node;
 			else
 				target = node.Add( Ground.areas[range][(j+r)%t] );
-			Resource resource = target.resource;
-			if ( resource == null || resource.hunter != null )
-				continue;
-			if ( resource.type == resourceType && resource.IsReadyToBeHarvested() )
+			foreach ( var resource in target.resources )
 			{
-				CollectResourceFromNode( target, resourceType );
-				return;
+				if ( resource.hunter != null )
+					continue;
+				if ( resource.type == resourceType && resource.IsReadyToBeHarvested() )
+				{
+					CollectResourceFromNode( resource );
+					return;
+				}
 			}
 		}
 	}
@@ -807,25 +814,23 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime + 1;
 	}
 
-	void CollectResourceFromNode( GroundNode target, Resource.Type resourceType )
+	void CollectResourceFromNode( Resource resource )
 	{
 		if ( !UseInput() || flag.FreeSpace() == 0 )
 			return;
 
 		assert.IsTrue( worker.IsIdle() );
 		worker.SetActive( true );
-		assert.IsTrue( resourceType == Resource.Type.fish || target.resource.type == resourceType );
-		if ( !Resource.IsUnderGround( resourceType ) )
+		if ( !resource.underGround )
 		{
 			worker.ScheduleWalkToNeighbour( flag.node );
-			worker.ScheduleWalkToNode( target, true, false, Worker.resourceCollectAct[(int)resourceType] );
+			worker.ScheduleWalkToNode( resource.node, true, false, Worker.resourceCollectAct[(int)resource.type] );
 		}
-		resourcePlace = target;
+		resourcePlace = resource.node;
 		var task = ScriptableObject.CreateInstance<GetResource>();
-		task.Setup( worker, target, resourceType );
+		task.Setup( worker, resource );
 		worker.ScheduleTask( task );
-		if ( target.resource )
-			target.resource.hunter = worker;
+		resource.hunter = worker;
 		SetWorking( true );
 	}
 

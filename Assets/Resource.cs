@@ -27,6 +27,28 @@ public class Resource : HiveObject
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
+	public Blocking isBlocking
+	{
+		get
+		{
+			return type switch
+			{
+				Type.tree => Blocking.all,
+				Type.rock => Blocking.all,
+				Type.fish => Blocking.none,
+				Type.cornfield => Blocking.everythingButWorkers,
+				Type.animalSpawner => Blocking.all,
+				Type.pasturingAnimal => Blocking.everythingButWorkers,
+				Type.salt => Blocking.none,
+				Type.coal => Blocking.none,
+				Type.iron => Blocking.none,
+				Type.gold => Blocking.none,
+				Type.stone => Blocking.none,
+				Type.expose => Blocking.none,
+				_ => Blocking.none
+			};
+		}
+	}
 
 	public enum Type
 	{
@@ -45,6 +67,13 @@ public class Resource : HiveObject
 		soil,
 		total,
 		unknown = -1	
+	}
+
+	public enum Blocking
+	{
+		none,
+		everythingButWorkers,
+		all
 	}
 
 	public static void Initialize()
@@ -113,13 +142,13 @@ public class Resource : HiveObject
 			return null;
 		}
 
-		if ( node.building || node.flag || node.resource )
+		if ( node.building || node.flag )
 		{
 			DestroyThis();
 			return null;
 		}
 
-		node.resource = this;
+		node.resources.Add( this );
 		this.type = type;
 		if ( charges != int.MaxValue )
 		{
@@ -212,7 +241,7 @@ public class Resource : HiveObject
 			foreach ( var o in Ground.areas[1] )
 			{
 				GroundNode n = node.Add( o );
-				if ( n.building != null || n.resource != null )
+				if ( n.IsBlocking() )
 					continue;
 				if ( animals.Count >= 3 )
 					continue;
@@ -275,8 +304,8 @@ public class Resource : HiveObject
 			animals[0].taskQueue.Clear();
 			animals[0].Remove( false );
 		}
-		assert.AreEqual( this, node.resource );
-		node.resource = null;
+		assert.IsTrue( node.resources.Contains( this ) );
+		node.resources.Remove( this );
 		DestroyThis();
 		return true;
 	}
@@ -325,7 +354,8 @@ public class Resource : HiveObject
 		{
 			var hunterTask = hunter.FindTaskInQueue<Workshop.GetResource>();
 			assert.IsNotNull( hunterTask );
-			assert.AreEqual( node, hunterTask.node );
+			assert.AreEqual( node, hunterTask.resource.node );
 		}
+		assert.IsTrue( node.resources.Contains( this ) );
 	}
 }
