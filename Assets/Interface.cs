@@ -157,6 +157,12 @@ public class Interface : OperationHandler
 		if ( o.y < 0 )
 			o.y += 1;
 		materialUIPath.mainTextureOffset = o;
+
+		if ( mainPlayer.averageEfficiency >= world.efficiencyGoal && !world.victory )
+		{
+			WorldProgressPanel.Create().Open( true );
+			world.victory = true;
+		}
 	}
 
 	static void Initialize()
@@ -263,7 +269,7 @@ public class Interface : OperationHandler
 		if ( !world.gameInProgress )
 			NewGame( 1299783286 );
 
-		Main.Create().Open( true );
+		MainPanel.Create().Open( true );
 	}
 
 	void NewGame( int seed )
@@ -350,6 +356,10 @@ public class Interface : OperationHandler
 		{
 			BuildingList.Create().Open();
 		}
+		if ( GetKeyDown( KeyCode.P ) )
+		{
+			WorldProgressPanel.Create().Open();
+		}
 		if ( GetKeyDown( KeyCode.Escape ) )
 		{
 			if ( !viewport.ResetInputHandler() )
@@ -358,7 +368,7 @@ public class Interface : OperationHandler
 				bool isMainOpen = false;
 				for ( int i = panels.Count - 1; i >= 0; i-- )
 				{
-					if ( panels[i] as Main )
+					if ( panels[i] as MainPanel )
 						isMainOpen = true;
 					if ( !panels[i].escCloses )
 						continue;
@@ -367,7 +377,7 @@ public class Interface : OperationHandler
 					break;
 				}
 				if ( !closedSomething && !isMainOpen )
-					Main.Create().Open();
+					MainPanel.Create().Open();
 			}
 		}
 		if ( GetKeyDown( KeyCode.M ) )
@@ -787,6 +797,17 @@ public class Interface : OperationHandler
 			return i;
 		}
 
+		public ProgressBar Progress( int x = 0, int y = 0, int xs = 0, int ys = 0, Sprite picture = null, Component parent = null )
+		{
+			Image i = new GameObject().AddComponent<Image>();
+			i.name = "Progress Bar";
+			i.sprite = picture;
+			Init( i.rectTransform, x, y, xs, ys, parent );
+			var p = i.gameObject.AddComponent<ProgressBar>();
+			p.Open();
+			return p;
+		}
+
 		public Image Frame( int x, int y, int xs, int ys, float pixelsPerUnitMultiplier = 1.5f, Component parent = null )
 		{
 			Image i = Image( x, y, xs, ys, iconTable.GetMediaData( Icon.frame ) );
@@ -927,7 +948,7 @@ public class Interface : OperationHandler
 			return i.gameObject.AddComponent<Button>();
 		}
 
-		public Text Text( int x, int y, int xs, int ys, string text = "", Component parent = null )
+		public Text Text( int x = 0, int y = 0, int xs = 100, int ys = 20, string text = "", Component parent = null )
 		{
 			Text t = new GameObject().AddComponent<Text>();
 			t.name = "Text";
@@ -958,6 +979,37 @@ public class Interface : OperationHandler
 			Init( image.rectTransform, x, y, xs, ys, parent );
 			d.name = "InputField";
 			return d;
+		}
+
+		public static UIElement Stretch<UIElement>( UIElement g, float x0 = 0, float x1 = 1, float y0 = 0, float y1 = 1 ) where UIElement : Component
+		{
+			if ( g.transform is RectTransform t )
+			{
+				t.anchorMin = new Vector2( x0, y0 );
+				t.anchorMax = new Vector2( x1, y1 );
+				t.offsetMin = t.offsetMax = Vector2.zero;
+			}
+			return g;
+		}
+
+		public int currentRow = 0;
+
+		public static UIElement Pin<UIElement>( UIElement g, int x0, int x1, int y0, int y1, float xa = 0, float ya = 1 ) where UIElement : Component
+		{
+			if ( g.transform is RectTransform t )
+			{
+				t.anchorMin = t.anchorMax = new Vector2( xa, ya );
+				t.offsetMin = new Vector2( x0, y0 );
+				t.offsetMax = new Vector2( x1, y1 );
+			}
+			return g;
+		}
+
+		public UIElement PinDownwards<UIElement>( UIElement g, int x0, int x1, int y0, int y1, float xa = 0, float ya = 1 ) where UIElement : Component
+		{
+			var r = Pin( g, x0, x1, y0 + currentRow, y1 + currentRow, xa, ya );
+			currentRow -= y1 - y0;
+			return r;
 		}
 
 		public virtual void Close()
@@ -1032,6 +1084,48 @@ public class Interface : OperationHandler
 
 			World.instance.eye.FocusOn( target );
 			followTarget = true;
+		}
+
+		public class ProgressBar : MonoBehaviour
+		{
+			Image bar;
+			public void Open()
+			{
+				Image frame = gameObject.GetComponent<Image>();
+				frame.sprite = iconTable.GetMediaData( Icon.frame );
+				frame.pixelsPerUnitMultiplier = 8 / uiScale;
+				frame.type = UnityEngine.UI.Image.Type.Sliced;
+				bar = new GameObject( "Bar" ).AddComponent<Image>();
+				bar.rectTransform.SetParent( transform, false );
+				bar.rectTransform.anchorMin	= Vector2.zero;
+				bar.rectTransform.anchorMax = Vector2.one;
+				bar.rectTransform.offsetMin = Vector2.one * uiScale * 4;
+				bar.rectTransform.offsetMax = -Vector2.one * uiScale * 4;
+				bar.color = Color.yellow;
+			}
+			public float progress
+			{
+				get
+				{
+					return bar.rectTransform.anchorMax.x;
+				}
+				set
+				{
+					bar.rectTransform.anchorMax = new Vector2( Math.Min( value, 1 ), 1 );
+				}
+			}
+			public Color color
+			{
+				get
+				{
+					return bar.color;
+				}
+				set
+				{
+					bar.color = value;
+				}
+			}
+
 		}
 
 		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IInputHandler
@@ -1243,7 +1337,7 @@ public class Interface : OperationHandler
 	public class WorkshopPanel : BuildingPanel
 	{
 		public Workshop workshop;
-		public Image progressBar;
+		public ProgressBar progressBar;
 		public Image changeModeImage;
 		public Text productivity;
 		public Text itemsProduced;
@@ -1321,14 +1415,7 @@ public class Interface : OperationHandler
 					row -= iconSize * 3 / 2;
 				}
 				int progressWidth = ( iconSize + 5 ) * 7;
-				var progressFrame = Frame( 20, row, progressWidth, iconSize, 8 );
-				progressBar = new GameObject( "Progress" ).AddComponent<Image>();
-				progressBar.rectTransform.SetParent( progressFrame.transform );
-				progressBar.rectTransform.anchorMin = Vector2.zero;
-				progressBar.rectTransform.anchorMax = Vector2.one;
-				progressBar.rectTransform.offsetMin = Vector2.one * uiScale * 4;
-				progressBar.rectTransform.offsetMax = -Vector2.one * uiScale * 4;
-				progressBar.color = Color.yellow;
+				progressBar = Progress( 20, row, progressWidth, iconSize );
 				row -= 25;
 
 				if ( ( contentToShow & Content.itemsProduced ) > 0 )
@@ -1399,7 +1486,7 @@ public class Interface : OperationHandler
 			{
 				if ( workshop.working )
 				{
-					progressBar.rectTransform.anchorMax = new Vector2( workshop.GetProgress(), 1 );
+					progressBar.progress = workshop.GetProgress();
 					progressBar.color = Color.yellow;
 				}
 				else
@@ -3643,7 +3730,7 @@ public class Interface : OperationHandler
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				Color textColor = Color.yellow;
-				if ( player.itemEfficiencyHistory[i].factor != 0 )
+				if ( player.itemEfficiencyHistory[i].weight != 0 )
 					textColor = Color.green;
 				if ( (int)player.worseItemType == i )
 					textColor = Color.red;
@@ -3804,7 +3891,65 @@ public class Interface : OperationHandler
 		}
 	}
 
-	public class Main : Panel
+	public class WorldProgressPanel : Panel
+	{
+		Text worldTime;
+		Text currentEfficiency;
+		ProgressBar efficiencyProgress;
+		float originalSpeed = -1;
+
+		public static WorldProgressPanel Create()
+		{
+			return new GameObject( "World Progress Panel" ).AddComponent<WorldProgressPanel>();
+		}
+
+		public void Open( bool victory = false )
+		{
+			if ( base.Open() )
+				return;
+			name = "World Progress Panel";
+			Pin( frame, -200, 200, -100, 100, 0.5f, 0.5f );
+			Stretch( Frame( 0, 0, 1, 1 ) );
+			var closeButton = Button( 0, 0, 1, 1, iconTable.GetMediaData( Icon.exit ) );
+			Pin( closeButton.GetComponent<Image>(), -30, -10, -30, -10, 1, 1 );
+			closeButton.onClick.AddListener( Close );
+			currentRow = -30;
+			if ( victory )
+			{
+				var t = PinDownwards( Text( 0, 0, 0, 0, "VICTORY!" ), -100, 100, -30, 0, 0.5f );
+				t.color = Color.red;
+				t.alignment = TextAnchor.MiddleCenter;
+				originalSpeed = root.world.timeFactor;
+				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
+				root.world.SetTimeFactor( 0 );
+			}
+			worldTime = PinDownwards( Text(), -200, 200, -30, 0, 0.5f );
+			worldTime.alignment = TextAnchor.MiddleCenter;
+			PinDownwards( Text( 0, 0, 1, 1, $"Efficiency goal: {World.instance.efficiencyGoal}" ), -200, 200, -30, 0, 0.5f ).alignment = TextAnchor.MiddleCenter;
+			currentEfficiency = PinDownwards( Text(), -200, 200, -30, 0, 0.5f );
+			currentEfficiency.alignment = TextAnchor.MiddleCenter;
+			efficiencyProgress = PinDownwards( Progress(), -100, 100, -30, 0, 0.5f );
+		}
+
+		new public void Update()
+		{
+			var t = World.instance.time;
+			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( t / 60 / 60 / 50 ) % 60}:{( t / 60 / 50) % 60}";
+			currentEfficiency.text = $"Current efficiency: {root.mainPlayer.averageEfficiency.ToString()}";
+			efficiencyProgress.progress = root.mainPlayer.averageEfficiency / World.instance.efficiencyGoal;
+			base.Update();
+		}
+
+		new public void OnDestroy()
+		{
+			if ( originalSpeed > 0 )
+				root.world.SetTimeFactor( originalSpeed );
+			root.world.eye.ReleaseFocus( null, true );
+			base.OnDestroy();
+		}
+	}
+
+	public class MainPanel : Panel
 	{
 		InputField seed;
 		InputField saveName;
@@ -3815,9 +3960,9 @@ public class Interface : OperationHandler
 		static int savedSize = 1;
 		Eye grabbedEye;
 
-		public static Main Create()
+		public static MainPanel Create()
 		{
-			return new GameObject().AddComponent<Main>();
+			return new GameObject().AddComponent<MainPanel>();
 		}
 
 		public void Open( bool focusOnMainBuilding = false )
@@ -3881,7 +4026,7 @@ public class Interface : OperationHandler
 		void StartNewGame()
 		{
 			root.world.settings = ScriptableObject.CreateInstance<World.Settings>();
-			root.world.settings.size = 32 + 16 * size.value;
+			root.world.settings.size = 16 + 16 * size.value;
 			root.NewGame( int.Parse( seed.text ) );
 			Close();
 		}

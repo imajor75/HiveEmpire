@@ -39,10 +39,16 @@ public class Item : HiveObject
 	public World.Timer atFlag;
 	const int timeoutAtFlag = 9000;
 	public float bottomHeight;		// y coordinate of the plane at the bottom of the item in the parent transformation
-	public Item buddy;  // This reference is used when two items at the different end of a road are swapping space, one goes to one direction, while the other one is going the opposite. Otherwise this member is null. Without this feature a deadlock at a road can very easily occur. When a worker notices that there is a possibility to swap two items, it can do that even if both flags are full without free space. In this case the two items get a reference in this member to each other. Picking up the first item is done as usual, but when the worker arrives at the next flag with the item, it will not search for a free entry at the flag (because it is possible that there is no) but swaps the item with its buddy. After this swap, delivering the item to the first flag is happening in a normal way.
+	public Item buddy;  // This reference is used when two items at the different end of a road are swapping space, one goes to one direction, while the other one is going the opposite. 
+						// Otherwise this member is null. Without this feature a deadlock at a road can very easily occur. When a worker notices that there is a possibility to swap two items, 
+						// it can do that even if both flags are full without free space. In this case the two items get a reference in this member to each other. Picking up the first item is 
+						// done as usual, but when the worker arrives at the next flag with the item, it will not search for a free entry at the flag (because it is possible that there is no) 
+						// but swaps the item with its buddy. After this swap, delivering the second item to the first flag is happening in a normal way.
 						// There are three phases of this:
-						// 1. Worker realizes that two items A and B could be swapped, so makrs them as buddies of each other. Walks to pick up A. During this phase, the buddy refernce of both items are valid, referring to each other.
-						// 2. A is in hand of the worker it is on its way to put down A and pick up B. During this phase A.buddy is null (cleared in Flag.ReleaseItem) but B.buddy is still referring to A, since it is keeping it's spot
+						// 1. Worker realizes that two items A and B could be swapped, so marks them as buddies of each other. Walks to pick up A. During this phase, the buddy refernce of both
+						// 		items are valid, referring to each other.
+						// 2. A is in hand of the worker it is on its way to put down A and pick up B. During this phase A.buddy is still referencing B, indicating that it will not look for a
+						// 		free slot at the flag, but replace another item. B.buddy is null, cleared in Flag.ReleaseItem
 						// 3. A is already delivered, the worker is now carrying B as normal. Both A.buddy and B.buddy is null. The latter got cleared in Flag.FinalizeItem
 	public int index = -1;
 	public static bool creditOnRemove = true;
@@ -298,14 +304,21 @@ public class Item : HiveObject
 		assert.IsNull( this.flag );
 		assert.AreEqual( flag, nextFlag );
 
-		if ( destination && path.progress != 0 )	// TODO Triggered.
+		// path.progess == 0 if the item was rerouting while in the hands of the hauler
+		if ( destination && path.progress != 0 )
 		{
-			// path.progess is zero if the item was rerouting while in the hands of the hauler
-			assert.IsFalse( path.isFinished );
-			assert.IsTrue( flag == path.road.ends[0] || flag == path.road.ends[1], "Path is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" ); // TODO Triggered multiple times
-			// Maybe this is happening when the hauler is exchanging two items, and the second item changes its path before the hauler would pick it up. Since no PickupItem.ExecuteFrame is called when picking
-			// up the item, the hauler does not check if the item still want to go that way, and anyway it cannot do anything else than picking up the item and carrying to the other flag. So in this case the trip
-			// of the item needs to be cancelled. DeliverItem.ExecuteFrame is doing this now, so maybe the bug causing the assert trigger is already fixed.
+			if ( path.isFinished )
+			{
+				// The path can be finished in a quite special case. There is a worker on a road, which discovers two items at the two end of the road, which would like to switch places.
+				// The worker walks to A to pick it up, but in the meanwhile B rerouts to a building whose flag is the same as where the worker is picking up A. If there is no swap, the PickupItem
+				// task realizes that the path of the item has been changed (it keeps the original path as a reference) but in case of switch, there is no PickupItem for B, DeliverItem handles the pick up.
+				// DeliverItem has no reference to the original path, so it will pick up the item no matter, and carry it to the flag where A was originally. Coincidently this is exactly the flag B would like
+				// to go, so DeliverItem thinks everything is good, and increases path.progress. Then the worker drops the item in front of the destination building, path is already finished, just one step is
+				// needed to deliver the item, but since this is such a rare case, we can simply cancel the trip, and find a new destination.
+				CancelTrip();
+			}
+			else
+				assert.IsTrue( flag == path.road.ends[0] || flag == path.road.ends[1], "Path is not continuing at this flag (progress: " + path.progress + ", roads: " + path.roadPath.Count + ")" ); // TODO Triggered multiple times
 		}
 
 		worker = null;

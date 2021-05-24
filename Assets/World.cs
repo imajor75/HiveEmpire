@@ -32,6 +32,7 @@ public class World : MonoBehaviour
 	public int time;
 	public int randomSeed;
 	public int overseas = 2;
+	public bool victory;
 
 	static public Water water;
 	static public GameObject nodes;
@@ -154,6 +155,7 @@ public class World : MonoBehaviour
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
 		var oldEye = eye;
+		victory = false;
 
 		Debug.Log( "Starting new game with seed " + seed );
 
@@ -537,6 +539,15 @@ public class World : MonoBehaviour
 #endif
 			var mainModule = o.main;
 			mainModule.simulationSpeed = factor;
+		}
+	}
+
+	public float efficiencyGoal
+	{
+		get
+		{
+			var groundSize = ground.dimension * ground.dimension;
+			return groundSize / 256.0f;
 		}
 	}
 

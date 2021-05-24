@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,9 +26,8 @@ public class Player : ScriptableObject
 	public int firstPossibleEmptyItemSlot = 0;
 	public int[] surplus = new int[(int)Item.Type.total];
 	public Item.Type worseItemType;
-
-	[JsonIgnore]
 	public float averageEfficiency;
+
 	[JsonIgnore]
 	public List<float> production;
 	[JsonIgnore]
@@ -51,7 +51,9 @@ public class Player : ScriptableObject
 		public float current;
 		public int recordIndex;
 		public Item.Type itemType;
-		public float factor;
+		[Obsolete( "Compatibility with old files", true )]
+		float factor { set { weight = value * 2; } }
+		public float weight;
 		public int production;
 		public float weighted;
 		const float efficiencyUpdateFactor = 0.2f;
@@ -65,29 +67,17 @@ public class Player : ScriptableObject
 		{
 			this.itemType = itemType;
 			data = new List<float>();
-			switch ( itemType )
+			weight = itemType switch
 			{
-				case Item.Type.stone:
-					factor = 0;
-					break;
-				case Item.Type.grain:
-				case Item.Type.beer:
-					factor = 0.4f;
-					break;
-				case Item.Type.flour:
-				case Item.Type.salt:
-					factor = 2;
-					break;
-				case Item.Type.coin:
-					factor = 0.5f;
-					break;
-				case Item.Type.coal:
-					factor = 0.33f;
-					break;
-				default:
-					factor = 1;
-					break;
-			}
+				Item.Type.stone => 0,
+				Item.Type.grain => 0.8f,
+				Item.Type.beer => 0.8f,
+				Item.Type.flour => 4f,
+				Item.Type.salt => 4f,
+				Item.Type.coin => 1f,
+				Item.Type.coal => 0.67f,
+				_ => 2
+			};
 			record = current = weighted = 0;
 			recordIndex = production = 0;
 			return this;
@@ -111,7 +101,7 @@ public class Player : ScriptableObject
 
 			data.Add( current );
 			production = 0;
-			return weighted = factor * current;
+			return weighted = weight * current;
 		}
 	}
 
@@ -205,7 +195,7 @@ public class Player : ScriptableObject
 		efficiencyTimer.Start( efficiencyUpdateTime );
 
 		totalEfficiency = float.MaxValue;
-		float averageEfficiency = 0;
+		averageEfficiency = 0;
 		int count = 0;
 		for ( int i = 0; i < itemEfficiencyHistory.Count; i++ )
 		{
@@ -214,7 +204,7 @@ public class Player : ScriptableObject
 			averageEfficiency += current;
 			count++;
 
-			if ( itemEfficiencyHistory[i].factor > 0 && current < totalEfficiency )
+			if ( itemEfficiencyHistory[i].weight > 0 && current < totalEfficiency )
 			{
 				worseItemType = (Item.Type)i;
 				totalEfficiency = current;

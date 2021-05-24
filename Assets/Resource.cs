@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -356,6 +356,7 @@ public class Resource : HiveObject
 			assert.IsNotNull( hunterTask );
 			assert.AreEqual( node, hunterTask.resource.node );
 		}
-		assert.IsTrue( node.resources.Contains( this ) );
+		if ( node )
+			assert.IsTrue( node.resources.Contains( this ) );
 	}
 }

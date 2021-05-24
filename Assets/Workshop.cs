@@ -858,7 +858,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 
 		this.working = working;
-		if ( working )
+		if ( working && soundSource )
 		{
 			smoke?.Play();
 			soundSource.loop = true;
@@ -868,7 +868,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		else
 		{
 			smoke?.Stop();
-			soundSource.Stop();
+			soundSource?.Stop();
 		}
 	}
 
