@@ -149,6 +149,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		foreach ( var n in nodes )
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
 			workerAtNodes.Add( null );
+		ends[0] = nodes[0].flag;
+		ends[1] = lastNode.flag;
 		CallNewWorker();
 		transform.localPosition = centerNode.position;
 		ground.Link( this );
@@ -159,8 +161,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		AttachWatches();
 		RegisterOnGround();
 		gameObject.GetComponent<MeshRenderer>().material = material;
-		ends[0] = nodes[0].flag;
-		ends[1] = lastNode.flag;
 		ready = true;
 		return true;
 	}

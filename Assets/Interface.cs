@@ -3934,7 +3934,7 @@ public class Interface : OperationHandler
 		new public void Update()
 		{
 			var t = World.instance.time;
-			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( t / 60 / 60 / 50 ) % 60}:{( t / 60 / 50) % 60}";
+			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( ( t / 60 / 60 / 50 ) % 60 ).ToString( "D2" )}:{( ( t / 60 / 50) % 60 ).ToString( "D2" )}";
 			currentEfficiency.text = $"Current efficiency: {root.mainPlayer.averageEfficiency.ToString()}";
 			efficiencyProgress.progress = root.mainPlayer.averageEfficiency / World.instance.efficiencyGoal;
 			base.Update();
@@ -4034,7 +4034,7 @@ public class Interface : OperationHandler
 				_ => 32
 			};
 			if ( size.value == 0 )
-				root.world.settings.maxHeight = 2;
+				root.world.settings.maxHeight = 3;
 			if ( size.value == 2 )
 				root.world.settings.randomness = 2.1f;
 			root.NewGame( int.Parse( seed.text ) );

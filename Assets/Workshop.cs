@@ -875,7 +875,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public void Callback( Worker worker )
 	{
 		// Worker returned back from gathering resource
-		assert.AreEqual( worker, this.worker );
+		assert.AreEqual( worker, this.worker );	// TODO Triggered shortly after removing a flag and roads. Triggered in a farm, not close to where the flag and roads were removed
 		SetWorking( false );
 	}
 

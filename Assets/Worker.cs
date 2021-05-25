@@ -1427,7 +1427,7 @@ public class Worker : HiveObject
 			ScheduleWalkToNeighbour( building.node );
 			if ( itemsInHands[0] )
 				ScheduleDeliverItem( itemsInHands[0], itemsInHands[1] );
-			if ( type == Type.tinkerer )
+			if ( type == Type.tinkerer && building.worker == this )
 				ScheduleCall( building as Workshop );
 			return;
 		}
