@@ -158,7 +158,7 @@ public class Interface : OperationHandler
 			o.y += 1;
 		materialUIPath.mainTextureOffset = o;
 
-		if ( mainPlayer.averageEfficiency >= world.efficiencyGoal && !world.victory )
+		if ( mainPlayer && mainPlayer.averageEfficiency >= world.efficiencyGoal && !world.victory )
 		{
 			WorldProgressPanel.Create().Open( true );
 			world.victory = true;
@@ -4027,6 +4027,10 @@ public class Interface : OperationHandler
 		{
 			root.world.settings = ScriptableObject.CreateInstance<World.Settings>();
 			root.world.settings.size = 16 + 16 * size.value;
+			if ( size.value == 0 )
+				root.world.settings.maxHeight = 2;
+			if ( size.value == 2 )
+				root.world.settings.randomness = 2.1f;
 			root.NewGame( int.Parse( seed.text ) );
 			Close();
 		}

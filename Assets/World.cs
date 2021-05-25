@@ -63,6 +63,28 @@ public class World : MonoBehaviour
 
 	public Settings settings;
 
+	[System.Serializable]
+	public class Ore
+	{
+		public Resource.Type resourceType;
+		public float idealRatio;
+		public int resourceCount;
+		public float missing
+		{
+			get
+			{
+				int total = World.instance.oreCount;
+				if ( resourceCount == 0 )
+					return 1000f;
+				return idealRatio - ( (float)resourceCount / total );
+			}
+
+		}
+	}
+
+	public int oreCount;
+	public List<Ore> ores = new List<Ore>();
+
 	public class Settings : HeightMap.Settings
 	{
 		[Range(16, 128)]
@@ -81,11 +103,23 @@ public class World : MonoBehaviour
 		public float forestChance = 0.006f;
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
-		public float ironChance = 0.04f;
-		public float coalChance = 0.04f;
-		public float stoneChance = 0.02f;
-		public float saltChance = 0.02f;
-		public float goldChance = 0.02f;
+		public float oreChance = 0.1f;
+		public float ironRatio = 4;
+		public float coalRatio = 8;
+		public float goldRatio = 3;
+		public float saltRatio = 2;
+		public float stoneRatio = 1;
+
+		[Obsolete( "Compatibility with old files", true )]
+		float ironChance;
+		[Obsolete( "Compatibility with old files", true )]
+		float coalChance;
+		[Obsolete( "Compatibility with old files", true )]
+		float stoneChance;
+		[Obsolete( "Compatibility with old files", true )]
+		float saltChance;
+		[Obsolete( "Compatibility with old files", true )]
+		float goldChance;
 
 		[JsonIgnore]
 		public bool apply;  // For debug purposes only
@@ -96,6 +130,7 @@ public class World : MonoBehaviour
 			{
 				apply = false;
 				instance.NewGame( instance.currentSeed, true );
+				Interface.root.mainPlayer = instance.players[0];
 			}
 		}
 	}
@@ -489,7 +524,15 @@ public class World : MonoBehaviour
 	}
 
 	public void GenerateResources()
-	{
+	{	
+		ores.Clear();
+		oreCount = 0;
+		ores.Add( new Ore{ resourceType = Resource.Type.coal, idealRatio = settings.coalRatio } );
+		ores.Add( new Ore{ resourceType = Resource.Type.iron, idealRatio = settings.ironRatio } );
+		ores.Add( new Ore{ resourceType = Resource.Type.gold, idealRatio = settings.goldRatio } );
+		ores.Add( new Ore{ resourceType = Resource.Type.salt, idealRatio = settings.saltRatio } );
+		ores.Add( new Ore{ resourceType = Resource.Type.stone, idealRatio = settings.stoneRatio } );
+
 		foreach ( var node in ground.nodes )
 		{
 			var r = new System.Random( World.rnd.Next() );
@@ -499,16 +542,30 @@ public class World : MonoBehaviour
 				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
 			if ( r.NextDouble() < settings.animalSpawnerChance )
 				node.AddResource( Resource.Type.animalSpawner );
-			if ( r.NextDouble() < settings.ironChance )
-				node.AddResourcePatch( Resource.Type.iron, 5, 10 );
-			if ( r.NextDouble() < settings.coalChance )
-				node.AddResourcePatch( Resource.Type.coal, 5, 10 );
-			if ( r.NextDouble() < settings.stoneChance )
-				node.AddResourcePatch( Resource.Type.stone, 3, 10 );
-			if ( r.NextDouble() < settings.saltChance )
-				node.AddResourcePatch( Resource.Type.salt, 3, 10 );
-			if ( r.NextDouble() < settings.goldChance )
-				node.AddResourcePatch( Resource.Type.gold, 3, 10 );
+			bool hasOre = false;
+			foreach ( var resource in node.resources )
+				if ( resource.underGround )
+					hasOre = true;
+			if ( r.NextDouble() < settings.oreChance && node.type == GroundNode.Type.hill && !hasOre )
+			{
+				float totalMissing = 0;
+				foreach ( var ore in ores )
+					totalMissing += ore.missing;
+				float type = (float)( r.NextDouble() * totalMissing );
+				
+				foreach ( var ore in ores )
+				{
+					if ( type < ore.missing )
+					{
+						var resourceCount = node.AddResourcePatch( ore.resourceType, settings.size / 6, 10 );
+						ore.resourceCount += resourceCount;
+						oreCount += resourceCount;
+						break;
+					}
+					else
+						type -= ore.missing;
+				}
+			}
 
 			if ( node.CheckType( GroundNode.Type.land ) )
 			{

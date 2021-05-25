@@ -275,8 +275,9 @@ public class GroundNode : HiveObject
 		return Mathf.Max( h, Mathf.Max( v, d ) );
 	}
 
-	public void AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false )
+	public int AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false )
 	{
+		int count = 0;
 		for ( int x = -size; x < size; x++ )
 		{
 			for ( int y = -size; y < size; y++ )
@@ -285,33 +286,38 @@ public class GroundNode : HiveObject
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > World.rnd.Next( 100 ) )
-					n.AddResource( type, overwrite );
+					if ( n.AddResource( type, overwrite ) )
+						count++;
 			}
 		}
+		return count;
 	}
 
-	public void AddResource( Resource.Type type, bool overwrite = false )
+	public bool AddResource( Resource.Type type, bool overwrite = false )
 	{
 		if ( resources.Count > 0  )
 		{
 			if ( !overwrite )
-				return;
+				return false;
 			while ( resources.Count > 0 )
 				resources[0].Remove( false );
 		}
 		assert.AreEqual( resources.Count, 0 );
 
-		if ( building || flag || road )
-			return;
-
 		if ( Resource.IsUnderGround( type ) )
 		{
 			if ( this.type != Type.hill && this.type != Type.mountain )
-				return;
+				return false;
+		}
+		else
+		{
+			if ( building || flag || road )
+				return false;
 		}
 		Resource resource = Resource.Create().Setup( this, type );
 		if ( resource && type == Resource.Type.tree )
 			resource.life.Start( -2 * Resource.treeGrowthMax );
+		return true;
 	}
 
 	public GroundNode Add( Ground.Offset o )
