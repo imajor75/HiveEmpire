@@ -3982,7 +3982,7 @@ public class Interface : OperationHandler
 			Text( 20, -100, 30, 20, "Size" ).fontSize = (int)( uiScale * 12 );
 			size = Dropdown( 60, -95, 80, 25 );
 			size.ClearOptions();
-			size.AddOptions( new List<string>() { "Small", "Medium", "Big" } );
+			size.AddOptions( new List<string>() { "Small (24x24)", "Medium (32x32)", "Big (48x48)" } );
 			size.value = savedSize;
 			Image( 20, -125, 260, 1 );
 
@@ -4026,7 +4026,13 @@ public class Interface : OperationHandler
 		void StartNewGame()
 		{
 			root.world.settings = ScriptableObject.CreateInstance<World.Settings>();
-			root.world.settings.size = 16 + 16 * size.value;
+			root.world.settings.size = size.value switch 
+			{
+				0 => 24,
+				1 => 32,
+				2 => 48,
+				_ => 32
+			};
 			if ( size.value == 0 )
 				root.world.settings.maxHeight = 2;
 			if ( size.value == 2 )

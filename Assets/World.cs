@@ -191,6 +191,7 @@ public class World : MonoBehaviour
 	{
 		var oldEye = eye;
 		victory = false;
+		time = 0;
 
 		Debug.Log( "Starting new game with seed " + seed );
 
@@ -223,6 +224,8 @@ public class World : MonoBehaviour
 			players.Add( mainPlayer );
 		ground.RecalculateOwnership();
 		gameInProgress = true;
+
+		water.transform.localPosition = Vector3.up * waterLevel;
 
 		foreach ( var player in players )
 			player.Start();
@@ -263,6 +266,7 @@ public class World : MonoBehaviour
 
 		if ( water == null )
 			water = Water.Create().Setup( ground );
+		water.transform.localPosition = Vector3.up * waterLevel;
 
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
