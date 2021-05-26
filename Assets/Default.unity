@@ -156,6 +156,8 @@ MonoBehaviour:
   id: 270383065
   noAssert: 0
   inactive: 0
+  undoQueue: []
+  redoQueue: []
   panels: []
   postProcessResources: {fileID: 0}
   world: {fileID: 0}

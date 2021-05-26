@@ -58,6 +58,8 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 
 	public Media GetMedia( Key key, int randomNumber = -1 )
 	{
+		if ( table == null )
+			table = new List<Media>();
 		List<Media> candidates = new List<Media>();
 		foreach ( Media media in table )
 			if ( media.keys.Contains( key ) )

@@ -30,6 +30,7 @@ public class Worker : HiveObject
 	public World.Timer bored;
 	public static int boredTimeBeforeRemove = 6000;
 	static public MediaTable<AudioClip, Type> walkSounds;
+	static public MediaTable<AudioClip, Tools> toolSounds;
 	public AudioSource soundSource;
 	public GameObject mapObject;
 	Material mapMaterial;
@@ -109,6 +110,13 @@ public class Worker : HiveObject
 		public AudioClip sound;
 		public GameObject toolTemplate;
 		public LinkType toolSlot;
+	}
+
+	public enum Tools
+	{
+		axe,
+		harvest,
+		pickaxeOnRock
 	}
 
 	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
@@ -1989,6 +1997,15 @@ public class Worker : HiveObject
 	}
 
 	public bool hasItems { get { return itemsInHands[0] != null; } }
+
+	public void MakeSound( int toolID )
+	{
+		if ( soundSource )
+		{
+			soundSource.clip = toolSounds.GetMediaData( (Tools)toolID ); 
+			soundSource.Play();
+		}
+	}
 
 	public override void Validate( bool chain )
 	{
