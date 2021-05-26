@@ -451,7 +451,7 @@ public class Item : HiveObject
 			if ( worker )
 				assert.IsFalse( worker.itemsInHands.Contains( this ) );
 			if ( destination )
-				assert.IsNotNull( path );
+				assert.IsNotNull( path );	// TODO Triggered when switching a building to overclock mode, and the items had nowhere to go
 			if ( destination && !path.isFinished && !path.road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.road ) );
 		}

@@ -30,7 +30,7 @@ public class Worker : HiveObject
 	public World.Timer bored;
 	public static int boredTimeBeforeRemove = 6000;
 	static public MediaTable<AudioClip, Type> walkSounds;
-	static public MediaTable<AudioClip, Tools> toolSounds;
+	static public MediaTable<AudioClip, AnimationSound> animationSounds;
 	public AudioSource soundSource;
 	public GameObject mapObject;
 	Material mapMaterial;
@@ -112,7 +112,7 @@ public class Worker : HiveObject
 		public LinkType toolSlot;
 	}
 
-	public enum Tools
+	public enum AnimationSound
 	{
 		axe,
 		harvest,
@@ -896,7 +896,6 @@ public class Worker : HiveObject
 
 		looks.Fill( lookData );
 
-
 		animationController = (RuntimeAnimatorController)Resources.Load( "animations/worker" );
 		Assert.global.IsNotNull( animationController );
 		walkingID = Animator.StringToHash( "walk" );
@@ -912,39 +911,13 @@ public class Worker : HiveObject
 		harvestingID = Animator.StringToHash( "harvesting" );
 		sowingID = Animator.StringToHash( "sowing" );
 
-		//object[] sounds = {
-		//	"Mines/pickaxe_deep", Resource.Type.coal, Resource.Type.iron, Resource.Type.gold, Resource.Type.stone, Resource.Type.salt,
-		//	"Forest/treecut", Resource.Type.tree,
-		//	"Mines/pickaxe", Resource.Type.rock };
-		//resourceGetSounds.Fill( sounds );
 		object[] walk = {
-			"cart", Type.cart };
+			"effects/cart", Type.cart };
 		walkSounds.Fill( walk );
 
 		var tex = Resources.Load<Texture2D>( "arrow" );
 		arrowSprite = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 
-		//float interruptAt = 0;
-		//int interruptionAnimation = -1;
-		//int interruptionDuration = 0;
-		//if ( resourceType == Resource.Type.tree )
-		//{
-		//	interruptAt = 0.7f;
-		//	interruptionAnimation = Worker.choppingID;
-		//	interruptionDuration = 200;
-		//}
-		//if ( resourceType == Resource.Type.rock )
-		//{
-		//	interruptAt = 0.7f;
-		//	interruptionAnimation = Worker.miningID;
-		//	interruptionDuration = 200;
-		//}
-		//if ( resourceType == Resource.Type.pasturingAnimal )
-		//{
-		//	interruptAt = 0.8f;
-		//	interruptionAnimation = Worker.skinningID;
-		//	interruptionDuration = 200;
-		//}
 		resourceCollectAct[(int)Resource.Type.tree] = new Act
 		{
 			animation = choppingID,
@@ -997,6 +970,8 @@ public class Worker : HiveObject
 			toolSlot = LinkType.rightHand,
 			duration = -1
 		};
+
+		animationSounds.fileNamePrefix = "effects/";
 	}
 
 	static public Worker Create()
@@ -2002,7 +1977,7 @@ public class Worker : HiveObject
 	{
 		if ( soundSource )
 		{
-			soundSource.clip = toolSounds.GetMediaData( (Tools)toolID ); 
+			soundSource.clip = animationSounds.GetMediaData( (AnimationSound)toolID ); 
 			soundSource.Play();
 		}
 	}
