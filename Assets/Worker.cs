@@ -116,7 +116,8 @@ public class Worker : HiveObject
 	{
 		axe,
 		harvest,
-		pickaxeOnRock
+		pickaxeOnRock,
+		construction
 	}
 
 	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
@@ -1973,11 +1974,13 @@ public class Worker : HiveObject
 
 	public bool hasItems { get { return itemsInHands[0] != null; } }
 
-	public void MakeSound( int toolID )
+	public void MakeSound( int soundID )
 	{
 		if ( soundSource )
 		{
-			soundSource.clip = animationSounds.GetMediaData( (AnimationSound)toolID ); 
+			soundSource.clip = animationSounds.GetMediaData( (AnimationSound)soundID ); 
+			soundSource.loop = false;
+			assert.IsNotNull( soundSource.clip, $"No sound found for AnimationSouns.{((AnimationSound)soundID).ToString()}" );
 			soundSource.Play();
 		}
 	}

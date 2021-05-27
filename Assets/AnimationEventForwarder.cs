@@ -11,9 +11,9 @@ public class AnimationEventForwarder : MonoBehaviour
         target = transform.parent.GetComponent<Worker>();
     }
 
-    void MakeSound( int toolID )
+    void MakeSound( int soundID )
     {
-        target?.MakeSound( toolID );
+        target?.MakeSound( soundID );
     }
 
 }

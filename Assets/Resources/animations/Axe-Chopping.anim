@@ -113461,7 +113461,7 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.6666667
+  - time: 0.6333333
     functionName: MakeSound
     data: 
     objectReferenceParameter: {fileID: 11500000, guid: 455cc5701aae3be4eb94400e80530edc,

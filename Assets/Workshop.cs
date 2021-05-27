@@ -365,6 +365,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"windmill", Type.mill,
 			"brewery", Type.brewery,
 			"coinmaker", Type.coinmaker,
+			"pig", Type.butcher,
+			"kneading", Type.bakery,
 			"pickaxe_deep", Type.goldmine,
 			"pickaxe_deep", Type.saltmine,
 			"pickaxe_deep", Type.coalmine,
