@@ -195,13 +195,13 @@ public class Player : ScriptableObject
 		efficiencyTimer.Start( efficiencyUpdateTime );
 
 		totalEfficiency = float.MaxValue;
-		averageEfficiency = 0;
+		averageEfficiency = 1;
 		int count = 0;
 		for ( int i = 0; i < itemEfficiencyHistory.Count; i++ )
 		{
 			var current = itemEfficiencyHistory[i].Advance();
 
-			averageEfficiency += current;
+			averageEfficiency *= current;
 			count++;
 
 			if ( itemEfficiencyHistory[i].weight > 0 && current < totalEfficiency )
@@ -210,7 +210,7 @@ public class Player : ScriptableObject
 				totalEfficiency = current;
 			}
 		}
-		averageEfficiency /= count;
+		averageEfficiency = (float)Math.Pow( averageEfficiency, 1f / count );
 		averageEfficiencyHistory.Advance( averageEfficiency );
 	}
 

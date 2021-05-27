@@ -6,6 +6,7 @@ public class GuardHouse : Building
 {
 	// TODO Guardhouses are sometimes not visible, only after reload
 	// Somehow they are offset, but they are linked to the correct block.
+	// TODO They are completely built even before the construction
 	public List<Worker> soldiers = new List<Worker>();
 	public bool ready;
 	public int influence = 8;

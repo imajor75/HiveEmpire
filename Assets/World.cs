@@ -19,7 +19,7 @@ public class World : MonoBehaviour
 	public List<Player> players = new List<Player>();
 	static public World instance;
 	public Eye eye;
-	static public int soundMaxDistance = 15;
+	static public int soundMaxDistance = 10;
 	static public int layerIndexNotOnMap;
 	static public int layerIndexMapOnly;
 	static public int layerIndexPickable;
