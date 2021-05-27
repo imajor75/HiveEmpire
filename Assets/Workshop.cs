@@ -211,7 +211,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			{
 				resource.gathered.Start();
 				if ( !resource.infinite && --resource.charges == 0 )
-					resource.Remove( false );
+					resource.Remove( true );
 				else
 				{
 					if ( resource.underGround )
@@ -361,10 +361,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 		looks.Fill( looksData );
 		object[] sounds = {
 			"handsaw", Type.sawmill,
-			"SAdK/smelter", Type.smelter,
+			"smelter", Type.smelter,
 			"windmill", Type.mill,
-			"brewery", Type.brewery
+			"brewery", Type.brewery,
+			"coinmaker", Type.coinmaker,
+			"pig", Type.butcher,
+			"kneading", Type.bakery,
+			"pickaxe_deep", Type.goldmine,
+			"pickaxe_deep", Type.saltmine,
+			"pickaxe_deep", Type.coalmine,
+			"pickaxe_deep", Type.stonemine,
+			"pickaxe_deep", Type.ironmine
  		};
+		processingSounds.fileNamePrefix = "effects/";
 		processingSounds.Fill( sounds );
 		mapIndicatorTexture = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
 	}
@@ -485,7 +494,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
 		assert.AreEqual( productionConfiguration.outputType, itemType );
-		assert.IsTrue( output > 0 );
+		assert.IsTrue( output > 0 );		// TODO Triggered for stone, in a stonemason, destination stock
 		Item item = base.SendItem( itemType, destination, priority );
 		if ( item != null )
 			output--;
@@ -574,7 +583,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			float weight = b.weight != null ? b.weight.weight : 0.5f;
 			owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 		}
-		if ( productionConfiguration.outputType != Item.Type.unknown )
+		if ( productionConfiguration.outputType != Item.Type.unknown && mode != Mode.always )
 		{
 			bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
 			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );

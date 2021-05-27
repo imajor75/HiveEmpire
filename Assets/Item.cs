@@ -305,7 +305,7 @@ public class Item : HiveObject
 		assert.AreEqual( flag, nextFlag );
 
 		// path.progess == 0 if the item was rerouting while in the hands of the hauler
-		if ( destination && path.progress != 0 )
+		if ( destination && path && path.progress != 0 )	// TODO path was null here
 		{
 			if ( path.isFinished )
 			{
@@ -322,7 +322,7 @@ public class Item : HiveObject
 		}
 
 		worker = null;
-		assert.IsTrue( destination == null || !path.isFinished || destination.flag == flag );
+		assert.IsTrue( destination == null || path == null || !path.isFinished || destination.flag == flag );
 
 		atFlag.Start();
 		return flag.FinalizeItem( this );
@@ -451,7 +451,7 @@ public class Item : HiveObject
 			if ( worker )
 				assert.IsFalse( worker.itemsInHands.Contains( this ) );
 			if ( destination )
-				assert.IsNotNull( path );
+				assert.IsNotNull( path );	// TODO Triggered when switching a building to overclock mode, and the items had nowhere to go
 			if ( destination && !path.isFinished && !path.road.invalid )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.road ) );
 		}

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -106,6 +106,7 @@ public class Resource : HiveObject
 			"bird2", 3000, Type.tree,
 			"bird3", 3000, Type.tree,
 			"bird4", 3000, Type.tree };
+		ambientSounds.fileNamePrefix = "effects/";
 		ambientSounds.Fill( sounds );
 	}
 
@@ -256,7 +257,7 @@ public class Resource : HiveObject
 			}
 			spawn.Start( 1000 );
 		}
-		if ( silence.done )
+		if ( silence.done || silence.empty )
 		{
 			if ( nextSound )
 			{
@@ -267,7 +268,7 @@ public class Resource : HiveObject
 			}
 			else
 			{
-				var m = ambientSounds.GetMedia( type );
+				var m = ambientSounds.GetMedia( type, World.rnd.Next() );
 				if ( m == null )
 					silence.Start( 1500 );
 				else

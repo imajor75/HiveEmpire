@@ -280,7 +280,7 @@ abstract public class Building : HiveObject
 			}
 			progress += boss.ground.world.timeFactor / boss.configuration.constructionTime;
 			float maxProgress = ((float)plankArrived+stoneArrived)/(boss.configuration.plankNeeded+boss.configuration.stoneNeeded);
-			if ( progress > maxProgress )
+			if ( progress >= maxProgress )
 			{
 				progress = maxProgress;
 				hammering.Stop();

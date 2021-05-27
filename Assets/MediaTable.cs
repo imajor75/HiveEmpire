@@ -12,7 +12,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		public bool boolData;
 		public List<Key> keys = new List<Key>();
 
-		public void Load( string file = "" )
+		public void Load( string prefix, string file = "" )
 		{
 			bool reportError = false;
 			if ( file == "" )
@@ -20,14 +20,15 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				file = this.file;
 				reportError = true;
 			}
-			data = Resources.Load<MediaType>( file );
+			data = Resources.Load<MediaType>( prefix + file );
 			if ( data == null && reportError )
-				Assert.global.Fail( "Resource " + file + " not found" );
+				Assert.global.Fail( "Resource " + prefix + file + " not found" );
 		}
 	}
 
 	List<Media> table;
 	Media failure;
+	public string fileNamePrefix;
 
 	public void Fill( object[] data )
 	{
@@ -52,24 +53,26 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		{
 			if ( l.keys.Count == 0 )
 				failure = l;
-			l.Load();
+			l.Load( fileNamePrefix );
 		}
 	}
 
 	public Media GetMedia( Key key, int randomNumber = -1 )
 	{
+		if ( table == null )
+			table = new List<Media>();
 		List<Media> candidates = new List<Media>();
 		foreach ( Media media in table )
 			if ( media.keys.Contains( key ) )
 				candidates.Add( media );
-
+             
 		if ( candidates.Count == 0 )
 		{
 			if ( failure != null )
 				return failure;
 
 			Media media = new Media();
-			media.Load( key.ToString() );
+			media.Load( fileNamePrefix, key.ToString() );
 			media.keys.Add( key );
 			table.Add( media );
 			return media;

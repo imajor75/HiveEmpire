@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
-[RequireComponent( typeof( Camera ) )]
+[RequireComponent( typeof( Camera ), typeof( AudioListener ) )]
 public class Eye : HiveObject
 {
 	public float altitude = 4.0f;
@@ -24,7 +24,6 @@ public class Eye : HiveObject
 	public new Camera camera;
 	[JsonIgnore]
 	public IDirector director;
-	Transform ear;
 
 	public static Eye Create()
 	{
@@ -52,10 +51,6 @@ public class Eye : HiveObject
 
 		// Disable temporarily, as unity is crashing at the moment with it.
 		ppl.enabled = false;
-
-		ear = new GameObject( "Ear" ).transform;
-		ear.gameObject.AddComponent<AudioListener>();
-		ear.transform.SetParent( World.instance.transform );
 		base.Start();
 	}
 
@@ -95,10 +90,10 @@ public class Eye : HiveObject
 			height += ( h - height ) * 0.04f;
 		else
 			height = h;
-		ear.position = new Vector3( x, height, y );
+		var position = new Vector3( x, height, y );
 		Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
-		transform.position = ear.position - viewer;
-		transform.LookAt( ear );
+		transform.position = position - viewer;
+		transform.LookAt( position );
 		if ( director == null )
 		{
 			director = null;
