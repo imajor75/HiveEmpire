@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering.PostProcessing;
@@ -527,6 +528,7 @@ public class Interface : OperationHandler
 			Assert.global.IsNotNull( highlightArea.center );
 		}
 #endif
+
 	}
 
 	public override GroundNode location { get { return null; } }
@@ -948,7 +950,7 @@ public class Interface : OperationHandler
 			return i.gameObject.AddComponent<Button>();
 		}
 
-		public Text Text( int x = 0, int y = 0, int xs = 100, int ys = 20, string text = "", Component parent = null )
+		public Text Text( int x, int y, int xs = 100, int ys = 20, string text = "", Component parent = null )
 		{
 			Text t = new GameObject().AddComponent<Text>();
 			t.name = "Text";
@@ -957,6 +959,14 @@ public class Interface : OperationHandler
 			t.fontSize = (int)( t.fontSize * uiScale );
 			t.text = text;
 			t.color = Color.yellow;
+			return t;
+		}
+
+		public Text Text( string text = "", int fontSize = 0, Component parent = null )
+		{
+			var t = Text( 0, 0, 0, 0, text, parent );
+			if ( fontSize != 0 )
+			t.fontSize = fontSize;
 			return t;
 		}
 
@@ -990,26 +1000,6 @@ public class Interface : OperationHandler
 				t.offsetMin = t.offsetMax = Vector2.zero;
 			}
 			return g;
-		}
-
-		public int currentRow = 0;
-
-		public static UIElement Pin<UIElement>( UIElement g, int x0, int x1, int y0, int y1, float xa = 0, float ya = 1 ) where UIElement : Component
-		{
-			if ( g.transform is RectTransform t )
-			{
-				t.anchorMin = t.anchorMax = new Vector2( xa, ya );
-				t.offsetMin = new Vector2( x0, y0 );
-				t.offsetMax = new Vector2( x1, y1 );
-			}
-			return g;
-		}
-
-		public UIElement PinDownwards<UIElement>( UIElement g, int x0, int x1, int y0, int y1, float xa = 0, float ya = 1 ) where UIElement : Component
-		{
-			var r = Pin( g, x0, x1, y0 + currentRow, y1 + currentRow, xa, ya );
-			currentRow -= y1 - y0;
-			return r;
 		}
 
 		public virtual void Close()
@@ -3655,12 +3645,19 @@ public class Interface : OperationHandler
 		ScrollRect scroll;
 		Player player;
 		Text finalEfficiency;
+		Comparison<int> currentComparison;
+		bool reverse = false;
 		readonly Text[] inStock = new Text[(int)Item.Type.total];
 		readonly Text[] onWay = new Text[(int)Item.Type.total];
 		readonly Text[] surplus = new Text[(int)Item.Type.total];
 		readonly Text[] production = new Text[(int)Item.Type.total];
 		readonly Text[] efficiency = new Text[(int)Item.Type.total];
 		readonly Button[] stockButtons = new Button[(int)Item.Type.total];
+		readonly ItemImage[] itemIcon = new ItemImage[(int)Item.Type.total];
+
+		int[] inStockCount = new int[(int)Item.Type.total];
+		int[] maxStockCount = new int[(int)Item.Type.total];
+		int[] onWayCount = new int[(int)Item.Type.total];
 
 		public static ItemStats Create()
 		{
@@ -3675,11 +3672,28 @@ public class Interface : OperationHandler
 			name = "Item stats panel";
 			this.player = player;
 			Frame( 0, 0, 370, 300 );
-			Text( 70, -20, 50, 20, "In stock" ).fontSize = (int)( uiScale * 10 );
-			Text( 120, -20, 50, 20, "On Road" ).fontSize = (int)( uiScale * 10 );
-			Text( 170, -20, 50, 20, "Surplus" ).fontSize = (int)( uiScale * 10 );
-			Text( 220, -20, 50, 20, "Per minute" ).fontSize = (int)( uiScale * 10 );
-			Text( 270, -20, 50, 20, "Efficiency" ).fontSize = (int)( uiScale * 10 );
+			UIHelpers.currentColumn = 50;
+
+			Text( "In stock", (int)( uiScale * 10 ) ).
+			PinSideways( 0, 50, -40, -20 ).
+			AddClickHandler( delegate { SetOrder( CompareInStock ); } );
+
+			Text( "On Road", (int)( uiScale * 10 ) ).
+			PinSideways( 0, 50, -40, -20 ).
+			AddClickHandler( delegate { SetOrder( CompareOnRoad ); } );
+
+			Text( "Surplus", (int)( uiScale * 10 ) ).
+			PinSideways( 0, 50, -40, -20 ).
+			AddClickHandler( delegate { SetOrder( CompareSurplus ); } );
+
+			Text( "Per minute", (int)( uiScale * 10 ) ).
+			PinSideways( 0, 50, -40, -20 ).
+			AddClickHandler( delegate { SetOrder( ComparePerMinute ); } );
+
+			Text( "Efficiency", (int)( uiScale * 10 ) ).
+			PinSideways( 0, 50, -40, -20 ).
+			AddClickHandler( delegate { SetOrder( CompareEfficiency ); } );
+
 			scroll = ScrollRect( 20, -45, 330, 205 );
 			Button( 340, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			finalEfficiency = Text( 100, -260, 100, 30 );
@@ -3688,7 +3702,7 @@ public class Interface : OperationHandler
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				int row = i * - ( iconSize + 5 );
-				ItemIcon( 0, row, 0, 0, (Item.Type)i, scroll.content );
+				itemIcon[i] = ItemIcon( 0, row, 0, 0, (Item.Type)i, scroll.content );
 				inStock[i] = Text( 30, row, 40, iconSize, "0", scroll.content );
 				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
 				onWay[i] = Text( 80, row, 40, iconSize, "0", scroll.content );
@@ -3700,11 +3714,54 @@ public class Interface : OperationHandler
 			SetScrollRectContentSize( scroll, 0, (int)Item.Type.total * ( iconSize + 5 ) );
 		}
 
+		int CompareInStock( int a, int b )
+		{
+			return inStockCount[a].CompareTo( inStockCount[b] );
+		}
+
+		int CompareOnRoad( int a, int b )
+		{
+			return onWayCount[a].CompareTo( onWayCount[b] );
+		}
+
+		int CompareSurplus( int a, int b )
+		{
+			return player.surplus[a].CompareTo( player.surplus[b] );
+		}
+
+		int ComparePerMinute( int a, int b )
+		{
+			return player.itemEfficiencyHistory[a].production.CompareTo( player.itemEfficiencyHistory[b].production );
+		}
+
+		int CompareEfficiency( int a, int b )
+		{
+			var ai = player.itemEfficiencyHistory[a];
+			var bi = player.itemEfficiencyHistory[b];
+			float ae = ai.weight == 0 ? -1 : ai.weighted;
+			float be = bi.weight == 0 ? -1 : bi.weighted;
+			return ae.CompareTo( be );
+		}
+
+		void SetOrder( Comparison<int> comparison )
+		{
+			if ( currentComparison == comparison )
+				reverse =! reverse;
+			else
+			{
+				currentComparison = comparison;
+				reverse = false;
+			}
+		}
+
 		public new void Update()
 		{
 			base.Update();
-			int[] inStockCount = new int[(int)Item.Type.total];
-			int[] maxStockCount = new int[(int)Item.Type.total];
+			for ( int i = 0; i < inStockCount.Length; i++ )
+			{
+				inStockCount[i] = 0;
+				onWayCount[i] = 0;
+			}
 			Stock[] richestStock = new Stock[(int)Item.Type.total];
 			foreach ( var stock in player.stocks )
 			{
@@ -3719,7 +3776,6 @@ public class Interface : OperationHandler
 				}
 			}
 
-			int[] onWayCount = new int[(int)Item.Type.total];
 			foreach ( var item in player.items )
 			{
 				if ( item == null )
@@ -3727,24 +3783,34 @@ public class Interface : OperationHandler
 				onWayCount[(int)item.type]++;
 			}
 
+			List<int> order = new List<int>();
+			for ( int i = 0; i < inStock.Length; i++ )
+				order.Add( i );
+			if ( currentComparison != null )
+				order.Sort( currentComparison );
+			if ( reverse )
+				order.Reverse();
+
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				Color textColor = Color.yellow;
 				if ( player.itemEfficiencyHistory[i].weight != 0 )
 					textColor = Color.green;
-				if ( (int)player.worseItemType == i )
+				if ( (int)player.worseItemType == order[i] )
 					textColor = Color.red;
 				inStock[i].color = onWay[i].color = production[i].color = efficiency[i].color = textColor;
 
-				inStock[i].text = inStockCount[i].ToString();
+				itemIcon[i].SetType( (Item.Type)order[i] );
+				inStock[i].text = inStockCount[order[i]].ToString();
 				stockButtons[i].onClick.RemoveAllListeners();
-				Stock stock = richestStock[i];
+				Stock stock = richestStock[order[i]];
 				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
-				onWay[i].text = onWayCount[i].ToString();
-				surplus[i].text = player.surplus[i].ToString();
-				production[i].text = player.itemEfficiencyHistory[i].production.ToString( "n2" );
-				float itemEfficiency = player.itemEfficiencyHistory[i].weighted;
-				efficiency[i].text = itemEfficiency.ToString( "n2" );
+				onWay[i].text = onWayCount[order[i]].ToString();
+				surplus[i].text = player.surplus[order[i]].ToString();
+
+				var itemData = player.itemEfficiencyHistory[order[i]];
+				production[i].text = itemData.production.ToString( "n2" );
+				efficiency[i].text = itemData.weight == 0 ? "-" : itemData.weighted.ToString( "n2" );
 			};
 
 			finalEfficiency.text = player.averageEfficiencyHistory.current.ToString( "n2" );
@@ -3908,27 +3974,28 @@ public class Interface : OperationHandler
 			if ( base.Open() )
 				return;
 			name = "World Progress Panel";
-			Pin( frame, -200, 200, -100, 100, 0.5f, 0.5f );
+			frame.Pin( -200, 200, -100, 100, 0.5f, 0.5f );
 			Stretch( Frame( 0, 0, 1, 1 ) );
-			var closeButton = Button( 0, 0, 1, 1, iconTable.GetMediaData( Icon.exit ) );
-			Pin( closeButton.GetComponent<Image>(), -30, -10, -30, -10, 1, 1 );
-			closeButton.onClick.AddListener( Close );
-			currentRow = -30;
+			Button( 0, 0, 1, 1, iconTable.GetMediaData( Icon.exit ) ).
+			Pin( -30, -10, -30, -10, 1, 1 ).onClick.AddListener( Close );
+			UIHelpers.currentRow = -30;
 			if ( victory )
 			{
-				var t = PinDownwards( Text( 0, 0, 0, 0, "VICTORY!" ), -100, 100, -30, 0, 0.5f );
+				var t = Text( 0, 0, 0, 0, "VICTORY!" );
+				t.PinDownwards( -100, 100, -30, 0, 0.5f );
 				t.color = Color.red;
 				t.alignment = TextAnchor.MiddleCenter;
 				originalSpeed = root.world.timeFactor;
 				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
 				root.world.SetTimeFactor( 0 );
 			}
-			worldTime = PinDownwards( Text(), -200, 200, -30, 0, 0.5f );
+			worldTime = Text().PinDownwards( -200, 200, -30, 0, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
-			PinDownwards( Text( 0, 0, 1, 1, $"Efficiency goal: {World.instance.efficiencyGoal}" ), -200, 200, -30, 0, 0.5f ).alignment = TextAnchor.MiddleCenter;
-			currentEfficiency = PinDownwards( Text(), -200, 200, -30, 0, 0.5f );
+			Text( 0, 0, 1, 1, $"Efficiency goal: {World.instance.efficiencyGoal}" ).
+			PinDownwards( -200, 200, -30, 0, 0.5f ).alignment = TextAnchor.MiddleCenter;
+			currentEfficiency = Text().PinDownwards( -200, 200, -30, 0, 0.5f );
 			currentEfficiency.alignment = TextAnchor.MiddleCenter;
-			efficiencyProgress = PinDownwards( Progress(), -100, 100, -30, 0, 0.5f );
+			efficiencyProgress = Progress().PinDownwards( -100, 100, -30, 0, 0.5f );
 		}
 
 		new public void Update()
@@ -4088,4 +4155,42 @@ public class Interface : OperationHandler
 		void OnLostInput();
 	}
 }
+
+public static class UIHelpers
+{
+	public static int currentRow = 0, currentColumn = 0;
+
+	public static UIElement Pin<UIElement>( this UIElement g, int x0, int x1, int y0, int y1, float xa = 0, float ya = 1 ) where UIElement : Component
+	{
+		if ( g.transform is RectTransform t )
+		{
+			t.anchorMin = t.anchorMax = new Vector2( xa, ya );
+			t.offsetMin = new Vector2( (int)( x0 * Interface.uiScale ), (int)( y0 * Interface.uiScale ) );
+			t.offsetMax = new Vector2( (int)( x1 * Interface.uiScale ), (int)( y1 * Interface.uiScale ) );
+		}
+		return g;
+	}
+
+	public static UIElement PinDownwards<UIElement>( this UIElement g, int x0, int x1, int y0, int y1, float xa = 0, float ya = 1 ) where UIElement : Component
+	{
+		g.Pin( x0, x1, y0 + currentRow, y1 + currentRow, xa, ya );
+		currentRow -= y1 - y0;
+		return g;
+	}
+
+	public static UIElement PinSideways<UIElement>( this UIElement g, int x0, int x1, int y0, int y1, float xa = 0, float ya = 1 ) where UIElement : Component
+	{
+		g.Pin( x0 + currentColumn, x1 + currentColumn, y0, y1, xa, ya );
+		currentColumn += x1 - x0;
+		return g;
+	}
+
+	public static UIElement AddClickHandler<UIElement>( this UIElement g, UnityAction callBack ) where UIElement : Component
+	{
+		Button b = g.gameObject.AddComponent<Button>();
+		b.onClick.AddListener( callBack );
+		return g;
+	}
+}
+
 
