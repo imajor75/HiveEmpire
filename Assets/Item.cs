@@ -214,6 +214,8 @@ public class Item : HiveObject
 
 		// If there is a hauler but no nextFlag, the item is on the last road of its path, and will be delivered straight into a buildig. Too late to offer it, the hauler will not be
 		// able to skip entering the building, as it is scheduled already.
+		// Another rarer case when there is a worker but nextFlag is zero: a hauler is carrying the item between two flags, but something interrupted him (called ResetTasks) causing the 
+		// items to cancel their trips, null destination and nextFlag. Even in this case the item should not be offered.
 		if ( worker && !nextFlag )
 			return; // justCreated is true here?
 
@@ -410,7 +412,14 @@ public class Item : HiveObject
 			{
 				case Worker.Type.hauler:
 				{
-					assert.IsTrue( worker.onRoad );
+					// In some rare cases it is possible that the hauler is carrying items, but not on the road. This 
+					// might happening after using the magnet on a flag which is cornered by a road. One or more nodes
+					// around the flag will end up not being part of any of the new roads. If a worker was goind to that
+					// node at the moment of the magnet, he will not be onRoad, but might still has items in hands. In this
+					// case the destination of the items is null, because Road.Split was calling Worker.ResetTasks, which was
+					// calling CancelTrip for the items in hand
+					if ( destination )
+						assert.IsTrue( worker.onRoad );
 					assert.IsNotNull( worker.road );
 					break;
 				}

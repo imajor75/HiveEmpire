@@ -1490,7 +1490,7 @@ public class Worker : HiveObject
 					continue;
 
 				flag.ReserveItem( itemsInHands[0] );
-				if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building
+				if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building, or the road is rearranged by a flag magnet (Road.Split)
 				{
 					foreach ( var o in Ground.areas[1] )
 					{

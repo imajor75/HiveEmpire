@@ -217,7 +217,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public void FixedUpdate()
 	{
-		if ( !ready )
+		if ( !ready || invalid )
 			return;
 
 		int jam = this.jam;
