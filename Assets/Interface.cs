@@ -3054,7 +3054,9 @@ public class Interface : OperationHandler
 			if ( GetKeyDown( KeyCode.Alpha2 ) )
 				showGridAtMouse = !showGridAtMouse;
 			if ( GetKeyDown( KeyCode.Alpha5 ) )
-				ShowNearestPossibleConstructionSite();
+				ShowNearestPossibleConstructionSite( false );
+			if ( GetKeyDown( KeyCode.Alpha6 ) )
+				ShowNearestPossibleConstructionSite( true );
 			if ( GetKeyDown( KeyCode.Comma ) )
 			{
 				if ( currentFlagDirection == 0 )
@@ -3158,15 +3160,24 @@ public class Interface : OperationHandler
 			}
 		}
 
-		void ShowNearestPossibleConstructionSite()
+		void ShowNearestPossibleConstructionSite( bool anyDirection )
 		{
+			List<int> possibleDirections = new List<int>();
+			if ( anyDirection )
+			{
+				for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+					possibleDirections.Add( i );
+			}
+			else
+				possibleDirections.Add( currentFlagDirection );
+
 			GroundNode bestSite = null;
 			int bestDistance = int.MaxValue;
 			int bestFlagDirection = -1;
 			foreach ( var o in Ground.areas[Ground.maxArea - 1] )
 			{
 				GroundNode node = currentNode + o;
-				for ( int flagDirection = 0; flagDirection < GroundNode.neighbourCount; flagDirection++ )
+				foreach ( int flagDirection in possibleDirections )
 				{
 					bool suitable = false;
 					switch ( constructionMode )
