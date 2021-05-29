@@ -365,7 +365,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"windmill", Type.mill,
 			"brewery", Type.brewery,
 			"coinmaker", Type.coinmaker,
-			"pig", Type.butcher,
+			"pig", true, Type.butcher,
 			"kneading", Type.bakery,
 			"pickaxe_deep", Type.goldmine,
 			"pickaxe_deep", Type.saltmine,
@@ -374,7 +374,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"pickaxe_deep", Type.ironmine
  		};
 		processingSounds.fileNamePrefix = "effects/";
-		processingSounds.Fill( sounds );
+		processingSounds.Fill( sounds );	// bool equals "dont loop"
 		mapIndicatorTexture = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
 	}
 
@@ -871,7 +871,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			smoke?.Play();
 			soundSource.loop = true;
-			soundSource.clip = processingSounds.GetMediaData( type );
+			var sound = processingSounds.GetMedia( type );
+			soundSource.clip = sound.data;
+			soundSource.loop = !sound.boolData;
 			soundSource.Play();
 		}
 		else
