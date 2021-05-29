@@ -2444,7 +2444,7 @@ public class Interface : OperationHandler
 
 	public class ConstructionPanel : BuildingPanel
 	{
-		public Image progressBar;
+		public ProgressBar progress;
 		public Building.Construction construction;
 		public WorkshopPanel.Buffer planks;
 		public WorkshopPanel.Buffer stones;
@@ -2471,7 +2471,7 @@ public class Interface : OperationHandler
 			stones = new WorkshopPanel.Buffer();
 			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, 20, -64, iconSize + 5 );
 
-			progressBar = Image( 20, -90, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
+			progress = Progress( 20, -90, ( iconSize + 5 ) * 8, iconSize, iconTable.GetMediaData( Icon.progress ) );
 
 			if ( show )
 				root.world.eye.FocusOn( construction.boss, true );
@@ -2493,7 +2493,7 @@ public class Interface : OperationHandler
 			base.Update();
 			planks.Update( construction.plankArrived, construction.plankOnTheWay );
 			stones.Update( construction.stoneArrived, construction.stoneOnTheWay );
-			progressBar.rectTransform.sizeDelta = new Vector2( construction.progress * ( iconSize + 5 ) * 8, iconSize );
+			progress.progress = construction.progress;
 		}
 
 		void Remove()
