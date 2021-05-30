@@ -770,7 +770,7 @@ public class Interface : OperationHandler
 			root.panels.Add( this );
 			name = "Panel";
 			frame = gameObject.AddComponent<Image>();
-			Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), 100, 100, root );
+			Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), xs, ys, root );
 			frame.enabled = false;
 			this.target = target;
 			UpdatePosition();
@@ -797,6 +797,11 @@ public class Interface : OperationHandler
 			i.sprite = picture;
 			Init( i.rectTransform, x, y, xs, ys, parent );
 			return i;
+		}
+
+		public Image Image( Sprite picture = null, Component parent = null )
+		{
+			return Image( 0, 0, 0, 0, picture, parent );
 		}
 
 		public ProgressBar Progress( int x = 0, int y = 0, int xs = 0, int ys = 0, Sprite picture = null, Component parent = null )
@@ -3662,6 +3667,7 @@ public class Interface : OperationHandler
 		readonly Text[] onWay = new Text[(int)Item.Type.total];
 		readonly Text[] surplus = new Text[(int)Item.Type.total];
 		readonly Text[] production = new Text[(int)Item.Type.total];
+		readonly Text[] weight = new Text[(int)Item.Type.total];
 		readonly Text[] efficiency = new Text[(int)Item.Type.total];
 		readonly Button[] stockButtons = new Button[(int)Item.Type.total];
 		readonly ItemImage[] itemIcon = new ItemImage[(int)Item.Type.total];
@@ -3677,12 +3683,12 @@ public class Interface : OperationHandler
 
 		public void Open( Player player )
 		{
-			if ( base.Open( null, 0, 0, 370, 300 ) )
+			if ( base.Open( null, 0, 0, 420, 300 ) )
 				return;
 
 			name = "Item stats panel";
 			this.player = player;
-			Frame( 0, 0, 370, 300 );
+			Frame( 0, 0, 420, 300 );
 			UIHelpers.currentColumn = 50;
 
 			Text( "In stock", (int)( uiScale * 10 ) ).
@@ -3701,12 +3707,18 @@ public class Interface : OperationHandler
 			PinSideways( 0, 50, -40, -20 ).
 			AddClickHandler( delegate { SetOrder( ComparePerMinute ); } );
 
+			Text( "Weight", (int)( uiScale * 10 ) ).
+			PinSideways( 0, 50, -40, -20 ).
+			AddClickHandler( delegate { SetOrder( CompareWeight ); } );
+
 			Text( "Efficiency", (int)( uiScale * 10 ) ).
 			PinSideways( 0, 50, -40, -20 ).
 			AddClickHandler( delegate { SetOrder( CompareEfficiency ); } );
 
-			scroll = ScrollRect( 20, -45, 330, 205 );
-			Button( 340, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
+			scroll = ScrollRect( 20, -45, 380, 205 );
+			Image( iconTable.GetMediaData( Icon.exit ) ).
+			Pin( -30, -10, -30, -10, 1, 1 ).
+			AddClickHandler( Close );
 			finalEfficiency = Text( 100, -260, 100, 30 );
 			finalEfficiency.fontSize = (int)( uiScale * 16 );
 
@@ -3719,7 +3731,8 @@ public class Interface : OperationHandler
 				onWay[i] = Text( 80, row, 40, iconSize, "0", scroll.content );
 				surplus[i] = Text( 130, row, 40, iconSize, "0", scroll.content );
 				production[i] = Text( 180, row, 40, iconSize, "0", scroll.content );
-				efficiency[i] = Text( 230, row, 40, iconSize, "0", scroll.content );
+				weight[i] = Text( 230, row, 40, iconSize, "0", scroll.content );
+				efficiency[i] = Text( 280, row, 40, iconSize, "0", scroll.content );
 			}
 
 			SetScrollRectContentSize( scroll, 0, (int)Item.Type.total * ( iconSize + 5 ) );
@@ -3743,6 +3756,11 @@ public class Interface : OperationHandler
 		int ComparePerMinute( int a, int b )
 		{
 			return player.itemEfficiencyHistory[a].production.CompareTo( player.itemEfficiencyHistory[b].production );
+		}
+
+		int CompareWeight( int a, int b )
+		{
+			return player.itemEfficiencyHistory[a].weight.CompareTo( player.itemEfficiencyHistory[b].weight );
 		}
 
 		int CompareEfficiency( int a, int b )
@@ -3821,6 +3839,7 @@ public class Interface : OperationHandler
 
 				var itemData = player.itemEfficiencyHistory[order[i]];
 				production[i].text = itemData.production.ToString( "n2" );
+				weight[i].text = itemData.weight.ToString( "n2" );
 				efficiency[i].text = itemData.weight == 0 ? "-" : itemData.weighted.ToString( "n2" );
 			};
 
