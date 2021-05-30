@@ -932,7 +932,7 @@ public class Interface : OperationHandler
 
 		public static void SelectBuilding( Building building )
 		{
-			building.OnClicked( true );
+			building?.OnClicked( true );
 		}
 
 		public Button Button( int x, int y, int xs, int ys, Sprite picture, Component parent = null )
