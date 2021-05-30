@@ -3382,9 +3382,9 @@ public class Interface : OperationHandler
 			Fill( CompareByAge );
 		}
 
-		public new void OnDestroy()
+		public override void Close()
 		{
-			base.OnDestroy();
+			base.Close();
 			World.instance.SetTimeFactor( timeSpeedToRestore );
 		}
 
