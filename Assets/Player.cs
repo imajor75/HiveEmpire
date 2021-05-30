@@ -201,8 +201,11 @@ public class Player : ScriptableObject
 		{
 			var current = itemEfficiencyHistory[i].Advance();
 
-			averageEfficiency *= current;
-			count++;
+			if ( itemEfficiencyHistory[i].weight != 0 )
+			{
+				averageEfficiency *= current;
+				count++;
+			}
 
 			if ( itemEfficiencyHistory[i].weight > 0 && current < totalEfficiency )
 			{
