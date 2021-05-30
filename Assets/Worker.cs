@@ -117,7 +117,8 @@ public class Worker : HiveObject
 		axe,
 		harvest,
 		pickaxeOnRock,
-		construction
+		construction,
+		stab
 	}
 
 	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.

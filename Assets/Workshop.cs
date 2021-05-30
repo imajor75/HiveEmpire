@@ -368,6 +368,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"pig", true, Type.butcher,
 			"kneading", Type.bakery,
 			"weaponforging", Type.weaponmaker,
+			"rasp", Type.bowmaker,
 			"pickaxe_deep", Type.goldmine,
 			"pickaxe_deep", Type.saltmine,
 			"pickaxe_deep", Type.coalmine,
