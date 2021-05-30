@@ -364,7 +364,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"smelter", 1.0f, Type.smelter,
 			"windmill", 1.0f, Type.mill,
 			"brewery", 0.7f, Type.brewery,
-			"coinmaker", 1.0f, Type.coinmaker,
+			"coinmaker", 0.5f, Type.coinmaker,
 			"pig", 1.0f, Type.butcher,
 			"kneading", 1.0f, Type.bakery,
 			"weaponforging", 1.0f, Type.weaponmaker,
