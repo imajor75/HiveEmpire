@@ -360,20 +360,20 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"prefabs/buildings/well", 1.1f, Type.well };
 		looks.Fill( looksData );
 		object[] sounds = {
-			"handsaw", Type.sawmill,
-			"smelter", Type.smelter,
-			"windmill", Type.mill,
-			"brewery", Type.brewery,
-			"coinmaker", Type.coinmaker,
-			"pig", Type.butcher,
-			"kneading", Type.bakery,
-			"weaponforging", Type.weaponmaker,
-			"rasp", Type.bowmaker,
-			"pickaxe_deep", Type.goldmine,
-			"pickaxe_deep", Type.saltmine,
-			"pickaxe_deep", Type.coalmine,
-			"pickaxe_deep", Type.stonemine,
-			"pickaxe_deep", Type.ironmine
+			"handsaw", 1.0f, Type.sawmill,
+			"smelter", 1.0f, Type.smelter,
+			"windmill", 1.0f, Type.mill,
+			"brewery", 0.7f, Type.brewery,
+			"coinmaker", 1.0f, Type.coinmaker,
+			"pig", 1.0f, Type.butcher,
+			"kneading", 1.0f, Type.bakery,
+			"weaponforging", 1.0f, Type.weaponmaker,
+			"rasp", 1.0f, Type.bowmaker,
+			"pickaxe_deep", 1.0f, Type.goldmine,
+			"pickaxe_deep", 1.0f, Type.saltmine,
+			"pickaxe_deep", 1.0f, Type.coalmine,
+			"pickaxe_deep", 1.0f, Type.stonemine,
+			"pickaxe_deep", 1.0f, Type.ironmine
  		};
 		processingSounds.fileNamePrefix = "effects/";
 		processingSounds.Fill( sounds );	// bool equals "dont loop"
@@ -875,6 +875,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			soundSource.loop = true;
 			var sound = processingSounds.GetMedia( type );
 			soundSource.clip = sound.data;
+			soundSource.volume = sound.floatData;
 			soundSource.loop = !sound.boolData;
 			soundSource.Play();
 		}
