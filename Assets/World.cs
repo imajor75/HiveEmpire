@@ -84,6 +84,7 @@ public class World : MonoBehaviour
 
 	public int oreCount;
 	public List<Ore> ores = new List<Ore>();
+	public int animalSpawnerCount;
 
 	public class Settings : HeightMap.Settings
 	{
@@ -531,6 +532,7 @@ public class World : MonoBehaviour
 	{	
 		ores.Clear();
 		oreCount = 0;
+		animalSpawnerCount = 0;
 		ores.Add( new Ore{ resourceType = Resource.Type.coal, idealRatio = settings.coalRatio } );
 		ores.Add( new Ore{ resourceType = Resource.Type.iron, idealRatio = settings.ironRatio } );
 		ores.Add( new Ore{ resourceType = Resource.Type.gold, idealRatio = settings.goldRatio } );
@@ -539,13 +541,11 @@ public class World : MonoBehaviour
 
 		foreach ( var node in ground.nodes )
 		{
-			var r = new System.Random( World.rnd.Next() );
+			var r = new System.Random( rnd.Next() );
 			if ( r.NextDouble() < settings.forestChance )
 				node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
 			if ( r.NextDouble() < settings.rocksChance )
 				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
-			if ( r.NextDouble() < settings.animalSpawnerChance )
-				node.AddResource( Resource.Type.animalSpawner );
 			bool hasOre = false;
 			foreach ( var resource in node.resources )
 				if ( resource.underGround )
@@ -582,6 +582,16 @@ public class World : MonoBehaviour
 					}
 				}
 			}
+		}
+
+		int idealAnimalSpawnerCount = (int)( settings.size * settings.size * settings.animalSpawnerChance );
+		if ( idealAnimalSpawnerCount == 0 )
+			idealAnimalSpawnerCount = 1;
+		while ( animalSpawnerCount != idealAnimalSpawnerCount )
+		{
+			var location = ground.GetNode( rnd.Next( settings.size ), rnd.Next( settings.size ) );
+			if ( Resource.Create().Setup( location, Resource.Type.animalSpawner ) != null )
+				animalSpawnerCount++;
 		}
 	}
 
