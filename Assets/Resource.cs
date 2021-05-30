@@ -23,6 +23,7 @@ public class Resource : HiveObject
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 8000;
 	public World.Timer silence;
+	[SerializeField]
 	AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
@@ -102,10 +103,10 @@ public class Resource : HiveObject
 		Resource.meshes.Fill( meshes );
 
 		object[] sounds = {
-			"bird1", 3000, Type.tree,
-			"bird2", 3000, Type.tree,
-			"bird3", 3000, Type.tree,
-			"bird4", 3000, Type.tree };
+			"bird1", 10000, Type.tree,
+			"bird2", 10000, Type.tree,
+			"bird3", 10000, Type.tree,
+			"bird4", 10000, Type.tree };
 		ambientSounds.fileNamePrefix = "effects/";
 		ambientSounds.Fill( sounds );
 	}
@@ -269,11 +270,14 @@ public class Resource : HiveObject
 			else
 			{
 				var m = ambientSounds.GetMedia( type, World.rnd.Next() );
-				if ( m == null )
+				if ( m == null || m.data == null )
+				{
 					silence.Start( 1500 );
+					assert.AreNotEqual( type, Type.tree );
+				}
 				else
 				{
-					silence.Start( (int)( World.rnd.NextDouble() * m.intData * 50 ) );
+					silence.Start( (int)( World.rnd.NextDouble() * m.intData ) );
 					nextSound = m.data;
 				}
 			}
