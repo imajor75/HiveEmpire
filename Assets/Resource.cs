@@ -23,8 +23,6 @@ public class Resource : HiveObject
 	public static int treeGrowthMax = 15000;    // 5 minutes
 	public static int cornfieldGrowthMax = 8000;
 	public World.Timer silence;
-	[SerializeField]
-	AudioClip nextSound;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
@@ -103,10 +101,10 @@ public class Resource : HiveObject
 		Resource.meshes.Fill( meshes );
 
 		object[] sounds = {
-			"bird1", 10000, Type.tree,
-			"bird2", 10000, Type.tree,
-			"bird3", 10000, Type.tree,
-			"bird4", 10000, Type.tree };
+			"bird1", 30000, Type.tree,
+			"bird2", 30000, Type.tree,
+			"bird3", 30000, Type.tree,
+			"bird4", 30000, Type.tree };
 		ambientSounds.fileNamePrefix = "effects/";
 		ambientSounds.Fill( sounds );
 	}
@@ -260,26 +258,18 @@ public class Resource : HiveObject
 		}
 		if ( silence.done || silence.empty )
 		{
-			if ( nextSound )
+			var m = ambientSounds.GetMedia( type, World.rnd.Next() );
+			if ( m == null || m.data == null )
 			{
-				soundSource.clip = nextSound;
-				soundSource.loop = false;
-				soundSource.Play();
-				nextSound = null;
+				silence.Start( 1500 );
+				assert.AreNotEqual( type, Type.tree );
 			}
 			else
 			{
-				var m = ambientSounds.GetMedia( type, World.rnd.Next() );
-				if ( m == null || m.data == null )
-				{
-					silence.Start( 1500 );
-					assert.AreNotEqual( type, Type.tree );
-				}
-				else
-				{
-					silence.Start( (int)( World.rnd.NextDouble() * m.intData ) );
-					nextSound = m.data;
-				}
+				silence.Start( (int)( World.rnd.NextDouble() * m.intData ) );
+				soundSource.clip = m.data;
+				soundSource.loop = false;
+				soundSource.Play();
 			}
 		}
 	}
