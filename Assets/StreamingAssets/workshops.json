@@ -179,7 +179,7 @@
   {
     "type": "bowmaker",
 	  "huge": true,
-	  "productionTime": 2500,
+	  "productionTime": 2100,
     "outputType": "bow",
     "inputs": [
       {
@@ -193,7 +193,7 @@
   {
     "type": "smelter",
     "outputType": "steel",
-	  "productionTime": 2500,
+	  "productionTime": 3500,
     "inputs": [
       {
         "itemType": "coal"
