@@ -1300,6 +1300,22 @@ public class Interface : OperationHandler
 				pathVisualization = null;
 				tooltip.Clear();
 			}
+
+			void Update()
+			{
+				if ( itemType == Item.Type.unknown || color.a < 0.5f )
+					SetInTransit( false );
+				if ( item?.path && inTransit )
+				{
+					if ( item.path.stepsLeft > 7 )
+						inTransit.color = Color.red;
+					else if ( item.path.stepsLeft < 3 )
+						inTransit.color = Color.green;
+					else
+						inTransit.color = Color.white;
+
+				}
+			}
 		}
 	}
 
@@ -1596,7 +1612,7 @@ public class Interface : OperationHandler
 							items[i].item = itemsOnTheWay[k++];
 						}
 						else
-							items[i].color = new Color( 1, 1, 1, 0  );
+							items[i].color = new Color( 1, 1, 1, 0 );
 					}
 				}
 			}
