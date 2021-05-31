@@ -3827,7 +3827,7 @@ public class Interface : OperationHandler
 					textColor = Color.green;
 				if ( (int)player.worseItemType == order[i] )
 					textColor = Color.red;
-				inStock[i].color = onWay[i].color = production[i].color = efficiency[i].color = textColor;
+				surplus[i].color = weight[i].color = inStock[i].color = onWay[i].color = production[i].color = efficiency[i].color = textColor;
 
 				itemIcon[i].SetType( (Item.Type)order[i] );
 				inStock[i].text = inStockCount[order[i]].ToString();
