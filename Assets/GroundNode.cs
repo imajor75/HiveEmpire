@@ -52,7 +52,8 @@ public class GroundNode : HiveObject
 		forest = 8,
 		underWater = 16,
 		land = grass + forest,
-		high = hill + mountain
+		high = hill + mountain,
+		anything = 0x7fffffff
 	}
 
 	public static void Initialize()

@@ -219,6 +219,7 @@
   },
   {
     "type": "well",
+    "groundTypeNeededAtEdge": "underWater",
     "outputType": "water",
     "plankNeeded": 1,
     "stoneNeeded": 1,

@@ -67,6 +67,7 @@ abstract public class Building : HiveObject
 	public class Configuration
 	{
 		public GroundNode.Type groundTypeNeeded = GroundNode.Type.land;
+		public GroundNode.Type groundTypeNeededAtEdge = GroundNode.Type.anything;
 
 		public int plankNeeded = 2;
 		public int stoneNeeded = 0;
@@ -389,6 +390,7 @@ abstract public class Building : HiveObject
 	{
 		var area = GetFoundation( configuration.huge, flagDirection );
 
+		bool edgeCondition = false;
 		foreach ( var o in area )
 		{
 			var basis = placeToBuild.Add( o );
@@ -396,16 +398,19 @@ abstract public class Building : HiveObject
 				return false;
 			if ( basis.owner != owner )
 				return false;
-			if ( configuration.flatteningNeeded )
+			foreach ( var b in Ground.areas[1] )
 			{
-				foreach ( var b in Ground.areas[1] )
+				var perim = basis.Add( b );
+				if ( configuration.flatteningNeeded )
 				{
-					var perim = basis.Add( b );
 					if ( perim.owner != owner )
 						return false;
 					if ( perim.fixedHeight )
 						return false;
 				}
+				if ( perim.CheckType( configuration.groundTypeNeededAtEdge ) )
+					edgeCondition = true;
+				
 			}
 			foreach ( var p in Ground.areas[1] )
 				if ( basis.Add( p ).building )
@@ -413,6 +418,8 @@ abstract public class Building : HiveObject
 			if ( !basis.CheckType( configuration.groundTypeNeeded ) )
 				return false;
 		}
+		if ( !edgeCondition )
+			return false;
 		GroundNode flagLocation = placeToBuild.Neighbour( flagDirection );
 		if ( flagLocation.flag && flagLocation.flag.crossing )
 			return false;
