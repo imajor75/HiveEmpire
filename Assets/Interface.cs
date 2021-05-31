@@ -3661,8 +3661,8 @@ public class Interface : OperationHandler
 		ScrollRect scroll;
 		Player player;
 		Text finalEfficiency;
-		Comparison<int> currentComparison;
-		bool reverse = false;
+		static Comparison<int> currentComparison;
+		static bool reverse = false;
 		readonly Text[] inStock = new Text[(int)Item.Type.total];
 		readonly Text[] onWay = new Text[(int)Item.Type.total];
 		readonly Text[] surplus = new Text[(int)Item.Type.total];
