@@ -176,6 +176,7 @@ public class World : MonoBehaviour
 		var soundSource = component.gameObject.AddComponent<AudioSource>();
 		soundSource.spatialBlend = 1;
 		soundSource.minDistance = 1;
+		soundSource.pitch = instance.timeFactor;
 		soundSource.maxDistance = GroundNode.size * World.soundMaxDistance;
 		return soundSource;
 	}
@@ -357,7 +358,7 @@ public class World : MonoBehaviour
 				node.AlignType();
 		}
 		gameInProgress = true;
-		SetTimeFactor( timeFactor );    // Just for the animators
+		SetTimeFactor( timeFactor );    // Just for the animators and sound
 
 		Interface.ValidateAll();
 	}
@@ -611,6 +612,9 @@ public class World : MonoBehaviour
 			var mainModule = o.main;
 			mainModule.simulationSpeed = factor;
 		}
+		var list3 = Resources.FindObjectsOfTypeAll<AudioSource>();
+		foreach ( var o in list3 )
+			o.pitch = factor;
 	}
 
 	public float efficiencyGoal
