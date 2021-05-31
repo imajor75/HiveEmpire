@@ -76,7 +76,6 @@ public class Player : ScriptableObject
 				Item.Type.beer => 0.8f,
 				Item.Type.flour => 4f,
 				Item.Type.salt => 4f,
-				Item.Type.coin => 1f,
 				Item.Type.coal => 0.67f,
 				_ => 2
 			};
