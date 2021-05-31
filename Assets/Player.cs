@@ -18,8 +18,10 @@ public class Player : ScriptableObject
 	public List<Chart> itemEfficiencyHistory = new List<Chart>();
 
 	public int soldiersProduced = 0;
-	public int bowmansProduced = 0;
-	public int coinsProduced = 0;
+	[Obsolete( "Compatibility with old files", true )]
+	int bowmansProduced;
+	[Obsolete( "Compatibility with old files", true )]
+	int coinsProduced;
 
 	public List<Stock> stocks = new List<Stock>();
 	public List<Item> items = new List<Item>();
