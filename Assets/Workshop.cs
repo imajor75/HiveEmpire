@@ -482,14 +482,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 		RefreshConfiguration();
 
 		smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
-		if ( working && smoke )
-		{
-			var a = smoke.main;
-			a.simulationSpeed = 1;
-			smoke.Simulate( 10 );
-			smoke.Play();
-			var b = smoke.main;
-			b.simulationSpeed = World.instance.timeFactor;
+		if ( working )
+		{ 
+			if ( smoke )
+			{
+				var a = smoke.main;
+				a.simulationSpeed = 1;
+				smoke.Simulate( 10 );
+				smoke.Play();
+				var b = smoke.main;
+				b.simulationSpeed = World.instance.timeFactor;
+			}
+			PlayWorkingSound();
 		}
 		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
@@ -853,6 +857,16 @@ public class Workshop : Building, Worker.Callback.IHandler
 		worker.ScheduleCall( worker.building as Workshop );
 	}
 
+	public void PlayWorkingSound()
+	{
+		soundSource.loop = true;
+		var sound = processingSounds.GetMedia( type );
+		soundSource.clip = sound.data;
+		soundSource.volume = sound.floatData;
+		soundSource.loop = !sound.boolData;
+		soundSource.Play();
+	}
+
 	public void SetWorking( bool working )
 	{
 		if ( this.working == working )
@@ -862,12 +876,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( working && soundSource )
 		{
 			smoke?.Play();
-			soundSource.loop = true;
-			var sound = processingSounds.GetMedia( type );
-			soundSource.clip = sound.data;
-			soundSource.volume = sound.floatData;
-			soundSource.loop = !sound.boolData;
-			soundSource.Play();
+			PlayWorkingSound();
 		}
 		else
 		{
