@@ -4011,6 +4011,7 @@ public class Interface : OperationHandler
 	{
 		Text worldTime;
 		Text currentEfficiency;
+		Text recordEfficiency;
 		ProgressBar efficiencyProgress;
 		float originalSpeed = -1;
 
@@ -4042,16 +4043,19 @@ public class Interface : OperationHandler
 			worldTime = Text().PinDownwards( -200, 200, -30, 0, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			Text( 0, 0, 1, 1, $"Efficiency goal: {World.instance.efficiencyGoal}" ).
-			PinDownwards( -200, 200, -30, 0, 0.5f ).alignment = TextAnchor.MiddleCenter;
-			currentEfficiency = Text().PinDownwards( -200, 200, -30, 0, 0.5f );
+			PinDownwards( -200, 200, -iconSize, 0, 0.5f ).alignment = TextAnchor.MiddleCenter;
+			recordEfficiency = Text().PinDownwards( -200, 200, -iconSize, 0, 0.5f );
+			recordEfficiency.alignment = TextAnchor.MiddleCenter;
+			currentEfficiency = Text().PinDownwards( -200, 200, -iconSize, 0, 0.5f );
 			currentEfficiency.alignment = TextAnchor.MiddleCenter;
-			efficiencyProgress = Progress().PinDownwards( -100, 100, -30, 0, 0.5f );
+			efficiencyProgress = Progress().PinDownwards( -100, 100, -iconSize, 0, 0.5f );
 		}
 
 		new public void Update()
 		{
 			var t = World.instance.time;
-			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( ( t / 60 / 60 / 50 ) % 60 ).ToString( "D2" )}:{( ( t / 60 / 50) % 60 ).ToString( "D2" )}";
+			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( ( t / 60 / 60 / 50 ) % 24 ).ToString( "D2" )}:{( ( t / 60 / 50) % 60 ).ToString( "D2" )}";
+			recordEfficiency.text = $"Record efficiency: {root.mainPlayer.averageEfficiencyHistory.record.ToString()}";
 			currentEfficiency.text = $"Current efficiency: {root.mainPlayer.averageEfficiency.ToString()}";
 			efficiencyProgress.progress = root.mainPlayer.averageEfficiency / World.instance.efficiencyGoal;
 			base.Update();
