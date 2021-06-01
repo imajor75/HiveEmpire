@@ -3858,7 +3858,7 @@ public class Interface : OperationHandler
 				surplus[i].text = player.surplus[order[i]].ToString();
 
 				var itemData = player.itemEfficiencyHistory[order[i]];
-				production[i].text = itemData.production.ToString( "n2" );
+				production[i].text = itemData.current.ToString( "n2" );
 				weight[i].text = itemData.weight.ToString( "n2" );
 				efficiency[i].text = itemData.weight == 0 ? "-" : itemData.weighted.ToString( "n2" );
 			};
