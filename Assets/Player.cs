@@ -69,19 +69,47 @@ public class Player : ScriptableObject
 		{
 			this.itemType = itemType;
 			data = new List<float>();
-			weight = itemType switch
-			{
-				Item.Type.stone => 0,
-				Item.Type.grain => 0.8f,
-				Item.Type.beer => 0.8f,
-				Item.Type.flour => 4f,
-				Item.Type.salt => 4f,
-				Item.Type.coal => 0.67f,
-				_ => 2
-			};
 			record = current = weighted = 0;
 			recordIndex = production = 0;
 			return this;
+		}
+
+		public void ResetWeight()
+		{
+			// to produce 1 soldier, the following items need to be produced:
+			// log		=> 1(coin)+1(plank)
+			// stone	=> 0	
+			// plank	=> 1	
+			// fish		=> 0.75 salt+1(iron+coal)=1.75
+			// grain	=> 0.75(flour)+1.25(beer)=2
+			// flour	=> 0.75	
+			// salt		=> 0.75
+			// pretzel	=> 0.5(gold)+1(iron+coal)=1.5	
+			// hide		=> 1
+			// iron		=> 1
+			// coal		=> 1(weapon)+1(steel)=2
+			// gold		=> 1
+			// bow		=> 1
+			// steel	=> 1	
+			// weapon	=> 1	
+			// water	=> 1.25
+			// beer		=> 1(barrack)+1.5(pork)=2.5
+			// pork		=> 0.5(gold)+1(iron+coal)=1.5
+			// coin		=> 1
+			weight = itemType switch
+			{
+				Item.Type.stone => 0,
+				Item.Type.grain => 1,
+				Item.Type.beer => 2/2.5f,
+				Item.Type.flour => 2/0.75f,
+				Item.Type.salt => 2/0.75f,
+				Item.Type.coal => 1,
+				Item.Type.fish => 2/1.75f,
+				Item.Type.pretzel => 2/1.5f,
+				Item.Type.water => 2/1.25f,
+				Item.Type.pork => 2/1.5f,
+				_ => 2
+			};
 		}
 
 		public float Advance( float efficiency = 0 )
@@ -184,6 +212,8 @@ public class Player : ScriptableObject
 			averageEfficiencyHistory = Chart.Create().Setup( Item.Type.total );
 		while ( itemEfficiencyHistory.Count < (int)Item.Type.total )
 			itemEfficiencyHistory.Add( Chart.Create().Setup( (Item.Type)itemEfficiencyHistory.Count ) );
+		foreach ( var h in itemEfficiencyHistory )
+			h.ResetWeight();
 
 		if ( inputWeights == null )
 			CreateInputWeights();	// For compatibility with old files
