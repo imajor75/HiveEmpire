@@ -1382,11 +1382,8 @@ public class Interface : OperationHandler
 			name = "Workshop panel";
 			this.workshop = workshop;
 			bool showOutputBuffer = false, showProgressBar = false;
-			if ( workshop.productionConfiguration.outputType != Item.Type.unknown || workshop.type == Workshop.Type.forester )
-			{
-				showProgressBar = true;
-				showOutputBuffer = workshop.productionConfiguration.outputType != Item.Type.unknown;
-			}
+			showProgressBar = true;
+			showOutputBuffer = workshop.productionConfiguration.outputType != Item.Type.unknown;
 
 			if ( ( contentToShow & Content.progress ) == 0 )
 				showProgressBar = false;

@@ -356,7 +356,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowmaker,
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
 			"prefabs/buildings/slaughterhouse", 1.5f, Type.butcher,
-			"SAdK/barrack_final", 1.5f, Type.barrack,
+			"SAdK/barrack_final", 1.8f, Type.barrack,
 			"SAdK/coinmaker_final", 2f, Type.coinmaker,
 			"prefabs/buildings/well", 1.1f, Type.well };
 		looks.Fill( looksData );
@@ -370,6 +370,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"kneading", 1.0f, Type.bakery,
 			"weaponforging", 1.0f, Type.weaponmaker,
 			"rasp", 1.0f, Type.bowmaker,
+			"fight", 1.0f, Type.barrack,
 			"pickaxe_deep", 1.0f, Type.goldmine,
 			"pickaxe_deep", 1.0f, Type.saltmine,
 			"pickaxe_deep", 1.0f, Type.coalmine,
@@ -615,6 +616,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( gatherer && worker.IsIdle() && worker.node == node )
 			SetWorking( false );
 
+		if ( type == Type.barrack && output > 0 )
+		{
+			output--;
+			owner.soldiersProduced++;
+		}
+
 		switch ( type )
 		{
 			case Type.farm:
@@ -678,21 +685,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 				}
 				break;
 			}
-			case Type.barrack:
-			{
-				if ( mode == Mode.sleeping )
-					return;
-
-				if ( buffers[0].stored > 0 && buffers[1].stored > 0 && buffers[2].stored > 0 && buffers[3].stored > 0 )
-				{
-					buffers[0].stored--;
-					buffers[1].stored--;
-					buffers[2].stored--;
-					buffers[3].stored--;
-					owner.soldiersProduced++;
-				}
-				break;
-			}
 			default:
 			{
 				if ( gatherer )
@@ -748,9 +740,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void ProcessInput()
 	{
-		if ( productionConfiguration.outputType == Item.Type.unknown )
-			return;
-
 		if ( !working && output + productionConfiguration.outputStackSize <= productionConfiguration.outputMax && worker.IsIdle( true ) && mode != Mode.sleeping && UseInput() )
 		{
 			SetWorking( true );
@@ -764,7 +753,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 				output += productionConfiguration.outputStackSize;
 				SetWorking( false );
 				itemsProduced += productionConfiguration.outputStackSize;
-				owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+				if ( productionConfiguration.outputType != Item.Type.unknown )
+					owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
 			}
 		}
 	}

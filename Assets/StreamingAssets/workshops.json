@@ -258,6 +258,7 @@
   {
     "type": "barrack",
     "stoneNeeded": 2,
+    "productionTime": 2000,
     "inputs": [
       {
         "itemType": "beer"
