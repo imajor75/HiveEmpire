@@ -254,7 +254,7 @@ public class ItemDispatcher : HiveObject
 					continue;
 				int quantity = offer.quantity;
 				Stock stock = offer.building as Stock;
-				if ( stock && stock.destinations[(int)itemType] )
+				if ( stock && stock.destinationLists[(int)itemType].Count > 0 )
 					quantity -= Stock.Cart.capacity;
 				if ( quantity >= 0 )
 					surplus += quantity;

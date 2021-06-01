@@ -1660,6 +1660,7 @@ public class Interface : OperationHandler
 		public Item.Type selectedItemType = Item.Type.log;
 		public ItemImage selected;
 		public Text inputMin, inputMax, outputMin, outputMax;
+		public int destinationIndex;
 
 		float lastMouseXPosition;
 		List<int>listToChange;
@@ -1730,7 +1731,7 @@ public class Interface : OperationHandler
 				i.additionalTooltip = "Shift+LMB Show input potentials\nCtrl+LMB Show output potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
 				if ( stock.GetSubcontractors( (Item.Type)j ).Count > 0 )
 					Image( 10 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
-				if ( stock.destinations[j] )
+				if ( stock.destinationLists[j].Count > 0 )
 				{
 					Image( 35 + offset, row, 20, 20, iconTable.GetMediaData( Icon.rightArrow ) );
 					offset += 10;
@@ -1766,12 +1767,18 @@ public class Interface : OperationHandler
 		{
 			if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 			{
-				SelectBuilding( stock.destinations[(int)selectedItemType] );
+				if ( stock.destinationLists[(int)selectedItemType].Count > 0 )
+				{
+					if ( destinationIndex >= stock.destinationLists[(int)selectedItemType].Count )
+						destinationIndex = 0;
+					World.instance.eye.FocusOn( stock.destinationLists[(int)selectedItemType][destinationIndex].node, true );
+					destinationIndex++;
+				}
 				return;
 			}
 			if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
 			{
-				stock.destinations[(int)selectedItemType] = null;
+				stock.destinationLists[(int)selectedItemType].Clear();
 				RecreateControls();
 				return;
 			}
@@ -1886,7 +1893,7 @@ public class Interface : OperationHandler
 			if ( destination == null )
 				return true;
 
-			stock.destinations[(int)itemTypeForRetarget] = destination;
+			stock.destinationLists[(int)itemTypeForRetarget].Add( destination );
 			root.highlightType = HighlightType.none;
 			RecreateControls();
 			return false;

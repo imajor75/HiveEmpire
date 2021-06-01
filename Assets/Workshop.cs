@@ -368,7 +368,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"coinmaker", 0.5f, Type.coinmaker,
 			"pig", 1.0f, Type.butcher,
 			"kneading", 1.0f, Type.bakery,
-			"weaponforging", 1.0f, Type.weaponmaker,
+			"weaponforging", 0.7f, Type.weaponmaker,
 			"rasp", 1.0f, Type.bowmaker,
 			"fight", 1.0f, Type.barrack,
 			"pickaxe_deep", 1.0f, Type.goldmine,

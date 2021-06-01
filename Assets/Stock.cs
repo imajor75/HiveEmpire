@@ -12,7 +12,21 @@ public class Stock : Building
 	public List<int> inputMax = new List<int>();
 	public List<int> outputMin = new List<int>();
 	public List<int> outputMax = new List<int>();
-	public Stock[] destinations = new Stock[(int)Item.Type.total];
+	public List<Stock>[] destinationLists = new List<Stock>[(int)Item.Type.total];
+	[Obsolete( "Compatibility with old files", true )]
+	public Stock[] destinations 
+	{ 
+		set 
+		{
+			for ( int i = 0; i < value.Length; i++ )
+			{
+				if ( destinationLists[i] == null )
+					destinationLists[i] = new List<Stock>();
+				if ( value[i] )
+					destinationLists[i].Add( value[i] );
+			}
+		} 
+	}
 	public static int influenceRange = 10;
 	public static int mainBuildingInfluence = 10;
 	public static GameObject template, mainTemplate;
@@ -244,6 +258,9 @@ public class Stock : Building
 		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly ) == null )
 			return null;
 
+		for ( int i = 0; i < destinationLists.Length; i++ )
+			destinationLists[i] = new List<Stock>();
+
 		owner.RegisterStock( this );
 
 		return this;
@@ -280,7 +297,7 @@ public class Stock : Building
 		{
 			if ( stock == this )
 				continue;
-			if ( stock.destinations[typeIndex] == this )
+			if ( stock.destinationLists[typeIndex].Contains( this ) )
 			list.Add( stock );
 		}
 		return list;
@@ -319,7 +336,7 @@ public class Stock : Building
 			outputMax.Add( maxItems / 4 );
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
-		Array.Resize( ref destinations, (int)Item.Type.total );
+		Array.Resize( ref destinationLists, (int)Item.Type.total );
 
 		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
 	}
@@ -346,23 +363,29 @@ public class Stock : Building
 			int count = content[itemType] + onWay[itemType];
 			total += count;
 			totalTarget += Math.Max( count, inputMin[itemType] );
-
-			// Remove unity stype null references
-			if ( destinations[itemType] == null )
-				destinations[itemType] = null;
 		}
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			if (
-				destinations[itemType] &&
-				content[itemType] >= Cart.capacity &&
-				cart.IsIdle( true ) &&
-				flag.user == null &&
-				destinations[itemType].total + Cart.capacity <= maxItems &&
-				destinations[itemType].content[itemType] + Cart.capacity <= destinations[itemType].inputMax[itemType] )
+			for ( int i = 0; i < destinationLists[itemType].Count; i++ )
 			{
-				cart.TransferItems( (Item.Type)itemType, destinations[itemType] );
+				var destination = destinationLists[itemType][i];
+				if ( destination == null )	// unity like null
+				{
+					destinationLists[itemType].RemoveAt( i );
+					i--;
+					continue;
+				}
+
+				if (
+					content[itemType] >= Cart.capacity &&
+					cart.IsIdle( true ) &&
+					flag.user == null &&
+					destination.total + Cart.capacity <= maxItems &&
+					destination.content[itemType] + Cart.capacity <= destination.inputMax[itemType] )
+				{
+					cart.TransferItems( (Item.Type)itemType, destination );
+				}
 			}
 
 			int current = content[itemType] + onWay[itemType];

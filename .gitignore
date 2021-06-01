@@ -54,3 +54,13 @@ windowsbuild
 /TextFile1.txt
 .vscode/launch.json
 .vscode/settings.json
+
+linux_Data/
+
+linux.x86_64
+
+LinuxPlayer_s.debug
+
+UnityPlayer_s.debug
+
+UnityPlayer.so
