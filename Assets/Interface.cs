@@ -630,7 +630,7 @@ public class Interface : OperationHandler
 
 	public class Tooltip : Panel
 	{
-		Component origin;
+		public Component origin;
 		Text text, additionalText;
 		Image image, backGround;
 
@@ -680,6 +680,7 @@ public class Interface : OperationHandler
 
 		public void Clear()
 		{
+			origin = null;
 			gameObject.SetActive( false );
 		}
 
@@ -702,25 +703,34 @@ public class Interface : OperationHandler
 		}
 	}
 
-	class TooltipSource : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+	class TooltipSource : MonoBehaviour
 	{
 		public string text;
 		public string additionalText;
 		public Sprite image;
 
-		public void OnPointerEnter( PointerEventData eventData )
+		public void Update()
 		{
-			tooltip.SetText( this, text, image, additionalText );
+			if ( GetUIElementUnderCursor() == gameObject )
+				tooltip.SetText( this, text, image, additionalText );
+			else if ( tooltip.origin == this )
+				tooltip.Clear();
 		}
 
-		public void OnPointerExit( PointerEventData eventData )
-		{
-			tooltip.Clear();
-		}
-
-		public static TooltipSource AddTo( Component widget, string text, Sprite image = null, string additionalText = "" )
+		public static TooltipSource Add( Component widget, string text, Sprite image = null, string additionalText = "" )
 		{
 			var s = widget.gameObject.AddComponent<TooltipSource>();
+			s.text = text;
+			s.image = image;
+			s.additionalText = additionalText;
+			return s;
+		}
+
+		public static TooltipSource Set( Component widget, string text, Sprite image = null, string additionalText = "" )
+		{
+			var s = widget.gameObject.GetComponent<TooltipSource>();
+			if ( s == null )
+				s = widget.gameObject.AddComponent<TooltipSource>();
 			s.text = text;
 			s.image = image;
 			s.additionalText = additionalText;
@@ -1754,13 +1764,13 @@ public class Interface : OperationHandler
 			selected.GetComponent<Button>().onClick.RemoveAllListeners();
 			selected.GetComponent<Button>().onClick.AddListener( SetTarget );
 			inputMin = Text( ipx - 40, ipy, 40, 20 );
-			TooltipSource.AddTo( inputMin, "If this number is higher than the current content, the stock will request new items at high priority" );
+			TooltipSource.Add( inputMin, "If this number is higher than the current content, the stock will request new items at high priority" );
 			inputMax = Text( ipx + 50, ipy, 40, 20 );
-			TooltipSource.AddTo( inputMax, "If the stock has at least this many items, it will no longer accept surplus" );
+			TooltipSource.Add( inputMax, "If the stock has at least this many items, it will no longer accept surplus" );
 			outputMin = Text( ipx - 40, ipy - 20, 40, 20 );
-			TooltipSource.AddTo( outputMin, "The stock will only supply other buildings with the item if it has at least this many" );
+			TooltipSource.Add( outputMin, "The stock will only supply other buildings with the item if it has at least this many" );
 			outputMax = Text( ipx + 50, ipy - 20, 40, 20 );
-			TooltipSource.AddTo( outputMax, "If the stock has more items than this number, then it will send the surplus even to other stocks" );
+			TooltipSource.Add( outputMax, "If the stock has more items than this number, then it will send the surplus even to other stocks" );
 		}
 
 		void SetTarget()
@@ -3874,6 +3884,7 @@ public class Interface : OperationHandler
 		float lastAverageEfficiency;
 		Image chart, itemFrame;
 		Text record;
+		public float scale = 1;
 
 		public static History Create()
 		{
@@ -3904,22 +3915,49 @@ public class Interface : OperationHandler
 			lastAverageEfficiency = -1;
 		}
 
+		int PerMinuteToPixel( float perMinute )
+		{
+			return (int)( perMinute * scale );
+		}
+
+		float PixelToPerMinute( int pixel )
+		{
+			return pixel / scale;
+		}
+
 		new public void Update()
 		{
 			// TODO Clean up this function, its a mess
 			base.Update();
+			var a = player.averageEfficiencyHistory;
+			if ( selected < Item.Type.total )
+				a = player.itemEfficiencyHistory[(int)selected];
+
+			Vector3[] chartCorners = new Vector3[4];
+			chart.rectTransform.GetWorldCorners( chartCorners );
+			var chartRect = new Rect( chartCorners[0], chartCorners[2] - chartCorners[0] );
+			if ( chartRect.Contains( Input.mousePosition ) )
+			{
+				var cursorInsideChart = Input.mousePosition - chartCorners[0];
+				int ticks = Player.efficiencyUpdateTime * (int)( chartRect.width - cursorInsideChart.x );
+				var hours = ticks / 60 / 60 / 50;
+				string time = $"{(ticks/60/50)%60} minutes ago";
+				if ( hours > 1 )
+					time = $"{hours} hours and " + time;
+				else if ( hours == 1 )
+					time = "1 hour and " + time;
+				TooltipSource.Set( chart, $"{time}\n{PixelToPerMinute( (int)cursorInsideChart.y )} per minute" );
+			}
+
 			if ( lastAverageEfficiency == player.averageEfficiencyHistory.current )
 				return;
 
-			var t = new Texture2D( 400, 260 );
+			var t = new Texture2D( (int)chart.rectTransform.sizeDelta.x, (int)chart.rectTransform.sizeDelta.y );
 			for ( int x = 0; x < t.width; x++ )
 			{
 				for ( int y = 0; y < t.height; y++ )
 					t.SetPixel( x, y, Color.black );
 			}
-			var a = player.averageEfficiencyHistory;
-			if ( selected < Item.Type.total )
-				a = player.itemEfficiencyHistory[(int)selected];
 			float max = float.MinValue;
 			for ( int i = a.data.Count - t.width; i < a.data.Count; i++ )
 			{
@@ -3941,21 +3979,21 @@ public class Interface : OperationHandler
 					break;
 				}
 			}
-			float itemsPerEfficiencyUpdate = (float)( Player.efficiencyUpdateTime ) / tickPerBuilding;
-			float scale = t.height / max;
-			if ( workshopCount * itemsPerEfficiencyUpdate != 0 )
-				scale = t.height / ( workshopCount * itemsPerEfficiencyUpdate );
-			int hi = (int)( itemsPerEfficiencyUpdate * scale );
+			float itemsPerMinuteInOneWorkshop = 3000f / tickPerBuilding;
+			scale = t.height / max;
+			if ( workshopCount * itemsPerMinuteInOneWorkshop != 0 )
+				scale = t.height / ( workshopCount * itemsPerMinuteInOneWorkshop );
 			Color hl = Color.grey;
-			if ( hi >= t.height - 1 )
+			float hi = itemsPerMinuteInOneWorkshop;
+			if ( PerMinuteToPixel( hi ) >= t.height - 1 )
 			{
 				hl = Color.Lerp( Color.grey, Color.black, 0.5f );
 				hi = hi / 4;
 			}
-			int yb = hi;
-			while ( yb < t.height )
+			float yb = hi;
+			while ( PerMinuteToPixel( yb ) < t.height )
 			{
-				HorizontalLine( yb, hl );
+				HorizontalLine( PerMinuteToPixel( yb ), hl );
 				yb += hi;
 			}
 			int row = -1;
@@ -3985,7 +4023,7 @@ public class Interface : OperationHandler
 				int index = a.data.Count - t.width + x;
 				if ( 0 <= index )
 				{
-					int newRow = (int)Math.Min( (float)t.height - 1, scale * a.data[index] );
+					int newRow = (int)Math.Min( (float)t.height - 1, PerMinuteToPixel( a.data[index] ) );
 					if ( row < 0 )
 						row = newRow;
 					var step = row < newRow ? 1 : -1;

@@ -58,7 +58,7 @@ public class Player : ScriptableObject
 		public float weight;
 		public int production;
 		public float weighted;
-		const float efficiencyUpdateFactor = 0.2f;
+		const float efficiencyUpdateFactor = 0.1f;
 
 		public static Chart Create()
 		{
@@ -96,20 +96,24 @@ public class Player : ScriptableObject
 			// beer		=> 1(barrack)+1.5(pork)=2.5
 			// pork		=> 0.5(gold)+1(iron+coal)=1.5
 			// coin		=> 1
-			weight = itemType switch
+			float amountPerSoldier = itemType switch
 			{
 				Item.Type.stone => 0,
-				Item.Type.grain => 1,
-				Item.Type.beer => 2/2.5f,
-				Item.Type.flour => 2/0.75f,
-				Item.Type.salt => 2/0.75f,
-				Item.Type.coal => 1,
-				Item.Type.fish => 2/1.75f,
-				Item.Type.pretzel => 2/1.5f,
-				Item.Type.water => 2/1.25f,
-				Item.Type.pork => 2/1.5f,
-				_ => 2
+				Item.Type.grain => 2,
+				Item.Type.beer => 2.5f,
+				Item.Type.flour => 0.75f,
+				Item.Type.salt => 0.75f,
+				Item.Type.coal => 2,
+				Item.Type.fish => 1.75f,
+				Item.Type.pretzel => 1.5f,
+				Item.Type.water => 1.25f,
+				Item.Type.pork => 1.5f,
+				_ => 1
 			};
+			if ( amountPerSoldier > 0 )
+				weight = 1 / amountPerSoldier;
+			else
+				weight = 0;
 		}
 
 		public float Advance( float efficiency = 0 )

@@ -142,7 +142,7 @@ public class Resource : HiveObject
 			return null;
 		}
 
-		if ( node.building || node.flag )
+		if ( node.IsBlocking() )
 		{
 			DestroyThis();
 			return null;

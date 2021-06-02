@@ -446,6 +446,7 @@ public class GroundNode : HiveObject
 			if ( resource.isBlocking == Resource.Blocking.all )
 				o++;
 		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
+		// Triggered again, o == 2 there is a tree and an animalspawner
 		if ( x != ground.dimension && y != ground.dimension )
 			for ( int i = 0; i < 6; i++ )
 				assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
