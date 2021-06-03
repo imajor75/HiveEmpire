@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -3703,7 +3703,6 @@ public class Interface : OperationHandler
 		readonly ItemImage[] itemIcon = new ItemImage[(int)Item.Type.total];
 
 		int[] inStockCount = new int[(int)Item.Type.total];
-		int[] maxStockCount = new int[(int)Item.Type.total];
 		int[] onWayCount = new int[(int)Item.Type.total];
 
 		public static ItemStats Create()
@@ -3822,6 +3821,7 @@ public class Interface : OperationHandler
 				onWayCount[i] = 0;
 			}
 			Stock[] richestStock = new Stock[(int)Item.Type.total];
+			int[] maxStockCount = new int[(int)Item.Type.total];
 			foreach ( var stock in player.stocks )
 			{
 				for ( int i = 0; i < inStock.Length; i++ )
