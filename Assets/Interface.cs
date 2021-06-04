@@ -307,20 +307,20 @@ public class Interface : OperationHandler
 			else
 				world.SetTimeFactor( 1 );
 		}
-		if ( GetKey( KeyCode.R ) )
-		{
-			bool localReset = false;
-			foreach ( var panel in panels )
-			{
-				if ( panel.target )
-				{
-					panel.target?.Reset();
-					localReset = true;
-				}
-			}
-			if ( !localReset )
-				world.Reset();
-		}
+		// if ( GetKey( KeyCode.R ) )
+		// {
+		// 	bool localReset = false;
+		// 	foreach ( var panel in panels )
+		// 	{
+		// 		if ( panel.target )
+		// 		{
+		// 			panel.target?.Reset();
+		// 			localReset = true;
+		// 		}
+		// 	}
+		// 	if ( !localReset )
+		// 		world.Reset();
+		// }
 		if ( GetKeyDown( KeyCode.Insert ) )
 			world.SetTimeFactor( 8 );
 		if ( GetKeyDown( KeyCode.Delete ) )
@@ -2734,9 +2734,10 @@ public class Interface : OperationHandler
 		List<Building> buildings = new List<Building>();
 		List<Text> productivities = new List<Text>();
 		List<Text> outputs = new List<Text>();
+		static string filter = "";
 		List<List<Text>> inputs = new List<List<Text>>();
-		bool reversed;
-		Comparison<Building> lastComparisonUsed;
+		static bool reversed;
+		static Comparison<Building> comparison = CompareTypes;
 
 		static public BuildingList Create()
 		{
@@ -2745,38 +2746,72 @@ public class Interface : OperationHandler
 
 		public void Open()
 		{
-			base.Open( null, 0, 0, 500, 400 );
+			base.Open( null, 0, 0, 500, 420 );
 
-			var t = Text( 20, -20, 150, iconSize, "type" );
-			t.fontSize = (int)( uiScale * 10 );
-			t.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareTypes ); } );
-			var p = Text( 170, -20, 150, iconSize, "productivity" );
-			p.fontSize = (int)( uiScale * 10 );
-			p.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareProductivities ); } );
-			var o = Text( 380, -20, 150, iconSize, "output" );
-			o.fontSize = (int)( uiScale * 10 );
-			o.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareOutputs ); } );
-			var i = Text( 235, -20, 150, iconSize, "input" );
-			i.fontSize = (int)( uiScale * 10 );
-			i.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareInputs ); } );
-			scroll = ScrollRect( 20, -40, 460, 340 );
-
-			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
+			Text( 20, -20, 150, iconSize, "Filter:" );
+			var d = Dropdown( 80, -20, 150, 20 );
+			d.ClearOptions();
+			List<string> options = new List<string>();
+			for ( int j = 0; j < (int)Workshop.Type.total; j++ )
 			{
-				if ( building.owner != root.mainPlayer || building.blueprintOnly )
-					continue;
-				buildings.Add( building );
+				string typeName = ((Workshop.Type)j).ToString();
+				if ( !typeName.Contains( "Obsolete" ) )
+					options.Add( typeName );
 			}
-			Fill( CompareTypes );
+			options.Add( "stock" );
+			options.Add( "guardhouse" );
+			options.Sort();
+			options.Add( "all" );
+			d.AddOptions( options );
+			d.value = options.Count - 1;
+			if ( options.Contains( filter ) )
+				d.value = options.IndexOf( filter );
+			d.onValueChanged.AddListener( delegate { SetFilter( d ); } );
+
+			var t = Text( 20, -40, 150, iconSize, "type" );
+			t.fontSize = (int)( uiScale * 10 );
+			t.gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeComparison( CompareTypes ); } );
+			var p = Text( 170, -40, 150, iconSize, "productivity" );
+			p.fontSize = (int)( uiScale * 10 );
+			p.gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeComparison( CompareProductivities ); } );
+			var o = Text( 380, -40, 150, iconSize, "output" );
+			o.fontSize = (int)( uiScale * 10 );
+			o.gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeComparison( CompareOutputs ); } );
+			var i = Text( 235, -40, 150, iconSize, "input" );
+			i.fontSize = (int)( uiScale * 10 );
+			i.gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeComparison( CompareInputs ); } );
+			scroll = ScrollRect( 20, -60, 460, 340 );
+
+			Fill();
 		}
 
-		void Fill( Comparison<Building> comparison )
+		void SetFilter( Dropdown d )
 		{
-			if ( lastComparisonUsed == comparison )
+			filter = d.options[d.value].text;
+			if ( filter == "all" )
+			filter = "";
+			Fill();
+		}
+
+		void ChangeComparison( Comparison<Building> comparison )
+		{
+			if ( BuildingList.comparison == comparison )
 				reversed = !reversed;
 			else
 				reversed = true;
-			lastComparisonUsed = comparison;
+			BuildingList.comparison = comparison;
+			Fill();
+		}
+
+		void Fill()
+		{
+			buildings = new List<Building>();
+			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
+			{
+				if ( building.owner != root.mainPlayer || building.blueprintOnly || !building.title.Contains( filter ) )
+					continue;
+				buildings.Add( building );
+			}
 
 			buildings.Sort( comparison );
 			if ( reversed )
