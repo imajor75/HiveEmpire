@@ -624,7 +624,7 @@ public class World : MonoBehaviour
 		get
 		{
 			var groundSize = ground.dimension * ground.dimension;
-			return groundSize / 256.0f;
+			return groundSize / 512.0f;
 		}
 	}
 
