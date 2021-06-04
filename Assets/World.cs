@@ -274,6 +274,8 @@ public class World : MonoBehaviour
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
 			{
+				if ( !o.ready )
+					o.Remove( false );
 				o.ends[0] = o.nodes[0].flag;
 				o.ends[1] = o.lastNode.flag;
 			}

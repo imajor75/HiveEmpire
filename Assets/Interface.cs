@@ -292,7 +292,6 @@ public class Interface : OperationHandler
 
 	public void Save( string fileName = "" )
 	{
-		viewport.ResetInputHandler();
 		if ( fileName == "" )
 			fileName = Application.persistentDataPath + "/Saves/" + World.rnd.Next() + ".json";
 		world.Save( fileName );
