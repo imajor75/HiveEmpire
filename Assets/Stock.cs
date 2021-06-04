@@ -43,7 +43,8 @@ public class Stock : Building
 		plankNeeded = 3,
 		stoneNeeded = 3,
 		flatteningNeeded = true,
-		constructionTime = 6000
+		constructionTime = 6000,
+		groundTypeNeeded = GroundNode.Type.aboveWater
 	};
 	static readonly Configuration mainConfiguration = new Configuration
 	{

@@ -53,6 +53,7 @@ public class GroundNode : HiveObject
 		underWater = 16,
 		land = grass + forest,
 		high = hill + mountain,
+		aboveWater = land + high,
 		anything = 0x7fffffff
 	}
 
