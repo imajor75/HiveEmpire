@@ -673,6 +673,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			case Type.farm:
 			{
+				if ( working )
+					SaveStatus( Status.working );
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
 				{
 					if ( output < productionConfiguration.outputMax )
@@ -689,8 +691,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 								CollectResourceFromNode( resource );
 								return;
 							}
+							SaveStatus( Status.waitingForResource );
 						}
 					}
+					else
+						SaveStatus( Status.waitingForOutputSlot );
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
