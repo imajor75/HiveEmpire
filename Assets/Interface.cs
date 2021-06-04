@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -632,7 +632,7 @@ public class Interface : OperationHandler
 	{
 		public Component origin;
 		Text text, additionalText;
-		Image image, backGround;
+		Image image;
 
 		public static Tooltip Create()
 		{
@@ -641,12 +641,13 @@ public class Interface : OperationHandler
 
 		public void Open()
 		{
-			base.Open();
+			borderWidth = 0.3f;
+			noCloseButton = true;
+			base.Open( 100, 100 );
 			escCloses = false;
 			name = "Tooltip";
 			( transform as RectTransform ).pivot = new Vector2( 0, 0.5f );
 
-			backGround = Frame( 0, 0, 200, 40, 3 );
 			image = Image( 20, -20, 100, 100 );
 			text = Text( 15, -10, 270, 60 );
 			additionalText = Text( 20, -30, 150, 60 );
@@ -664,15 +665,15 @@ public class Interface : OperationHandler
 			{
 				image.sprite = imageToShow;
 				image.enabled = true;
-				backGround.rectTransform.sizeDelta = new Vector2( (int)( uiScale * 200 ), (int)( uiScale * 140 ) );
+				frame.rectTransform.sizeDelta = new Vector2( (int)( uiScale * 200 ), (int)( uiScale * 140 ) );
 			}
 			else
 			{
 				image.enabled = false;
 				if ( text.Length > 20 ) // TODO Big fat hack
-					backGround.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 300 ), (int)( uiScale * 70 ) );
+					frame.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 300 ), (int)( uiScale * 70 ) );
 				else
-					backGround.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 200 ), (int)( uiScale * 40 ) );
+					frame.rectTransform.sizeDelta = new Vector2( (int)(uiScale * 200 ), (int)( uiScale * 40 ) );
 			}
 			gameObject.SetActive( true );
 			FollowMouse();
@@ -746,6 +747,8 @@ public class Interface : OperationHandler
 		public bool escCloses = true;
 		public bool disableDrag;
 		public Vector2 offset;
+		public float borderWidth = 0.7f;
+		public bool noCloseButton;
 
 		public static int itemIconBorderSize = 2;
 
@@ -758,7 +761,7 @@ public class Interface : OperationHandler
 
 		// Summary:
 		// Return true if the caller should give
-		public bool Open( HiveObject target = null, int x = 0, int y = 0, int xs = 100, int ys = 100 )
+		public bool Open( HiveObject target, int x, int y, int xs, int ys )
 		{
 			foreach ( var panel in root.panels )
 			{
@@ -780,13 +783,30 @@ public class Interface : OperationHandler
 			root.panels.Add( this );
 			name = "Panel";
 			frame = gameObject.AddComponent<Image>();
+			frame.sprite = iconTable.GetMediaData( Icon.frame );
+			frame.type = UnityEngine.UI.Image.Type.Sliced;
+			frame.pixelsPerUnitMultiplier = 1 / uiScale / borderWidth;
 			Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), xs, ys, root );
-			frame.enabled = false;
+			if ( !noCloseButton )
+			{
+				int offset = borderWidth > 0.5f ? 10 : 0;
+				Image( iconTable.GetMediaData( Icon.exit ) ).Pin( -20 - offset, 0 - offset, -20 - offset, 0 - offset, 1, 1 ).AddClickHandler( Close );
+			}
 			this.target = target;
 			UpdatePosition();
 			return false;
 		}
 
+		public bool Open( HiveObject target, int xs, int ys )
+		{
+			return Open( target, 0, 0, xs, ys );
+		}
+		
+		public bool Open( int xs, int ys )
+		{
+			return Open( null, xs, ys );
+		}
+		
 		public virtual CompareResult IsTheSame( Panel other )
 		{
 			if ( other.GetType() == GetType() )
@@ -1004,17 +1024,6 @@ public class Interface : OperationHandler
 			Init( image.rectTransform, x, y, xs, ys, parent );
 			d.name = "InputField";
 			return d;
-		}
-
-		public static UIElement Stretch<UIElement>( UIElement g, float x0 = 0, float x1 = 1, float y0 = 0, float y1 = 1 ) where UIElement : Component
-		{
-			if ( g.transform is RectTransform t )
-			{
-				t.anchorMin = new Vector2( x0, y0 );
-				t.anchorMax = new Vector2( x1, y1 );
-				t.offsetMin = t.offsetMax = Vector2.zero;
-			}
-			return g;
 		}
 
 		public virtual void Close()
@@ -1338,7 +1347,7 @@ public class Interface : OperationHandler
 			Selection.activeGameObject = building.gameObject;
 #endif
 			this.building = building;
-			return base.Open( building.node );
+			return base.Open( building.node, 100, 100 );
 		}
 		public override CompareResult IsTheSame( Panel other )
 		{
@@ -1441,6 +1450,7 @@ public class Interface : OperationHandler
 					itemsProduced = Text( 20, row, 200, 20 );
 					productivity = Text( 150, -20, 50, 20 );
 					productivity.alignment = TextAnchor.MiddleRight;
+					productivity.AddClickHandler( ShowPastStatuses );
 					row -= 25;
 				}
 			}
@@ -1463,6 +1473,11 @@ public class Interface : OperationHandler
 
 			if ( show )
 				root.world.eye.FocusOn( workshop, true );
+		}
+
+		void ShowPastStatuses()
+		{
+			PastStatuses.Create().Open( workshop );
 		}
 
 		void Remove()
@@ -1628,6 +1643,93 @@ public class Interface : OperationHandler
 			{
 				Assert.global.IsNotNull( buffer );
 				Update( buffer.stored, buffer.onTheWay );
+			}
+		}
+		public class PastStatuses : Panel
+		{
+			public static PastStatuses Create()
+			{
+				return new GameObject().AddComponent<PastStatuses>();
+			}
+
+			public void Open( Workshop workshop )
+			{
+				if ( base.Open( workshop, 300, 150 ) )
+					return;
+
+				int[] ticksInStatus = new int[(int)Workshop.Status.total];
+				int totalTicks = 0;
+				void ProcessStatusList( List<Workshop.PastStatus> past )
+				{
+					foreach ( var s in past )
+					{
+						ticksInStatus[(int)s.status] += s.length;
+						totalTicks += s.length;
+					}
+				}
+				ProcessStatusList( workshop.pastStatuses );
+				ProcessStatusList( workshop.previousPastStatuses );
+				if ( totalTicks == 0 )
+					return;
+
+				List<Workshop.Status> statusList = new List<Workshop.Status>();
+				for ( int i = 0; i < ticksInStatus.Length; i++ )
+				{
+					int share = 100 * ticksInStatus[i] / totalTicks;
+					for ( int j = 0; j < share; j++ )
+						statusList.Add( (Workshop.Status)i );
+				}
+				while ( statusList.Count < 101 )
+					statusList.Add( statusList[0] );
+
+				Color[] statusColors = { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light() };
+				Assert.global.AreEqual( statusColors.Length, (int)Workshop.Status.total );
+
+				UIHelpers.currentRow = -20;
+				Text( $"Last {totalTicks / 60 / 50} minutes" ).PinDownwards( 150, 350, -iconSize, 0 );
+				for ( int i = 0; i < (int)Workshop.Status.total; i++ )
+				{
+					if ( ticksInStatus[i] == 0 )
+						continue;
+					string statusName = (Workshop.Status)i switch
+					{
+						Workshop.Status.working => "Working",
+						Workshop.Status.waitingForAnyInput => "Waiting for input",
+						Workshop.Status.waitingForInput0 => $"Waiting for {workshop.buffers[0].itemType.ToString()}",
+						Workshop.Status.waitingForInput1 => $"Waiting for {workshop.buffers[1].itemType.ToString()}",
+						Workshop.Status.waitingForInput2 => $"Waiting for {workshop.buffers[2].itemType.ToString()}",
+						Workshop.Status.waitingForInput3 => $"Waiting for {workshop.buffers[3].itemType.ToString()}",
+						Workshop.Status.waitingForOutputSlot => "Waiting for output slot",
+						Workshop.Status.waitingForResource => "Waiting for resource",
+						_ => "Unknown"
+					};
+					var e = Text( statusName );
+					e.PinDownwards( 150, 350, (int)( -iconSize * 0.8f ), 0 );
+					e.color = statusColors[i];
+					e.SetFontSize( 10 );
+				}
+
+				var g = Image().Stretch( 20, -170, 20, -20 );
+				var t = new Texture2D( (int)g.rectTransform.rect.width, (int)g.rectTransform.rect.height );
+
+				for ( int x = 0; x < t.width; x++ )
+				{
+					for ( int y = 0; y < t.height; y++ )
+					{
+						int xv = x - ( t.width / 2 );
+						int yv = y - ( t.height / 2 );
+						if ( Math.Sqrt( xv * xv + yv * yv ) > Math.Min( t.width / 2, t.height / 2 ) )
+							t.SetPixel( x, y, new Color( 1, 1, 1, 0 ) );
+						else
+						{
+							int percent = Math.Min( (int)( Math.Atan2( xv, yv ) / Math.PI * 50 + 50 ), 100 );
+							t.SetPixel( x, y, statusColors[(int)statusList[percent]] );
+						}
+					}
+				}
+
+				t.Apply();
+				g.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
 			}
 		}
 	}
@@ -1926,13 +2028,9 @@ public class Interface : OperationHandler
 
 		public void Open( GroundNode node, bool show = false )
 		{
-			base.Open( node );
+			base.Open( node, 0, 0, 380, 180 );
 			this.node = node;
 			name = "Node panel";
-
-			Frame( 0, 0, 380, 180 );
-			Button( 350, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
-
 #if DEBUG
 			BuildButton( 20, -60, "Tree", !node.IsBlocking( true ) && node.CheckType( GroundNode.Type.land ), AddTree );
 			BuildButton( 20, -80, "Remove", node.IsBlocking( true ), Remove );
@@ -2010,11 +2108,8 @@ public class Interface : OperationHandler
 
 		public void Open()
 		{
-			base.Open();
+			base.Open( null, 0, 0, 360, 320 );
 			name = "Build panel";
-
-			Frame( 0, 0, 360, 320 );
-			Button( 330, -20, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 			int row = -20;
 			var workshops = FindObjectsOfType<Workshop>( true );
@@ -2126,11 +2221,10 @@ public class Interface : OperationHandler
 
 		public void Open( Road road, GroundNode node )
 		{
-			base.Open( road );
+			borderWidth = 0.3f;
+			base.Open( road, 0, 0, 210, 165 );
 			this.road = road;
 			this.node = node;
-			Frame( 0, 0, 210, 165, 3 );
-			Button( 190, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 170, -10, 20, 20, iconTable.GetMediaData( Icon.hauler ) ).onClick.AddListener( Hauler );
 			Button( 150, -10, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			Button( 130, -10, 20, 20, iconTable.GetMediaData( Icon.box ) ).onClick.AddListener( Split );
@@ -2280,13 +2374,12 @@ public class Interface : OperationHandler
 #if DEBUG
 			Selection.activeGameObject = flag.gameObject;
 #endif
-			if ( base.Open( flag ) )
+			borderWidth = 0.3f;
+			if ( base.Open( flag, 0, 0, 250, 75 ) )
 				return;
 
 			this.flag = flag;
 			int col = 16;
-			Frame( 0, 0, 250, 75, 3 );
-			Button( 230, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Button( 210, -45, 20, 20, iconTable.GetMediaData( Icon.destroy ) ).onClick.AddListener( Remove );
 			Button( 20, -45, 20, 20, iconTable.GetMediaData( Icon.newRoad ) ).onClick.AddListener( StartRoad );
 			Button( 45, -45, 20, 20, iconTable.GetMediaData( Icon.magnet ) ).onClick.AddListener( CaptureRoads );
@@ -2404,13 +2497,12 @@ public class Interface : OperationHandler
 
 		public void Open( Worker worker, bool show )
 		{
-			if ( base.Open( worker.node ) )
+			var cart = worker as Stock.Cart;
+			borderWidth = 0.3f;
+			if ( base.Open( worker.node, 0, 0, 200, cart ? 140 : 80 ) )
 				return;
 			name = "Worker panel";
 			this.worker = worker;
-			var cart = worker as Stock.Cart;
-			Frame( 0, 0, 200, cart ? 140 : 80 );
-			Button( 170, 0, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			item = ItemIcon( 20, -20 );
 			itemsInCart = Text( 45, -20, 150, 20 );
 			itemCount = Text( 20, -44, 160, 20, "Items" );
@@ -2554,13 +2646,11 @@ public class Interface : OperationHandler
 		{
 			this.item = item;
 
-			if ( base.Open() )
+			if ( base.Open( null, 0, 0, 300, 150 ) )
 				return;
 
 			name = "Item panel";
 
-			Frame( 0, 0, 300, 150, 1.5f );
-			Button( 270, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 15, -15, 100, 20, item.type.ToString() );
 			stats = Text( 15, -35, 250, 20 );
 			Text( 15, -55, 170, 20, "Origin:" );
@@ -2650,8 +2740,6 @@ public class Interface : OperationHandler
 		{
 			base.Open( null, 0, 0, 500, 400 );
 
-			Frame( 0, 0, 500, 400 );
-			Button( 470, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			var t = Text( 20, -20, 150, iconSize, "type" );
 			t.fontSize = (int)( uiScale * 10 );
 			t.gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareTypes ); } );
@@ -3401,8 +3489,6 @@ public class Interface : OperationHandler
 			timeSpeedToRestore = World.instance.timeFactor;
 			World.instance.SetTimeFactor( 0 );
 
-			Frame( 0, 0, 400, 320 );
-			Button( 370, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 50, -20, 100, 20, "Origin" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByOrigin ); } );
 			Text( 150, -20, 100, 20, "Destination" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByDestination ); } );
 			Text( 250, -20, 100, 20, "Age" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByAge ); } );
@@ -3517,8 +3603,6 @@ public class Interface : OperationHandler
 				return;
 			name = "Resource list panel";
 
-			Frame( 0, 0, 400, 320 );
-			Button( 370, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			Text( 50, -20, 100, 20, "Type" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate
 			{ Fill( CompareByType ); } );
 			Text( 150, -20, 100, 20, "Last" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate
@@ -3595,9 +3679,6 @@ public class Interface : OperationHandler
 			if ( base.Open( null, 0, 0, 540, 320 ) )
 				return;
 			name = "Logistic list panel";
-
-			Frame( 0, 0, 540, 320 );
-			Button( 510, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 
 			Text( 20, -20, 250, 20, "List of potentials for       at" );
 			ItemIcon( 150, -20, 0, 0, itemType );
@@ -3717,7 +3798,6 @@ public class Interface : OperationHandler
 
 			name = "Item stats panel";
 			this.player = player;
-			Frame( 0, 0, 420, 300 );
 			UIHelpers.currentColumn = 50;
 
 			Text( "In stock", (int)( uiScale * 10 ) ).
@@ -3745,9 +3825,6 @@ public class Interface : OperationHandler
 			AddClickHandler( delegate { SetOrder( CompareEfficiency ); } );
 
 			scroll = ScrollRect( 20, -45, 380, 205 );
-			Image( iconTable.GetMediaData( Icon.exit ) ).
-			Pin( -30, -10, -30, -10, 1, 1 ).
-			AddClickHandler( Close );
 			finalEfficiency = Text( 100, -260, 100, 30 );
 			finalEfficiency.fontSize = (int)( uiScale * 16 );
 
@@ -3899,8 +3976,6 @@ public class Interface : OperationHandler
 				return;
 
 			name = "History panel";
-			Frame( 0, 0, 450, 300 );
-			Button( 420, -10, 20, 20, iconTable.GetMediaData( Icon.exit ) ).onClick.AddListener( Close );
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				var t = (Item.Type)i;
@@ -3987,7 +4062,7 @@ public class Interface : OperationHandler
 			float hi = itemsPerMinuteInOneWorkshop;
 			if ( PerMinuteToPixel( hi ) >= t.height - 1 )
 			{
-				hl = Color.Lerp( Color.grey, Color.black, 0.5f );
+				hl = Color.grey.Dark();
 				hi = hi / 4;
 			}
 			float yb = hi;
@@ -4060,13 +4135,10 @@ public class Interface : OperationHandler
 
 		public void Open( bool victory = false )
 		{
-			if ( base.Open() )
+			if ( base.Open( 200, 200 ) )
 				return;
 			name = "World Progress Panel";
 			frame.Pin( -200, 200, -100, 100, 0.5f, 0.5f );
-			Stretch( Frame( 0, 0, 1, 1 ) );
-			Button( 0, 0, 1, 1, iconTable.GetMediaData( Icon.exit ) ).
-			Pin( -30, -10, -30, -10, 1, 1 ).onClick.AddListener( Close );
 			UIHelpers.currentRow = -30;
 			if ( victory )
 			{
@@ -4126,13 +4198,14 @@ public class Interface : OperationHandler
 
 		public void Open( bool focusOnMainBuilding = false )
 		{
-			Open( null, ( Screen.width - (int)( 300 * uiScale ) ) / 2, -Screen.height + (int)( 250 * uiScale ) );
+			noCloseButton = true;
+			Open( null, 0, 0, 300, 210 );
+			frame.Pin( -150, 150, -105, 105, 0.5f, 0.3f );
 
 			name = "Main Panel";
-			Frame( 0, 0, 300, 210 );
-			Button( 110, -20, 80, 20, "Continue" ).onClick.AddListener( Close );
 			Image( 20, -45, 260, 1 );
 
+			Button( 110, -20, 80, 20, "Continue" ).onClick.AddListener( Close );
 			Button( 90, -50, 120, 20, "Start New World" ).onClick.AddListener( StartNewGame );
 			Text( 20, -75, 40, 20, "Seed" ).fontSize = (int)( uiScale * 12 );
 			seed = InputField( 60, -70, 100, 25 );
@@ -4277,11 +4350,39 @@ public static class UIHelpers
 		return g;
 	}
 
+	public static UIElement Stretch<UIElement>( this UIElement g, int x0 = 0, int x1 = 0, int y0 = 0, int y1 = 0 ) where UIElement : Component
+	{
+		if ( g.transform is RectTransform t )
+		{
+			t.anchorMin = Vector2.zero;
+			t.anchorMax = Vector2.one;
+			t.offsetMin = new Vector2( (int)( x0 * Interface.uiScale ), (int)( y0 * Interface.uiScale ) );
+			t.offsetMax = new Vector2( (int)( x1 * Interface.uiScale ), (int)( y1 * Interface.uiScale ) );
+		}
+		return g;
+	}
+
 	public static UIElement AddClickHandler<UIElement>( this UIElement g, UnityAction callBack ) where UIElement : Component
 	{
 		Button b = g.gameObject.AddComponent<Button>();
 		b.onClick.AddListener( callBack );
 		return g;
+	}
+
+	public static Text SetFontSize( this Text text, int size )
+	{
+		text.fontSize = (int)( size * Interface.uiScale );
+		return text;
+	}
+
+	public static Color Light( this Color color )
+	{
+		return Color.Lerp( color, Color.white, 0.5f );
+	}
+
+	public static Color Dark( this Color color )
+	{
+		return Color.Lerp( color, Color.black, 0.5f );
 	}
 }
 

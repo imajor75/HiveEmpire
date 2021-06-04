@@ -31,7 +31,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	static Texture2D mapIndicatorTexture;
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	public static Configuration[] configurations;
-
+	
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 8000;
 	public static int fishRestTime = 8000;
@@ -72,6 +72,31 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public bool commonInputs = false;	// If true, the workshop will work with the input buffers separately, if any has any item it will work (f.e. mines). Otherwise each input is needed.
 		public Input[] inputs;
 	}
+
+	public enum Status
+	{
+		working,
+		waitingForAnyInput,
+		waitingForInput0,
+		waitingForInput1,
+		waitingForInput2,
+		waitingForInput3,
+		waitingForOutputSlot,
+		waitingForResource,
+		total
+	}
+
+	[Serializable]
+	public class PastStatus
+	{
+		public Status status;
+		public int length;
+	}
+
+	public List<PastStatus> pastStatuses = new List<PastStatus>(), previousPastStatuses = new List<PastStatus>();
+	public World.Timer statusDuration;
+	public int savedStatusTicks = 0;
+	public const int maxSavedStatusTicks = 150000;
 
 	public struct Productivity
 	{
@@ -576,6 +601,25 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public bool gatherer { get { return productionConfiguration.gatheredResource != Resource.Type.unknown; } }
 
+	public void SaveStatus( Status status )
+	{
+		if ( !statusDuration.empty )
+		{
+			if ( pastStatuses.Count > 0 && pastStatuses.Last().status == status )
+				pastStatuses.Last().length += statusDuration.age;
+			else
+				pastStatuses.Add( new PastStatus { status = status, length = statusDuration.age } );
+			savedStatusTicks += statusDuration.age;
+			if ( savedStatusTicks > maxSavedStatusTicks )
+			{
+				previousPastStatuses = pastStatuses;
+				pastStatuses = new List<PastStatus>();
+				savedStatusTicks = 0;
+			}
+		}
+		statusDuration.Start();
+	}
+
 	public new void FixedUpdate()
 	{
 		productivity.FixedUpdate( this );
@@ -715,15 +759,27 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( count == 0 || buffers.Count == 0 )
 			return true;
 
-		int min = int.MaxValue, sum = 0;
-		foreach ( var b in buffers )
+		int min = int.MaxValue, sum = 0, minIndex = 0;
+		for ( int i = 0; i < buffers.Count; i++ )
 		{
+			var b = buffers[i];
 			sum += b.stored;
 			if ( min > b.stored )
+			{
 				min = b.stored;
+				minIndex = i;
+			}
 		}
-		if ( ( common && sum < count ) || ( !common && min < count ) )
+		if ( common && sum < count )
+		{
+			SaveStatus( Status.waitingForAnyInput );
 			return false;
+		}
+		if ( !common && min < count )
+		{
+			SaveStatus( Status.waitingForInput0 + minIndex );
+			return false;
+		}
 
 		int o = World.rnd.Next();
 		for ( int i = 0; i < buffers.Count; i++ )
@@ -743,13 +799,22 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void ProcessInput()
 	{
-		if ( !working && output + productionConfiguration.outputStackSize <= productionConfiguration.outputMax && worker.IsIdle( true ) && mode != Mode.sleeping && UseInput() )
+		if ( !working && worker.IsIdle( true ) && mode != Mode.sleeping )
 		{
-			SetWorking( true );
-			progress = 0;
+			if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
+			{
+				SaveStatus( Status.waitingForOutputSlot );
+				return;
+			}
+			if ( UseInput() )
+			{
+				SetWorking( true );
+				progress = 0;
+			}
 		}
 		if ( working )
 		{
+			SaveStatus( Status.working );
 			progress += ground.world.timeFactor / productionConfiguration.productionTime;
 			if ( progress > 1 )
 			{
@@ -764,6 +829,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
+		if ( working )
+			SaveStatus( Status.working );
 		if ( !worker.IsIdle( true ) || mode == Mode.sleeping )
 			return;
 		if ( output >= productionConfiguration.outputMax )
@@ -794,6 +861,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				}
 			}
 		}
+		SaveStatus( Status.waitingForResource );
 	}
 
 	/// <summary>
