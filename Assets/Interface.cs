@@ -2005,7 +2005,15 @@ public class Interface : OperationHandler
 			if ( destination == null )
 				return true;
 
-			stock.destinationLists[(int)itemTypeForRetarget].Add( destination );
+			var l = stock.destinationLists[(int)itemTypeForRetarget];
+			if ( l.Contains( destination ) )
+				l.Remove( destination );
+			else
+			{
+				l.Add( destination );
+				destination.inputMax[(int)itemTypeForRetarget] = Math.Max( (int)( Stock.Cart.capacity * 1.5f ), destination.inputMax[(int)itemTypeForRetarget] );
+			}
+
 			root.highlightType = HighlightType.none;
 			RecreateControls();
 			return false;
