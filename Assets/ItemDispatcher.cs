@@ -43,7 +43,7 @@ public class ItemDispatcher : HiveObject
 		public bool noDispenser;
 	}
 
-	public Market[] markets;
+	public List<Market> markets = new List<Market>();
 	public Player player;
 	public Building queryBuilding;
 	public Item.Type queryItemType;
@@ -72,6 +72,11 @@ public class ItemDispatcher : HiveObject
 	public void Setup( Player player )
 	{
 		this.player = player;
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+		{
+			markets.Add( ScriptableObject.CreateInstance<Market>() );
+			markets[i].Setup( this, (Item.Type)i );
+		}
 	}
 
 	new public void Start()
@@ -79,14 +84,11 @@ public class ItemDispatcher : HiveObject
 		name = "Item displatcher";
 		transform.SetParent( World.instance.transform );
 
-		if ( markets == null || markets.Length != (int)Item.Type.total )
+		while ( markets.Count < (int)Item.Type.total )
 		{
-			markets = new Market[(int)Item.Type.total];
-			for ( int i = 0; i < (int)Item.Type.total; i++ )
-			{
-				markets[i] = ScriptableObject.CreateInstance<Market>();
-				markets[i].Setup( this, (Item.Type)i );
-			}
+			var market = ScriptableObject.CreateInstance<Market>();
+			market.Setup( this, (Item.Type)markets.Count );
+			markets.Add( market );
 		}
 		foreach ( var market in markets )
 			market.Start();
