@@ -36,7 +36,6 @@ public class Stock : Building
 	public int total;
 	public int totalTarget;
 	static public int maxItems = 200;
-	GameObject body;
 	public World.Timer offersSuspended;     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
 	static readonly Configuration stockConfiguration = new Configuration
 	{
@@ -314,12 +313,6 @@ public class Stock : Building
 
 	new void Start()
 	{
-		if ( main )
-			body = Instantiate( mainTemplate, transform );
-		else
-			body = Instantiate( template, transform );
-		body.layer = World.layerIndexPickable;
-
 		base.Start();
 		if ( main )
 			name = "Headquarters";
@@ -338,8 +331,11 @@ public class Stock : Building
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
 		Array.Resize( ref destinationLists, (int)Item.Type.total );
+	}
 
-		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
+	override public GameObject Template()
+	{
+		return main ? mainTemplate : template;
 	}
 
 	new void FixedUpdate()

@@ -18,7 +18,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	bool soldierWasCreatedLastTime;	// Only used by the barack
 	public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
-	GameObject body;
 	public Transform millWheel;
 	public float millWheelSpeed = 0;
 	public GroundNode resourcePlace;
@@ -481,17 +480,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public new void Start()
 	{
-		var m = looks.GetMedia( type );
-		body = Instantiate( m.data, transform );
-		body.layer = World.layerIndexPickable;
-		height = m.floatData;
+		height = looks.GetMedia( type ).floatData;
 		levelBrake = height / 2;    // TODO Better way?
 		if ( levelBrake < 1 )
 			levelBrake = 1;
+		base.Start();
 		assert.IsNotNull( body );
 		if ( type == Type.mill )
 			millWheel = body.transform.Find( "SM_Bld_Preset_House_Windmill_01_Blades_Optimized" );
-		base.Start();
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 ) + $" {node.x}:{node.y}";
 
@@ -524,7 +520,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 			var b = smoke.main;
 			b.simulationSpeed = World.instance.timeFactor;
 		}
-		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
+	}
+
+	public override GameObject Template()
+	{
+		return looks.GetMediaData( type );
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )

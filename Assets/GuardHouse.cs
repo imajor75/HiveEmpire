@@ -46,9 +46,11 @@ public class GuardHouse : Building
 	{
 		base.Start();
 		name = $"Guardhouse {node.x}:{node.y}";
-		var body = Instantiate( template, transform );
-		body.layer = World.layerIndexPickable;
-		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
+	}
+
+	public override GameObject Template()
+	{
+		return template;
 	}
 
 	public new void FixedUpdate()

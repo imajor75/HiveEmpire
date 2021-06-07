@@ -7,8 +7,7 @@ using UnityEngine.Profiling;
 [SelectionBase]
 abstract public class Building : HiveObject
 {
-	public string 
-	title;
+	public string title;
 	public Player owner;
 	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;
@@ -26,6 +25,7 @@ abstract public class Building : HiveObject
 	public List<Item> itemsOnTheWay = new List<Item>();
 	static List<Ground.Offset> foundationHelper;
 	public Configuration configuration;
+	protected GameObject body;
 
 	[Obsolete( "Compatibility with old files", true )]
 	GroundNode.Type groundTypeNeeded;
@@ -477,7 +477,11 @@ abstract public class Building : HiveObject
 		UpdateBody();
 		renderers = new List<MeshRenderer>();
 
-		World.CollectRenderersRecursive( gameObject, renderers );
+		body = Instantiate( Template(), transform );
+		body.layer = World.layerIndexPickable;
+		body.transform.RotateAround( node.position, Vector3.up, 60 * ( 1 - flagDirection ) );
+
+		World.CollectRenderersRecursive( body, renderers );
 		float lowerLimit = transform.position.y;
 		float upperLimit = lowerLimit + height;
 		float level = upperLimit;
@@ -499,6 +503,11 @@ abstract public class Building : HiveObject
 		highlightArrow.transform.SetParent( transform );
 		highlightArrow.transform.localScale = Vector3.one * 3f;
 		base.Start();
+	}
+
+	public virtual GameObject Template()
+	{
+		throw new System.NotImplementedException();
 	}
 
 	public void Update()
