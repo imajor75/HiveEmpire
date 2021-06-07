@@ -781,11 +781,14 @@ public class Interface : OperationHandler
 			}
 			root.panels.Add( this );
 			name = "Panel";
-			frame = gameObject.AddComponent<Image>();
-			frame.sprite = iconTable.GetMediaData( Icon.frame );
-			frame.type = UnityEngine.UI.Image.Type.Sliced;
-			frame.pixelsPerUnitMultiplier = 1 / uiScale / borderWidth;
-			Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), xs, ys, root );
+			if ( borderWidth != 0 )
+			{
+				frame = gameObject.AddComponent<Image>();
+				frame.sprite = iconTable.GetMediaData( Icon.frame );
+				frame.type = UnityEngine.UI.Image.Type.Sliced;
+				frame.pixelsPerUnitMultiplier = 1 / uiScale / borderWidth;
+				Init( frame.rectTransform, (int)( x / uiScale ), (int)( y / uiScale ), xs, ys, root );
+			}
 			if ( !noCloseButton )
 			{
 				int offset = borderWidth > 0.5f ? 10 : 0;

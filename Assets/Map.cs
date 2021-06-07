@@ -20,12 +20,13 @@ public class Map : Interface.Panel
 		Transform dialog = new GameObject( "Map dialog" ).transform;
 		dialog.transform.SetParent( transform );
 		this.fullScreen = fullScreen;
+		noCloseButton = fullScreen;
+		borderWidth = fullScreen ? 0 : 0.6f;
 		base.Open( null, 0, 0, 316, 316 );
 		name = "Map";
 		content = MapImage.Create();
 		content.Setup( fullScreen );
 		Init( content.rawImage.rectTransform, 30, -30, 256, 256, dialog );
-		dialog.gameObject.SetActive( !fullScreen );
 	}
 
 	new void Update()
