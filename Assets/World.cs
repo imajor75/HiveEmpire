@@ -124,16 +124,6 @@ public class World : MonoBehaviour
 
 		[JsonIgnore]
 		public bool apply;  // For debug purposes only
-
-		public void OnValidate()
-		{
-			if ( apply )
-			{
-				apply = false;
-				instance.NewGame( instance.currentSeed, true );
-				Interface.root.mainPlayer = instance.players[0];
-			}
-		}
 	}
 
 	public static void Initialize()
@@ -183,6 +173,12 @@ public class World : MonoBehaviour
 
 	void FixedUpdate()
 	{
+		if ( settings.apply )
+		{
+			settings.apply = false;
+			instance.NewGame( instance.currentSeed, true );
+			Interface.root.mainPlayer = instance.players[0];
+		}
 		massDestroy = false;
 		time += (int)timeFactor;
 		foreach ( var player in players )
@@ -191,6 +187,7 @@ public class World : MonoBehaviour
 		
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
+		SetTimeFactor( 1 );
 		var oldEye = eye;
 		victory = false;
 		time = 0;
