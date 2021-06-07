@@ -497,8 +497,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		mapIndicator.transform.SetParent( transform, false );
 		World.SetLayerRecursive( mapIndicator, World.layerIndexMapOnly );
 		mapIndicatorMaterial = mapIndicator.GetComponent<MeshRenderer>().material = new Material( World.defaultShader );
+		mapIndicatorMaterial.renderQueue = 4001;
 		mapIndicatorMaterial.mainTexture = mapIndicatorTexture;
-		mapIndicator.transform.position = node.position + new Vector3( 0, 2, GroundNode.size * 0.5f );
+		mapIndicator.transform.position = node.position + Vector3.up * 3;
 		mapIndicator.SetActive( false );
 
 		RefreshConfiguration();
@@ -649,6 +650,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
+		mapIndicator.transform.rotation = Quaternion.Euler( 0, (float)( World.instance.eye.direction / Math.PI * 180 ), 0 );
 		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
 
 
