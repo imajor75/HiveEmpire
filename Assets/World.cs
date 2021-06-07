@@ -99,7 +99,7 @@ public class World : MonoBehaviour
 		[Range(0.0f, 1.0f)]
 		public float mountainLevel = 0.8f;
 		[Range(0.0f, 1.0f)]
-		public float forestGroundChance = 0.5f;
+		public float forestGroundChance = 0.45f;
 
 		public float forestChance = 0.006f;
 		public float rocksChance = 0.002f;

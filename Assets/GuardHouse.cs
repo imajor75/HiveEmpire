@@ -35,7 +35,7 @@ public class GuardHouse : Building
 	public GuardHouse Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
 		title = "guardhouse";
-		height = 2;
+		height = 1.2f;
 		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly ) == null )
 			return null;
 
