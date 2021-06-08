@@ -70,7 +70,8 @@ public class Interface : OperationHandler
 		clock,
 		alarm,
 		shovel,
-		crossing
+		crossing,
+		resizer
 	}
 
 	public Interface()
@@ -738,16 +739,19 @@ public class Interface : OperationHandler
 		}
 	}
 
-	public class Panel : MonoBehaviour, IDragHandler, IPointerClickHandler
+	public class Panel : MonoBehaviour, IDragHandler, IBeginDragHandler, IPointerClickHandler
 	{
 		public HiveObject target;
 		public bool followTarget = true;
 		public Image frame;
+		Image resizer;
 		public bool escCloses = true;
 		public bool disableDrag;
 		public Vector2 offset;
 		public float borderWidth = 0.7f;
 		public bool noCloseButton;
+		public bool noResize;
+		bool dragResizes;
 
 		public static int itemIconBorderSize = 2;
 
@@ -794,6 +798,8 @@ public class Interface : OperationHandler
 				int offset = borderWidth > 0.5f ? 10 : 0;
 				Image( iconTable.GetMediaData( Icon.exit ) ).Pin( -20 - offset, 0 - offset, -20 - offset, 0 - offset, 1, 1 ).AddClickHandler( Close );
 			}
+			if ( !noResize )
+				resizer = Image( iconTable.GetMediaData( Icon.resizer ) ).Pin( -20, 0, 0, 20, 1, 0 );
 			this.target = target;
 			UpdatePosition();
 			return false;
@@ -1054,7 +1060,7 @@ public class Interface : OperationHandler
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.location.GetPositionRelativeTo( new Vector3( root.world.eye.x, 0, root.world.eye.y ) ) + Vector3.up * GroundNode.size );
+			MoveTo( target.location.GetPositionRelativeTo( root.world.eye.position ) + Vector3.up * GroundNode.size );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -1078,13 +1084,30 @@ public class Interface : OperationHandler
 			frame.rectTransform.anchoredPosition = screenPosition;
 		}
 
+		public void OnBeginDrag( PointerEventData eventData )
+		{
+			if ( resizer != null && resizer.Contains( Input.mousePosition ) )
+				dragResizes = true;
+			else
+				dragResizes = false;
+		}
+
 		public void OnDrag( PointerEventData eventData )
 		{
 			if ( disableDrag )
 				return;
 
-			followTarget = false;
-			frame.rectTransform.anchoredPosition += eventData.delta;
+			if ( dragResizes )
+			{
+				var delta = eventData.delta;
+				delta.y *= -1;
+				frame.rectTransform.sizeDelta += delta;
+			}
+			else
+			{
+				frame.rectTransform.anchoredPosition += eventData.delta;
+				followTarget = false;
+			}
 		}
 
 		public void OnPointerClick( PointerEventData eventData )
@@ -2038,6 +2061,7 @@ public class Interface : OperationHandler
 
 		public void Open( GroundNode node, bool show = false )
 		{
+			noResize = true;
 			base.Open( node, 0, 0, 380, 180 );
 			this.node = node;
 			name = "Node panel";
@@ -2118,6 +2142,7 @@ public class Interface : OperationHandler
 
 		public void Open()
 		{
+			noResize = true;
 			base.Open( null, 0, 0, 360, 320 );
 			name = "Build panel";
 
@@ -2232,6 +2257,7 @@ public class Interface : OperationHandler
 		public void Open( Road road, GroundNode node )
 		{
 			borderWidth = 0.3f;
+			noResize = true;
 			base.Open( road, 0, 0, 210, 165 );
 			this.road = road;
 			this.node = node;
@@ -2385,6 +2411,7 @@ public class Interface : OperationHandler
 			Selection.activeGameObject = flag.gameObject;
 #endif
 			borderWidth = 0.3f;
+			noResize = true;
 			if ( base.Open( flag, 0, 0, 250, 75 ) )
 				return;
 
@@ -2509,6 +2536,7 @@ public class Interface : OperationHandler
 		{
 			var cart = worker as Stock.Cart;
 			borderWidth = 0.3f;
+			noResize = true;
 			if ( base.Open( worker.node, 0, 0, 200, cart ? 140 : 80 ) )
 				return;
 			name = "Worker panel";
@@ -2656,6 +2684,7 @@ public class Interface : OperationHandler
 		{
 			this.item = item;
 
+			noResize = true;
 			if ( base.Open( null, 0, 0, 300, 150 ) )
 				return;
 
@@ -2783,7 +2812,7 @@ public class Interface : OperationHandler
 			var i = Text( 235, -40, 150, iconSize, "input" );
 			i.fontSize = (int)( uiScale * 10 );
 			i.gameObject.AddComponent<Button>().onClick.AddListener( delegate { ChangeComparison( CompareInputs ); } );
-			scroll = ScrollRect( 20, -60, 460, 340 );
+			scroll = ScrollRect( 20, -60, 460, 340 ).Stretch( 20, -20, 20, -60 );
 
 			Fill();
 		}
@@ -3539,7 +3568,7 @@ public class Interface : OperationHandler
 			Text( 250, -20, 100, 20, "Age" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByAge ); } );
 			Text( 300, -20, 100, 20, "Route" ).gameObject.AddComponent<Button>().onClick.AddListener( delegate { Fill( CompareByPathLength ); } );
 
-			scroll = ScrollRect( 20, -40, 360, 260 );
+			scroll = ScrollRect( 20, -40, 360, 260 ).Stretch( 20, -20, 20, -40 );
 			Fill( CompareByAge );
 		}
 
@@ -3654,7 +3683,7 @@ public class Interface : OperationHandler
 			{ Fill( CompareByLastMined ); } );
 			Text( 250, -20, 100, 20, "Ready" ).gameObject.AddComponent<Button>();
 
-			scroll = ScrollRect( 20, -40, 360, 260 );
+			scroll = ScrollRect( 20, -40, 360, 260 ).Stretch( 20, -20, 20, -40 );
 			Fill( CompareByType );
 		}
 
@@ -3736,7 +3765,7 @@ public class Interface : OperationHandler
 			Text( 230, -40, 100, 20, "Quantity" ).fontSize = (int)( uiScale * 10 );
 			Text( 270, -40, 100, 20, "Result" ).fontSize = (int)( uiScale * 10 );
 
-			scroll = ScrollRect( 20, -60, 500, 240 );
+			scroll = ScrollRect( 20, -60, 500, 240 ).Stretch( 20, -20, 20, -60 );
 		}
 
 		new public void OnDestroy()
@@ -3869,8 +3898,8 @@ public class Interface : OperationHandler
 			PinSideways( 0, 50, -40, -20 ).
 			AddClickHandler( delegate { SetOrder( CompareEfficiency ); } );
 
-			scroll = ScrollRect( 20, -45, 380, 205 );
-			finalEfficiency = Text( 100, -260, 100, 30 );
+			scroll = ScrollRect( 20, -45, 380, 205 ).Stretch( 20, -20, 40, -40 );
+			finalEfficiency = Text( 100, -260, 100, 30 ).Pin( 100, 200, 10, 40, 0, 0 );
 			finalEfficiency.fontSize = (int)( uiScale * 16 );
 
 			for ( int i = 0; i < inStock.Length; i++ )
@@ -4053,13 +4082,12 @@ public class Interface : OperationHandler
 			if ( selected < Item.Type.total )
 				a = player.itemEfficiencyHistory[(int)selected];
 
-			Vector3[] chartCorners = new Vector3[4];
-			chart.rectTransform.GetWorldCorners( chartCorners );
-			var chartRect = new Rect( chartCorners[0], chartCorners[2] - chartCorners[0] );
-			if ( chartRect.Contains( Input.mousePosition ) )
+			if ( chart.Contains( Input.mousePosition ) )
 			{
-				var cursorInsideChart = Input.mousePosition - chartCorners[0];
-				int ticks = Player.efficiencyUpdateTime * (int)( chartRect.width - cursorInsideChart.x );
+				Vector3[] corners = new Vector3[4];
+				chart.rectTransform.GetWorldCorners( corners );
+				var cursorInsideChart = Input.mousePosition - corners[0];
+				int ticks = Player.efficiencyUpdateTime * (int)( corners[2].x - Input.mousePosition.x );
 				var hours = ticks / 60 / 60 / 50;
 				string time = $"{(ticks/60/50)%60} minutes ago";
 				if ( hours > 1 )
@@ -4244,6 +4272,7 @@ public class Interface : OperationHandler
 		public void Open( bool focusOnMainBuilding = false )
 		{
 			noCloseButton = true;
+			noResize = true;
 			Open( null, 0, 0, 300, 210 );
 			frame.Pin( -150, 150, -105, 105, 0.5f, 0.3f );
 
@@ -4431,6 +4460,19 @@ public static class UIHelpers
 	public static Color Dark( this Color color )
 	{
 		return Color.Lerp( color, Color.black, 0.5f );
+	}
+
+	public static bool Contains<UIElement>( this UIElement g, Vector2 position ) where UIElement : Component
+	{
+		if ( g.transform is RectTransform t )
+		{
+			Vector3[] corners = new Vector3[4];
+			t.GetWorldCorners( corners );
+			var rect = new Rect( corners[0], corners[2] - corners[0] );
+			return rect.Contains( position );
+
+		}
+		return false;
 	}
 }
 
