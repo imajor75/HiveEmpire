@@ -164,29 +164,17 @@ public class GroundNode : HiveObject
 	public Vector3 GetPositionRelativeTo( Vector3 reference )
 	{
 		float limit = ground.dimension * size / 2;
-		var position = this.position;	// cache
+		var position = this.position;	
 		var difference = position - reference;
 		float dv0 = difference.z, dv1 = -dv0, dh0 = difference.x - difference.z / 2, dh1 = -dh0;
-		if ( dh0 > dh1 && dh0 > dv0 && dh0 > dv1 )
-		{
-			if ( dh0 > limit )
-				return position - new Vector3( limit * 2, 0, 0 );
-		}
-		else if ( dh1 > dv0 && dh1 > dv1 )
-		{
-			if ( dh1 > limit )
-				return position + new Vector3( limit * 2, 0, 0 );
-		}
-		else if ( dv0 > dv1 )
-		{
-			if ( dv0 > limit )
-				return position - new Vector3( limit, 0, limit * 2 );
-		}
-		else
-		{
-			if ( dv1 > limit )
-				return position + new Vector3( limit, 0, limit * 2 );
-		}
+		if ( difference.x - difference.z / 2 > limit )
+			position -= new Vector3( limit * 2, 0, 0 );
+		if ( difference.z / 2 - difference.x > limit )
+			position += new Vector3( limit * 2, 0, 0 );
+		if ( difference.z > limit )
+			position -= new Vector3( limit, 0, limit * 2 );
+		if ( -difference.z > limit )
+			position += new Vector3( limit, 0, limit * 2 );
 		return position;
 	}
 
@@ -197,26 +185,10 @@ public class GroundNode : HiveObject
 	/// <returns></returns>
 	public Vector3 GetPositionRelativeTo( GroundNode reference )
 	{
-		var position = this.position;
 		if ( reference )
-		{
-			if ( reference.x - x > ground.dimension / 2 )
-				position.x += ground.dimension * size;
-			if ( x - reference.x > ground.dimension / 2 )
-				position.x -= ground.dimension * size;
-			if ( reference.y - y > ground.dimension / 2 )
-			{
-				position.z += ground.dimension * size;
-				position.x += ground.dimension * size / 2;
-			}
-			if ( y - reference.y > ground.dimension / 2 )
-			{
-				position.z -= ground.dimension * size;
-				position.x -= ground.dimension * size / 2;
-			}
-		}
+			return GetPositionRelativeTo( reference.position );
 		return position;
-	}
+	} 
 
 	public Vector3 GetPosition( int x, int y )
 	{
