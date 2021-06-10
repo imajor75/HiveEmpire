@@ -95,7 +95,7 @@ public class World : MonoBehaviour
 		[Range(0.0f, 1.0f)]
 		public float waterLevel = 0.25f;
 		[Range(0.0f, 1.0f)]
-		public float hillLevel = 0.55f;
+		public float hillLevel = 0.6f;
 		[Range(0.0f, 1.0f)]
 		public float mountainLevel = 0.8f;
 		[Range(0.0f, 1.0f)]

@@ -4340,10 +4340,7 @@ public class Interface : OperationHandler
 				_ => 32
 			};
 			if ( size.value == 0 )
-			{
 				root.world.settings.maxHeight = 3;
-				root.world.settings.hillLevel = 0.6f;
-			}
 			if ( size.value == 2 )
 				root.world.settings.randomness = 2.1f;
 			root.NewGame( int.Parse( seed.text ) );
