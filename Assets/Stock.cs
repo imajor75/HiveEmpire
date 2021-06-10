@@ -287,6 +287,7 @@ public class Stock : Building
 		}
 		construction.done = true;
 		content[(int)Item.Type.plank] = 10;
+		content[(int)Item.Type.stone] = 5;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );
