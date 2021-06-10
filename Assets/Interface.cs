@@ -1975,7 +1975,7 @@ public class Interface : OperationHandler
 				{
 					listToChange = stock.inputMax;
 					min = stock.inputMin[t];
-					max = Stock.maxItems;
+					max = stock.maxItems;
 					disableDrag = true;
 				}
 				if ( g == outputMin.gameObject )
@@ -1989,7 +1989,7 @@ public class Interface : OperationHandler
 				{
 					listToChange = stock.outputMax;
 					min = stock.outputMin[t];
-					max = Stock.maxItems;
+					max = stock.maxItems;
 					disableDrag = true;
 				}
 			}

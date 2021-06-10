@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -35,7 +35,9 @@ public class Stock : Building
 	public Ground.Area outputArea = new Ground.Area();
 	public int total;
 	public int totalTarget;
-	static public int maxItems = 200;
+	public int maxItems = defaultmaxItems;
+	static public int defaultmaxItems = 200;
+	static public int defaultmaxItemsForMain = 400;
 	public World.Timer offersSuspended;     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
 	static readonly Configuration stockConfiguration = new Configuration
 	{
@@ -245,6 +247,7 @@ public class Stock : Building
 	{
 		title = "stock";
 		height = 1.5f;
+		maxItems = defaultmaxItems;
 
 		while ( content.Count < (int)Item.Type.total )
 		{
@@ -275,6 +278,7 @@ public class Stock : Building
 			return null;
 
 		title = "headquarter";
+		maxItems = defaultmaxItemsForMain;
 		height = 3;
 		if ( configuration.flatteningNeeded )
 		{
