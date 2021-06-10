@@ -50,6 +50,8 @@ public class Map : Interface.Panel
 			fullScreen = !fullScreen;
 			content.Setup( fullScreen );
 		}
+		if ( fullScreen )
+			World.instance.eye.moveSensitivity = zoom / 3;
 
 		float rotation = World.instance.eye.direction / (float)Math.PI * 180f;
 		content.SetTarget( new Vector2( World.instance.eye.x, World.instance.eye.y ), zoom, rotation );

@@ -22,6 +22,7 @@ public class Eye : HiveObject
 	public float storedX, storedY, storedDirection;
 	public bool hasStoredValues;
 	public new Camera camera;
+	public float moveSensitivity;
 	[JsonIgnore]
 	public IDirector director;
 
@@ -182,28 +183,28 @@ public class Eye : HiveObject
 		Vector3 movement = autoMovement;
 		if ( Interface.GetKey( KeyCode.A ) )
 		{
-			movement += transform.right * -0.1f * altitude / 6;
+			movement += transform.right * -0.1f * moveSensitivity;
 			rotateAround = false;
 			Interface.root.viewport.markEyePosition = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.D ) )
 		{
-			movement += transform.right * 0.1f * altitude / 6;
+			movement += transform.right * 0.1f * moveSensitivity;
 			rotateAround = false;
 			Interface.root.viewport.markEyePosition = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.W ) )
 		{
-			movement += transform.forward * 0.13f * altitude / 6;
+			movement += transform.forward * 0.13f * moveSensitivity;
 			rotateAround = false;
 			Interface.root.viewport.markEyePosition = false;
 			director = null;
 		}
 		if ( Interface.GetKey( KeyCode.S ) )
 		{
-			movement += transform.forward * -0.13f * altitude / 6;
+			movement += transform.forward * -0.13f * moveSensitivity;
 			rotateAround = false;
 			Interface.root.viewport.markEyePosition = false;
 			director = null;
@@ -257,12 +258,13 @@ public class Eye : HiveObject
 			targetAltitude *= 1.01f;
 		if ( Interface.GetKey( KeyCode.X ) )
 			targetAltitude *= 0.99f;
-		if ( camera == camera.enabled )
+		if ( camera.enabled )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
 				targetAltitude += 0.5f;
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
 				targetAltitude -= 0.5f;
+			moveSensitivity = targetAltitude / 6;
 		}
 		if ( targetAltitude < minAltitude )
 			targetAltitude = minAltitude;
