@@ -188,6 +188,7 @@ public class World : MonoBehaviour
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
 		SetTimeFactor( 1 );
+		overseas = 2;
 		var oldEye = eye;
 		victory = false;
 		time = 0;

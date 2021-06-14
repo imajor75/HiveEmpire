@@ -26,7 +26,7 @@ public class Map : Interface.Panel
 		name = "Map";
 		content = MapImage.Create();
 		content.Setup( fullScreen );
-		Init( content.rawImage.rectTransform, 30, -30, 256, 256, dialog );
+		content.Stretch( 30, 30, -30, -30 ).Link( dialog );
 	}
 
 	new void Update()
