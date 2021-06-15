@@ -917,8 +917,7 @@ public class Worker : HiveObject
 			"effects/cart", Type.cart };
 		walkSounds.Fill( walk );
 
-		var tex = Resources.Load<Texture2D>( "arrow" );
-		arrowSprite = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
+		arrowSprite = Resources.Load<Sprite>( "arrow" );
 
 		resourceCollectAct[(int)Resource.Type.tree] = new Act
 		{

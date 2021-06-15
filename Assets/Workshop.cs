@@ -403,7 +403,7 @@ public class Workshop : Building, Worker.Callback.IHandler
  		};
 		processingSounds.fileNamePrefix = "effects/";
 		processingSounds.Fill( sounds );	// bool equals "dont loop"
-		mapIndicatorTexture = Resources.Load<Texture2D>( "simple UI & icons/button/board" );
+		mapIndicatorTexture = Resources.Load<Texture2D>( "brick" );
 	}
 
 	public static Workshop Create()

@@ -56,6 +56,7 @@ public class Interface : OperationHandler
 		progress,
 		frame,
 		smallFrame,
+		emptyFrame,
 		hauler,
 		box,
 		destroy,
@@ -200,12 +201,9 @@ public class Interface : OperationHandler
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.global.IsNotNull( font );
 		object[] table = {
-		"simple UI & icons/box/box_event1", Icon.frame,
-		"simple UI & icons/button/button_triangle_right", Icon.rightArrow,
-		"simple UI & icons/button/board", Icon.progress,
-		"simple UI & icons/button/button_exit", Icon.exit,
-		"simple UI & icons/button/button_login", Icon.button,
-		"simple UI & icons/box/smallFrame", Icon.smallFrame };
+		"arrow", Icon.rightArrow,
+		"brick", Icon.progress,
+		"cross", Icon.exit };
 		iconTable.Fill( table );
 		//			print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
 		//#if DEVELOPMENT_BUILD
@@ -642,7 +640,7 @@ public class Interface : OperationHandler
 
 		public void Open()
 		{
-			borderWidth = 0.3f;
+			borderWidth = 10;
 			noCloseButton = true;
 			base.Open( width = 100, height = 100 );
 			escCloses = false;
@@ -746,7 +744,7 @@ public class Interface : OperationHandler
 		public bool escCloses = true;
 		public bool disableDrag;
 		public Vector2 offset;
-		public float borderWidth = 0.7f;
+		public int borderWidth = 20;
 		public bool noCloseButton;
 		public bool noResize;
 		bool dragResizes;
@@ -788,16 +786,20 @@ public class Interface : OperationHandler
 			transform.SetParent( root.transform, false );
 			if ( borderWidth != 0 )
 			{
-				frame = Frame( 1 / borderWidth ).Stretch( 0, 0, 0, 0 );
+				frame = Frame( borderWidth ).Stretch( 0, 0, 0, 0 );
 				frame.name = "Background";
 			}
 			if ( !noCloseButton )
 			{
-				int offset = borderWidth > 0.5f ? 10 : 0;
-				Image( iconTable.GetMediaData( Icon.exit ) ).Pin( -iconSize - offset, 0 - offset, iconSize, iconSize, 1, 1 ).AddClickHandler( Close ).name = "Close button";
+				var cb = Image( iconTable.GetMediaData( Icon.exit ) ).Pin( -borderWidth, 0, borderWidth, borderWidth, 1, 1 ).AddClickHandler( Close );
+				cb.name = "Close button";
+				cb.color = Color.red;
 			}
 			if ( !noResize )
+			{
 				resizer = Image( iconTable.GetMediaData( Icon.resizer ) ).Pin( -iconSize, iconSize, iconSize, iconSize, 1, 0 );
+				resizer.name = "Resizer";
+			}
 			this.target = target;
 			this.Pin( x, y, xs, ys );
 			UpdatePosition();
@@ -853,11 +855,14 @@ public class Interface : OperationHandler
 			return p;
 		}
 
-		public Image Frame( float pixelsPerUnitMultiplier = 1.5f )
+		public Image Frame( int borderWidth = iconSize )
 		{
-			Image i = Image( iconTable.GetMediaData( Icon.frame ) );
+			var s = iconTable.GetMediaData( Icon.frame );
+			int originalBorder = (int)( ( s.border.x + s.border.y + s.border.z + s.border.w ) * 0.25f );
+
+			Image i = Image( s );
 			i.type = UnityEngine.UI.Image.Type.Sliced;
-			i.pixelsPerUnitMultiplier = pixelsPerUnitMultiplier / uiScale; 
+			i.pixelsPerUnitMultiplier = originalBorder / uiScale / borderWidth; 
 			return i;
 
 		}
@@ -940,13 +945,15 @@ public class Interface : OperationHandler
 			return i;
 		}
 
-		public AreaControl AreaIcon( Ground.Area area )
+		public Image AreaIcon( Ground.Area area )
 		{
-			Image( iconTable.GetMediaData( Icon.smallFrame ) );
-			var i = Image( iconTable.GetMediaData( Icon.crosshair ) );
-			var a= i.gameObject.AddComponent<AreaControl>();
+			var bg = Image( iconTable.GetMediaData( Icon.smallFrame ) );
+			bg.color = Color.grey;
+			var i = Image( iconTable.GetMediaData( Icon.crosshair ) ).AddOutline();
+			var a = i.gameObject.AddComponent<AreaControl>();
 			a.Setup( area );
-			return a;
+			a.Link( bg ).Stretch( 6, 6, -6, -6 );
+			return bg;
 		}
 
 		public Text BuildingIcon( Building building, int fontSize = 12 )
@@ -966,11 +973,11 @@ public class Interface : OperationHandler
 
 		public Image Button( string text )
 		{
-			Image i = Image( Resources.Load<Sprite>( "simple UI & icons/button/button_round" ) );
+			Image i = Image( Resources.Load<Sprite>( "button" ) );
 			i.type = UnityEngine.UI.Image.Type.Sliced;
 			i.pixelsPerUnitMultiplier = 6;
-			var t = Text( text ).Link( i ).Stretch( 4, 4, -4, -4 );
-			t.color = Color.black;
+			var t = Text( text ).Link( i ).Stretch( 6, 6, -6, -6 );
+			t.color = Color.yellow;
 			t.alignment = TextAnchor.MiddleCenter;
 			t.resizeTextForBestFit = true;
 			return i;
@@ -983,8 +990,8 @@ public class Interface : OperationHandler
 			t.transform.SetParent( transform );
 			t.font = Interface.font;
 			t.fontSize = (int)( fontSize * uiScale );
+			t.color = Color.black;
 			t.text = text;
-			t.color = Color.yellow;
 			return t;
 		}
 
@@ -1098,15 +1105,20 @@ public class Interface : OperationHandler
 			public void Open()
 			{
 				Image frame = gameObject.GetComponent<Image>();
-				frame.sprite = iconTable.GetMediaData( Icon.frame );
+				frame.sprite = iconTable.GetMediaData( Icon.smallFrame );
 				frame.pixelsPerUnitMultiplier = 8 / uiScale;
 				frame.type = UnityEngine.UI.Image.Type.Sliced;
+				frame.color = Color.Lerp( Color.red, Color.yellow, 0.5f ).Dark();
+
 				bar = new GameObject( "Bar" ).AddComponent<Image>();
+				bar.sprite = iconTable.GetMediaData( Icon.emptyFrame );
+				bar.pixelsPerUnitMultiplier = 12 / uiScale;
+				bar.type = UnityEngine.UI.Image.Type.Sliced;
 				bar.rectTransform.SetParent( transform, false );
 				bar.rectTransform.anchorMin	= Vector2.zero;
 				bar.rectTransform.anchorMax = Vector2.one;
-				bar.rectTransform.offsetMin = Vector2.one * uiScale * 4;
-				bar.rectTransform.offsetMax = -Vector2.one * uiScale * 4;
+				bar.rectTransform.offsetMin = Vector2.one * uiScale * 3;
+				bar.rectTransform.offsetMax = -Vector2.one * uiScale * 3;
 				bar.color = Color.yellow;
 			}
 			public float progress
@@ -1202,7 +1214,7 @@ public class Interface : OperationHandler
 
 			public void Update()
 			{
-				image.color = area.center != null ? Color.green : Color.grey;
+				image.color = area.center != null ? Color.green : Color.white;
 				if ( GetKeyDown( KeyCode.Comma ) )
 				{
 					if ( area.radius > 1 )
@@ -1408,6 +1420,7 @@ public class Interface : OperationHandler
 
 		public void Open( Workshop workshop, Content contentToShow = Content.everything, bool show = false )
 		{
+			noResize = true;
 			if ( base.Open( workshop, 250, 150 ) )
 				return;
 
@@ -1453,31 +1466,31 @@ public class Interface : OperationHandler
 					row -= iconSize * 3 / 2;
 				}
 				int progressWidth = ( iconSize + 5 ) * 7;
-				progressBar = Progress().Pin( 20, 20 + progressWidth, row - iconSize, row );
+				progressBar = Progress().Pin( iconSize, row, iconSize + progressWidth, iconSize );
 				row -= 25;
 
 				if ( ( contentToShow & Content.itemsProduced ) > 0 )
 				{
 					itemsProduced = Text().Pin( 20, row, 200, 20 );
-					productivity = Text().Pin( 150, -20, 50, 20 );
+					productivity = Text().Pin( 150, -20, 50, 20 ).AddOutline();
 					productivity.alignment = TextAnchor.MiddleRight;
 					productivity.AddClickHandler( ShowPastStatuses );
 					row -= 25;
 				}
 			}
 			if ( workshop.gatherer && ( contentToShow & Content.resourcesLeft ) > 0 )
-			{
 				resourcesLeft = Text( "Resources left: 0" ).Pin( 20, row, 150, 20 );
-				row -= 25;
-			}
 
 			if ( ( contentToShow & Content.controlIcons ) != 0 )
 			{
 				Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 190, row ).AddClickHandler( Remove );
 				Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, row ).AddClickHandler( ShowWorker );
 				changeModeImage = Image( GetModeIcon() ).Pin( 150, row ).AddClickHandler( ChangeMode );
+				changeModeImage.color = Color.black;
+				row -= 25;
 			}
 
+			this.Pin( 0, 0, 250, 15 - row );
 			if ( show )
 				root.world.eye.FocusOn( workshop, true );
 		}
@@ -1665,6 +1678,7 @@ public class Interface : OperationHandler
 					return;
 
 				int[] ticksInStatus = new int[(int)Workshop.Status.total];
+				int[] percentInStatus = new int[(int)Workshop.Status.total];
 				int totalTicks = 0;
 				void ProcessStatusList( List<Workshop.PastStatus> past )
 				{
@@ -1682,8 +1696,8 @@ public class Interface : OperationHandler
 				List<Workshop.Status> statusList = new List<Workshop.Status>();
 				for ( int i = 0; i < ticksInStatus.Length; i++ )
 				{
-					int share = 100 * ticksInStatus[i] / totalTicks;
-					for ( int j = 0; j < share; j++ )
+					percentInStatus[i] = 100 * ticksInStatus[i] / totalTicks;
+					for ( int j = 0; j < percentInStatus[i]; j++ )
 						statusList.Add( (Workshop.Status)i );
 				}
 				while ( statusList.Count < 101 )
@@ -1710,7 +1724,7 @@ public class Interface : OperationHandler
 						Workshop.Status.waitingForResource => "Waiting for resource",
 						_ => "Unknown"
 					};
-					var e = Text( statusName, 10 ).PinDownwards( 150, 0, 350, (int)( iconSize * 0.8f ) );
+					var e = Text( $"{percentInStatus[i]}% " + statusName, 10 ).PinDownwards( 150, 0, 350, (int)( iconSize * 0.8f ) ).AddOutline();
 					e.color = statusColors[i];
 					e.name = $"Reason {i}";
 				}
@@ -1725,12 +1739,19 @@ public class Interface : OperationHandler
 					{
 						int xv = x - ( t.width / 2 );
 						int yv = y - ( t.height / 2 );
-						if ( Math.Sqrt( xv * xv + yv * yv ) > Math.Min( t.width / 2, t.height / 2 ) )
+						var dist = Math.Sqrt( xv * xv + yv * yv );
+						var radius = Math.Min( t.width / 2, t.height / 2 );
+						if ( dist > radius )
 							t.SetPixel( x, y, new Color( 1, 1, 1, 0 ) );
 						else
 						{
-							int percent = Math.Min( (int)( Math.Atan2( xv, yv ) / Math.PI * 50 + 50 ), 100 );
-							t.SetPixel( x, y, statusColors[(int)statusList[percent]] );
+							if ( dist > radius * 0.97 )
+								t.SetPixel( x, y, Color.black );
+							else
+							{
+								int percent = Math.Min( (int)( Math.Atan2( xv, yv ) / Math.PI * 50 + 50 ), 100 );
+								t.SetPixel( x, y, statusColors[(int)statusList[percent]] );
+							}
 						}
 					}
 				}
@@ -1833,10 +1854,10 @@ public class Interface : OperationHandler
 			controls.Link( this ).Stretch();
 
 			int height = 340;
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 270, 40 - height ).AddClickHandler( Remove );
-			AreaIcon( stock.inputArea ).Link( controls ).Pin( 30, -30 );
-			AreaIcon( stock.outputArea ).Link( controls ).Pin( 250, -30 );
-			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 140, -30 ).AddClickHandler( stock.ClearSettings );
+			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 250, 40 - height ).AddClickHandler( Remove ).name = "Remover";
+			AreaIcon( stock.inputArea ).Link( controls ).Pin( 30, -25, 30, 30 ).name = "Input area";
+			AreaIcon( stock.outputArea ).Link( controls ).Pin( 250, -25, 30, 30 ).name = "Output area";
+			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 140, -30 ).AddClickHandler( stock.ClearSettings ).name = "Reset";;
 			total = Text( "", 16 ).Link( controls ).Pin( 35, 35 - height, 100 );
 			total.name = "Total";
 
@@ -1848,10 +1869,10 @@ public class Interface : OperationHandler
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
 				i.additionalTooltip = "Shift+LMB Show input potentials\nCtrl+LMB Show output potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
 				if ( stock.GetSubcontractors( (Item.Type)j ).Count > 0 )
-					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( controls ).Pin( 10 + offset, row );
+					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f );
 				if ( stock.destinationLists[j].Count > 0 )
 				{
-					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( controls ).Pin( 35 + offset, row );
+					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f );
 					offset += 10;
 				}
 				i.AddClickHandler( delegate { SelectItemType( t ); } );
@@ -1869,7 +1890,7 @@ public class Interface : OperationHandler
 			int ipx = 165, ipy = -280;
 			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( ipx, ipy, 2 * iconSize, 2 * iconSize ).AddClickHandler( SetTarget );
 			selected.additionalTooltip = "LMB Set cart target\nShift+LMB Show current target\nCtrl+LMB Clear target\nAlt+LMB Show inputs";
-			selected.name = "SelectedItem";
+			selected.name = "Selected item";
 			inputMin = Text().Link( controls ).Pin( ipx - 40, ipy, 40 );
 			TooltipSource.Add( inputMin, "If this number is higher than the current content, the stock will request new items at high priority" );
 			inputMax = Text().Link( controls ).Pin( ipx + 50, ipy, 40 );
@@ -1924,16 +1945,16 @@ public class Interface : OperationHandler
 			base.Update();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
-				Color c = Color.yellow;
+				Color c = Color.black;
 				if ( stock.content[i] < stock.inputMin[i] )
-					c = Color.red;
+					c = Color.red.Dark();
 				if ( stock.content[i] > stock.inputMax[i] )
-					c = Color.green;
+					c = Color.green.Dark();
 				counts[i].color = c;
 				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ")";
 			}
 			total.text = stock.total + " => " + stock.totalTarget;
-			selected.SetType( selectedItemType );
+			selected?.SetType( selectedItemType );
 			int t = (int)selectedItemType;
 			inputMin.text = stock.inputMin[t] + "<";
 			outputMin.text = stock.outputMin[t] + "<";
@@ -2234,7 +2255,7 @@ public class Interface : OperationHandler
 
 		public void Open( Road road, GroundNode node )
 		{
-			borderWidth = 0.3f;
+			borderWidth = 10;
 			noResize = true;
 			base.Open( road, 0, 0, 210, 165 );
 			this.road = road;
@@ -2387,7 +2408,7 @@ public class Interface : OperationHandler
 #if DEBUG
 			Selection.activeGameObject = flag.gameObject;
 #endif
-			borderWidth = 0.3f;
+			borderWidth = 10;
 			noResize = true;
 			if ( base.Open( flag, 0, 0, 250, 75 ) )
 				return;
@@ -2508,7 +2529,7 @@ public class Interface : OperationHandler
 		public void Open( Worker worker, bool show )
 		{
 			var cart = worker as Stock.Cart;
-			borderWidth = 0.3f;
+			borderWidth = 10;
 			noResize = true;
 			if ( base.Open( worker.node, 0, 0, 200, cart ? 140 : 80 ) )
 				return;
@@ -2589,7 +2610,7 @@ public class Interface : OperationHandler
 
 		public static ConstructionPanel Create()
 		{
-			return new GameObject().AddComponent<ConstructionPanel>();
+			return new GameObject( "Contruction panel").AddComponent<ConstructionPanel>();
 		}
 
 		public void Open( Building.Construction construction, bool show = false )
@@ -2607,7 +2628,7 @@ public class Interface : OperationHandler
 			stones = new WorkshopPanel.Buffer();
 			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, 20, -64, iconSize + 5 );
 
-			progress = Progress().Pin( 20, -90, ( iconSize + 5 ) * 8 );
+			progress = Progress().Pin( 20, -90, ( iconSize + 5 ) * 4 );
 
 			if ( show )
 				root.world.eye.FocusOn( construction.boss, true );
@@ -2820,7 +2841,7 @@ public class Interface : OperationHandler
 			for ( int i = 0; i < buildings.Count; i++ )
 			{
 				BuildingIcon( buildings[i] ).Link( scroll.content ).Pin( 0, -iconSize * i, 80 );
-				productivities.Add( Text( "" ).Link( scroll.content ).Pin( 150, -iconSize * i, 100 ) );
+				productivities.Add( Text( "" ).AddOutline().Link( scroll.content ).Pin( 150, -iconSize * i, 100 ) );
 				outputs.Add( Text( "" ).Link( scroll.content ).Pin( 385, -iconSize * i, 50 ) );
 				inputs.Add( new List<Text>() );
 				if ( buildings[i] is Workshop workshop )
@@ -3865,13 +3886,13 @@ public class Interface : OperationHandler
 			{
 				int row = i * - ( iconSize + 5 );
 				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
-				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 40, iconSize );
+				inStock[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 30, row, 40, iconSize );
 				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
-				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 80, row, 40 );
-				surplus[i] = Text( "0" ).Link( scroll.content ).Pin( 130, row, 40 );
-				production[i] = Text( "0" ).Link( scroll.content ).Pin( 180, row, 40 );
-				weight[i] = Text( "0" ).Link( scroll.content ).Pin( 230, row, 40 );
-				efficiency[i] = Text( "0" ).Link( scroll.content ).Pin( 280, row, 40 );
+				onWay[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 80, row, 40 );
+				surplus[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 130, row, 40 );
+				production[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 180, row, 40 );
+				weight[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 230, row, 40 );
+				efficiency[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 280, row, 40 );
 			}
 
 			SetScrollRectContentSize( scroll, 0, (int)Item.Type.total * ( iconSize + 5 ) );
@@ -4232,30 +4253,30 @@ public class Interface : OperationHandler
 		{
 			noCloseButton = true;
 			noResize = true;
-			Open( null, 0, 0, 300, 210 );
-			this.Pin( -150, 105, 300, 210, 0.5f, 0.3f );
+			Open( null, 0, 0, 300, 230 );
+			this.PinCenter( 0, 0, 300, 230, 0.5f, 0.3f );
 
-			Image().Pin( 20, -45, 260, 1 );
+			Button( "Continue" ).PinCenter( 0, -34, 100, 25, 0.5f ).AddClickHandler( Close );
+			Image().PinCenter( 0, -50, 260, 1, 0.5f ).color = Color.black;
 
-			Button( "Continue" ).Pin( 110, -20, 80, 20 ).AddClickHandler( Close );
-			Button( "Start New World" ).Pin( 90, -50, 120, 20 ).AddClickHandler( StartNewGame );
-			Text( "Seed", 12 ).Pin( 20, -75, 40, 20 );
-			seed = InputField().Pin( 60, -70, 100, 25 );
+			Button( "Start New World" ).PinCenter( 0, -67, 120, 25, 0.5f ).AddClickHandler( StartNewGame );
+			Text( "Seed", 12 ).Pin( 20, -85, 40, 20 );
+			seed = InputField().Pin( 60, -80, 100, 25 );
 			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
-			Button( "Randomize" ).Pin( 165, -73, 60 ).AddClickHandler( RandomizeSeed );
-			Text( "Size", 12 ).Pin( 20, -100, 30 );
-			size = Dropdown().Pin( 60, -95, 80, 25 );
+			Button( "Randomize" ).Pin( 165, -83, 60, 25 ).AddClickHandler( RandomizeSeed );
+			Text( "Size", 12 ).Pin( 20, -115, 30 );
+			size = Dropdown().Pin( 60, -110, 80, 25 );
 			size.ClearOptions();
 			size.AddOptions( new List<string>() { "Small (24x24)", "Medium (32x32)", "Big (48x48)" } );
 			size.value = savedSize;
-			Image().Pin( 20, -125, 260, 1 );
+			Image().PinCenter( 0, -140, 260, 1, 0.5f ).color = Color.black;
 
-			Button( "Load" ).Pin( 20, -133, 50 ).AddClickHandler( Load );
-			loadNames = Dropdown().Pin( 80, -130, 200, 25 );
-			Image().Pin( 20, -158, 260, 1 );
+			Button( "Load" ).Pin( 20, -148, 60, 25 ).AddClickHandler( Load );
+			loadNames = Dropdown().Pin( 80, -145, 200, 25 );
+			Image().Pin( 20, -173, 260, 1 ).color = Color.black;
 
-			Button( "Save" ).Pin( 20, -168, 50 ).AddClickHandler( Save );
-			saveName = InputField().Pin( 80, -165, 100, 25 );
+			Button( "Save" ).Pin( 20, -178, 60, 25 ).AddClickHandler( Save );
+			saveName = InputField().Pin( 80, -180, 100, 25 );
 			saveName.text = new System.Random().Next().ToString();
 
 			RandomizeSeed();
@@ -4368,6 +4389,11 @@ public static class UIHelpers
 		return g;
 	}
 
+	public static UIElement PinCenter<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
+	{
+		return g.Pin( x - xs / 2, y + ys / 2, xs, ys, xa, ya );
+	}
+
 	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
 	{
 		g.Pin( x, y + currentRow, xs, ys, xa, ya );
@@ -4406,6 +4432,17 @@ public static class UIHelpers
 	public static UIElement Link<UIElement>( this UIElement g, Component parent ) where UIElement : Component
 	{
 		g.transform.SetParent( parent.transform, false );
+		return g;
+	}
+
+	public static UIElement AddOutline<UIElement>( this UIElement g, Color? color = null, float distance = 1 ) where UIElement : Component
+	{
+		Outline o = g.gameObject.AddComponent<Outline>();
+		if ( o != null )
+		{
+			o.effectColor = color ?? Color.black;
+			o.effectDistance = Vector2.one * distance;
+		}
 		return g;
 	}
 

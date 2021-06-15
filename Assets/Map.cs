@@ -21,7 +21,7 @@ public class Map : Interface.Panel
 		dialog.transform.SetParent( transform );
 		this.fullScreen = fullScreen;
 		noCloseButton = fullScreen;
-		borderWidth = fullScreen ? 0 : 0.6f;
+		borderWidth = fullScreen ? 0 : 15;
 		base.Open( null, 0, 0, 316, 316 );
 		name = "Map";
 		content = MapImage.Create();
