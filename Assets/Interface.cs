@@ -4033,13 +4033,13 @@ public class Interface : OperationHandler
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				var t = (Item.Type)i;
-				var j = ItemIcon( (Item.Type)i ).Pin( 20 + i * iconSize, -20 );
-				j.GetComponent<Button>().onClick.AddListener( delegate { selected = t; lastAverageEfficiency = -1; } );
+				ItemIcon( (Item.Type)i ).Pin( 20 + i * iconSize, -20 ).AddClickHandler( delegate { selected = t; lastAverageEfficiency = -1; } );
 			}
 			Image( iconTable.GetMediaData( Icon.summa ) ).Pin( 400, -20 ).AddClickHandler( delegate { selected = Item.Type.total; lastAverageEfficiency = -1; } );
 			itemFrame = Image( iconTable.GetMediaData( Icon.tinyFrame ) ).Pin( 17, -17, 26, 26 );
 			chart = Image().Pin( 20, -40, 410, 240 );
 			record = Text().Pin( 25, -45, 150 );
+			record.color = Color.yellow;
 			selected = Item.Type.total;
 			lastAverageEfficiency = -1;
 		}
