@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -3879,7 +3879,7 @@ public class Interface : OperationHandler
 			AddClickHandler( delegate { SetOrder( CompareEfficiency ); } );
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
-			finalEfficiency = Text().Pin( 100, 30, 200, 40, 0, 0 );
+			finalEfficiency = Text().Pin( 100, 40, 200, 40, 0, 0 );
 			finalEfficiency.fontSize = (int)( uiScale * 16 );
 
 			for ( int i = 0; i < inStock.Length; i++ )
