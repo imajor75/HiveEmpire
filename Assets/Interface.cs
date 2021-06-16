@@ -4168,7 +4168,7 @@ public class Interface : OperationHandler
 			chart.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
 			Assert.global.IsNotNull( chart.sprite );
 			record.text = "Record: " + a.record;
-			itemFrame.rectTransform.anchoredPosition = new Vector2( (int)( uiScale * ( 17 + iconSize * (int)selected ) ), (int)( uiScale * -17 ) );
+			itemFrame.PinCenter( 30 + (int)selected * iconSize, -30 );
 			lastAverageEfficiency = player.averageEfficiencyHistory.current;
 		}
 	}
