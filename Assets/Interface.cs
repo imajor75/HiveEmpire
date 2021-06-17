@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1106,13 +1106,13 @@ public class Interface : OperationHandler
 			{
 				Image frame = gameObject.GetComponent<Image>();
 				frame.sprite = iconTable.GetMediaData( Icon.smallFrame );
-				frame.pixelsPerUnitMultiplier = 8 / uiScale;
+				frame.pixelsPerUnitMultiplier = 16 / uiScale;
 				frame.type = UnityEngine.UI.Image.Type.Sliced;
 				frame.color = Color.Lerp( Color.red, Color.yellow, 0.5f ).Dark();
 
 				bar = new GameObject( "Bar" ).AddComponent<Image>();
 				bar.sprite = iconTable.GetMediaData( Icon.emptyFrame );
-				bar.pixelsPerUnitMultiplier = 12 / uiScale;
+				bar.pixelsPerUnitMultiplier = 24 / uiScale;
 				bar.type = UnityEngine.UI.Image.Type.Sliced;
 				bar.rectTransform.SetParent( transform, false );
 				bar.rectTransform.anchorMin	= Vector2.zero;
