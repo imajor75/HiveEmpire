@@ -11,7 +11,6 @@ Shader "Custom/Road"
     {
         Tags { "RenderType"="Opaque" }
         LOD 200
-        ZTest Always
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
@@ -25,6 +24,7 @@ Shader "Custom/Road"
         struct Input
         {
             float2 uv_MainTex;
+            float3 highlight : COLOR;
         };
 
         half _Glossiness;
@@ -42,10 +42,8 @@ Shader "Custom/Road"
         {
             // Albedo comes from a texture tinted by color
             fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-            clip( c.a - 0.5f );
-            o.Albedo.r = 1;
-            o.Albedo.g = 1;
-            o.Albedo.b = 0;
+            clip( c.a - 0.5 );
+            o.Albedo = c.rgb + IN.highlight;
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;

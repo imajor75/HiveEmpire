@@ -18,7 +18,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
 	public Mesh mesh;
-	public static Material material, materialWithHighlight;
+	public static Material material;
 	public static int timeBetweenWorkersAdded = 3000;
 	public World.Timer workerAdded;
 	public bool decorationOnly;
@@ -38,7 +38,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	public static void Initialize()
 	{
 		material = Resources.Load<Material>( "Road" );
-		materialWithHighlight = Resources.Load<Material>( "RoadHighlighted" );
 	}
 
 	public static Road Create()
@@ -157,11 +156,12 @@ public class Road : HiveObject, Interface.IInputHandler
 		referenceLocation = centerNode;
 		curves = new List<CubicCurve>[3];
 		CreateCurves();
+		ready = true;
 		RebuildMesh();
 		AttachWatches();
 		RegisterOnGround();
 		gameObject.GetComponent<MeshRenderer>().material = material;
-		ready = true;
+		
 		return true;
 	}
 
@@ -196,7 +196,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			name = "Road";
 
 		var renderer = gameObject.AddComponent<MeshRenderer>();
-		renderer.material = ( ready || decorationOnly ) ? material : materialWithHighlight;
+		renderer.material = material;
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		var filter = gameObject.AddComponent<MeshFilter>();
 		mesh = filter.mesh = new Mesh();
@@ -254,14 +254,21 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		int v = 0;
 		var vertices = new Vector3[vertexRows * 3];
-		for ( int j = 0; j < vertices.Length; j++ )
-			vertices[j] = new Vector3();
+		var colors = new Color[vertexRows * 3];
 		var uvs = new Vector2[vertexRows * 3];
 
 		var mapVertices = new Vector3[nodes.Count * 2];
 
 		for (int i = 0; i < nodes.Count; i++)
 		{
+			Color vertexColor = Color.black;
+			if ( !ready && !decorationOnly )
+			{
+				if ( i < nodes.Count - tempNodes  - 1 )
+					vertexColor = Color.green.Dark().Dark().Dark();
+				else
+					vertexColor = Color.yellow;
+			}
 			for ( int b = 0; b < blocksInSection; b++ )
             {
 				if (i == nodes.Count - 1 && b > 0)
@@ -285,10 +292,13 @@ public class Road : HiveObject, Interface.IInputHandler
 				}
 
 				uvs[v] = new Vector2(0.0f, tv );
+				colors[v] = vertexColor;
 				vertices[v++] = pos + h - side * width;
 				uvs[v] = new Vector2(0.5f, tv );
+				colors[v] = vertexColor;
 				vertices[v++] = pos + h;
 				uvs[v] = new Vector2(1.0f, tv );
+				colors[v] = vertexColor;
 				vertices[v++] = pos + h + side * width;
 			}
 		}
@@ -303,6 +313,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.AreEqual( v, vertexRows * 3 );
 		mesh.vertices = vertices;
 		mesh.uv = uvs;
+		mesh.colors = colors;
 		mapMesh.vertices = mapVertices;
 
 		int blockCount = (nodes.Count - 1) * blocksInSection;
