@@ -973,6 +973,11 @@ public class Worker : HiveObject
 		};
 
 		animationSounds.fileNamePrefix = "effects/";
+		object[] animationSoundData = 
+		{
+			"construction", 0.5f, AnimationSound.construction
+		};
+		animationSounds.Fill( animationSoundData );
 	}
 
 	static public Worker Create()
@@ -1978,8 +1983,14 @@ public class Worker : HiveObject
 	{
 		if ( soundSource )
 		{
-			soundSource.clip = animationSounds.GetMediaData( (AnimationSound)soundID ); 
+			var m = animationSounds.GetMedia( (AnimationSound)soundID );
+			soundSource.clip = m.data;
+			if ( m.floatData != 0 )
+				soundSource.volume = m.floatData;
+			else
+				soundSource.volume = 1;
 			soundSource.loop = false;
+			
 			assert.IsNotNull( soundSource.clip, $"No sound found for AnimationSouns.{((AnimationSound)soundID).ToString()}" );
 			soundSource.Play();
 		}
