@@ -700,7 +700,7 @@ public class Interface : OperationHandler
 		}
 	}
 
-	class TooltipSource : MonoBehaviour
+	public class TooltipSource : MonoBehaviour
 	{
 		public string text;
 		public string additionalText;
@@ -712,26 +712,6 @@ public class Interface : OperationHandler
 				tooltip.SetText( this, text, image, additionalText );
 			else if ( tooltip.origin == this )
 				tooltip.Clear();
-		}
-
-		public static TooltipSource Add( Component widget, string text, Sprite image = null, string additionalText = "" )
-		{
-			var s = widget.gameObject.AddComponent<TooltipSource>();
-			s.text = text;
-			s.image = image;
-			s.additionalText = additionalText;
-			return s;
-		}
-
-		public static TooltipSource Set( Component widget, string text, Sprite image = null, string additionalText = "" )
-		{
-			var s = widget.gameObject.GetComponent<TooltipSource>();
-			if ( s == null )
-				s = widget.gameObject.AddComponent<TooltipSource>();
-			s.text = text;
-			s.image = image;
-			s.additionalText = additionalText;
-			return s;
 		}
 	}
 
@@ -1111,7 +1091,7 @@ public class Interface : OperationHandler
 				frame.sprite = iconTable.GetMediaData( Icon.smallFrame );
 				frame.pixelsPerUnitMultiplier = 16 / uiScale;
 				frame.type = UnityEngine.UI.Image.Type.Sliced;
-				frame.color = Color.Lerp( Color.red, Color.yellow, 0.5f ).Dark();
+				frame.color = Color.grey;
 
 				bar = new GameObject( "Bar" ).AddComponent<Image>();
 				bar.sprite = iconTable.GetMediaData( Icon.emptyFrame );
@@ -1399,6 +1379,7 @@ public class Interface : OperationHandler
 		public Image changeModeImage;
 		public Text productivity;
 		public Text itemsProduced;
+		public Text title;
 		public Text resourcesLeft;
 
 		public List<Buffer> buffers;
@@ -1443,7 +1424,7 @@ public class Interface : OperationHandler
 			int row = -20;
 			if ( ( contentToShow & Content.name ) > 0 )
 			{
-				Text( workshop.type.ToString() ).Pin( 20, row, 160, 20 );
+				title = Text( workshop.type.ToString() ).Pin( 20, row, 160, 20 );
 				row -= 20;
 			}
 
@@ -1538,19 +1519,40 @@ public class Interface : OperationHandler
 
 			outputs?.Update( workshop.output, 0 );
 
+			if ( title != null && title.Contains( Input.mousePosition ) )
+			{
+				var r = workshop.relaxSpotCount;
+				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
+				if ( percent > 100 )
+					percent = 100;
+				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%" );
+			}
+
 			if ( progressBar )
 			{
-				if ( workshop.working )
+				progressBar.SetTooltip( 
+					$"Time needed to produce a new item: {( workshop.productionConfiguration.productionTime * Time.fixedDeltaTime ).ToString( "F2" )}s", 
+					null, 
+					$"Rest time needed: {( workshop.restTime * Time.fixedDeltaTime ).ToString( "F2" )}s" );
+				if ( workshop.resting.inProgress )
 				{
-					progressBar.progress = workshop.GetProgress();
-					progressBar.color = Color.yellow;
+					progressBar.progress = (float)( -workshop.resting.age ) / workshop.restTime;
+					progressBar.color = Color.grey.Light();
 				}
 				else
 				{
-					if ( workshop.gatherer && !workshop.working )
-						progressBar.color = Color.green;
+					if ( workshop.working )
+					{
+						progressBar.progress = workshop.GetProgress();
+						progressBar.color = Color.yellow;
+					}
 					else
-						progressBar.color = Color.red;
+					{
+						if ( workshop.gatherer && !workshop.working )
+							progressBar.color = Color.green;
+						else
+							progressBar.color = Color.red;
+					}
 				}
 				if ( productivity )
 					UpdateProductivity( productivity, workshop );
@@ -1687,6 +1689,9 @@ public class Interface : OperationHandler
 				{
 					foreach ( var s in past )
 					{
+						if ( s.status == Workshop.Status.unknown )
+							continue;
+
 						ticksInStatus[(int)s.status] += s.length;
 						totalTicks += s.length;
 					}
@@ -1706,7 +1711,7 @@ public class Interface : OperationHandler
 				while ( statusList.Count < 101 )
 					statusList.Add( statusList[0] );
 
-				Color[] statusColors = { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light() };
+				Color[] statusColors = { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light(), Color.Lerp( Color.green, Color.blue, 0.5f ).Light() };
 				Assert.global.AreEqual( statusColors.Length, (int)Workshop.Status.total );
 
 				UIHelpers.currentRow = -20;
@@ -1725,6 +1730,7 @@ public class Interface : OperationHandler
 						Workshop.Status.waitingForInput3 => $"Waiting for {workshop.buffers[3].itemType.ToString()}",
 						Workshop.Status.waitingForOutputSlot => "Waiting for output slot",
 						Workshop.Status.waitingForResource => "Waiting for resource",
+						Workshop.Status.resting => "Resting",
 						_ => "Unknown"
 					};
 					var e = Text( $"{percentInStatus[i]}% " + statusName, 10 ).PinDownwards( 150, 0, 350, (int)( iconSize * 0.8f ) ).AddOutline();
@@ -1895,14 +1901,14 @@ public class Interface : OperationHandler
 			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( ipx, ipy, 2 * iconSize, 2 * iconSize ).AddClickHandler( SetTarget );
 			selected.additionalTooltip = "LMB Set cart target\nShift+LMB Show current target\nCtrl+LMB Clear target\nAlt+LMB Show inputs";
 			selected.name = "Selected item";
-			inputMin = Text().Link( controls ).Pin( ipx - 40, ipy, 40 );
-			TooltipSource.Add( inputMin, "If this number is higher than the current content, the stock will request new items at high priority" );
-			inputMax = Text().Link( controls ).Pin( ipx + 50, ipy, 40 );
-			TooltipSource.Add( inputMax, "If the stock has at least this many items, it will no longer accept surplus" );
-			outputMin = Text().Link( controls ).Pin( ipx - 40, ipy - 20, 40 );
-			TooltipSource.Add( outputMin, "The stock will only supply other buildings with the item if it has at least this many" );
-			outputMax = Text().Link( controls ).Pin( ipx + 50, ipy - 20, 40 );
-			TooltipSource.Add( outputMax, "If the stock has more items than this number, then it will send the surplus even to other stocks" );
+			inputMin = Text().Link( controls ).Pin( ipx - 40, ipy, 40 ).
+			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority" );
+			inputMax = Text().Link( controls ).Pin( ipx + 50, ipy, 40 ).
+			SetTooltip( "If the stock has at least this many items, it will no longer accept surplus" );
+			outputMin = Text().Link( controls ).Pin( ipx - 40, ipy - 20, 40 ).
+			SetTooltip( "The stock will only supply other buildings with the item if it has at least this many" );
+			outputMax = Text().Link( controls ).Pin( ipx + 50, ipy - 20, 40 ).
+			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks" );
 		}
 
 		void SetTarget()
@@ -4078,7 +4084,7 @@ public class Interface : OperationHandler
 					time = $"{hours} hours and " + time;
 				else if ( hours == 1 )
 					time = "1 hour and " + time;
-				TooltipSource.Set( chart, $"{time}\n{PixelToPerMinute( (int)cursorInsideChart.y )} per minute" );
+				chart.SetTooltip( $"{time}\n{PixelToPerMinute( (int)cursorInsideChart.y )} per minute" );
 			}
 
 			if ( lastAverageEfficiency == player.averageEfficiencyHistory.current )
@@ -4470,6 +4476,19 @@ public static class UIHelpers
 			return rect.Contains( position );
 		}
 		return false;
+	}
+	
+	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "" ) where UIElement : Component
+	{
+			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
+			if ( s == null )
+				s = g.gameObject.AddComponent<Interface.TooltipSource>();
+			s.text = text;
+			s.image = image;
+			s.additionalText = additionalText;
+			foreach ( Transform t in g.transform )
+				t.SetTooltip( text, image, additionalText );
+			return g;
 	}
 }
 

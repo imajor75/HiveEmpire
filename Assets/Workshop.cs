@@ -22,6 +22,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public float millWheelSpeed = 0;
 	public GroundNode resourcePlace;
 	public int itemsProduced;
+	public World.Timer resting;
 	public Productivity productivity = new Productivity( 0.5f );
 	AudioSource soundSource;
 	static public MediaTable<AudioClip, Type> processingSounds;
@@ -63,6 +64,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
 		public int productionTime = 1500;
+		public int relaxSpotCountNeeded = 25;
+		public int maxRestTime = 300;
 		public int outputMax = 6;
 
 		[Obsolete( "Compatibility with old files", true )]
@@ -82,7 +85,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 		waitingForInput3,
 		waitingForOutputSlot,
 		waitingForResource,
-		total
+		resting,
+		total,
+		unknown = -1
 	}
 
 	[Serializable]
@@ -93,6 +98,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	}
 
 	public List<PastStatus> pastStatuses = new List<PastStatus>(), previousPastStatuses = new List<PastStatus>();
+	public Status currentStatus = Status.unknown;
 	public World.Timer statusDuration;
 	public int savedStatusTicks = 0;
 	public const int maxSavedStatusTicks = 150000;
@@ -597,19 +603,24 @@ public class Workshop : Building, Worker.Callback.IHandler
 		output += productionConfiguration.outputStackSize;
 		itemsProduced += productionConfiguration.outputStackSize;
 		owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+		resting.Start( restTime );
+		ChangeStatus( Status.resting );
 		SetWorking( false );
 	}
 
 	public bool gatherer { get { return productionConfiguration.gatheredResource != Resource.Type.unknown; } }
 
-	public void SaveStatus( Status status )
+	public void ChangeStatus( Status status )
 	{
-		if ( !statusDuration.empty )
+		if ( currentStatus == status )
 		{
-			if ( pastStatuses.Count > 0 && pastStatuses.Last().status == status )
-				pastStatuses.Last().length += statusDuration.age;
-			else
-				pastStatuses.Add( new PastStatus { status = status, length = statusDuration.age } );
+			assert.IsTrue( statusDuration.done );
+			return;
+		}
+
+		if ( currentStatus != Status.unknown )
+		{
+			pastStatuses.Add( new PastStatus { status = currentStatus, length = statusDuration.age } );
 			savedStatusTicks += statusDuration.age;
 			if ( savedStatusTicks > maxSavedStatusTicks )
 			{
@@ -618,6 +629,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				savedStatusTicks = 0;
 			}
 		}
+		currentStatus = status;
 		statusDuration.Start();
 	}
 
@@ -675,9 +687,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			case Type.farm:
 			{
-				if ( working )
-					SaveStatus( Status.working );
-				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
+				if ( worker.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
 					if ( output < productionConfiguration.outputMax )
 					{
@@ -693,11 +703,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 								CollectResourceFromNode( resource );
 								return;
 							}
-							SaveStatus( Status.waitingForResource );
+							ChangeStatus( Status.waitingForResource );
 						}
 					}
 					else
-						SaveStatus( Status.waitingForOutputSlot );
+						ChangeStatus( Status.waitingForOutputSlot );
 					foreach ( var o in Ground.areas[3] )
 					{
 						GroundNode place = node.Add( o );
@@ -712,7 +722,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			case Type.forester:
 			{
-				if ( worker.IsIdle( true ) && mode != Mode.sleeping )
+				if ( worker.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
 					var o = Ground.areas[productionConfiguration.gatheringRange];
 					for ( int i = 0; i < o.Count; i++ )
@@ -746,15 +756,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 				else
 					ProcessInput();
 
-				if ( type == Type.mill && working )
-					millWheelSpeed += 0.01f;
-				else
-					millWheelSpeed -= 0.01f;
-				if ( millWheelSpeed > 1 )
-					millWheelSpeed = 1;
-				if ( millWheelSpeed < 0 )
-					millWheelSpeed = 0;
-				millWheel?.Rotate( 0, 0, World.instance.timeFactor * millWheelSpeed );
+				if ( millWheel )
+				{
+					if ( type == Type.mill && working )
+						millWheelSpeed += 0.01f;
+					else
+						millWheelSpeed -= 0.01f;
+					if ( millWheelSpeed > 1 )
+						millWheelSpeed = 1;
+					if ( millWheelSpeed < 0 )
+						millWheelSpeed = 0;
+					millWheel.Rotate( 0, 0, World.instance.timeFactor * millWheelSpeed );
+				}
 				break;
 			}
 		}
@@ -779,12 +792,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		if ( common && sum < count )
 		{
-			SaveStatus( Status.waitingForAnyInput );
+			ChangeStatus( Status.waitingForAnyInput );
 			return false;
 		}
 		if ( !common && min < count )
 		{
-			SaveStatus( Status.waitingForInput0 + minIndex );
+			ChangeStatus( Status.waitingForInput0 + minIndex );
 			return false;
 		}
 
@@ -806,11 +819,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void ProcessInput()
 	{
-		if ( !working && worker.IsIdle( true ) && mode != Mode.sleeping )
+		if ( !working && worker.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 		{
 			if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
 			{
-				SaveStatus( Status.waitingForOutputSlot );
+				ChangeStatus( Status.waitingForOutputSlot );
 				return;
 			}
 			if ( UseInput() )
@@ -821,7 +834,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		if ( working )
 		{
-			SaveStatus( Status.working );
 			progress += ground.world.timeFactor / productionConfiguration.productionTime;
 			if ( progress > 1 )
 			{
@@ -830,17 +842,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 				itemsProduced += productionConfiguration.outputStackSize;
 				if ( productionConfiguration.outputType != Item.Type.unknown )
 					owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+				resting.Start( restTime );
+				ChangeStatus( Status.resting );
 			}
 		}
 	}
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
-		if ( working )
-			SaveStatus( Status.working );
 		if ( !worker.IsIdle( true ) || mode == Mode.sleeping )
 			return;
 		if ( output >= productionConfiguration.outputMax )
+			return;
+		if ( resting.inProgress )
 			return;
 
 		resourcePlace = null;
@@ -868,7 +882,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				}
 			}
 		}
-		SaveStatus( Status.waitingForResource );
+		ChangeStatus( Status.waitingForResource );
 	}
 
 	/// <summary>
@@ -951,6 +965,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 			smoke?.Stop();
 			soundSource?.Stop();
 		}
+
+		if ( working )
+			ChangeStatus( Status.working );
 	}
 
 	public void Callback( Worker worker )
@@ -1000,6 +1017,36 @@ public class Workshop : Building, Worker.Callback.IHandler
 		progress = 0;
 	}
 
+	const int relaxAreaSize = 3;
+	public int relaxSpotCount 
+	{
+		get
+		{
+			int relaxSpotCount = 0;
+			foreach ( var o in Ground.areas[relaxAreaSize] )
+			{
+				var node = this.node + o;
+				if ( node.IsBlocking() )
+				{
+					if ( node.building || node.flag )
+						continue;
+					if ( node.road && node.road.ready )
+						continue;
+				}
+				relaxSpotCount++;
+			}
+			return relaxSpotCount;
+		}
+	}
+
+	public int restTime
+	{
+		get
+		{
+			return productionConfiguration.maxRestTime * relaxSpotCount / productionConfiguration.relaxSpotCountNeeded;
+		}
+	}
+
 	public override void Validate( bool chain )
 	{
 		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && gatherer );
@@ -1022,5 +1069,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				assert.IsFalse( worker.IsIdle() );
 			}
 		}
+		if ( currentStatus != Status.unknown )
+			assert.IsTrue( statusDuration.done );
 	}
 }
