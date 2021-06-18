@@ -952,7 +952,10 @@ public class Interface : OperationHandler
 			var i = Image( iconTable.GetMediaData( Icon.crosshair ) ).AddOutline();
 			var a = i.gameObject.AddComponent<AreaControl>();
 			a.Setup( area );
-			a.Link( bg ).Stretch( 6, 6, -6, -6 );
+			i.Link( bg );
+			i.rectTransform.anchorMin = new Vector2( 0.2f, 0.2f );
+			i.rectTransform.anchorMax = new Vector2( 0.8f, 0.8f );
+			i.rectTransform.offsetMin = i.rectTransform.offsetMax = Vector2.zero;
 			return bg;
 		}
 
