@@ -1774,10 +1774,11 @@ public class Interface : OperationHandler
 		public void Open( GuardHouse guardHouse, bool show = false )
 		{
 			this.guardHouse = guardHouse;
+			noResize = true;
 			if ( base.Open( guardHouse, 50, 50 ) )
 				return;
 			name = "Guard House panel";
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( -40, 0 ).AddClickHandler( Remove );
+			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( 0, 0, iconSize, iconSize, 0.5f, 0.5f ).AddClickHandler( Remove );
 			if ( show )
 				root.world.eye.FocusOn( guardHouse, true );
 		}
