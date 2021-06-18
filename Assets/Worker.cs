@@ -975,7 +975,7 @@ public class Worker : HiveObject
 		animationSounds.fileNamePrefix = "effects/";
 		object[] animationSoundData = 
 		{
-			"construction", 0.5f, AnimationSound.construction
+			"construction", 0.2f, AnimationSound.construction
 		};
 		animationSounds.Fill( animationSoundData );
 	}
