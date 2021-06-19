@@ -1043,7 +1043,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		get
 		{
-			return productionConfiguration.maxRestTime * relaxSpotCount / productionConfiguration.relaxSpotCountNeeded;
+			var f = (float)( relaxSpotCount ) / productionConfiguration.relaxSpotCountNeeded;
+			if ( f > 1 )
+				f = 1;
+			return (int)( productionConfiguration.maxRestTime * ( 1 - f ) );
 		}
 	}
 
