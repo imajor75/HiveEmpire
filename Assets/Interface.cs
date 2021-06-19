@@ -4198,30 +4198,32 @@ public class Interface : OperationHandler
 
 		public void Open( bool victory = false )
 		{
+			noResize = true;
 			if ( base.Open( 200, 200 ) )
 				return;
 			name = "World Progress Panel";
-			this.Pin( -200, 200, -100, 100, 0.5f, 0.5f );
+			this.Pin( -200, -100, 200, 100, 0.5f, 0.5f );
 			UIHelpers.currentRow = -30;
 			if ( victory )
 			{
 				var t = Text( "VICTORY!" );
-				t.PinDownwards( -100, 100, -30, 0, 0.5f );
+				t.PinDownwards( -100, 0, 200, 30, 0.5f );
 				t.color = Color.red;
 				t.alignment = TextAnchor.MiddleCenter;
 				originalSpeed = root.world.timeFactor;
 				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
 				root.world.SetTimeFactor( 0 );
 			}
-			worldTime = Text().PinDownwards( -200, 200, -30, 0, 0.5f );
+			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			Text( $"Efficiency goal: {World.instance.efficiencyGoal}" ).
-			PinDownwards( -200, 200, -iconSize, 0, 0.5f ).alignment = TextAnchor.MiddleCenter;
-			recordEfficiency = Text().PinDownwards( -200, 200, -iconSize, 0, 0.5f );
+			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
+			recordEfficiency = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			recordEfficiency.alignment = TextAnchor.MiddleCenter;
-			currentEfficiency = Text().PinDownwards( -200, 200, -iconSize, 0, 0.5f );
+			currentEfficiency = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			currentEfficiency.alignment = TextAnchor.MiddleCenter;
-			efficiencyProgress = Progress().PinDownwards( -100, 100, -iconSize, 0, 0.5f );
+			efficiencyProgress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
+			this.SetSize( 300, -UIHelpers.currentRow + 30 );
 		}
 
 		new public void Update()
