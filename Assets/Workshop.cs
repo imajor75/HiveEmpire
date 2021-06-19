@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -64,7 +64,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
 		public int productionTime = 1500;
-		public int relaxSpotCountNeeded = 25;
+		public int relaxSpotCountNeeded = 20;
 		public int maxRestTime = 300;
 		public int outputMax = 6;
 
