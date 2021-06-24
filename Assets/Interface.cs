@@ -1400,6 +1400,7 @@ public class Interface : OperationHandler
 		public Text itemsProduced;
 		public Text title;
 		public Text resourcesLeft;
+		public Text status;
 
 		public List<Buffer> buffers;
 		public Buffer outputs;
@@ -1470,6 +1471,9 @@ public class Interface : OperationHandler
 				}
 				int progressWidth = ( iconSize + 5 ) * 7;
 				progressBar = Progress().Pin( iconSize, row, iconSize + progressWidth, iconSize );
+				status = Text().Link( progressBar ).Stretch().AddOutline();
+				status.alignment = TextAnchor.MiddleCenter;
+				status.color = Color.white;
 				row -= 25;
 
 				if ( ( contentToShow & Content.itemsProduced ) > 0 )
@@ -1584,6 +1588,8 @@ public class Interface : OperationHandler
 					UpdateProductivity( productivity, workshop );
 				if ( itemsProduced )
 					itemsProduced.text = "Items produced: " + workshop.itemsProduced;
+				if ( status )
+					status.text = workshop.GetStatusText( workshop.currentStatus );
 			}
 			if ( resourcesLeft )
 			{
@@ -1757,20 +1763,8 @@ public class Interface : OperationHandler
 				{
 					if ( ticksInStatus[i] == 0 )
 						continue;
-					string statusName = (Workshop.Status)i switch
-					{
-						Workshop.Status.working => "Working",
-						Workshop.Status.waitingForAnyInput => "Waiting for input",
-						Workshop.Status.waitingForInput0 => $"Waiting for {workshop.buffers[0].itemType.ToString()}",
-						Workshop.Status.waitingForInput1 => $"Waiting for {workshop.buffers[1].itemType.ToString()}",
-						Workshop.Status.waitingForInput2 => $"Waiting for {workshop.buffers[2].itemType.ToString()}",
-						Workshop.Status.waitingForInput3 => $"Waiting for {workshop.buffers[3].itemType.ToString()}",
-						Workshop.Status.waitingForOutputSlot => "Waiting for output slot",
-						Workshop.Status.waitingForResource => "Waiting for resource",
-						Workshop.Status.resting => "Resting",
-						_ => "Unknown"
-					};
-					var e = Text( $"{percentInStatus[i]}% " + statusName, 10 ).PinDownwards( 150, 0, 350, (int)( iconSize * 0.8f ) ).AddOutline();
+					
+					var e = Text( $"{percentInStatus[i]}% " + workshop.GetStatusText( (Workshop.Status)i ), 10 ).PinDownwards( 150, 0, 350, (int)( iconSize * 0.8f ) ).AddOutline();
 					e.color = statusColors[i];
 					e.name = $"Reason {i}";
 				}

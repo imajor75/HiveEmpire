@@ -1055,6 +1055,23 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 	}
 
+	public string GetStatusText( Status status )
+	{
+		return status switch
+		{
+			Workshop.Status.working => "Working",
+			Workshop.Status.waitingForAnyInput => "Waiting for input",
+			Workshop.Status.waitingForInput0 => $"Waiting for {buffers[0].itemType.ToString()}",
+			Workshop.Status.waitingForInput1 => $"Waiting for {buffers[1].itemType.ToString()}",
+			Workshop.Status.waitingForInput2 => $"Waiting for {buffers[2].itemType.ToString()}",
+			Workshop.Status.waitingForInput3 => $"Waiting for {buffers[3].itemType.ToString()}",
+			Workshop.Status.waitingForOutputSlot => "Waiting for output slot",
+			Workshop.Status.waitingForResource => "Waiting for resource",
+			Workshop.Status.resting => "Resting",
+			_ => "Unknown"
+		};
+	}
+
 	public override void Validate( bool chain )
 	{
 		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && gatherer );
