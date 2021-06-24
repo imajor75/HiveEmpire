@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1152,7 +1152,7 @@ public class Interface : OperationHandler
 
 		}
 
-		public class AreaControl : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IInputHandler
+		public class AreaControl : MonoBehaviour, IInputHandler
 		{
 			public Ground.Area area;
 			public GroundNode oldCenter;
@@ -1163,6 +1163,8 @@ public class Interface : OperationHandler
 			{
 				this.area = area;
 				image = gameObject.GetComponent<Image>();
+				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, "", Show, Hide );
+				this.AddClickHandler( OnClick );
 			}
 
 			public bool OnMovingOverNode( GroundNode node )
@@ -1183,7 +1185,7 @@ public class Interface : OperationHandler
 				return false;
 			}
 
-			public void OnPointerClick( PointerEventData eventData )
+			public void OnClick()
 			{
 				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
@@ -1202,7 +1204,7 @@ public class Interface : OperationHandler
 				root.viewport.inputHandler = this;
 			}
 
-			public void OnPointerEnter( PointerEventData eventData )
+			public void Show()
 			{
 				if ( area.center == null )
 					return;
@@ -1212,7 +1214,7 @@ public class Interface : OperationHandler
 				root.highlightArea = area;
 			}
 
-			public void OnPointerExit( PointerEventData eventData )
+			public void Hide()
 			{
 				if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == area )
 					root.highlightType = HighlightType.none;
