@@ -1017,7 +1017,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		progress = 0;
 	}
 
-	const int relaxAreaSize = 3;
+	public const int relaxAreaSize = 3;
 	public int relaxSpotCount 
 	{
 		get
@@ -1025,18 +1025,23 @@ public class Workshop : Building, Worker.Callback.IHandler
 			int relaxSpotCount = 0;
 			foreach ( var o in Ground.areas[relaxAreaSize] )
 			{
-				var node = this.node + o;
-				if ( node.IsBlocking() )
-				{
-					if ( node.building || node.flag )
-						continue;
-					if ( node.road && node.road.ready )
-						continue;
-				}
-				relaxSpotCount++;
+				if ( IsNodeGoodForRelax( this.node + o ) )
+					relaxSpotCount++;
 			}
 			return relaxSpotCount;
 		}
+	}
+
+	public static bool IsNodeGoodForRelax( GroundNode node )
+	{
+		if ( node.IsBlocking() )
+		{
+			if ( node.building || node.flag )
+				return false;;
+			if ( node.road && node.road.ready )
+				return false;
+		}
+		return true;
 	}
 
 	public int restTime

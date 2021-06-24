@@ -198,7 +198,8 @@ public class GroundNode : HiveObject
 		return position;
 	}
 
-	public Vector3 position { get { 	return GetPosition( x, y );	} }
+	public Vector3 position { get { return GetPosition( x, y );	} }
+	public Vector3 positionInViewport { get { return GetPositionRelativeTo( World.instance.eye.position ); } }
 
 	public static GroundNode FromPosition( Vector3 position, Ground ground )
 	{

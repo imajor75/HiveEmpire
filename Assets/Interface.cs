@@ -538,7 +538,7 @@ public class Interface : OperationHandler
 
 		public static PathVisualization Create()
 		{
-			return new GameObject().AddComponent<PathVisualization>();
+			return new GameObject( "Path visualization" ).AddComponent<PathVisualization>();
 		}
 
 		public PathVisualization Setup( Path path, Vector3 view )
@@ -608,7 +608,6 @@ public class Interface : OperationHandler
 
 		public void Start()
 		{
-			name = "Path visualization";
 			transform.SetParent( World.instance.transform );
 		}
 
@@ -705,13 +704,37 @@ public class Interface : OperationHandler
 		public string text;
 		public string additionalText;
 		public Sprite image;
+		public Action onShow;
+		public Action onHide;
+		public bool active;
 
 		public void Update()
 		{
 			if ( GetUIElementUnderCursor() == gameObject )
+			{
 				tooltip.SetText( this, text, image, additionalText );
-			else if ( tooltip.origin == this )
-				tooltip.Clear();
+				if ( onShow != null && !active )
+				{
+					onShow();
+					active = true;
+				}
+			}
+			else
+			{
+				if ( tooltip.origin == this )
+					tooltip.Clear();
+				if ( onHide != null && active )
+				{
+					onHide();
+					active = false;
+				}
+			}
+		}
+
+		public void OnDestroy()
+		{
+			if ( active && onHide != null )
+				onHide();
 		}
 	}
 
@@ -1010,7 +1033,7 @@ public class Interface : OperationHandler
 			UpdatePosition();
 		}
 
-		void UpdatePosition()
+		public void UpdatePosition()
 		{
 			if ( target == null || !followTarget )
 				return;
@@ -1172,7 +1195,7 @@ public class Interface : OperationHandler
 				oldCenter = area.center;
 				oldRadius = area.radius;
 				area.center = World.instance.ground.nodes[0];
-				area.radius = 4;
+				area.radius = 2;
 				root.highlightType = HighlightType.area;
 				root.highlightArea = area;
 				root.highlightOwner = gameObject;
@@ -1225,7 +1248,7 @@ public class Interface : OperationHandler
 			}
 		}
 
-		public class ItemImage : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+		public class ItemImage : MonoBehaviour
 		{
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
@@ -1252,6 +1275,16 @@ public class Interface : OperationHandler
 				picture.enabled = itemType != Item.Type.unknown;
 				if ( itemType != Item.Type.unknown )
 					picture.sprite = Item.sprites[(int)itemType];
+
+				inTransit = new GameObject( "Logistic indicator" ).AddComponent<Image>().Link( this );
+				inTransit.sprite = Worker.arrowSprite;
+				inTransit.rectTransform.anchorMin = new Vector2( 0.5f, 0.0f );
+				inTransit.rectTransform.anchorMax = new Vector2( 1.0f, 0.5f );
+				inTransit.rectTransform.offsetMin = inTransit.rectTransform.offsetMax = Vector2.zero;
+				inTransit.gameObject.SetActive( false );
+
+				if ( itemType != Item.Type.unknown )
+					this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip, OnHideTooltip );
 				return this;
 			}
 
@@ -1279,19 +1312,11 @@ public class Interface : OperationHandler
 				}
 				picture.enabled = true;
 				picture.sprite = Item.sprites[(int)itemType];
+				this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip, OnHideTooltip );
 			}
 
 			public void SetInTransit( bool show )
 			{
-				if ( inTransit == null )
-				{
-					inTransit = new GameObject().AddComponent<Image>();
-					inTransit.transform.SetParent( transform, false );
-					inTransit.sprite = Worker.arrowSprite;
-					inTransit.rectTransform.anchorMin = new Vector2( 0.5f, 0.0f );
-					inTransit.rectTransform.anchorMax = new Vector2( 1.0f, 0.5f );
-					inTransit.rectTransform.offsetMin = inTransit.rectTransform.offsetMax = Vector2.zero;
-				}
 				inTransit.gameObject.SetActive( show );
 			}
 
@@ -1310,22 +1335,16 @@ public class Interface : OperationHandler
 					SetType( Item.Type.unknown );
 			}
 
-			public void OnPointerEnter( PointerEventData eventData )
+			public void OnShowTooltip()
 			{
-				if ( item != null )
-				{
+				if ( pathVisualization == null && item )
 					pathVisualization = PathVisualization.Create().Setup( item.path, Interface.root.viewport.visibleAreaCenter );
-					tooltip.SetText( this, item.type.ToString(), Item.sprites[(int)item.type], additionalTooltip );
-				}
-				else
-					tooltip.SetText( this, itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip );
 			}
 
-			public void OnPointerExit( PointerEventData eventData )
+			public void OnHideTooltip()
 			{
-				Destroy( pathVisualization );
+				Destroy( pathVisualization?.gameObject );
 				pathVisualization = null;
-				tooltip.Clear();
 			}
 
 			void Update()
@@ -1463,7 +1482,11 @@ public class Interface : OperationHandler
 				}
 			}
 			if ( workshop.gatherer && ( contentToShow & Content.resourcesLeft ) > 0 )
+			{
 				resourcesLeft = Text( "Resources left: 0" ).Pin( 20, row, 150, 20 );
+				if ( ( contentToShow & Content.controlIcons ) == 0 )
+					row -= 25;
+			}
 
 			if ( ( contentToShow & Content.controlIcons ) != 0 )
 			{
@@ -1474,7 +1497,8 @@ public class Interface : OperationHandler
 				row -= 25;
 			}
 
-			this.Pin( 0, 0, 250, 15 - row );
+			this.SetSize( 250, 15 - row );
+			Update();
 			if ( show )
 				root.world.eye.FocusOn( workshop, true );
 		}
@@ -1525,7 +1549,9 @@ public class Interface : OperationHandler
 				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
 				if ( percent > 100 )
 					percent = 100;
-				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%" );
+				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "",
+				delegate { ShowRelaxSpotsAround( true ); },
+				delegate { ShowRelaxSpotsAround( false ); } );
 			}
 
 			if ( progressBar )
@@ -1584,6 +1610,17 @@ public class Interface : OperationHandler
 			}
 			if ( changeModeImage )
 				changeModeImage.sprite = GetModeIcon();
+		}
+
+		void ShowRelaxSpotsAround( bool on )
+		{
+			if ( on )
+			{
+				root.viewport.nodeInfoToShow = Viewport.NodeInfoType.relaxSites;
+				root.viewport.relaxCenter = workshop;
+			}
+			if ( !on && root.viewport.nodeInfoToShow == Viewport.NodeInfoType.relaxSites && root.viewport.relaxCenter == workshop )
+				root.viewport.nodeInfoToShow = Viewport.NodeInfoType.none;
 		}
 
 		static public void UpdateProductivity( Text text, Workshop workshop )
@@ -2930,14 +2967,16 @@ public class Interface : OperationHandler
 		public GameObject cursor;
 		IInputHandler inputHandlerData;
 		readonly GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
-		//readonly GameObject cursorFlag;
-		//readonly GameObject cursorBuilding;
+		static Material greenCheckOnGround;
+		static Material redCrossOnGround;
+		static Mesh plane;
 		public new Camera camera;
 		public Vector3 lastMouseOnGround;
 		static int gridMaskXID;
 		static int gridMaskZID;
 		public bool showGridAtMouse;
 		public NodeInfoType nodeInfoToShow;
+		public Building relaxCenter;
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
 		public WorkshopPanel currentBlueprintPanel;
@@ -2959,7 +2998,8 @@ public class Interface : OperationHandler
 		{
 			none,
 			possibleBuildings,
-			undergroundResources
+			undergroundResources,
+			relaxSites
 		}
 
 		public Construct constructionMode = Construct.nothing;
@@ -3007,6 +3047,25 @@ public class Interface : OperationHandler
 
 			inputHandler = this;
 			marker.transform.SetParent( transform );
+
+			plane = new Mesh();
+			plane.vertices = new Vector3[4] { 
+				new Vector3( -0.5f, 0, -0.5f ), 
+				new Vector3( -0.5f, 0, 0.5f ), 
+				new Vector3( 0.5f, 0, -0.5f ),
+				new Vector3( 0.5f, 0, 0.5f ) };
+			plane.uv = new Vector2[4] { 
+				new Vector2( 1, 0 ), 
+				new Vector2( 0, 0 ), 
+				new Vector2( 1, 1 ),
+				new Vector2( 0, 1 ) };
+			plane.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };
+
+			greenCheckOnGround = new Material( Resources.Load<Shader>( "relaxMarker" ) );
+			greenCheckOnGround.mainTexture = Resources.Load<Texture>( "greenCheck" );
+
+			redCrossOnGround = new Material( Resources.Load<Shader>( "relaxMarker" ) );
+			redCrossOnGround.mainTexture = Resources.Load<Texture>( "redCross" );
 		}
 
 		public bool ResetInputHandler()
@@ -3291,6 +3350,8 @@ public class Interface : OperationHandler
 			else
 				marker.SetActive( false );
 
+			RenderNodeInfo();
+
 			if ( !mouseOver )
 				return;
 			currentNode = FindNodeAt( Input.mousePosition );
@@ -3307,6 +3368,10 @@ public class Interface : OperationHandler
 			if ( GetKeyDown( KeyCode.PageDown ) && currentNode )
 				currentNode.SetHeight( currentNode.height - 0.05f );
 #endif
+		}
+
+		void RenderNodeInfo()
+		{
 			if ( nodeInfoToShow != NodeInfoType.none && currentNode )
 			{
 				foreach ( var o in Ground.areas[6] )
@@ -3327,7 +3392,7 @@ public class Interface : OperationHandler
 									continue;
 							}
 
-							Graphics.DrawMesh( p.mesh, Matrix4x4.TRS( n.position, Quaternion.identity, new Vector3( p.scale, p.scale, p.scale ) ), p.material, 0 );
+							Graphics.DrawMesh( p.mesh, Matrix4x4.TRS( n.positionInViewport , Quaternion.identity, new Vector3( p.scale, p.scale, p.scale ) ), p.material, 0 );
 							break;
 						}
 					}
@@ -3342,10 +3407,19 @@ public class Interface : OperationHandler
 							var body = Item.looks.GetMediaData( itemType );
 							var renderer = body.GetComponent<MeshRenderer>();
 							var meshFilter = body.GetComponent<MeshFilter>();
-							World.DrawObject( body, Matrix4x4.TRS( n.position + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.3f ) );
+							World.DrawObject( body, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.3f ) );
 							break;
 						}
 					}
+				}
+			}
+			if ( nodeInfoToShow == NodeInfoType.relaxSites )
+			{
+				foreach ( var o in Ground.areas[Workshop.relaxAreaSize] )
+				{
+					var n = relaxCenter.node + o;
+					var material = Workshop.IsNodeGoodForRelax( n ) ? greenCheckOnGround : redCrossOnGround;
+					Graphics.DrawMesh( plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.8f ), material, 0 );
 				}
 			}
 		}
@@ -4480,7 +4554,7 @@ public static class UIHelpers
 		return false;
 	}
 	
-	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "" ) where UIElement : Component
+	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action onShow = null, Action onHide = null ) where UIElement : Component
 	{
 			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
 			if ( s == null )
@@ -4488,8 +4562,10 @@ public static class UIHelpers
 			s.text = text;
 			s.image = image;
 			s.additionalText = additionalText;
+			s.onShow = onShow;
+			s.onHide = onHide;
 			foreach ( Transform t in g.transform )
-				t.SetTooltip( text, image, additionalText );
+				t.SetTooltip( text, image, additionalText, onShow, onHide );
 			return g;
 	}
 }
