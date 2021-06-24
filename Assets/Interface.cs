@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -2201,7 +2201,36 @@ public class Interface : OperationHandler
 				foreach ( var workshop in workshops )
 					if ( workshop.type == type && workshop.owner == root.mainPlayer )
 						c++;
-				BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type} ({c})", delegate { BuildWorkshop( type ); } );
+				var b = BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type} ({c})", delegate { BuildWorkshop( type ); } );
+				string tooltip = "";
+				var o = Workshop.GetConfiguration( type );
+				if ( o.inputs != null && o.inputs.Length > 0 )
+				{
+					tooltip += "Requires ";
+					for ( int h = 0; h < o.inputs.Length; h++ )
+					{
+						if ( h > 0 )
+						{
+							if ( h == o.inputs.Length - 1 && o.inputs.Length > 1 )
+							{
+								if ( o.commonInputs )
+									tooltip += " or ";
+								else
+									tooltip += " and ";
+							}
+							else
+								tooltip += ", ";
+						}
+						tooltip += o.inputs[h].itemType.ToString();
+					}
+					tooltip += "\n";
+				}
+				if ( o.outputType != Item.Type.unknown )
+					tooltip += $"Produces {( o.outputStackSize > 1 ? "2*" : "")}{o.outputType.ToString()}\n";
+				tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F2" )}s";
+
+				b.SetTooltip( tooltip );
+
 				if ( i % 2 != 0 )
 					row -= 20;
 			}
@@ -2212,7 +2241,7 @@ public class Interface : OperationHandler
 			BuildButton( 180, -280, "Stock", AddStock );
 		}
 
-		void BuildButton( int x, int y, string title, UnityEngine.Events.UnityAction action )
+		Image BuildButton( int x, int y, string title, UnityEngine.Events.UnityAction action )
 		{
 			Image button = Button( title ).Pin( x, y, 160 ).AddClickHandler( action );
 			if ( !enabled )
@@ -2221,6 +2250,7 @@ public class Interface : OperationHandler
 				if ( text )
 					text.color = Color.red;
 			}
+			return button;
 		}
 
 		void AddFlag()
