@@ -20,8 +20,9 @@ public class Resource : HiveObject
 	public World.Timer spawn;
 	public Worker hunter;
 	public List<Worker> animals = new List<Worker>();
-	public static int treeGrowthMax = 15000;    // 5 minutes
-	public static int cornfieldGrowthMax = 20000;
+	public const int treeGrowthMax = 15000;    // 5 minutes
+	public const int cornfieldGrowthMax = 20000;
+	public const int animalSpawnTime = 3000;
 	public World.Timer silence;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
@@ -254,7 +255,7 @@ public class Resource : HiveObject
 				else
 					assert.Fail();
 			}
-			spawn.Start( 1000 );
+			spawn.Start( animalSpawnTime );
 		}
 		if ( silence.done || silence.empty )
 		{
