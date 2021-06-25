@@ -536,6 +536,8 @@ public class Interface : OperationHandler
 	{
 	    Vector3 lastAbsoluteEyePosition;
 		GroundNode start;
+		Path path;
+		int lastProgress;
 
 		public static PathVisualization Create()
 		{
@@ -549,6 +551,7 @@ public class Interface : OperationHandler
 				Destroy( this );
 				return null;
 			}
+			this.path = path;
 
 			var renderer = gameObject.AddComponent<MeshRenderer>();
 			renderer.material = materialUIPath;
@@ -604,7 +607,29 @@ public class Interface : OperationHandler
 			route.triangles = triangles.ToArray();
 			route.uv = uvs.ToArray();
 		    lastAbsoluteEyePosition = World.instance.eye.absolutePosition;
+			AlignColors();
 			return this;
+		}
+
+		void AlignColors()
+		{
+			var route = gameObject.GetComponent<MeshFilter>().mesh;
+			List<Color> colors = new List<Color>();
+			for ( int j = 0; j < path.roadPath.Count; j++ )
+			{
+				Color segmentColor = j < path.progress ? Color.green.Light() : new Color( 0, 0.5f, 1 );
+				Road road = path.roadPath[j];
+				for ( int i = 0; i < road.nodes.Count - 1; i++ )
+				{
+					colors.Add( segmentColor );
+					colors.Add( segmentColor );
+					colors.Add( segmentColor );
+					colors.Add( segmentColor );
+				}
+			}
+
+			route.colors = colors.ToArray();
+			lastProgress = path.progress;
 		}
 
 		public void Start()
@@ -614,6 +639,9 @@ public class Interface : OperationHandler
 
 		public void Update()
 		{
+			if ( lastProgress != path.progress )
+				AlignColors();
+
 			var currentAbsoluteEyePosition = World.instance.eye.absolutePosition;
 			transform.localPosition -= currentAbsoluteEyePosition - lastAbsoluteEyePosition;
 			lastAbsoluteEyePosition = currentAbsoluteEyePosition;
