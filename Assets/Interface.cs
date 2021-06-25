@@ -75,6 +75,7 @@ public class Interface : OperationHandler
 		resizer
 	}
 
+
 	public Interface()
 	{
 		root = this;
@@ -1286,7 +1287,7 @@ public class Interface : OperationHandler
 				inTransit.gameObject.SetActive( false );
 
 				if ( itemType != Item.Type.unknown )
-					this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip, OnHideTooltip );
+					this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip, OnHideTooltip );
 				return this;
 			}
 
@@ -1446,7 +1447,7 @@ public class Interface : OperationHandler
 			int row = -20;
 			if ( ( contentToShow & Content.name ) > 0 )
 			{
-				title = Text( workshop.type.ToString() ).Pin( 20, row, 160, 20 );
+				title = Text( workshop.type.ToString().GetPrettyName() ).Pin( 20, row, 160, 20 );
 				row -= 20;
 			}
 
@@ -2201,7 +2202,7 @@ public class Interface : OperationHandler
 				foreach ( var workshop in workshops )
 					if ( workshop.type == type && workshop.owner == root.mainPlayer )
 						c++;
-				var b = BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type} ({c})", delegate { BuildWorkshop( type ); } );
+				var b = BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
 				string tooltip = "";
 				var o = Workshop.GetConfiguration( type );
 				if ( o.inputs != null && o.inputs.Length > 0 )
@@ -2221,12 +2222,12 @@ public class Interface : OperationHandler
 							else
 								tooltip += ", ";
 						}
-						tooltip += o.inputs[h].itemType.ToString();
+						tooltip += o.inputs[h].itemType.ToString().GetPrettyName( false );
 					}
 					tooltip += "\n";
 				}
 				if ( o.outputType != Item.Type.unknown )
-					tooltip += $"Produces {( o.outputStackSize > 1 ? "2*" : "")}{o.outputType.ToString()}\n";
+					tooltip += $"Produces {( o.outputStackSize > 1 ? "2*" : "")}{o.outputType.ToString().GetPrettyName( false )}\n";
 				tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F2" )}s";
 
 				b.SetTooltip( tooltip );
@@ -2850,14 +2851,14 @@ public class Interface : OperationHandler
 			List<string> options = new List<string>();
 			for ( int j = 0; j < (int)Workshop.Type.total; j++ )
 			{
-				string typeName = ((Workshop.Type)j).ToString();
+				string typeName = ((Workshop.Type)j).ToString().GetPrettyName();
 				if ( !typeName.Contains( "Obsolete" ) )
 					options.Add( typeName );
 			}
-			options.Add( "stock" );
-			options.Add( "guardhouse" );
+			options.Add( "Stock" );
+			options.Add( "Guard House" );
 			options.Sort();
-			options.Add( "all" );
+			options.Add( "All" );
 			d.AddOptions( options );
 			d.value = options.Count - 1;
 			if ( options.Contains( filter ) )
@@ -2876,7 +2877,7 @@ public class Interface : OperationHandler
 		void SetFilter( Dropdown d )
 		{
 			filter = d.options[d.value].text;
-			if ( filter == "all" )
+			if ( filter == "All" )
 			filter = "";
 			Fill();
 		}
@@ -3170,7 +3171,7 @@ public class Interface : OperationHandler
 			} );
 			buildCategories.Add( new BuildPossibility
 			{
-				configuration = Workshop.GetConfiguration( Workshop.Type.ironmine ),
+				configuration = Workshop.GetConfiguration( Workshop.Type.ironMine ),
 				material = orangeMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/mine" ),
 				scale = 0.7f
@@ -3793,7 +3794,7 @@ public class Interface : OperationHandler
 
 			foreach ( var resource in sortedResources )
 			{
-				Text( resource.type.ToString() ).Link( scroll.content ).Pin( 30, row, 100 ).AddClickHandler( delegate { GroundNode node = resource.node; NodePanel.Create().Open( node, true ); } );
+				Text( resource.type.ToString().GetPrettyName() ).Link( scroll.content ).Pin( 30, row, 100 ).AddClickHandler( delegate { GroundNode node = resource.node; NodePanel.Create().Open( node, true ); } );
 				Text( ( resource.gathered.age / 50 ).ToString() ).Link( scroll.content ).Pin( 130, row, 50 );
 				Text( resource.keepAway.inProgress ? "no" : "yes" ).Link( scroll.content ).Pin( 230, row, 30 );
 				row -= iconSize + 5;
@@ -4593,6 +4594,27 @@ public static class UIHelpers
 			foreach ( Transform t in g.transform )
 				t.SetTooltip( text, image, additionalText, onShow, onHide );
 			return g;
+	}
+
+	public static string GetPrettyName( this string name, bool capitalize = true )
+	{
+		bool beginWord = true;
+		string result = "";
+		foreach ( char c in name )
+		{
+			if ( Char.IsUpper( c ) )
+			{
+				beginWord = true;
+				result += " ";
+			}
+			if ( beginWord && capitalize )
+				result += Char.ToUpper( c );
+			else
+				result += Char.ToLower( c );
+
+			beginWord = false;
+		}
+		return result;
 	}
 }
 

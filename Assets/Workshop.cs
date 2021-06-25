@@ -31,6 +31,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	static Texture2D mapIndicatorTexture;
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	public static Configuration[] configurations;
+	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	
 	static MediaTable<GameObject, Type> looks;
 	public static int mineOreRestTime = 8000;
@@ -164,21 +165,21 @@ public class Workshop : Building, Worker.Callback.IHandler
 		mill,
 		bakery,
 		hunter,
-		saltmine,
-		ironmine,
-		coalmine,
-		stonemine,
-		goldmine,
+		saltMine,
+		ironMine,
+		coalMine,
+		stoneMine,
+		goldMine,
 		forester,
 		_geologistObsolete,	// Obsolete, kept here only to remain compatible with old files
-		bowmaker,
+		bowMaker,
 		smelter,
-		weaponmaker,
+		weaponMaker,
 		well,
 		brewery,
 		butcher,
 		barrack,
-		coinmaker,
+		goldBarMaker,
 		total,
 		unknown = -1
 	}
@@ -374,20 +375,20 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"prefabs/buildings/smallCabin", 1.4f, Type.stonemason,
 			"prefabs/buildings/farm", 1.8f, Type.farm,
 			"prefabs/buildings/mill", 3.5f, Type.mill,
-			"Mines/saltmine_final", 1.5f, Type.saltmine,
-			"Mines/coalmine_final", 1.1f, Type.coalmine,
-			"Mines/ironmine_final", 1.5f, Type.ironmine,
-			"Mines/goldmine_final", 1.5f, Type.goldmine,
-			"Mines/stonemine_final", 1.5f, Type.stonemine,
+			"Mines/saltmine_final", 1.5f, Type.saltMine,
+			"Mines/coalmine_final", 1.1f, Type.coalMine,
+			"Mines/ironmine_final", 1.5f, Type.ironMine,
+			"Mines/goldmine_final", 1.5f, Type.goldMine,
+			"Mines/stonemine_final", 1.5f, Type.stoneMine,
 			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
 			"Forest/forester_final", 1.33f, Type.forester,
 			"SAdK/smelter_final", 2f, Type.smelter,
-			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponmaker,
-			"prefabs/buildings/bowmaker", 2.5f, Type.bowmaker,
+			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,
+			"prefabs/buildings/bowmaker", 2.5f, Type.bowMaker,
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
 			"prefabs/buildings/slaughterhouse", 1.5f, Type.butcher,
 			"SAdK/barrack_final", 1.8f, Type.barrack,
-			"SAdK/coinmaker_final", 2f, Type.coinmaker,
+			"SAdK/coinmaker_final", 2f, Type.goldBarMaker,
 			"prefabs/buildings/well", 1.1f, Type.well };
 		looks.Fill( looksData );
 		object[] sounds = {
@@ -395,17 +396,17 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"smelter", 1.0f, Type.smelter,
 			"windmill", 1.0f, Type.mill,
 			"brewery", 0.7f, Type.brewery,
-			"coinmaker", 0.5f, Type.coinmaker,
+			"coinmaker", 0.5f, Type.goldBarMaker,
 			"pig", 1.0f, Type.butcher,
 			"kneading", 1.0f, Type.bakery,
-			"weaponforging", 0.7f, Type.weaponmaker,
-			"rasp", 1.0f, Type.bowmaker,
+			"weaponforging", 0.7f, Type.weaponMaker,
+			"rasp", 1.0f, Type.bowMaker,
 			"fight", 1.0f, Type.barrack,
-			"pickaxe_deep", 1.0f, Type.goldmine,
-			"pickaxe_deep", 1.0f, Type.saltmine,
-			"pickaxe_deep", 1.0f, Type.coalmine,
-			"pickaxe_deep", 1.0f, Type.stonemine,
-			"pickaxe_deep", 1.0f, Type.ironmine
+			"pickaxe_deep", 1.0f, Type.goldMine,
+			"pickaxe_deep", 1.0f, Type.saltMine,
+			"pickaxe_deep", 1.0f, Type.coalMine,
+			"pickaxe_deep", 1.0f, Type.stoneMine,
+			"pickaxe_deep", 1.0f, Type.ironMine
  		};
 		processingSounds.fileNamePrefix = "effects/";
 		processingSounds.Fill( sounds );	// bool equals "dont loop"
@@ -420,7 +421,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public Workshop Setup( GroundNode node, Player owner, Type type, int flagDirection, bool blueprintOnly = false )
 	{
 		this.type = type;
-		title = type.ToString();
 		buffers.Clear();
 
 		RefreshConfiguration();

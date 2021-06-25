@@ -36,6 +36,7 @@ public class Stock : Building
 	public int total;
 	public int totalTarget;
 	public int maxItems = defaultmaxItems;
+	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
 	static public int defaultmaxItems = 200;
 	static public int defaultmaxItemsForMain = 400;
 	public World.Timer offersSuspended;     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
@@ -245,7 +246,6 @@ public class Stock : Building
 
 	public Stock Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
-		title = "stock";
 		height = 1.5f;
 		maxItems = defaultmaxItems;
 
@@ -277,7 +277,6 @@ public class Stock : Building
 		if ( !Setup( node, owner, flagDirection ) )
 			return null;
 
-		title = "headquarter";
 		maxItems = defaultmaxItemsForMain;
 		height = 3;
 		if ( configuration.flatteningNeeded )

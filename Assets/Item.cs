@@ -80,7 +80,7 @@ public class Item : HiveObject
 		water,
 		beer,
 		pork,
-		coin,
+		goldBar,
 		total,
 		unknown = -1
 	}
@@ -100,7 +100,7 @@ public class Item : HiveObject
 			"prefabs/items/bow", Type.bow,
 			"prefabs/items/animal pelt", Type.hide,
 			"prefabs/items/beam cap", Type.stone,
-			"prefabs/items/gold ignot", Type.coin,
+			"prefabs/items/gold ignot", Type.goldBar,
 			"prefabs/items/iron ignot", Type.steel,
 			"prefabs/items/meat ribs", Type.pork,
 			"prefabs/items/pouch", Type.flour,

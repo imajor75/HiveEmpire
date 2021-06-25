@@ -81,7 +81,7 @@
     "outputType": "hide"
   },
   {
-    "type": "coalmine",
+    "type": "coalMine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
 	  "groundTypeNeeded": "hill",
@@ -104,7 +104,7 @@
     ]
   },
   {
-    "type": "saltmine",
+    "type": "saltMine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
 	  "groundTypeNeeded": "hill",
@@ -119,7 +119,7 @@
     ]
   },
   {
-    "type": "ironmine",
+    "type": "ironMine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
 	  "groundTypeNeeded": "hill",
@@ -142,7 +142,7 @@
     ]
   },
   {
-    "type": "goldmine",
+    "type": "goldMine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
 	  "groundTypeNeeded": "hill",
@@ -161,7 +161,7 @@
     ]
   },
   {
-    "type": "stonemine",
+    "type": "stoneMine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
 	  "groundTypeNeeded": "hill",
@@ -180,7 +180,7 @@
     ]
   },
   {
-    "type": "bowmaker",
+    "type": "bowMaker",
 	  "huge": true,
 	  "productionTime": 2100,
     "outputType": "bow",
@@ -207,7 +207,7 @@
     ]
   },
   {
-    "type": "weaponmaker",
+    "type": "weaponMaker",
     "outputType": "weapon",
 	  "productionTime": 2500,
 	  "huge": true,
@@ -273,14 +273,14 @@
         "itemType": "bow"
       },
       {
-        "itemType": "coin"
+        "itemType": "goldBar"
       }
 	]
   },
   {
-    "type": "coinmaker",
+    "type": "goldBarMaker",
     "stoneNeeded": 2,
-    "outputType": "coin",
+    "outputType": "goldBar",
     "inputs": [
       {
         "itemType": "log"

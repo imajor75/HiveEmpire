@@ -7,7 +7,11 @@ using UnityEngine.Profiling;
 [SelectionBase]
 abstract public class Building : HiveObject
 {
-	public string title;
+	virtual public string title
+	{
+		get	{ throw new NotImplementedException(); }
+		set {} // for compatibility with old files
+	}
 	public Player owner;
 	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;

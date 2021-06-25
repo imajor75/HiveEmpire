@@ -32,9 +32,10 @@ public class GuardHouse : Building
 		return new GameObject().AddComponent<GuardHouse>();
 	}
 
+	override public string title { get { return "Guard House"; } set {} }
+
 	public GuardHouse Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
-		title = "guardhouse";
 		height = 1.2f;
 		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly ) == null )
 			return null;
