@@ -4366,8 +4366,8 @@ public class Interface : OperationHandler
 		{
 			noCloseButton = true;
 			noResize = true;
-			Open( null, 0, 0, 300, 230 );
-			this.PinCenter( 0, 0, 300, 230, 0.5f, 0.3f );
+			Open( null, 0, 0, 300, 250 );
+			this.PinCenter( 0, 0, 300, 250, 0.5f, 0.3f );
 
 			Button( "Continue" ).PinCenter( 0, -34, 100, 25, 0.5f ).AddClickHandler( Close );
 			Image().PinCenter( 0, -50, 260, 1, 0.5f ).color = Color.black;
@@ -4397,6 +4397,8 @@ public class Interface : OperationHandler
 			watcher.Created += SaveFolderChanged;
 			watcher.Deleted += SaveFolderChanged;
 			watcher.EnableRaisingEvents = true;
+
+			Button( "Exit" ).PinCenter( 0, -220, 100, 25, 0.5f ).AddClickHandler( Application.Quit );
 
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
