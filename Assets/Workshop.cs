@@ -852,8 +852,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		if ( !worker.IsIdle( true ) || mode == Mode.sleeping )
 			return;
-		if ( output >= productionConfiguration.outputMax )
+		if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
+		{
+			ChangeStatus( Status.waitingForOutputSlot );
 			return;
+		}
 		if ( resting.inProgress )
 			return;
 
