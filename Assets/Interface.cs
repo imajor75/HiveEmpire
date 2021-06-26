@@ -3254,6 +3254,8 @@ public class Interface : OperationHandler
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
 			if ( hiveObject == null )
 				hiveObject = hit.collider.transform.parent.GetComponent<HiveObject>();
+			if ( hiveObject == null )
+				hiveObject = hit.collider.transform.parent.parent.GetComponent<HiveObject>();
 			Assert.global.IsNotNull( hiveObject );
 
 			var ground = World.instance.ground;

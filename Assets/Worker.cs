@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1138,7 +1138,11 @@ public class Worker : HiveObject
 			_ => "Worker",
 		};
 		soundSource = World.CreateSoundSource( this );
+		
 		World.SetLayerRecursive( gameObject, World.layerIndexNotOnMap );
+		var collider = World.FindChildRecursive( body.transform, "collider" );
+		if ( collider )
+			collider.gameObject.layer = World.layerIndexPickable;
 
 		mapObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
