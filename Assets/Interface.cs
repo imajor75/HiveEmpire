@@ -362,6 +362,10 @@ public class Interface : OperationHandler
 		{
 			WorldProgressPanel.Create().Open();
 		}
+		if ( GetKeyDown( KeyCode.Home ) )
+		{
+			mainPlayer.mainBuilding.OnClicked( true );
+		}
 		if ( GetKeyDown( KeyCode.Escape ) )
 		{
 			if ( !viewport.ResetInputHandler() )
