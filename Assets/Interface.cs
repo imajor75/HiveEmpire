@@ -72,7 +72,9 @@ public class Interface : OperationHandler
 		alarm,
 		shovel,
 		crossing,
-		resizer
+		resizer,
+		cart,
+		home
 	}
 
 
@@ -670,6 +672,7 @@ public class Interface : OperationHandler
 		{
 			borderWidth = 10;
 			noCloseButton = true;
+			noResize = true;
 			base.Open( width = 100, height = 100 );
 			escCloses = false;
 
@@ -874,6 +877,11 @@ public class Interface : OperationHandler
 			i.sprite = picture;
 			i.transform.SetParent( transform );
 			return i;
+		}
+
+		public Image Image( Icon icon )
+		{
+			return Image( iconTable.GetMediaData( icon ) );
 		}
 
 		public ProgressBar Progress( Sprite picture = null )
@@ -1336,6 +1344,7 @@ public class Interface : OperationHandler
 				pathVisualization = null;
 
 				this.itemType = itemType;
+				gameObject.SetActive( itemType != Item.Type.unknown );
 				if ( itemType == Item.Type.unknown )
 				{
 					picture.enabled = false;
@@ -1418,8 +1427,6 @@ public class Interface : OperationHandler
 
 			return CompareResult.sameButDifferentTarget;
 		}
-
-
 	}
 
 	public class WorkshopPanel : BuildingPanel
@@ -1929,7 +1936,8 @@ public class Interface : OperationHandler
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 250, 40 - height ).AddClickHandler( Remove ).name = "Remover";
 			AreaIcon( stock.inputArea ).Link( controls ).Pin( 30, -25, 30, 30 ).name = "Input area";
 			AreaIcon( stock.outputArea ).Link( controls ).Pin( 250, -25, 30, 30 ).name = "Output area";
-			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 140, -30 ).AddClickHandler( stock.ClearSettings ).name = "Reset";;
+			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 140, -30 ).AddClickHandler( stock.ClearSettings ).name = "Reset";
+			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 165, -30 ).AddClickHandler( ShowCart ).name = "Show cart";
 			total = Text( "", 16 ).Link( controls ).Pin( 35, 35 - height, 100 );
 			total.name = "Total";
 
@@ -1971,6 +1979,14 @@ public class Interface : OperationHandler
 			SetTooltip( "The stock will only supply other buildings with the item if it has at least this many" );
 			outputMax = Text().Link( controls ).Pin( ipx + 50, ipy - 20, 40 ).
 			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks" );
+		}
+
+		void ShowCart()
+		{
+			if ( stock.cart.taskQueue.Count == 0 )
+				return;
+
+			WorkerPanel.Create().Open( stock.cart, true );
 		}
 
 		void SetTarget()
@@ -2617,11 +2633,12 @@ public class Interface : OperationHandler
 	{
 		public Worker worker;
 		Text itemCount;
-		ItemImage item;
-		Text itemsInCart;
 		public Stock cartDestination;
-		Text destinationBuilding;
 		PathVisualization cartPath;
+		Text status;
+		ItemImage statusImage0, statusImage1;
+		Worker.Task lastFirstTask;
+		new HiveObject target;
 
 		public static WorkerPanel Create()
 		{
@@ -2630,28 +2647,58 @@ public class Interface : OperationHandler
 
 		public void Open( Worker worker, bool show )
 		{
-			var cart = worker as Stock.Cart;
 			borderWidth = 10;
 			noResize = true;
-			if ( base.Open( worker.node, 0, 0, 200, cart ? 140 : 80 ) )
+			if ( base.Open( worker.node, 0, 0, 200, 95 ) )
 				return;
 			name = "Worker panel";
 			this.worker = worker;
-			item = ItemIcon().Pin( 20, -20 );
-			itemsInCart = Text().Pin( 45, -20, 150 );
-			itemCount = Text( "Items" ).Pin( 20, -44, 160 );
-			if ( cart )
-			{
-				Text( "From:" ).Pin( 20, -70, 50 );
-				BuildingIcon( cart.building ).Pin( 70, -70 );
-				Text( "To:" ).Pin( 20, -95, 50 );
-			}
+			status = Text().Pin( 20, -20, 200, 50 ).AddClickHandler( ShowTarget );
+			statusImage0 = ItemIcon().Pin( 80, -20 );
+			statusImage0.gameObject.SetActive( false );
+			statusImage1 = ItemIcon().Pin( 130, -20 );
+			statusImage1.gameObject.SetActive( false );
+			itemCount = Text( "Items" ).Pin( 20, -70, 160 );
+
+			Image( Icon.home ).Pin( 160, 20, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowHome );
 
 			if ( show )
 				World.instance.eye.GrabFocus( this );
 #if DEBUG
 			Selection.activeGameObject = worker.gameObject;
 #endif
+		}
+
+		void ShowTarget()
+		{
+			target?.OnClicked( true );
+		}
+
+		void ShowHome()
+		{
+			if ( worker.type == Worker.Type.tinkerer )
+				worker.building.OnClicked( true );
+
+			if ( worker.type == Worker.Type.cart )
+				worker.building.OnClicked( true );
+
+			if ( worker.type == Worker.Type.hauler )
+				worker.road.OnClicked( true );
+
+			if ( worker.type == Worker.Type.constructor )
+				worker.owner.mainBuilding.OnClicked( true );
+		}
+
+		public override CompareResult IsTheSame( Panel other )
+		{
+			var p = other as WorkerPanel;
+			if ( p == null )
+				return CompareResult.different;
+
+			if ( p.worker == this.worker )
+				return CompareResult.same;
+
+			return CompareResult.sameButDifferentTarget;
 		}
 
 		public override void OnDoubleClick()
@@ -2673,24 +2720,133 @@ public class Interface : OperationHandler
 			}
 			base.Update();
 			var cart = worker as Stock.Cart;
-			if ( cart )
+
+			Worker.Task firstTask = null;
+			if ( worker.taskQueue.Count > 0 )
+				firstTask = worker.taskQueue.First();
+			if ( lastFirstTask != firstTask )
 			{
-				item.SetType( cart.itemType );
-				itemsInCart.text = "x" + cart.itemQuantity;
+				lastFirstTask = firstTask;
+				target = null;
+				statusImage0.SetItem( null );
+				statusImage1.SetItem( null );
+				switch( worker.type )
+				{
+					case Worker.Type.hauler:
+					{
+						var pickup = worker.FindTaskInQueue<Worker.PickupItem>();
+						if ( pickup != null )
+						{
+							status.text = "Picking up";
+							statusImage0.SetItem( pickup.items[0] );
+							break;
+						}
+						var deliver = worker.FindTaskInQueue<Worker.DeliverItem>();
+						if ( deliver )
+						{
+							status.text = "Delivering";
+							statusImage0.SetItem( deliver.items[0] );
+							if ( deliver.items[1] )
+							{
+								status.text += "          and";
+								statusImage1.SetItem( deliver.items[1] );
+							}
+							target = (HiveObject)deliver.items[0].nextFlag ?? deliver.items[0].destination;
+							break;
+						}
+						var startWorking = worker.FindTaskInQueue<Worker.StartWorkingOnRoad>();
+						if ( startWorking )
+						{
+							status.text = "Going to a road to start working\nas a hauler";
+							break;
+						}
+						status.text = "Waiting for something to do";
+						break;
+					}
+					case Worker.Type.tinkerer:
+					{
+						var res = worker.FindTaskInQueue<Workshop.GetResource>();
+						if ( res )
+						{
+							status.text = "Getting " + res.resource.type.ToString();
+							target = res.resource;
+							break;
+						}
+						var deliver = worker.FindTaskInQueue<Worker.DeliverItem>();
+						if ( deliver )
+						{
+							if ( worker == worker.building.worker )
+								status.text = "Bringing             home";
+							else
+								status.text = "Releasing";
+							statusImage0.SetItem( deliver.items[0] );
+							break;
+						}
+						var step = worker.FindTaskInQueue<Worker.WalkToNeighbour>();
+						if ( step )
+						{
+							status.text = "Going home";
+							break;
+						}
+
+						status.text = "Waiting for something to do";
+						break;
+					}
+					case Worker.Type.constructor:
+					{
+						var flattening = worker.FindTaskInQueue<Worker.Callback>();
+						if ( flattening )
+						{
+							status.text = "Flattening land";
+							break;
+						}
+						if ( worker.taskQueue.Count == 0 )
+							status.text = "Constructing";
+						else
+							status.text = "Going to construction site";
+						break;
+					}
+					case Worker.Type.soldier:
+					{
+						status.text = "Hitting everything";
+						break;
+					}
+					case Worker.Type.cart:
+					{
+						var massDeliver = worker.FindTaskInQueue<Stock.DeliverStackTask>();
+						if ( massDeliver )
+						{
+							status.text = $"Transporting {Stock.Cart.capacity}";
+							statusImage1.SetType( (worker as Stock.Cart).itemType );
+							target = massDeliver.stock;
+							break;
+						}
+						status.text = "Returning home";
+						if ( worker.taskQueue.Count == 0 )
+							Close();
+						break;
+					}
+					case Worker.Type.unemployed:
+					{
+						status.text = "Going back to the headquarters";
+						break;
+					}
+				}
+			}
+
+if ( cart )
+			{
 				if ( cart.destination != cartDestination )
 				{
 					cartDestination = cart.destination;
-					Destroy( destinationBuilding.gameObject );
-					if ( cart.destination )
-						destinationBuilding = BuildingIcon( cart.destination ).Pin( 70, -95, 80 );
 					var path = cart.FindTaskInQueue<Worker.WalkToFlag>()?.path;
 					Destroy( cartPath );
 					cartPath = PathVisualization.Create().Setup( path, Interface.root.viewport.visibleAreaCenter );
 				}
 			}
-			else
-				item.SetItem( worker.itemsInHands[0] );	// TODO Show the second item
+
 			itemCount.text = "Items delivered: " + worker.itemsDelivered;
+
 			if ( followTarget )
 				MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
 		}

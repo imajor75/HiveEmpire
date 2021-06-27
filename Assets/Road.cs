@@ -815,6 +815,12 @@ public class Road : HiveObject, Interface.IInputHandler
 		return false;
 	}
 
+	public override void OnClicked( bool show = false )
+	{
+		base.OnClicked( show );
+		Interface.RoadPanel.Create().Open( this, centerNode );
+	}
+
 	public override void Reset()
 	{
 		while ( workers.Count > 1 )
