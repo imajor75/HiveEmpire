@@ -20,6 +20,7 @@ abstract public class Building : HiveObject
 	public GroundNode node;
 	[JsonIgnore]
 	public Road exit;
+	public AudioSource soundSource;
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
@@ -480,6 +481,8 @@ abstract public class Building : HiveObject
 		ground.Link( this );
 		UpdateBody();
 		renderers = new List<MeshRenderer>();
+
+		soundSource = World.CreateSoundSource( this );
 
 		body = Instantiate( Template(), transform );
 		body.layer = World.layerIndexPickable;

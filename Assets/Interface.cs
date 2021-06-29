@@ -164,7 +164,7 @@ public class Interface : OperationHandler
 			o.y += 1;
 		materialUIPath.mainTextureOffset = o;
 
-		if ( mainPlayer && mainPlayer.averageEfficiency >= world.efficiencyGoal && !world.victory )
+		if ( mainPlayer && mainPlayer.mainProductivity >= world.productivityGoal && !world.victory )
 		{
 			WorldProgressPanel.Create().Open( true );
 			world.victory = true;
@@ -517,7 +517,8 @@ public class Interface : OperationHandler
 	public static void ValidateAll()
 	{
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
-			ho.Validate( false );
+			if ( ho )
+				ho.Validate( false );
 	}
 
 	public override void Validate( bool chain )
@@ -1897,7 +1898,7 @@ public class Interface : OperationHandler
 		{
 			this.stock = stock;
 			noResize = true;
-			if ( base.Open( stock, 300, 350 ) )
+			if ( base.Open( stock, 300, 400 ) )
 				return;
 			RecreateControls();
 			if ( show )
@@ -1936,13 +1937,9 @@ public class Interface : OperationHandler
 			controls = new GameObject( "Stock controls" ).AddComponent<RectTransform>();
 			controls.Link( this ).Stretch();
 
-			int height = 340;
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 250, 40 - height ).AddClickHandler( Remove ).name = "Remover";
 			AreaIcon( stock.inputArea ).Link( controls ).Pin( 30, -25, 30, 30 ).name = "Input area";
-			AreaIcon( stock.outputArea ).Link( controls ).Pin( 250, -25, 30, 30 ).name = "Output area";
-			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 140, -30 ).AddClickHandler( stock.ClearSettings ).name = "Reset";
-			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 165, -30 ).AddClickHandler( ShowCart ).name = "Show cart";
-			total = Text( "", 16 ).Link( controls ).Pin( 35, 35 - height, 100 );
+			AreaIcon( stock.outputArea ).Link( controls ).Pin( 235, -25, 30, 30 ).name = "Output area";
+			total = Text( "", 16 ).Link( controls ).Pin( 35, 75, 100, iconSize * 2, 0, 0 );
 			total.name = "Total";
 
 			int row = -55;
@@ -1971,18 +1968,21 @@ public class Interface : OperationHandler
 				counts[i].AddClickHandler( delegate { SelectItemType( j ); } );
 			}
 
-			int ipx = 165, ipy = -280;
-			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( ipx, ipy, 2 * iconSize, 2 * iconSize ).AddClickHandler( SetTarget );
+			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( 165, 90, 2 * iconSize, 2 * iconSize, 0, 0 ).AddClickHandler( SetTarget );
 			selected.additionalTooltip = "LMB Set cart target\nShift+LMB Show current target\nCtrl+LMB Clear target\nAlt+LMB Show inputs";
 			selected.name = "Selected item";
-			inputMin = Text().Link( controls ).Pin( ipx - 40, ipy, 40 ).
+			inputMin = Text().Link( selected ).Pin( -40, 0, 40 ).
 			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority" );
-			inputMax = Text().Link( controls ).Pin( ipx + 50, ipy, 40 ).
+			inputMax = Text().Link( selected ).Pin( 50, 0, 40 ).
 			SetTooltip( "If the stock has at least this many items, it will no longer accept surplus" );
-			outputMin = Text().Link( controls ).Pin( ipx - 40, ipy - 20, 40 ).
+			outputMin = Text().Link( selected ).Pin( -40, -20, 40 ).
 			SetTooltip( "The stock will only supply other buildings with the item if it has at least this many" );
-			outputMax = Text().Link( controls ).Pin( ipx + 50, ipy - 20, 40 ).
+			outputMax = Text().Link( selected ).Pin( 50, -20, 40 ).
 			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks" );
+
+			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).name = "Reset";
+			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).name = "Show cart";
+			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).name = "Remover";
 		}
 
 		void ShowCart()
@@ -3396,7 +3396,7 @@ if ( cart )
 			// TODO This should be way cleaner
 			get
 			{
-				if ( World.instance.eye.camera.enabled )
+				if ( World.instance.eye && World.instance.eye.camera.enabled )
 					return World.instance.eye.visibleAreaCenter;
 				else
 					return camera.transform.position;
@@ -4126,15 +4126,12 @@ if ( cart )
 	{
 		ScrollRect scroll;
 		Player player;
-		Text finalEfficiency;
 		static Comparison<int> currentComparison;
 		static bool reverse = false;
 		readonly Text[] inStock = new Text[(int)Item.Type.total];
 		readonly Text[] onWay = new Text[(int)Item.Type.total];
 		readonly Text[] surplus = new Text[(int)Item.Type.total];
 		readonly Text[] production = new Text[(int)Item.Type.total];
-		readonly Text[] weight = new Text[(int)Item.Type.total];
-		readonly Text[] efficiency = new Text[(int)Item.Type.total];
 		readonly Button[] stockButtons = new Button[(int)Item.Type.total];
 		readonly ItemImage[] itemIcon = new ItemImage[(int)Item.Type.total];
 
@@ -4148,7 +4145,7 @@ if ( cart )
 
 		public void Open( Player player )
 		{
-			if ( base.Open( null, 0, 0, 420, 300 ) )
+			if ( base.Open( null, 0, 0, 320, 300 ) )
 				return;
 
 			name = "Item stats panel";
@@ -4171,29 +4168,17 @@ if ( cart )
 			PinSideways( 0, -20, 50, 20 ).
 			AddClickHandler( delegate { SetOrder( ComparePerMinute ); } );
 
-			Text( "Weight", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
-			AddClickHandler( delegate { SetOrder( CompareWeight ); } );
-
-			Text( "Efficiency", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
-			AddClickHandler( delegate { SetOrder( CompareEfficiency ); } );
-
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
-			finalEfficiency = Text().Pin( 100, 40, 200, 40, 0, 0 );
-			finalEfficiency.fontSize = (int)( uiScale * 16 );
 
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				int row = i * - ( iconSize + 5 );
 				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
-				inStock[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 30, row, 40, iconSize );
+				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 40, iconSize );
 				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
-				onWay[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 80, row, 40 );
-				surplus[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 130, row, 40 );
-				production[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 180, row, 40 );
-				weight[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 230, row, 40 );
-				efficiency[i] = Text( "0" ).AddOutline().Link( scroll.content ).Pin( 280, row, 40 );
+				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 80, row, 40 );
+				surplus[i] = Text( "0" ).Link( scroll.content ).Pin( 130, row, 40 );
+				production[i] = Text( "0" ).Link( scroll.content ).Pin( 180, row, 40 );
 			}
 
 			SetScrollRectContentSize( scroll, 0, (int)Item.Type.total * ( iconSize + 5 ) );
@@ -4216,21 +4201,7 @@ if ( cart )
 
 		int ComparePerMinute( int a, int b )
 		{
-			return player.itemEfficiencyHistory[a].production.CompareTo( player.itemEfficiencyHistory[b].production );
-		}
-
-		int CompareWeight( int a, int b )
-		{
-			return player.itemEfficiencyHistory[a].weight.CompareTo( player.itemEfficiencyHistory[b].weight );
-		}
-
-		int CompareEfficiency( int a, int b )
-		{
-			var ai = player.itemEfficiencyHistory[a];
-			var bi = player.itemEfficiencyHistory[b];
-			float ae = ai.weight == 0 ? -1 : ai.weighted;
-			float be = bi.weight == 0 ? -1 : bi.weighted;
-			return ae.CompareTo( be );
+			return player.itemProductivityHistory[a].production.CompareTo( player.itemProductivityHistory[b].production );
 		}
 
 		void SetOrder( Comparison<int> comparison )
@@ -4284,13 +4255,6 @@ if ( cart )
 
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
-				Color textColor = Color.yellow;
-				if ( player.itemEfficiencyHistory[i].weight != 0 )
-					textColor = Color.green;
-				if ( (int)player.worseItemType == order[i] )
-					textColor = Color.red;
-				surplus[i].color = weight[i].color = inStock[i].color = onWay[i].color = production[i].color = efficiency[i].color = textColor;
-
 				itemIcon[i].SetType( (Item.Type)order[i] );
 				inStock[i].text = inStockCount[order[i]].ToString();
 				stockButtons[i].onClick.RemoveAllListeners();
@@ -4299,13 +4263,9 @@ if ( cart )
 				onWay[i].text = onWayCount[order[i]].ToString();
 				surplus[i].text = player.surplus[order[i]].ToString();
 
-				var itemData = player.itemEfficiencyHistory[order[i]];
+				var itemData = player.itemProductivityHistory[order[i]];
 				production[i].text = itemData.current.ToString( "n2" );
-				weight[i].text = itemData.weight.ToString( "n2" );
-				efficiency[i].text = itemData.weight == 0 ? "-" : itemData.weighted.ToString( "n2" );
 			};
-
-			finalEfficiency.text = player.averageEfficiencyHistory.current.ToString( "n2" );
 		}
 	}
 
@@ -4313,7 +4273,7 @@ if ( cart )
 	{
 		Item.Type selected;
 		Player player;
-		float lastAverageEfficiency;
+		float lastProductivity;
 		Image chart, itemFrame;
 		Text record;
 		public float scale = 1;
@@ -4334,15 +4294,14 @@ if ( cart )
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				var t = (Item.Type)i;
-				ItemIcon( (Item.Type)i ).Pin( 20 + i * iconSize, -20 ).AddClickHandler( delegate { selected = t; lastAverageEfficiency = -1; } );
+				ItemIcon( (Item.Type)i ).Pin( 20 + i * iconSize, -20 ).AddClickHandler( delegate { selected = t; } );
 			}
-			Image( iconTable.GetMediaData( Icon.summa ) ).Pin( 400, -20 ).AddClickHandler( delegate { selected = Item.Type.total; lastAverageEfficiency = -1; } );
 			itemFrame = Image( iconTable.GetMediaData( Icon.tinyFrame ) ).Pin( 17, -17, 26, 26 );
 			chart = Image().Pin( 20, -40, 410, 240 );
 			record = Text().Pin( 25, -45, 150 );
 			record.color = Color.yellow;
-			selected = Item.Type.total;
-			lastAverageEfficiency = -1;
+			selected = Item.Type.soldier;
+			lastProductivity = -1;
 		}
 
 		int PerMinuteToPixel( float perMinute )
@@ -4359,16 +4318,14 @@ if ( cart )
 		{
 			// TODO Clean up this function, its a mess
 			base.Update();
-			var a = player.averageEfficiencyHistory;
-			if ( selected < Item.Type.total )
-				a = player.itemEfficiencyHistory[(int)selected];
+			var a = player.itemProductivityHistory[(int)selected];
 
 			if ( chart.Contains( Input.mousePosition ) )
 			{
 				Vector3[] corners = new Vector3[4];
 				chart.rectTransform.GetWorldCorners( corners );
 				var cursorInsideChart = Input.mousePosition - corners[0];
-				int ticks = Player.efficiencyUpdateTime * (int)( corners[2].x - Input.mousePosition.x );
+				int ticks = Player.productivityUpdateTime * (int)( corners[2].x - Input.mousePosition.x );
 				var hours = ticks / 60 / 60 / 50;
 				string time = $"{(ticks/60/50)%60} minutes ago";
 				if ( hours > 1 )
@@ -4378,7 +4335,7 @@ if ( cart )
 				chart.SetTooltip( $"{time}\n{PixelToPerMinute( (int)cursorInsideChart.y )} per minute" );
 			}
 
-			if ( lastAverageEfficiency == player.averageEfficiencyHistory.current )
+			if ( lastProductivity == a.current )
 				return;
 
 			var t = new Texture2D( (int)chart.rectTransform.sizeDelta.x, (int)chart.rectTransform.sizeDelta.y );
@@ -4436,11 +4393,11 @@ if ( cart )
 				for ( int x = 0; x < t.width; x++ )
 					t.SetPixel( x, y, c );
 			}
-			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Player.efficiencyUpdateTime;
+			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Player.productivityUpdateTime;
 			while ( xh >= 0 )
 			{
 				VerticalLine( xh, Color.grey );
-				xh -= World.hourTickCount / Player.efficiencyUpdateTime;
+				xh -= World.hourTickCount / Player.productivityUpdateTime;
 			}
 
 			int recordColumn = t.width - ( a.data.Count - a.recordIndex );
@@ -4470,16 +4427,16 @@ if ( cart )
 			Assert.global.IsNotNull( chart.sprite );
 			record.text = "Record: " + a.record;
 			itemFrame.PinCenter( 30 + (int)selected * iconSize, -30 );
-			lastAverageEfficiency = player.averageEfficiencyHistory.current;
+			lastProductivity = a.current;
 		}
 	}
 
 	public class WorldProgressPanel : Panel
 	{
 		Text worldTime;
-		Text currentEfficiency;
-		Text recordEfficiency;
-		ProgressBar efficiencyProgress;
+		Text currentProductivity;
+		Text recordProductivity;
+		ProgressBar productivityProgress;
 		float originalSpeed = -1;
 
 		public static WorldProgressPanel Create()
@@ -4507,23 +4464,24 @@ if ( cart )
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
-			Text( $"Efficiency goal: {World.instance.efficiencyGoal}" ).
+			Text( $"Productivity goal: {World.instance.productivityGoal}" ).
 			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
-			recordEfficiency = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
-			recordEfficiency.alignment = TextAnchor.MiddleCenter;
-			currentEfficiency = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
-			currentEfficiency.alignment = TextAnchor.MiddleCenter;
-			efficiencyProgress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
+			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
+			recordProductivity.alignment = TextAnchor.MiddleCenter;
+			currentProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
+			currentProductivity.alignment = TextAnchor.MiddleCenter;
+			productivityProgress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			this.SetSize( 300, -UIHelpers.currentRow + 30 );
 		}
 
 		new public void Update()
 		{
 			var t = World.instance.time;
+			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
 			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( ( t / 60 / 60 / 50 ) % 24 ).ToString( "D2" )}:{( ( t / 60 / 50) % 60 ).ToString( "D2" )}";
-			recordEfficiency.text = $"Record efficiency: {root.mainPlayer.averageEfficiencyHistory.record.ToString()}";
-			currentEfficiency.text = $"Current efficiency: {root.mainPlayer.averageEfficiency.ToString()}";
-			efficiencyProgress.progress = root.mainPlayer.averageEfficiency / World.instance.efficiencyGoal;
+			recordProductivity.text = $"Record productivity: {m.record}";
+			currentProductivity.text = $"Current productivity: {m.current}";
+			productivityProgress.progress = m.current / World.instance.productivityGoal;
 			base.Update();
 		}
 

@@ -320,6 +320,7 @@ public class World : MonoBehaviour
 				var t = o as Stock;
 				if ( t && t.cart == null )
 					t.cart = Stock.Cart.Create().SetupAsCart( t ) as Stock.Cart;
+				t?.CreateMissingArrays();
 			}
 		}
 		{
@@ -351,6 +352,19 @@ public class World : MonoBehaviour
 			foreach ( var f in list )
 				if ( f.flattening == null )
 					f.flattening = new Building.Flattening();
+		}
+
+		{
+			var list = Resources.FindObjectsOfTypeAll<ItemDispatcher>();
+			foreach ( var d in list )
+			{
+				while ( d.markets.Count < (int)Item.Type.total )
+				{
+					var market = ScriptableObject.CreateInstance<ItemDispatcher.Market>();
+					market.Setup( d, (Item.Type)d.markets.Count );
+					d.markets.Add( market );
+				}
+			}
 		}
 
 		{
@@ -617,12 +631,12 @@ public class World : MonoBehaviour
 			o.pitch = factor;
 	}
 
-	public float efficiencyGoal
+	public float productivityGoal
 	{
 		get
 		{
 			var groundSize = ground.dimension * ground.dimension;
-			return groundSize / 512.0f;
+			return groundSize / 768.0f;
 		}
 	}
 

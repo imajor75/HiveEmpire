@@ -262,6 +262,7 @@
     "type": "barrack",
     "stoneNeeded": 2,
     "productionTime": 2000,
+    "outputType": "soldier",
     "inputs": [
       {
         "itemType": "beer"

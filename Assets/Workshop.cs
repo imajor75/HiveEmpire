@@ -24,7 +24,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public int itemsProduced;
 	public World.Timer resting;
 	public Productivity productivity = new Productivity( 0.5f );
-	AudioSource soundSource;
 	static public MediaTable<AudioClip, Type> processingSounds;
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
@@ -497,8 +496,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 ) + $" {node.x}:{node.y}";
 
-		soundSource = World.CreateSoundSource( this );
-
 		mapIndicator = GameObject.CreatePrimitive( PrimitiveType.Plane );
 		mapIndicator.transform.SetParent( transform, false );
 		World.SetLayerRecursive( mapIndicator, World.layerIndexMapOnly );
@@ -680,7 +677,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( type == Type.barrack && output > 0 )
 		{
 			output--;
-			owner.soldiersProduced++;
+			Worker.Create().SetupAsSoldier( this ).ScheduleWalkToNeighbour( flag.node, true );
 		}
 
 		switch ( type )
@@ -1097,7 +1094,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				assert.IsFalse( worker.IsIdle() );
 			}
 		}
-		if ( currentStatus != Status.unknown )
+		if ( currentStatus != Status.unknown && !World.massDestroy )
 			assert.IsTrue( statusDuration.done );
 	}
 }

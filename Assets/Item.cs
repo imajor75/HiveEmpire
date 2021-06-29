@@ -81,6 +81,7 @@ public class Item : HiveObject
 		beer,
 		pork,
 		goldBar,
+		soldier,
 		total,
 		unknown = -1
 	}
@@ -106,6 +107,7 @@ public class Item : HiveObject
 			"prefabs/items/pouch", Type.flour,
 			"prefabs/items/hay", Type.grain,
 			"prefabs/items/jar", Type.salt,
+			"prefabs/items/soldier", Type.soldier,
 			"prefabs/items/wood", Type.log
 		};
 		looks.Fill( looksData );

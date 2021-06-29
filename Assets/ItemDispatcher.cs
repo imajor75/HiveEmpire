@@ -84,12 +84,6 @@ public class ItemDispatcher : HiveObject
 		name = "Item displatcher";
 		transform.SetParent( World.instance.transform );
 
-		while ( markets.Count < (int)Item.Type.total )
-		{
-			var market = ScriptableObject.CreateInstance<Market>();
-			market.Setup( this, (Item.Type)markets.Count );
-			markets.Add( market );
-		}
 		foreach ( var market in markets )
 			market.Start();
 			

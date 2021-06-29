@@ -57,8 +57,9 @@ public class GuardHouse : Building
 	public new void FixedUpdate()
 	{
 		base.FixedUpdate();
-		if ( construction.done && soldiers.Count == 0 && !blueprintOnly )
+		if ( construction.done && soldiers.Count == 0 && !blueprintOnly && owner.soldierCount > 0 )
 		{
+			owner.soldierCount--;
 			Worker soldier = Worker.Create().SetupAsSoldier( this );
 			if ( soldier == null )
 				return;
@@ -89,5 +90,4 @@ public class GuardHouse : Building
 	{
 		return influence - node.DistanceFrom( this.node );
 	}
-
 }

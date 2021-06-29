@@ -16,6 +16,7 @@ public class Worker : HiveObject
 	public int walkBlock;
 	public bool walkBackward;
 	public float walkProgress;
+	public float standingHeight = 0;
 	public float speed = 1;
 	public GroundNode node;
 	[Obsolete( "Compatibility with old files", true )]
@@ -1042,7 +1043,17 @@ public class Worker : HiveObject
 		look = type = Type.soldier;
 		name = "Soldier";
 		currentColor = Color.red;
-		return SetupForBuildingSite( building );
+		if ( building is GuardHouse guardHouse )
+		{
+			standingHeight = 0.367f;
+			return SetupForBuildingSite( building );
+		}
+		
+		ground = building.ground;
+		owner = building.owner;
+		this.building = building;
+		SetNode( building.node );
+		return this;
 	}
 
 	Worker SetupForBuildingSite( Building building )
@@ -1409,6 +1420,15 @@ public class Worker : HiveObject
 			return;
 		}
 
+		if ( type == Type.soldier )
+		{
+			if ( building && building is GuardHouse )
+				return;
+
+			ReturnToHeadquarters();
+			return;
+		}
+
 		if ( type != Type.unemployed && building != null && node != building.node )
 		{
 			assert.IsTrue( type == Type.tinkerer || type == Type.constructor ); // This happens if the path to the building gets disabled for any reason
@@ -1425,50 +1445,27 @@ public class Worker : HiveObject
 			return;
 		}
 
-		if ( type == Type.soldier && building == null )
-			type = Type.unemployed;
-
 		if ( type == Type.unemployed )
+			ReturnToHeadquarters();
+	}
+
+	void ReturnToHeadquarters()
+	{
+		if ( this as Stock.Cart )
+			assert.IsNull( building as Stock );     // ?
+		if ( !owner.mainBuilding.returningUnits.Contains( this ) )
+			owner.mainBuilding.returningUnits.Add( this );
+		if ( !recalled )
 		{
-			if ( this as Stock.Cart )
-				assert.IsNull( building as Stock );     // ?
-			if ( node == owner.mainBuilding.node )
-			{
-				if ( walkTo == null )
-				{
-					foreach ( var item in itemsInHands )
-					{
-						if ( item == null )
-							continue;
-
-						// TODO Sometimes this item keeps alive with all the destinations? Suspicious
-						item.CancelTrip();
-						item.SetRawTarget( owner.mainBuilding );
-						item.Arrived();
-						item.transform.SetParent( node.ground.transform );
-					}
-					itemsInHands[0] = itemsInHands[1] = null;
-					DestroyThis();
-				}
-				return;
-			}
-			if ( node == owner.mainBuilding.flag.node )
-			{
-				ScheduleWalkToNeighbour( owner.mainBuilding.node );
-				return;
-			}
-			if ( recalled )
-			{
-				SetNode( owner.mainBuilding.flag.node );    // Hack, teleport to the main building flag, if there is no path
-				return;
-			}
-
 			if ( node.validFlag )
 				ScheduleWalkToFlag( owner.mainBuilding.flag );
 			else
-				ScheduleWalkToNode( owner.mainBuilding.flag.node, false, false, null ); // TODO Handle when no path
-			recalled = true;
-		}
+				ScheduleWalkToNode( owner.mainBuilding.flag.node );
+			ScheduleWalkToNeighbour( owner.mainBuilding.node );
+		};
+		ScheduleCall( owner.mainBuilding );
+		ScheduleWait( 50 );	// Wait to prevent further calls to this function once the unit reached the headquarters
+		recalled = true;
 	}
 
 	void FindHaulerTask()
@@ -1788,7 +1785,7 @@ public class Worker : HiveObject
 				animator?.SetBool( walkingID, false );
 				soundSource?.Stop();
 				node.ground.Link( this );
-				transform.localPosition = node.position;
+				transform.localPosition = node.position + Vector3.up * standingHeight;
 				if ( taskQueue.Count > 0 )
 				{
 					WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;

@@ -11,13 +11,29 @@ public class Player : ScriptableObject
 	public Versioned versionedRoadDelete = new Versioned();
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
-	public const int efficiencyUpdateTime = 3000;
-	public float totalEfficiency;
-	public World.Timer efficiencyTimer;
-	public Chart averageEfficiencyHistory;
-	public List<Chart> itemEfficiencyHistory = new List<Chart>();
+	public const int productivityUpdateTime = 3000;
+	public World.Timer productivityTimer;
+	public List<Chart> itemProductivityHistory = new List<Chart>();
+	public float mainProductivity { get { return itemProductivityHistory[(int)Item.Type.soldier].current; } }
 
-	public int soldiersProduced = 0;
+	[Obsolete( "Compatibility with old files", true )]
+	float totalEfficiency { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer efficiencyTimer { set { productivityTimer = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Chart averageEfficiencyHistory { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Chart> itemEfficiencyHistory { set { itemProductivityHistory = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Item.Type worseItemType { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	float averageEfficiency { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int soldiersProduced { set { soldierCount = value; } }
+	public int soldierCount 
+	{ 
+		set { mainBuilding.content[(int)Item.Type.soldier] = value; }
+		get { return mainBuilding.content[(int)Item.Type.soldier]; } }
 	[Obsolete( "Compatibility with old files", true )]
 	int bowmansProduced;
 	[Obsolete( "Compatibility with old files", true )]
@@ -27,8 +43,6 @@ public class Player : ScriptableObject
 	public List<Item> items = new List<Item>();
 	public int firstPossibleEmptyItemSlot = 0;
 	public int[] surplus = new int[(int)Item.Type.total];
-	public Item.Type worseItemType;
-	public float averageEfficiency;
 
 	[JsonIgnore]
 	public List<float> production;
@@ -54,11 +68,13 @@ public class Player : ScriptableObject
 		public int recordIndex;
 		public Item.Type itemType;
 		[Obsolete( "Compatibility with old files", true )]
-		float factor { set { weight = value * 2; } }
-		public float weight;
+		float factor { set {} }
 		public int production;
-		public float weighted;
 		const float efficiencyUpdateFactor = 0.1f;
+		[Obsolete( "Compatibility with old files", true )]
+		float weight { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float weighted { set {} }
 
 		public static Chart Create()
 		{
@@ -69,62 +85,17 @@ public class Player : ScriptableObject
 		{
 			this.itemType = itemType;
 			data = new List<float>();
-			record = current = weighted = 0;
+			record = current = 0;
 			recordIndex = production = 0;
 			return this;
 		}
 
-		public void ResetWeight()
-		{
-			// to produce 1 soldier, the following items need to be produced:
-			// log		=> 1(coin)+1(plank)
-			// stone	=> 0	
-			// plank	=> 1	
-			// fish		=> 0.75 salt+1(iron+coal)=1.75
-			// grain	=> 0.75(flour)+1.25(beer)=2
-			// flour	=> 0.75	
-			// salt		=> 0.75
-			// pretzel	=> 0.5(gold)+1(iron+coal)=1.5	
-			// hide		=> 1
-			// iron		=> 1
-			// coal		=> 1(weapon)+1(steel)=2
-			// gold		=> 1
-			// bow		=> 1
-			// steel	=> 1	
-			// weapon	=> 1	
-			// water	=> 1.25
-			// beer		=> 1(barrack)+1.5(pork)=2.5
-			// pork		=> 0.5(gold)+1(iron+coal)=1.5
-			// coin		=> 1
-			float amountPerSoldier = itemType switch
-			{
-				Item.Type.stone => 0,
-				Item.Type.grain => 2,
-				Item.Type.beer => 2.5f,
-				Item.Type.flour => 0.75f,
-				Item.Type.salt => 0.75f,
-				Item.Type.coal => 2,
-				Item.Type.fish => 1.75f,
-				Item.Type.pretzel => 1.5f,
-				Item.Type.water => 1.25f,
-				Item.Type.pork => 1.5f,
-				_ => 1
-			};
-			if ( amountPerSoldier > 0 )
-				weight = 1 / amountPerSoldier;
-			else
-				weight = 0;
-		}
-
-		public float Advance( float efficiency = 0 )
+		public void Advance()
 		{
 			if ( data == null )
 				data = new List<float>();
 
-			if ( efficiency == 0 )
-				current = current * ( 1 - efficiencyUpdateFactor ) + production * efficiencyUpdateFactor;
-			else
-				current = efficiency;
+			current = current * ( 1 - efficiencyUpdateFactor ) + production * efficiencyUpdateFactor;
 
 			if ( current > record )
 			{
@@ -134,7 +105,6 @@ public class Player : ScriptableObject
 
 			data.Add( current );
 			production = 0;
-			return weighted = weight * current;
 		}
 	}
 
@@ -160,7 +130,7 @@ public class Player : ScriptableObject
 			Destroy( this );
 			return null;
 		}
-		efficiencyTimer.Start( efficiencyUpdateTime );
+		productivityTimer.Start( productivityUpdateTime );
 		CreateInputWeights();
 
 		return this;
@@ -212,44 +182,24 @@ public class Player : ScriptableObject
 	{
 		while ( itemHaulPriorities.Count < (int)Item.Type.total )
 			itemHaulPriorities.Add( 1 );
-		if ( averageEfficiencyHistory == null )
-			averageEfficiencyHistory = Chart.Create().Setup( Item.Type.total );
-		while ( itemEfficiencyHistory.Count < (int)Item.Type.total )
-			itemEfficiencyHistory.Add( Chart.Create().Setup( (Item.Type)itemEfficiencyHistory.Count ) );
-		foreach ( var h in itemEfficiencyHistory )
-			h.ResetWeight();
+		while ( itemProductivityHistory.Count < (int)Item.Type.total )
+			itemProductivityHistory.Add( Chart.Create().Setup( (Item.Type)itemProductivityHistory.Count ) );
 
 		if ( inputWeights == null )
 			CreateInputWeights();	// For compatibility with old files
+
+		if ( surplus.Length != (int)Item.Type.total )
+			surplus = new int[(int)Item.Type.total];
 	}
 
 	public void FixedUpdate()
 	{
-		if ( !efficiencyTimer.done )
+		if ( !productivityTimer.done )
 			return;
-		efficiencyTimer.Start( efficiencyUpdateTime );
+		productivityTimer.Start( productivityUpdateTime );
 
-		totalEfficiency = float.MaxValue;
-		averageEfficiency = 1;
-		int count = 0;
-		for ( int i = 0; i < itemEfficiencyHistory.Count; i++ )
-		{
-			var current = itemEfficiencyHistory[i].Advance();
-
-			if ( itemEfficiencyHistory[i].weight != 0 )
-			{
-				averageEfficiency *= current;
-				count++;
-			}
-
-			if ( itemEfficiencyHistory[i].weight > 0 && current < totalEfficiency )
-			{
-				worseItemType = (Item.Type)i;
-				totalEfficiency = current;
-			}
-		}
-		averageEfficiency = (float)Math.Pow( averageEfficiency, 1f / count );
-		averageEfficiencyHistory.Advance( averageEfficiency );
+		foreach ( var chart in itemProductivityHistory )
+			chart.Advance();
 	}
 
 	bool CreateMainBuilding()
@@ -374,7 +324,7 @@ public class Player : ScriptableObject
 	public void ItemProduced( Item.Type itemType, int quantity = 1 )
 	{
 		Assert.global.IsTrue( quantity > 0 );
-		itemEfficiencyHistory[(int)itemType].production += quantity;
+		itemProductivityHistory[(int)itemType].production += quantity;
 	}
 
 	public void Validate()

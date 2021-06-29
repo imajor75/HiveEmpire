@@ -102,10 +102,10 @@ public class Resource : HiveObject
 		Resource.meshes.Fill( meshes );
 
 		object[] sounds = {
-			"bird1", 30000, Type.tree,
-			"bird2", 30000, Type.tree,
-			"bird3", 30000, Type.tree,
-			"bird4", 30000, Type.tree };
+			"bird1", 60000, Type.tree,
+			"bird2", 60000, Type.tree,
+			"bird3", 60000, Type.tree,
+			"bird4", 60000, Type.tree };
 		ambientSounds.fileNamePrefix = "effects/";
 		ambientSounds.Fill( sounds );
 	}

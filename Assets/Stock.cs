@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Stock : Building
+public class Stock : Building, Worker.Callback.IHandler
 {
 	public bool main = false;
 	public List<int> content = new List<int>();
@@ -12,7 +12,8 @@ public class Stock : Building
 	public List<int> inputMax = new List<int>();
 	public List<int> outputMin = new List<int>();
 	public List<int> outputMax = new List<int>();
-	public List<Stock>[] destinationLists = new List<Stock>[(int)Item.Type.total];
+	public List<List<Stock>> destinationLists = new List<List<Stock>>();
+	public List<Worker> returningUnits = new List<Worker>();	// This list is maintained for returning units to store them during save, because they usually have no building
 	[Obsolete( "Compatibility with old files", true )]
 	public Stock[] destinations 
 	{ 
@@ -249,20 +250,9 @@ public class Stock : Building
 		height = 1.5f;
 		maxItems = defaultmaxItems;
 
-		while ( content.Count < (int)Item.Type.total )
-		{
-			content.Add( 0 );
-			onWay.Add( 0 );
-			inputMin.Add( 0 );
-			inputMax.Add( 0 );
-			outputMin.Add( 0 );
-			outputMax.Add( maxItems / 4 );
-		}
+		CreateMissingArrays();
 		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly ) == null )
 			return null;
-
-		for ( int i = 0; i < destinationLists.Length; i++ )
-			destinationLists[i] = new List<Stock>();
 
 		owner.RegisterStock( this );
 
@@ -287,6 +277,7 @@ public class Stock : Building
 		construction.done = true;
 		content[(int)Item.Type.plank] = 10;
 		content[(int)Item.Type.stone] = 5;
+		content[(int)Item.Type.soldier] = 10;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );
@@ -319,28 +310,45 @@ public class Stock : Building
 	{
 		base.Start();
 		if ( main )
+		{
 			name = "Headquarters";
+			soundSource.clip = Resources.Load<AudioClip>( "effects/gong" );
+			soundSource.loop = false;
+		}
 		else
-			name = "Stock " + node.x + ", " + node.y;
-		while ( content.Count < (int)Item.Type.total )
-			content.Add( 0 );
-		while ( inputMin.Count < (int)Item.Type.total )
-			inputMin.Add( 0 );
-		while ( inputMax.Count < (int)Item.Type.total )
-			inputMax.Add( 0 );
-		while ( outputMin.Count < (int)Item.Type.total )
-			outputMin.Add( 0 );
-		while ( outputMax.Count < (int)Item.Type.total )
-			outputMax.Add( maxItems / 4 );
-		while ( onWay.Count < (int)Item.Type.total )
-			onWay.Add( 0 );
-		Array.Resize( ref destinationLists, (int)Item.Type.total );
+			name = $"Stock {node.x}, {node.y}";
 	}
 
 	override public GameObject Template()
 	{
 		return main ? mainTemplate : template;
 	}
+
+	public void Callback( Worker worker )
+	{
+		if ( worker.type == Worker.Type.soldier )
+		{
+			content[(int)Item.Type.soldier]++;
+			soundSource.Play();
+		}
+		assert.IsTrue( returningUnits.Contains( worker ) );
+		returningUnits.Remove( worker );
+
+		foreach ( var item in worker.itemsInHands )
+		{
+			if ( item == null )
+				continue;
+
+			// TODO Sometimes this item keeps alive with all the destinations? Suspicious
+			item.CancelTrip();
+			item.SetRawTarget( this );
+			item.Arrived();
+			item.transform.SetParent( node.ground.transform );
+		}
+		worker.itemsInHands[0] = worker.itemsInHands[1] = null;
+
+		worker.DestroyThis();
+}
 
 	new void FixedUpdate()
 	{
@@ -361,6 +369,8 @@ public class Stock : Building
 		total = totalTarget = 0;
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
+			if ( itemType == (int)Item.Type.soldier )
+				continue;
 			int count = content[itemType] + onWay[itemType];
 			total += count;
 			totalTarget += Math.Max( count, inputMin[itemType] );
@@ -482,6 +492,24 @@ public class Stock : Building
 			content[i] = 0;
 	}
 
+	public void CreateMissingArrays()
+	{
+		while ( content.Count < (int)Item.Type.total )
+			content.Add( 0 );
+		while ( inputMin.Count < (int)Item.Type.total )
+			inputMin.Add( 0 );
+		while ( inputMax.Count < (int)Item.Type.total )
+			inputMax.Add( 0 );
+		while ( outputMin.Count < (int)Item.Type.total )
+			outputMin.Add( 0 );
+		while ( outputMax.Count < (int)Item.Type.total )
+			outputMax.Add(  maxItems / 4 );
+		while ( onWay.Count < (int)Item.Type.total )
+			onWay.Add( 0 );
+		while ( destinationLists.Count < (int)Item.Type.total )
+			destinationLists.Add( new List<Stock>() );
+	}
+
 	public override void Validate( bool chain )
 	{
 		base.Validate( chain );
@@ -493,6 +521,6 @@ public class Stock : Building
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % Cart.capacity,		0 );
+			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % Cart.capacity, 0 );
 	}
 }
