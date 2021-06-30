@@ -247,7 +247,7 @@ public class Eye : HiveObject
 			targetAltitude *= 1.01f;
 		if ( Interface.GetKey( KeyCode.X ) )
 			targetAltitude *= 0.99f;
-		if ( camera.enabled )
+		if ( camera.enabled && Interface.root.viewport.mouseOver )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
 				targetAltitude += 0.5f;

@@ -920,6 +920,7 @@ public class Interface : OperationHandler
 			scroll.transform.SetParent( transform );
 			scroll.vertical = vertical;
 			scroll.horizontal = horizontal;
+			scroll.scrollSensitivity = 50;
 
 			if ( horizontal )
 			{
@@ -957,7 +958,9 @@ public class Interface : OperationHandler
 			content.enabled = false;
 			content.rectTransform.anchorMin = Vector2.zero;
 			content.rectTransform.anchorMax = new Vector2( 1, 0 );
-			content.rectTransform.offsetMax = new Vector2( horizontal ? (int)( uiScale * 20 ) : 0, vertical ? (int)( uiScale * 20 ) : 0 );
+			content.rectTransform.offsetMax = new Vector2( vertical ? (int)( uiScale * -20 ) : 0, horizontal ? (int)( uiScale * -20 ) : 0 );
+
+			scroll.Clear();	// Just to create the background image
 
 			return scroll;
 		}
@@ -3865,8 +3868,7 @@ if ( cart )
 		void Fill( Comparison<Item> comparison )
 		{
 			int row = 0;
-			foreach ( Transform child in scroll.content )
-				Destroy( child.gameObject );
+			scroll.Clear();
 
 			if ( comparison == lastComparison )
 				reversed = !reversed;
@@ -4766,6 +4768,18 @@ public static class UIHelpers
 		}
 		return result;
 	}
+
+	public static ScrollRect Clear( this ScrollRect s )
+	{
+		foreach ( Transform child in s.content )
+			MonoBehaviour.Destroy( child.gameObject );
+
+		var bg = new GameObject().AddComponent<Image>().Link( s.content ).Stretch();
+		bg.color = new Color( 0, 0, 0, 0 );	// emptry transparent background image for picking, otherwise mouse wheel is not srolling when not over a child element
+		bg.name = "Background";
+		return s;
+	}
 }
+
 
 
