@@ -2953,9 +2953,9 @@ if ( cart )
 			Text( item.type.ToString() ).Pin( 15, -15, 100 );
 			stats = Text().Pin( 15, -35, 250 );
 			Text( "Origin:" ).Pin( 15, -55, 170 );
-			BuildingIcon( item.origin ).Pin( 100, -55, 80 ).AddClickHandler( delegate { Destroy( route ); route = null; } );
+			BuildingIcon( item.origin ).Pin( 100, -55, 200 ).AddClickHandler( delegate { Destroy( route ); route = null; } );
 			Text( "Destination:" ).Pin( 15, -75, 170 );
-			BuildingIcon( item.destination ).Pin( 100, -75, 80 );
+			BuildingIcon( item.destination ).Pin( 100, -75, 200 );
 
 			mapIcon = new GameObject( "Map icon" );
 			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
