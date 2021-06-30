@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -2889,7 +2889,7 @@ if ( cart )
 
 			Workshop workshop = construction.boss as Workshop;
 			if ( workshop )
-				Text( workshop.type.ToString() ).Pin( 20, -20, 160 );
+				Text( workshop.type.ToString().GetPrettyName() ).Pin( 20, -20, 160 );
 
 			planks = new WorkshopPanel.Buffer();
 			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, 20, -40, iconSize + 5 );
