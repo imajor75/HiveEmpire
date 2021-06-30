@@ -45,6 +45,27 @@ abstract public class Building : HiveObject
 		}
 	}
 
+	public enum Type
+	{
+		stock = Workshop.Type.total,
+		headquarters,
+		guardHouse,
+		total
+	}
+
+	public Type type 
+	{
+		get
+		{
+			if ( this is Workshop workshop )
+				return (Type)workshop.type;
+			if ( this is Stock stock )
+				return stock.main ? Type.headquarters : Type.stock;
+			assert.IsTrue( this is GuardHouse );
+			return Type.guardHouse;
+		}
+	}
+
 	public List<Ground.Offset> foundation
 	{
 		get
@@ -580,7 +601,7 @@ abstract public class Building : HiveObject
 		if ( !construction.done && !blueprintOnly )
 			level = lowerLimit + ( upperLimit - lowerLimit ) * (float)Math.Pow( construction.progress, levelBrake );
 
-		bool highlight = Interface.root.highlightType == Interface.HighlightType.stocks && this as Stock;
+		bool highlight = Interface.root.highlightType == Interface.HighlightType.buildingType && Interface.root.highlightBuildingTypes.Contains( type );
 
 		if ( currentHighlight != highlight || currentLevel != level )
 		{

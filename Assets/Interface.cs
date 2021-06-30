@@ -32,6 +32,7 @@ public class Interface : OperationHandler
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
 	public HighlightType highlightType;
+	public List<Building.Type> highlightBuildingTypes = new List<Building.Type>(); 
 	public Ground.Area highlightArea;
 	public GameObject highlightVolume;
 	GroundNode highlightVolumeCenter;
@@ -44,7 +45,7 @@ public class Interface : OperationHandler
 	public enum HighlightType
 	{
 		none,
-		stocks,
+		buildingType,
 		volume,
 		area
 	}
@@ -534,7 +535,6 @@ public class Interface : OperationHandler
 			Assert.global.IsNotNull( highlightArea.center );
 		}
 #endif
-
 	}
 
 	public override GroundNode location { get { return null; } }
@@ -2025,7 +2025,10 @@ public class Interface : OperationHandler
 			itemTypeForRetarget = selectedItemType;
 			root.highlightOwner = gameObject;
 			root.viewport.inputHandler = this;
-			root.highlightType = HighlightType.stocks;
+			root.highlightType = HighlightType.buildingType;
+			root.highlightBuildingTypes.Clear();
+			root.highlightBuildingTypes.Add( Building.Type.stock );
+			root.highlightBuildingTypes.Add( Building.Type.headquarters );
 		}
 
 		void Remove()
@@ -3030,7 +3033,7 @@ if ( cart )
 
 		static public BuildingList Create()
 		{
-			return new GameObject().AddComponent<BuildingList>();
+			return new GameObject( "Building list" ).AddComponent<BuildingList>();
 		}
 
 		public void Open()
@@ -3062,14 +3065,30 @@ if ( cart )
 			var i = Text( "input", 10 ).Pin( 235, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareInputs ); } );
 			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
 
-			Fill();
+			SetFilter( d );
 		}
 
 		void SetFilter( Dropdown d )
 		{
 			filter = d.options[d.value].text;
 			if ( filter == "All" )
-			filter = "";
+			{
+				root.highlightType = HighlightType.none;
+				filter = "";
+			}
+			else
+			{
+				root.highlightType = HighlightType.buildingType;
+				root.highlightOwner = gameObject;
+				root.highlightBuildingTypes.Clear();
+				for ( int i = 0; i < (int)Building.Type.total; i++ )
+				{
+					if ( i < (int)Workshop.Type.total && ((Workshop.Type)i).ToString().GetPrettyName() == filter )
+						root.highlightBuildingTypes.Add( (Building.Type)i );
+					if ( ((Building.Type)i).ToString().GetPrettyName() == filter )
+						root.highlightBuildingTypes.Add( (Building.Type)i );
+				}
+			}
 			Fill();
 		}
 

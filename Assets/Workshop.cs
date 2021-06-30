@@ -16,7 +16,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public bool working;
 	[Obsolete( "Compatibility with old files", true )]
 	bool soldierWasCreatedLastTime;	// Only used by the barack
-	public Type type = Type.unknown;
+	new public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
 	public Transform millWheel;
 	public float millWheelSpeed = 0;
@@ -154,7 +154,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public Player.InputWeight weight;
 	}
 
-	public enum Type
+	new public enum Type
 	{
 		woodcutter,
 		sawmill,
