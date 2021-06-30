@@ -2783,6 +2783,14 @@ public class Interface : OperationHandler
 							targetObject = res.resource;
 							break;
 						}
+						var plant = worker.FindTaskInQueue<Workshop.Plant>();
+						if ( plant )
+						{
+							status.text = "Planting " + plant.resourceType.ToString();
+							targetObject = plant.node;
+							break;
+
+						}
 						var deliver = worker.FindTaskInQueue<Worker.DeliverItem>();
 						if ( deliver )
 						{
