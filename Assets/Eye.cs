@@ -178,37 +178,26 @@ public class Eye : HiveObject
 		this.rotateAround = rotateAround;
 	}
 
+	Vector3 Move( float side, float forward )
+	{
+		rotateAround = false;
+		hasStoredValues = false;
+		Interface.root.viewport.markEyePosition = false;
+		director = null;
+		return transform.right * side * moveSensitivity + transform.forward * forward * moveSensitivity;
+	}
+
 	void FixedUpdate()
 	{
 		Vector3 movement = autoMovement;
 		if ( Interface.GetKey( KeyCode.A ) )
-		{
-			movement += transform.right * -0.1f * moveSensitivity;
-			rotateAround = false;
-			Interface.root.viewport.markEyePosition = false;
-			director = null;
-		}
+			movement += Move( -0.1f, 0 );
 		if ( Interface.GetKey( KeyCode.D ) )
-		{
-			movement += transform.right * 0.1f * moveSensitivity;
-			rotateAround = false;
-			Interface.root.viewport.markEyePosition = false;
-			director = null;
-		}
+			movement += Move( 0.1f, 0 );
 		if ( Interface.GetKey( KeyCode.W ) )
-		{
-			movement += transform.forward * 0.13f * moveSensitivity;
-			rotateAround = false;
-			Interface.root.viewport.markEyePosition = false;
-			director = null;
-		}
+			movement += Move( 0, 0.13f );
 		if ( Interface.GetKey( KeyCode.S ) )
-		{
-			movement += transform.forward * -0.13f * moveSensitivity;
-			rotateAround = false;
-			Interface.root.viewport.markEyePosition = false;
-			director = null;
-		}
+			movement += Move( 0, -0.13f );
 		x += movement.x;
 		y += movement.z;
 
