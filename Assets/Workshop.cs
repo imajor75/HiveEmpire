@@ -379,7 +379,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			"Mines/ironmine_final", 1.5f, Type.ironMine,
 			"Mines/goldmine_final", 1.5f, Type.goldMine,
 			"Mines/stonemine_final", 1.5f, Type.stoneMine,
-			"Forest/woodcutter_final", 1.1f, Type.woodcutter,
+			"Forest/woodcutter_final", 1.2f, Type.woodcutter,
 			"Forest/forester_final", 1.33f, Type.forester,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,
