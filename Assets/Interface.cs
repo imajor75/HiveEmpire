@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -2642,13 +2642,13 @@ public class Interface : OperationHandler
 	public class WorkerPanel : Panel, Eye.IDirector
 	{
 		public Worker worker;
-		Text itemCount;
+		public Text itemCount;
 		public Stock cartDestination;
-		PathVisualization cartPath;
-		Text status;
-		ItemImage statusImage0, statusImage1;
-		Worker.Task lastFirstTask;
-		new HiveObject target;
+		public PathVisualization cartPath;
+		public Text status;
+		public ItemImage statusImage0, statusImage1;
+		public Worker.Task lastFirstTask;
+		public HiveObject targetObject;
 
 		public static WorkerPanel Create()
 		{
@@ -2681,7 +2681,7 @@ public class Interface : OperationHandler
 
 		void ShowTarget()
 		{
-			target?.OnClicked( true );
+			root.world.eye.FocusOn( targetObject.location, true );
 		}
 
 		void ShowHome()
@@ -2737,7 +2737,7 @@ public class Interface : OperationHandler
 			if ( lastFirstTask != firstTask )
 			{
 				lastFirstTask = firstTask;
-				target = null;
+				targetObject = null;
 				statusImage0.SetItem( null );
 				statusImage1.SetItem( null );
 				switch( worker.type )
@@ -2749,6 +2749,7 @@ public class Interface : OperationHandler
 						{
 							status.text = "Picking up";
 							statusImage0.SetItem( pickup.items[0] );
+							targetObject = pickup.items[0].flag;
 							break;
 						}
 						var deliver = worker.FindTaskInQueue<Worker.DeliverItem>();
@@ -2761,7 +2762,7 @@ public class Interface : OperationHandler
 								status.text += "          and";
 								statusImage1.SetItem( deliver.items[1] );
 							}
-							target = (HiveObject)deliver.items[0].nextFlag ?? deliver.items[0].destination;
+							targetObject = (HiveObject)deliver.items[0].nextFlag ?? deliver.items[0].destination;
 							break;
 						}
 						var startWorking = worker.FindTaskInQueue<Worker.StartWorkingOnRoad>();
@@ -2779,7 +2780,7 @@ public class Interface : OperationHandler
 						if ( res )
 						{
 							status.text = "Getting " + res.resource.type.ToString();
-							target = res.resource;
+							targetObject = res.resource;
 							break;
 						}
 						var deliver = worker.FindTaskInQueue<Worker.DeliverItem>();
@@ -2828,7 +2829,7 @@ public class Interface : OperationHandler
 						{
 							status.text = $"Transporting {Stock.Cart.capacity}";
 							statusImage1.SetType( (worker as Stock.Cart).itemType );
-							target = massDeliver.stock;
+							targetObject = massDeliver.stock;
 							break;
 						}
 						status.text = "Returning home";
