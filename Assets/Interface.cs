@@ -75,6 +75,7 @@ public class Interface : OperationHandler
 		crossing,
 		resizer,
 		cart,
+		pin,
 		home
 	}
 
@@ -678,6 +679,7 @@ public class Interface : OperationHandler
 			borderWidth = 10;
 			noCloseButton = true;
 			noResize = true;
+			noPin = true;
 			base.Open( width = 100, height = 100 );
 			escCloses = false;
 
@@ -787,6 +789,9 @@ public class Interface : OperationHandler
 		public int borderWidth = 20;
 		public bool noCloseButton;
 		public bool noResize;
+		public bool noPin;
+		public Image pin;
+		public bool pinned;
 		bool dragResizes;
 
 		public const int itemIconBorderSize = 2;
@@ -807,6 +812,8 @@ public class Interface : OperationHandler
 
 			foreach ( var panel in root.panels )
 			{
+				if ( panel.pinned )
+					continue;
 				var r = IsTheSame( panel );
 				if ( r != CompareResult.different )
 					panel.Close();
@@ -831,9 +838,14 @@ public class Interface : OperationHandler
 			}
 			if ( !noCloseButton )
 			{
-				var cb = Image( iconTable.GetMediaData( Icon.exit ) ).Pin( -borderWidth, 0, borderWidth, borderWidth, 1, 1 ).AddClickHandler( Close );
+				var cb = Image( Icon.exit ).Pin( -borderWidth, 0, borderWidth, borderWidth, 1, 1 ).AddClickHandler( Close );
 				cb.name = "Close button";
 				cb.color = Color.red;
+			}
+			if ( !noPin )
+			{
+				pin = Image( Icon.pin ).Pin( -borderWidth * 2, 0, borderWidth, borderWidth, 1, 1 ).AddClickHandler( Pin );
+				pin.color = Color.green.Dark();
 			}
 			if ( !noResize )
 			{
@@ -844,6 +856,12 @@ public class Interface : OperationHandler
 			this.Pin( x, y, xs, ys );
 			UpdatePosition();
 			return false;
+		}
+
+		void Pin()
+		{
+			pinned = !pinned;
+			pin.color = pinned ? Color.green : Color.green.Dark();
 		}
 
 		public bool Open( HiveObject target, int xs, int ys )
@@ -4477,6 +4495,7 @@ if ( cart )
 		public void Open( bool victory = false )
 		{
 			noResize = true;
+			noPin = true;
 			if ( base.Open( 200, 200 ) )
 				return;
 			name = "World Progress Panel";
@@ -4544,6 +4563,7 @@ if ( cart )
 		{
 			noCloseButton = true;
 			noResize = true;
+			noPin = true;
 			Open( null, 0, 0, 300, 250 );
 			this.PinCenter( 0, 0, 300, 250, 0.5f, 0.3f );
 
