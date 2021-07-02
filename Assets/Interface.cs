@@ -3266,6 +3266,7 @@ if ( cart )
 			relaxSites
 		}
 
+		public bool showCursor;
 		public Construct constructionMode = Construct.nothing;
 		public Workshop.Type workshopType;
 		public int currentFlagDirection = 1;    // 1 is a legacy value.
@@ -3572,6 +3573,8 @@ if ( cart )
 				ShowNearestPossibleConstructionSite( false );
 			if ( GetKeyDown( KeyCode.Alpha6 ) )
 				ShowNearestPossibleConstructionSite( true );
+			if ( GetKeyDown( KeyCode.Alpha7 ) )
+				showCursor = !showCursor;
 			if ( GetKeyDown( KeyCode.Comma ) )
 			{
 				if ( currentFlagDirection == 0 )
@@ -3818,8 +3821,10 @@ if ( cart )
 			return true;
 		}
 
-		public void SetCursorType( CursorType cursortype, int roadDirection = -1 )
+		public void SetCursorType( CursorType cursorType, int roadDirection = -1 )
 		{
+			if ( !showCursor )
+				cursorType = CursorType.invisible;
 			if ( cursor == null )
 			{
 				cursor = Instantiate( Resources.Load<GameObject>( "prefabs/others/cursor" ) );
@@ -3833,7 +3838,7 @@ if ( cart )
 			}
 			
 			for ( int i = 0; i < cursorTypes.Length; i++ )
-				cursorTypes[i]?.SetActive( i == (int)cursortype );
+				cursorTypes[i]?.SetActive( i == (int)cursorType );
 			if ( roadDirection >= 0 )
 				cursorTypes[(int)CursorType.direction0 + roadDirection].SetActive( true );
 		}
