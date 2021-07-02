@@ -330,7 +330,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return true;
 			}
 			return false;
-
 		}
 
 		public override void Cancel()

@@ -108,9 +108,9 @@ public class Worker : HiveObject
 		public float timeToInterrupt = -1;
 		public int duration;
 		public int animation;
-		public AudioClip sound;
 		public GameObject toolTemplate;
 		public LinkType toolSlot;
+		public GroundNode.Type turnTo = GroundNode.Type.anything;
 	}
 
 	public enum AnimationSound
@@ -200,6 +200,17 @@ public class Worker : HiveObject
 		{
 			if ( started )
 				return;
+
+			if ( act.turnTo != GroundNode.Type.anything )
+			{
+				foreach ( var c in Ground.areas[1] )
+				{
+					var n = boss.node.Add( c );
+					if ( n.type == GroundNode.Type.underWater )
+						boss.TurnTo( n );
+				}
+			}
+
 			if ( boss.animator )
 				wasWalking = boss.animator.GetBool( walkingID );
 			boss.animator?.SetBool( walkingID, false );
@@ -942,7 +953,8 @@ public class Worker : HiveObject
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/stick" ),
 			toolSlot = LinkType.rightHand,
 			timeToInterrupt = 1.0f,
-			duration = 500
+			duration = 500,
+			turnTo = GroundNode.Type.underWater
 		};
 		resourceCollectAct[(int)Resource.Type.cornfield] = new Act
 		{
