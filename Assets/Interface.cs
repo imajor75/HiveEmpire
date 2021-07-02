@@ -1903,8 +1903,10 @@ public class Interface : OperationHandler
 		public Item.Type selectedItemType = Item.Type.log;
 		public ItemImage selected;
 		public Text inputMin, inputMax, outputMin, outputMax;
-		public int destinationIndex;
+		public int otherStockIndex;
 		public RectTransform controls;
+		public Text selectedInputCount, selectedOutputCount;
+		public Image selectedInput, selectedOutput;
 
 		float lastMouseXPosition;
 		List<int>listToChange;
@@ -1949,6 +1951,15 @@ public class Interface : OperationHandler
 				return;
 			}
 			selectedItemType = itemType;
+			int inputCount = stock.GetSubcontractors( itemType ).Count;
+			selectedInputCount.text = inputCount.ToString();
+			selectedInputCount.gameObject.SetActive( inputCount > 0 );
+			selectedInput.gameObject.SetActive( inputCount > 0 );
+
+			int outputCount = stock.destinationLists[(int)itemType].Count;
+			selectedOutputCount.text = outputCount.ToString();
+			selectedOutputCount.gameObject.SetActive( outputCount > 0 );
+			selectedOutput.gameObject.SetActive( outputCount > 0 );
 		}
 
 		void RecreateControls()
@@ -2000,10 +2011,16 @@ public class Interface : OperationHandler
 			SetTooltip( "The stock will only supply other buildings with the item if it has at least this many" );
 			outputMax = Text().Link( selected ).Pin( 50, -20, 40 ).
 			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks" );
+			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 0, 0.7f );
+			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.7f );
+			selectedInputCount = Text( "0" ).Link( selectedInput ).PinCenter( 0, -20, iconSize / 2, iconSize, 0.5f, 0.5f ).AddOutline();
+			selectedOutputCount = Text( "0" ).Link( selectedOutput ).PinCenter( 0, -20, iconSize / 2, iconSize, 0.5f, 0.5f ).AddOutline();
+			selectedInputCount.color = selectedOutputCount.color = Color.green;
 
 			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).name = "Reset";
 			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).name = "Show cart";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).name = "Remover";
+			SelectItemType( selectedItemType );
 		}
 
 		void ShowCart()
@@ -2016,14 +2033,15 @@ public class Interface : OperationHandler
 
 		void SetTarget()
 		{
+			var i = (int)selectedItemType;
 			if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 			{
-				if ( stock.destinationLists[(int)selectedItemType].Count > 0 )
+				if ( stock.destinationLists[i].Count > 0 )
 				{
-					if ( destinationIndex >= stock.destinationLists[(int)selectedItemType].Count )
-						destinationIndex = 0;
-					World.instance.eye.FocusOn( stock.destinationLists[(int)selectedItemType][destinationIndex].node, true );
-					destinationIndex++;
+					if ( otherStockIndex >= stock.destinationLists[i].Count )
+						otherStockIndex = 0;
+					World.instance.eye.FocusOn( stock.destinationLists[i][otherStockIndex].node, true );
+					otherStockIndex++;
 				}
 				return;
 			}
@@ -2036,8 +2054,11 @@ public class Interface : OperationHandler
 			if ( GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) )
 			{
 				var sources = stock.GetSubcontractors( selectedItemType );
-				if ( sources.Count > 0 )
-					SelectBuilding( sources[0] );	// TODO Show the rest?
+				if ( otherStockIndex >= sources.Count )
+					otherStockIndex = 0;
+				if ( sources.Count > otherStockIndex )
+					SelectBuilding( sources[otherStockIndex] );
+				otherStockIndex++;
 				return;
 			}
 			itemTypeForRetarget = selectedItemType;
