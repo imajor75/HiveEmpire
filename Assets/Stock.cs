@@ -12,7 +12,23 @@ public class Stock : Building, Worker.Callback.IHandler
 	public List<int> inputMax = new List<int>();
 	public List<int> outputMin = new List<int>();
 	public List<int> outputMax = new List<int>();
-	public List<List<Stock>> destinationLists = new List<List<Stock>>();
+	[Obsolete( "Compatibility with old files", true )]
+	List<List<Stock>> destinationLists
+	{
+		set
+		{
+			for ( int i = 0; i < value.Count; i++ )
+			{
+				while ( outputRoutes.Count <= i )
+					outputRoutes.Add( new List<Route>() );
+				foreach ( var s in value[i] )
+					outputRoutes[i].Add( new Route { start = this, end = s, itemType = (Item.Type)i } );
+
+			}
+
+		}
+	}
+	public List<List<Route>> outputRoutes = new List<List<Route>>();
 	public List<Worker> returningUnits = new List<Worker>();	// This list is maintained for returning units to store them during save, because they usually have no building
 	[Obsolete( "Compatibility with old files", true )]
 	public Stock[] destinations 
@@ -21,10 +37,10 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			for ( int i = 0; i < value.Length; i++ )
 			{
-				if ( destinationLists[i] == null )
-					destinationLists[i] = new List<Stock>();
+				if ( outputRoutes[i] == null )
+					outputRoutes[i] = new List<Route>();
 				if ( value[i] )
-					destinationLists[i].Add( value[i] );
+					outputRoutes[i].Add( new Route { start = this, end = value[i], itemType = (Item.Type)i } );
 			}
 		} 
 	}
@@ -57,12 +73,20 @@ public class Stock : Building, Worker.Callback.IHandler
 	[Obsolete( "Compatibility for old files", true )]
 	List<int> target = new List<int>();
 
+	public class Route
+	{
+		public Stock start, end;
+		public Item.Type itemType;
+	}
+
 	public class Cart : Worker
 	{
 		public const int capacity = 25;
-		public Item.Type itemType;
 		public int itemQuantity;
+		public Item.Type itemType;
+		public Route currentRoute;
 		public Stock destination;
+		public bool back;
 		public const int frameCount = 8;
 		public Stock boss { get { return building as Stock; } }
 		readonly GameObject[] frames = new GameObject[8];
@@ -74,6 +98,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		public void DeliverItems( Stock destination )
 		{
 			this.destination = destination;
+
 			destination.onWay[(int)itemType] += itemQuantity;
 			ScheduleWalkToFlag( destination.flag, true );
 			ScheduleWalkToNeighbour( destination.node );
@@ -83,16 +108,16 @@ public class Stock : Building, Worker.Callback.IHandler
 			ScheduleTask( task );
 		}
 
-		public void TransferItems( Item.Type itemType, Stock destination )
+		public void TransferItems( Route route )
 		{
-			int typeIndex = (int)itemType;
+			assert.AreEqual( route.start, boss );
+			int typeIndex = (int)route.itemType;
 			boss.content[typeIndex] -= capacity;
 			itemQuantity = capacity;
-			this.itemType = itemType;
 
 			ScheduleWalkToNeighbour( boss.flag.node );
-			DeliverItems( destination );
-			ScheduleWalkToNeighbour( destination.flag.node );
+			DeliverItems( route.end );
+			ScheduleWalkToNeighbour( route.end.flag.node );
 			ScheduleWalkToFlag( boss.flag, true );
 			ScheduleWalkToNeighbour( node );
 
@@ -110,7 +135,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			base.Reset();
 			itemQuantity = 0;
-			destination = null;
+			currentRoute = null;
 		}
 
 		new public void Start()
@@ -130,6 +155,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			if ( itemQuantity > 0 && destination == null )
 			{
+				currentRoute = null;
 				destination = null; // Real null, not the unity style fake one
 				ResetTasks();
 				DeliverItems( boss );
@@ -171,6 +197,26 @@ public class Stock : Building, Worker.Callback.IHandler
 						Destroy( f.transform.GetChild( 0 ).gameObject );
 			}
 		}
+
+		public override void Validate( bool chain )
+		{
+			base.Validate( chain );
+			assert.IsTrue( type == Worker.Type.cart || type == Worker.Type.unemployed );
+			if ( building )		// Can be null, if the user removed the stock
+				assert.IsTrue( building is Stock );
+			if ( road && onRoad )
+			{
+				int index = IndexOnRoad();
+				assert.IsTrue( index >= 0 );
+				assert.AreEqual( road.workerAtNodes[index], this );
+			}
+			if ( currentRoute != null )
+			{
+				assert.AreEqual( destination, currentRoute.end );
+				assert.AreEqual( boss, currentRoute.start );
+				assert.AreEqual( itemType, currentRoute.itemType );
+			}
+		}
 	}
 
 	public class DeliverStackTask : Worker.Task
@@ -206,6 +252,7 @@ public class Stock : Building, Worker.Callback.IHandler
 				if ( stock != cartStock )
 					stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
 				cart.itemQuantity = 0;
+				cart.currentRoute = null;
 				cart.UpdateLook();
 			}
 			if ( cartStock != stock )
@@ -284,16 +331,20 @@ public class Stock : Building, Worker.Callback.IHandler
 		return this;
 	}
 
-	public List<Stock> GetSubcontractors( Item.Type itemType )
+	public List<Route> GetInputRoutes( Item.Type itemType )
 	{
 		int typeIndex = (int)itemType;
-		List<Stock> list = new List<Stock>();
+		List<Route> list = new List<Route>();
 		foreach ( var stock in owner.stocks )
 		{
 			if ( stock == this )
 				continue;
-			if ( stock.destinationLists[typeIndex].Contains( this ) )
-			list.Add( stock );
+			foreach ( var r in stock.outputRoutes[typeIndex] )
+			{
+				if ( r.end == this )
+					list.Add( r );
+
+			}
 		}
 		return list;
 	}
@@ -378,12 +429,12 @@ public class Stock : Building, Worker.Callback.IHandler
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			for ( int i = 0; i < destinationLists[itemType].Count; i++ )
+			for ( int i = 0; i < outputRoutes[itemType].Count; i++ )
 			{
-				var destination = destinationLists[itemType][i];
+				var destination = outputRoutes[itemType][i].end;
 				if ( destination == null )	// unity like null
 				{
-					destinationLists[itemType].RemoveAt( i );
+					outputRoutes[itemType].RemoveAt( i );
 					i--;
 					continue;
 				}
@@ -395,7 +446,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					destination.total + Cart.capacity <= maxItems &&
 					destination.content[itemType] + Cart.capacity <= destination.inputMax[itemType] )
 				{
-					cart.TransferItems( (Item.Type)itemType, destination );
+					cart.TransferItems( outputRoutes[itemType][i] );
 				}
 			}
 
@@ -506,8 +557,8 @@ public class Stock : Building, Worker.Callback.IHandler
 			outputMax.Add(  maxItems / 4 );
 		while ( onWay.Count < (int)Item.Type.total )
 			onWay.Add( 0 );
-		while ( destinationLists.Count < (int)Item.Type.total )
-			destinationLists.Add( new List<Stock>() );
+		while ( outputRoutes.Count < (int)Item.Type.total )
+			outputRoutes.Add( new List<Route>() );
 	}
 
 	public override void Validate( bool chain )

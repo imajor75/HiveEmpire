@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -355,6 +355,10 @@ public class Interface : OperationHandler
 		if ( GetKeyDown( KeyCode.K ) )
 		{
 			ResourceList.Create().Open();
+		}
+		if ( GetKeyDown( KeyCode.R ) )
+		{
+			RouteList.Create().Open( null, Item.Type.log, true );
 		}
 		if ( GetKeyDown( KeyCode.B ) )
 		{
@@ -981,19 +985,6 @@ public class Interface : OperationHandler
 			scroll.Clear();	// Just to create the background image
 
 			return scroll;
-		}
-
-		public void SetScrollRectContentSize( ScrollRect scroll, int x = 0, int y = 0 )
-		{
-			var t = scroll.content.transform as RectTransform;
-			var m = t.offsetMax;
-			if ( y != 0 )
-				m.y = (int)( uiScale * y );
-			if ( x != 0 )
-				m.x = (int)( uiScale * x );
-			t.offsetMax = m;
-			t.offsetMin = Vector2.zero;
-			scroll.verticalNormalizedPosition = 1;
 		}
 
 		public ItemImage ItemIcon( Item.Type type = Item.Type.unknown )
@@ -1954,7 +1945,6 @@ public class Interface : OperationHandler
 		public Item.Type selectedItemType = Item.Type.log;
 		public ItemImage selected;
 		public Text inputMin, inputMax, outputMin, outputMax;
-		public int otherStockIndex;
 		public RectTransform controls;
 		public Text selectedInputCount, selectedOutputCount;
 		public Image selectedInput, selectedOutput;
@@ -2004,12 +1994,12 @@ public class Interface : OperationHandler
 				return;
 			}
 			selectedItemType = itemType;
-			int inputCount = stock.GetSubcontractors( itemType ).Count;
+			int inputCount = stock.GetInputRoutes( itemType ).Count;
 			selectedInputCount.text = inputCount.ToString();
 			selectedInputCount.gameObject.SetActive( inputCount > 0 );
 			selectedInput.gameObject.SetActive( inputCount > 0 );
 
-			int outputCount = stock.destinationLists[(int)itemType].Count;
+			int outputCount = stock.outputRoutes[(int)itemType].Count;
 			selectedOutputCount.text = outputCount.ToString();
 			selectedOutputCount.gameObject.SetActive( outputCount > 0 );
 			selectedOutput.gameObject.SetActive( outputCount > 0 );
@@ -2039,9 +2029,9 @@ public class Interface : OperationHandler
 				var t = (Item.Type)j;
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
 				i.additionalTooltip = "Shift+LMB Show input potentials\nCtrl+LMB Show output potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
-				if ( stock.GetSubcontractors( (Item.Type)j ).Count > 0 )
+				if ( stock.GetInputRoutes( (Item.Type)j ).Count > 0 )
 					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f );
-				if ( stock.destinationLists[j].Count > 0 )
+				if ( stock.outputRoutes[j].Count > 0 )
 				{
 					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f );
 					offset += 10;
@@ -2094,29 +2084,18 @@ public class Interface : OperationHandler
 			var i = (int)selectedItemType;
 			if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 			{
-				if ( stock.destinationLists[i].Count > 0 )
-				{
-					if ( otherStockIndex >= stock.destinationLists[i].Count )
-						otherStockIndex = 0;
-					World.instance.eye.FocusOn( stock.destinationLists[i][otherStockIndex].node, true );
-					otherStockIndex++;
-				}
+				RouteList.Create().Open( stock, selectedItemType, true );
 				return;
 			}
 			if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
 			{
-				stock.destinationLists[(int)selectedItemType].Clear();
+				stock.outputRoutes[(int)selectedItemType].Clear();
 				RecreateControls();
 				return;
 			}
 			if ( GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) )
 			{
-				var sources = stock.GetSubcontractors( selectedItemType );
-				if ( otherStockIndex >= sources.Count )
-					otherStockIndex = 0;
-				if ( sources.Count > otherStockIndex )
-					SelectBuilding( sources[otherStockIndex] );
-				otherStockIndex++;
+				RouteList.Create().Open( stock, selectedItemType, false );
 				return;
 			}
 			itemTypeForRetarget = selectedItemType;
@@ -2231,12 +2210,17 @@ public class Interface : OperationHandler
 			if ( destination == null )
 				return true;
 
-			var l = stock.destinationLists[(int)itemTypeForRetarget];
-			if ( l.Contains( destination ) )
-				l.Remove( destination );
-			else
+			var l = stock.outputRoutes[(int)itemTypeForRetarget];
+			bool found = false;
+			for ( int i = 0; i < l.Count; i++ )
 			{
-				l.Add( destination );
+				if ( l[i].end == destination )
+					l.RemoveAt( i );
+					found = true;
+			}
+			if ( !found )
+			{
+				l.Add( new Stock.Route { end = destination, start = stock, itemType = itemTypeForRetarget } );
 				destination.inputMax[(int)itemTypeForRetarget] = Math.Max( (int)( Stock.Cart.capacity * 1.5f ), destination.inputMax[(int)itemTypeForRetarget] );
 			}
 
@@ -3131,6 +3115,80 @@ if ( cart )
 		}
 	}
 
+	public class RouteList : Panel
+	{
+		public Stock stock;
+		public Item.Type itemType;
+		public bool outputs;
+		public ScrollRect scroll;
+		public List<Stock.Route> list;
+
+		static public RouteList Create()
+		{
+			return new GameObject( "Route list" ).AddComponent<RouteList>();
+		}
+
+		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
+		{
+			base.Open( stock, 410, 350 );
+			this.stock = stock;
+			this.itemType = itemType;
+			this.outputs = outputs;
+			var d = Dropdown().Pin( borderWidth, -borderWidth, 150, iconSize );
+			List<string> options = new List<string>();
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+			{
+				options.Add( ((Item.Type)i).ToString().GetPrettyName() );
+			}
+			d.AddOptions( options );
+			d.onValueChanged.AddListener( OnItemTypeChanged );
+			Text( "Start" ).Pin( 20, -borderWidth - iconSize, 150, iconSize );
+			Text( "End" ).Pin( 170, -borderWidth - iconSize, 150, iconSize );
+			Text( "Distance" ).Pin( 320, -borderWidth - iconSize, 50, iconSize );
+			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 2 );
+			Fill();
+			return this;
+		}
+
+		void OnItemTypeChanged( int newType )
+		{
+			itemType = (Item.Type)newType;
+			Fill();
+		}
+
+		public void Fill()
+		{
+			scroll.Clear();
+
+			if ( stock == null )
+			{
+				list = new List<Stock.Route>();
+				foreach ( var stock in root.mainPlayer.stocks )
+				{
+					foreach ( var r in stock.outputRoutes[(int)itemType] )
+						list.Add( r );
+				}
+			}
+			else
+			{
+				list = stock.outputRoutes[(int)itemType];
+				if ( !outputs )
+					list = stock.GetInputRoutes( itemType );
+			}
+
+			int row = 0;
+			foreach ( var route in list )
+			{
+				BuildingIcon( route.start ).Link( scroll.content ).Pin( 0, row, 150, iconSize );
+				BuildingIcon( route.end ).Link( scroll.content ).Pin( 150, row, 150, iconSize );
+				Text( route.start.node.DistanceFrom( route.end.node ).ToString() ).Link( scroll.content ).Pin( 300, row, 50, iconSize );
+				row -= iconSize + 5;
+			}
+			scroll.SetContentSize( 0, -row );
+		}
+
+	}
+
 	public class BuildingList : Panel
 	{
 		ScrollRect scroll;
@@ -3230,8 +3288,7 @@ if ( cart )
 			outputs.Clear();
 			inputs.Clear();
 
-			foreach ( Transform child in scroll.content )
-				Destroy( child.gameObject );
+			scroll.Clear();
 
 			for ( int i = 0; i < buildings.Count; i++ )
 			{
@@ -3251,7 +3308,7 @@ if ( cart )
 					}
 				}
 			}
-			SetScrollRectContentSize( scroll, 0, iconSize * buildings.Count );
+			scroll.SetContentSize( -1, iconSize * buildings.Count );
 		}
 
 		new public void Update()
@@ -4033,7 +4090,7 @@ if ( cart )
 					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 280, row, 30 );				
 				row -= iconSize + 5;
 			}
-			SetScrollRectContentSize( scroll, 0, sortedItems.Count * ( iconSize + 5 ) );
+			scroll.SetContentSize( -1, sortedItems.Count * ( iconSize + 5 ) );
 		}
 
 		static public int CompareByAge( Item itemA, Item itemB )
@@ -4126,7 +4183,7 @@ if ( cart )
 				Text( resource.keepAway.inProgress ? "no" : "yes" ).Link( scroll.content ).Pin( 230, row, 30 );
 				row -= iconSize + 5;
 			}
-			SetScrollRectContentSize( scroll, 0, sortedResources.Count * ( iconSize + 5 ) );
+			scroll.SetContentSize( -1, sortedResources.Count * ( iconSize + 5 ) );
 		}
 
 		static public int CompareByType( Resource resA, Resource resB )
@@ -4255,7 +4312,7 @@ if ( cart )
 				Text( message ).Link( scroll.content ).Pin( 250, row, 200, 40 );
 				row -= iconSize + 5;
 			}
-			SetScrollRectContentSize( scroll, 0, root.mainPlayer.itemDispatcher.results.Count * ( iconSize + 5 ) );
+			scroll.SetContentSize( -1, root.mainPlayer.itemDispatcher.results.Count * ( iconSize + 5 ) );
 		}
 	}
 
@@ -4318,7 +4375,7 @@ if ( cart )
 				production[i] = Text( "0" ).Link( scroll.content ).Pin( 180, row, 40 );
 			}
 
-			SetScrollRectContentSize( scroll, 0, (int)Item.Type.total * ( iconSize + 5 ) );
+			scroll.SetContentSize( -1, (int)Item.Type.total * ( iconSize + 5 ) );
 		}
 
 		int CompareInStock( int a, int b )
@@ -4915,6 +4972,20 @@ public static class UIHelpers
 		bg.color = new Color( 0, 0, 0, 0 );	// emptry transparent background image for picking, otherwise mouse wheel is not srolling when not over a child element
 		bg.name = "Background";
 		return s;
+	}
+
+	public static ScrollRect SetContentSize( this ScrollRect scroll, int x = -1, int y = -1 )
+	{
+		var t = scroll.content.transform as RectTransform;
+		var m = t.offsetMax;
+		if ( y != -1 )
+			m.y = (int)( Interface.uiScale * y );
+		if ( x != -1 )
+			m.x = (int)( Interface.uiScale * x );
+		t.offsetMax = m;
+		t.offsetMin = Vector2.zero;
+		scroll.verticalNormalizedPosition = 1;
+		return scroll;
 	}
 }
 

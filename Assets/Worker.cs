@@ -2066,17 +2066,6 @@ public class Worker : HiveObject
 			}
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
 		}
-		if ( type == Type.cart )
-		{
-			if ( building )		// Can be null, if the user removed the stock
-				assert.IsNotNull( building as Stock );
-			if ( road && onRoad )
-			{
-				int index = IndexOnRoad();
-				assert.IsTrue( index >= 0 );
-				assert.AreEqual( road.workerAtNodes[index], this );
-			}
-		}
 		if ( type == Type.tinkerer && building is Workshop workshop && workshop.gatherer )
 		{
 			if ( IsIdle( true ) )

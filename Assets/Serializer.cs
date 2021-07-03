@@ -139,18 +139,10 @@ public class Serializer : JsonSerializer
 		Assert.global.IsTrue( i != null || p != null, $"No field with the name {name} found in {type.FullName}" );
 		reader.Read();
 
-		try
-		{
-			if ( p != null && ( i == null || p.DeclaringType.IsSubclassOf( i.DeclaringType ) ) )
-				p.SetValue( Object(), ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
-			else
-				i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
-		}
-		catch ( System.Exception exception )
-		{
-			Debug.Log( exception.Message );
-			Assert.global.Fail( $"Field type mismatch with {type.Name}.{i.Name}" );
-		}
+		if ( p != null && ( i == null || p.DeclaringType.IsSubclassOf( i.DeclaringType ) ) )
+			p.SetValue( Object(), ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
+		else
+			i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
 	}
 
 	object ProcessFieldValue( Type type, string owner )
