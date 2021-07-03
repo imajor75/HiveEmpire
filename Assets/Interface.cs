@@ -1030,7 +1030,8 @@ public class Interface : OperationHandler
 			if ( building == null )
 				return null;
 
-			var text = Text( building.title, fontSize );
+			string name = building.moniker ?? building.title;
+			var text = Text( name, fontSize );
 			text.AddClickHandler( delegate { SelectBuilding( building ); } );
 			return text;
 		}
@@ -1055,6 +1056,19 @@ public class Interface : OperationHandler
 		public Text Text( string text = "", int fontSize = 12 )
 		{
 			Text t = new GameObject().AddComponent<Text>();
+			t.name = "Text";
+			t.transform.SetParent( transform );
+			t.font = Interface.font;
+			t.fontSize = (int)( fontSize * uiScale );
+			t.color = Color.black;
+			t.text = text;
+			return t;
+		}
+
+		public EditableText Editable( string text = "", int fontSize = 12 )
+		{
+			var t = new GameObject().AddComponent<EditableText>();
+			t.AddClickHandler( t.Edit );
 			t.name = "Text";
 			t.transform.SetParent( transform );
 			t.font = Interface.font;
@@ -1313,6 +1327,34 @@ public class Interface : OperationHandler
 			}
 		}
 
+		public class EditableText : Text
+		{
+			public InputField editor;
+			public Action onValueChanged;
+			public void Edit()
+			{
+				var o = Instantiate( Resources.Load<GameObject>( "InputField" ) );
+				editor = o.GetComponent<InputField>();
+				editor.name = "InputField";
+				editor.Link( this ).Stretch();
+				editor.text = text;
+				editor.onSubmit.AddListener( EditorSubmit );
+				editor.onEndEdit.AddListener( delegate { EditorSubmit( text ); } );
+				editor.Select();
+			}
+
+			void EditorSubmit( string newText )
+			{
+				if ( editor == null )
+					return;
+
+				text = newText;
+				Destroy( editor.gameObject );
+				if ( onValueChanged != null )
+					onValueChanged();
+			}
+		}
+
 		public class ItemImage : MonoBehaviour
 		{
 			public Item item;
@@ -1462,7 +1504,7 @@ public class Interface : OperationHandler
 		public Image changeModeImage;
 		public Text productivity;
 		public Text itemsProduced;
-		public Text title;
+		public EditableText title;
 		public Text resourcesLeft;
 		public Text status;
 
@@ -1508,7 +1550,11 @@ public class Interface : OperationHandler
 			int row = -20;
 			if ( ( contentToShow & Content.name ) > 0 )
 			{
-				title = Text( workshop.type.ToString().GetPrettyName() ).Pin( 20, row, 160, 20 );
+				string name = workshop.moniker;
+				if ( name == null )
+					name = workshop.type.ToString().GetPrettyName();
+				title = Editable( name ).Pin( 20, row, 160, 20 );
+				title.onValueChanged = Rename;
 				row -= 20;
 			}
 
@@ -1582,6 +1628,11 @@ public class Interface : OperationHandler
 				root.ExecuteRemoveBuilding( workshop );
 
 			Close();
+		}
+
+		void Rename()
+		{
+			workshop.moniker = title.text;
 		}
 
 		void ShowWorker()
@@ -1907,6 +1958,8 @@ public class Interface : OperationHandler
 		public RectTransform controls;
 		public Text selectedInputCount, selectedOutputCount;
 		public Image selectedInput, selectedOutput;
+		new public EditableText name;
+		public InputField renamer;
 
 		float lastMouseXPosition;
 		List<int>listToChange;
@@ -1973,6 +2026,11 @@ public class Interface : OperationHandler
 			AreaIcon( stock.outputArea ).Link( controls ).Pin( 235, -25, 30, 30 ).name = "Output area";
 			total = Text( "", 16 ).Link( controls ).Pin( 35, 75, 100, iconSize * 2, 0, 0 );
 			total.name = "Total";
+			name = Editable( stock.moniker ).Link( controls ).PinCenter( 0, -35, 160, iconSize, 0.5f, 1 );
+			name.alignment = TextAnchor.MiddleCenter;
+			if ( name.text == "" )
+				name.text = "Stock";
+			name.onValueChanged = OnRename;
 
 			int row = -55;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
@@ -2075,6 +2133,11 @@ public class Interface : OperationHandler
 			if ( stock )
 				root.ExecuteRemoveBuilding( stock );
 			Close();
+		}
+
+		void OnRename()
+		{
+			stock.moniker = name.text;
 		}
 
 		public override void Update()
