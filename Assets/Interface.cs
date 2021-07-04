@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -747,8 +747,7 @@ public class Interface : OperationHandler
 		public string text;
 		public string additionalText;
 		public Sprite image;
-		public Action onShow;
-		public Action onHide;
+		public Action<bool> onShow;
 		public bool active;
 
 		public void Update()
@@ -758,7 +757,7 @@ public class Interface : OperationHandler
 				tooltip.SetText( this, text, image, additionalText );
 				if ( onShow != null && !active )
 				{
-					onShow();
+					onShow( true );
 					active = true;
 				}
 			}
@@ -766,9 +765,9 @@ public class Interface : OperationHandler
 			{
 				if ( tooltip.origin == this )
 					tooltip.Clear();
-				if ( onHide != null && active )
+				if ( onShow != null && active )
 				{
-					onHide();
+					onShow( false );
 					active = false;
 				}
 			}
@@ -776,8 +775,8 @@ public class Interface : OperationHandler
 
 		public void OnDestroy()
 		{
-			if ( active && onHide != null )
-				onHide();
+			if ( active && onShow != null )
+				onShow( false );
 		}
 	}
 
@@ -1231,7 +1230,7 @@ public class Interface : OperationHandler
 			{
 				this.area = area;
 				image = gameObject.GetComponent<Image>();
-				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, "", Show, Hide );
+				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, "", Show );
 				this.AddClickHandler( OnClick );
 			}
 
@@ -1272,20 +1271,22 @@ public class Interface : OperationHandler
 				root.viewport.inputHandler = this;
 			}
 
-			public void Show()
+			public void Show( bool show )
 			{
-				if ( area.center == null )
-					return;
+				if ( show )
+				{
+					if ( area.center == null )
+						return;
 
-				root.highlightType = HighlightType.area;
-				root.highlightOwner = gameObject;
-				root.highlightArea = area;
-			}
-
-			public void Hide()
-			{
-				if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == area )
-					root.highlightType = HighlightType.none;
+					root.highlightType = HighlightType.area;
+					root.highlightOwner = gameObject;
+					root.highlightArea = area;
+				}
+				else
+				{
+					if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == area )
+						root.highlightType = HighlightType.none;
+				}
 			}
 
 			public void Update()
@@ -1382,7 +1383,7 @@ public class Interface : OperationHandler
 				inTransit.gameObject.SetActive( false );
 
 				if ( itemType != Item.Type.unknown )
-					this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip, OnHideTooltip );
+					this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip );
 				return this;
 			}
 
@@ -1411,7 +1412,7 @@ public class Interface : OperationHandler
 				}
 				picture.enabled = true;
 				picture.sprite = Item.sprites[(int)itemType];
-				this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip, OnHideTooltip );
+				this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip );
 			}
 
 			public void SetInTransit( bool show )
@@ -1434,16 +1435,15 @@ public class Interface : OperationHandler
 					SetType( Item.Type.unknown );
 			}
 
-			public void OnShowTooltip()
+			public void OnShowTooltip( bool show )
 			{
-				if ( pathVisualization == null && item )
+				if ( show && pathVisualization == null && item )
 					pathVisualization = PathVisualization.Create().Setup( item.path, Interface.root.viewport.visibleAreaCenter );
-			}
-
-			public void OnHideTooltip()
-			{
-				Destroy( pathVisualization?.gameObject );
-				pathVisualization = null;
+				if ( !show )
+				{
+					Destroy( pathVisualization?.gameObject );
+					pathVisualization = null;
+				}
 			}
 
 			void Update()
@@ -1659,9 +1659,7 @@ public class Interface : OperationHandler
 				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
 				if ( percent > 100 )
 					percent = 100;
-				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "",
-				delegate { ShowRelaxSpotsAround( true ); },
-				delegate { ShowRelaxSpotsAround( false ); } );
+				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "", ShowRelaxSpotsAround );
 			}
 
 			if ( progressBar )
@@ -4927,7 +4925,7 @@ public static class UIHelpers
 		return false;
 	}
 	
-	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action onShow = null, Action onHide = null ) where UIElement : Component
+	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
 	{
 			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
 			if ( s == null )
@@ -4936,9 +4934,8 @@ public static class UIHelpers
 			s.image = image;
 			s.additionalText = additionalText;
 			s.onShow = onShow;
-			s.onHide = onHide;
 			foreach ( Transform t in g.transform )
-				t.SetTooltip( text, image, additionalText, onShow, onHide );
+				t.SetTooltip( text, image, additionalText, onShow );
 			return g;
 	}
 
