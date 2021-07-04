@@ -76,7 +76,8 @@ public class Interface : OperationHandler
 		resizer,
 		cart,
 		pin,
-		home
+		home,
+		ring
 	}
 
 
@@ -1024,7 +1025,48 @@ public class Interface : OperationHandler
 			string name = building.moniker ?? building.title;
 			var text = Text( name, fontSize );
 			text.AddClickHandler( delegate { SelectBuilding( building ); } );
+			var d = text.gameObject.AddComponent<BuildingIconData>();
+			d.building = building;
+			d.SetTooltip( null, null, null, show => d.track = show );
 			return text;
+		}
+
+		public class BuildingIconData : MonoBehaviour
+		{
+			public Building building;
+			public bool track;
+			public Image ring;
+
+			void Update()
+			{
+				if ( ring == null )
+				{
+					ring = new GameObject( "Ring" ).AddComponent<Image>();
+					ring.Link( root );
+					ring.transform.SetAsFirstSibling();
+					ring.sprite = iconTable.GetMediaData( Icon.ring );
+					ring.color = new Color( 0, 1, 1 );
+				}
+				ring.gameObject.SetActive( track );
+				var c = root.viewport.camera;
+				var p = c.WorldToScreenPoint( building.node.positionInViewport );
+				ring.transform.position = p;
+				float scale;
+				if ( c.orthographic )
+				{
+					var f = c.WorldToScreenPoint( building.flag.node.positionInViewport );
+					scale = ( p - f ).magnitude / 70;
+				}
+				else
+					scale = 20 / p.z;
+					
+				ring.transform.localScale = Vector3.one * scale * uiScale;
+			}
+
+			void OnDestroy()
+			{
+				Destroy( ring.gameObject );
+			}
 		}
 
 		public static void SelectBuilding( Building building )
