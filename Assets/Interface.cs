@@ -754,7 +754,8 @@ public class Interface : OperationHandler
 		{
 			if ( GetUIElementUnderCursor() == gameObject )
 			{
-				tooltip.SetText( this, text, image, additionalText );
+				if ( text != null )
+					tooltip.SetText( this, text, image, additionalText );
 				if ( onShow != null && !active )
 				{
 					onShow( true );
@@ -4927,6 +4928,7 @@ public static class UIHelpers
 	
 	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
 	{
+			Assert.global.IsTrue( text != null || onShow != null );
 			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
 			if ( s == null )
 				s = g.gameObject.AddComponent<Interface.TooltipSource>();
