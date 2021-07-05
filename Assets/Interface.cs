@@ -1035,37 +1035,67 @@ public class Interface : OperationHandler
 		{
 			public Building building;
 			public bool track;
-			public Image ring;
+			public Image ring, arrow;
 
 			void Update()
 			{
 				if ( ring == null )
 				{
-					ring = new GameObject( "Ring" ).AddComponent<Image>();
+					ring = new GameObject( "Ring for building icon" ).AddComponent<Image>();
 					ring.Link( root );
 					ring.transform.SetAsFirstSibling();
 					ring.sprite = iconTable.GetMediaData( Icon.ring );
 					ring.color = new Color( 0, 1, 1 );
 				}
-				ring.gameObject.SetActive( track );
+
+				if ( arrow == null )
+				{
+					arrow = new GameObject( "Arrow for building icon" ).AddComponent<Image>();
+					arrow.Link( root );
+					arrow.sprite = iconTable.GetMediaData( Icon.rightArrow );
+					arrow.transform.localScale = new Vector3( 0.5f, 0.5f, 1 );
+				}
+
 				var c = root.viewport.camera;
 				var p = c.WorldToScreenPoint( building.node.positionInViewport );
-				ring.transform.position = p;
-				float scale;
-				if ( c.orthographic )
+
+				ring.gameObject.SetActive( track );
+				if ( track )
 				{
-					var f = c.WorldToScreenPoint( building.flag.node.positionInViewport );
-					scale = ( p - f ).magnitude / 70;
+					ring.transform.position = p;
+					float scale;
+					if ( c.orthographic )
+					{
+						var f = c.WorldToScreenPoint( building.flag.node.positionInViewport );
+						scale = ( p - f ).magnitude / 70;
+					}
+					else
+						scale = 20 / p.z;
+					ring.transform.localScale = Vector3.one * scale * uiScale;
 				}
-				else
-					scale = 20 / p.z;
-					
-				ring.transform.localScale = Vector3.one * scale * uiScale;
+	
+				arrow.gameObject.SetActive( track );
+				if ( track )
+				{
+					var offset = ( p - transform.position ).normalized;
+					arrow.transform.position = transform.position + offset * 120;
+					arrow.transform.rotation = Quaternion.Euler( 0, 0, 90 - (float)( 180 * Math.Atan2( offset.x, offset.y ) / Math.PI ) );
+					var w = ( ( p - transform.position ).magnitude - Screen.height / 2 ) / Screen.height;
+					print( w );
+					if ( w < 0 ) 
+						w = 0;
+					if ( w > 1 )
+						w = 1;
+					arrow.color = Color.Lerp( Color.green, Color.red, w );
+				}
 			}
 
 			void OnDestroy()
 			{
-				Destroy( ring.gameObject );
+				if ( ring )
+					Destroy( ring.gameObject );
+				if ( arrow )
+					Destroy( arrow.gameObject );
 			}
 		}
 
