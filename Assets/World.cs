@@ -28,6 +28,7 @@ public class World : MonoBehaviour
 	static public Shader defaultColorShader;
 	static public Shader defaultMapShader;
 	static public Shader defaultTextureShader;
+	static public Shader defaultCutoutTextureShader;
 	public bool gameInProgress;
 	public int time;
 	public int randomSeed;
@@ -136,6 +137,7 @@ public class World : MonoBehaviour
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
 		defaultTextureShader = Shader.Find( "Unlit/Texture" );
+		defaultCutoutTextureShader = Shader.Find( "Unlit/Transparent Cutout" );
 		defaultMapShader = Resources.Load<Shader>( "Map" );
 	}
 

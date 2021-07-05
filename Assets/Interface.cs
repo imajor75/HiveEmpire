@@ -1022,8 +1022,7 @@ public class Interface : OperationHandler
 			if ( building == null )
 				return null;
 
-			string name = building.moniker ?? building.title;
-			var text = Text( name, fontSize );
+			var text = Text( null, fontSize );
 			text.AddClickHandler( delegate { SelectBuilding( building ); } );
 			var d = text.gameObject.AddComponent<BuildingIconData>();
 			d.building = building;
@@ -1036,9 +1035,14 @@ public class Interface : OperationHandler
 			public Building building;
 			public bool track;
 			public Image ring, arrow;
+			public Text text;
 
 			void Update()
 			{
+				if ( text == null )
+					text = gameObject.GetComponent<Text>();
+				text.text = building.moniker ?? building.title;
+
 				if ( ring == null )
 				{
 					ring = new GameObject( "Ring for building icon" ).AddComponent<Image>();
@@ -1424,7 +1428,16 @@ public class Interface : OperationHandler
 		{
 			public Item item;
 			public Item.Type itemType = Item.Type.unknown;
-			public string additionalTooltip;
+			public string additionalTooltipText;
+			public string additionalTooltip
+			{
+				set
+				{
+					additionalTooltipText = value;
+					if ( itemType != Item.Type.unknown )
+						this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites[(int)itemType], additionalTooltipText, OnShowTooltip );
+				}
+			}
 			PathVisualization pathVisualization;
 			public Image inTransit;
 			public Image picture;
@@ -1456,7 +1469,7 @@ public class Interface : OperationHandler
 				inTransit.gameObject.SetActive( false );
 
 				if ( itemType != Item.Type.unknown )
-					this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip );
+					this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites[(int)itemType], additionalTooltipText, OnShowTooltip );
 				return this;
 			}
 
@@ -1485,7 +1498,7 @@ public class Interface : OperationHandler
 				}
 				picture.enabled = true;
 				picture.sprite = Item.sprites[(int)itemType];
-				this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltip, OnShowTooltip );
+				this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltipText, OnShowTooltip );
 			}
 
 			public void SetInTransit( bool show )
@@ -2065,12 +2078,17 @@ public class Interface : OperationHandler
 				return;
 			}
 			selectedItemType = itemType;
-			int inputCount = stock.GetInputRoutes( itemType ).Count;
+			UpdateRouteIcons();
+		}
+
+		void UpdateRouteIcons()
+		{
+			int inputCount = stock.GetInputRoutes( selectedItemType ).Count;
 			selectedInputCount.text = inputCount.ToString();
 			selectedInputCount.gameObject.SetActive( inputCount > 0 );
 			selectedInput.gameObject.SetActive( inputCount > 0 );
 
-			int outputCount = stock.outputRoutes[(int)itemType].Count;
+			int outputCount = stock.outputRoutes[(int)selectedItemType].Count;
 			selectedOutputCount.text = outputCount.ToString();
 			selectedOutputCount.gameObject.SetActive( outputCount > 0 );
 			selectedOutput.gameObject.SetActive( outputCount > 0 );
@@ -2139,7 +2157,7 @@ public class Interface : OperationHandler
 			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).name = "Reset";
 			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).name = "Show cart";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).name = "Remover";
-			SelectItemType( selectedItemType );
+			UpdateRouteIcons();
 		}
 
 		void ShowCart()
@@ -3193,6 +3211,7 @@ if ( cart )
 		public bool outputs;
 		public ScrollRect scroll;
 		public List<Stock.Route> list;
+		public Material arrowMaterial;
 
 		static public RouteList Create()
 		{
@@ -3217,7 +3236,6 @@ if ( cart )
 			Text( "End" ).Pin( 170, -borderWidth - iconSize, 150, iconSize );
 			Text( "Distance" ).Pin( 320, -borderWidth - iconSize, 50, iconSize );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 2 );
-			Fill();
 			return this;
 		}
 
@@ -3227,13 +3245,12 @@ if ( cart )
 			Fill();
 		}
 
-		public void Fill()
+		bool UpdateList()
 		{
-			scroll.Clear();
-
+			List<Stock.Route> currentList;
 			if ( stock == null )
 			{
-				list = new List<Stock.Route>();
+				currentList = new List<Stock.Route>();
 				foreach ( var stock in root.mainPlayer.stocks )
 				{
 					foreach ( var r in stock.outputRoutes[(int)itemType] )
@@ -3242,10 +3259,20 @@ if ( cart )
 			}
 			else
 			{
-				list = stock.outputRoutes[(int)itemType];
+				currentList = stock.outputRoutes[(int)itemType];
 				if ( !outputs )
-					list = stock.GetInputRoutes( itemType );
+					currentList = stock.GetInputRoutes( itemType );
 			}
+			if ( list != null && currentList.Count == list.Count )
+				return false;
+
+			list = currentList;
+			return true;
+		}
+
+		public void Fill()
+		{
+			scroll.Clear();
 
 			int row = 0;
 			foreach ( var route in list )
@@ -3258,6 +3285,38 @@ if ( cart )
 			scroll.SetContentSize( 0, -row );
 		}
 
+		new void Update()
+		{
+			base.Update();
+
+			if ( UpdateList() )
+				Fill();
+
+			if ( arrowMaterial == null )
+			{
+				arrowMaterial = new Material( World.defaultCutoutTextureShader );
+				arrowMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
+				World.SetRenderMode( arrowMaterial, World.BlendMode.Cutout );
+			}
+
+			foreach ( var route in list )
+			{
+				var startPosition = route.start.node.positionInViewport;
+				var endPosition = route.end.node.positionInViewport;
+				var dif = endPosition-startPosition;
+				var fullDistance = dif.magnitude;
+				var normalizedDif = dif / fullDistance;
+				materialUIPath.color = Color.green;
+				const float steps = GroundNode.size * 2;
+				var distance = (float)( Time.time - Math.Floor( Time.time ) ) * steps;
+				while ( distance < fullDistance )
+				{
+					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * GroundNode.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), arrowMaterial, 0 );
+					distance += steps;
+				}
+				materialUIPath.color = Color.white;
+			}
+		}
 	}
 
 	public class BuildingList : Panel
@@ -3445,7 +3504,7 @@ if ( cart )
 		readonly GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
 		static Material greenCheckOnGround;
 		static Material redCrossOnGround;
-		static Mesh plane;
+		public static Mesh plane;
 		public new Camera camera;
 		public Vector3 lastMouseOnGround;
 		static int gridMaskXID;
