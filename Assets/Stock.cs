@@ -77,6 +77,9 @@ public class Stock : Building, Worker.Callback.IHandler
 	{
 		public Stock start, end;
 		public Item.Type itemType;
+		public int lastDelivery;
+		public float averateTransferRate;
+		public int itemsDelivered;
 	}
 
 	public class Cart : Worker
@@ -114,6 +117,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			int typeIndex = (int)route.itemType;
 			boss.content[typeIndex] -= capacity;
 			itemQuantity = capacity;
+			currentRoute = route;
 
 			ScheduleWalkToNeighbour( boss.flag.node );
 			DeliverItems( route.end );
@@ -247,12 +251,22 @@ public class Stock : Building, Worker.Callback.IHandler
 			Stock cartStock = cart.building as Stock;
 			if ( cart.itemQuantity > 0 )
 			{
+				if ( cart.currentRoute != null )
+				{
+					if ( cart.currentRoute.lastDelivery > 0 )
+					{
+						float rate = (float)cart.itemQuantity / ( World.instance.time - cart.currentRoute.lastDelivery );
+						cart.currentRoute.averateTransferRate = cart.currentRoute.averateTransferRate * 0.5f + rate * 0.5f;
+					}
+					cart.currentRoute.itemsDelivered += cart.itemQuantity;
+					cart.currentRoute.lastDelivery = World.instance.time;
+					cart.currentRoute = null;
+				}
 				cart.itemsDelivered += cart.itemQuantity;
 				stock.content[(int)cart.itemType] += cart.itemQuantity;
 				if ( stock != cartStock )
 					stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
 				cart.itemQuantity = 0;
-				cart.currentRoute = null;
 				cart.UpdateLook();
 			}
 			if ( cartStock != stock )

@@ -3212,6 +3212,7 @@ if ( cart )
 		public ScrollRect scroll;
 		public List<Stock.Route> list;
 		public Material arrowMaterial;
+		public Text[] last, rate, total;
 
 		static public RouteList Create()
 		{
@@ -3220,7 +3221,7 @@ if ( cart )
 
 		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
 		{
-			base.Open( stock, 410, 350 );
+			base.Open( stock, 480, 350 );
 			this.stock = stock;
 			this.itemType = itemType;
 			this.outputs = outputs;
@@ -3232,9 +3233,12 @@ if ( cart )
 			}
 			d.AddOptions( options );
 			d.onValueChanged.AddListener( OnItemTypeChanged );
-			Text( "Start" ).Pin( 20, -borderWidth - iconSize, 150, iconSize );
-			Text( "End" ).Pin( 170, -borderWidth - iconSize, 150, iconSize );
-			Text( "Distance" ).Pin( 320, -borderWidth - iconSize, 50, iconSize );
+			Text( "Start" ).Pin( 20, -borderWidth - iconSize, 120, iconSize );
+			Text( "End" ).Pin( 140, -borderWidth - iconSize, 120, iconSize );
+			Text( "Distance" ).Pin( 260, -borderWidth - iconSize, 30, iconSize );
+			Text( "Last" ).Pin( 290, -borderWidth - iconSize, 50, iconSize );
+			Text( "Rate" ).Pin( 340, -borderWidth - iconSize, 50, iconSize );
+			Text( "Total" ).Pin( 390, -borderWidth - iconSize, 50, iconSize );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 2 );
 			return this;
 		}
@@ -3274,12 +3278,19 @@ if ( cart )
 		{
 			scroll.Clear();
 
+			last = new Text[list.Count];
+			rate = new Text[list.Count];
+			total = new Text[list.Count];
 			int row = 0;
-			foreach ( var route in list )
+			for ( int i = 0; i < list.Count; i++ )
 			{
-				BuildingIcon( route.start ).Link( scroll.content ).Pin( 0, row, 150, iconSize );
-				BuildingIcon( route.end ).Link( scroll.content ).Pin( 150, row, 150, iconSize );
-				Text( route.start.node.DistanceFrom( route.end.node ).ToString() ).Link( scroll.content ).Pin( 300, row, 50, iconSize );
+				var route = list[i];
+				BuildingIcon( route.start ).Link( scroll.content ).Pin( 0, row, 120, iconSize );
+				BuildingIcon( route.end ).Link( scroll.content ).Pin( 120, row, 120, iconSize );
+				Text( route.start.node.DistanceFrom( route.end.node ).ToString() ).Link( scroll.content ).Pin( 240, row, 30, iconSize );
+				last[i] = Text().Link( scroll.content ).Pin( 270, row, 50, iconSize );
+				rate[i] = Text().Link( scroll.content ).Pin( 320, row, 50, iconSize );
+				total[i] = Text().Link( scroll.content ).Pin( 370, row, 50, iconSize );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( 0, -row );
@@ -3291,6 +3302,19 @@ if ( cart )
 
 			if ( UpdateList() )
 				Fill();
+
+			for ( int i = 0; i < list.Count; i++ )
+			{
+				if ( list[i].lastDelivery > 0 )
+				{
+					int ticks = World.instance.time - list[i].lastDelivery;
+					last[i].text = $"{(int)(ticks/60*Time.fixedDeltaTime)}:{((int)(ticks*Time.fixedDeltaTime)%60).ToString( "D2" )} ago";
+				}
+				else
+					last[i].text = "-";
+				rate[i].text = $"~{(list[i].averateTransferRate*Time.deltaTime).ToString( "F2" )}";
+				total[i].text = list[i].itemsDelivered.ToString();
+			}
 
 			if ( arrowMaterial == null )
 			{
