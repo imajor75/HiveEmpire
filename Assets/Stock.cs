@@ -88,6 +88,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	[Obsolete( "Compatibility for old files", true )]
 	List<int> target = new List<int>();
 
+	[Serializable]
 	public class Route
 	{
 		public Stock start, end;

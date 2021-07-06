@@ -65,7 +65,6 @@ public class Interface : OperationHandler
 		magnet,
 		rightArrow,
 		crosshair,
-		summa,
 		tinyFrame,
 		reset,
 		sleeping,
@@ -1085,7 +1084,6 @@ public class Interface : OperationHandler
 					arrow.transform.position = transform.position + offset * 120;
 					arrow.transform.rotation = Quaternion.Euler( 0, 0, 90 - (float)( 180 * Math.Atan2( offset.x, offset.y ) / Math.PI ) );
 					var w = ( ( p - transform.position ).magnitude - Screen.height / 2 ) / Screen.height;
-					print( w );
 					if ( w < 0 ) 
 						w = 0;
 					if ( w > 1 )
@@ -3146,13 +3144,14 @@ if ( cart )
 		public bool outputs;
 		public ScrollRect scroll;
 		public List<Stock.Route> list;
-		public Material arrowMaterial;
+		public static Material arrowMaterial, arrowMaterialWithHighlight;
 		public Text[] last, rate, total;
 		public Watch listWatcher = new Watch();
 		public List<Stock> stockOptions = new List<Stock>();
 		public bool forceRefill;
 		public Text direction;
 		public Stock tempPickedStock;
+		public Stock.Route toHighlight;
 
 		static public RouteList Create()
 		{
@@ -3290,7 +3289,7 @@ if ( cart )
 					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( delegate { route.MoveUp(); } );
 					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( delegate { route.MoveDown(); } );
 				}
-				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } );
+				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } ).SetTooltip( null, null, null, x => toHighlight = x ? route : null );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( 0, -row );
@@ -3318,13 +3317,19 @@ if ( cart )
 
 			if ( arrowMaterial == null )
 			{
-				arrowMaterial = new Material( World.defaultCutoutTextureShader );
+				arrowMaterial = new Material( Resources.Load<Shader>( "Route" ) );
 				arrowMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 				World.SetRenderMode( arrowMaterial, World.BlendMode.Cutout );
+
+				arrowMaterialWithHighlight = new Material( Resources.Load<Shader>( "Route" ) );
+				arrowMaterialWithHighlight.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
+				World.SetRenderMode( arrowMaterialWithHighlight, World.BlendMode.Cutout );
+				arrowMaterialWithHighlight.color = Color.red;
 			}
 
 			foreach ( var route in list )
 			{
+				var material = route == toHighlight ? arrowMaterialWithHighlight : arrowMaterial;
 				var startPosition = route.start.node.positionInViewport;
 				var endPosition = route.end.node.positionInViewport;
 				var dif = endPosition-startPosition;
@@ -3335,7 +3340,7 @@ if ( cart )
 				var distance = (float)( Time.time - Math.Floor( Time.time ) ) * steps;
 				while ( distance < fullDistance )
 				{
-					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * GroundNode.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), arrowMaterial, 0 );
+					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * GroundNode.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, 0 );
 					distance += steps;
 				}
 				materialUIPath.color = Color.white;
