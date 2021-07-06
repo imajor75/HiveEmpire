@@ -1945,8 +1945,8 @@ public class Interface : OperationHandler
 				Color[] statusColors = { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light(), Color.Lerp( Color.green, Color.blue, 0.5f ).Light() };
 				Assert.global.AreEqual( statusColors.Length, (int)Workshop.Status.total );
 
-				UIHelpers.currentRow = -20;
-				Text( $"Last {totalTicks / 60 / 50} minutes" ).PinDownwards( 150, 350, -iconSize, 0 );
+				UIHelpers.currentRow = -borderWidth;
+				Text( $"Last {totalTicks / 60 / 50} minutes" ).PinDownwards( 150, 0, 300, iconSize );
 				for ( int i = 0; i < (int)Workshop.Status.total; i++ )
 				{
 					if ( ticksInStatus[i] == 0 )
