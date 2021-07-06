@@ -641,7 +641,7 @@ public class Worker : HiveObject
 				return false;
 			boss.assert.IsNull( deliverTask.items[1] );
 			Flag target = boss.road.OtherEnd( boss.node.flag );
-			if ( target.FreeSpace() == 0 && items[0].path.stepsLeft != 1 )
+			if ( target.freeSlots == 0 && items[0].path.stepsLeft != 1 )
 				return false;
 			foreach ( var secondary in boss.node.flag.items )
 			{
@@ -1504,7 +1504,7 @@ public class Worker : HiveObject
 			for ( int i = 0; i < 2; i++ )
 			{
 				Flag flag = road.ends[i];
-				if ( flag.FreeSpace() < 1 )
+				if ( flag.freeSlots < 1 )
 					continue;
 
 				flag.ReserveItem( itemsInHands[0] );
@@ -1621,7 +1621,7 @@ public class Worker : HiveObject
 		if ( !item.path.isFinished && item.path.road != road )
 			return (0f, false);
 
-		if ( road.OtherEnd( item.flag ).FreeSpace() == 0 && item.path.stepsLeft != 1 )
+		if ( road.OtherEnd( item.flag ).freeSlots == 0 && item.path.stepsLeft != 1 )
 		{
 			if ( item.path.stepsLeft <= 1 )
 				return (0f, false);
@@ -1763,7 +1763,7 @@ public class Worker : HiveObject
 		else
 		{
 			if ( replace == null )
-				assert.IsTrue( other.FreeSpace() > 0 );
+				assert.IsTrue( other.freeSlots > 0 );
 			other.ReserveItem( item, replace );
 			ScheduleDeliverItem( item );
 			if ( replace && item.buddy == null )

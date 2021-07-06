@@ -552,7 +552,7 @@ abstract public class Building : HiveObject
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
-		if ( dispenser == null || !dispenser.IsIdle( true ) || flag.FreeSpace() == 0 )
+		if ( dispenser == null || !dispenser.IsIdle( true ) || flag.freeSlots == 0 )
 			return null;
 
 		dispenser.SetActive( true );

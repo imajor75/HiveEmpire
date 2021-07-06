@@ -526,7 +526,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					p = ItemDispatcher.Priority.zero;
 				if ( current > outputMax[itemType] )
 					p = ItemDispatcher.Priority.high;
-				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea, 0.5f, flag.FreeSpace() == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
+				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
 	}

@@ -22,6 +22,7 @@ public class Flag : HiveObject
 	static GameObject template;
 	static GameObject baseTemplate;
 	public Versioned itemsStored = new Versioned();
+	public Watch freeSlotsWatch = new Watch();
 	public bool requestFlattening;
 	public const float itemSpread = 0.25f;
 	GameObject tiles;
@@ -63,6 +64,7 @@ public class Flag : HiveObject
 			}
 			if ( crossing )
 				requestFlattening = true;
+			freeSlotsWatch.Attach( itemsStored );
 			return this;
 		}
 		DestroyThis();
@@ -242,6 +244,7 @@ public class Flag : HiveObject
 					items[i] = item;
 				item.nextFlag = this;
 				UpdateBody();
+				itemsStored.Trigger();
 				return true;
 			}
 		}
@@ -311,14 +314,20 @@ public class Flag : HiveObject
 	}
 
 	// Returns the number of available slots at the flag
-	public int FreeSpace()
+	public int freeSlotsCached;
+	public int freeSlots
 	{
-		// TODO Cache this
-		int free = 0;
-		for ( int i = 0; i < maxItems; i++ )
-			if ( items[i] == null )
-				free++;
-		return free;
+		get
+		{
+			if ( freeSlotsWatch.Check() )
+			{
+				freeSlotsCached = 0;
+				for ( int i = 0; i < maxItems; i++ )
+					if ( items[i] == null )
+						freeSlotsCached++;
+			}
+			return freeSlotsCached;
+		}
 	}
 
 	public override void Reset()
@@ -342,7 +351,7 @@ public class Flag : HiveObject
         assert.AreEqual( this, node.flag );
         for ( int i = 0; i < GroundNode.neighbourCount; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
-		assert.IsTrue( FreeSpace() >= 0 );
+		assert.IsTrue( freeSlots >= 0 );
 		for ( int j = 0; j < maxItems; j++ )
 		{
 			Item i = items[j];

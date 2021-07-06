@@ -639,7 +639,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 		}
 
-		int freeSpaceAtFlag = flag.FreeSpace();
+		int freeSpaceAtFlag = flag.freeSlots;
 		foreach ( Buffer b in buffers )
 		{
 			int missing = b.size-b.stored-b.onTheWay;
@@ -902,7 +902,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void CollectResourceFromNode( Resource resource )
 	{
-		if ( !UseInput() || flag.FreeSpace() == 0 )
+		if ( !UseInput() || flag.freeSlots == 0 )
 			return;
 
 		assert.IsTrue( worker.IsIdle() );

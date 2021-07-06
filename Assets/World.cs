@@ -354,8 +354,11 @@ public class World : MonoBehaviour
 		{
 			var list = Resources.FindObjectsOfTypeAll<Flag>();
 			foreach ( var f in list )
+			{
 				if ( f.flattening == null )
 					f.flattening = new Building.Flattening();
+				f.freeSlotsWatch.Attach( f.itemsStored );
+			}
 		}
 
 		{
