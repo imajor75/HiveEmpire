@@ -323,6 +323,8 @@ public class World : MonoBehaviour
 				if ( t && t.cart == null )
 					t.cart = Stock.Cart.Create().SetupAsCart( t ) as Stock.Cart;
 				t?.CreateMissingArrays();
+				if ( t )
+					t.outputRouteVersion = new Versioned();
 			}
 		}
 		{

@@ -13,6 +13,7 @@ abstract public class Building : HiveObject
 		set {} // for compatibility with old files
 	}
 	public string moniker;
+	public string nick { get { return moniker ?? title; } }
 	public Player owner;
 	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;

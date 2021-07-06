@@ -358,11 +358,13 @@ public class Watch
 	public void Attach( Versioned source )
 	{
 		this.source = source;
-		localVersion = source.version;
+		if ( source != null )
+			localVersion = source.version;
 	}
+	public bool isAttached { get { return source != null; } }
 	public bool Check()
 	{
-		if ( localVersion != source.version )
+		if ( isAttached && localVersion != source.version )
 		{
 			localVersion = source.version;
 			return true;

@@ -29,6 +29,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		}
 	}
 	public List<List<Route>> outputRoutes = new List<List<Route>>();
+	public Versioned outputRouteVersion = new Versioned();
 	public List<Worker> returningUnits = new List<Worker>();	// This list is maintained for returning units to store them during save, because they usually have no building
 	[Obsolete( "Compatibility with old files", true )]
 	public Stock[] destinations 
@@ -70,6 +71,20 @@ public class Stock : Building, Worker.Callback.IHandler
 		huge = true
 	};
 
+	public void AddNewRoute( Item.Type itemType, Stock destination )
+	{
+		foreach ( var route in outputRoutes[(int)itemType] )
+			if ( route.end == destination && route.itemType == itemType )
+				return;
+
+		var newRoute = new Route();
+		newRoute.start = this;
+		newRoute.end = destination;
+		newRoute.itemType = itemType;
+		outputRoutes[(int)itemType].Add( newRoute );
+		outputRouteVersion.Trigger();
+	}
+
 	[Obsolete( "Compatibility for old files", true )]
 	List<int> target = new List<int>();
 
@@ -80,6 +95,35 @@ public class Stock : Building, Worker.Callback.IHandler
 		public int lastDelivery;
 		public float averateTransferRate;
 		public int itemsDelivered;
+
+		public void Remove()
+		{
+			int itemTypeIndex = (int)itemType;
+			Assert.global.IsTrue( start.outputRoutes[itemTypeIndex].Contains( this ) );
+			start.outputRoutes[itemTypeIndex].Remove( this );
+		}
+
+		public void MoveUp()
+		{
+			var list = start.outputRoutes[(int)itemType];
+			int i = list.IndexOf( this );
+			if ( i < 1 )
+				return;
+			list[i] = list[i-1];
+			list[i-1] = this;
+			start.outputRouteVersion.Trigger();
+		}
+
+		public void MoveDown()
+		{
+			var list = start.outputRoutes[(int)itemType];
+			int i = list.IndexOf( this );
+			if ( i < 0 || i == list.Count-1 )
+				return;
+			list[i] = list[i+1];
+			list[i+1] = this;
+			start.outputRouteVersion.Trigger();
+		}
 	}
 
 	public class Cart : Worker

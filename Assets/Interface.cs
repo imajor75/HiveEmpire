@@ -2020,12 +2020,11 @@ public class Interface : OperationHandler
 		}
 	}
 
-	public class StockPanel : BuildingPanel, IInputHandler
+	public class StockPanel : BuildingPanel
 	{
 		public Stock stock;
 		public Text[] counts = new Text[(int)Item.Type.total];
 		public Text total;
-		public Item.Type itemTypeForRetarget;
 		public Item.Type selectedItemType = Item.Type.log;
 		public ItemImage selected;
 		public Text inputMin, inputMax, outputMin, outputMax;
@@ -2137,8 +2136,7 @@ public class Interface : OperationHandler
 				counts[i].AddClickHandler( delegate { SelectItemType( j ); } );
 			}
 
-			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( 165, 90, 2 * iconSize, 2 * iconSize, 0, 0 ).AddClickHandler( SetTarget );
-			selected.additionalTooltip = "LMB Set cart target\nShift+LMB Show current target\nCtrl+LMB Clear target\nAlt+LMB Show inputs";
+			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( 165, 90, 2 * iconSize, 2 * iconSize, 0, 0 ).AddClickHandler( ShowRoutes );
 			selected.name = "Selected item";
 			inputMin = Text().Link( selected ).Pin( -40, 0, 40 ).
 			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority" );
@@ -2168,32 +2166,9 @@ public class Interface : OperationHandler
 			WorkerPanel.Create().Open( stock.cart, true );
 		}
 
-		void SetTarget()
+		void ShowRoutes()
 		{
-			var i = (int)selectedItemType;
-			if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
-			{
-				RouteList.Create().Open( stock, selectedItemType, true );
-				return;
-			}
-			if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
-			{
-				stock.outputRoutes[(int)selectedItemType].Clear();
-				RecreateControls();
-				return;
-			}
-			if ( GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) )
-			{
-				RouteList.Create().Open( stock, selectedItemType, false );
-				return;
-			}
-			itemTypeForRetarget = selectedItemType;
-			root.highlightOwner = gameObject;
-			root.viewport.inputHandler = this;
-			root.highlightType = HighlightType.buildingType;
-			root.highlightBuildingTypes.Clear();
-			root.highlightBuildingTypes.Add( Building.Type.stock );
-			root.highlightBuildingTypes.Add( Building.Type.headquarters );
+			RouteList.Create().Open( stock, selectedItemType, true );
 		}
 
 		void Remove()
@@ -2281,46 +2256,6 @@ public class Interface : OperationHandler
 					listToChange = null;
 				}
 			}
-		}
-
-		public bool OnMovingOverNode( GroundNode node )
-		{
-			return true;
-		}
-
-		public bool OnNodeClicked( GroundNode node )
-		{
-			return false;	// Cancel?
-		}
-
-		public bool OnObjectClicked( HiveObject target )
-		{
-			var destination = target as Stock;
-			if ( destination == null )
-				return true;
-
-			var l = stock.outputRoutes[(int)itemTypeForRetarget];
-			bool found = false;
-			for ( int i = 0; i < l.Count; i++ )
-			{
-				if ( l[i].end == destination )
-					l.RemoveAt( i );
-					found = true;
-			}
-			if ( !found )
-			{
-				l.Add( new Stock.Route { end = destination, start = stock, itemType = itemTypeForRetarget } );
-				destination.inputMax[(int)itemTypeForRetarget] = Math.Max( (int)( Stock.Cart.capacity * 1.5f ), destination.inputMax[(int)itemTypeForRetarget] );
-			}
-
-			root.highlightType = HighlightType.none;
-			RecreateControls();
-			return false;
-		}
-
-		public void OnLostInput()
-		{
-			root.highlightType = HighlightType.none;
 		}
 	}
 
@@ -3204,7 +3139,7 @@ if ( cart )
 		}
 	}
 
-	public class RouteList : Panel
+	public class RouteList : Panel, IInputHandler
 	{
 		public Stock stock;
 		public Item.Type itemType;
@@ -3213,6 +3148,11 @@ if ( cart )
 		public List<Stock.Route> list;
 		public Material arrowMaterial;
 		public Text[] last, rate, total;
+		public Watch listWatcher = new Watch();
+		public List<Stock> stockOptions = new List<Stock>();
+		public bool forceRefill;
+		public Text direction;
+		public Stock tempPickedStock;
 
 		static public RouteList Create()
 		{
@@ -3221,35 +3161,87 @@ if ( cart )
 
 		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
 		{
-			base.Open( stock, 480, 350 );
+			base.Open( null, 540, 350 );
 			this.stock = stock;
 			this.itemType = itemType;
 			this.outputs = outputs;
-			var d = Dropdown().Pin( borderWidth, -borderWidth, 150, iconSize );
-			List<string> options = new List<string>();
-			for ( int i = 0; i < (int)Item.Type.total; i++ )
+
 			{
-				options.Add( ((Item.Type)i).ToString().GetPrettyName() );
+				var d = Dropdown().Pin( borderWidth, -borderWidth, 150, iconSize );
+				int currentValue = 0;
+				List<string> options = new List<string>();
+				stockOptions.Clear();
+				foreach ( var s in root.mainPlayer.stocks )
+				{
+					if ( s == stock )
+						currentValue = options.Count;
+					options.Add( s.nick );
+					stockOptions.Add( s );
+				}
+				if ( stock == null )
+					currentValue = options.Count;
+				options.Add( "All" );
+				stockOptions.Add( null );
+				d.AddOptions( options );
+				d.value = currentValue;
+				d.onValueChanged.AddListener( OnStockChanged );
 			}
-			d.AddOptions( options );
-			d.onValueChanged.AddListener( OnItemTypeChanged );
+
+			{
+				var d = Dropdown().PinSideways( 0, -borderWidth, 150, iconSize );
+				List<string> options = new List<string>();
+				for ( int i = 0; i < (int)Item.Type.total; i++ )
+					options.Add( ((Item.Type)i).ToString().GetPrettyName() );
+				d.AddOptions( options );
+				d.value = (int)itemType;
+				d.onValueChanged.AddListener( OnItemTypeChanged );
+			}
+
+			direction = Text( outputs ? "Output" : "Input" ).PinSideways( 5, -borderWidth, 100, iconSize ).AddClickHandler( OnChangeDirecton );
+			direction.alignment = TextAnchor.MiddleLeft;
+
+			Button( "Add" ).PinSideways( 0, -borderWidth, 50, iconSize ).AddClickHandler( Add );
+
 			Text( "Start" ).Pin( 20, -borderWidth - iconSize, 120, iconSize );
-			Text( "End" ).Pin( 140, -borderWidth - iconSize, 120, iconSize );
-			Text( "Distance" ).Pin( 260, -borderWidth - iconSize, 30, iconSize );
-			Text( "Last" ).Pin( 290, -borderWidth - iconSize, 50, iconSize );
-			Text( "Rate" ).Pin( 340, -borderWidth - iconSize, 50, iconSize );
-			Text( "Total" ).Pin( 390, -borderWidth - iconSize, 50, iconSize );
+			Text( "End" ).PinSideways( 0, -borderWidth - iconSize, 120, iconSize );
+			Text( "Distance" ).PinSideways( 0, -borderWidth - iconSize, 30, iconSize );
+			Text( "Last" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
+			Text( "Rate" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
+			Text( "Total" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 2 );
 			return this;
+		}
+
+		void OnStockChanged( int newStock )
+		{
+			stock = stockOptions[newStock];
+			forceRefill = true;
 		}
 
 		void OnItemTypeChanged( int newType )
 		{
 			itemType = (Item.Type)newType;
-			Fill();
+			forceRefill = true;
 		}
 
-		bool UpdateList()
+		void OnChangeDirecton()
+		{
+			outputs = !outputs;
+			direction.text = outputs ? "Output" : "Input";
+			forceRefill = true;
+		}
+
+		void Add()
+		{
+			root.highlightOwner = gameObject;
+			root.viewport.inputHandler = this;
+			root.highlightType = HighlightType.buildingType;
+			root.highlightBuildingTypes.Clear();
+			root.highlightBuildingTypes.Add( Building.Type.stock );
+			root.highlightBuildingTypes.Add( Building.Type.headquarters );
+		}
+
+		bool UpdateList() 
 		{
 			List<Stock.Route> currentList;
 			if ( stock == null )
@@ -3258,7 +3250,7 @@ if ( cart )
 				foreach ( var stock in root.mainPlayer.stocks )
 				{
 					foreach ( var r in stock.outputRoutes[(int)itemType] )
-						list.Add( r );
+						currentList.Add( r );
 				}
 			}
 			else
@@ -3271,11 +3263,13 @@ if ( cart )
 				return false;
 
 			list = currentList;
+			listWatcher.Attach( stock && outputs ? stock.outputRouteVersion : null );
 			return true;
 		}
 
 		public void Fill()
 		{
+			forceRefill = false;
 			scroll.Clear();
 
 			last = new Text[list.Count];
@@ -3286,11 +3280,17 @@ if ( cart )
 			{
 				var route = list[i];
 				BuildingIcon( route.start ).Link( scroll.content ).Pin( 0, row, 120, iconSize );
-				BuildingIcon( route.end ).Link( scroll.content ).Pin( 120, row, 120, iconSize );
-				Text( route.start.node.DistanceFrom( route.end.node ).ToString() ).Link( scroll.content ).Pin( 240, row, 30, iconSize );
-				last[i] = Text().Link( scroll.content ).Pin( 270, row, 50, iconSize );
-				rate[i] = Text().Link( scroll.content ).Pin( 320, row, 50, iconSize );
-				total[i] = Text().Link( scroll.content ).Pin( 370, row, 50, iconSize );
+				BuildingIcon( route.end ).Link( scroll.content ).PinSideways( 0, row, 120, iconSize );
+				Text( route.start.node.DistanceFrom( route.end.node ).ToString() ).Link( scroll.content ).PinSideways( 0, row, 30, iconSize );
+				last[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
+				rate[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
+				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
+				if ( stock && outputs )
+				{
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( delegate { route.MoveUp(); } );
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( delegate { route.MoveDown(); } );
+				}
+				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( 0, -row );
@@ -3300,7 +3300,7 @@ if ( cart )
 		{
 			base.Update();
 
-			if ( UpdateList() )
+			if ( UpdateList() || listWatcher.Check() || forceRefill )
 				Fill();
 
 			for ( int i = 0; i < list.Count; i++ )
@@ -3341,7 +3341,51 @@ if ( cart )
 				materialUIPath.color = Color.white;
 			}
 		}
-	}
+
+		public bool OnMovingOverNode( GroundNode node )
+		{
+			return true;
+		}
+
+		public bool OnNodeClicked( GroundNode node )
+		{
+			return false;	// Cancel?
+		}
+
+		public bool OnObjectClicked( HiveObject target )
+		{
+			var targetStock = target as Stock;
+			if ( targetStock == null )
+				return true;
+
+			if ( stock == null )
+			{
+				if ( tempPickedStock == null )
+				{
+					tempPickedStock = targetStock;
+					return true;
+				}
+				tempPickedStock.AddNewRoute( itemType, targetStock );
+				tempPickedStock = null;
+			}
+			else
+			{
+				if ( outputs )
+					stock.AddNewRoute( itemType, targetStock );
+				else
+					targetStock.AddNewRoute( itemType, stock );
+			}
+
+			root.highlightType = HighlightType.none;
+			forceRefill = true;
+			return false;
+		}
+
+		public void OnLostInput()
+		{
+			root.highlightType = HighlightType.none;
+		}
+    }
 
 	public class BuildingList : Panel
 	{
@@ -4993,6 +5037,8 @@ public static class UIHelpers
 
 	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
 	{
+		currentColumn = x + xs;
+		currentRow = y - ys;
 		if ( g.transform is RectTransform t )
 		{
 			t.anchorMin = t.anchorMax = new Vector2( xa, ya );
@@ -5010,14 +5056,12 @@ public static class UIHelpers
 	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
 	{
 		g.Pin( x, y + currentRow, xs, ys, xa, ya );
-		currentRow -= ys;
 		return g;
 	}
 
 	public static UIElement PinSideways<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
 	{
 		g.Pin( x + currentColumn, y, xs, ys, xa, ya );
-		currentColumn += xs;
 		return g;
 	}
 
@@ -5030,6 +5074,12 @@ public static class UIHelpers
 			t.offsetMin = new Vector2( (int)( x0 * Interface.uiScale ), (int)( y0 * Interface.uiScale ) );
 			t.offsetMax = new Vector2( (int)( x1 * Interface.uiScale ), (int)( y1 * Interface.uiScale ) );
 		}
+		return g;
+	}
+
+	public static UIElement Rotate<UIElement>( this UIElement g, float angle ) where UIElement : Component
+	{
+		g.transform.rotation = Quaternion.Euler( 0, 0, angle );
 		return g;
 	}
 
