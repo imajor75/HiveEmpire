@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -742,7 +742,7 @@ public class Interface : OperationHandler
 		}
 	}
 
-	public class TooltipSource : MonoBehaviour
+	public class TooltipSource : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 	{
 		public string text;
 		public string additionalText;
@@ -750,36 +750,34 @@ public class Interface : OperationHandler
 		public Action<bool> onShow;
 		public bool active;
 
-		public void Update()
-		{
-			if ( GetUIElementUnderCursor() == gameObject )
-			{
-				if ( text != null )
-					tooltip.SetText( this, text, image, additionalText );
-				if ( onShow != null && !active )
-				{
-					onShow( true );
-					active = true;
-				}
-			}
-			else
-			{
-				if ( tooltip.origin == this )
-					tooltip.Clear();
-				if ( onShow != null && active )
-				{
-					onShow( false );
-					active = false;
-				}
-			}
-		}
-
 		public void OnDestroy()
 		{
 			if ( active && onShow != null )
 				onShow( false );
 		}
-	}
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+			if ( text != null )
+				tooltip.SetText( this, text, image, additionalText );
+			if ( onShow != null && !active )
+			{
+				onShow( true );
+				active = true;
+			}
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+			if ( tooltip.origin == this )
+				tooltip.Clear();
+			if ( onShow != null && active )
+			{
+				onShow( false );
+				active = false;
+			}
+        }
+    }
 
 	public class Panel : MonoBehaviour, IDragHandler, IBeginDragHandler, IPointerClickHandler
 	{
