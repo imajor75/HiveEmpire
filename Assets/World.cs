@@ -357,7 +357,8 @@ public class World : MonoBehaviour
 			{
 				if ( f.flattening == null )
 					f.flattening = new Building.Flattening();
-				f.freeSlotsWatch.Attach( f.itemsStored );
+				if ( !f.freeSlotsWatch.isAttached )
+					f.freeSlotsWatch.Attach( f.itemsStored );
 			}
 		}
 

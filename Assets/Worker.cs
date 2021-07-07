@@ -693,12 +693,12 @@ public class Worker : HiveObject
 				{
 					timer.Start( pickupTimeStart );
 					boss.animator?.ResetTrigger( putdownID );
-				// The ConsiderSecondary call in the next line is only done to foresee if a second item will be picked, it might be different 
-				expectingSecondary = ConsiderSecondary( true );
+					// The ConsiderSecondary call in the next line is only done to foresee if a second item will be picked, it might be different 
+					expectingSecondary = ConsiderSecondary( true );
 					boss.animator?.SetTrigger( expectingSecondary ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
 				}
 
-			var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
+				var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
 				if ( items[0].transform.parent != attachAt && timer.age > -pickupReparentTime )
 				{
 					reparented[0] = true;

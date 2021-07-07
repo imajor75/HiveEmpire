@@ -314,12 +314,12 @@ public class Flag : HiveObject
 	}
 
 	// Returns the number of available slots at the flag
-	public int freeSlotsCached;
+	public int freeSlotsCached = -1;
 	public int freeSlots
 	{
 		get
 		{
-			if ( freeSlotsWatch.Check() )
+			if ( freeSlotsWatch.Check() || freeSlotsCached == -1 )
 			{
 				freeSlotsCached = 0;
 				for ( int i = 0; i < maxItems; i++ )
@@ -352,6 +352,7 @@ public class Flag : HiveObject
         for ( int i = 0; i < GroundNode.neighbourCount; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( freeSlots >= 0 );
+		int usedSlots = 0;
 		for ( int j = 0; j < maxItems; j++ )
 		{
 			Item i = items[j];
@@ -360,8 +361,10 @@ public class Flag : HiveObject
 				assert.IsTrue( i.flag == this || i.nextFlag == this, "Item is here, but both flag and nextFlag pointers are referencing elsewhere (index: " + j + ")" );
 				if ( chain )
 					i.Validate( true );
+				usedSlots++;
 			}
 		}
+		assert.AreEqual( freeSlots, maxItems - usedSlots );
 		for ( int j = 0; j < GroundNode.neighbourCount; j++ )
 			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node && chain )
 				roadsStartingHere[j].Validate( true );
