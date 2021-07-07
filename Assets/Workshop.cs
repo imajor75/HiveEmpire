@@ -28,6 +28,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
 	static Texture2D mapIndicatorTexture;
+	public const int pasturingTime = 100;
+	public const float pasturingPrayChance = 0.1f;  
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	public static Configuration[] configurations;
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
@@ -316,7 +318,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( pasturingTimer.empty )
 			{
 				resource = Resource.Create().SetupAsPrey( boss );
-				pasturingTimer.Start( 100 );
+				pasturingTimer.Start( pasturingTime );
 				if ( resource == null )
 					return true;
 

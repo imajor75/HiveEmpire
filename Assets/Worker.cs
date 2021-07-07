@@ -1390,12 +1390,13 @@ public class Worker : HiveObject
 			for ( int i = 0; i < d.Count; i++ )
 			{
 				GroundNode t = node.Add( d[(i+r)%d.Count] );
-				if ( t.IsBlocking() )
+				if ( t.IsBlocking( false ) )
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
 				ScheduleWalkToNeighbour( t );
-				ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
+				if ( World.rnd.NextDouble() < Workshop.pasturingPrayChance )
+					ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
 				return;
 			}
 		}

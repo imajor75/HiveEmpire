@@ -22,7 +22,7 @@ public class Resource : HiveObject
 	public List<Worker> animals = new List<Worker>();
 	public const int treeGrowthMax = 15000;    // 5 minutes
 	public const int cornfieldGrowthMax = 20000;
-	public const int animalSpawnTime = 3000;
+	public const int animalSpawnTime = 1000;
 	public World.Timer silence;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
