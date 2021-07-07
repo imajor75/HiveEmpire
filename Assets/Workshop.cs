@@ -308,19 +308,21 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public class Pasturing : Worker.Task
 	{
 		public Resource resource;
-		public int timer;
+		[Obsolete( "Compatibility with old files", true )]
+		int timer;
+		public World.Timer pasturingTimer;
 		public override bool ExecuteFrame()
 		{
-			if ( resource == null )
+			if ( pasturingTimer.empty )
 			{
 				resource = Resource.Create().SetupAsPrey( boss );
-				timer = 100;
+				pasturingTimer.Start( 100 );
 				if ( resource == null )
 					return true;
 
 				return false;
 			}
-			if ( timer-- > 0 )
+			if ( pasturingTimer.inProgress )
 				return false;
 
 			if ( resource.hunter == null )
