@@ -29,7 +29,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	Material mapIndicatorMaterial;
 	static Texture2D mapIndicatorTexture;
 	public const int pasturingTime = 100;
-	public const float pasturingPrayChance = 0.1f;  
+	public const float pasturingPrayChance = 0.2f;  
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	public static Configuration[] configurations;
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
