@@ -3146,6 +3146,7 @@ if ( cart )
 		public List<Stock.Route> list;
 		public static Material arrowMaterial, arrowMaterialWithHighlight;
 		public Text[] last, rate, total;
+		public Image[] cart;
 		public Watch listWatcher = new Watch();
 		public List<Stock> stockOptions = new List<Stock>();
 		public bool forceRefill;
@@ -3160,7 +3161,7 @@ if ( cart )
 
 		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
 		{
-			base.Open( null, 540, 350 );
+			base.Open( null, 560, 350 );
 			this.stock = stock;
 			this.itemType = itemType;
 			this.outputs = outputs;
@@ -3274,6 +3275,7 @@ if ( cart )
 			last = new Text[list.Count];
 			rate = new Text[list.Count];
 			total = new Text[list.Count];
+			cart = new Image[list.Count];
 			int row = 0;
 			for ( int i = 0; i < list.Count; i++ )
 			{
@@ -3290,9 +3292,16 @@ if ( cart )
 					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( delegate { route.MoveDown(); } );
 				}
 				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } ).SetTooltip( null, null, null, x => toHighlight = x ? route : null );
+				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( 0, -row );
+		}
+
+		void ShowCart( Stock.Route route )
+		{
+			if ( route.start.cart.currentRoute == route )
+				WorkerPanel.Create().Open( route.start.cart, true );
 		}
 
 		new void Update()
@@ -3313,6 +3322,7 @@ if ( cart )
 					last[i].text = "-";
 				rate[i].text = $"~{(list[i].averageTransferRate*Time.deltaTime).ToString( "F2" )}";
 				total[i].text = list[i].itemsDelivered.ToString();
+				cart[i].gameObject.SetActive( list[i].start.cart.currentRoute == list[i] );
 			}
 
 			if ( arrowMaterial == null )
