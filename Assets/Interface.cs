@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -3310,7 +3310,7 @@ if ( cart )
 				}
 				else
 					last[i].text = "-";
-				rate[i].text = $"~{(list[i].averateTransferRate*Time.deltaTime).ToString( "F2" )}";
+				rate[i].text = $"~{(list[i].averageTransferRate*Time.deltaTime).ToString( "F2" )}";
 				total[i].text = list[i].itemsDelivered.ToString();
 			}
 

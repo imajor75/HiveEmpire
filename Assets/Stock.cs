@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -95,7 +95,10 @@ public class Stock : Building, Worker.Callback.IHandler
 		public Stock start, end;
 		public Item.Type itemType;
 		public int lastDelivery;
-		public float averateTransferRate;
+		public float averageTransferRate;
+		[Obsolete( "Compatibility with old files", true )]
+		float averateTransferRate { set { averageTransferRate = value; } }
+
 		public int itemsDelivered;
 
 		public void Remove()
@@ -302,7 +305,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					if ( cart.currentRoute.lastDelivery > 0 )
 					{
 						float rate = (float)cart.itemQuantity / ( World.instance.time - cart.currentRoute.lastDelivery );
-						cart.currentRoute.averateTransferRate = cart.currentRoute.averateTransferRate * 0.5f + rate * 0.5f;
+						cart.currentRoute.averageTransferRate = cart.currentRoute.averageTransferRate * 0.5f + rate * 0.5f;
 					}
 					cart.currentRoute.itemsDelivered += cart.itemQuantity;
 					cart.currentRoute.lastDelivery = World.instance.time;
