@@ -83,6 +83,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		newRoute.itemType = itemType;
 		outputRoutes[(int)itemType].Add( newRoute );
 		outputRouteVersion.Trigger();
+		destination.inputMax[(int)itemType] = Math.Max( (int)( Stock.Cart.capacity * 1.5f ), destination.inputMax[(int)itemType] );
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
