@@ -342,6 +342,8 @@ public class Ground : HiveObject
 		public int radius = 8;
 		public static Area global = new Area();
 
+		public static Area empty = new Area();
+
 		public Area()
 		{
 		}

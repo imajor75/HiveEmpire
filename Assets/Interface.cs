@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -2788,7 +2788,8 @@ public class Interface : OperationHandler
 
 		void ShowTarget()
 		{
-			root.world.eye.FocusOn( targetObject.location, true );
+			if ( targetObject )
+				root.world.eye.FocusOn( targetObject.location, true );
 		}
 
 		void ShowHome()

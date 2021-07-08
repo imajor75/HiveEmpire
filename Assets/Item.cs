@@ -247,10 +247,7 @@ public class Item : HiveObject
 		if ( offerPriority == ItemDispatcher.Priority.zero )
 			return;
 
-		var area = ( origin as Workshop )?.outputArea;
-		if ( area == null )
-			area = new Ground.Area( flag?.node ?? worker.node, 8 );
-		owner.itemDispatcher.RegisterOffer( this, offerPriority, area );
+		owner.itemDispatcher.RegisterOffer( this, offerPriority, Ground.Area.empty );
 	}
 
 	public void SetRawTarget( Building building, ItemDispatcher.Priority priority = ItemDispatcher.Priority.low )
