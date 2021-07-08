@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -166,6 +166,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			int typeIndex = (int)route.itemType;
 			boss.content[typeIndex] -= capacity;
 			itemQuantity = capacity;
+			this.itemType = route.itemType;
 			currentRoute = route;
 
 			ScheduleWalkToNeighbour( boss.flag.node );
