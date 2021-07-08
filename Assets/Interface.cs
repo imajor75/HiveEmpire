@@ -200,6 +200,23 @@ public class Interface : OperationHandler
 		//	d.Apply();
 		//	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
 		//}
+		// {
+		// 	var alpha = Resources.Load<Texture2D>( "icons/arrow" );
+		// 	var color = Resources.Load<Texture2D>( "icons/arrow2" );
+		// 	var d = new Texture2D( color.width, color.height );
+		// 	for ( int x = 0; x < color.width; x++ )
+		// 	{
+		// 		for ( int y = 0; y < color.height; y++ )
+		// 		{
+		// 			var c = color.GetPixel( x, y );
+		// 			var a = alpha.GetPixel( x, y );
+		// 			c.a = a.a;
+		// 			d.SetPixel( x, y, c );
+		// 		};
+		// 	}
+		// 	d.Apply();
+		// 	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
+		// }
 		var highlightShader = Resources.Load<Shader>( "shaders/HighlightVolume" );
 		highlightMaterial = new Material( highlightShader );
 
