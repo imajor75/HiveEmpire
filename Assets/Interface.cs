@@ -757,27 +757,34 @@ public class Interface : OperationHandler
 				onShow( false );
 		}
 
-        public void OnPointerEnter(PointerEventData eventData)
+        public void OnPointerEnter( PointerEventData eventData )
         {
 			if ( text != null )
 				tooltip.SetText( this, text, image, additionalText );
 			if ( onShow != null && !active )
-			{
 				onShow( true );
-				active = true;
-			}
+			active = true;
         }
 
-        public void OnPointerExit(PointerEventData eventData)
+        public void OnPointerExit( PointerEventData eventData )
         {
 			if ( tooltip.origin == this )
 				tooltip.Clear();
 			if ( onShow != null && active )
-			{
 				onShow( false );
-				active = false;
-			}
+			active = false;
         }
+
+		public void SetData( string text, Sprite image, string additionalText, Action<bool> onShow )
+		{
+			this.text = text;
+			this.image = image;
+			this.additionalText = additionalText;
+			this.onShow = onShow;
+
+			if ( active )
+				tooltip.SetText( this, text, image, additionalText );
+		}
     }
 
 	public class Panel : MonoBehaviour, IDragHandler, IBeginDragHandler, IPointerClickHandler
@@ -5157,10 +5164,7 @@ public static class UIHelpers
 			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
 			if ( s == null )
 				s = g.gameObject.AddComponent<Interface.TooltipSource>();
-			s.text = text;
-			s.image = image;
-			s.additionalText = additionalText;
-			s.onShow = onShow;
+			s.SetData( text, image, additionalText, onShow );
 			foreach ( Transform t in g.transform )
 				t.SetTooltip( text, image, additionalText, onShow );
 			return g;
