@@ -929,7 +929,7 @@ public class Worker : HiveObject
 			"effects/cart", Type.cart };
 		walkSounds.Fill( walk );
 
-		arrowSprite = Resources.Load<Sprite>( "arrow" );
+		arrowSprite = Resources.Load<Sprite>( "icons/arrow" );
 
 		resourceCollectAct[(int)Resource.Type.tree] = new Act
 		{

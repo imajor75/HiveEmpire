@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -200,7 +200,7 @@ public class Interface : OperationHandler
 		//	d.Apply();
 		//	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
 		//}
-		var highlightShader = Resources.Load<Shader>( "HighlightVolume" );
+		var highlightShader = Resources.Load<Shader>( "shaders/HighlightVolume" );
 		highlightMaterial = new Material( highlightShader );
 
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
@@ -209,6 +209,7 @@ public class Interface : OperationHandler
 		"arrow", Icon.rightArrow,
 		"brick", Icon.progress,
 		"cross", Icon.exit };
+		iconTable.fileNamePrefix = "icons/";
 		iconTable.Fill( table );
 		//			print( "Runtime debug: " + UnityEngine.Debug.isDebugBuild );
 		//#if DEVELOPMENT_BUILD
@@ -1106,7 +1107,7 @@ public class Interface : OperationHandler
 
 		public Image Button( string text )
 		{
-			Image i = Image( Resources.Load<Sprite>( "button" ) );
+			Image i = Image( Resources.Load<Sprite>( "icons/button" ) );
 			i.type = UnityEngine.UI.Image.Type.Sliced;
 			i.pixelsPerUnitMultiplier = 6;
 			var t = Text( text ).Link( i ).Stretch( 6, 6, -6, -6 );
@@ -3070,7 +3071,7 @@ if ( cart )
 			Text( "Origin:" ).Pin( 15, -55, 170 );
 			BuildingIcon( item.origin ).Pin( 100, -55, 200 ).AddClickHandler( delegate { Destroy( route ); route = null; } );
 			Text( "Destination:" ).Pin( 15, -75, 170 );
-			BuildingIcon( item.destination ).Pin( 100, -75, 200 );
+			BuildingIcon( item.destination )?.Pin( 100, -75, 200 );
 
 			mapIcon = new GameObject( "Map icon" );
 			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
@@ -3315,11 +3316,11 @@ if ( cart )
 
 			if ( arrowMaterial == null )
 			{
-				arrowMaterial = new Material( Resources.Load<Shader>( "Route" ) );
+				arrowMaterial = new Material( Resources.Load<Shader>( "shaders/Route" ) );
 				arrowMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 				World.SetRenderMode( arrowMaterial, World.BlendMode.Cutout );
 
-				arrowMaterialWithHighlight = new Material( Resources.Load<Shader>( "Route" ) );
+				arrowMaterialWithHighlight = new Material( Resources.Load<Shader>( "shaders/Route" ) );
 				arrowMaterialWithHighlight.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 				World.SetRenderMode( arrowMaterialWithHighlight, World.BlendMode.Cutout );
 				arrowMaterialWithHighlight.color = Color.red;
@@ -3668,11 +3669,11 @@ if ( cart )
 				new Vector2( 0, 1 ) };
 			plane.triangles = new int[6] { 0, 1, 2, 1, 3, 2 };
 
-			greenCheckOnGround = new Material( Resources.Load<Shader>( "relaxMarker" ) );
-			greenCheckOnGround.mainTexture = Resources.Load<Texture>( "greenCheck" );
+			greenCheckOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
+			greenCheckOnGround.mainTexture = Resources.Load<Texture>( "icons/greenCheck" );
 
-			redCrossOnGround = new Material( Resources.Load<Shader>( "relaxMarker" ) );
-			redCrossOnGround.mainTexture = Resources.Load<Texture>( "redCross" );
+			redCrossOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
+			redCrossOnGround.mainTexture = Resources.Load<Texture>( "icons/redCross" );
 		}
 
 		public bool ResetInputHandler()
@@ -4285,7 +4286,8 @@ if ( cart )
 				i.SetItem( item );
 
 				BuildingIcon( item.origin ).Link( scroll.content ).Pin( 30, row, 80 );
-				BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
+				if ( item.destination )
+					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
 				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
 				if ( item.path )
 					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 280, row, 30 );				
@@ -4322,6 +4324,10 @@ if ( cart )
 		}
 		static public int CompareByDestination( Item itemA, Item itemB )
 		{
+			if ( itemA.destination == null )
+				return 1;
+			if ( itemB.destination == null )
+				return -1;
 			return CompareBuildings( itemA.destination, itemB.destination );
 		}
 		static int CompareBuildings( Building A, Building B )

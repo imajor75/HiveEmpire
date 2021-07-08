@@ -138,7 +138,7 @@ public class World : MonoBehaviour
 		defaultColorShader = Shader.Find( "Unlit/Color" );
 		defaultTextureShader = Shader.Find( "Unlit/Texture" );
 		defaultCutoutTextureShader = Shader.Find( "Unlit/Transparent Cutout" );
-		defaultMapShader = Resources.Load<Shader>( "Map" );
+		defaultMapShader = Resources.Load<Shader>( "shaders/Map" );
 	}
 
 	World()

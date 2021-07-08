@@ -228,7 +228,7 @@ abstract public class Building : HiveObject
 
 		static public void Initialize()
 		{
-			shader = (Shader)Resources.Load( "Construction" );
+			shader = Resources.Load<Shader>( "shaders/Construction" );
 			Assert.global.IsNotNull( shader );
 			sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
 		}

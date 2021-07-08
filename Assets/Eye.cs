@@ -278,8 +278,8 @@ public class CameraHighlight : HiveObject
 
 	public static void Initialize()
 	{
-		highlightMaterial = new Material( Resources.Load<Shader>( "Highlight" ) );
-		blurMaterial = new Material( Resources.Load<Shader>( "Blur" ) );
+		highlightMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
+		blurMaterial = new Material( Resources.Load<Shader>( "shaders/Blur" ) );
 		highLightStencilRef = Shader.PropertyToID( "_StencilRef" );
 	}
 
