@@ -911,6 +911,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 		assert.IsTrue( worker.IsIdle() );
 		worker.SetActive( true );
+		if ( resource.underGround )
+			worker.SetStandingHeight( -10 );	// Moving the miner go underground, to avoid it being picked by mouse clicks
 		if ( !resource.underGround )
 		{
 			worker.ScheduleWalkToNeighbour( flag.node );
@@ -976,6 +978,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public void Callback( Worker worker )
 	{
 		// Worker returned back from gathering resource
+		worker.SetStandingHeight( 0 );	// Bring miners back to the surface
 		assert.AreEqual( worker, this.worker );	// TODO Triggered shortly after removing a flag and roads. Triggered in a farm, not close to where the flag and roads were removed
 		SetWorking( false );
 	}

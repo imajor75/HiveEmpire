@@ -2010,6 +2010,12 @@ public class Worker : HiveObject
 		}
 	}
 
+	public void SetStandingHeight( float standingHeight )
+	{
+		this.standingHeight = standingHeight;
+		transform.localPosition = node.position + Vector3.up * standingHeight;
+	}
+
 	public override void Validate( bool chain )
 	{
 		if ( type == Type.wildAnimal )
