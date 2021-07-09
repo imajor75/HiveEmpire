@@ -57,7 +57,6 @@ public class Worker : HiveObject
 
 	public Animator animator;
 	static public List<GameObject> templates = new List<GameObject>();
-	static public RuntimeAnimatorController animationController;
 	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
 	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
 
@@ -910,8 +909,6 @@ public class Worker : HiveObject
 
 		looks.Fill( lookData );
 
-		animationController = (RuntimeAnimatorController)Resources.Load( "animations/worker" );
-		Assert.global.IsNotNull( animationController );
 		walkingID = Animator.StringToHash( "walk" );
 		pickupHeavyID = Animator.StringToHash( "pick up heavy" );
 		pickupLightID = Animator.StringToHash( "pick up light" );
@@ -1137,7 +1134,6 @@ public class Worker : HiveObject
 		if ( animator )
 		{
 			animator.speed = ground.world.timeFactor;
-			animator.runtimeAnimatorController = animationController;
 			animator.applyRootMotion = false;
 		}
 		else
