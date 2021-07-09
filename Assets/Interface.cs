@@ -3026,7 +3026,7 @@ if ( cart )
 		{
 			base.Open( construction.boss, 150, 150 );
 			this.construction = construction;
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 190, -150 ).AddClickHandler( Remove );
+			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( -40, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 
 			Workshop workshop = construction.boss as Workshop;
 			if ( workshop )
