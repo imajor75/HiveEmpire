@@ -1193,7 +1193,8 @@ public class Worker : HiveObject
 
 		if ( itemsInHands[1] )
 		{
-			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
+			if ( itemsInHands[0] )
+				itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
 			itemsInHands[1].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
 		}
 		else if ( itemsInHands[0] )
