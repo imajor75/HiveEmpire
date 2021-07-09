@@ -98,7 +98,7 @@ public class Resource : HiveObject
 		"prefabs/rocks/rock04", Type.rock,
 
 		"AnimalCave/animRock(Clone)", Type.animalSpawner,
-		"grainfield_final", Type.cornfield };
+		"prefabs/others/field", Type.cornfield };
 		Resource.meshes.Fill( meshes );
 
 		object[] sounds = {
@@ -195,17 +195,12 @@ public class Resource : HiveObject
 			// Align cornfield to ground
 			if ( type == Type.cornfield )
 			{
-				Mesh mesh = body.GetComponent<MeshFilter>().mesh;
-				var positions = mesh.vertices;
-				for ( int i = 0; i < positions.Length; i++ )
+				foreach ( Transform c in body.transform )
 				{
-					var worldPos = body.transform.TransformPoint( positions[i] );
-					float h = node.ground.GetHeightAt( worldPos.x, worldPos.z ) - node.height;
-					positions[i] = body.transform.InverseTransformPoint( worldPos + Vector3.up * h );
+					float h = node.ground.GetHeightAt( c.position.x, c.position.z ) - node.height;
+					c.position = c.position + Vector3.up * h;
 				}
-				mesh.vertices = positions;
 			}
-
 		}
 
 		soundSource = World.CreateSoundSource( this );
