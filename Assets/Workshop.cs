@@ -97,13 +97,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		public Status status;
 		public int length;
+		public int startTime;
 	}
 
-	public List<PastStatus> pastStatuses = new List<PastStatus>(), previousPastStatuses = new List<PastStatus>();
+	[Obsolete( "Compatibility with old files", true )]
+	List<PastStatus> pastStatuses { set {} }
+	List<PastStatus> previousPastStatuses { set {} }
+	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
 	public Status currentStatus = Status.unknown;
 	public World.Timer statusDuration;
-	public int savedStatusTicks = 0;
-	public const int maxSavedStatusTicks = 150000;
+	public const int maxSavedStatusTime = 50 * 60 * 60 * 10;
+	[Obsolete( "Compatibility with old files", true )]
+	int savedStatusTicks { set {} }	
 
 	public struct Productivity
 	{
@@ -619,16 +624,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 
 		if ( currentStatus != Status.unknown )
-		{
-			pastStatuses.Add( new PastStatus { status = currentStatus, length = statusDuration.age } );
-			savedStatusTicks += statusDuration.age;
-			if ( savedStatusTicks > maxSavedStatusTicks )
-			{
-				previousPastStatuses = pastStatuses;
-				pastStatuses = new List<PastStatus>();
-				savedStatusTicks = 0;
-			}
-		}
+			statuses.AddLast( new PastStatus { status = currentStatus, length = statusDuration.age, startTime = statusDuration.reference } );
 		currentStatus = status;
 		statusDuration.Start();
 	}
@@ -642,6 +638,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 			base.FixedUpdate();
 			return;
 		}
+
+		while ( statuses.Count > 0 && World.instance.time - statuses.First().startTime > maxSavedStatusTime )
+			statuses.RemoveFirst();
 
 		int freeSpaceAtFlag = flag.freeSlots;
 		foreach ( Buffer b in buffers )

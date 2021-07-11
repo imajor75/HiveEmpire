@@ -736,7 +736,7 @@ public class Interface : OperationHandler
 			FollowMouse();
 		}
 
-		public void Clear()
+		new public void Clear()
 		{
 			origin = null;
 			gameObject.SetActive( false );
@@ -858,6 +858,15 @@ public class Interface : OperationHandler
 			}
 			root.panels.Add( this );
 			transform.SetParent( root.transform, false );
+			Prepare();
+			this.target = target;
+			this.Pin( x, y, xs, ys );
+			UpdatePosition();
+			return false;
+		}
+
+		public void Prepare()
+		{
 			if ( borderWidth != 0 )
 			{
 				frame = Frame( borderWidth ).Stretch( 0, 0, 0, 0 );
@@ -879,10 +888,14 @@ public class Interface : OperationHandler
 				resizer = Image( iconTable.GetMediaData( Icon.resizer ) ).Pin( -iconSize, iconSize, iconSize, iconSize, 1, 0 );
 				resizer.name = "Resizer";
 			}
-			this.target = target;
-			this.Pin( x, y, xs, ys );
-			UpdatePosition();
-			return false;
+		}
+
+		public void Clear()
+		{
+			foreach ( Transform c in transform )
+				Destroy( c.gameObject );
+
+			Prepare();
 		}
 
 		void Pin()
@@ -1246,13 +1259,23 @@ public class Interface : OperationHandler
 			{
 				t.offsetMin += Vector2.up * eventData.delta.y;
 				t.offsetMax += Vector2.right * eventData.delta.x;
+				OnResized();
 			}
 			else
 			{
 				t.offsetMin += eventData.delta;
 				t.offsetMax += eventData.delta;
 				followTarget = false;
+				OnMoved();
 			}
+		}
+
+		public virtual void OnResized()
+		{
+		}
+
+		public virtual void OnMoved()
+		{
 		}
 
 		public void OnPointerClick( PointerEventData eventData )
@@ -1926,6 +1949,15 @@ public class Interface : OperationHandler
 		}
 		public class PastStatuses : Panel
 		{
+			public int interval;
+			public Color[] statusColors;
+			public List<Workshop.Status> statusList;
+			public Workshop workshop;
+			public World.Timer autoRefresh;
+			public Image circle;
+			const int autoRefreshInterval = 3000;
+			public List<Text> intervalTexts = new List<Text>();
+
 			public static PastStatuses Create()
 			{
 				return new GameObject( "Past Statuses Panel").AddComponent<PastStatuses>();
@@ -1936,26 +1968,38 @@ public class Interface : OperationHandler
 				if ( base.Open( workshop, 300, 150 ) )
 					return;
 
+				this.workshop = workshop;
+				autoRefresh.Start( autoRefreshInterval );
+				SetInterval( 50 * 60 * 10 );
+			}
+			
+			public void Fill()
+			{
 				int[] ticksInStatus = new int[(int)Workshop.Status.total];
 				int[] percentInStatus = new int[(int)Workshop.Status.total];
 				int totalTicks = 0;
-				void ProcessStatusList( List<Workshop.PastStatus> past )
+				void ProcessPastStatus( Workshop.PastStatus s )
 				{
-					foreach ( var s in past )
-					{
-						if ( s.status == Workshop.Status.unknown )
-							continue;
+					if ( s.status == Workshop.Status.unknown )
+						return;
 
-						ticksInStatus[(int)s.status] += s.length;
-						totalTicks += s.length;
-					}
+					int start = Math.Max( World.instance.time - interval, s.startTime );
+					int end = s.startTime + s.length;
+					int duration = end - start;
+
+					if ( duration <= 0 )
+						return;
+
+					ticksInStatus[(int)s.status] += duration;
+					totalTicks += duration;
 				}
-				ProcessStatusList( workshop.pastStatuses );
-				ProcessStatusList( workshop.previousPastStatuses );
+				ProcessPastStatus( new Workshop.PastStatus { status = workshop.currentStatus, startTime = workshop.statusDuration.reference, length = workshop.statusDuration.age } );
+				foreach ( var s in workshop.statuses )
+					ProcessPastStatus( s );
 				if ( totalTicks == 0 )
 					return;
 
-				List<Workshop.Status> statusList = new List<Workshop.Status>();
+				statusList = new List<Workshop.Status>();
 				for ( int i = 0; i < ticksInStatus.Length; i++ )
 				{
 					percentInStatus[i] = 100 * ticksInStatus[i] / totalTicks;
@@ -1965,24 +2009,44 @@ public class Interface : OperationHandler
 				while ( statusList.Count < 101 )
 					statusList.Add( statusList[0] );
 
-				Color[] statusColors = { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light(), Color.Lerp( Color.green, Color.blue, 0.5f ).Light() };
+				statusColors = new Color[] { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light(), Color.Lerp( Color.green, Color.blue, 0.5f ).Light() };
 				Assert.global.AreEqual( statusColors.Length, (int)Workshop.Status.total );
 
-				UIHelpers.currentRow = -borderWidth;
-				Text( $"Last {totalTicks / 60 / 50} minutes" ).PinDownwards( 150, 0, 300, iconSize );
+				Text( $"Last {totalTicks / 60 / 50} minutes" ).Pin( -150, -borderWidth, 300, iconSize, 1, 1 );
 				for ( int i = 0; i < (int)Workshop.Status.total; i++ )
 				{
 					if ( ticksInStatus[i] == 0 )
 						continue;
 					
-					var e = Text( $"{percentInStatus[i]}% " + workshop.GetStatusText( (Workshop.Status)i ), 10 ).PinDownwards( 150, 0, 350, (int)( iconSize * 0.8f ) ).AddOutline();
+					var e = Text( $"{percentInStatus[i]}% " + workshop.GetStatusText( (Workshop.Status)i ), 10 ).PinDownwards( -150, 0, 350, (int)( iconSize * 0.8f ), 1, 1 ).AddOutline();
 					e.color = statusColors[i];
 					e.name = $"Reason {i}";
 				}
 
-				var g = Image().Stretch( 20, 20, -170, -20 );
-				g.name = "Circle";
-				var t = new Texture2D( (int)g.rectTransform.rect.width, (int)g.rectTransform.rect.height );
+				circle = Image().Stretch( 20, 20, -170, -20 );
+				circle.name = "Circle";
+				FillCircle();
+
+				intervalTexts.Clear();
+				void AddIntervalText( string text, int interval )
+				{
+					var t = Text( text ).PinSideways( 0, 30, 30, iconSize, 1, 0 ).AddOutline();
+					intervalTexts.Add( t );
+					t.AddClickHandler( () => SetInterval( interval ) );
+					t.name = interval.ToString();
+					t.color = interval == this.interval ? Color.white : Color.grey;
+				}
+				UIHelpers.currentColumn = -180;
+				AddIntervalText( "10h", 50 * 60 * 60 * 10 );
+				AddIntervalText( "1h", 50 * 60 * 60 );
+				AddIntervalText( "30m", 50 * 60 * 30 );
+				AddIntervalText( "10m", 50 * 60 * 10 );
+				AddIntervalText( "1m", 50 * 60 );
+			}
+
+			void FillCircle()
+			{
+				var t = new Texture2D( (int)circle.rectTransform.rect.width, (int)circle.rectTransform.rect.height );
 
 				for ( int x = 0; x < t.width; x++ )
 				{
@@ -2008,7 +2072,33 @@ public class Interface : OperationHandler
 				}
 
 				t.Apply();
-				g.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
+				circle.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
+
+			}
+
+			public void SetInterval( int interval )
+			{
+				this.interval = interval;
+				Clear();
+				Fill();
+				foreach ( var t in intervalTexts )
+					t.color = t.name == interval.ToString() ? Color.white : Color.grey;
+			}
+
+			override public void Update()
+			{
+				base.Update();
+				if ( autoRefresh.inProgress )
+					return;
+
+				autoRefresh.Start( autoRefreshInterval );
+				Clear();
+				Fill();
+			}
+
+			public override void OnResized()
+			{
+				FillCircle();
 			}
 		}
 	}

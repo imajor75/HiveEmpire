@@ -178,6 +178,8 @@ public class Serializer : JsonSerializer
 					elementType = type.GetElementType();
 				if ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( List<> ) )
 					elementType = type.GetGenericArguments()[0];
+				if ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( LinkedList<> ) )
+					elementType = type.GetGenericArguments()[0];
 				Assert.global.IsNotNull( elementType, $"Unknown element type of {type.ToString()} for {owner}" );
 
 				Type listType = typeof( List<> ).MakeGenericType( new [] { elementType } );
@@ -201,6 +203,11 @@ public class Serializer : JsonSerializer
 					for ( int i = 0; i < list.Count; i++ )
 						array.SetValue( list[i], i );
 					return array;
+				}
+				if ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( LinkedList<> ) )
+				{
+					Type linkedListType = typeof( LinkedList<> ).MakeGenericType( new [] { elementType } );
+					return Activator.CreateInstance( linkedListType, list );
 				}
 				return list;
 			}
