@@ -80,7 +80,7 @@ public class Eye : HiveObject
 		}
 	}
 
-    public override GroundNode location => throw new NotImplementedException();
+    public override Node location => throw new NotImplementedException();
 
     private void Update()
 	{
@@ -137,7 +137,7 @@ public class Eye : HiveObject
 		rotateAround = false;
 	}
 
-	public void FocusOn( GroundNode node, bool rotateAround = false, bool mark = false )
+	public void FocusOn( Node node, bool rotateAround = false, bool mark = false )
 	{
 		if ( node == null )
 			return;
@@ -201,29 +201,29 @@ public class Eye : HiveObject
 		x += movement.x;
 		y += movement.z;
 
-		if ( y < -World.instance.ground.dimension * GroundNode.size / 2 )
+		if ( y < -World.instance.ground.dimension * Node.size / 2 )
 		{
-			y += World.instance.ground.dimension * GroundNode.size;
-			x += World.instance.ground.dimension * GroundNode.size / 2;
-			absoluteY -= World.instance.ground.dimension * GroundNode.size;
-			absoluteX -= World.instance.ground.dimension * GroundNode.size / 2;
+			y += World.instance.ground.dimension * Node.size;
+			x += World.instance.ground.dimension * Node.size / 2;
+			absoluteY -= World.instance.ground.dimension * Node.size;
+			absoluteX -= World.instance.ground.dimension * Node.size / 2;
 		}
-		if ( y > World.instance.ground.dimension * GroundNode.size / 2 )
+		if ( y > World.instance.ground.dimension * Node.size / 2 )
 		{
-			y -= World.instance.ground.dimension * GroundNode.size;
-			x -= World.instance.ground.dimension * GroundNode.size / 2;
-			absoluteY += World.instance.ground.dimension * GroundNode.size;
-			absoluteX += World.instance.ground.dimension * GroundNode.size / 2;
+			y -= World.instance.ground.dimension * Node.size;
+			x -= World.instance.ground.dimension * Node.size / 2;
+			absoluteY += World.instance.ground.dimension * Node.size;
+			absoluteX += World.instance.ground.dimension * Node.size / 2;
 		}
-		if ( x < -World.instance.ground.dimension * GroundNode.size / 2 + y / 2 )
+		if ( x < -World.instance.ground.dimension * Node.size / 2 + y / 2 )
 		{
-			x += World.instance.ground.dimension * GroundNode.size;
-			absoluteX -= World.instance.ground.dimension * GroundNode.size;
+			x += World.instance.ground.dimension * Node.size;
+			absoluteX -= World.instance.ground.dimension * Node.size;
 		}
-		if ( x > World.instance.ground.dimension * GroundNode.size / 2 + y / 2 )
+		if ( x > World.instance.ground.dimension * Node.size / 2 + y / 2 )
 		{
-			x -= World.instance.ground.dimension * GroundNode.size;
-			absoluteX += World.instance.ground.dimension * GroundNode.size;
+			x -= World.instance.ground.dimension * Node.size;
+			absoluteX += World.instance.ground.dimension * Node.size;
 		}
 
 		if ( Interface.GetKey( KeyCode.Q ) )
@@ -324,6 +324,6 @@ public class CameraHighlight : HiveObject
 		RenderTexture.ReleaseTemporary( tempRT );
 	}
 
-	public override GroundNode location { get { return null; } }
+	public override Node location { get { return null; } }
 }
 

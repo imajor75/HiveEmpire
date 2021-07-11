@@ -5,9 +5,9 @@ using UnityEngine;
 public class PathFinder : ScriptableObject
 {
 	// TODO Detect when circumstances change, and invalidate the path
-	public GroundNode target;
+	public Node target;
 	public List<Reached> visited = new List<Reached>();
-	public List<GroundNode> path = new List<GroundNode>();
+	public List<Node> path = new List<Node>();
 	public List<Road> roadPath = new List<Road>();
 	public List<bool> roadPathReversed = new List<bool>();
 	public HiveObject ignoreObject;
@@ -18,7 +18,7 @@ public class PathFinder : ScriptableObject
 
 	public class Reached
     {
-        public GroundNode node;
+        public Node node;
         public float costG;
         public float costH;
         public float costF;
@@ -36,7 +36,7 @@ public class PathFinder : ScriptableObject
 		total
 	}
 
-    public bool FindPathBetween( GroundNode start, GroundNode end, Mode mode, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
+    public bool FindPathBetween( Node start, Node end, Mode mode, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
     {
         target = end;
 		this.ignoreFinalObstacle = ignoreFinalObstacle;
@@ -65,7 +65,7 @@ public class PathFinder : ScriptableObject
         return ready;
     }
 
-    void VisitNode( GroundNode node, float cost, Reached from, Road road = null, bool reversed = false )
+    void VisitNode( Node node, float cost, Reached from, Road road = null, bool reversed = false )
     {
 		if ( !ignoreFinalObstacle || node != target )
 		{
@@ -76,7 +76,7 @@ public class PathFinder : ScriptableObject
 			if ( mode == Mode.avoidRoadsAndFlags && ( node.owner != target.owner || node.road ) )
 				return;
 
-			if ( node.type == GroundNode.Type.underWater )
+			if ( node.type == Node.Type.underWater )
 				return;
 		}
 
@@ -95,7 +95,7 @@ public class PathFinder : ScriptableObject
         AddNode( node, cost, from, road, reversed );
     }
 
-	void AddNode( GroundNode node, float cost, Reached from, Road road = null, bool reversed = false )
+	void AddNode( Node node, float cost, Reached from, Road road = null, bool reversed = false )
     {
 		var n = new Reached
 		{
@@ -154,9 +154,9 @@ public class PathFinder : ScriptableObject
 		}
 		else
 		{
-			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+			for ( int i = 0; i < Node.neighbourCount; i++ )
 			{
-				GroundNode t = r.node.Neighbour( i );
+				Node t = r.node.Neighbour( i );
 				VisitNode( t, r.costG + 0.01f/Worker.SpeedBetween( r.node, t ), r ); // TODO cost should depend on steepness of the road
 			}
 		}
@@ -228,7 +228,7 @@ public class Path : PathFinder
 	public int progress;
 	public HiveObject owner;
 
-	public static Path Between( GroundNode start, GroundNode end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
+	public static Path Between( Node start, Node end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
 	{
 		var p = CreateInstance<Path>();
 		p.owner = owner;
@@ -254,7 +254,7 @@ public class Path : PathFinder
 		return roadPath[progress++];
 	}
 
-	public GroundNode location
+	public Node location
 	{
 		get
 		{
@@ -262,7 +262,7 @@ public class Path : PathFinder
 		}
 	}
 
-	public GroundNode NextNode()
+	public Node NextNode()
 	{
 		return path[progress++];
 	}

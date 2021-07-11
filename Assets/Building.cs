@@ -19,7 +19,7 @@ abstract public class Building : HiveObject
 	public Flag flag;
 	public int flagDirection;
 	public Ground ground;
-	public GroundNode node;
+	public Node node;
 	[JsonIgnore]
 	public Road exit;
 	public AudioSource soundSource;
@@ -35,7 +35,7 @@ abstract public class Building : HiveObject
 	protected GameObject body;
 
 	[Obsolete( "Compatibility with old files", true )]
-	GroundNode.Type groundTypeNeeded;
+	Node.Type groundTypeNeeded;
 	[Obsolete( "Compatibility with old files", true )]
 	bool huge
 	{
@@ -80,9 +80,9 @@ abstract public class Building : HiveObject
 		var list = new List<Ground.Offset> { new Ground.Offset( 0, 0, 0 ) };
 		if ( huge )
 		{
-			list.Add( foundationHelper[( flagDirection + 2 ) % GroundNode.neighbourCount] );
-			list.Add( foundationHelper[( flagDirection + 3 ) % GroundNode.neighbourCount] );
-			list.Add( foundationHelper[( flagDirection + 4 ) % GroundNode.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 2 ) % Node.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 3 ) % Node.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 4 ) % Node.neighbourCount] );
 		}
 		return list;
 	}
@@ -94,8 +94,8 @@ abstract public class Building : HiveObject
 	[System.Serializable]
 	public class Configuration
 	{
-		public GroundNode.Type groundTypeNeeded = GroundNode.Type.land;
-		public GroundNode.Type groundTypeNeededAtEdge = GroundNode.Type.anything;
+		public Node.Type groundTypeNeeded = Node.Type.land;
+		public Node.Type groundTypeNeededAtEdge = Node.Type.anything;
 
 		public int plankNeeded = 2;
 		public int stoneNeeded = 0;
@@ -114,18 +114,18 @@ abstract public class Building : HiveObject
 		public World.Timer suspend;
 		public float level;
 		public Worker worker;
-		public List<GroundNode> area;
+		public List<Node> area;
 
 		[Obsolete( "Compatibility with old files", true )]
 		bool flatteningCorner;
 		[Obsolete( "Compatibility with old files", true )]
-		List<GroundNode> flatteningArea;
+		List<Node> flatteningArea;
 		[Obsolete( "Compatibility with old files", true )]
 		bool flatteningNeeded;
 		[Obsolete( "Compatibility with old files", true )]
 		bool done;
 
-		public void Setup( List<GroundNode> area, bool permanent = true, HiveObject ignoreDuringWalking = null )
+		public void Setup( List<Node> area, bool permanent = true, HiveObject ignoreDuringWalking = null )
 		{
 			flattened = false;
 			this.area = area;
@@ -174,10 +174,10 @@ abstract public class Building : HiveObject
 			{
 				if ( worker && worker.IsIdle() )
 				{
-					GroundNode node = area[corner++];
+					Node node = area[corner++];
 					if ( node.fixedHeight && node.staticHeight != level )
 						return true;
-					if ( node.type == GroundNode.Type.underWater )
+					if ( node.type == Node.Type.underWater )
 						return true;
 					float dif = node.height - level;
 					if ( Math.Abs( dif ) > 0.001f )
@@ -239,15 +239,15 @@ abstract public class Building : HiveObject
 			if ( !boss.configuration.flatteningNeeded )
 				return;
 			
-			List<GroundNode> flatteningArea = new List<GroundNode>();
+			List<Node> flatteningArea = new List<Node>();
 			var area = boss.foundation;
 			flatteningArea.Add( boss.node );
 			foreach ( var o in area )
 			{
-				GroundNode basis = boss.node.Add( o );
+				Node basis = boss.node.Add( o );
 				foreach ( var b in Ground.areas[1] )
 				{
-					GroundNode node = basis.Add( b );
+					Node node = basis.Add( b );
 					if ( !flatteningArea.Contains( node ) )
 						flatteningArea.Add( node );
 				}
@@ -295,7 +295,7 @@ abstract public class Building : HiveObject
 			if ( progress == 0 )
 			{
 				var o = new Ground.Offset( 0, -1, 1 );
-				GroundNode node = boss.node.Add( o );
+				Node node = boss.node.Add( o );
 				if ( worker.node != node )
 				{
 					worker.ScheduleWalkToNode( node, true, false, null, boss );
@@ -414,7 +414,7 @@ abstract public class Building : HiveObject
 		Construction.Initialize();
 	}
 
-	static public bool IsNodeSuitable( GroundNode placeToBuild, Player owner, Configuration configuration, int flagDirection )
+	static public bool IsNodeSuitable( Node placeToBuild, Player owner, Configuration configuration, int flagDirection )
 	{
 		var area = GetFoundation( configuration.huge, flagDirection );
 
@@ -448,13 +448,13 @@ abstract public class Building : HiveObject
 		}
 		if ( !edgeCondition )
 			return false;
-		GroundNode flagLocation = placeToBuild.Neighbour( flagDirection );
+		Node flagLocation = placeToBuild.Neighbour( flagDirection );
 		if ( flagLocation.flag && flagLocation.flag.crossing )
 			return false;
 		return flagLocation.validFlag || Flag.IsNodeSuitable( flagLocation, owner );
 	}
 
-	public Building Setup( GroundNode node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
+	public Building Setup( Node node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
 	{
 		this.configuration = configuration;
 		if ( !IsNodeSuitable( node, owner, configuration, flagDirection ) )
@@ -664,7 +664,7 @@ abstract public class Building : HiveObject
 		return true;
 	}
 
-	public virtual int Influence( GroundNode node )
+	public virtual int Influence( Node node )
 	{
 		return 0;
 	}
@@ -681,7 +681,7 @@ abstract public class Building : HiveObject
 		workerMate?.Reset();
 	}
 
-	public override GroundNode location { get { return node; } }
+	public override Node location { get { return node; } }
 
 	public override void Validate( bool chain )
 	{

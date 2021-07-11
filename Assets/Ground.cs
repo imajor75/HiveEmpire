@@ -7,7 +7,7 @@ public class Ground : HiveObject
 {
 	public World world;
 	public int dimension;
-	public GroundNode[] nodes;
+	public Node[] nodes;
 	public static int maxArea = 10;
 	public static List<Offset>[] areas = new List<Offset>[maxArea];
 	[Range(0.0f, 1.0f)]
@@ -87,10 +87,10 @@ public class Ground : HiveObject
 		this.dimension = dimension;
 
 		if ( nodes == null )
-			nodes = new GroundNode[( dimension + 1 ) * ( dimension + 1 )];
+			nodes = new Node[( dimension + 1 ) * ( dimension + 1 )];
 		for ( int x = 0; x <= dimension; x++ )
 			for ( int y = 0; y <= dimension; y++ )
-				nodes[y * ( dimension + 1 ) + x] = GroundNode.Create().Setup( this, x, y );
+				nodes[y * ( dimension + 1 ) + x] = Node.Create().Setup( this, x, y );
 		ScanHeights( heightMap, forestMap );
 
 		n00x = GetNode( 0, 0 ).position.x;
@@ -105,7 +105,7 @@ public class Ground : HiveObject
 		return this;
     }
 
-	public Block FindClosestBlock( GroundNode node )
+	public Block FindClosestBlock( Node node )
 	{
 		foreach ( var block in blocks )
 		{
@@ -122,7 +122,7 @@ public class Ground : HiveObject
 		return null;
 	}
 
-	public void Link( HiveObject hiveObject, GroundNode location = null )
+	public void Link( HiveObject hiveObject, Node location = null )
 	{
 		var bestBlock = FindClosestBlock( location ?? hiveObject.location );
 		if ( bestBlock )
@@ -182,17 +182,17 @@ public class Ground : HiveObject
 		{
 			float d = heightMap.data[(int)Math.Round( xf * n.x ), (int)Math.Round( yf * n.y )];
 			n.height = d * World.instance.settings.maxHeight;
-			n.type = GroundNode.Type.grass;
+			n.type = Node.Type.grass;
 			float forestData = forestMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
 			forestData = forestData - forestMap.averageValue + 0.5f;
 			if ( forestData < World.instance.settings.forestGroundChance )
-				n.type = GroundNode.Type.forest;
+				n.type = Node.Type.forest;
 			if ( d > World.instance.settings.hillLevel )
-				n.type = GroundNode.Type.hill;
+				n.type = Node.Type.hill;
 			if ( d > World.instance.settings.mountainLevel )
-				n.type = GroundNode.Type.mountain;
+				n.type = Node.Type.mountain;
 			if ( d < World.instance.settings.waterLevel )
-				n.type = GroundNode.Type.underWater;
+				n.type = Node.Type.underWater;
 			n.transform.localPosition = n.position;
 		}
 	}
@@ -207,12 +207,12 @@ public class Ground : HiveObject
 				if ( x == 0 && y == 0 )
 					continue;
 				foreach ( var block in blocks )
-					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * GroundNode.size, 0, y * dimension * GroundNode.size ) + block.transform.position, Quaternion.identity, material, 0 );
+					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Node.size, 0, y * dimension * Node.size ) + block.transform.position, Quaternion.identity, material, 0 );
 			}
 		}
 	}
 
-	public GroundNode GetNode( int x, int y )
+	public Node GetNode( int x, int y )
 	{
 		if ( x < 0 )
 			x += dimension;
@@ -226,10 +226,10 @@ public class Ground : HiveObject
 		return nodes[y * ( dimension + 1 ) + x];
 	}
 
-	public void SetNode( int x, int y, GroundNode node )
+	public void SetNode( int x, int y, Node node )
 	{
 		if ( nodes == null )
-			nodes = new GroundNode[( dimension + 1 ) * ( dimension + 1 )];
+			nodes = new Node[( dimension + 1 ) * ( dimension + 1 )];
 
 		nodes[y * ( dimension + 1 ) + x] = node;
 	}
@@ -270,7 +270,7 @@ public class Ground : HiveObject
 		}
 	}
 
-	public GroundNode GetCenter()
+	public Node GetCenter()
 	{
 		return GetNode( dimension / 2, dimension / 2 );
 	}
@@ -287,7 +287,7 @@ public class Ground : HiveObject
 		{
 			foreach ( var building in player.influencers )
 			{
-				List<GroundNode> touched = new List<GroundNode>
+				List<Node> touched = new List<Node>
 				{
 					building.node
 				};
@@ -301,9 +301,9 @@ public class Ground : HiveObject
 						touched[i].influence = influence;
 						touched[i].owner = building.owner;
 					}
-					for ( int j = 0; j < GroundNode.neighbourCount; j++ )
+					for ( int j = 0; j < Node.neighbourCount; j++ )
 					{
-						GroundNode neighbour = touched[i].Neighbour( j );
+						Node neighbour = touched[i].Neighbour( j );
 						if ( neighbour.index >= 0 && neighbour.index < touched.Count && touched[neighbour.index] == neighbour )
 							continue;
 						neighbour.index = touched.Count;
@@ -315,9 +315,9 @@ public class Ground : HiveObject
 
 		foreach ( var node in nodes )
 		{
-			for ( int j = 0; j < GroundNode.neighbourCount; j++ )
+			for ( int j = 0; j < Node.neighbourCount; j++ )
 			{
-				GroundNode neighbour = node.Neighbour( j );
+				Node neighbour = node.Neighbour( j );
 				if ( node.owner == neighbour.owner )
 				{
 					if ( node.borders[j] )
@@ -338,7 +338,7 @@ public class Ground : HiveObject
 	[System.Serializable]
 	public class Area
 	{
-		public GroundNode center;
+		public Node center;
 		public int radius = 8;
 		public static Area global = new Area();
 
@@ -348,13 +348,13 @@ public class Ground : HiveObject
 		{
 		}
 
-		public Area( GroundNode center, int radius )
+		public Area( Node center, int radius )
 		{
 			this.center = center;
 			this.radius = radius;
 		}
 
-		public bool IsInside( GroundNode node )
+		public bool IsInside( Node node )
 		{
 			if ( center == null )
 				return true;
@@ -369,7 +369,7 @@ public class Ground : HiveObject
 			node.Reset();
 	}
 
-	public void SetDirty( GroundNode node )
+	public void SetDirty( Node node )
 	{
 		foreach ( var block in blocks )
 		{
@@ -391,7 +391,7 @@ public class Ground : HiveObject
 		}
 	}
 
-	public override GroundNode location { get { return null; } }
+	public override Node location { get { return null; } }
 
 	override public void Validate( bool chain )
  	{
@@ -409,7 +409,7 @@ public class Ground : HiveObject
 	public class Block : HiveObject
 	{
 		public Ground boss;
-		public GroundNode center;
+		public Node center;
 		public int dimension;
 		public Mesh mesh;
 		public new MeshCollider collider;
@@ -420,7 +420,7 @@ public class Ground : HiveObject
 			return new GameObject().AddComponent<Block>();
 		}
 
-		public Block Setup( Ground boss, GroundNode center, int dimension )
+		public Block Setup( Ground boss, Node center, int dimension )
 		{
 			this.boss = boss;
 			this.center = center;
@@ -454,7 +454,7 @@ public class Ground : HiveObject
 			}
 		}
 
-		public override GroundNode location
+		public override Node location
 		{
 			get
 			{
@@ -488,23 +488,23 @@ public class Ground : HiveObject
 					positions.Add( node.GetPosition( center.x + x, center.y + y ) );
 					switch ( node.type )
 					{
-						case GroundNode.Type.grass:
-						case GroundNode.Type.underWater:
+						case Node.Type.grass:
+						case Node.Type.underWater:
 						{
 							colors.Add( new Color( 1, 0, 0, 0 ) );
 							break;
 						}
-						case GroundNode.Type.hill:
+						case Node.Type.hill:
 						{
 							colors.Add( new Color( 0, 1, 0, 0 ) );
 							break;
 						}
-						case GroundNode.Type.mountain:
+						case Node.Type.mountain:
 						{
 							colors.Add( new Color( 0, 0, 1, 0 ) );
 							break;
 						}
-						case GroundNode.Type.forest:
+						case Node.Type.forest:
 						{
 							colors.Add( new Color( 0, 0, 0, 1 ) );
 							break;
@@ -651,17 +651,17 @@ public class Ground : HiveObject
 		public void UpdateOffset( Vector3 camera )
 		{
 			var thisPosition = center.position;
-			float limit = boss.dimension / 2 * GroundNode.size;
+			float limit = boss.dimension / 2 * Node.size;
 			int xo = 0, yo = 0;
 			if ( camera.z - thisPosition.z > limit )
 				yo = 1;
 			if ( thisPosition.z - camera.z > limit )
 				yo = -1;
-			if ( camera.x - thisPosition.x - GroundNode.size * boss.dimension / 2 * yo > limit )
+			if ( camera.x - thisPosition.x - Node.size * boss.dimension / 2 * yo > limit )
 				xo = 1;
-			if ( thisPosition.x - camera.x + GroundNode.size * boss.dimension / 2 * yo > limit )
+			if ( thisPosition.x - camera.x + Node.size * boss.dimension / 2 * yo > limit )
 				xo = -1;
-			transform.localPosition = new Vector3( GroundNode.size * boss.dimension / 2 * ( xo * 2 + yo ), 0, GroundNode.size * boss.dimension * yo );
+			transform.localPosition = new Vector3( Node.size * boss.dimension / 2 * ( xo * 2 + yo ), 0, Node.size * boss.dimension * yo );
 		}
 	}
 }

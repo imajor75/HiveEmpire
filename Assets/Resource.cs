@@ -5,7 +5,7 @@ using UnityEngine;
 [SelectionBase]
 public class Resource : HiveObject
 {
-	public GroundNode node;
+	public Node node;
 	public bool underGround;
 	public Type type;
 	public World.Timer life;
@@ -120,7 +120,7 @@ public class Resource : HiveObject
 		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
 	}
 
-	public Resource Setup( GroundNode node, Type type, int charges = -1 )
+	public Resource Setup( Node node, Type type, int charges = -1 )
 	{
 		underGround = IsUnderGround( type );
 
@@ -137,7 +137,7 @@ public class Resource : HiveObject
 			}
 		}
 
-		if ( ( underGround && node.type != GroundNode.Type.hill ) || ( !underGround && !node.CheckType( GroundNode.Type.land ) ) )
+		if ( ( underGround && node.type != Node.Type.hill ) || ( !underGround && !node.CheckType( Node.Type.land ) ) )
 		{
 			DestroyThis();
 			return null;
@@ -212,7 +212,7 @@ public class Resource : HiveObject
 		if ( type == Type.cornfield )
 		{
 			float growth = (float)life.age / cornfieldGrowthMax;
-			if ( node.type != GroundNode.Type.grass )
+			if ( node.type != Node.Type.grass )
 				growth /= 2;
 			if ( growth > 1 )
 				growth = 1;
@@ -222,7 +222,7 @@ public class Resource : HiveObject
 		if ( type == Type.tree )
 		{
 			float size = (float)life.age / treeGrowthMax;
-			if ( node.type != GroundNode.Type.forest )
+			if ( node.type != Node.Type.forest )
 				size /= 2;
 			size = Math.Max( size, 0.1f );
 			size = Math.Min( size, 1 );
@@ -236,7 +236,7 @@ public class Resource : HiveObject
 		{
 			foreach ( var o in Ground.areas[1] )
 			{
-				GroundNode n = node.Add( o );
+				Node n = node.Add( o );
 				if ( n.IsBlocking() )
 					continue;
 				if ( animals.Count >= 3 )
@@ -307,13 +307,13 @@ public class Resource : HiveObject
 			return false;
 		if ( type == Type.tree )
 		{
-			if ( node.type == GroundNode.Type.forest )
+			if ( node.type == Node.Type.forest )
 				return life.age > treeGrowthMax;
 			return life.age > treeGrowthMax * 2;
 		}
 		if ( type == Type.cornfield )
 		{
-			if ( node.type == GroundNode.Type.grass )
+			if ( node.type == Node.Type.grass )
 				return life.age > cornfieldGrowthMax;
 			return life.age > cornfieldGrowthMax * 2;
 		}
@@ -332,7 +332,7 @@ public class Resource : HiveObject
 			Remove( false );
 	}
 
-	public override GroundNode location { get { return node; } }
+	public override Node location { get { return node; } }
 
 	public override void Validate( bool chain )
 	{

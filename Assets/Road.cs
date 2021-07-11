@@ -14,7 +14,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool ready = false;
 	public int tempNodes = 0;
 	public Ground ground;
-	public List<GroundNode> nodes = new List<GroundNode>();
+	public List<Node> nodes = new List<Node>();
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
 	public Mesh mesh;
@@ -27,7 +27,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public int targetWorkerCount;   // Zero means automaic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
-	public GroundNode referenceLocation;
+	public Node referenceLocation;
 	Material mapMaterial;
 	Mesh mapMesh;
 	public bool invalid;
@@ -57,7 +57,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return this;
 	}
 
-	public static bool IsNodeSuitable( Road road, GroundNode node, Player owner )
+	public static bool IsNodeSuitable( Road road, Node node, Player owner )
 	{
 		if ( road.owner != owner )
 			return false;
@@ -100,7 +100,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return this;
 	}
 
-	public bool AddNode( GroundNode node, bool checkConditions = false )
+	public bool AddNode( Node node, bool checkConditions = false )
 	{
 		assert.IsFalse( ready );
 		if ( checkConditions && !IsNodeSuitable( this, node, owner ) )
@@ -165,7 +165,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
-	GroundNode GetNodeFromEnd( int index )
+	Node GetNodeFromEnd( int index )
 	{
 		return nodes[nodes.Count - 1 - index];
 	}
@@ -246,7 +246,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		CreateCurves();
 
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
-		Vector3 h = Vector3.up*GroundNode.size*height;
+		Vector3 h = Vector3.up*Node.size*height;
 		mesh.Clear();
 		mapMesh.Clear();
 		if ( nodes.Count == 1 )
@@ -381,7 +381,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			curves[2][block].DirectionAt( fraction ) );
 	}
 
-	public int NodeIndex( GroundNode node )
+	public int NodeIndex( Node node )
 	{
 		if ( node.road )
 		{
@@ -398,7 +398,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return -1;
 	}
 
-	static public Road Between( GroundNode first, GroundNode second )
+	static public Road Between( Node first, Node second )
 	{
 		Assert.global.IsNotNull( first.validFlag );
 		Assert.global.IsNotNull( second.validFlag );
@@ -500,7 +500,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public void OnClicked( GroundNode node )
+	public void OnClicked( Node node )
 	{
 		assert.AreEqual( node.road, this );
 		Interface.RoadPanel.Create().Open( this, node );
@@ -680,7 +680,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
-	public GroundNode centerNode
+	public Node centerNode
 	{
 		get
 		{
@@ -715,9 +715,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public GroundNode lastNode { get { return nodes[nodes.Count - 1]; } }
+	public Node lastNode { get { return nodes[nodes.Count - 1]; } }
 
-	public bool OnMovingOverNode( GroundNode node )
+	public bool OnMovingOverNode( Node node )
  	{
 		if ( node == null )
 			return true;
@@ -769,7 +769,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
-	public bool OnNodeClicked( GroundNode node )
+	public bool OnNodeClicked( Node node )
 	{
 		if ( node != lastNode )
 			return true;
@@ -828,7 +828,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		workers[0].Reset();
 	}
 
-	public override GroundNode location
+	public override Node location
 	{
 		get
 		{

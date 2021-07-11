@@ -205,7 +205,7 @@ public class Player : ScriptableObject
 	bool CreateMainBuilding()
 	{
 		const int flagDirection = 1;
-		GroundNode center = World.instance.ground.GetCenter(), best = null;
+		Node center = World.instance.ground.GetCenter(), best = null;
 		float heightdDif = float.MaxValue;
 		var area = Building.GetFoundation( true, flagDirection );
 		List<Ground.Offset> extendedArea = new List<Ground.Offset>();
@@ -221,13 +221,13 @@ public class Player : ScriptableObject
 
 		foreach ( var o in Ground.areas[8] )
 		{
-			GroundNode node = center + o;
+			Node node = center + o;
 
 			bool invalidNode = false;
 			foreach ( var n in area )
 			{
 				var localNode = node + n;
-				if ( !localNode.CheckType( GroundNode.Type.land ) || localNode.owner != null || localNode.IsBlocking() )
+				if ( !localNode.CheckType( Node.Type.land ) || localNode.owner != null || localNode.IsBlocking() )
 					invalidNode = true;
 			}
 			if ( invalidNode || node.Neighbour( flagDirection ).IsBlocking() )
@@ -238,7 +238,7 @@ public class Player : ScriptableObject
 			foreach ( var e in extendedArea )
 			{
 				var localNode = node + e;
-				if ( !localNode.CheckType( GroundNode.Type.land ) )
+				if ( !localNode.CheckType( Node.Type.land ) )
 				{
 					max = float.MaxValue;
 					break;

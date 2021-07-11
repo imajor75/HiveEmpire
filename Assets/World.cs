@@ -169,7 +169,7 @@ public class World : MonoBehaviour
 		soundSource.spatialBlend = 1;
 		soundSource.minDistance = 1;
 		soundSource.pitch = instance.timeFactor;
-		soundSource.maxDistance = GroundNode.size * World.soundMaxDistance;
+		soundSource.maxDistance = Node.size * World.soundMaxDistance;
 		return soundSource;
 	}
 
@@ -573,7 +573,7 @@ public class World : MonoBehaviour
 			foreach ( var resource in node.resources )
 				if ( resource.underGround )
 					hasOre = true;
-			if ( r.NextDouble() < settings.oreChance && node.type == GroundNode.Type.hill && !hasOre )
+			if ( r.NextDouble() < settings.oreChance && node.type == Node.Type.hill && !hasOre )
 			{
 				float totalMissing = 0;
 				foreach ( var ore in ores )
@@ -594,11 +594,11 @@ public class World : MonoBehaviour
 				}
 			}
 
-			if ( node.CheckType( GroundNode.Type.land ) )
+			if ( node.CheckType( Node.Type.land ) )
 			{
 				foreach ( var o in Ground.areas[1] )
 				{
-					if ( node.Add( o ).type == GroundNode.Type.underWater )
+					if ( node.Add( o ).type == Node.Type.underWater )
 					{
 						node.AddResource( Resource.Type.fish );
 						break;

@@ -9,14 +9,14 @@ public class Flag : HiveObject
 {
 	public Player owner;
 	public const int maxItems = 6;
-	public GroundNode node;
+	public Node node;
 	public Item[] items = new Item[maxItems];
 	[JsonIgnore]
 	public GameObject[] frames = new GameObject[maxItems];
 	public Worker user;
 	public bool crossing;
 	public bool recentlyLeftCrossing;	// Only for validaion, debug purposes
-	public Road[] roadsStartingHere = new Road[GroundNode.neighbourCount];
+	public Road[] roadsStartingHere = new Road[Node.neighbourCount];
 	[Obsolete( "Compatibility with old files", true )]
 	Building building;
 	static GameObject template;
@@ -43,7 +43,7 @@ public class Flag : HiveObject
 		return new GameObject().AddComponent<Flag>();
 	}
 
-	public Flag Setup( GroundNode node, Player owner, bool blueprintOnly = false, bool crossing = false )
+	public Flag Setup( Node node, Player owner, bool blueprintOnly = false, bool crossing = false )
 	{
 		if ( IsNodeSuitable( node, owner ) )
 		{
@@ -105,8 +105,8 @@ public class Flag : HiveObject
 			t.localScale = 0.15f * Vector3.one;
 			Vector3 pos;
 			float itemBottomHeight = items[i] == null ? 0 : items[i].bottomHeight;
-			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
-			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * GroundNode.size;
+			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * Node.size;
+			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * Node.size;
 			// Adjust the height of the frame so that the item in it should be just above the tiles of the flag
 			pos.y = node.ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + tilesHeight;
 			t.localPosition = pos;
@@ -124,7 +124,7 @@ public class Flag : HiveObject
 			requestFlattening = false;
 			if ( flattening == null )	// This should never be null, only after loading old files.
 				flattening = new Building.Flattening();
-			var area = new List<GroundNode>();
+			var area = new List<Node>();
 			area.Add( node );
 			foreach ( var o in Ground.areas[1] )
 				area.Add( node + o );
@@ -349,7 +349,7 @@ public class Flag : HiveObject
 		foreach ( var building in Buildings() )
 			assert.AreEqual( building.flag, this );
         assert.AreEqual( this, node.flag );
-        for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+        for ( int i = 0; i < Node.neighbourCount; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( freeSlots >= 0 );
 		int usedSlots = 0;
@@ -365,7 +365,7 @@ public class Flag : HiveObject
 			}
 		}
 		assert.AreEqual( freeSlots, maxItems - usedSlots );
-		for ( int j = 0; j < GroundNode.neighbourCount; j++ )
+		for ( int j = 0; j < Node.neighbourCount; j++ )
 			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node && chain )
 				roadsStartingHere[j].Validate( true );
 		if ( user )
@@ -380,7 +380,7 @@ public class Flag : HiveObject
 			assert.IsNull( user );
 	}
 
-	public override GroundNode location
+	public override Node location
 	{
 		get
 		{
@@ -415,9 +415,9 @@ public class Flag : HiveObject
 		base.DestroyThis( noAssert );
 	}
 
-	static public bool IsNodeSuitable( GroundNode placeToBuildOn, Player owner )
+	static public bool IsNodeSuitable( Node placeToBuildOn, Player owner )
 	{
-		if ( placeToBuildOn.type == GroundNode.Type.underWater )
+		if ( placeToBuildOn.type == Node.Type.underWater )
 			return false;
 
 		if ( ( placeToBuildOn.IsBlocking() && placeToBuildOn.road == null ) || placeToBuildOn.flag )

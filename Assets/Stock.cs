@@ -64,7 +64,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		stoneNeeded = 3,
 		flatteningNeeded = true,
 		constructionTime = 6000,
-		groundTypeNeeded = GroundNode.Type.aboveWater
+		groundTypeNeeded = Node.Type.aboveWater
 	};
 	static readonly Configuration mainConfiguration = new Configuration
 	{
@@ -351,12 +351,12 @@ public class Stock : Building, Worker.Callback.IHandler
 		return new GameObject().AddComponent<Stock>();
 	}
 
-	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner, int flagDirection )
+	public static bool IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
 	{
 		return Building.IsNodeSuitable( placeToBuild, owner, stockConfiguration, flagDirection );
 	}
 
-	public Stock Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
+	public Stock Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
 		height = 1.5f;
 		maxItems = defaultmaxItems;
@@ -370,7 +370,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		return this;
 	}
 
-	public Stock SetupMain( GroundNode node, Player owner, int flagDirection )
+	public Stock SetupMain( Node node, Player owner, int flagDirection )
 	{
 		main = true;
 
@@ -536,7 +536,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		}
 	}
 
-	public override int Influence( GroundNode node )
+	public override int Influence( Node node )
 	{
 		if ( !main )
 			base.Influence( node );

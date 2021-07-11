@@ -2,7 +2,7 @@
 
 public class BorderEdge : HiveObject
 {
-    public GroundNode node;
+    public Node node;
     public int direction;
 
 	public static BorderEdge Create()
@@ -13,7 +13,7 @@ public class BorderEdge : HiveObject
 		return body.AddComponent<BorderEdge>();
 	}
 
-    public BorderEdge Setup( GroundNode node, int direction )
+    public BorderEdge Setup( Node node, int direction )
     {
 		if ( node.DistanceFrom( node.Neighbour( direction ) ) > 1 )
 		{
@@ -42,6 +42,6 @@ public class BorderEdge : HiveObject
 		transform.localPosition = position;
 	}
 
-	public override GroundNode location { get { return node; } }
+	public override Node location { get { return node; } }
 
 }

@@ -401,7 +401,7 @@ public class Item : HiveObject
 		assert.Fail();
 	}
 
-	public override GroundNode location { get { return flag ? flag.location : worker.location; } }
+	public override Node location { get { return flag ? flag.location : worker.location; } }
 
 	public override void Validate( bool chain )
 	{

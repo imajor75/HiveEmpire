@@ -20,7 +20,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public List<Buffer> buffers = new List<Buffer>();
 	public Transform millWheel;
 	public float millWheelSpeed = 0;
-	public GroundNode resourcePlace;
+	public Node resourcePlace;
 	public int itemsProduced;
 	public World.Timer resting;
 	public Productivity productivity = new Productivity( 0.5f );
@@ -194,7 +194,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		public Resource resource;
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
-		public GroundNode node;
+		public Node node;
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public Resource.Type resourceType;
 		public World.Timer timer;
@@ -271,12 +271,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public class Plant : Worker.Task
 	{
-		public GroundNode node;
+		public Node node;
 		public World.Timer wait;
 		public bool done;
 		public Resource.Type resourceType;
 
-		public void Setup( Worker boss, GroundNode node, Resource.Type resourceType )
+		public void Setup( Worker boss, Node node, Resource.Type resourceType )
 		{
 			base.Setup( boss );
 			this.node = node;
@@ -292,7 +292,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				boss.animator?.SetBool( Worker.sowingID, false );
 				return true;
 			}
-			if ( boss.node != node || node.building || node.flag || node.road || !node.CheckType( GroundNode.Type.land ) )
+			if ( boss.node != node || node.building || node.flag || node.road || !node.CheckType( Node.Type.land ) )
 			{
 				( boss.building as Workshop ).SetWorking( false );
 				return true;
@@ -425,7 +425,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return new GameObject().AddComponent<Workshop>();
 	}
 
-	public Workshop Setup( GroundNode node, Player owner, Type type, int flagDirection, bool blueprintOnly = false )
+	public Workshop Setup( Node node, Player owner, Type type, int flagDirection, bool blueprintOnly = false )
 	{
 		this.type = type;
 		buffers.Clear();
@@ -660,7 +660,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
 
 		mapIndicator.SetActive( true );
-		mapIndicator.transform.localScale = new Vector3( GroundNode.size * productivity.current / 10, 1, GroundNode.size * 0.02f );
+		mapIndicator.transform.localScale = new Vector3( Node.size * productivity.current / 10, 1, Node.size * 0.02f );
 		mapIndicator.transform.rotation = Quaternion.Euler( 0, (float)( World.instance.eye.direction / Math.PI * 180 ), 0 );
 		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
 
@@ -692,7 +692,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					{
 						foreach ( var o in Ground.areas[3] )
 						{
-							GroundNode place = node.Add( o );
+							Node place = node.Add( o );
 							if ( place.building || place.flag || place.road || place.fixedHeight )
 								continue;
 							foreach ( var resource in place.resources )
@@ -709,8 +709,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 						ChangeStatus( Status.waitingForOutputSlot );
 					foreach ( var o in Ground.areas[3] )
 					{
-						GroundNode place = node.Add( o );
-						if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.grass ) )
+						Node place = node.Add( o );
+						if ( place.IsBlocking( true ) || !place.CheckType( Node.Type.grass ) )
 							continue;
 						PlantAt( place, Resource.Type.cornfield );
 						return;
@@ -728,9 +728,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 					{
 						int randomOffset = World.rnd.Next( o.Count );
 						int x = (i + randomOffset) % o.Count;
-						GroundNode place = node.Add( o[x] );
+						Node place = node.Add( o[x] );
 						{
-							if ( place.IsBlocking( true ) || !place.CheckType( GroundNode.Type.forest ) || place.fixedHeight )
+							if ( place.IsBlocking( true ) || !place.CheckType( Node.Type.forest ) || place.fixedHeight )
 								continue;
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
@@ -864,7 +864,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
-		GroundNode target;
+		Node target;
 		int t = Ground.areas[range].Count;
 		int r = World.rnd.Next( t );
 		for ( int j = -1; j < t; j++ )
@@ -982,7 +982,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		SetWorking( false );
 	}
 
-	void PlantAt( GroundNode place, Resource.Type resourceType )
+	void PlantAt( Node place, Resource.Type resourceType )
 	{
 		assert.IsTrue( worker.IsIdle() );
 		worker.SetActive( true );
@@ -1007,7 +1007,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( Selection.Contains( gameObject ) && resourcePlace != null )
 		{
 			Gizmos.color = Color.red;
-			Gizmos.DrawLine( node.position + Vector3.up * GroundNode.size, resourcePlace.position );
+			Gizmos.DrawLine( node.position + Vector3.up * Node.size, resourcePlace.position );
 		}
 #endif
 	}
@@ -1037,7 +1037,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 	}
 
-	public static bool IsNodeGoodForRelax( GroundNode node )
+	public static bool IsNodeGoodForRelax( Node node )
 	{
 		if ( node.IsBlocking() )
 		{

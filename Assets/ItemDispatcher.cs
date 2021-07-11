@@ -32,7 +32,7 @@ public class ItemDispatcher : HiveObject
 		}
 
 		public Item item;
-		public GroundNode location;
+		public Node location;
 		public Building building;
 		public Priority priority;
 		public int quantity;
@@ -62,7 +62,7 @@ public class ItemDispatcher : HiveObject
 
 	public List<LogisticResult> results, resultsInThisFrame;
 
-    public override GroundNode location => throw new System.NotImplementedException();
+    public override Node location => throw new System.NotImplementedException();
 
     static public ItemDispatcher Create()
 	{

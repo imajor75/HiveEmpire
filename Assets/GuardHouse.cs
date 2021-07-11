@@ -22,7 +22,7 @@ public class GuardHouse : Building
 		guardHouseConfiguration.constructionTime = 5000;
 	}
 
-	public static bool IsNodeSuitable( GroundNode placeToBuild, Player owner, int flagDirection )
+	public static bool IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
 	{
 		return Building.IsNodeSuitable( placeToBuild, owner, guardHouseConfiguration, flagDirection );
 	}
@@ -34,7 +34,7 @@ public class GuardHouse : Building
 
 	override public string title { get { return "Guard House"; } set {} }
 
-	public GuardHouse Setup( GroundNode node, Player owner, int flagDirection, bool blueprintOnly = false )
+	public GuardHouse Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
 		height = 1.2f;
 		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly ) == null )
@@ -86,7 +86,7 @@ public class GuardHouse : Building
 		return base.Remove( takeYourTime );
 	}
 
-	public override int Influence( GroundNode node )
+	public override int Influence( Node node )
 	{
 		return influence - node.DistanceFrom( this.node );
 	}

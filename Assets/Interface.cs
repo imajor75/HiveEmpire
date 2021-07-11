@@ -35,7 +35,7 @@ public class Interface : OperationHandler
 	public List<Building.Type> highlightBuildingTypes = new List<Building.Type>(); 
 	public Ground.Area highlightArea;
 	public GameObject highlightVolume;
-	GroundNode highlightVolumeCenter;
+	Node highlightVolumeCenter;
 	int highlightVolumeRadius;
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -245,7 +245,7 @@ public class Interface : OperationHandler
 
 	new public void Start()
 	{
-		GroundNode.Initialize();
+		Node.Initialize();
 		Assert.Initialize();
 		World.Initialize();
 		Ground.Initialize();
@@ -459,7 +459,7 @@ public class Interface : OperationHandler
 		}
 
 		highlightVolume.transform.localPosition = highlightVolumeCenter.GetPositionRelativeTo( viewport.visibleAreaCenter );
-		float scale = ( highlightVolumeRadius + 0.5f ) * GroundNode.size;
+		float scale = ( highlightVolumeRadius + 0.5f ) * Node.size;
 		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
 		Destroy( highlightVolume.GetComponent<MeshCollider>() );
 		highlightVolume.AddComponent<MeshCollider>();
@@ -467,9 +467,9 @@ public class Interface : OperationHandler
 
 	void CreateHighLightVolumeMesh( Mesh m )
 	{
-		var vertices = new Vector3[GroundNode.neighbourCount * 2];
+		var vertices = new Vector3[Node.neighbourCount * 2];
 		var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
-		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+		for ( int i = 0; i < Node.neighbourCount; i++ )
 		{
 			float x = corners[i, 0] - corners[i, 1] / 2f;
 			float y = corners[i, 1];
@@ -478,12 +478,12 @@ public class Interface : OperationHandler
 		}
 		m.vertices = vertices;
 
-		var triangles = new int[GroundNode.neighbourCount * 2 * 3 + 2 * 3 * (GroundNode.neighbourCount - 2)];
-		for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+		var triangles = new int[Node.neighbourCount * 2 * 3 + 2 * 3 * (Node.neighbourCount - 2)];
+		for ( int i = 0; i < Node.neighbourCount; i++ )
 		{
 			int a = i * 2;
 			int b = i * 2 + 2;
-			if ( b == GroundNode.neighbourCount * 2 )
+			if ( b == Node.neighbourCount * 2 )
 				b = 0;
 
 			triangles[i * 2 * 3 + 0] = a + 0;
@@ -494,8 +494,8 @@ public class Interface : OperationHandler
 			triangles[i * 2 * 3 + 4] = b + 1;
 			triangles[i * 2 * 3 + 5] = b + 0;
 		}
-		assert.AreEqual( GroundNode.neighbourCount, 6 );
-		int cap = GroundNode.neighbourCount * 6;
+		assert.AreEqual( Node.neighbourCount, 6 );
+		int cap = Node.neighbourCount * 6;
 		triangles[cap++] = 0;
 		triangles[cap++] = 2;
 		triangles[cap++] = 10;
@@ -560,12 +560,12 @@ public class Interface : OperationHandler
 #endif
 	}
 
-	public override GroundNode location { get { return null; } }
+	public override Node location { get { return null; } }
 
 	public class PathVisualization : MonoBehaviour
 	{
 	    Vector3 lastAbsoluteEyePosition;
-		GroundNode start;
+		Node start;
 		Path path;
 		int lastProgress;
 
@@ -1216,7 +1216,7 @@ public class Interface : OperationHandler
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.location.GetPositionRelativeTo( root.world.eye.position ) + Vector3.up * GroundNode.size );
+			MoveTo( target.location.GetPositionRelativeTo( root.world.eye.position ) + Vector3.up * Node.size );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -1225,7 +1225,7 @@ public class Interface : OperationHandler
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * GroundNode.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * Node.size );
 			screenPosition.y -= Screen.height;
 			if ( transform is RectTransform t )
 			{
@@ -1343,7 +1343,7 @@ public class Interface : OperationHandler
 		public class AreaControl : MonoBehaviour, IInputHandler
 		{
 			public Ground.Area area;
-			public GroundNode oldCenter;
+			public Node oldCenter;
 			public int oldRadius;
 			public Image image;
 
@@ -1355,14 +1355,14 @@ public class Interface : OperationHandler
 				this.AddClickHandler( OnClick );
 			}
 
-			public bool OnMovingOverNode( GroundNode node )
+			public bool OnMovingOverNode( Node node )
 			{
 				if ( node )
 					area.center = node;
 				return true;
 			}
 
-			public bool OnNodeClicked( GroundNode node )
+			public bool OnNodeClicked( Node node )
 			{
 				if ( root.highlightArea == area )
 				{
@@ -1828,7 +1828,7 @@ public class Interface : OperationHandler
 			if ( resourcesLeft )
 			{
 				int left = 0;
-				void CheckNode( GroundNode node )
+				void CheckNode( Node node )
 				{
 					foreach ( var resource in node.resources )
 					{
@@ -2372,21 +2372,21 @@ public class Interface : OperationHandler
 
 	public class NodePanel : Panel
 	{
-		public GroundNode node;
+		public Node node;
 
 		public static NodePanel Create()
 		{
 			return new GameObject().AddComponent<NodePanel>();
 		}
 
-		public void Open( GroundNode node, bool show = false )
+		public void Open( Node node, bool show = false )
 		{
 			noResize = true;
 			base.Open( node, 0, 0, 380, 180 );
 			this.node = node;
 			name = "Node panel";
 #if DEBUG
-			BuildButton( 20, -60, "Tree", !node.IsBlocking( true ) && node.CheckType( GroundNode.Type.land ), AddTree );
+			BuildButton( 20, -60, "Tree", !node.IsBlocking( true ) && node.CheckType( Node.Type.land ), AddTree );
 			BuildButton( 20, -80, "Remove", node.IsBlocking( true ), Remove );
 			BuildButton( 20, -100, "Raise", true, delegate { AlignHeight( 0.1f ); } );
 			BuildButton( 20, -120, "Lower", true, delegate { AlignHeight( -0.1f ); } );
@@ -2590,7 +2590,7 @@ public class Interface : OperationHandler
 		public Road road;
 		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>(), centerItems = new List<ItemImage>();
 		public List<Text> leftNumbers = new List<Text>(), rightNumbers = new List<Text>(), centerDirections = new List<Text>();
-		public GroundNode node;
+		public Node node;
 		public Dropdown targetWorkerCount;
 		public Text jam;
 		public Text workers;
@@ -2602,7 +2602,7 @@ public class Interface : OperationHandler
 			return new GameObject().AddComponent<RoadPanel>();
 		}
 
-		public void Open( Road road, GroundNode node )
+		public void Open( Road road, Node node )
 		{
 			borderWidth = 10;
 			noResize = true;
@@ -2804,9 +2804,9 @@ public class Interface : OperationHandler
 
 		void CaptureRoads()
 		{
-			for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+			for ( int i = 0; i < Node.neighbourCount; i++ )
 			{
-				GroundNode A = flag.node.Neighbour( i ), B = flag.node.Neighbour( ( i + 1 ) % GroundNode.neighbourCount );
+				Node A = flag.node.Neighbour( i ), B = flag.node.Neighbour( ( i + 1 ) % Node.neighbourCount );
 				if ( A.road && A.road == B.road )
 				{
 					if ( A.road.ends[0] == flag || A.road.ends[1] == flag )
@@ -3089,7 +3089,7 @@ if ( cart )
 			itemCount.text = "Items delivered: " + worker.itemsDelivered;
 
 			if ( followTarget )
-				MoveTo( worker.transform.position + Vector3.up * GroundNode.size );
+				MoveTo( worker.transform.position + Vector3.up * Node.size );
 		}
 
 		public new void OnDestroy()
@@ -3460,23 +3460,23 @@ if ( cart )
 				var fullDistance = dif.magnitude;
 				var normalizedDif = dif / fullDistance;
 				materialUIPath.color = Color.green;
-				const float steps = GroundNode.size * 2;
+				const float steps = Node.size * 2;
 				var distance = (float)( Time.time - Math.Floor( Time.time ) ) * steps;
 				while ( distance < fullDistance )
 				{
-					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * GroundNode.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, 0 );
+					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * Node.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, 0 );
 					distance += steps;
 				}
 				materialUIPath.color = Color.white;
 			}
 		}
 
-		public bool OnMovingOverNode( GroundNode node )
+		public bool OnMovingOverNode( Node node )
 		{
 			return true;
 		}
 
-		public bool OnNodeClicked( GroundNode node )
+		public bool OnNodeClicked( Node node )
 		{
 			return false;	// Cancel?
 		}
@@ -3712,7 +3712,7 @@ if ( cart )
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
 		public WorkshopPanel currentBlueprintPanel;
-		public GroundNode currentNode;  // Node currently under the cursor
+		public Node currentNode;  // Node currently under the cursor
 		static GameObject marker;
 		public bool markEyePosition;
 
@@ -3945,13 +3945,13 @@ if ( cart )
 			if ( hiveObject is Ground.Block || hiveObject == ground )
 			{
 				Vector3 localPosition = ground.transform.InverseTransformPoint( hit.point );
-				return GroundNode.FromPosition( localPosition, ground );
+				return Node.FromPosition( localPosition, ground );
 			}
 			
 			return hiveObject;
 		}
 
-		public GroundNode FindNodeAt( Vector3 screenPosition )
+		public Node FindNodeAt( Vector3 screenPosition )
 		{
 			RaycastHit hit = new RaycastHit();
 			if ( camera == null )
@@ -3984,7 +3984,7 @@ if ( cart )
 				World.instance.ground.material.SetFloat( gridMaskXID, 10000 );
 				World.instance.ground.material.SetFloat( gridMaskZID, 10000 );
 			}
-			return GroundNode.FromPosition( lastMouseOnGround, ground );
+			return Node.FromPosition( lastMouseOnGround, ground );
 		}
 
 		public void OnPointerClick( PointerEventData eventData )
@@ -4010,7 +4010,7 @@ if ( cart )
 				UnityEngine.Debug.Log( "Clicked on nothing?" );
 				return;
 			}
-			var node = hiveObject as GroundNode;
+			var node = hiveObject as Node;
 			if ( node )
 			{
 				if ( !inputHandler.OnNodeClicked( node ) )
@@ -4166,18 +4166,18 @@ if ( cart )
 			List<int> possibleDirections = new List<int>();
 			if ( anyDirection )
 			{
-				for ( int i = 0; i < GroundNode.neighbourCount; i++ )
+				for ( int i = 0; i < Node.neighbourCount; i++ )
 					possibleDirections.Add( i );
 			}
 			else
 				possibleDirections.Add( currentFlagDirection );
 
-			GroundNode bestSite = null;
+			Node bestSite = null;
 			int bestDistance = int.MaxValue;
 			int bestFlagDirection = -1;
 			foreach ( var o in Ground.areas[Ground.maxArea - 1] )
 			{
-				GroundNode node = currentNode + o;
+				Node node = currentNode + o;
 				foreach ( int flagDirection in possibleDirections )
 				{
 					bool suitable = false;
@@ -4222,14 +4222,14 @@ if ( cart )
 			}
 		}
 
-		public bool OnMovingOverNode( GroundNode node )
+		public bool OnMovingOverNode( Node node )
 		{
 			if ( node != null )
 			{
 				if ( constructionMode == Construct.nothing )
 				{
 					CursorType t = CursorType.nothing;
-					GroundNode flagNode = node.Neighbour( currentFlagDirection );
+					Node flagNode = node.Neighbour( currentFlagDirection );
 					bool hasFlagAround = false, hasFlagAroundFlag = false;
 					foreach ( var o in Ground.areas[1] )
 						if ( node.Add( o ).flag != null )
@@ -4311,7 +4311,7 @@ if ( cart )
 				cursorTypes[(int)CursorType.direction0 + roadDirection].SetActive( true );
 		}
 
-		public bool OnNodeClicked( GroundNode node )
+		public bool OnNodeClicked( Node node )
 		{
 			if ( node.building )
 			{
@@ -4510,7 +4510,7 @@ if ( cart )
 
 			foreach ( var resource in sortedResources )
 			{
-				Text( resource.type.ToString().GetPrettyName() ).Link( scroll.content ).Pin( 30, row, 100 ).AddClickHandler( delegate { GroundNode node = resource.node; NodePanel.Create().Open( node, true ); } );
+				Text( resource.type.ToString().GetPrettyName() ).Link( scroll.content ).Pin( 30, row, 100 ).AddClickHandler( delegate { Node node = resource.node; NodePanel.Create().Open( node, true ); } );
 				Text( ( resource.gathered.age / 50 ).ToString() ).Link( scroll.content ).Pin( 130, row, 50 );
 				Text( resource.keepAway.inProgress ? "no" : "yes" ).Link( scroll.content ).Pin( 230, row, 30 );
 				row -= iconSize + 5;
@@ -5158,8 +5158,8 @@ if ( cart )
 
 	public interface IInputHandler
 	{
-		bool OnMovingOverNode( GroundNode node );
-		bool OnNodeClicked( GroundNode node );
+		bool OnMovingOverNode( Node node );
+		bool OnNodeClicked( Node node );
 		bool OnObjectClicked( HiveObject target );
 		void OnLostInput();
 	}

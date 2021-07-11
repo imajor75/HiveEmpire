@@ -10,15 +10,15 @@ public class Worker : HiveObject
 	public Type type;
 	public Ground ground;
 	public Player owner;
-	public GroundNode walkFrom;
-	public GroundNode walkTo;
+	public Node walkFrom;
+	public Node walkTo;
 	public Road walkBase;
 	public int walkBlock;
 	public bool walkBackward;
 	public float walkProgress;
 	public float standingHeight = 0;
 	public float speed = 1;
-	public GroundNode node;
+	public Node node;
 	[Obsolete( "Compatibility with old files", true )]
 	Item itemInHands { set { itemsInHands[0] = value; } }
 	public Item[] itemsInHands = new Item[2];
@@ -109,7 +109,7 @@ public class Worker : HiveObject
 		public int animation;
 		public GameObject toolTemplate;
 		public LinkType toolSlot;
-		public GroundNode.Type turnTo = GroundNode.Type.anything;
+		public Node.Type turnTo = Node.Type.anything;
 	}
 
 	public enum AnimationSound
@@ -200,12 +200,12 @@ public class Worker : HiveObject
 			if ( started )
 				return;
 
-			if ( act.turnTo != GroundNode.Type.anything )
+			if ( act.turnTo != Node.Type.anything )
 			{
 				foreach ( var c in Ground.areas[1] )
 				{
 					var n = boss.node.Add( c );
-					if ( n.type == GroundNode.Type.underWater )
+					if ( n.type == Node.Type.underWater )
 						boss.TurnTo( n );
 				}
 			}
@@ -373,7 +373,7 @@ public class Worker : HiveObject
 
 	public class WalkToNode : Task
 	{
-		public GroundNode target;
+		public Node target;
 		public Path path;
 		public bool ignoreFinalObstacle;
 		public HiveObject ignoreObject;
@@ -381,7 +381,7 @@ public class Worker : HiveObject
 		public World.Timer interruptionTimer;
 		public Act lastStepInterruption;
 
-		public void Setup( Worker boss, GroundNode target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null )
+		public void Setup( Worker boss, Node target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null )
 		{
 			base.Setup( boss );
 			this.target = target;
@@ -566,8 +566,8 @@ public class Worker : HiveObject
 
 	public class WalkToNeighbour : Task
 	{
-		public GroundNode target;
-		public void Setup( Worker boss, GroundNode target )
+		public Node target;
+		public void Setup( Worker boss, Node target )
 		{
 			base.Setup( boss );
 			this.target = target;
@@ -951,7 +951,7 @@ public class Worker : HiveObject
 			toolSlot = LinkType.rightHand,
 			timeToInterrupt = 1.0f,
 			duration = 500,
-			turnTo = GroundNode.Type.underWater
+			turnTo = Node.Type.underWater
 		};
 		resourceCollectAct[(int)Resource.Type.cornfield] = new Act
 		{
@@ -1083,7 +1083,7 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public Worker SetupAsAnimal( Resource origin, GroundNode node )
+	public Worker SetupAsAnimal( Resource origin, Node node )
 	{
 		look = type = Type.wildAnimal;
 		SetNode( node );
@@ -1104,7 +1104,7 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public void SetNode( GroundNode node )
+	public void SetNode( Node node )
 	{
 		this.node = node;
 		node.ground.Link( this, walkBase?.location );
@@ -1204,14 +1204,14 @@ public class Worker : HiveObject
 	}
 
 	// Distance the worker is taking in a single frame (0.02 sec)
-	public static float SpeedBetween( GroundNode a, GroundNode b )
+	public static float SpeedBetween( Node a, Node b )
 	{
 		float heightDifference = Math.Abs( a.height - b.height );
 		float time = 2f + heightDifference * 4f;    // Number of seconds it takes for the worker to reach the other node
 		return 1 / time / 50;
 	}
 
-	public void Walk( GroundNode target )
+	public void Walk( Node target )
 	{
 		assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
 		currentSpeed = speed * SpeedBetween( target, node );
@@ -1386,7 +1386,7 @@ public class Worker : HiveObject
 			var d = Ground.areas[1];
 			for ( int i = 0; i < d.Count; i++ )
 			{
-				GroundNode t = node.Add( d[(i+r)%d.Count] );
+				Node t = node.Add( d[(i+r)%d.Count] );
 				if ( t.IsBlocking( false ) )
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
@@ -1639,7 +1639,7 @@ public class Worker : HiveObject
 		ScheduleTask( instance );
 	}
 
-	public void ScheduleWalkToNeighbour( GroundNode target, bool first = false )
+	public void ScheduleWalkToNeighbour( Node target, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNeighbour>();
 		instance.Setup( this, target );
@@ -1655,7 +1655,7 @@ public class Worker : HiveObject
 	/// <param name="interruption"></param>
 	/// <param name="findPathNow"></param>
 	/// <returns>True, if a valid path is found.</returns>
-	public void ScheduleWalkToNode( GroundNode target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, HiveObject ignoreObject = null )
+	public void ScheduleWalkToNode( Node target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, HiveObject ignoreObject = null )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
 		instance.Setup( this, target, ignoreFinalObstacle, interruption, ignoreObject );
@@ -1676,7 +1676,7 @@ public class Worker : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleWalkToRoadNode( Road road, GroundNode target, bool exclusive = true, bool first = false )
+	public void ScheduleWalkToRoadNode( Road road, Node target, bool exclusive = true, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
 		instance.Setup( this, road, road.NodeIndex( target ), exclusive );
@@ -1778,7 +1778,7 @@ public class Worker : HiveObject
 	}
 
 	static readonly float[] angles = new float[6] { 210, 150, 90, 30, 330, 270 };
-	public void TurnTo( GroundNode node, GroundNode from = null )
+	public void TurnTo( Node node, Node from = null )
 	{
 		from ??= this.node;
 		int direction = from.DirectionTo( node );
@@ -1829,7 +1829,7 @@ public class Worker : HiveObject
 		}
 		else
 		{
-			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * GroundNode.size * Road.height;
+			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * Node.size * Road.height;
 			TurnTo( walkTo, walkFrom );
 		}
 
@@ -1848,7 +1848,7 @@ public class Worker : HiveObject
 						continue;
 					g.transform.Rotate( World.instance.timeFactor * currentSpeed * 300, 0, 0 );
 				}
-				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / GroundNode.size * -50, 0, 0 );
+				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Node.size * -50, 0, 0 );
 			}
 		}
 	}
@@ -1961,7 +1961,7 @@ public class Worker : HiveObject
 		}
 	}
 
-	public override GroundNode location { get { return node; } }
+	public override Node location { get { return node; } }
 
 	public override void DestroyThis( bool noAssert = false )
 	{

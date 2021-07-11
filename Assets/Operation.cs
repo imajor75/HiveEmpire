@@ -7,7 +7,7 @@ public class OperationHandler : HiveObject
 {
 	public List<Operation> undoQueue, redoQueue;
 
-    public override GroundNode location => throw new System.NotImplementedException();
+    public override Node location => throw new System.NotImplementedException();
 
     public void ExecuteOperation( Operation operation, bool doneAlready = false )
 	{
@@ -99,7 +99,7 @@ public class OperationHandler : HiveObject
 		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), true );
 	}
 
-	public void RegisterChangeArea( Ground.Area area, GroundNode oldCenter, int oldRadius )
+	public void RegisterChangeArea( Ground.Area area, Node oldCenter, int oldRadius )
 	{
         if ( area != null )
 		    ExecuteOperation( Operation.Create().SetupAsChangeArea( area, oldCenter, oldRadius ), true );
@@ -112,11 +112,11 @@ public class Operation : ScriptableObject
     public int workerCount;
     public Road road;
     public Building building;
-    public GroundNode location;
+    public Node location;
     public Workshop.Type workshopType;
     public BuildingType buildingType;
     public int direction;
-    public List<GroundNode> roadPath;
+    public List<Node> roadPath;
     public Flag flag;
     public bool crossing;
     public bool merge;
@@ -165,7 +165,7 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsCreateBuilding( GroundNode location, int direction, BuildingType buildingType, Workshop.Type workshopType = Workshop.Type.unknown )
+    public Operation SetupAsCreateBuilding( Node location, int direction, BuildingType buildingType, Workshop.Type workshopType = Workshop.Type.unknown )
     {
         type = Type.createBuilding;
         this.location = location;
@@ -185,7 +185,7 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsCreateRoad( List<GroundNode> path )
+    public Operation SetupAsCreateRoad( List<Node> path )
     {
         type = Type.createRoad;
         this.roadPath = path;
@@ -202,7 +202,7 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsCreateFlag( GroundNode location, bool crossing )
+    public Operation SetupAsCreateFlag( Node location, bool crossing )
     {
         type = Type.createFlag;
         this.location = location;
@@ -211,7 +211,7 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsChangeArea( Ground.Area area, GroundNode center, int radius )
+    public Operation SetupAsChangeArea( Ground.Area area, Node center, int radius )
     {
         type = Type.changeArea;
         this.area = area;

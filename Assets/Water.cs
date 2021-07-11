@@ -80,7 +80,7 @@ public class Water : MonoBehaviour
 				if ( x == 0 && y == 0 )
 					continue;
 
-				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * GroundNode.size, 0, y * ground.dimension * GroundNode.size ) + transform.position, Quaternion.identity, material, 0 );
+				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * Node.size, 0, y * ground.dimension * Node.size ) + transform.position, Quaternion.identity, material, 0 );
             }
         }
     }

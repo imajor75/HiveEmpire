@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 [System.Serializable]
-public class GroundNode : HiveObject
+public class Node : HiveObject
 {
 	public const float size = 1;
 	public const int neighbourCount = 6;
@@ -95,12 +95,12 @@ public class GroundNode : HiveObject
 	}
 
 
-	static public GroundNode Create()
+	static public Node Create()
 	{
-		return new GameObject().AddComponent<GroundNode>();
+		return new GameObject().AddComponent<Node>();
 	}
 
-	public GroundNode Setup( Ground ground, int x, int y )
+	public Node Setup( Ground ground, int x, int y )
 	{
 		this.ground = ground;
 		this.x = x;
@@ -109,7 +109,7 @@ public class GroundNode : HiveObject
 		if ( World.rnd.NextDouble() <= decorationDensity )
 		{
 			decorationPosition = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
-			decorationDirection = World.rnd.Next( GroundNode.neighbourCount );
+			decorationDirection = World.rnd.Next( Node.neighbourCount );
 			decorationType = World.rnd.Next( 1000000 );		// TODO not so nice
 			// At this moment we don't really know the count for the different decorations, so a big random number is generated. MediaTable is doing a %, so it is ok
 			// The reason why we use an upper limit here is to avoid the value -1, which is OK, but gives an assert fail
@@ -120,7 +120,7 @@ public class GroundNode : HiveObject
 
 	new public void Start()
 	{
-		name = "GroundNode (" + x + ", " + y + ")";
+		name = "Node (" + x + ", " + y + ")";
 		transform.SetParent( World.nodes.transform );
 		transform.localPosition = position;
 
@@ -183,7 +183,7 @@ public class GroundNode : HiveObject
 	/// </summary>
 	/// <param name="reference"></param>
 	/// <returns></returns>
-	public Vector3 GetPositionRelativeTo( GroundNode reference )
+	public Vector3 GetPositionRelativeTo( Node reference )
 	{
 		if ( reference )
 			return GetPositionRelativeTo( reference.position );
@@ -201,14 +201,14 @@ public class GroundNode : HiveObject
 	public Vector3 position { get { return GetPosition( x, y );	} }
 	public Vector3 positionInViewport { get { return GetPositionRelativeTo( World.instance.eye.position ); } }
 
-	public static GroundNode FromPosition( Vector3 position, Ground ground )
+	public static Node FromPosition( Vector3 position, Ground ground )
 	{
 		int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
 		int x = Mathf.FloorToInt( ( position.x - y * size / 2 + ( size / 2 ) ) / size );
 		return ground.GetNode( x + ground.dimension / 2, y + ground.dimension / 2 );
 	}
 
-	public int DirectionTo( GroundNode another )
+	public int DirectionTo( Node another )
 	{
 		int direction = -1;
 		for ( int i = 0; i < 6; i++ )
@@ -217,7 +217,7 @@ public class GroundNode : HiveObject
 		return direction;
 	}
 
-	public GroundNode Neighbour( int i )
+	public Node Neighbour( int i )
 	{
 		assert.IsTrue( i >= 0 && i < 6 );
 		return i switch
@@ -232,7 +232,7 @@ public class GroundNode : HiveObject
 		};
 	}
 
-	public int DistanceFrom( GroundNode o )
+	public int DistanceFrom( Node o )
 	{
 		int a = ground.dimension / 2;
 		int h = Mathf.Abs( x - o.x );
@@ -257,7 +257,7 @@ public class GroundNode : HiveObject
 		{
 			for ( int y = -size; y < size; y++ )
 			{
-				GroundNode n = ground.GetNode( this.x + x, this.y + y );
+				Node n = ground.GetNode( this.x + x, this.y + y );
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > World.rnd.Next( 100 ) )
@@ -295,7 +295,7 @@ public class GroundNode : HiveObject
 		return true;
 	}
 
-	public GroundNode Add( Ground.Offset o )
+	public Node Add( Ground.Offset o )
 	{
 		return ground.GetNode( x + o.x, y + o.y );
 	}
@@ -400,9 +400,9 @@ public class GroundNode : HiveObject
 		Validate( true );		// Be careful not to do circle validation to avoid infinite cycles
 	}
 
-	public override GroundNode location { get { return this; } }
+	public override Node location { get { return this; } }
 
-	public static GroundNode operator +( GroundNode node, Ground.Offset offset )
+	public static Node operator +( Node node, Ground.Offset offset )
 	{
 		return node.Add( offset );
 	}
