@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1998,7 +1998,10 @@ public class Interface : OperationHandler
 				foreach ( var s in workshop.statuses )
 					ProcessPastStatus( s );
 				if ( totalTicks == 0 )
+				{
+					Text( "Not enough data yet" ).Stretch().alignment = TextAnchor.MiddleCenter;
 					return;
+				}
 
 				statusList = new List<Workshop.Status>();
 				for ( int i = 0; i < ticksInStatus.Length; i++ )
