@@ -394,20 +394,20 @@ public class Interface : OperationHandler
 		{
 			if ( !viewport.ResetInputHandler() )
 			{
-				bool closedSomething = false;
 				bool isMainOpen = false;
+				Panel toClose = null;
 				for ( int i = panels.Count - 1; i >= 0; i-- )
 				{
 					if ( panels[i] as MainPanel )
 						isMainOpen = true;
 					if ( !panels[i].escCloses )
 						continue;
-					panels[panels.Count - 1].Close();
-					closedSomething = true;
-					break;
+					if ( toClose == null || toClose.transform.GetSiblingIndex() < panels[i].transform.GetSiblingIndex() )
+						toClose = panels[i];
 				}
-				if ( !closedSomething && !isMainOpen )
+				if ( toClose == null && !isMainOpen )
 					MainPanel.Create().Open();
+				toClose?.Close();
 			}
 		}
 		if ( GetKeyDown( KeyCode.M ) )
