@@ -6,16 +6,13 @@ using UnityEngine.Rendering.PostProcessing;
 [RequireComponent( typeof( Camera ), typeof( AudioListener ) )]
 public class Eye : HiveObject
 {
-	public float altitude = 4.0f;
-	public float targetAltitude = 4.0f;
-	static public float minAltitude = 2.0f;
-	static public float maxAltitude = 15.0f;
+	public float altitude = Constants.Eye.defaultAltitude;
+	public float targetAltitude = Constants.Eye.defaultAltitude;
 	[JsonIgnore]
-	public float viewDistance = 5.0f;
+	public float viewDistance = Constants.Eye.defaultViewDistance;
 	public World world;
 	public float x, y, height;
 	public float absoluteX, absoluteY;
-	public float forwardForGroundBlocks = 10;
 	public float direction;
 	public Vector3 autoMovement;
 	public bool rotateAround;
@@ -25,6 +22,9 @@ public class Eye : HiveObject
 	public float moveSensitivity;
 	[JsonIgnore]
 	public IDirector director;
+
+	[Obsolete( "Compatibility with old files", true )]
+	float forwardForGroundBlocks { set {} }
 
 	public static Eye Create()
 	{
@@ -76,7 +76,7 @@ public class Eye : HiveObject
 	{
 		get
 		{
-			return transform.position + transform.forward * forwardForGroundBlocks;
+			return transform.position + transform.forward * Constants.Eye.forwardForGroundBlocks;
 		}
 	}
 
@@ -88,7 +88,7 @@ public class Eye : HiveObject
 		if ( h < World.instance.waterLevel )
 			h = World.instance.waterLevel;
 		if ( height > 0 )
-			height += ( h - height ) * 0.04f;
+			height += ( h - height ) * Constants.Eye.heightFollowSpeed;
 		else
 			height = h;
 		var position = new Vector3( x, height, y );
@@ -98,11 +98,11 @@ public class Eye : HiveObject
 		if ( director == null )
 		{
 			director = null;
-			viewDistance = 5;
+			viewDistance = Constants.Eye.defaultViewDistance;
 		}
 		else
 		{
-			viewDistance = 2;
+			viewDistance = Constants.Eye.defaultViewDistanceWithDirector;
 			IDirector director = this.director;
 			director.SetCameraTarget( this );
 			this.director = director;
@@ -191,77 +191,77 @@ public class Eye : HiveObject
 	{
 		Vector3 movement = autoMovement;
 		if ( Interface.GetKey( KeyCode.A ) )
-			movement += Move( -0.1f, 0 );
+			movement += Move( -Constants.Eye.moveSpeed, 0 );
 		if ( Interface.GetKey( KeyCode.D ) )
-			movement += Move( 0.1f, 0 );
+			movement += Move( Constants.Eye.moveSpeed, 0 );
 		if ( Interface.GetKey( KeyCode.W ) )
-			movement += Move( 0, 0.13f );
+			movement += Move( 0, Constants.Eye.moveSpeed * 1.3f );
 		if ( Interface.GetKey( KeyCode.S ) )
-			movement += Move( 0, -0.13f );
+			movement += Move( 0, -Constants.Eye.moveSpeed * 1.3f );
 		x += movement.x;
 		y += movement.z;
 
-		if ( y < -World.instance.ground.dimension * Node.size / 2 )
+		if ( y < -World.instance.ground.dimension * Constants.Node.size / 2 )
 		{
-			y += World.instance.ground.dimension * Node.size;
-			x += World.instance.ground.dimension * Node.size / 2;
-			absoluteY -= World.instance.ground.dimension * Node.size;
-			absoluteX -= World.instance.ground.dimension * Node.size / 2;
+			y += World.instance.ground.dimension * Constants.Node.size;
+			x += World.instance.ground.dimension * Constants.Node.size / 2;
+			absoluteY -= World.instance.ground.dimension * Constants.Node.size;
+			absoluteX -= World.instance.ground.dimension * Constants.Node.size / 2;
 		}
-		if ( y > World.instance.ground.dimension * Node.size / 2 )
+		if ( y > World.instance.ground.dimension * Constants.Node.size / 2 )
 		{
-			y -= World.instance.ground.dimension * Node.size;
-			x -= World.instance.ground.dimension * Node.size / 2;
-			absoluteY += World.instance.ground.dimension * Node.size;
-			absoluteX += World.instance.ground.dimension * Node.size / 2;
+			y -= World.instance.ground.dimension * Constants.Node.size;
+			x -= World.instance.ground.dimension * Constants.Node.size / 2;
+			absoluteY += World.instance.ground.dimension * Constants.Node.size;
+			absoluteX += World.instance.ground.dimension * Constants.Node.size / 2;
 		}
-		if ( x < -World.instance.ground.dimension * Node.size / 2 + y / 2 )
+		if ( x < -World.instance.ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
-			x += World.instance.ground.dimension * Node.size;
-			absoluteX -= World.instance.ground.dimension * Node.size;
+			x += World.instance.ground.dimension * Constants.Node.size;
+			absoluteX -= World.instance.ground.dimension * Constants.Node.size;
 		}
-		if ( x > World.instance.ground.dimension * Node.size / 2 + y / 2 )
+		if ( x > World.instance.ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
-			x -= World.instance.ground.dimension * Node.size;
-			absoluteX += World.instance.ground.dimension * Node.size;
+			x -= World.instance.ground.dimension * Constants.Node.size;
+			absoluteX += World.instance.ground.dimension * Constants.Node.size;
 		}
 
 		if ( Interface.GetKey( KeyCode.Q ) )
 		{
 			rotateAround = false;
-			direction += 0.03f;
+			direction += Constants.Eye.rotateSpeed;
 		}
 		if ( Interface.GetKey( KeyCode.E ) )
 		{
 			rotateAround = false;
-			direction -= 0.03f;
+			direction -= Constants.Eye.rotateSpeed;
 		}
 		if ( rotateAround )
-			direction += 0.001f;
+			direction += Constants.Eye.autoRotateSpeed;
 		if ( direction >= Math.PI * 2 )
 			direction -= (float)Math.PI * 2;
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
 
 		if ( Interface.GetKey( KeyCode.Z ) && !Interface.GetKey( KeyCode.LeftControl ) && !Interface.GetKey( KeyCode.RightControl ) )
-			targetAltitude *= 1.01f;
+			targetAltitude *= Constants.Eye.altitudeChangeSpeed;
 		if ( Interface.GetKey( KeyCode.X ) )
-			targetAltitude *= 0.99f;
+			targetAltitude /= Constants.Eye.altitudeChangeSpeed;
 		if ( camera.enabled && Interface.root.viewport.mouseOver )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
-				targetAltitude += 0.5f;
+				targetAltitude += Constants.Eye.altitudeChangeSpeedWithMouseWheel;
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
-				targetAltitude -= 0.5f;
+				targetAltitude -= Constants.Eye.altitudeChangeSpeedWithMouseWheel;
 			moveSensitivity = targetAltitude / 6;
 		}
-		if ( targetAltitude < minAltitude )
-			targetAltitude = minAltitude;
-		if ( targetAltitude > maxAltitude )
-			targetAltitude = maxAltitude;
+		if ( targetAltitude < Constants.Eye.minAltitude )
+			targetAltitude = Constants.Eye.minAltitude;
+		if ( targetAltitude > Constants.Eye.maxAltitude )
+			targetAltitude = Constants.Eye.maxAltitude;
 
 
-		altitude += ( targetAltitude - altitude ) * 0.1f;
+		altitude += ( targetAltitude - altitude ) * Constants.Eye.altitudeSmoothness;
 	}
 
 	public interface IDirector

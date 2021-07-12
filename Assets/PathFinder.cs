@@ -154,7 +154,7 @@ public class PathFinder : ScriptableObject
 		}
 		else
 		{
-			for ( int i = 0; i < Node.neighbourCount; i++ )
+			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 			{
 				Node t = r.node.Neighbour( i );
 				VisitNode( t, r.costG + 0.01f/Worker.SpeedBetween( r.node, t ), r ); // TODO cost should depend on steepness of the road

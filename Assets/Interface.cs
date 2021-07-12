@@ -459,7 +459,7 @@ public class Interface : OperationHandler
 		}
 
 		highlightVolume.transform.localPosition = highlightVolumeCenter.GetPositionRelativeTo( viewport.visibleAreaCenter );
-		float scale = ( highlightVolumeRadius + 0.5f ) * Node.size;
+		float scale = ( highlightVolumeRadius + 0.5f ) * Constants.Node.size;
 		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
 		Destroy( highlightVolume.GetComponent<MeshCollider>() );
 		highlightVolume.AddComponent<MeshCollider>();
@@ -467,9 +467,9 @@ public class Interface : OperationHandler
 
 	void CreateHighLightVolumeMesh( Mesh m )
 	{
-		var vertices = new Vector3[Node.neighbourCount * 2];
+		var vertices = new Vector3[Constants.Node.neighbourCount * 2];
 		var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
-		for ( int i = 0; i < Node.neighbourCount; i++ )
+		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 		{
 			float x = corners[i, 0] - corners[i, 1] / 2f;
 			float y = corners[i, 1];
@@ -478,12 +478,12 @@ public class Interface : OperationHandler
 		}
 		m.vertices = vertices;
 
-		var triangles = new int[Node.neighbourCount * 2 * 3 + 2 * 3 * (Node.neighbourCount - 2)];
-		for ( int i = 0; i < Node.neighbourCount; i++ )
+		var triangles = new int[Constants.Node.neighbourCount * 2 * 3 + 2 * 3 * (Constants.Node.neighbourCount - 2)];
+		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 		{
 			int a = i * 2;
 			int b = i * 2 + 2;
-			if ( b == Node.neighbourCount * 2 )
+			if ( b == Constants.Node.neighbourCount * 2 )
 				b = 0;
 
 			triangles[i * 2 * 3 + 0] = a + 0;
@@ -494,8 +494,8 @@ public class Interface : OperationHandler
 			triangles[i * 2 * 3 + 4] = b + 1;
 			triangles[i * 2 * 3 + 5] = b + 0;
 		}
-		assert.AreEqual( Node.neighbourCount, 6 );
-		int cap = Node.neighbourCount * 6;
+		assert.AreEqual( Constants.Node.neighbourCount, 6 );
+		int cap = Constants.Node.neighbourCount * 6;
 		triangles[cap++] = 0;
 		triangles[cap++] = 2;
 		triangles[cap++] = 10;
@@ -1216,7 +1216,7 @@ public class Interface : OperationHandler
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.location.GetPositionRelativeTo( root.world.eye.position ) + Vector3.up * Node.size );
+			MoveTo( target.location.GetPositionRelativeTo( root.world.eye.position ) + Vector3.up * Constants.Node.size );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -1225,7 +1225,7 @@ public class Interface : OperationHandler
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * Node.size );
+				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * Constants.Node.size );
 			screenPosition.y -= Screen.height;
 			if ( transform is RectTransform t )
 			{
@@ -2430,7 +2430,7 @@ public class Interface : OperationHandler
 
 		void AddTree()
 		{
-			Resource.Create().Setup( node, Resource.Type.tree )?.life.Start( -2 * Resource.treeGrowthMax );
+			Resource.Create().Setup( node, Resource.Type.tree )?.life.Start( -2 * Constants.Resource.treeGrowthTime );
 		}
 
 		void AddCave()
@@ -2743,8 +2743,8 @@ public class Interface : OperationHandler
 	public class FlagPanel : Panel
 	{
 		public Flag flag;
-		public ItemImage[] items = new ItemImage[Flag.maxItems];
-		public Image[] itemTimers = new Image[Flag.maxItems];
+		public ItemImage[] items = new ItemImage[Constants.Flag.maxItems];
+		public Image[] itemTimers = new Image[Constants.Flag.maxItems];
 		public Image shovelingIcon, convertIcon;
 
 		public static FlagPanel Create()
@@ -2770,7 +2770,7 @@ public class Interface : OperationHandler
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).Pin( 65, -45 ).AddClickHandler( Flatten );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).Pin( 85, -45 ).AddClickHandler( Convert );
 
-			for ( int i = 0; i < Flag.maxItems; i++ )
+			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
 				itemTimers[i] = Image().Pin( col, -8, iconSize, 3 );
 				items[i] = ItemIcon().Pin( col, -13 );
@@ -2804,9 +2804,9 @@ public class Interface : OperationHandler
 
 		void CaptureRoads()
 		{
-			for ( int i = 0; i < Node.neighbourCount; i++ )
+			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 			{
-				Node A = flag.node.Neighbour( i ), B = flag.node.Neighbour( ( i + 1 ) % Node.neighbourCount );
+				Node A = flag.node.Neighbour( i ), B = flag.node.Neighbour( ( i + 1 ) % Constants.Node.neighbourCount );
 				if ( A.road && A.road == B.road )
 				{
 					if ( A.road.ends[0] == flag || A.road.ends[1] == flag )
@@ -2835,7 +2835,7 @@ public class Interface : OperationHandler
 			base.Update();
 
 			// TODO Skip empty slots
-			for ( int i = 0; i < Flag.maxItems; i++ )
+			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
 				items[i].SetItem( flag.items[i] );
 				itemTimers[i].enabled = false;
@@ -3057,7 +3057,7 @@ public class Interface : OperationHandler
 						var massDeliver = worker.FindTaskInQueue<Stock.DeliverStackTask>();
 						if ( massDeliver )
 						{
-							status.text = $"Transporting {Stock.Cart.capacity}";
+							status.text = $"Transporting {Constants.Stock.cartCapacity}";
 							statusImage1.SetType( (worker as Stock.Cart).itemType );
 							targetObject = massDeliver.stock;
 							break;
@@ -3089,7 +3089,7 @@ if ( cart )
 			itemCount.text = "Items delivered: " + worker.itemsDelivered;
 
 			if ( followTarget )
-				MoveTo( worker.transform.position + Vector3.up * Node.size );
+				MoveTo( worker.transform.position + Vector3.up * Constants.Node.size );
 		}
 
 		public new void OnDestroy()
@@ -3460,11 +3460,11 @@ if ( cart )
 				var fullDistance = dif.magnitude;
 				var normalizedDif = dif / fullDistance;
 				materialUIPath.color = Color.green;
-				const float steps = Node.size * 2;
+				const float steps = Constants.Node.size * 2;
 				var distance = (float)( Time.time - Math.Floor( Time.time ) ) * steps;
 				while ( distance < fullDistance )
 				{
-					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * Node.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, 0 );
+					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * Constants.Node.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, 0 );
 					distance += steps;
 				}
 				materialUIPath.color = Color.white;
@@ -4166,7 +4166,7 @@ if ( cart )
 			List<int> possibleDirections = new List<int>();
 			if ( anyDirection )
 			{
-				for ( int i = 0; i < Node.neighbourCount; i++ )
+				for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 					possibleDirections.Add( i );
 			}
 			else
@@ -4175,7 +4175,7 @@ if ( cart )
 			Node bestSite = null;
 			int bestDistance = int.MaxValue;
 			int bestFlagDirection = -1;
-			foreach ( var o in Ground.areas[Ground.maxArea - 1] )
+			foreach ( var o in Ground.areas[Constants.Ground.maxArea - 1] )
 			{
 				Node node = currentNode + o;
 				foreach ( int flagDirection in possibleDirections )
@@ -4851,7 +4851,7 @@ if ( cart )
 				Vector3[] corners = new Vector3[4];
 				chart.rectTransform.GetWorldCorners( corners );
 				var cursorInsideChart = Input.mousePosition - corners[0];
-				int ticks = Player.productivityUpdateTime * (int)( corners[2].x - Input.mousePosition.x );
+				int ticks = Constants.Player.productivityUpdateTime * (int)( corners[2].x - Input.mousePosition.x );
 				var hours = ticks / 60 / 60 / 50;
 				string time = $"{(ticks/60/50)%60} minutes ago";
 				if ( hours > 1 )
@@ -4919,11 +4919,11 @@ if ( cart )
 				for ( int x = 0; x < t.width; x++ )
 					t.SetPixel( x, y, c );
 			}
-			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Player.productivityUpdateTime;
+			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Constants.Player.productivityUpdateTime;
 			while ( xh >= 0 )
 			{
 				VerticalLine( xh, Color.grey );
-				xh -= World.hourTickCount / Player.productivityUpdateTime;
+				xh -= World.hourTickCount / Constants.Player.productivityUpdateTime;
 			}
 
 			int recordColumn = t.width - ( a.data.Count - a.recordIndex );

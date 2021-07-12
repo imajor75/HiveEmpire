@@ -6,24 +6,19 @@ using UnityEngine;
 public class Resource : HiveObject
 {
 	public Node node;
-	public bool underGround;
 	public Type type;
 	public World.Timer life;
-	[Obsolete( "Compatibility with old files", true )]
-	World.Timer exposed;
 	public int charges = 1;
 	public bool infinite;
-	GameObject body;
 	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
 	public World.Timer gathered;
 	public World.Timer keepAway;
 	public World.Timer spawn;
 	public Worker hunter;
 	public List<Worker> animals = new List<Worker>();
-	public const int treeGrowthMax = 15000;    // 5 minutes
-	public const int cornfieldGrowthMax = 20000;
-	public const int animalSpawnTime = 1000;
 	public World.Timer silence;
+
+	GameObject body;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
@@ -49,6 +44,18 @@ public class Resource : HiveObject
 			};
 		}
 	}
+	public bool underGround
+	{
+		get
+		{
+			return IsUnderGround( type );
+		}
+		[Obsolete( "Compatibility with old files", true )]
+		set {}
+	}
+
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer exposed;
 
 	public enum Type
 	{
@@ -102,10 +109,10 @@ public class Resource : HiveObject
 		Resource.meshes.Fill( meshes );
 
 		object[] sounds = {
-			"bird1", 60000, Type.tree,
-			"bird2", 60000, Type.tree,
-			"bird3", 60000, Type.tree,
-			"bird4", 60000, Type.tree };
+			"bird1", Constants.Resource.treeSoundTime, Type.tree,
+			"bird2", Constants.Resource.treeSoundTime, Type.tree,
+			"bird3", Constants.Resource.treeSoundTime, Type.tree,
+			"bird4", Constants.Resource.treeSoundTime, Type.tree };
 		ambientSounds.fileNamePrefix = "effects/";
 		ambientSounds.Fill( sounds );
 	}
@@ -122,8 +129,6 @@ public class Resource : HiveObject
 
 	public Resource Setup( Node node, Type type, int charges = -1 )
 	{
-		underGround = IsUnderGround( type );
-
 		if ( charges < 1 )
 		{
 			if ( underGround || type == Type.fish )
@@ -211,7 +216,7 @@ public class Resource : HiveObject
 	{
 		if ( type == Type.cornfield )
 		{
-			float growth = (float)life.age / cornfieldGrowthMax;
+			float growth = (float)life.age / Constants.Resource.cornfieldGrowthTime;
 			if ( node.type != Node.Type.grass )
 				growth /= 2;
 			if ( growth > 1 )
@@ -221,7 +226,7 @@ public class Resource : HiveObject
 		}
 		if ( type == Type.tree )
 		{
-			float size = (float)life.age / treeGrowthMax;
+			float size = (float)life.age / Constants.Resource.treeGrowthTime;
 			if ( node.type != Node.Type.forest )
 				size /= 2;
 			size = Math.Max( size, 0.1f );
@@ -250,7 +255,7 @@ public class Resource : HiveObject
 				else
 					assert.Fail();
 			}
-			spawn.Start( animalSpawnTime );
+			spawn.Start( Constants.Resource.animalSpawnTime );
 		}
 		if ( silence.done || silence.empty )
 		{
@@ -308,14 +313,14 @@ public class Resource : HiveObject
 		if ( type == Type.tree )
 		{
 			if ( node.type == Node.Type.forest )
-				return life.age > treeGrowthMax;
-			return life.age > treeGrowthMax * 2;
+				return life.age > Constants.Resource.treeGrowthTime;
+			return life.age > Constants.Resource.treeGrowthTime * 2;
 		}
 		if ( type == Type.cornfield )
 		{
 			if ( node.type == Node.Type.grass )
-				return life.age > cornfieldGrowthMax;
-			return life.age > cornfieldGrowthMax * 2;
+				return life.age > Constants.Resource.cornfieldGrowthTime;
+			return life.age > Constants.Resource.cornfieldGrowthTime * 2;
 		}
 		return true;
 	}

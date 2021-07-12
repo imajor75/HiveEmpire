@@ -8,10 +8,9 @@ public class Ground : HiveObject
 	public World world;
 	public int dimension;
 	public Node[] nodes;
-	public static int maxArea = 10;
-	public static List<Offset>[] areas = new List<Offset>[maxArea];
+	public static List<Offset>[] areas = new List<Offset>[Constants.Ground.maxArea];
 	[Range(0.0f, 1.0f)]
-	public float sharpRendering = 0.5f;
+	public float sharpRendering = Constants.Ground.defaultSharpRendering;
 	public List<Block> blocks = new List<Block>();
 	public Material material;
 
@@ -143,9 +142,9 @@ public class Ground : HiveObject
 		for ( int i = 0; i < areas.Length; i++ )
 			areas[i] = new List<Offset>();
 
-		for ( int x = -maxArea; x < maxArea; x++ )
+		for ( int x = -Constants.Ground.maxArea; x < Constants.Ground.maxArea; x++ )
 		{
-			for ( int y = -maxArea; y < maxArea; y++ )
+			for ( int y = -Constants.Ground.maxArea; y < Constants.Ground.maxArea; y++ )
 			{
 				if ( x == 0 && y == 0 )
 					continue;
@@ -154,7 +153,7 @@ public class Ground : HiveObject
 				int d = Mathf.Abs( x + y );
 
 				int distance = Mathf.Max( h, Mathf.Max( v, d ) );
-				for ( int j = 1; j < maxArea; j++ )
+				for ( int j = 1; j < Constants.Ground.maxArea; j++ )
 				{
 					if ( distance > j )
 						continue;
@@ -207,7 +206,7 @@ public class Ground : HiveObject
 				if ( x == 0 && y == 0 )
 					continue;
 				foreach ( var block in blocks )
-					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Node.size, 0, y * dimension * Node.size ) + block.transform.position, Quaternion.identity, material, 0 );
+					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, 0 );
 			}
 		}
 	}
@@ -301,7 +300,7 @@ public class Ground : HiveObject
 						touched[i].influence = influence;
 						touched[i].owner = building.owner;
 					}
-					for ( int j = 0; j < Node.neighbourCount; j++ )
+					for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 					{
 						Node neighbour = touched[i].Neighbour( j );
 						if ( neighbour.index >= 0 && neighbour.index < touched.Count && touched[neighbour.index] == neighbour )
@@ -315,7 +314,7 @@ public class Ground : HiveObject
 
 		foreach ( var node in nodes )
 		{
-			for ( int j = 0; j < Node.neighbourCount; j++ )
+			for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 			{
 				Node neighbour = node.Neighbour( j );
 				if ( node.owner == neighbour.owner )
@@ -651,17 +650,17 @@ public class Ground : HiveObject
 		public void UpdateOffset( Vector3 camera )
 		{
 			var thisPosition = center.position;
-			float limit = boss.dimension / 2 * Node.size;
+			float limit = boss.dimension / 2 * Constants.Node.size;
 			int xo = 0, yo = 0;
 			if ( camera.z - thisPosition.z > limit )
 				yo = 1;
 			if ( thisPosition.z - camera.z > limit )
 				yo = -1;
-			if ( camera.x - thisPosition.x - Node.size * boss.dimension / 2 * yo > limit )
+			if ( camera.x - thisPosition.x - Constants.Node.size * boss.dimension / 2 * yo > limit )
 				xo = 1;
-			if ( thisPosition.x - camera.x + Node.size * boss.dimension / 2 * yo > limit )
+			if ( thisPosition.x - camera.x + Constants.Node.size * boss.dimension / 2 * yo > limit )
 				xo = -1;
-			transform.localPosition = new Vector3( Node.size * boss.dimension / 2 * ( xo * 2 + yo ), 0, Node.size * boss.dimension * yo );
+			transform.localPosition = new Vector3( Constants.Node.size * boss.dimension / 2 * ( xo * 2 + yo ), 0, Constants.Node.size * boss.dimension * yo );
 		}
 	}
 }

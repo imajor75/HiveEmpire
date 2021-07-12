@@ -6,9 +6,7 @@ using UnityEngine.UI;
 public class Map : Interface.Panel
 {
 	public MapImage content;
-	static public float zoom = 6f;
-	const float zoomMin = 1;
-	const float zoomMax = 20;
+	static public float zoom = Constants.Map.defaultZoom;
 	public bool fullScreen;
 
 	static public Map Create()
@@ -40,17 +38,17 @@ public class Map : Interface.Panel
 		base.Update();
 
 		if ( Interface.GetKey( KeyCode.KeypadPlus ) )
-			zoom *= 0.97f;
+			zoom /= 1 + Constants.Map.zoomSpeed;
 		if ( Interface.GetKey( KeyCode.KeypadMinus ) )
-			zoom *= 1.03f;
+			zoom *= 1 + Constants.Map.zoomSpeed;
 		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 && fullScreen )
-			zoom *= 0.82f;
+			zoom /= 1 + Constants.Map.zoomSpeedWithMouseWheel;
 		if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 && fullScreen )
-			zoom *= 1.2f;
-		if ( zoom < zoomMin )
-			zoom = zoomMin;
-		if ( zoom > zoomMax )
-			zoom = zoomMax;
+			zoom *= 1 + Constants.Map.zoomSpeedWithMouseWheel;
+		if ( zoom < Constants.Map.zoomMin )
+			zoom = Constants.Map.zoomMin;
+		if ( zoom > Constants.Map.zoomMax )
+			zoom = Constants.Map.zoomMax;
 		if ( Interface.GetKeyDown( KeyCode.Return ) )
 		{
 			fullScreen = !fullScreen;

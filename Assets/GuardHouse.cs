@@ -8,8 +8,8 @@ public class GuardHouse : Building
 	// Somehow they are offset, but they are linked to the correct block.
 	// TODO They are completely built even before the construction
 	public List<Worker> soldiers = new List<Worker>();
+	public int influence = Constants.GuardHouse.defaultInfluence;
 	public bool ready;
-	public int influence = 8;
 	public static GameObject template;
 	static readonly Configuration guardHouseConfiguration = new Configuration();
 

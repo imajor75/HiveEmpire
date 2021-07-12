@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class HeightMap
 {
-	public int sizeX = 513, sizeY = 513, size = 9;
+	public int sizeX = ( 1 << Constants.HeightMap.defaultSize ) + 1, sizeY = ( 1 << Constants.HeightMap.defaultSize ) + 1, size = Constants.HeightMap.defaultSize;
 	public System.Random random;
 	[JsonIgnore]
 	public float[,] data;
@@ -15,33 +15,33 @@ public class HeightMap
 
 	public class Settings : ScriptableObject
 	{
-		public int mapSize = 9;
-		public bool tileable = true;
-		public bool island = false;
+		public int mapSize = Constants.HeightMap.defaultSize;
+		public bool tileable = Constants.HeightMap.defaultTileable;
+		public bool island = Constants.HeightMap.defaultIsland;
 
 		[Range(0.0f, 1.0f)]
-		public float borderLevel = 0.5f;
+		public float borderLevel = Constants.HeightMap.defaultBorderLevel;
 
 		[Range(0.0f, 4.0f)]
-		public float randomness = 1.2f;
+		public float randomness = Constants.HeightMap.defaultRandomness;
 		[Range(-1.0f, 1.0f)]
-		public float noise = -0.15f;
+		public float noise = Constants.HeightMap.defaultNoise;
 		[Range(-1.0f, 1.0f)]
-		public float randomnessDistribution = -0.3f;
+		public float randomnessDistribution = Constants.HeightMap.defaultRandomnessDistribution;
 
-		public bool normalize = true;
+		public bool normalize = Constants.HeightMap.defaultNormalize;
 		[Range(-1.0f, 1.0f)]
-		public float adjustment = 0;
+		public float adjustment = Constants.HeightMap.defaultAdjustment;
 
 		[Range(0.5f, 1.5f)]
-		public float squareDiamondRatio = 1;
+		public float squareDiamondRatio = Constants.HeightMap.defaultSquareDiamondRatio;
 	}
 
 	Settings settings;
 
 	public static HeightMap Create()
 	{
-		return new HeightMap();	;
+		return new HeightMap();
 	}
 
 	public void Setup( Settings settings, int seed )

@@ -8,13 +8,14 @@ using UnityEngine;
 
 public abstract class HiveObject : MonoBehaviour
 {
+	public bool blueprintOnly;
+	public bool inactive;
+	
 	[JsonIgnore]
 	public Assert assert;
-	public bool blueprintOnly;
 	static System.Random idSource = new System.Random();
 	public int id = idSource.Next();		// Only to help debugging
 	public bool noAssert;
-	public bool inactive;
 
 	public HiveObject()
 	{

@@ -27,7 +27,6 @@ public class Item : HiveObject
 	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag (Still could be waiting at a flag, but has an associated worker). It is also possible that this is null, but the item is in the hand of a worker. That happens when the item is on the last road of its path, and the worker will deliver it into a building, and not a flag.
 	public Worker worker;		// If this is a valid reference, the item has a worker who promised to come and pick it up. Other workers will not care about the item, when it already has an associated worker.
 	public Type type;
-	public Ground ground;
 	public Path path;			// This is the current path of the item leading to the destination. The next road in this path is starting at the current flag, and the last road on this path is using the final flag. This member might be null at any point, if the previous path was destroyed for some reason (for example because the player did remove a road)
 	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;	// This member shows the priority of the current order the item is fulfilling, so the destination member should not be zero. If this priority is low, the item keeps offering itself at higher priorities, so it is possible that the item changes its destination while on the way to the previous one. (for example a log is carried to a stock, but meanwhile a sawmill requests a new one)
 	public Building destination;	// The current destination of the item. This could be null at any point, if the item is not needed anywhere. The game is trying to avoid it, so buildings are only spitting out items if they know that the item is needed somewhere, but the player might remove the destination building at any time. The current destination can change also if the game finds a better use for the item, except on the last road, where the item is not offered, even if it is delivered to a stock.
@@ -51,7 +50,14 @@ public class Item : HiveObject
 						// 		free slot at the flag, but replace another item. B.buddy is null, cleared in Flag.ReleaseItem
 						// 3. A is already delivered, the worker is now carrying B as normal. Both A.buddy and B.buddy is null. The latter got cleared in Flag.FinalizeItem
 	public int index = -1;
-	public static bool creditOnRemove = true;
+
+	public Ground ground
+	{
+		get { return World.instance.ground; }
+		[Obsolete( "Compatibility for old files", true )]
+		set {}
+	}
+
 	public GameObject body;
 
 	[JsonIgnore]
@@ -138,7 +144,6 @@ public class Item : HiveObject
 	{
 		this.origin = origin;
 		life.Start();
-		ground = origin.ground;
 		owner = origin.owner;
 		justCreated = true;
 		transform.SetParent( World.itemsJustCreated.transform, false );
@@ -369,7 +374,7 @@ public class Item : HiveObject
 		};
 		CancelTrip();
 		owner.UnregisterItem( this );
-		if ( creditOnRemove )
+		if ( Constants.Item.creditOnRemove )
 			owner.mainBuilding.content[(int)type]++;
 		DestroyThis();
 		return true;

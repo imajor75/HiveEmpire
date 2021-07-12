@@ -14,31 +14,40 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
 	public float progress;
 	public bool working;
-	[Obsolete( "Compatibility with old files", true )]
-	bool soldierWasCreatedLastTime;	// Only used by the barack
 	new public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
-	public Transform millWheel;
 	public float millWheelSpeed = 0;
 	public Node resourcePlace;
+	public Mode mode = Mode.whenNeeded;
 	public int itemsProduced;
 	public World.Timer resting;
 	public Productivity productivity = new Productivity( 0.5f );
+	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
+	public Status currentStatus = Status.unknown;
+	public World.Timer statusDuration;
+	
+	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
+	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
+
+	public static Configuration[] configurations;
+	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> processingSounds;
+	static Texture2D mapIndicatorTexture;
+	
+	ParticleSystem smoke;
+	public Transform millWheel;
+
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
-	static Texture2D mapIndicatorTexture;
-	public const int pasturingTime = 100;
-	public const float pasturingPrayChance = 0.2f;  
-	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
-	public static Configuration[] configurations;
-	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
-	
-	static MediaTable<GameObject, Type> looks;
-	public static int mineOreRestTime = 8000;
-	public static int fishRestTime = 8000;
-	ParticleSystem smoke;
-	public Mode mode = Mode.whenNeeded;
+
+	[Obsolete( "Compatibility with old files", true )]
+	List<PastStatus> previousPastStatuses { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	bool soldierWasCreatedLastTime;	// Only used by the barack
+	[Obsolete( "Compatibility with old files", true )]
+	List<PastStatus> pastStatuses { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int savedStatusTicks { set {} }	
 
 	public enum Mode
 	{
@@ -55,20 +64,20 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public class Input
 		{
 			public Item.Type itemType;
-			public int bufferSize = 6;
+			public int bufferSize = Constants.Workshop.defaultBufferSize;
 			public int stackSize = 1;
 		}
 		public Type type;
 
 		public Resource.Type gatheredResource = Resource.Type.unknown;
-		public int gatheringRange = 6;
+		public int gatheringRange = Constants.Workshop.defaultGatheringRange;
 
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
-		public int productionTime = 1500;
-		public int relaxSpotCountNeeded = 20;
-		public int maxRestTime = 3000;
-		public int outputMax = 6;
+		public int productionTime = Constants.Workshop.defaultProductionTime;
+		public int relaxSpotCountNeeded = Constants.Workshop.defaultRelaxSpotNeeded;
+		public int maxRestTime = Constants.Workshop.defaultMaxRestTime;
+		public int outputMax = Constants.Workshop.defaultOutputMax;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }
@@ -100,24 +109,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public int startTime;
 	}
 
-	[Obsolete( "Compatibility with old files", true )]
-	List<PastStatus> pastStatuses { set {} }
-	List<PastStatus> previousPastStatuses { set {} }
-	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
-	public Status currentStatus = Status.unknown;
-	public World.Timer statusDuration;
-	public const int maxSavedStatusTime = 50 * 60 * 60 * 10;
-	[Obsolete( "Compatibility with old files", true )]
-	int savedStatusTicks { set {} }	
-
 	public struct Productivity
 	{
 		public Productivity( float current )
 		{
 			this.current = current;
 			workCounter = 0;
-			weight = 0.05f;
-			timinglength = 300;
+			weight = Constants.Workshop.productivityWeight;
+			timinglength = Constants.Workshop.productivityTimingLength;
 			timer.reference = 0;
 		}
 		public void FixedUpdate( Workshop boss )
@@ -145,18 +144,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public class Buffer
 	{
 		public Buffer() { }
-		public Buffer( Item.Type itemType = Item.Type.unknown, int size = 6 )
+		public Buffer( Item.Type itemType = Item.Type.unknown, int size = Constants.Workshop.defaultBufferSize )
 		{
 			this.itemType = itemType;
 			this.size = size;
 		}
 		public Item.Type itemType;
-		public int size = 6;
+		public int size = Constants.Workshop.defaultBufferSize;
 		public int stackSize = 1;
 		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
 		public int stored;
 		public int onTheWay;
-		public int important = 3;
+		public int important = Constants.Workshop.defaultImportantInBuffer;
 		public Ground.Area area = new Ground.Area();
 		public Player.InputWeight weight;
 	}
@@ -253,9 +252,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 				else
 				{
 					if ( resource.underGround )
-						resource.keepAway.Start( mineOreRestTime );
+						resource.keepAway.Start( Constants.Workshop.mineOreRestTime );
 					if ( resource.type == Resource.Type.fish )
-						resource.keepAway.Start( fishRestTime );
+						resource.keepAway.Start( Constants.Workshop.fishRestTime );
 				}
 			}
 			else
@@ -323,7 +322,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( pasturingTimer.empty )
 			{
 				resource = Resource.Create().SetupAsPrey( boss );
-				pasturingTimer.Start( pasturingTime );
+				pasturingTimer.Start( Constants.Workshop.pasturingTime );
 				if ( resource == null )
 					return true;
 
@@ -639,7 +638,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 		}
 
-		while ( statuses.Count > 0 && World.instance.time - statuses.First().startTime > maxSavedStatusTime )
+		while ( statuses.Count > 0 && World.instance.time - statuses.First().startTime > Constants.Workshop.maxSavedStatusTime )
 			statuses.RemoveFirst();
 
 		int freeSpaceAtFlag = flag.freeSlots;
@@ -660,7 +659,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
 
 		mapIndicator.SetActive( true );
-		mapIndicator.transform.localScale = new Vector3( Node.size * productivity.current / 10, 1, Node.size * 0.02f );
+		mapIndicator.transform.localScale = new Vector3( Constants.Node.size * productivity.current / 10, 1, Constants.Node.size * 0.02f );
 		mapIndicator.transform.rotation = Quaternion.Euler( 0, (float)( World.instance.eye.direction / Math.PI * 180 ), 0 );
 		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
 
@@ -1007,7 +1006,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( Selection.Contains( gameObject ) && resourcePlace != null )
 		{
 			Gizmos.color = Color.red;
-			Gizmos.DrawLine( node.position + Vector3.up * Node.size, resourcePlace.position );
+			Gizmos.DrawLine( node.position + Vector3.up * Constants.Node.size, resourcePlace.position );
 		}
 #endif
 	}

@@ -169,7 +169,7 @@ public class World : MonoBehaviour
 		soundSource.spatialBlend = 1;
 		soundSource.minDistance = 1;
 		soundSource.pitch = instance.timeFactor;
-		soundSource.maxDistance = Node.size * World.soundMaxDistance;
+		soundSource.maxDistance = Constants.Node.size * World.soundMaxDistance;
 		return soundSource;
 	}
 

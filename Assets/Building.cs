@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 [SelectionBase]
 abstract public class Building : HiveObject
@@ -18,21 +17,21 @@ abstract public class Building : HiveObject
 	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;
 	public int flagDirection;
-	public Ground ground;
 	public Node node;
-	[JsonIgnore]
-	public Road exit;
-	public AudioSource soundSource;
-	[JsonIgnore]
-	public List<MeshRenderer> renderers;
 	public Construction construction = new Construction();
-	public const int flatteningTime = 220;
 	public float height = 1.5f;
 	public float levelBrake = 1;
 	public List<Item> itemsOnTheWay = new List<Item>();
 	static List<Ground.Offset> foundationHelper;
 	public Configuration configuration;
+
 	protected GameObject body;
+	GameObject highlightArrow;
+	[JsonIgnore]
+	public Road exit;
+	public AudioSource soundSource;
+	[JsonIgnore]
+	public List<MeshRenderer> renderers;
 
 	[Obsolete( "Compatibility with old files", true )]
 	Node.Type groundTypeNeeded;
@@ -45,6 +44,12 @@ abstract public class Building : HiveObject
 				configuration = new Configuration();
 			configuration.huge = value;
 		}
+	}
+	public Ground ground
+	{
+		get { return World.instance.ground; }
+		[Obsolete( "Compatibility for old files", true )]
+		set {}
 	}
 
 	public enum Type
@@ -80,13 +85,12 @@ abstract public class Building : HiveObject
 		var list = new List<Ground.Offset> { new Ground.Offset( 0, 0, 0 ) };
 		if ( huge )
 		{
-			list.Add( foundationHelper[( flagDirection + 2 ) % Node.neighbourCount] );
-			list.Add( foundationHelper[( flagDirection + 3 ) % Node.neighbourCount] );
-			list.Add( foundationHelper[( flagDirection + 4 ) % Node.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 2 ) % Constants.Node.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 3 ) % Constants.Node.neighbourCount] );
+			list.Add( foundationHelper[( flagDirection + 4 ) % Constants.Node.neighbourCount] );
 		}
 		return list;
 	}
-	GameObject highlightArrow;
 	bool currentHighlight;
 	float currentLevel;
 	static int highlightID;
@@ -97,8 +101,8 @@ abstract public class Building : HiveObject
 		public Node.Type groundTypeNeeded = Node.Type.land;
 		public Node.Type groundTypeNeededAtEdge = Node.Type.anything;
 
-		public int plankNeeded = 2;
-		public int stoneNeeded = 0;
+		public int plankNeeded = Constants.Building.defaultPlankNeeded;
+		public int stoneNeeded = Constants.Building.defaultStoneNeeded;
 		public bool flatteningNeeded = true;
 		public bool huge = false;
 		public int constructionTime = 0;
@@ -473,7 +477,6 @@ abstract public class Building : HiveObject
 			return null;
 		}
 
-		ground = node.ground;
 		this.flag = flag;
 		this.flagDirection = flagDirection;
 		this.owner = owner;

@@ -11,10 +11,15 @@ public class Player : ScriptableObject
 	public Versioned versionedRoadDelete = new Versioned();
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
-	public const int productivityUpdateTime = 3000;
 	public World.Timer productivityTimer;
 	public List<Chart> itemProductivityHistory = new List<Chart>();
 	public float mainProductivity { get { return itemProductivityHistory[(int)Item.Type.soldier].current; } }
+	public List<Stock> stocks = new List<Stock>();
+	public List<Item> items = new List<Item>();
+	public int firstPossibleEmptyItemSlot = 0;
+	public int[] surplus = new int[(int)Item.Type.total];
+	public List<InputWeight> inputWeights;
+	public InputWeight plankForConstructionWeight, stoneForConstructionWeight;
 
 	[Obsolete( "Compatibility with old files", true )]
 	float totalEfficiency { set {} }
@@ -30,24 +35,16 @@ public class Player : ScriptableObject
 	float averageEfficiency { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int soldiersProduced { set { soldierCount = value; } }
-	public int soldierCount 
-	{ 
-		set { mainBuilding.content[(int)Item.Type.soldier] = value; }
-		get { return mainBuilding.content[(int)Item.Type.soldier]; } }
 	[Obsolete( "Compatibility with old files", true )]
 	int bowmansProduced;
 	[Obsolete( "Compatibility with old files", true )]
 	int coinsProduced;
 
-	public List<Stock> stocks = new List<Stock>();
-	public List<Item> items = new List<Item>();
-	public int firstPossibleEmptyItemSlot = 0;
-	public int[] surplus = new int[(int)Item.Type.total];
-
-	[JsonIgnore]
-	public List<float> production;
-	[JsonIgnore]
-	public List<float> efficiency;
+	public int soldierCount 
+	{ 
+		set { mainBuilding.content[(int)Item.Type.soldier] = value; }
+		get { return mainBuilding.content[(int)Item.Type.soldier]; } 
+	}
 
 	[System.Serializable]
 	public class InputWeight
@@ -57,9 +54,6 @@ public class Player : ScriptableObject
 		public float weight;
 	}
 
-	public List<InputWeight> inputWeights;
-	public InputWeight plankForConstructionWeight, stoneForConstructionWeight;
-
 	public class Chart : ScriptableObject
 	{
 		public List<float> data;
@@ -67,10 +61,10 @@ public class Player : ScriptableObject
 		public float current;
 		public int recordIndex;
 		public Item.Type itemType;
+		public int production;
+		
 		[Obsolete( "Compatibility with old files", true )]
 		float factor { set {} }
-		public int production;
-		const float efficiencyUpdateFactor = 0.1f;
 		[Obsolete( "Compatibility with old files", true )]
 		float weight { set {} }
 		[Obsolete( "Compatibility with old files", true )]
@@ -95,7 +89,7 @@ public class Player : ScriptableObject
 			if ( data == null )
 				data = new List<float>();
 
-			current = current * ( 1 - efficiencyUpdateFactor ) + production * efficiencyUpdateFactor;
+			current = current * ( 1 - Constants.Player.productionUpdateFactor ) + production * Constants.Player.productionUpdateFactor;
 
 			if ( current > record )
 			{
@@ -130,7 +124,7 @@ public class Player : ScriptableObject
 			Destroy( this );
 			return null;
 		}
-		productivityTimer.Start( productivityUpdateTime );
+		productivityTimer.Start( Constants.Player.productivityUpdateTime );
 		CreateInputWeights();
 
 		return this;
@@ -161,7 +155,7 @@ public class Player : ScriptableObject
 				{
 					workshopType = c.type,
 					itemType = b.itemType,
-					weight = 0.5f
+					weight = Constants.Player.defaultInputWeight
 				} );
 			}
 		}
@@ -196,7 +190,7 @@ public class Player : ScriptableObject
 	{
 		if ( !productivityTimer.done )
 			return;
-		productivityTimer.Start( productivityUpdateTime );
+		productivityTimer.Start( Constants.Player.productivityUpdateTime );
 
 		foreach ( var chart in itemProductivityHistory )
 			chart.Advance();

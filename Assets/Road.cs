@@ -13,24 +13,29 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<Worker> workers = new List<Worker>();
 	public bool ready = false;
 	public int tempNodes = 0;
-	public Ground ground;
 	public List<Node> nodes = new List<Node>();
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
-	public Mesh mesh;
-	public static Material material;
-	public static int timeBetweenWorkersAdded = 3000;
 	public World.Timer workerAdded;
 	public bool decorationOnly;
-	public static float height = 1.0f/20;
 	public float cachedCost = 0;
 	public int targetWorkerCount;   // Zero means automaic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	public Node referenceLocation;
+	public bool invalid;
+
 	Material mapMaterial;
 	Mesh mapMesh;
-	public bool invalid;
+	public static Material material;
+	public Mesh mesh;
+
+	public Ground ground 
+	{ 
+		get { return World.instance.ground; }
+		[Obsolete( "Compatibility for old files", true )]
+		set {} 
+	}
 
 	[Obsolete( "Compatibility for old files", true )]
 	int timeSinceWorkerAdded;
@@ -53,7 +58,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		decorationOnly = true;
 		nodes.Add( building.node );
 		nodes.Add( building.flag.node );
-		ground = building.ground;
 		return this;
 	}
 
@@ -94,7 +98,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		if ( flag == null )
 			return null;
-		this.ground = flag.node.ground;
 		nodes.Add( flag.node );
 		owner = flag.owner;
 		return this;
@@ -221,7 +224,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return;
 
 		int jam = this.jam;
-		const int maxJam = 2 * Flag.maxItems;
+		const int maxJam = 2 * Constants.Flag.maxItems;
 		float weight = (float)( jam - 2 ) / ( maxJam - 6 );
 		mapMaterial.color = Color.Lerp( Color.green, Color.red, weight );
 
@@ -246,7 +249,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		CreateCurves();
 
 		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
-		Vector3 h = Vector3.up*Node.size*height;
+		Vector3 h = Vector3.up*Constants.Node.size*Constants.Road.bodyHeight;
 		mesh.Clear();
 		mapMesh.Clear();
 		if ( nodes.Count == 1 )
@@ -432,7 +435,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				for ( int e = 0; e < 2; e++ )
 				{
 					Flag flag = ends[e];
-					for ( int i = 0; i < Flag.maxItems; i++ )
+					for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 					{
 						Item t = flag.items[i];
 						if ( t != null && t.flag == flag && t.road == this )
@@ -450,7 +453,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( worker != null )
 		{
 			workers.Add( worker );
-			workerAdded.Start( timeBetweenWorkersAdded );
+			workerAdded.Start( Constants.Road.timeBetweenWorkersAdded );
 		}
 	}
 
@@ -540,7 +543,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		Road first = Create(), second = Create();
 		first.owner = second.owner = owner;	
 		first.ready = second.ready = true;
-		first.ground = second.ground = ground;
 		first.nodes = nodes.GetRange( 0, splitPoint + 1 - forget );
 		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 - forget );
 		second.nodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
@@ -897,7 +899,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		for ( int e = 0; e < 2; e++ )
 		{
 			Flag flag = ends[e];
-			for ( int i = 0; i < Flag.maxItems; i++ )
+			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
 				Item t = flag.items[i];
 				if ( t != null && t.flag == flag && t.road == this )

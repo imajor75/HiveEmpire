@@ -6,33 +6,35 @@ using UnityEngine;
 [System.Serializable]
 public class Node : HiveObject
 {
-	public const float size = 1;
-	public const int neighbourCount = 6;
 	public int x, y;
 	public Building building;
 	public Flag flag;
 	public Road road;
 	public List<Resource> resources = new List<Resource>();
-	[Obsolete( "Compatibility with old files", true )]
-	Resource resource { set { if ( value ) resources.Add( value ); } }
 	public int roadIndex;
 	public float height = 0;
 	public int index = -1;
-	public Ground ground;
 	public Player owner;
 	public int influence;
-	public BorderEdge[] borders = new BorderEdge[neighbourCount];
-	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
+	public BorderEdge[] borders = new BorderEdge[Constants.Node.neighbourCount];
 	public float staticHeight = -1;
 	public Type type;
 	static MediaTable<GameObject, Type> decorations;
-	public bool hasDecoration { get { return decorationDirection != -1; } }
 	public float decorationPosition;
 	public int decorationDirection = -1;
 	public int decorationType;
-	const float decorationSpreadMin = 0.3f;
-	const float decorationSpreadMax = 0.6f;
-	const float decorationDensity = 0.4f;
+
+	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
+	public bool hasDecoration { get { return decorationDirection != -1; } }
+	public Ground ground 
+	{ 
+		get { return World.instance.ground; }
+		[Obsolete( "Compatibility for old files", true )]
+		set {}
+	}
+
+	[Obsolete( "Compatibility with old files", true )]
+	Resource resource { set { if ( value ) resources.Add( value ); } }
 
 	public Flag validFlag
 	{
@@ -102,14 +104,13 @@ public class Node : HiveObject
 
 	public Node Setup( Ground ground, int x, int y )
 	{
-		this.ground = ground;
 		this.x = x;
 		this.y = y;
 
-		if ( World.rnd.NextDouble() <= decorationDensity )
+		if ( World.rnd.NextDouble() <= Constants.Node.decorationDensity )
 		{
-			decorationPosition = decorationSpreadMin + (float)World.rnd.NextDouble() * ( decorationSpreadMax - decorationSpreadMin );
-			decorationDirection = World.rnd.Next( Node.neighbourCount );
+			decorationPosition = Constants.Node.decorationSpreadMin + (float)World.rnd.NextDouble() * ( Constants.Node.decorationSpreadMax - Constants.Node.decorationSpreadMin );
+			decorationDirection = World.rnd.Next( Constants.Node.neighbourCount );
 			decorationType = World.rnd.Next( 1000000 );		// TODO not so nice
 			// At this moment we don't really know the count for the different decorations, so a big random number is generated. MediaTable is doing a %, so it is ok
 			// The reason why we use an upper limit here is to avoid the value -1, which is OK, but gives an assert fail
@@ -163,7 +164,7 @@ public class Node : HiveObject
 
 	public Vector3 GetPositionRelativeTo( Vector3 reference )
 	{
-		float limit = ground.dimension * size / 2;
+		float limit = ground.dimension * Constants.Node.size / 2;
 		var position = this.position;	
 		var difference = position - reference;
 		float dv0 = difference.z, dv1 = -dv0, dh0 = difference.x - difference.z / 2, dh1 = -dh0;
@@ -194,7 +195,7 @@ public class Node : HiveObject
 	{
 		int rx = x-ground.dimension/2;
 		int ry = y-ground.dimension/2;
-		Vector3 position = new Vector3( rx*size+ry*size/2, height, ry*size );
+		Vector3 position = new Vector3( rx*Constants.Node.size+ry*Constants.Node.size/2, height, ry*Constants.Node.size );
 		return position;
 	}
 
@@ -203,8 +204,8 @@ public class Node : HiveObject
 
 	public static Node FromPosition( Vector3 position, Ground ground )
 	{
-		int y = Mathf.FloorToInt( ( position.z + ( size / 2 ) ) / size );
-		int x = Mathf.FloorToInt( ( position.x - y * size / 2 + ( size / 2 ) ) / size );
+		int y = Mathf.FloorToInt( ( position.z + ( Constants.Node.size / 2 ) ) / Constants.Node.size );
+		int x = Mathf.FloorToInt( ( position.x - y * Constants.Node.size / 2 + ( Constants.Node.size / 2 ) ) / Constants.Node.size );
 		return ground.GetNode( x + ground.dimension / 2, y + ground.dimension / 2 );
 	}
 
@@ -291,7 +292,7 @@ public class Node : HiveObject
 		}
 		Resource resource = Resource.Create().Setup( this, type );
 		if ( resource && type == Resource.Type.tree )
-			resource.life.Start( -2 * Resource.treeGrowthMax );
+			resource.life.Start( -2 * Constants.Resource.treeGrowthTime );
 		return true;
 	}
 
@@ -352,7 +353,7 @@ public class Node : HiveObject
 	{
 		// TODO Check maximum height difference between neighbours
 		// TODO Check if any border node is part of another flattening
-		for ( int i = 0; i < neighbourCount; i++ )
+		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 			if ( Neighbour( i ).fixedHeight )
 				return false;
 		return true;

@@ -12,6 +12,45 @@ public class Stock : Building, Worker.Callback.IHandler
 	public List<int> inputMax = new List<int>();
 	public List<int> outputMin = new List<int>();
 	public List<int> outputMax = new List<int>();
+	public List<List<Route>> outputRoutes = new List<List<Route>>();
+	public Versioned outputRouteVersion = new Versioned();
+	public List<Worker> returningUnits = new List<Worker>();	// This list is maintained for returning units to store them during save, because they usually have no building
+	public Cart cart;
+	public Ground.Area inputArea = new Ground.Area();
+	public Ground.Area outputArea = new Ground.Area();
+	public int total;
+	public int totalTarget;
+	public int maxItems = Constants.Stock.defaultmaxItems;
+	public World.Timer offersSuspended;     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+
+	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
+
+	static readonly Configuration stockConfiguration = new Configuration
+	{
+		plankNeeded = Constants.Stock.plankNeeded,
+		stoneNeeded = Constants.Stock.stoneNeeded,
+		flatteningNeeded = Constants.Stock.flatteningNeeded,
+		constructionTime = Constants.Stock.constructionTime,
+		groundTypeNeeded = Constants.Stock.groundTypeNeeded
+	};
+	static readonly Configuration mainConfiguration = new Configuration	{ huge = true };
+
+	public static GameObject template, mainTemplate;
+
+	[Obsolete( "Compatibility with old files", true )]
+	public Stock[] destinations 
+	{ 
+		set 
+		{
+			for ( int i = 0; i < value.Length; i++ )
+			{
+				if ( outputRoutes[i] == null )
+					outputRoutes[i] = new List<Route>();
+				if ( value[i] )
+					outputRoutes[i].Add( new Route { start = this, end = value[i], itemType = (Item.Type)i } );
+			}
+		} 
+	}
 	[Obsolete( "Compatibility with old files", true )]
 	List<List<Stock>> destinationLists
 	{
@@ -28,48 +67,6 @@ public class Stock : Building, Worker.Callback.IHandler
 
 		}
 	}
-	public List<List<Route>> outputRoutes = new List<List<Route>>();
-	public Versioned outputRouteVersion = new Versioned();
-	public List<Worker> returningUnits = new List<Worker>();	// This list is maintained for returning units to store them during save, because they usually have no building
-	[Obsolete( "Compatibility with old files", true )]
-	public Stock[] destinations 
-	{ 
-		set 
-		{
-			for ( int i = 0; i < value.Length; i++ )
-			{
-				if ( outputRoutes[i] == null )
-					outputRoutes[i] = new List<Route>();
-				if ( value[i] )
-					outputRoutes[i].Add( new Route { start = this, end = value[i], itemType = (Item.Type)i } );
-			}
-		} 
-	}
-	public static int influenceRange = 10;
-	public static int mainBuildingInfluence = 10;
-	public static GameObject template, mainTemplate;
-	public Cart cart;
-	public Ground.Area inputArea = new Ground.Area();
-	public Ground.Area outputArea = new Ground.Area();
-	public int total;
-	public int totalTarget;
-	public int maxItems = defaultmaxItems;
-	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
-	static public int defaultmaxItems = 200;
-	static public int defaultmaxItemsForMain = 400;
-	public World.Timer offersSuspended;     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
-	static readonly Configuration stockConfiguration = new Configuration
-	{
-		plankNeeded = 3,
-		stoneNeeded = 3,
-		flatteningNeeded = true,
-		constructionTime = 6000,
-		groundTypeNeeded = Node.Type.aboveWater
-	};
-	static readonly Configuration mainConfiguration = new Configuration
-	{
-		huge = true
-	};
 
 	public void AddNewRoute( Item.Type itemType, Stock destination )
 	{
@@ -83,7 +80,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		newRoute.itemType = itemType;
 		outputRoutes[(int)itemType].Add( newRoute );
 		outputRouteVersion.Trigger();
-		destination.inputMax[(int)itemType] = Math.Max( (int)( Stock.Cart.capacity * 1.5f ), destination.inputMax[(int)itemType] );
+		destination.inputMax[(int)itemType] = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.inputMax[(int)itemType] );
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
@@ -96,6 +93,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		public Item.Type itemType;
 		public int lastDelivery;
 		public float averageTransferRate;
+
 		[Obsolete( "Compatibility with old files", true )]
 		float averateTransferRate { set { averageTransferRate = value; } }
 
@@ -133,7 +131,6 @@ public class Stock : Building, Worker.Callback.IHandler
 
 	public class Cart : Worker
 	{
-		public const int capacity = 25;
 		public int itemQuantity;
 		public Item.Type itemType;
 		public Route currentRoute;
@@ -164,8 +161,8 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			assert.AreEqual( route.start, boss );
 			int typeIndex = (int)route.itemType;
-			boss.content[typeIndex] -= capacity;
-			itemQuantity = capacity;
+			boss.content[typeIndex] -= Constants.Stock.cartCapacity;
+			itemQuantity = Constants.Stock.cartCapacity;
 			this.itemType = route.itemType;
 			currentRoute = route;
 
@@ -359,7 +356,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	public Stock Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false )
 	{
 		height = 1.5f;
-		maxItems = defaultmaxItems;
+		maxItems = Constants.Stock.defaultmaxItems;
 
 		CreateMissingArrays();
 		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly ) == null )
@@ -378,7 +375,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		if ( !Setup( node, owner, flagDirection ) )
 			return null;
 
-		maxItems = defaultmaxItemsForMain;
+		maxItems = Constants.Stock.defaultmaxItemsForMain;
 		height = 3;
 		if ( configuration.flatteningNeeded )
 		{
@@ -504,11 +501,11 @@ public class Stock : Building, Worker.Callback.IHandler
 				}
 
 				if (
-					content[itemType] >= Cart.capacity &&
+					content[itemType] >= Constants.Stock.cartCapacity &&
 					cart.IsIdle( true ) &&
 					flag.user == null &&
-					destination.total + Cart.capacity <= maxItems &&
-					destination.content[itemType] + Cart.capacity <= destination.inputMax[itemType] )
+					destination.total + Constants.Stock.cartCapacity <= maxItems &&
+					destination.content[itemType] + Constants.Stock.cartCapacity <= destination.inputMax[itemType] )
 				{
 					cart.TransferItems( outputRoutes[itemType][i] );
 				}
@@ -541,7 +538,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		if ( !main )
 			base.Influence( node );
 
-		return Stock.mainBuildingInfluence - node.DistanceFrom( this.node );
+		return Constants.Stock.influenceRange - node.DistanceFrom( this.node );
 	}
 
 	public override void OnClicked( bool show = false )
@@ -636,6 +633,6 @@ public class Stock : Building, Worker.Callback.IHandler
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % Cart.capacity, 0 );
+			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % Constants.Stock.cartCapacity, 0 );
 	}
 }

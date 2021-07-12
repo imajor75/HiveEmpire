@@ -8,7 +8,9 @@ using UnityEngine.Profiling;
 public class Worker : HiveObject
 {
 	public Type type;
-	public Ground ground;
+	public Road road;
+	public bool onRoad;
+	public Building building;
 	public Player owner;
 	public Node walkFrom;
 	public Node walkTo;
@@ -19,8 +21,6 @@ public class Worker : HiveObject
 	public float standingHeight = 0;
 	public float speed = 1;
 	public Node node;
-	[Obsolete( "Compatibility with old files", true )]
-	Item itemInHands { set { itemsInHands[0] = value; } }
 	public Item[] itemsInHands = new Item[2];
 	public Type look;
 	public Resource origin;
@@ -29,9 +29,24 @@ public class Worker : HiveObject
 	public bool recalled;
 	public int itemsDelivered;
 	public World.Timer bored;
-	public static int boredTimeBeforeRemove = 6000;
+	public BodyState bodyState = BodyState.unknown;
+	public SerializableColor currentColor;
+	public List<Task> taskQueue = new List<Task>();
+
+	[JsonIgnore]
+	public bool debugReset;
+
+	public static Act[] resourceCollectAct = new Act[(int)Resource.Type.total];
+	public static Act shovelingAct;
+	public static Act constructingAct;
+	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> walkSounds;
 	static public MediaTable<AudioClip, AnimationSound> animationSounds;
+	static public List<GameObject> templates = new List<GameObject>();
+	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
+	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
+
+	public Animator animator;
 	public AudioSource soundSource;
 	public GameObject mapObject;
 	Material mapMaterial;
@@ -39,34 +54,26 @@ public class Worker : HiveObject
 	SpriteRenderer itemOnMap;
 	static public Sprite arrowSprite;
 	Material shirtMaterial;
-	[JsonIgnore]
-	public bool debugReset;
-	static public int stuckTimeout = 3000;
-	static MediaTable<GameObject, Type> looks;
-	public static Act[] resourceCollectAct = new Act[(int)Resource.Type.total];
-	public static Act shovelingAct;
-	public static Act constructingAct;
-
-	[Obsolete( "Compatibility with old files", true )]
-	bool underControl;
-
-	public Road road;
-	public bool onRoad;
-
-	public Building building;
-
-	public Animator animator;
-	static public List<GameObject> templates = new List<GameObject>();
-	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
-	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
-
-	public List<Task> taskQueue = new List<Task>();
 	protected GameObject body;
-	[Obsolete( "Compatibility with old files", true )]
-	GameObject haulingBox;
 	[JsonIgnore]
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
+
+	[Obsolete( "Compatibility with old files", true )]
+	bool underControl { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	Item itemInHands { set { itemsInHands[0] = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Color cachedColor;
+	[Obsolete( "Compatibility with old files", true )]
+	GameObject haulingBox;
+
+	public Ground ground
+	{
+		get { return World.instance.ground; }
+		[Obsolete( "Compatibility for old files", true )]
+		set {}
+	}
 
 	public enum LinkType
 	{
@@ -77,18 +84,12 @@ public class Worker : HiveObject
 		total
 	}
 
-	BodyState bodyState = BodyState.unknown;
-
-	enum BodyState
+	public enum BodyState
 	{
 		unknown,
 		standing,
 		walking
 	}
-
-	[Obsolete( "Compatibility with old files", true )]
-	Color cachedColor;
-	public SerializableColor currentColor;
 
 	public Color Color
 	{
@@ -485,7 +486,7 @@ public class Worker : HiveObject
 					else
 					{
 						if ( stuck.empty )
-							stuck.Start( stuckTimeout );
+							stuck.Start( Constants.Worker.stuckTimeout );
 						return false;
 					}
 				}
@@ -795,7 +796,7 @@ public class Worker : HiveObject
 			boss.itemsDelivered++;
 			if ( items[1] )
 				boss.itemsDelivered++;
-			boss.bored.Start( boredTimeBeforeRemove );
+			boss.bored.Start( Constants.Worker.boredTimeBeforeRemove );
 			boss.links[(int)LinkType.haulingBoxLight]?.SetActive( items[0].buddy != null );
 			boss.links[(int)LinkType.haulingBoxHeavy]?.SetActive( false );
 			for ( int i = 0; i < items.Length; i++ )
@@ -972,7 +973,7 @@ public class Worker : HiveObject
 			animation = shovelingID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/shovel" ),
 			toolSlot = LinkType.leftHand,
-			duration = Building.flatteningTime
+			duration = Constants.Building.flatteningTime
 		};
 		constructingAct = new Act
 		{
@@ -1000,7 +1001,6 @@ public class Worker : HiveObject
 		look = type = Type.hauler;
 		name = "Hauler";
 		owner = road.owner;
-		ground = road.ground;
 		currentColor = Color.grey;
 		Building main = road.owner.mainBuilding;
 		SetNode( main.node );
@@ -1038,7 +1038,6 @@ public class Worker : HiveObject
 		look = type = Type.constructor;
 		name = "Builder";
 		currentColor = Color.cyan;
-		ground = flag.node.ground;
 		owner = flag.owner;
 		Building main = owner.mainBuilding;
 		SetNode( main.node );
@@ -1058,7 +1057,6 @@ public class Worker : HiveObject
 			return SetupForBuildingSite( building );
 		}
 		
-		ground = building.ground;
 		owner = building.owner;
 		this.building = building;
 		SetNode( building.node );
@@ -1067,7 +1065,6 @@ public class Worker : HiveObject
 
 	Worker SetupForBuildingSite( Building building )
 	{
-		ground = building.ground;
 		owner = building.owner;
 		this.building = building;
 		Building main = owner.mainBuilding;
@@ -1088,7 +1085,6 @@ public class Worker : HiveObject
 		look = type = Type.wildAnimal;
 		SetNode( node );
 		this.origin = origin;
-		this.ground = node.ground;
 		return this;
 	}
 
@@ -1097,8 +1093,7 @@ public class Worker : HiveObject
 		look = type = Type.cart;
 		building = stock;
 		SetNode( stock.node );
-		speed = 1.25f;
-		ground = stock.ground;
+		speed = Constants.Stock.cartSpeed;
 		owner = stock.owner;
 		currentColor = Color.white;
 		return this;
@@ -1392,7 +1387,7 @@ public class Worker : HiveObject
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
 				ScheduleWalkToNeighbour( t );
-				if ( World.rnd.NextDouble() < Workshop.pasturingPrayChance )
+				if ( World.rnd.NextDouble() < Constants.Workshop.pasturingPrayChance )
 					ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
 				return;
 			}
@@ -1829,7 +1824,7 @@ public class Worker : HiveObject
 		}
 		else
 		{
-			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * Node.size * Road.height;
+			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * Constants.Node.size * Constants.Road.bodyHeight;
 			TurnTo( walkTo, walkFrom );
 		}
 
@@ -1848,7 +1843,7 @@ public class Worker : HiveObject
 						continue;
 					g.transform.Rotate( World.instance.timeFactor * currentSpeed * 300, 0, 0 );
 				}
-				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Node.size * -50, 0, 0 );
+				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Constants.Node.size * -50, 0, 0 );
 			}
 		}
 	}

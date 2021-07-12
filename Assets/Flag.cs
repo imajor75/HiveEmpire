@@ -8,27 +8,26 @@ using UnityEngine;
 public class Flag : HiveObject
 {
 	public Player owner;
-	public const int maxItems = 6;
 	public Node node;
-	public Item[] items = new Item[maxItems];
-	[JsonIgnore]
-	public GameObject[] frames = new GameObject[maxItems];
+	public Item[] items = new Item[Constants.Flag.maxItems];
 	public Worker user;
 	public bool crossing;
 	public bool recentlyLeftCrossing;	// Only for validaion, debug purposes
-	public Road[] roadsStartingHere = new Road[Node.neighbourCount];
-	[Obsolete( "Compatibility with old files", true )]
-	Building building;
-	static GameObject template;
-	static GameObject baseTemplate;
+	public Road[] roadsStartingHere = new Road[Constants.Node.neighbourCount];
 	public Versioned itemsStored = new Versioned();
 	public Watch freeSlotsWatch = new Watch();
 	public bool requestFlattening;
-	public const float itemSpread = 0.25f;
-	GameObject tiles;
-	const float tilesHeight = 0.03f;
 	public Building.Flattening flattening = new Building.Flattening();
+
+	[JsonIgnore]
+	public GameObject[] frames = new GameObject[Constants.Flag.maxItems];
+	static GameObject template;
+	static GameObject baseTemplate;
+	GameObject tiles;
 	GameObject pole;
+
+	[Obsolete( "Compatibility with old files", true )]
+	Building building;
 
 	static public void Initialize()
 	{
@@ -97,7 +96,7 @@ public class Flag : HiveObject
 		tiles.transform.SetParent( transform, false );
 
 		UpdateBody();
-		for ( int i = 0; i < maxItems; i++ )
+		for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 		{
 			frames[i] = new GameObject( "Item Frame " + i );
 			var t = frames[i].transform;
@@ -105,10 +104,10 @@ public class Flag : HiveObject
 			t.localScale = 0.15f * Vector3.one;
 			Vector3 pos;
 			float itemBottomHeight = items[i] == null ? 0 : items[i].bottomHeight;
-			pos.x = Mathf.Sin( Mathf.PI * 2 / maxItems * i ) * itemSpread * Node.size;
-			pos.z = Mathf.Cos( Mathf.PI * 2 / maxItems * i ) * itemSpread * Node.size;
+			pos.x = Mathf.Sin( Mathf.PI * 2 / Constants.Flag.maxItems * i ) * Constants.Flag.itemSpread * Constants.Node.size;
+			pos.z = Mathf.Cos( Mathf.PI * 2 / Constants.Flag.maxItems * i ) * Constants.Flag.itemSpread * Constants.Node.size;
 			// Adjust the height of the frame so that the item in it should be just above the tiles of the flag
-			pos.y = node.ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + tilesHeight;
+			pos.y = node.ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + Constants.Flag.tilesHeight;
 			t.localPosition = pos;
 			t.LookAt( transform );
 			if ( items[i] != null )
@@ -146,7 +145,7 @@ public class Flag : HiveObject
 		for ( int i = 0; i < vertices.Length; i++ )
 		{
 			var groundPosition = gt.InverseTransformPoint( tiles.transform.TransformPoint( vertices[i] ) );
-			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z ) + tilesHeight;
+			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z ) + Constants.Flag.tilesHeight;
 			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
 		}
 		tileMesh.vertices = vertices;
@@ -262,7 +261,7 @@ public class Flag : HiveObject
 
 		if ( item.buddy )
 		{
-			for ( int i = 0; i < maxItems; i++ )
+			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
 				if ( items[i] == item.buddy )
 				{
@@ -275,7 +274,7 @@ public class Flag : HiveObject
 				}
 			}
 		}
-		for ( int i = 0; i < maxItems; i++ )
+		for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 		{
 			if ( items[i] == item )
 			{
@@ -284,7 +283,7 @@ public class Flag : HiveObject
 
 				// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
 				Vector3 framePos = frames[i].transform.position;
-				framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + tilesHeight;
+				framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
 				t.position = framePos;
 				break;
 			}
@@ -322,7 +321,7 @@ public class Flag : HiveObject
 			if ( freeSlotsWatch.Check() || freeSlotsCached == -1 )
 			{
 				freeSlotsCached = 0;
-				for ( int i = 0; i < maxItems; i++ )
+				for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 					if ( items[i] == null )
 						freeSlotsCached++;
 			}
@@ -332,7 +331,7 @@ public class Flag : HiveObject
 
 	public override void Reset()
 	{
-		for ( int i = 0; i < maxItems; i++ )
+		for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 		{
 			if ( items[i] == null || items[i].flag != this )
 				continue;
@@ -349,11 +348,11 @@ public class Flag : HiveObject
 		foreach ( var building in Buildings() )
 			assert.AreEqual( building.flag, this );
         assert.AreEqual( this, node.flag );
-        for ( int i = 0; i < Node.neighbourCount; i++ )
+        for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
             assert.IsNull( node.Neighbour( i ).flag );
 		assert.IsTrue( freeSlots >= 0 );
 		int usedSlots = 0;
-		for ( int j = 0; j < maxItems; j++ )
+		for ( int j = 0; j < Constants.Flag.maxItems; j++ )
 		{
 			Item i = items[j];
 			if ( i )
@@ -364,8 +363,8 @@ public class Flag : HiveObject
 				usedSlots++;
 			}
 		}
-		assert.AreEqual( freeSlots, maxItems - usedSlots );
-		for ( int j = 0; j < Node.neighbourCount; j++ )
+		assert.AreEqual( freeSlots, Constants.Flag.maxItems - usedSlots );
+		for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node && chain )
 				roadsStartingHere[j].Validate( true );
 		if ( user )

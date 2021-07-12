@@ -5,10 +5,16 @@ using UnityEngine;
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ) )]
 public class Water : MonoBehaviour
 {
-    public Ground ground;
     public Mesh mesh;
     public Material material;
     static int offset0ID, offset1ID, iterID;
+
+    public Ground ground
+    {
+        get { return World.instance.ground; }
+    	[Obsolete( "Compatibility for old files", true )]
+        set {}
+    }
 
     public static void Initialize()
     {
@@ -24,7 +30,6 @@ public class Water : MonoBehaviour
 
     public Water Setup( Ground ground )
     {
-        this.ground = ground;
         return this;
     }
 
@@ -80,7 +85,7 @@ public class Water : MonoBehaviour
 				if ( x == 0 && y == 0 )
 					continue;
 
-				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * Node.size, 0, y * ground.dimension * Node.size ) + transform.position, Quaternion.identity, material, 0 );
+				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * Constants.Node.size, 0, y * ground.dimension * Constants.Node.size ) + transform.position, Quaternion.identity, material, 0 );
             }
         }
     }
