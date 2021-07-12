@@ -51,6 +51,7 @@
     "flatteningNeeded": true,
 	  "groundTypeNeeded": "mountain",
     "outputType": "flour",
+    "productionTime": 900,
     "inputs": [
       {
         "itemType": "grain"
