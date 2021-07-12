@@ -1130,6 +1130,8 @@ public class Worker : HiveObject
 		{
 			animator.speed = ground.world.timeFactor;
 			animator.applyRootMotion = false;
+			if ( itemsInHands[0] )
+				animator.Play( "idle light" );
 		}
 		else
 			animator = null;
