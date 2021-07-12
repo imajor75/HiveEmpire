@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1280,6 +1280,7 @@ public class Interface : OperationHandler
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
+			transform.SetAsLastSibling();
 			if ( eventData.clickCount == 2 )
 				OnDoubleClick();
 		}
