@@ -3373,12 +3373,12 @@ if ( cart )
 				if ( !outputs )
 					currentList = stock.GetInputRoutes( itemType );
 			}
-			if ( list != null && currentList.Count == list.Count )
-				return false;
-
+			bool needRefill = list == null || currentList.Count != list.Count;
+			
 			list = currentList;
 			listWatcher.Attach( stock && outputs ? stock.outputRouteVersion : null );
-			return true;
+
+			return needRefill;
 		}
 
 		public void Fill()
