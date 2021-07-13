@@ -123,7 +123,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		{
 			if ( timer.empty )
 				timer.Start();
-			if ( boss.IsWorking() )
+			if ( boss.working )
 				workCounter += (int)World.instance.timeFactor;
 			if ( timer.age >= timinglength )
 			{
@@ -483,11 +483,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		assert.AreEqual( newList.Count, productionConfiguration.inputs.Length );
 		buffers = newList;
-	}
-
-	public bool IsWorking()
-	{
-		return worker != null && !worker.IsIdle( true );
 	}
 
 	public new void Start()
