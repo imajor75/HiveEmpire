@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1683,6 +1683,12 @@ public class Interface : OperationHandler
 					name = workshop.type.ToString().GetPrettyName();
 				title = Editable( name ).Pin( 20, row, 160, 20 );
 				title.onValueChanged = Rename;
+				title.name = "Title";
+				var r = workshop.relaxSpotCount;
+				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
+				if ( percent > 100 )
+					percent = 100;
+				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "", ShowRelaxSpotsAround );
 				row -= 20;
 			}
 
@@ -1790,15 +1796,6 @@ public class Interface : OperationHandler
 
 			outputs?.Update( workshop.output, 0 );
 
-			if ( title != null && title.Contains( Input.mousePosition ) )
-			{
-				var r = workshop.relaxSpotCount;
-				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
-				if ( percent > 100 )
-					percent = 100;
-				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "", ShowRelaxSpotsAround );
-			}
-
 			if ( progressBar )
 			{
 				progressBar.SetTooltip( 
@@ -1861,6 +1858,13 @@ public class Interface : OperationHandler
 
 		void ShowRelaxSpotsAround( bool on )
 		{
+			// Recalculate the relax spots just in case it changed
+			var r = workshop.relaxSpotCount;
+			var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
+			if ( percent > 100 )
+				percent = 100;
+			title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "", ShowRelaxSpotsAround );
+
 			if ( on )
 			{
 				root.viewport.nodeInfoToShow = Viewport.NodeInfoType.relaxSites;
