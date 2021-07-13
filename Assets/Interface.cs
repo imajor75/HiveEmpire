@@ -3444,7 +3444,7 @@ if ( cart )
 				}
 				else
 					last[i].text = "-";
-				rate[i].text = $"~{(list[i].averageTransferRate*Time.deltaTime).ToString( "F2" )}";
+				rate[i].text = $"~{(list[i].averageTransferRate*50*60).ToString( "F2" )}/m";
 				total[i].text = list[i].itemsDelivered.ToString();
 				cart[i].gameObject.SetActive( list[i].start.cart.currentRoute == list[i] );
 			}
