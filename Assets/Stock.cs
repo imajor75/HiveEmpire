@@ -505,7 +505,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					cart.IsIdle( true ) &&
 					flag.user == null &&
 					destination.total + Constants.Stock.cartCapacity <= maxItems &&
-					destination.content[itemType] + Constants.Stock.cartCapacity <= destination.inputMax[itemType] )
+					destination.content[itemType] + destination.onWay[itemType] + Constants.Stock.cartCapacity <= destination.inputMax[itemType] )
 				{
 					cart.TransferItems( outputRoutes[itemType][i] );
 				}
