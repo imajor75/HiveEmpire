@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -410,6 +410,8 @@ public class Interface : OperationHandler
 				toClose?.Close();
 			}
 		}
+		if ( GetKeyDown( KeyCode.LeftArrow ) && GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) )
+			world.eye.RestoreOldPosition();
 		if ( GetKeyDown( KeyCode.M ) )
 			Map.Create().Open( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) );
 		if ( GetKeyDown( KeyCode.Alpha9 ) )
@@ -4980,6 +4982,7 @@ if ( cart )
 		Text recordProductivity;
 		ProgressBar productivityProgress;
 		float originalSpeed = -1;
+		bool victory;
 
 		public static WorldProgressPanel Create()
 		{
@@ -4988,6 +4991,7 @@ if ( cart )
 
 		public void Open( bool victory = false )
 		{
+			this.victory = victory;
 			noResize = true;
 			noPin = true;
 			if ( base.Open( 200, 200 ) )
@@ -5032,7 +5036,8 @@ if ( cart )
 		{
 			if ( originalSpeed > 0 )
 				root.world.SetTimeFactor( originalSpeed );
-			root.world.eye.ReleaseFocus( null, true );
+			if ( victory )
+				root.world.eye.ReleaseFocus( null, true );
 			base.OnDestroy();
 		}
 	}

@@ -22,6 +22,8 @@ public static class Constants
         public const float altitudeChangeSpeed = 1.01f;
         public const float altitudeSmoothness = 0.1f;
         public const float altitudeChangeSpeedWithMouseWheel = 0.5f;
+        public const int autoStorePositionAfter = 100; // 2 seconds
+        public const int maxNumberOfSavedPositions = 10;
     }
 
     public static class Flag

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -14,10 +15,10 @@ public class Eye : HiveObject
 	public float x, y, height;
 	public float absoluteX, absoluteY;
 	public float direction;
+	public List<StoredPosition> oldPositions = new List<StoredPosition>();
+	public int autoStorePositionCounter;
 	public Vector3 autoMovement;
 	public bool rotateAround;
-	public float storedX, storedY, storedDirection;
-	public bool hasStoredValues;
 	public new Camera camera;
 	public float moveSensitivity;
 	[JsonIgnore]
@@ -25,6 +26,14 @@ public class Eye : HiveObject
 
 	[Obsolete( "Compatibility with old files", true )]
 	float forwardForGroundBlocks { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	public float storedX { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	public float storedY { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	public float storedDirection { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	bool hasStoredValues { set {} }
 
 	public static Eye Create()
 	{
@@ -53,6 +62,12 @@ public class Eye : HiveObject
 		// Disable temporarily, as unity is crashing at the moment with it.
 		ppl.enabled = false;
 		base.Start();
+	}
+
+	[Serializable]
+	public class StoredPosition
+	{
+		public float x, y, direction;		
 	}
 
 	public Vector3 position
@@ -111,14 +126,30 @@ public class Eye : HiveObject
 
 	public void GrabFocus( IDirector director )
 	{
-		if ( !hasStoredValues )
-		{
-			storedX = x;
-			storedY = y;
-			storedDirection = direction;
-			hasStoredValues = true;
-		}
+		oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
 		this.director = director;
+	}
+
+	public bool RestoreOldPosition()
+	{
+		if ( autoStorePositionCounter > Constants.Eye.autoStorePositionAfter )
+		{
+			// When the condition above is true, the camera is in a position which was already saved. So the last saved position needs to be ignored.
+			oldPositions.RemoveAt( oldPositions.Count-1 );
+			autoStorePositionCounter = 0;
+		}
+
+		if ( oldPositions.Count == 0 )
+			return false;
+
+		var last = oldPositions[oldPositions.Count-1];
+		x = last.x;
+		y = last.y;
+		direction = last.direction;
+		height = -1;
+		rotateAround = false;
+		oldPositions.RemoveAt( oldPositions.Count-1 );
+		return true;
 	}
 
 	public void ReleaseFocus( IDirector director, bool restore = false )
@@ -126,62 +157,34 @@ public class Eye : HiveObject
 		if ( this.director == director )
 			this.director = null;
 
-		if ( restore && hasStoredValues )
-		{
-			x = storedX;
-			y = storedY;
-			height = -1;
-			direction = storedDirection;
-			hasStoredValues = false;
-		}
+		RestoreOldPosition();
+
 		rotateAround = false;
 	}
 
-	public void FocusOn( Node node, bool rotateAround = false, bool mark = false )
+	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false )
 	{
-		if ( node == null )
+		if ( target == null )
 			return;
+		oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
 
-		if ( !hasStoredValues )
-		{
-			storedX = x;
-			storedY = y;
-			storedDirection = direction;
-			hasStoredValues = true;
-		}
-
-		var p = node.position;
-		x = p.x;
-		y = p.z;
+		x = target.transform.position.x;
+		y = target.transform.position.z;
 		height = -1;
 		director = null;
 		this.rotateAround = rotateAround;
 		Interface.root.viewport.markEyePosition = mark;
 	}
 
-	public void FocusOn( Component component, bool rotateAround = false )
+	void OnPositionChanged()
 	{
-		if ( component == null )
-			return;
-		if ( !hasStoredValues )
-		{
-			storedX = x;
-			storedY = y;
-			storedDirection = direction;
-			hasStoredValues = true;
-		}
-
-		x = component.transform.position.x;
-		y = component.transform.position.z;
-		height = -1;
-		director = null;
-		this.rotateAround = rotateAround;
+		rotateAround = false;
+		autoStorePositionCounter = 0;
 	}
 
 	Vector3 Move( float side, float forward )
 	{
-		rotateAround = false;
-		hasStoredValues = false;
+		OnPositionChanged();
 		Interface.root.viewport.markEyePosition = false;
 		director = null;
 		return transform.right * side * moveSensitivity + transform.forward * forward * moveSensitivity;
@@ -189,6 +192,12 @@ public class Eye : HiveObject
 
 	void FixedUpdate()
 	{
+		while ( oldPositions.Count > Constants.Eye.maxNumberOfSavedPositions )
+			oldPositions.RemoveAt( oldPositions.Count-1 );
+
+		if ( autoStorePositionCounter++ == Constants.Eye.autoStorePositionAfter )
+			oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
+
 		Vector3 movement = autoMovement;
 		if ( Interface.GetKey( KeyCode.A ) )
 			movement += Move( -Constants.Eye.moveSpeed, 0 );
