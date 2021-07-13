@@ -1096,6 +1096,12 @@ public class Interface : OperationHandler
 				}
 
 				var c = root.viewport.camera;
+				// A null reference crash happened here in map mode, so safety check
+				if ( c == null || building == null || building.node == null )
+				{
+					Assert.global.IsTrue( false );
+					return;
+				}
 				var p = c.WorldToScreenPoint( building.node.positionInViewport );
 
 				ring.gameObject.SetActive( track );
