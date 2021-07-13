@@ -2245,7 +2245,8 @@ public class Interface : OperationHandler
 					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f );
 					offset += 10;
 				}
-				i.AddClickHandler( delegate { SelectItemType( t ); } );
+				i.AddClickHandler( () => SelectItemType( t ) );
+				i.AddClickHandler( () => ShowRoutesFor( t ), UIHelpers.ClickType.right );
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				if ( j % 2 > 0 )
 					row -= iconSize + 5;
@@ -2254,10 +2255,10 @@ public class Interface : OperationHandler
 			for ( int i = 0; i < counts.Length; i++ )
 			{
 				Item.Type j = (Item.Type)i;
-				counts[i].AddClickHandler( delegate { SelectItemType( j ); } );
+				counts[i].AddClickHandler( () => SelectItemType( j ) );
 			}
 
-			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( 165, 90, 2 * iconSize, 2 * iconSize, 0, 0 ).AddClickHandler( ShowRoutes );
+			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( 165, 90, 2 * iconSize, 2 * iconSize, 0, 0 ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
 			selected.name = "Selected item";
 			inputMin = Text().Link( selected ).Pin( -40, 0, 40 ).
 			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority" );
@@ -2287,10 +2288,11 @@ public class Interface : OperationHandler
 			WorkerPanel.Create().Open( stock.cart, true );
 		}
 
-		void ShowRoutes()
+		void ShowRoutesFor( Item.Type itemType )
 		{
-			RouteList.Create().Open( stock, selectedItemType, true );
+			RouteList.Create().Open( stock, itemType, stock.outputRoutes[(int)itemType].Count > 0 ? true : false );
 		}
+
 
 		void Remove()
 		{
@@ -2422,7 +2424,7 @@ public class Interface : OperationHandler
 				root.world.eye.FocusOn( node, true );
 		}
 
-		void BuildButton( int x, int y, string title, bool enabled, UnityEngine.Events.UnityAction action )
+		void BuildButton( int x, int y, string title, bool enabled, Action action )
 		{
 			Image button = Button( title ).Pin( x, y, 160 ).AddClickHandler( action );
 			if ( !enabled )
@@ -2527,7 +2529,7 @@ public class Interface : OperationHandler
 			BuildButton( 180, -280, "Stock", AddStock );
 		}
 
-		Image BuildButton( int x, int y, string title, UnityEngine.Events.UnityAction action )
+		Image BuildButton( int x, int y, string title, Action action )
 		{
 			Image button = Button( title ).Pin( x, y, 160 ).AddClickHandler( action );
 			if ( !enabled )
@@ -5227,12 +5229,39 @@ public static class UIHelpers
 		return g;
 	}
 
-	public static UIElement AddClickHandler<UIElement>( this UIElement g, UnityAction callBack ) where UIElement : Component
+	public class HiveButton : MonoBehaviour, IPointerClickHandler
 	{
-		Button b = g.gameObject.GetComponent<Button>();
+		public Action leftClickHandler, rightClickHandler, middleClickHandler;
+
+        public void OnPointerClick( PointerEventData eventData )
+        {
+			if ( eventData.button == PointerEventData.InputButton.Left && leftClickHandler != null )
+				leftClickHandler();
+			if ( eventData.button == PointerEventData.InputButton.Right && rightClickHandler != null )
+				rightClickHandler();
+			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
+				middleClickHandler();
+        }
+    }
+
+	public enum ClickType
+	{
+		left,
+		right,
+		middle
+	}
+
+	public static UIElement AddClickHandler<UIElement>( this UIElement g, Action callBack, ClickType type = ClickType.left ) where UIElement : Component
+	{
+		var b = g.gameObject.GetComponent<HiveButton>();
 		if ( b == null )
-			b = g.gameObject.AddComponent<Button>();
-		b.onClick.AddListener( callBack );
+			b = g.gameObject.AddComponent<HiveButton>();
+		if ( type == ClickType.left )
+			b.leftClickHandler = callBack;
+		if ( type == ClickType.right )
+			b.rightClickHandler = callBack;
+		if ( type == ClickType.middle )
+			b.middleClickHandler = callBack;
 		return g;
 	}
 
