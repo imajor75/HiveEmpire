@@ -44,20 +44,12 @@ public class Interface : OperationHandler
 	static bool focusOnInputField;
 	static KeyCode ignoreKey = KeyCode.None;
 
-	static public Hotkey buildingListHotkey = new Hotkey( "Building list", KeyCode.B );
 	static public Hotkey hotkeyListHotkey = new Hotkey( "Hotkey list", KeyCode.H, true );
-	static public Hotkey historyHotkey = new Hotkey( "History", KeyCode.H );
-	static public Hotkey itemListHotkey = new Hotkey( "Item list", KeyCode.I );
-	static public Hotkey itemStatsHotkey = new Hotkey( "Item statistics", KeyCode.J );
-	static public Hotkey resourceListHotkey = new Hotkey( "Resource list", KeyCode.K );
-	static public Hotkey routeListHotkey = new Hotkey( "Route list", KeyCode.R );
-	static public Hotkey worldProgressHotkey = new Hotkey( "World progress", KeyCode.P );
 
 	static public Hotkey headquartersHotkey = new Hotkey( "Show headquarters", KeyCode.Home );
 	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
 	static public Hotkey cameraBackHotkey = new Hotkey( "Camera back", KeyCode.LeftArrow, false, true );
 
-	static public Hotkey minimapHotkey = new Hotkey( "Minimap", KeyCode.M );
 	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M, true );
 
 	static public Hotkey undoHotkey = new Hotkey( "Undo", KeyCode.Z, true );
@@ -94,6 +86,13 @@ public class Interface : OperationHandler
 
 		public Hotkey()
 		{
+		}
+
+		public void Remove()
+		{
+			Assert.global.IsTrue( core );
+			Assert.global.IsTrue( instances.Contains( this ) );
+			instances.Remove( this );
 		}
 
 		public Hotkey( string action, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false )
@@ -189,7 +188,6 @@ public class Interface : OperationHandler
 		smallFrame,
 		emptyFrame,
 		hauler,
-		box,
 		destroy,
 		newRoad,
 		magnet,
@@ -206,7 +204,17 @@ public class Interface : OperationHandler
 		cart,
 		pin,
 		home,
-		ring
+		ring,
+		house,
+		hammer,
+		junction,
+		crate,
+		itemPile,
+		resource,
+		history,
+		map,
+		hive,
+		cup
 	}
 
 
@@ -310,11 +318,6 @@ public class Interface : OperationHandler
 			o.y += 1;
 		materialUIPath.mainTextureOffset = o;
 
-		if ( buildingListHotkey.IsDown() )
-			BuildingList.Create().Open();
-		if ( historyHotkey.IsDown() )
-			History.Create().Open( mainPlayer );
-
 		if ( undoHotkey.IsDown() )
 			Undo();
 		if ( redoHotkey.IsDown() )
@@ -392,6 +395,7 @@ public class Interface : OperationHandler
 		object[] table = {
 		"arrow", Icon.rightArrow,
 		"brick", Icon.progress,
+		"mainIcon", Icon.crate,
 		"cross", Icon.exit };
 		iconTable.fileNamePrefix = "icons/";
 		iconTable.Fill( table );
@@ -449,6 +453,18 @@ public class Interface : OperationHandler
 
 		tooltip = Tooltip.Create();
 		tooltip.Open();
+
+		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
+		this.Image( Icon.hammer ).AddClickHandler( () => BuildPanel.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Alpha1 );
+
+		this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
+		this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
+		this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
+		this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R );
+		this.Image( Icon.cup ).AddClickHandler( () => WorldProgressPanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
+		this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
+		this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
 
 		world = World.Create().Setup();
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
@@ -537,18 +553,8 @@ public class Interface : OperationHandler
 		// 	if ( !localReset )
 		// 		world.Reset();
 		// }
-		if ( itemListHotkey.IsDown() )
-			ItemList.Create().Open( mainPlayer );
-		if ( itemStatsHotkey.IsDown() )
-			ItemStats.Create().Open( mainPlayer );
-		if ( resourceListHotkey.IsDown() )
-			ResourceList.Create().Open();
-		if ( routeListHotkey.IsDown() )
-			RouteList.Create().Open( null, Item.Type.log, true );
 		if ( hotkeyListHotkey.IsDown() )
 			HotkeyList.Create().Open();
-		if ( worldProgressHotkey.IsDown() )
-			WorldProgressPanel.Create().Open();
 		if ( headquartersHotkey.IsDown() )
 			mainPlayer.mainBuilding.OnClicked( true );
 		if ( closeWindowHotkey.IsDown() )
@@ -573,8 +579,6 @@ public class Interface : OperationHandler
 		}
 		if ( cameraBackHotkey.IsDown() )
 			world.eye.RestoreOldPosition();
-		if ( minimapHotkey.IsDown() )
-			Map.Create().Open();
 		if ( mapHotkey.IsDown() )
 			Map.Create().Open( true );
 		if ( Interface.heightStripsHotkey.IsDown() )
@@ -969,6 +973,24 @@ public class Interface : OperationHandler
 		}
     }
 
+	public class HotkeyControl : MonoBehaviour
+	{
+		public Hotkey hotkey;
+		public UIHelpers.HiveButton button;
+
+		public void Open( string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false )
+		{
+			hotkey = new Hotkey( name, key, ctrl, alt, shift );
+			button = gameObject.GetComponent<UIHelpers.HiveButton>();
+		}
+
+		public void Update()
+		{
+			if ( button && hotkey != null && hotkey.IsDown() )
+				button.leftClickHandler();
+		}
+	}
+
 	public class Panel : MonoBehaviour, IDragHandler, IBeginDragHandler, IPointerClickHandler
 	{
 		public HiveObject target;
@@ -1100,16 +1122,12 @@ public class Interface : OperationHandler
 
 		public Image Image( Sprite picture = null )
 		{
-			Image i = new GameObject().AddComponent<Image>();
-			i.name = "Image";
-			i.sprite = picture;
-			i.transform.SetParent( transform );
-			return i;
+			return UIHelpers.Image( this, picture );
 		}
 
 		public Image Image( Icon icon )
 		{
-			return Image( iconTable.GetMediaData( icon ) );
+			return UIHelpers.Image( this, icon );
 		}
 
 		public ProgressBar Progress( Sprite picture = null )
@@ -2795,7 +2813,7 @@ public class Interface : OperationHandler
 			this.node = node;
 			Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, -10 ).AddClickHandler( Hauler );
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 150, -10 ).AddClickHandler( Remove );
-			Image( iconTable.GetMediaData( Icon.box ) ).Pin( 130, -10, 20, 20 ).AddClickHandler( Split );
+			Image( iconTable.GetMediaData( Icon.junction ) ).Pin( 130, -10, 20, 20 ).AddClickHandler( Split );
 			jam = Text( "Jam" ).Pin( 12, -4, 120 );
 			workers = Text( "Worker count" ).Pin( 12, -28, 120 );
 			name = "Road panel";
@@ -4349,7 +4367,6 @@ if ( cart )
 			mouseOver = false;
 		}
 
-		static public Hotkey constructionHotkey = new Hotkey( "Build", KeyCode.Alpha1 );
 		static public Hotkey showGridHotkey = new Hotkey( "Show grids", KeyCode.Alpha2 );
 		static public Hotkey showNearestPossibleConstructionSiteHotkey = new Hotkey( "Show nearest construction site", KeyCode.Alpha5 );
 		static public Hotkey showNearestPossibleConstructionSiteAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Alpha6 );
@@ -4362,8 +4379,6 @@ if ( cart )
 
 		public void Update()
 		{
-			if ( constructionHotkey.IsDown() )
-				BuildPanel.Create().Open();
 			if ( showGridHotkey.IsDown() )
 				showGridAtMouse = !showGridAtMouse;
 			if ( showNearestPossibleConstructionSiteHotkey.IsDown() )
@@ -5501,6 +5516,20 @@ public static class UIHelpers
 {
 	public static int currentRow = 0, currentColumn = 0;
 
+	public static Image Image( this Component panel, Sprite picture = null )
+	{
+		Image i = new GameObject().AddComponent<Image>();
+		i.name = "Image";
+		i.sprite = picture;
+		i.transform.SetParent( panel.transform );
+		return i;
+	}
+
+	public static Image Image( this Component panel, Interface.Icon icon )
+	{
+		return panel.Image( Interface.iconTable.GetMediaData( icon ) );
+	}
+
 	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
 	{
 		currentColumn = x + xs;
@@ -5634,6 +5663,13 @@ public static class UIHelpers
 			foreach ( Transform t in g.transform )
 				t.SetTooltip( text, image, additionalText, onShow );
 			return g;
+	}
+
+	public static UIElement AddHotkey<UIElement>( this UIElement g, string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false ) where UIElement : Component
+	{
+		var h = g.gameObject.AddComponent<Interface.HotkeyControl>();
+		h.Open( name, key, ctrl, alt, shift );
+		return g;
 	}
 
 	public static string GetPrettyName( this string name, bool capitalize = true )
