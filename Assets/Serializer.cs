@@ -21,7 +21,6 @@ public class Serializer : JsonSerializer
 	public class SkipUnityContractResolver : DefaultContractResolver
 	{
 		public static readonly SkipUnityContractResolver Instance = new SkipUnityContractResolver();
-
 		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
 		{
 			JsonProperty property = base.CreateProperty( member, memberSerialization );
@@ -229,8 +228,10 @@ public class Serializer : JsonSerializer
 		return Object();
 	}
 
-	static public T Read<T>( string fileName )
+	static public T Read<T>( string fileName ) where T : class
 	{
+		if ( !File.Exists( fileName ) )
+			return null;
 		using ( var sw = new StreamReader( fileName ) )
 		using ( var reader = new JsonTextReader( sw ) )
 		{
@@ -240,14 +241,16 @@ public class Serializer : JsonSerializer
 		}
 	}
 
-	static public void Write( string fileName, object source, bool intended = true )
+	static public void Write( string fileName, object source, bool intended = true, bool allowUnityTypes = false )
 	{
 		JsonSerializerSettings jsonSettings = new JsonSerializerSettings
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
-			PreserveReferencesHandling = PreserveReferencesHandling.Objects,
-			ContractResolver = Serializer.SkipUnityContractResolver.Instance
+			PreserveReferencesHandling = PreserveReferencesHandling.Objects
 		};
+		if ( !allowUnityTypes )
+			jsonSettings.ContractResolver = Serializer.SkipUnityContractResolver.Instance;
+		
 		var serializer = JsonSerializer.Create( jsonSettings );
 
 		using var sw = new StreamWriter( fileName );

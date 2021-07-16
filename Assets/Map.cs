@@ -33,13 +33,15 @@ public class Map : Interface.Panel
 		}
 	}
 
+	static public Interface.Hotkey toggleFullscreenHotkey = new Interface.Hotkey( "Toggle map fullscreen", KeyCode.Return );
+
 	new void Update()
 	{
 		base.Update();
 
-		if ( Interface.GetKey( KeyCode.KeypadPlus ) )
+		if ( Interface.mapZoomInHotkey.IsDown() )
 			zoom /= 1 + Constants.Map.zoomSpeed;
-		if ( Interface.GetKey( KeyCode.KeypadMinus ) )
+		if ( Interface.mapZoomOutHotkey.IsDown() )
 			zoom *= 1 + Constants.Map.zoomSpeed;
 		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 && fullScreen )
 			zoom /= 1 + Constants.Map.zoomSpeedWithMouseWheel;
@@ -49,7 +51,7 @@ public class Map : Interface.Panel
 			zoom = Constants.Map.zoomMin;
 		if ( zoom > Constants.Map.zoomMax )
 			zoom = Constants.Map.zoomMax;
-		if ( Interface.GetKeyDown( KeyCode.Return ) )
+		if ( toggleFullscreenHotkey.IsDown() )
 		{
 			fullScreen = !fullScreen;
 			content.Setup( fullScreen );

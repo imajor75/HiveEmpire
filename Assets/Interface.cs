@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
@@ -41,6 +42,135 @@ public class Interface : OperationHandler
 	public GameObject highlightOwner;
 	public static Material materialUIPath;
 	static bool focusOnInputField;
+	static KeyCode ignoreKey = KeyCode.None;
+
+	static public Hotkey buildingListHotkey = new Hotkey( "Building list", KeyCode.B );
+	static public Hotkey hotkeyListHotkey = new Hotkey( "Hotkey list", KeyCode.H, true );
+	static public Hotkey historyHotkey = new Hotkey( "History", KeyCode.H );
+	static public Hotkey itemListHotkey = new Hotkey( "Item list", KeyCode.I );
+	static public Hotkey itemStatsHotkey = new Hotkey( "Item statistics", KeyCode.J );
+	static public Hotkey resourceListHotkey = new Hotkey( "Resource list", KeyCode.K );
+	static public Hotkey routeListHotkey = new Hotkey( "Route list", KeyCode.R );
+	static public Hotkey worldProgressHotkey = new Hotkey( "World progress", KeyCode.P );
+
+	static public Hotkey headquartersHotkey = new Hotkey( "Show headquarters", KeyCode.Home );
+	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
+	static public Hotkey cameraBackHotkey = new Hotkey( "Camera back", KeyCode.LeftArrow, false, true );
+
+	static public Hotkey minimapHotkey = new Hotkey( "Minimap", KeyCode.M );
+	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M, true );
+
+	static public Hotkey undoHotkey = new Hotkey( "Undo", KeyCode.Z, true );
+	static public Hotkey redoHotkey = new Hotkey( "Redo", KeyCode.Y, true );
+
+	static public Hotkey fastSpeedHotkey = new Hotkey( "Speed 8x", KeyCode.Insert );
+	static public Hotkey normalSpeedHotkey = new Hotkey( "Speed 1x", KeyCode.Delete );
+	static public Hotkey pauseHotkey = new Hotkey( "Pause", KeyCode.Pause );
+	static public Hotkey speedUpHotkey = new Hotkey( "Speed 5x (continuous)", KeyCode.Space );
+
+	static public Hotkey cameraLeftHotkey = new Hotkey( "Camera move left (continuous)", KeyCode.A );
+	static public Hotkey cameraRightHotkey = new Hotkey( "Camera move right (continuous)", KeyCode.D );
+	static public Hotkey cameraUpHotkey = new Hotkey( "Camera move up (continuous)", KeyCode.W );
+	static public Hotkey cameraDownHotkey = new Hotkey( "Camera move down (continuous)", KeyCode.S );
+	static public Hotkey cameraRotateCWHotkey = new Hotkey( "Camera rotate CW (continuous)", KeyCode.E );
+	static public Hotkey cameraRotateCCWHotkey = new Hotkey( "Camera rotate CCW (continuous)", KeyCode.Q );
+	static public Hotkey cameraZoomInHotkey = new Hotkey( "Camera zoom in", KeyCode.Z );
+	static public Hotkey cameraZoomOutHotkey = new Hotkey( "Camera zoom out", KeyCode.Y );
+
+	static public Hotkey mapZoomInHotkey = new Hotkey( "Map zoom in", KeyCode.KeypadPlus );
+	static public Hotkey mapZoomOutHotkey = new Hotkey( "Map zoom out", KeyCode.KeypadMinus );
+
+	static public Hotkey heightStripsHotkey = new Hotkey( "Height strips", KeyCode.Alpha9 );
+	public class Hotkey
+	{
+		public string action;
+		public KeyCode key;
+		public bool alt, shift, ctrl;
+		[JsonIgnore]
+		public bool core;
+		[JsonIgnore]
+		public Hotkey original;
+		public static List<Hotkey> instances = new List<Hotkey>();
+
+		public Hotkey()
+		{
+		}
+
+		public Hotkey( string action, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false )
+		{
+			this.action = action;
+			this.key = key;
+			this.ctrl = ctrl;
+			this.alt = alt;
+			this.shift = shift;
+			original = new Hotkey { key = key, alt = alt, ctrl = ctrl, shift = shift };
+			core = true;
+			instances.Add( this );
+		}
+
+		public void Reset()
+		{
+			Assert.global.IsNotNull( original );
+			key = original.key;
+			alt = original.alt;
+			ctrl = original.ctrl;
+			shift = original.shift;
+		}
+
+		public void CopyTo( Hotkey dest )
+		{
+			Assert.global.IsTrue( dest.core );
+			Assert.global.IsFalse( core );
+
+			dest.key = key;
+			dest.alt = alt;
+			dest.ctrl = ctrl;
+			dest.shift = shift;
+		}
+
+		[JsonIgnore]
+		public string keyName
+		{
+			get
+			{
+				string keyName = "";
+				if ( alt )
+					keyName += "Alt+";
+				if ( ctrl )
+					keyName += "Ctrl+";
+				if ( shift )
+					keyName += "Shift+";
+				return keyName + GetKeyName( key );
+			}
+		}
+
+		public bool IsSecondaryHold()
+		{
+			if ( alt != ( GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) ) )
+				return false;
+			if ( shift != ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) ) )
+				return false;
+			if ( ctrl != ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) ) )
+				return false;
+
+			return true;
+		}
+
+		public bool IsDown()
+		{
+			return IsSecondaryHold() && GetKeyDown( key );
+		}
+
+		public bool IsHold()
+		{
+			return IsSecondaryHold() && GetKey( key );
+		}
+
+		public class List
+		{
+			public List<Hotkey> list;
+		}
+	}
 
 	public enum HighlightType
 	{
@@ -85,6 +215,14 @@ public class Interface : OperationHandler
 		root = this;
 	}
 
+	static public string GetKeyName( KeyCode k )
+	{
+		if ( k >= KeyCode.Alpha0 && k <= KeyCode.Alpha9 )
+			return ( k - KeyCode.Alpha0 ).ToString();
+		
+		return k.ToString();
+	}
+
 	static public GameObject GetUIElementUnderCursor()
 	{
 		PointerEventData p = new PointerEventData( EventSystem.current )
@@ -97,6 +235,12 @@ public class Interface : OperationHandler
 			return null;
 
 		return result[0].gameObject;
+	}
+
+	void OnGUI()
+	{ 
+		if ( Event.current.type == EventType.KeyUp && ignoreKey == Event.current.keyCode )
+			ignoreKey = KeyCode.None;
 	}
 
 	public void Clear()
@@ -126,7 +270,7 @@ public class Interface : OperationHandler
 
 	public static bool GetKey( KeyCode key )
 	{
-		if ( focusOnInputField )
+		if ( focusOnInputField || ignoreKey == key )
 			return false;
 
 		return Input.GetKey( key );
@@ -134,7 +278,7 @@ public class Interface : OperationHandler
 
 	public static bool GetKeyDown( KeyCode key )
 	{
-		if ( focusOnInputField )
+		if ( focusOnInputField || ignoreKey == key )
 			return false;
 
 		return Input.GetKeyDown( key );
@@ -165,6 +309,28 @@ public class Interface : OperationHandler
 		if ( o.y < 0 )
 			o.y += 1;
 		materialUIPath.mainTextureOffset = o;
+
+		if ( buildingListHotkey.IsDown() )
+			BuildingList.Create().Open();
+		if ( historyHotkey.IsDown() )
+			History.Create().Open( mainPlayer );
+
+		if ( undoHotkey.IsDown() )
+			Undo();
+		if ( redoHotkey.IsDown() )
+			Redo();
+
+		if ( fastSpeedHotkey.IsDown() )
+			world.SetTimeFactor( 8 );
+		if ( normalSpeedHotkey.IsDown() )
+			world.SetTimeFactor( 1 );
+		if ( pauseHotkey.IsDown() )
+		{
+			if ( world.timeFactor > 0 )
+				world.SetTimeFactor( 0 );
+			else
+				world.SetTimeFactor( 1 );
+		}
 
 		if ( mainPlayer && mainPlayer.mainProductivity >= world.productivityGoal && !world.victory )
 		{
@@ -217,6 +383,7 @@ public class Interface : OperationHandler
 		// 	d.Apply();
 		// 	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
 		// }
+
 		var highlightShader = Resources.Load<Shader>( "shaders/HighlightVolume" );
 		highlightMaterial = new Material( highlightShader );
 
@@ -264,6 +431,8 @@ public class Interface : OperationHandler
 		Water.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
+		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
+		LoadHotkeys();
 
 		canvas = gameObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -320,11 +489,36 @@ public class Interface : OperationHandler
 		print( fileName + " is saved" );
 	}
 
+	public void SaveHotkeys()
+	{
+		Serializer.Write( Application.persistentDataPath + "/Settings/hotkeys.json", new Hotkey.List { list = Hotkey.instances }, true, true );
+	}
+
+	public void LoadHotkeys()
+	{
+		var hotkeys = Serializer.Read<Hotkey.List>( Application.persistentDataPath + "/Settings/hotkeys.json" );
+		if ( hotkeys == null )
+			return;
+
+		var list = hotkeys.list;
+		list.AddRange( Hotkey.instances );
+		list.Sort( ( a, b ) => a.action.CompareTo( b.action ) );
+		for ( int i = 0; i < list.Count-1; i++ )
+		{
+			if ( list[i].action != list[i+1].action )
+				continue;
+			if ( list[i].core )
+				list[i+1].CopyTo( list[i] );
+			else
+				list[i].CopyTo( list[i+1] );
+		}
+	}
+
 	public void Update()
 	{
 		if ( world.timeFactor != 0 && world.timeFactor != 8 )
 		{
-			if ( GetKey( KeyCode.Space ) )
+			if ( speedUpHotkey.IsHold() )
 				world.SetTimeFactor( 5 );
 			else
 				world.SetTimeFactor( 1 );
@@ -343,54 +537,21 @@ public class Interface : OperationHandler
 		// 	if ( !localReset )
 		// 		world.Reset();
 		// }
-		if ( GetKeyDown( KeyCode.Insert ) )
-			world.SetTimeFactor( 8 );
-		if ( GetKeyDown( KeyCode.Delete ) )
-			world.SetTimeFactor( 1 );
-		if ( GetKeyDown( KeyCode.Pause ) )
-		{
-			if ( world.timeFactor > 0 )
-				world.SetTimeFactor( 0 );
-			else
-				world.SetTimeFactor( 1 );
-		}
-		if ( GetKeyDown( KeyCode.Z ) && ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) ) )
-			Undo();
-		if ( GetKeyDown( KeyCode.Y ) && ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) ) )
-			Redo();
-		if ( GetKeyDown( KeyCode.H ) )
-		{
-			History.Create().Open( mainPlayer );
-		}
-		if ( GetKeyDown( KeyCode.I ) )
-		{
+		if ( itemListHotkey.IsDown() )
 			ItemList.Create().Open( mainPlayer );
-		}
-		if ( GetKeyDown( KeyCode.J ) )
-		{
+		if ( itemStatsHotkey.IsDown() )
 			ItemStats.Create().Open( mainPlayer );
-		}
-		if ( GetKeyDown( KeyCode.K ) )
-		{
+		if ( resourceListHotkey.IsDown() )
 			ResourceList.Create().Open();
-		}
-		if ( GetKeyDown( KeyCode.R ) )
-		{
+		if ( routeListHotkey.IsDown() )
 			RouteList.Create().Open( null, Item.Type.log, true );
-		}
-		if ( GetKeyDown( KeyCode.B ) )
-		{
-			BuildingList.Create().Open();
-		}
-		if ( GetKeyDown( KeyCode.P ) )
-		{
+		if ( hotkeyListHotkey.IsDown() )
+			HotkeyList.Create().Open();
+		if ( worldProgressHotkey.IsDown() )
 			WorldProgressPanel.Create().Open();
-		}
-		if ( GetKeyDown( KeyCode.Home ) )
-		{
+		if ( headquartersHotkey.IsDown() )
 			mainPlayer.mainBuilding.OnClicked( true );
-		}
-		if ( GetKeyDown( KeyCode.Escape ) )
+		if ( closeWindowHotkey.IsDown() )
 		{
 			if ( !viewport.ResetInputHandler() )
 			{
@@ -410,11 +571,13 @@ public class Interface : OperationHandler
 				toClose?.Close();
 			}
 		}
-		if ( GetKeyDown( KeyCode.LeftArrow ) && GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) )
+		if ( cameraBackHotkey.IsDown() )
 			world.eye.RestoreOldPosition();
-		if ( GetKeyDown( KeyCode.M ) )
-			Map.Create().Open( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) );
-		if ( GetKeyDown( KeyCode.Alpha9 ) )
+		if ( minimapHotkey.IsDown() )
+			Map.Create().Open();
+		if ( mapHotkey.IsDown() )
+			Map.Create().Open( true );
+		if ( Interface.heightStripsHotkey.IsDown() )
 			SetHeightStrips( !heightStrips );
 
 		CheckHighlight();
@@ -1419,15 +1582,18 @@ public class Interface : OperationHandler
 				}
 			}
 
+			static public Hotkey increaseSizeHotkey = new Hotkey( "Area size increase", KeyCode.Period );
+			static public Hotkey decreaseSizeHotkey = new Hotkey( "Area size decrease", KeyCode.Comma );
+
 			public void Update()
 			{
 				image.color = area.center != null ? Color.green : Color.white;
-				if ( GetKeyDown( KeyCode.Comma ) )
+				if ( decreaseSizeHotkey.IsDown() )
 				{
 					if ( area.radius > 1 )
 						area.radius--;
 				}
-				if ( GetKeyDown( KeyCode.Period ) )
+				if ( increaseSizeHotkey.IsDown() )
 				{
 					if ( area.radius < 8 )
 						area.radius++;
@@ -3534,6 +3700,140 @@ if ( cart )
 		}
     }
 
+	public class HotkeyList : Panel
+	{
+		public ScrollRect scroll;
+
+		static public HotkeyList Create()
+		{
+			return new GameObject( "Hotkey List ").AddComponent<HotkeyList>();
+		}
+
+		public void Open()
+		{
+			base.Open( null, 0, 0, 500, 350 );
+			Fill();
+		}
+
+		public void Fill()
+		{
+			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
+			int row = 0;
+			Hotkey.instances.Sort( (a, b) => a.action.CompareTo( b.action ) );
+			foreach ( var hotkey in Hotkey.instances )
+			{
+				Text( hotkey.action ).Link( scroll.content ).Pin( 0, row, 320, iconSize ).alignment = TextAnchor.UpperRight;
+				Text( hotkey.keyName ).Link( scroll.content ).PinSideways( 10, row, 110, iconSize ).AddClickHandler( () => Editor.Create().Open( hotkey, this ) );
+				row -= iconSize;
+			}
+			scroll.SetContentSize( -1, -row );
+		}
+
+		public void UpdateList()
+		{
+			var scrollPos = scroll.verticalNormalizedPosition;
+			Clear();
+			Fill();
+			scroll.verticalNormalizedPosition = scrollPos;
+		}
+
+		public class Editor : Panel
+		{
+			public Hotkey hotkey;
+			public HotkeyList boss;
+
+			public static Editor Create()
+			{
+				return new GameObject( "Press new hotkey panel" ).AddComponent<Editor>();
+			}
+
+			public void Open( Hotkey hotkey, HotkeyList boss )
+			{
+				this.hotkey = hotkey;
+				this.boss = boss;
+				base.Open( 300, 100 );
+				Listen();
+			}
+
+			void Listen()
+			{
+				Text( $"Press new hotkey for\n{hotkey.action}" ).PinCenter( 0, -borderWidth-iconSize, 260, 2 * iconSize, 0.5f, 1 ).alignment = TextAnchor.MiddleCenter;
+				Button( "Cancel" ).PinCenter( 0, -70, 100, iconSize, 0.25f ).AddClickHandler( () => { Close(); } );
+				Button( "Reset" ).PinCenter( 0, -70, 100, iconSize, 0.75f ).AddClickHandler( () => { ChangeTo( hotkey.original, false ); } );
+			}
+
+			void OnGUI()
+			{
+				if ( Event.current.type != EventType.KeyDown )
+					return;
+				var key = Event.current.keyCode;
+				if ( key == KeyCode.LeftAlt || key == KeyCode.RightAlt )
+					return;
+				if ( key == KeyCode.LeftShift || key == KeyCode.RightShift )
+					return;
+				if ( key == KeyCode.LeftControl || key == KeyCode.RightControl )
+					return;
+
+				Event.current.Use();	// does it do anything?
+				Interface.ignoreKey = key;
+
+				Hotkey newHotkey = new Hotkey { alt = Event.current.alt, ctrl = Event.current.control, shift = Event.current.shift, key = key };
+				ChangeTo( newHotkey );
+			}
+
+			public void ChangeTo( Hotkey newHotkey, bool offerAnotherTake = true )
+			{
+				foreach ( var hotkey in Hotkey.instances )
+				{
+					if ( hotkey == this.hotkey )
+						continue;;
+
+					if ( hotkey.ctrl != newHotkey.ctrl )
+						continue;
+					if ( hotkey.alt != newHotkey.alt )
+						continue;
+					if ( hotkey.shift != newHotkey.shift )
+						continue;
+					if ( hotkey.key == newHotkey.key )
+					{
+						Clear();
+						Text( $"{newHotkey.keyName} is already\ntaken for {hotkey.action}" ).PinCenter( 0, -borderWidth-iconSize, 260, 2 * iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
+						Button( "Use anyway" ).PinCenter( 0, -70, 100, iconSize, 0.25f ).AddClickHandler( () => UseInstead( newHotkey, hotkey ) );
+						if ( offerAnotherTake )
+							Button( "Take another" ).PinCenter( 0, -70, 100, iconSize, 0.75f ).AddClickHandler( () => { Clear(); Listen(); } );
+						else
+							Button( "Cancel" ).PinCenter( 0, -70, 100, iconSize, 0.75f ).AddClickHandler( Close );
+						return;
+					}
+				}
+
+				hotkey.key = newHotkey.key;
+				hotkey.ctrl = newHotkey.ctrl;
+				hotkey.alt = newHotkey.alt;
+				hotkey.shift = newHotkey.shift;
+				DoneEditing();
+			}
+
+			void DoneEditing()
+			{
+				root.SaveHotkeys();
+				boss.UpdateList();
+				Close();
+			}
+
+			void UseInstead( Hotkey newHotkey, Hotkey old )
+			{
+				old.key = KeyCode.None;
+				old.alt = old.ctrl = old.shift = false;
+				hotkey.key = newHotkey.key;
+				hotkey.ctrl = newHotkey.ctrl;
+				hotkey.alt = newHotkey.alt;
+				hotkey.shift = newHotkey.shift;
+				DoneEditing();
+			}
+		}
+	}
+
 	public class BuildingList : Panel
 	{
 		ScrollRect scroll;
@@ -4049,19 +4349,30 @@ if ( cart )
 			mouseOver = false;
 		}
 
+		static public Hotkey constructionHotkey = new Hotkey( "Build", KeyCode.Alpha1 );
+		static public Hotkey showGridHotkey = new Hotkey( "Show grids", KeyCode.Alpha2 );
+		static public Hotkey showNearestPossibleConstructionSiteHotkey = new Hotkey( "Show nearest construction site", KeyCode.Alpha5 );
+		static public Hotkey showNearestPossibleConstructionSiteAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Alpha6 );
+		static public Hotkey showNodeHotkey = new Hotkey( "Show current node", KeyCode.Alpha7 );
+		static public Hotkey rotateConstructionCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.Period );
+		static public Hotkey rotateConstructionCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.Comma );
+		static public Hotkey showPossibleBuildingsHotkey = new Hotkey( "Show possible buildings", KeyCode.Alpha3 );
+		static public Hotkey showUndergroundResourcesHotkey = new Hotkey( "Show underground resources", KeyCode.Alpha4 );
+
+
 		public void Update()
 		{
-			if ( GetKeyDown( KeyCode.Alpha1 ) )
+			if ( constructionHotkey.IsDown() )
 				BuildPanel.Create().Open();
-			if ( GetKeyDown( KeyCode.Alpha2 ) )
+			if ( showGridHotkey.IsDown() )
 				showGridAtMouse = !showGridAtMouse;
-			if ( GetKeyDown( KeyCode.Alpha5 ) )
+			if ( showNearestPossibleConstructionSiteHotkey.IsDown() )
 				ShowNearestPossibleConstructionSite( false );
-			if ( GetKeyDown( KeyCode.Alpha6 ) )
+			if ( showNearestPossibleConstructionSiteAnyDirectionHotkey.IsDown() )
 				ShowNearestPossibleConstructionSite( true );
-			if ( GetKeyDown( KeyCode.Alpha7 ) )
+			if ( showNodeHotkey.IsDown() )
 				showCursor = !showCursor;
-			if ( GetKeyDown( KeyCode.Comma ) )
+			if ( rotateConstructionCCWHotkey.IsDown() )
 			{
 				if ( currentFlagDirection == 0 )
 					currentFlagDirection = 5;
@@ -4069,7 +4380,7 @@ if ( cart )
 					currentFlagDirection--;
 				CancelBlueprint();
 			}
-			if ( GetKeyDown( KeyCode.Period ) )
+			if ( rotateConstructionCWHotkey.IsDown() )
 			{
 				if ( currentFlagDirection == 5 )
 					currentFlagDirection = 0;
@@ -4078,14 +4389,14 @@ if ( cart )
 				CancelBlueprint();
 			}
 
-			if ( GetKeyDown( KeyCode.Alpha3 ) )
+			if ( showPossibleBuildingsHotkey.IsDown() )
 			{
 				if ( nodeInfoToShow == NodeInfoType.possibleBuildings )
 					nodeInfoToShow = NodeInfoType.none;
 				else
 					nodeInfoToShow = NodeInfoType.possibleBuildings;
 			}
-			if ( GetKeyDown( KeyCode.Alpha4 ) )
+			if ( showUndergroundResourcesHotkey.IsDown() )
 			{
 				if ( nodeInfoToShow == NodeInfoType.undergroundResources )
 					nodeInfoToShow = NodeInfoType.none;

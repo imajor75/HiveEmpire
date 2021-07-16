@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -199,13 +199,13 @@ public class Eye : HiveObject
 			oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
 
 		Vector3 movement = autoMovement;
-		if ( Interface.GetKey( KeyCode.A ) )
+		if ( Interface.cameraLeftHotkey.IsHold() )
 			movement += Move( -Constants.Eye.moveSpeed, 0 );
-		if ( Interface.GetKey( KeyCode.D ) )
+		if ( Interface.cameraRightHotkey.IsHold() )
 			movement += Move( Constants.Eye.moveSpeed, 0 );
-		if ( Interface.GetKey( KeyCode.W ) )
+		if ( Interface.cameraUpHotkey.IsHold() )
 			movement += Move( 0, Constants.Eye.moveSpeed * 1.3f );
-		if ( Interface.GetKey( KeyCode.S ) )
+		if ( Interface.cameraDownHotkey.IsHold() )
 			movement += Move( 0, -Constants.Eye.moveSpeed * 1.3f );
 		x += movement.x;
 		y += movement.z;
@@ -235,12 +235,12 @@ public class Eye : HiveObject
 			absoluteX += World.instance.ground.dimension * Constants.Node.size;
 		}
 
-		if ( Interface.GetKey( KeyCode.Q ) )
+		if ( Interface.cameraRotateCCWHotkey.IsHold() )
 		{
 			rotateAround = false;
 			direction += Constants.Eye.rotateSpeed;
 		}
-		if ( Interface.GetKey( KeyCode.E ) )
+		if ( Interface.cameraRotateCWHotkey.IsHold() )
 		{
 			rotateAround = false;
 			direction -= Constants.Eye.rotateSpeed;
@@ -252,9 +252,9 @@ public class Eye : HiveObject
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
 
-		if ( Interface.GetKey( KeyCode.Z ) && !Interface.GetKey( KeyCode.LeftControl ) && !Interface.GetKey( KeyCode.RightControl ) )
+		if ( Interface.cameraZoomOutHotkey.IsHold() )
 			targetAltitude *= Constants.Eye.altitudeChangeSpeed;
-		if ( Interface.GetKey( KeyCode.X ) )
+		if ( Interface.cameraZoomInHotkey.IsHold() )
 			targetAltitude /= Constants.Eye.altitudeChangeSpeed;
 		if ( camera.enabled && Interface.root.viewport.mouseOver )
 		{
