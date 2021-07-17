@@ -72,7 +72,6 @@ public class Interface : OperationHandler
 	static public Hotkey mapZoomInHotkey = new Hotkey( "Map zoom in", KeyCode.KeypadPlus );
 	static public Hotkey mapZoomOutHotkey = new Hotkey( "Map zoom out", KeyCode.KeypadMinus );
 
-	static public Hotkey heightStripsHotkey = new Hotkey( "Height strips", KeyCode.Alpha9 );
 	public class Hotkey
 	{
 		public string action;
@@ -214,7 +213,10 @@ public class Interface : OperationHandler
 		history,
 		map,
 		hive,
-		cup
+		cup,
+		cursor,
+		grid,
+		buildings
 	}
 
 
@@ -466,6 +468,8 @@ public class Interface : OperationHandler
 		this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
 
+		this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.Alpha9 );
+
 		world = World.Create().Setup();
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 		if ( directory.Exists )
@@ -581,8 +585,6 @@ public class Interface : OperationHandler
 			world.eye.RestoreOldPosition();
 		if ( mapHotkey.IsDown() )
 			Map.Create().Open( true );
-		if ( Interface.heightStripsHotkey.IsDown() )
-			SetHeightStrips( !heightStrips );
 
 		CheckHighlight();
 	}
@@ -976,12 +978,12 @@ public class Interface : OperationHandler
 	public class HotkeyControl : MonoBehaviour
 	{
 		public Hotkey hotkey;
-		public UIHelpers.HiveButton button;
+		public UIHelpers.Button button;
 
 		public void Open( string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false )
 		{
 			hotkey = new Hotkey( name, key, ctrl, alt, shift );
-			button = gameObject.GetComponent<UIHelpers.HiveButton>();
+			button = gameObject.GetComponent<UIHelpers.Button>();
 		}
 
 		public void Update()
@@ -4135,6 +4137,21 @@ if ( cart )
 
 			redCrossOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
 			redCrossOnGround.mainTexture = Resources.Load<Texture>( "icons/redCross" );
+
+			this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -160, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.Alpha2 );
+			this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show note at cursor", KeyCode.Alpha7 );
+			this.Image( Icon.buildings ).AddToggleHandler( ShowPossibleBuildings ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show possible buildings", KeyCode.Alpha3 );
+			this.Image( Icon.crate ).AddToggleHandler( ShowUndergroundResources ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show underground resources", KeyCode.Alpha4 );
+		}
+
+		void ShowPossibleBuildings( bool state )
+		{
+			nodeInfoToShow = state ? NodeInfoType.possibleBuildings : NodeInfoType.none;
+		}
+
+		void ShowUndergroundResources( bool state )
+		{
+			nodeInfoToShow = state ? NodeInfoType.undergroundResources : NodeInfoType.none;
 		}
 
 		public bool ResetInputHandler()
@@ -4367,26 +4384,18 @@ if ( cart )
 			mouseOver = false;
 		}
 
-		static public Hotkey showGridHotkey = new Hotkey( "Show grids", KeyCode.Alpha2 );
 		static public Hotkey showNearestPossibleConstructionSiteHotkey = new Hotkey( "Show nearest construction site", KeyCode.Alpha5 );
 		static public Hotkey showNearestPossibleConstructionSiteAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Alpha6 );
-		static public Hotkey showNodeHotkey = new Hotkey( "Show current node", KeyCode.Alpha7 );
 		static public Hotkey rotateConstructionCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.Period );
 		static public Hotkey rotateConstructionCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.Comma );
-		static public Hotkey showPossibleBuildingsHotkey = new Hotkey( "Show possible buildings", KeyCode.Alpha3 );
-		static public Hotkey showUndergroundResourcesHotkey = new Hotkey( "Show underground resources", KeyCode.Alpha4 );
 
 
 		public void Update()
 		{
-			if ( showGridHotkey.IsDown() )
-				showGridAtMouse = !showGridAtMouse;
 			if ( showNearestPossibleConstructionSiteHotkey.IsDown() )
 				ShowNearestPossibleConstructionSite( false );
 			if ( showNearestPossibleConstructionSiteAnyDirectionHotkey.IsDown() )
 				ShowNearestPossibleConstructionSite( true );
-			if ( showNodeHotkey.IsDown() )
-				showCursor = !showCursor;
 			if ( rotateConstructionCCWHotkey.IsDown() )
 			{
 				if ( currentFlagDirection == 0 )
@@ -4404,20 +4413,6 @@ if ( cart )
 				CancelBlueprint();
 			}
 
-			if ( showPossibleBuildingsHotkey.IsDown() )
-			{
-				if ( nodeInfoToShow == NodeInfoType.possibleBuildings )
-					nodeInfoToShow = NodeInfoType.none;
-				else
-					nodeInfoToShow = NodeInfoType.possibleBuildings;
-			}
-			if ( showUndergroundResourcesHotkey.IsDown() )
-			{
-				if ( nodeInfoToShow == NodeInfoType.undergroundResources )
-					nodeInfoToShow = NodeInfoType.none;
-				else
-					nodeInfoToShow = NodeInfoType.undergroundResources;
-			}
 			if ( inputHandler == null || inputHandler.Equals( null ) )
 				inputHandler = this;
 
@@ -5578,9 +5573,11 @@ public static class UIHelpers
 		return g;
 	}
 
-	public class HiveButton : MonoBehaviour, IPointerClickHandler
+	public class Button : MonoBehaviour, IPointerClickHandler
 	{
 		public Action leftClickHandler, rightClickHandler, middleClickHandler;
+		public Action<bool> toggleHandler;
+		public bool toggleState;
 
         public void OnPointerClick( PointerEventData eventData )
         {
@@ -5591,6 +5588,22 @@ public static class UIHelpers
 			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
 				middleClickHandler();
         }
+
+		public void Toggle()
+		{
+			toggleState =! toggleState;
+			UpdateLook();
+			if ( toggleHandler != null )
+				toggleHandler( toggleState );
+		}
+
+		public void UpdateLook()
+		{
+			var i = GetComponent<Image>();
+			if ( i )
+				i.color = toggleState ? Color.white : Color.grey;
+
+		}
     }
 
 	public enum ClickType
@@ -5602,15 +5615,29 @@ public static class UIHelpers
 
 	public static UIElement AddClickHandler<UIElement>( this UIElement g, Action callBack, ClickType type = ClickType.left ) where UIElement : Component
 	{
-		var b = g.gameObject.GetComponent<HiveButton>();
+		var b = g.gameObject.GetComponent<Button>();
 		if ( b == null )
-			b = g.gameObject.AddComponent<HiveButton>();
+			b = g.gameObject.AddComponent<Button>();
 		if ( type == ClickType.left )
 			b.leftClickHandler = callBack;
 		if ( type == ClickType.right )
 			b.rightClickHandler = callBack;
 		if ( type == ClickType.middle )
 			b.middleClickHandler = callBack;
+		return g;
+	}
+
+	public static UIElement AddToggleHandler<UIElement>( this UIElement g, Action<bool> callBack, bool initialState = false ) where UIElement : Component
+	{
+		var b = g.gameObject.GetComponent<Button>();
+		if ( b == null )
+			b = g.gameObject.AddComponent<Button>();
+
+		b.leftClickHandler = b.Toggle;
+		b.toggleHandler = callBack;
+		b.toggleState = initialState;
+		b.UpdateLook();
+
 		return g;
 	}
 
