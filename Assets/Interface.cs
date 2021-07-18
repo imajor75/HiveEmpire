@@ -2055,11 +2055,11 @@ public class Interface : OperationHandler
 
 			if ( on )
 			{
-				root.viewport.nodeInfoToShow = Viewport.NodeInfoType.relaxSites;
+				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodeRelaxSites;
 				root.viewport.relaxCenter = workshop;
 			}
-			if ( !on && root.viewport.nodeInfoToShow == Viewport.NodeInfoType.relaxSites && root.viewport.relaxCenter == workshop )
-				root.viewport.nodeInfoToShow = Viewport.NodeInfoType.none;
+			if ( !on && root.viewport.nodeInfoToShow == Viewport.OverlayInfoType.nodeRelaxSites && root.viewport.relaxCenter == workshop )
+				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.none;
 		}
 
 		static public void UpdateProductivity( Text text, Workshop workshop )
@@ -2736,28 +2736,28 @@ public class Interface : OperationHandler
 		void AddFlag()
 		{
 			root.viewport.constructionMode = Viewport.Construct.flag;
-			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
+			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
 			Close();
 		}
 
 		void AddCrossing()
 		{
 			root.viewport.constructionMode = Viewport.Construct.crossing;
-			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
+			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
 			Close();
 		}
 
 		void AddStock()
 		{
 			root.viewport.constructionMode = Viewport.Construct.stock;
-			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
+			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
 			Close();
 		}
 
 		void AddGuardHouse()
 		{
 			root.viewport.constructionMode = Viewport.Construct.guardHouse;
-			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
+			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
 			Close();
 		}
 
@@ -2783,7 +2783,7 @@ public class Interface : OperationHandler
 			}
 			root.viewport.constructionMode = Viewport.Construct.workshop;
 			root.viewport.workshopType = type;
-			root.viewport.nodeInfoToShow = Viewport.NodeInfoType.possibleBuildings;
+			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
 			Close();
 		}
 	}
@@ -4045,7 +4045,7 @@ if ( cart )
 		static int gridMaskXID;
 		static int gridMaskZID;
 		public bool showGridAtMouse;
-		public NodeInfoType nodeInfoToShow;
+		public OverlayInfoType     nodeInfoToShow;
 		public Building relaxCenter;
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
 		public HiveObject currentBlueprint;
@@ -4064,12 +4064,13 @@ if ( cart )
 			crossing
 		}
 
-		public enum NodeInfoType
+		public enum OverlayInfoType
 		{
 			none,
-			possibleBuildings,
-			undergroundResources,
-			relaxSites
+			nodePossibleBuildings,
+			nodeUndergroundResources,
+			nodeRelaxSites,
+			stockContent
 		}
 
 		public bool showCursor;
@@ -4138,20 +4139,26 @@ if ( cart )
 			redCrossOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
 			redCrossOnGround.mainTexture = Resources.Load<Texture>( "icons/redCross" );
 
-			this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -160, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.Alpha2 );
+			this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -200, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.Alpha2 );
 			this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show note at cursor", KeyCode.Alpha7 );
 			this.Image( Icon.buildings ).AddToggleHandler( ShowPossibleBuildings ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show possible buildings", KeyCode.Alpha3 );
 			this.Image( Icon.crate ).AddToggleHandler( ShowUndergroundResources ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show underground resources", KeyCode.Alpha4 );
+			this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.Alpha8 );
 		}
 
 		void ShowPossibleBuildings( bool state )
 		{
-			nodeInfoToShow = state ? NodeInfoType.possibleBuildings : NodeInfoType.none;
+			nodeInfoToShow = state ? OverlayInfoType.nodePossibleBuildings : OverlayInfoType.none;
 		}
 
 		void ShowUndergroundResources( bool state )
 		{
-			nodeInfoToShow = state ? NodeInfoType.undergroundResources : NodeInfoType.none;
+			nodeInfoToShow = state ? OverlayInfoType.nodeUndergroundResources : OverlayInfoType.none;
+		}
+
+		void ShowStockContent( bool state )
+		{
+			nodeInfoToShow = state ? OverlayInfoType.stockContent : OverlayInfoType.none;
 		}
 
 		public bool ResetInputHandler()
@@ -4162,7 +4169,7 @@ if ( cart )
 				{
 					constructionMode = Construct.nothing;
 					CancelBlueprint();
-					nodeInfoToShow = NodeInfoType.none;
+					nodeInfoToShow = OverlayInfoType.none;
 					return true;
 				}
 				return false;
@@ -4353,7 +4360,7 @@ if ( cart )
 				currentBlueprintPanel?.Close();
 				currentBlueprintPanel = null;
 				constructionMode = Construct.nothing;
-				nodeInfoToShow = NodeInfoType.none;
+				nodeInfoToShow = OverlayInfoType.none;
 				return;
 			}
 
@@ -4426,7 +4433,7 @@ if ( cart )
 			else
 				marker.SetActive( false );
 
-			RenderNodeInfo();
+			RenderOverlayInfo();
 
 			if ( !mouseOver )
 				return;
@@ -4446,14 +4453,14 @@ if ( cart )
 #endif
 		}
 
-		void RenderNodeInfo()
+		void RenderOverlayInfo()
 		{
-			if ( nodeInfoToShow != NodeInfoType.none && currentNode )
+			if ( nodeInfoToShow != OverlayInfoType.none && currentNode )
 			{
 				foreach ( var o in Ground.areas[6] )
 				{
 					var n = currentNode + o;
-					if ( nodeInfoToShow == NodeInfoType.possibleBuildings )
+					if ( nodeInfoToShow == OverlayInfoType.nodePossibleBuildings )
 					{
 						foreach ( var p in buildCategories )
 						{
@@ -4472,7 +4479,7 @@ if ( cart )
 							break;
 						}
 					}
-					if ( nodeInfoToShow == NodeInfoType.undergroundResources )
+					if ( nodeInfoToShow == OverlayInfoType.nodeUndergroundResources )
 					{
 						foreach ( var resource in n.resources )
 						{
@@ -4489,13 +4496,28 @@ if ( cart )
 					}
 				}
 			}
-			if ( nodeInfoToShow == NodeInfoType.relaxSites )
+			if ( nodeInfoToShow == OverlayInfoType.nodeRelaxSites )
 			{
 				foreach ( var o in Ground.areas[Workshop.relaxAreaSize] )
 				{
 					var n = relaxCenter.node + o;
 					var material = Workshop.IsNodeGoodForRelax( n ) ? greenCheckOnGround : redCrossOnGround;
 					Graphics.DrawMesh( plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.8f ), material, 0 );
+				}
+			}
+			if ( nodeInfoToShow == OverlayInfoType.stockContent )
+			{
+				foreach ( var stock in root.mainPlayer.stocks )
+				{
+					float angle = Time.fixedTime;
+
+					for ( int itemType = 0; itemType != (int)Item.Type.total; itemType++ )
+					{
+						if ( stock.content[itemType] < 1 )
+							continue;
+						World.DrawObject( Item.looks.GetMediaData( (Item.Type)itemType ), Matrix4x4.TRS( stock.node.positionInViewport + new Vector3( 0.5f * (float)Math.Sin( angle ), 3, 0.5f * (float)Math.Cos( angle ) ), Quaternion.identity, Vector3.one * stock.content[itemType] * 0.05f ) );
+						angle += (float)( Math.PI * 2 / 7 );
+					}
 				}
 			}
 		}

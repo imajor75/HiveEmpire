@@ -380,7 +380,7 @@ public class Node : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
-		Interface.root.viewport.nodeInfoToShow = Interface.Viewport.NodeInfoType.none;
+		Interface.root.viewport.nodeInfoToShow = Interface.Viewport.OverlayInfoType.none;
 		Interface.NodePanel.Create().Open( this, show );
 	}
 
