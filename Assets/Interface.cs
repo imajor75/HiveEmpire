@@ -4515,7 +4515,7 @@ if ( cart )
 					{
 						if ( stock.content[itemType] < 1 )
 							continue;
-						World.DrawObject( Item.looks.GetMediaData( (Item.Type)itemType ), Matrix4x4.TRS( stock.node.positionInViewport + new Vector3( 0.5f * (float)Math.Sin( angle ), 3, 0.5f * (float)Math.Cos( angle ) ), Quaternion.identity, Vector3.one * stock.content[itemType] * 0.05f ) );
+						World.DrawObject( Item.looks.GetMediaData( (Item.Type)itemType ), Matrix4x4.TRS( stock.node.positionInViewport + new Vector3( 0.5f * (float)Math.Sin( angle ), 3, 0.5f * (float)Math.Cos( angle ) ), Quaternion.identity, Vector3.one * stock.content[itemType] * 0.02f ) );
 						angle += (float)( Math.PI * 2 / 7 );
 					}
 				}
