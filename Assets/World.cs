@@ -218,7 +218,8 @@ public class World : MonoBehaviour
 		Interface.ValidateAll();
 
 		eye = Eye.Create().Setup( this );
-		ground = Ground.Create().Setup( this, heightMap, forestMap, settings.size );
+		ground = Ground.Create();
+		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
 		water = Water.Create().Setup( ground );
 		var mainPlayer = Player.Create().Setup();
