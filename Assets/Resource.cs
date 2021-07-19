@@ -129,6 +129,7 @@ public class Resource : HiveObject
 
 	public Resource Setup( Node node, Type type, int charges = -1 )
 	{
+		this.type = type;
 		if ( charges < 1 )
 		{
 			if ( underGround || type == Type.fish )
@@ -155,7 +156,6 @@ public class Resource : HiveObject
 		}
 
 		node.resources.Add( this );
-		this.type = type;
 		if ( charges != int.MaxValue )
 		{
 			this.charges = charges;
