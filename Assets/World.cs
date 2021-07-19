@@ -79,7 +79,8 @@ public class World : MonoBehaviour
 				int total = World.instance.oreCount;
 				if ( resourceCount == 0 )
 					return 1000f;
-				return idealRatio - ( (float)resourceCount / total );
+				float currentRatio = (float)resourceCount / total;
+				return Math.Max( 0f, idealRatio - currentRatio );
 			}
 
 		}
@@ -575,6 +576,13 @@ public class World : MonoBehaviour
 		ores.Add( new Ore{ resourceType = Resource.Type.gold, idealRatio = settings.goldRatio } );
 		ores.Add( new Ore{ resourceType = Resource.Type.salt, idealRatio = settings.saltRatio } );
 		ores.Add( new Ore{ resourceType = Resource.Type.stone, idealRatio = settings.stoneRatio } );
+
+		// Normalize the ideal ratios
+		float totalRatio = 0;
+		foreach ( var ore in ores )
+			totalRatio += ore.idealRatio;
+		foreach ( var ore in ores )
+			ore.idealRatio /= totalRatio;
 
 		foreach ( var node in ground.nodes )
 		{
