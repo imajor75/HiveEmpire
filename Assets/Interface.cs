@@ -337,10 +337,11 @@ public class Interface : OperationHandler
 				world.SetTimeFactor( 1 );
 		}
 
-		if ( mainPlayer && mainPlayer.mainProductivity >= world.productivityGoal && !world.victory )
+		if ( mainPlayer && mainPlayer.mainProductivity >= world.productivityGoal )
 		{
-			WorldProgressPanel.Create().Open( true );
-			world.victory = true;
+			World.Goal reached = (World.Goal)( world.currentWinLevel + 1 );
+			WorldProgressPanel.Create().Open( reached );
+			world.currentWinLevel = reached;
 		}
 	}
 
@@ -5325,16 +5326,16 @@ if ( cart )
 		Text recordProductivity;
 		ProgressBar productivityProgress;
 		float originalSpeed = -1;
-		bool victory;
+		bool worldStopped;
 
 		public static WorldProgressPanel Create()
 		{
 			return new GameObject( "World Progress Panel" ).AddComponent<WorldProgressPanel>();
 		}
 
-		public void Open( bool victory = false )
+		public void Open( World.Goal reached = World.Goal.none )
 		{
-			this.victory = victory;
+			worldStopped = reached != World.Goal.none;
 			noResize = true;
 			noPin = true;
 			if ( base.Open( 200, 200 ) )
@@ -5342,19 +5343,35 @@ if ( cart )
 			name = "World Progress Panel";
 			this.Pin( -200, -100, 200, 100, 0.5f, 0.5f );
 			UIHelpers.currentRow = -30;
-			if ( victory )
+			if ( worldStopped )
 			{
-				var t = Text( "VICTORY!" );
-				t.PinDownwards( -100, 0, 200, 30, 0.5f );
-				t.color = Color.red;
+				var t = Text();
+				t.PinDownwards( -100, 0, 200, 30, 0.5f ).AddOutline();
 				t.alignment = TextAnchor.MiddleCenter;
+				if ( reached == World.Goal.gold )
+				{
+					t.color = Color.yellow;
+					t.text = "VICTORY!";
+				}
+				else if (reached == World.Goal.silver )
+				{
+					t.color = Color.grey;
+					t.text = "Silver level reached";
+				}
+				else
+				{
+					Assert.global.AreEqual( reached, World.Goal.bronze );
+					t.color = Color.yellow.Dark();
+					t.text = "Bronze level reached";
+				}
 				originalSpeed = root.world.timeFactor;
 				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
 				root.world.SetTimeFactor( 0 );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
-			Text( $"Productivity goal: {World.instance.productivityGoal}" ).
+			if ( reached != World.Goal.gold )
+				Text( $"Next goal: {World.instance.productivityGoal} ({root.world.currentWinLevel+1})" ).
 			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
 			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			recordProductivity.alignment = TextAnchor.MiddleCenter;
@@ -5379,7 +5396,7 @@ if ( cart )
 		{
 			if ( originalSpeed > 0 )
 				root.world.SetTimeFactor( originalSpeed );
-			if ( victory )
+			if ( worldStopped )
 				root.world.eye.ReleaseFocus( null, true );
 			base.OnDestroy();
 		}

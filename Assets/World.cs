@@ -33,12 +33,14 @@ public class World : MonoBehaviour
 	public int time;
 	public int randomSeed;
 	public int overseas = 2;
-	public bool victory;
+	public Goal currentWinLevel;
 
 	static public Water water;
 	static public GameObject nodes;
 	static public GameObject itemsJustCreated;
 
+	[Obsolete( "Compatibility with old files", true )]
+	bool victory;
 	[Obsolete( "Compatibility with old files", true )]
 	float maxHeight;
 	[Obsolete( "Compatibility with old files", true )]
@@ -81,6 +83,14 @@ public class World : MonoBehaviour
 			}
 
 		}
+	}
+
+	public enum Goal
+	{
+		none,
+		bronze,
+		silver,
+		gold
 	}
 
 	public int oreCount;
@@ -192,7 +202,7 @@ public class World : MonoBehaviour
 		SetTimeFactor( 1 );
 		overseas = 2;
 		var oldEye = eye;
-		victory = false;
+		currentWinLevel = World.Goal.none;
 		time = 0;
 
 		Debug.Log( "Starting new game with seed " + seed );
@@ -648,7 +658,16 @@ public class World : MonoBehaviour
 		get
 		{
 			var groundSize = ground.dimension * ground.dimension;
-			return groundSize / 768.0f;
+			var goldGoal = groundSize / 512.0f;
+			if ( currentWinLevel == Goal.none )
+				return goldGoal * 0.5f;
+			if ( currentWinLevel == Goal.bronze )
+				return goldGoal * 0.75f;
+			if ( currentWinLevel == Goal.silver )				
+				return goldGoal;
+			if ( currentWinLevel == Goal.gold )
+				return float.MaxValue;
+			return goldGoal;
 		}
 	}
 
