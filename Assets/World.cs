@@ -432,6 +432,9 @@ public class World : MonoBehaviour
 		foreach ( Transform o in transform )
 			Destroy( o.gameObject );
 
+		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
+			ho.noAssert = true;
+
 		massDestroy = true;
 		Interface.root.Clear();
 	}

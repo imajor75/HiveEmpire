@@ -712,7 +712,7 @@ public class Interface : OperationHandler
 	public static void ValidateAll()
 	{
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
-			if ( ho )
+			if ( ho && !ho.noAssert )
 				ho.Validate( false );
 	}
 
