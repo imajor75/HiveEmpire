@@ -615,8 +615,14 @@ public class Worker : HiveObject
 				items[i].worker = null;
 				// It is possible in rare cases, that the worker was reset AFTER relinking the item to its hand, but before this task would actually take the item in hands. This leads to a crash when the worker arrives back at the HQ, as the 
 				// worker object gets destroyed, the item gets destroyed too, because it is linked to the hauling box of the worker, but still sitting at the flag. In this case the item should be linked back to the previous parent (the frame at the flag)
-				if ( reparented[i] )
-					items[i].transform.SetParent( items[i].flag?.transform, false );	// TODO Should be reparented to the correct object	
+				if ( reparented[i] && items[i].flag )
+				{
+					for ( int j = 0; j < items[i].flag.items.Length; j++ )
+					{
+						if ( items[i].flag.items[j] == items[i] )
+							items[i].transform.SetParent( items[i].flag.frames[j].transform, false );
+					}
+				}
 				// items[i].flag should never be zero here, but it was after a global reset
 
 				// TODO Exception was thrown here, items[0].flag was null. This happened after I removed a road.
@@ -684,27 +690,27 @@ public class Worker : HiveObject
 			if ( items[0].path != path )
 				return ResetBossTasks();
 
-				boss.assert.AreEqual( items[0].worker, boss );
-				if ( items[0].buddy )
-					boss.assert.AreEqual( items[0].buddy.worker, boss );
-				if ( boss.type == Type.hauler )
-					boss.assert.IsNull( boss.itemsInHands[0] );
-				if ( timer.empty )
-				{
-					timer.Start( pickupTimeStart );
-					boss.animator?.ResetTrigger( putdownID );
-					// The ConsiderSecondary call in the next line is only done to foresee if a second item will be picked, it might be different 
-					expectingSecondary = ConsiderSecondary( true );
-					boss.animator?.SetTrigger( expectingSecondary ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
-				}
+			boss.assert.AreEqual( items[0].worker, boss );
+			if ( items[0].buddy )
+				boss.assert.AreEqual( items[0].buddy.worker, boss );
+			if ( boss.type == Type.hauler )
+				boss.assert.IsNull( boss.itemsInHands[0] );
+			if ( timer.empty )
+			{
+				timer.Start( pickupTimeStart );
+				boss.animator?.ResetTrigger( putdownID );
+				// The ConsiderSecondary call in the next line is only done to foresee if a second item will be picked, it might be different 
+				expectingSecondary = ConsiderSecondary( true );
+				boss.animator?.SetTrigger( expectingSecondary ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
+			}
 
-				var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
-				if ( items[0].transform.parent != attachAt && timer.age > -pickupReparentTime )
-				{
-					reparented[0] = true;
-					items[0].transform.SetParent( attachAt?.transform, false );
-					attachAt?.SetActive( true );
-				}
+			var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
+			if ( items[0].transform.parent != attachAt && timer.age > -pickupReparentTime )
+			{
+				reparented[0] = true;
+				items[0].transform.SetParent( attachAt?.transform, false );
+				attachAt?.SetActive( true );
+			}
 
 			if ( !timer.done )
 				return false;
