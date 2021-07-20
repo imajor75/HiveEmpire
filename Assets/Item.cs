@@ -268,8 +268,6 @@ public class Item : HiveObject
 	{
 		assert.IsTrue( building != destination || priority != currentOrderPriority );
 
-		CancelTrip();
-
 		Flag start = origin?.flag;
 		if ( nextFlag )
 			start = nextFlag;
@@ -277,8 +275,14 @@ public class Item : HiveObject
 			start = flag;
 		if ( start == null )
 			return false;
+			
+		var newPath = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad, this );
+		if ( newPath == null )
+			return false;
 
-		path = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad, this );
+		CancelTrip();
+
+		path = newPath;
 		// TODO Exception happened here, start was null after I left the computer running for a long time
 		// item was a beer, destination is null. Item is in the hand of a worker, but it is only second in the hand
 		// Trip cancelled for the item (tripCancelled is true)
