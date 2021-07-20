@@ -622,6 +622,7 @@ public class Worker : HiveObject
 						if ( items[i].flag.items[j] == items[i] )
 							items[i].transform.SetParent( items[i].flag.frames[j].transform, false );
 					}
+					boss.animator?.Play( "idle" );
 				}
 				// items[i].flag should never be zero here, but it was after a global reset
 
