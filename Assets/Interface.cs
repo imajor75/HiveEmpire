@@ -3323,9 +3323,7 @@ if ( cart )
 			this.construction = construction;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( -40, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 
-			Workshop workshop = construction.boss as Workshop;
-			if ( workshop )
-				Text( workshop.type.ToString().GetPrettyName() ).Pin( 20, -20, 160 );
+			Text( construction.boss.type.ToString().GetPrettyName() ).Pin( 20, -20, 160 );
 
 			planks = new WorkshopPanel.Buffer();
 			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, 20, -40, iconSize + 5 );
