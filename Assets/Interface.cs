@@ -320,23 +320,6 @@ public class Interface : OperationHandler
 			o.y += 1;
 		materialUIPath.mainTextureOffset = o;
 
-		if ( undoHotkey.IsDown() )
-			Undo();
-		if ( redoHotkey.IsDown() )
-			Redo();
-
-		if ( fastSpeedHotkey.IsDown() )
-			world.SetTimeFactor( 8 );
-		if ( normalSpeedHotkey.IsDown() )
-			world.SetTimeFactor( 1 );
-		if ( pauseHotkey.IsDown() )
-		{
-			if ( world.timeFactor > 0 )
-				world.SetTimeFactor( 0 );
-			else
-				world.SetTimeFactor( 1 );
-		}
-
 		if ( mainPlayer && mainPlayer.mainProductivity >= world.productivityGoal )
 		{
 			World.Goal reached = (World.Goal)( world.currentWinLevel + 1 );
@@ -558,6 +541,23 @@ public class Interface : OperationHandler
 		// 	if ( !localReset )
 		// 		world.Reset();
 		// }
+		if ( undoHotkey.IsDown() )
+			Undo();
+		if ( redoHotkey.IsDown() )
+			Redo();
+
+		if ( fastSpeedHotkey.IsDown() )
+			world.SetTimeFactor( 8 );
+		if ( normalSpeedHotkey.IsDown() )
+			world.SetTimeFactor( 1 );
+		if ( pauseHotkey.IsDown() )
+		{
+			print( "pause pressed" );
+			if ( world.timeFactor > 0 )
+				world.SetTimeFactor( 0 );
+			else
+				world.SetTimeFactor( 1 );
+		}
 		if ( hotkeyListHotkey.IsDown() )
 			HotkeyList.Create().Open();
 		if ( headquartersHotkey.IsDown() )
