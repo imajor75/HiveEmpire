@@ -164,6 +164,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		AttachWatches();
 		RegisterOnGround();
 		gameObject.GetComponent<MeshRenderer>().material = material;
+
+		owner.versionedRoadNetworkChanged.Trigger();
 		
 		return true;
 	}
@@ -608,6 +610,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		first.Validate( false );
 		second.Validate( false );
 		flag.Validate( false );
+
+		owner.versionedRoadNetworkChanged.Trigger();
 	}
 
 	void RegisterOnGround()
@@ -666,6 +670,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public void OnDestroy()
 	{
 		owner.versionedRoadDelete.Trigger();
+		owner.versionedRoadNetworkChanged.Trigger();
 	}
 
 	public override bool Remove( bool takeYourTime )

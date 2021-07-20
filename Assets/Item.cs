@@ -50,6 +50,7 @@ public class Item : HiveObject
 						// 		free slot at the flag, but replace another item. B.buddy is null, cleared in Flag.ReleaseItem
 						// 3. A is already delivered, the worker is now carrying B as normal. Both A.buddy and B.buddy is null. The latter got cleared in Flag.FinalizeItem
 	public int index = -1;
+	public Watch roadNetworkChangeListener = new Watch();
 
 	public Ground ground
 	{
@@ -215,6 +216,14 @@ public class Item : HiveObject
 				CancelTrip();
 		}
 
+		// If the item appears to be separated from the HQ, should not be offeted yet
+		if ( roadNetworkChangeListener.isAttached )
+		{
+			if ( !roadNetworkChangeListener.Check() )
+				return;
+			roadNetworkChangeListener.Disconnect();
+		}
+
 		// If the item is just being gathered, it should not be offered yet
 		if ( flag == null && worker.type != Worker.Type.hauler )
 			return;
@@ -275,7 +284,7 @@ public class Item : HiveObject
 			start = flag;
 		if ( start == null )
 			return false;
-			
+
 		var newPath = Path.Between( start.node, building.flag.node, PathFinder.Mode.onRoad, this );
 		if ( newPath == null )
 			return false;

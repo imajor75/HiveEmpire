@@ -382,7 +382,13 @@ public class ItemDispatcher : HiveObject
 			}
 
 			if ( !success )
+			{
+				first.building?.UpdateIsolated();
+				if ( first.item )
+					first.item.roadNetworkChangeListener.Attach( first.item.owner.versionedRoadNetworkChanged );
+				second.building.UpdateIsolated();
 				return false;
+			}
 
 			first.quantity--;
 			second.quantity--;

@@ -73,6 +73,29 @@ abstract public class Building : HiveObject
 		}
 	}
 
+	public void UpdateIsolated()
+	{
+		if ( Path.Between( flag.node, owner.mainBuilding.flag.node, PathFinder.Mode.onRoad, this ) == null )
+		{
+			isolated = true;
+			roadNetworkChangeListener.Attach( owner.versionedRoadNetworkChanged );
+		}
+		else
+			isolated = false;
+	}
+
+	public Watch roadNetworkChangeListener = new Watch();
+	public bool isolated;
+	public bool reachable
+	{
+		get
+		{
+			if ( isolated && roadNetworkChangeListener.Check() )
+				UpdateIsolated();
+			return !isolated;
+		}
+	}
+
 	public List<Ground.Offset> foundation
 	{
 		get
@@ -272,10 +295,13 @@ abstract public class Building : HiveObject
 			if ( done || suspend.inProgress || boss.blueprintOnly )
 				return;
 
-			int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
-			boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.plankForConstructionWeight.weight );
-			int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
-			boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
+			if ( boss.reachable )
+			{
+				int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
+				boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.plankForConstructionWeight.weight );
+				int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
+				boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
+			}
 
 			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{

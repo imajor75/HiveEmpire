@@ -9,6 +9,7 @@ public class Player : ScriptableObject
 	public List<float> itemHaulPriorities = new List<float>();
 	public ItemDispatcher itemDispatcher;
 	public Versioned versionedRoadDelete = new Versioned();
+	public Versioned versionedRoadNetworkChanged = new Versioned();
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
 	public World.Timer productivityTimer;
@@ -354,6 +355,10 @@ public class Watch
 		this.source = source;
 		if ( source != null )
 			localVersion = source.version;
+	}
+	public void Disconnect()
+	{
+		source = null;
 	}
 	public bool isAttached { get { return source != null; } }
 	public bool Check()

@@ -636,22 +636,25 @@ public class Workshop : Building, Worker.Callback.IHandler
 		while ( statuses.Count > 0 && World.instance.time - statuses.First().startTime > Constants.Workshop.maxSavedStatusTime )
 			statuses.RemoveFirst();
 
-		int freeSpaceAtFlag = flag.freeSlots;
-		foreach ( Buffer b in buffers )
+		if ( reachable )
 		{
-			int missing = b.size-b.stored-b.onTheWay;
-			var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
-			float weight = b.weight != null ? b.weight.weight : 0.5f;
-			owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
-		}
-		if ( productionConfiguration.outputType != Item.Type.unknown && mode != Mode.always )
-		{
-			bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
-			owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
-		}
+			int freeSpaceAtFlag = flag.freeSlots;
+			foreach ( Buffer b in buffers )
+			{
+				int missing = b.size-b.stored-b.onTheWay;
+				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
+				float weight = b.weight != null ? b.weight.weight : 0.5f;
+				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
+			}
+			if ( productionConfiguration.outputType != Item.Type.unknown && mode != Mode.always )
+			{
+				bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
+				owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
+			}
 
-		if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
-			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
+			if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
+				SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
+		}
 
 		mapIndicator.SetActive( true );
 		mapIndicator.transform.localScale = new Vector3( Constants.Node.size * productivity.current / 10, 1, Constants.Node.size * 0.02f );

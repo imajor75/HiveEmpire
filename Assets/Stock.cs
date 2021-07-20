@@ -468,6 +468,9 @@ public class Stock : Building, Worker.Callback.IHandler
 		if ( !construction.done || blueprintOnly )
 			return;
 
+		if ( !reachable )
+			return;
+
 		if ( worker == null && construction.done && !blueprintOnly )
 			dispenser = worker = Worker.Create().SetupForBuilding( this );
 		if ( workerMate == null )
