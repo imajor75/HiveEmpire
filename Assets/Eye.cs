@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -154,11 +154,11 @@ public class Eye : HiveObject
 
 	public void ReleaseFocus( IDirector director, bool restore = false )
 	{
-		if ( this.director == director )
-			this.director = null;
+		if ( this.director != director )
+			return;
 
+		this.director = null;
 		RestoreOldPosition();
-
 		rotateAround = false;
 	}
 
