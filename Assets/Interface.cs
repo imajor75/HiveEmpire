@@ -422,7 +422,6 @@ public class Interface : OperationHandler
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
-		LoadHotkeys();
 
 		canvas = gameObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -463,6 +462,7 @@ public class Interface : OperationHandler
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.Alpha9 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
+		LoadHotkeys();
 
 		world = World.Create().Setup();
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
@@ -4195,6 +4195,7 @@ if ( cart )
 			showUndergroundResourcesButton.SetTooltip( () => $"Show underground resources (hotkey: {showUndergroundResourcesButton.GetHotkey().keyName})" );
 			var showStockContentButton = this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.Alpha8 );
 			showStockContentButton.SetTooltip( () => $"Show stock contents (hotkey: {showStockContentButton.GetHotkey().keyName})" );
+			root.LoadHotkeys();
 		}
 
 		void ShowPossibleBuildings( bool state )
