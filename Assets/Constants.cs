@@ -115,6 +115,9 @@ public static class Constants
         public const global::Node.Type groundTypeNeeded = global::Node.Type.aboveWater;
 		public const int cartCapacity = 25;
         public const float cartSpeed = 1.25f;
+        public const int startPlankCount = 10;
+        public const int startStoneCount = 5;
+        public const int startSoldierCount = 10;
     }
 
     public static class Worker

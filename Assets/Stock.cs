@@ -383,9 +383,9 @@ public class Stock : Building, Worker.Callback.IHandler
 				node.Add( o ).SetHeight( node.height );
 		}
 		construction.done = true;
-		content[(int)Item.Type.plank] = 10;
-		content[(int)Item.Type.stone] = 5;
-		content[(int)Item.Type.soldier] = 10;
+		content[(int)Item.Type.plank] = Constants.Stock.startPlankCount;
+		content[(int)Item.Type.stone] = Constants.Stock.startStoneCount;
+		content[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );

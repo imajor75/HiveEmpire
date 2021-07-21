@@ -936,7 +936,7 @@ public class Interface : OperationHandler
 
 		void FollowMouse()
 		{
-			if ( Input.mousePosition.x + width > Screen.width )
+			if ( Input.mousePosition.x + width * uiScale > Screen.width )
 				this.Pin( (int)( (Input.mousePosition.x - 20) / uiScale - width ), (int)( (Input.mousePosition.y - Screen.height) / uiScale ), width, height );
 			else
 				this.Pin( (int)( (Input.mousePosition.x + 20) / uiScale ), (int)( (Input.mousePosition.y - Screen.height) / uiScale ), width, height );
@@ -2755,16 +2755,49 @@ public class Interface : OperationHandler
 					tooltip += $"Produces {( o.outputStackSize > 1 ? "2*" : "")}{o.outputType.ToString().GetPrettyName( false )}\n";
 				tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F2" )}s";
 
-				b.SetTooltip( tooltip );
+				string additionalTooltip = type switch 
+				{
+					Workshop.Type.barrack => "Final building in the production chain, produces soldiers.",
+					Workshop.Type.bowMaker => "Huge building producing one of the weapons required for soldiers.",
+					Workshop.Type.brewery => "Beer is needed by both the barracks to produce soldiers, and the butcher to produce pork.",
+					Workshop.Type.butcher => "This building produces one type of the food for mines, pork. To have an optimal supply of mines with food, " +
+						"both pork and pretzel should be produced.",
+					Workshop.Type.coalMine => "Most important type of mine, accepts all kind of food.",
+					Workshop.Type.farm => "Produces grain which is the base for both pretzel and pork, also needed for beer. Need free green space around.",
+					Workshop.Type.fishingHut => "Simpliest building to produce food. Salt mines only accept fish, so unavoidable there. Should be built close to water.",
+					Workshop.Type.forester => "This building doesn't produce or need anything, just plants trees around the house in the brown area.",
+					Workshop.Type.goldBarMaker => "Gold bars are needed by the barrack to produce soldiers.",
+					Workshop.Type.goldMine => "This type of mine does not accept fish, only pretzel or pork.",
+					Workshop.Type.hunter => "The hunter captures and kills wild rabbits, and produces hide which is needed for bow. Should be built close to the wild " +
+						" animal spawners (weird rock with bunnies around)",
+					Workshop.Type.ironMine => "Iron is needed to produce weapons.",
+					Workshop.Type.mill => "Can only be built on the high mountains.",
+					Workshop.Type.saltMine => "Salt is needed to produce pretzel, and important food for other mines.",
+					Workshop.Type.sawmill => "Planks are needed by constructions at the beginning, later for bows.",
+					Workshop.Type.smelter => "The slowest building in the game, probably need two for a single weapon maker.",
+					Workshop.Type.stonemason => "Gathers rock from the surface, which is needed for construction only. Should be built close to rocks.",
+					Workshop.Type.stoneMine => "As stone is not needed for soldier production yet, this building can be skipped.",
+					Workshop.Type.weaponMaker => "Weapons are needed by the barrack to produce soldiers.",
+					Workshop.Type.well => "Can only be built next to water.",
+					Workshop.Type.woodcutter => "Should be built close to trees and brown area, close to a forester, which keeps planting the trees.",
+					Workshop.Type.bakery => "Pretzel is one of the important food types, needs a salt mine.",
+					_ => null
+				};
+
+				b.SetTooltip( tooltip, null, additionalTooltip  );
 
 				if ( i % 2 != 0 )
 					row -= 20;
 			}
-			BuildButton( 20, -260, "Flag", AddFlag );
-			BuildButton( 180, -260, "Crossing", AddCrossing );
+			BuildButton( 20, -260, "Junction", AddFlag ).SetTooltip( "Junction without a building", null, "Junctions can be built separately from a building, which can be added later. Junctions are " +
+			" exclusive for haulers, so a junction with multiple roads with high traffic might be inefficient." );
+			BuildButton( 180, -260, "Crossing", AddCrossing ).SetTooltip( "Crossing", null, "Crossings are like junctions, but they are not exclusive to halulers, so they can manage high traffic, " +
+			" but they cannot be used as an exit for buildings" );
 
-			BuildButton( 20, -280, "Guardhouse", AddGuardHouse );
-			BuildButton( 180, -280, "Stock", AddStock );
+			BuildButton( 20, -280, "Guardhouse", AddGuardHouse ).SetTooltip( "Guard houses are needed to extend the border of the empire.", null, $"Only if a soldier occupies a guard house it extends the border. " +
+			$"As there is only {Constants.Stock.startSoldierCount} soldiers are available at start, soldier production should start after building the first {Constants.Stock.startSoldierCount} guardhouses." );
+			BuildButton( 180, -280, "Stock", AddStock ).SetTooltip( "Stocks are used to store items temporarily", null, "They are also very important as starting and end point of routes, so there should be a stock close to every buildings. Stocks can be built on hills also." +
+			"See the route list for more details." );
 		}
 
 		Image BuildButton( int x, int y, string title, Action action )
