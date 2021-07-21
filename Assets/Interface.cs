@@ -441,18 +441,28 @@ public class Interface : OperationHandler
 		tooltip.Open();
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
-		this.Image( Icon.hammer ).AddClickHandler( () => BuildPanel.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Alpha1 );
+		var buildButton = this.Image( Icon.hammer ).AddClickHandler( () => BuildPanel.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Alpha1 );
+		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
 
-		this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
-		this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
-		this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
-		this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
-		this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R );
-		this.Image( Icon.cup ).AddClickHandler( () => WorldProgressPanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
-		this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
-		this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
+		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
+		buildingListButton.SetTooltip( () => $"List all buildings (hotkey: {buildingListButton.GetHotkey().keyName})" );
+		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
+		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
+		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
+		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
+		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
+		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R );
+		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
+		var worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => WorldProgressPanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
+		worldProgressButton.SetTooltip( () => $"Show world progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
+		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
+		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
+		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
+		mapButton.SetTooltip( () => $"Minimap (hotkey: {mapButton.GetHotkey().keyName})" );
 
-		this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.Alpha9 );
+		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.Alpha9 );
+		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
 		world = World.Create().Setup();
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
@@ -885,7 +895,7 @@ public class Interface : OperationHandler
 			FollowMouse();
 		}
 
-		public void SetText( Component origin, string text = "", Sprite imageToShow = null, string additionalText = "" )
+		public void SetText( Component origin, string text = null, Sprite imageToShow = null, string additionalText = "" )
 		{
 			this.origin = origin;
 			this.text.text = text;
@@ -926,13 +936,16 @@ public class Interface : OperationHandler
 
 		void FollowMouse()
 		{
-			this.Pin( (int)( (Input.mousePosition.x + 20) / uiScale ), (int)( (Input.mousePosition.y - Screen.height) / uiScale ), width, height );
+			if ( Input.mousePosition.x + width > Screen.width )
+				this.Pin( (int)( (Input.mousePosition.x - 20) / uiScale - width ), (int)( (Input.mousePosition.y - Screen.height) / uiScale ), width, height );
+			else
+				this.Pin( (int)( (Input.mousePosition.x + 20) / uiScale ), (int)( (Input.mousePosition.y - Screen.height) / uiScale ), width, height );
 		}
 	}
 
 	public class TooltipSource : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 	{
-		public string text;
+		public Func<string> textGenerator;
 		public string additionalText;
 		public Sprite image;
 		public Action<bool> onShow;
@@ -947,8 +960,8 @@ public class Interface : OperationHandler
         public void OnPointerEnter( PointerEventData eventData )
         {
 			print( $"enter {name}" );
-			if ( text != null )
-				tooltip.SetText( this, text, image, additionalText );
+			if ( textGenerator != null )
+				tooltip.SetText( this, textGenerator(), image, additionalText );
 			if ( onShow != null && !active )
 				onShow( true );
 			active = true;
@@ -964,15 +977,15 @@ public class Interface : OperationHandler
 			active = false;
         }
 
-		public void SetData( string text, Sprite image, string additionalText, Action<bool> onShow )
+		public void SetData( Func<string> textGenerator, Sprite image, string additionalText, Action<bool> onShow )
 		{
-			this.text = text;
+			this.textGenerator = textGenerator;
 			this.image = image;
 			this.additionalText = additionalText;
 			this.onShow = onShow;
 
 			if ( active )
-				tooltip.SetText( this, text, image, additionalText );
+				tooltip.SetText( this, textGenerator(), image, additionalText );
 		}
     }
 
@@ -1252,7 +1265,7 @@ public class Interface : OperationHandler
 			text.AddClickHandler( delegate { SelectBuilding( building ); } );
 			var d = text.gameObject.AddComponent<BuildingIconData>();
 			d.building = building;
-			d.SetTooltip( null, null, null, show => d.track = show );
+			d.SetTooltip( "", null, null, show => d.track = show );
 			return text;
 		}
 
@@ -3642,7 +3655,7 @@ if ( cart )
 					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( delegate { route.MoveUp(); } );
 					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( delegate { route.MoveDown(); } );
 				}
-				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } ).SetTooltip( null, null, null, x => toHighlight = x ? route : null );
+				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } ).SetTooltip( "", null, null, x => toHighlight = x ? route : null );
 				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) );
 				row -= iconSize + 5;
 			}
@@ -4172,11 +4185,16 @@ if ( cart )
 			redCrossOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
 			redCrossOnGround.mainTexture = Resources.Load<Texture>( "icons/redCross" );
 
-			this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -200, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.Alpha2 );
-			this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show note at cursor", KeyCode.Alpha7 );
-			this.Image( Icon.buildings ).AddToggleHandler( ShowPossibleBuildings ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show possible buildings", KeyCode.Alpha3 );
-			this.Image( Icon.crate ).AddToggleHandler( ShowUndergroundResources ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show underground resources", KeyCode.Alpha4 );
-			this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.Alpha8 );
+			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -200, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.Alpha2 );
+			showGridButton.SetTooltip( () => $"Show grid (hotkey: {showGridButton.GetHotkey().keyName})" );
+			var showNodeButton = this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show node at cursor", KeyCode.Alpha7 );
+			showNodeButton.SetTooltip( () => $"Show node at cursor (hotkey: {showNodeButton.GetHotkey().keyName})" );
+			var showPossibleBuildingsButton = this.Image( Icon.buildings ).AddToggleHandler( ShowPossibleBuildings ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show possible buildings", KeyCode.Alpha3 );
+			showPossibleBuildingsButton.SetTooltip( () => $"Show possible buildings (hotkey: {showPossibleBuildingsButton.GetHotkey().keyName})" );
+			var showUndergroundResourcesButton = this.Image( Icon.crate ).AddToggleHandler( ShowUndergroundResources ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show underground resources", KeyCode.Alpha4 );
+			showUndergroundResourcesButton.SetTooltip( () => $"Show underground resources (hotkey: {showUndergroundResourcesButton.GetHotkey().keyName})" );
+			var showStockContentButton = this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.Alpha8 );
+			showStockContentButton.SetTooltip( () => $"Show stock contents (hotkey: {showStockContentButton.GetHotkey().keyName})" );
 		}
 
 		void ShowPossibleBuildings( bool state )
@@ -5752,16 +5770,21 @@ public static class UIHelpers
 		return false;
 	}
 	
-	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
+	public static UIElement SetTooltip<UIElement>( this UIElement g, Func<string> textGenerator, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
 	{
-			Assert.global.IsTrue( text != null || onShow != null );
+			Assert.global.IsTrue( textGenerator != null || onShow != null );
 			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
 			if ( s == null )
 				s = g.gameObject.AddComponent<Interface.TooltipSource>();
-			s.SetData( text, image, additionalText, onShow );
+			s.SetData( textGenerator, image, additionalText, onShow );
 			foreach ( Transform t in g.transform )
-				t.SetTooltip( text, image, additionalText, onShow );
+				t.SetTooltip( textGenerator, image, additionalText, onShow );
 			return g;
+	}
+
+	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
+	{
+		return SetTooltip( g, () => text, image, additionalText, onShow );
 	}
 
 	public static UIElement AddHotkey<UIElement>( this UIElement g, string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false ) where UIElement : Component
@@ -5769,6 +5792,11 @@ public static class UIHelpers
 		var h = g.gameObject.AddComponent<Interface.HotkeyControl>();
 		h.Open( name, key, ctrl, alt, shift );
 		return g;
+	}
+
+	public static Interface.Hotkey GetHotkey( this Component g )
+	{
+		return g.gameObject.GetComponent<Interface.HotkeyControl>()?.hotkey;
 	}
 
 	public static string GetPrettyName( this string name, bool capitalize = true )
