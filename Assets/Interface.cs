@@ -877,9 +877,9 @@ public class Interface : OperationHandler
 			base.Open( width = 100, height = 100 );
 			escCloses = false;
 
-			image = Image().Pin( 20, -20, 100, 100 );
-			text = Text().Pin( 15, -10, 270, 60 );
-			additionalText = Text().Pin( 20, -30, 150, 60 );
+			image = Image().Pin( borderWidth, -borderWidth, 100, 100 );
+			text = Text().Stretch( borderWidth, 0, -borderWidth, -borderWidth );
+			additionalText = Text();
 			additionalText.fontSize = (int)( 10 * uiScale );
 			gameObject.SetActive( false );
 			FollowMouse();
@@ -890,6 +890,7 @@ public class Interface : OperationHandler
 			this.origin = origin;
 			this.text.text = text;
 			this.additionalText.text = additionalText;
+			this.additionalText.Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - (int)(this.text.preferredHeight) );
 			if ( imageToShow )
 			{
 				image.sprite = imageToShow;
@@ -899,10 +900,7 @@ public class Interface : OperationHandler
 			else
 			{
 				image.enabled = false;
-				if ( text.Length > 20 ) // TODO Big fat hack
-					SetSize( width = 300, height = 70 );
-				else
-					SetSize( width = 200, height = 40 );
+				SetSize( width = 300, height = (int)( this.text.preferredHeight + this.additionalText.preferredHeight ) + 2 * borderWidth );
 			}
 			gameObject.SetActive( true );
 			FollowMouse();
@@ -948,6 +946,7 @@ public class Interface : OperationHandler
 
         public void OnPointerEnter( PointerEventData eventData )
         {
+			print( $"enter {name}" );
 			if ( text != null )
 				tooltip.SetText( this, text, image, additionalText );
 			if ( onShow != null && !active )
@@ -957,6 +956,7 @@ public class Interface : OperationHandler
 
         public void OnPointerExit( PointerEventData eventData )
         {
+			print( $"exit {name}" );
 			if ( tooltip.origin == this )
 				tooltip.Clear();
 			if ( onShow != null && active )
@@ -1222,6 +1222,11 @@ public class Interface : OperationHandler
 			i.transform.SetParent( transform );
 			i.gameObject.AddComponent<Button>().onClick.AddListener( i.Track );
 			return i;
+		}
+
+		public RectTransform RectTransform()
+		{
+			return new GameObject().AddComponent<RectTransform>();
 		}
 
 		public Image AreaIcon( Ground.Area area )
@@ -1544,7 +1549,11 @@ public class Interface : OperationHandler
 			{
 				this.area = area;
 				image = gameObject.GetComponent<Image>();
-				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, "", Show );
+				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, 
+				"You can specify the area where this building is sending items or getting " +
+				"items from. By default no area is specified, so items can arrive and go to " +
+				"any place in the world. Note that the other side also has an option to " +
+				"specify an area, if there is no union of these areas, items will not travel there.", Show );
 				this.AddClickHandler( OnClick );
 			}
 
@@ -1721,7 +1730,7 @@ public class Interface : OperationHandler
 				ItemPanel.Create().Open( item );
 			}
 
-			public void SetType( Item.Type itemType )
+			public void SetType( Item.Type itemType, bool updateTooltip = true )
 			{
 				if ( this.itemType == itemType )
 					return;
@@ -1738,7 +1747,8 @@ public class Interface : OperationHandler
 				}
 				picture.enabled = true;
 				picture.sprite = Item.sprites[(int)itemType];
-				this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltipText, OnShowTooltip );
+				if ( updateTooltip )
+					this.SetTooltip( itemType.ToString(), Item.sprites[(int)itemType], additionalTooltipText, OnShowTooltip );
 			}
 
 			public void SetInTransit( bool show )
@@ -1877,7 +1887,7 @@ public class Interface : OperationHandler
 				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
 				if ( percent > 100 )
 					percent = 100;
-				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "", ShowRelaxSpotsAround );
+				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, null, ShowRelaxSpotsAround );
 				row -= 20;
 			}
 
@@ -1912,7 +1922,7 @@ public class Interface : OperationHandler
 				if ( ( contentToShow & Content.itemsProduced ) > 0 )
 				{
 					itemsProduced = Text().Pin( 20, row, 200, 20 );
-					productivity = Text().Pin( 150, -20, 50, 20 ).AddOutline();
+					productivity = Text().Pin( 150, -20, 50, 20 ).AddOutline().SetTooltip( "Current productivity of the building\nPress LMB for statistics of the past" );
 					productivity.alignment = TextAnchor.MiddleRight;
 					productivity.AddClickHandler( ShowPastStatuses );
 					row -= 25;
@@ -1927,9 +1937,12 @@ public class Interface : OperationHandler
 
 			if ( ( contentToShow & Content.controlIcons ) != 0 )
 			{
-				Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 190, row ).AddClickHandler( Remove );
-				Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, row ).AddClickHandler( ShowWorker );
-				changeModeImage = Image( GetModeIcon() ).Pin( 150, row ).AddClickHandler( ChangeMode );
+				Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 190, row ).AddClickHandler( Remove ).SetTooltip( "Remove the building" );
+				Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, row ).AddClickHandler( ShowWorker ).SetTooltip( "Show the tinkerer of the building" );
+				changeModeImage = Image( GetModeIcon() ).Pin( 150, row ).AddClickHandler( ChangeMode ).SetTooltip( "Current running mode of the building\nLMB to cycle throught possible modes", null, 
+				"Clock (default) - Work when needed\n" +
+				"Alarm - Work even if not needed\n" +
+				"Bed - Don't work at all" );
 				changeModeImage.color = Color.black;
 				row -= 25;
 			}
@@ -1990,7 +2003,9 @@ public class Interface : OperationHandler
 				progressBar.SetTooltip( 
 					$"Time needed to produce a new item: {( workshop.productionConfiguration.productionTime * Time.fixedDeltaTime ).ToString( "F2" )}s", 
 					null, 
-					$"Rest time needed: {( workshop.restTime * Time.fixedDeltaTime ).ToString( "F2" )}s" );
+					$"Resting time needed between two item production: {( workshop.restTime * Time.fixedDeltaTime ).ToString( "F2" )}s\n" +
+					"This time depends on the number of relaxing spots around the building. The more relaxing spots, the less resting time the building needs (ideally zero). " +
+					"Hover the cursor above the title of the building to see the relaxing spots." );
 				if ( workshop.resting.inProgress )
 				{
 					progressBar.progress = (float)( -workshop.resting.age ) / workshop.restTime;
@@ -2047,15 +2062,15 @@ public class Interface : OperationHandler
 
 		void ShowRelaxSpotsAround( bool on )
 		{
-			// Recalculate the relax spots just in case it changed
-			var r = workshop.relaxSpotCount;
-			var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
-			if ( percent > 100 )
-				percent = 100;
-			title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "", ShowRelaxSpotsAround );
-
 			if ( on )
 			{
+				// Recalculate the relax spots just in case it changed
+				var r = workshop.relaxSpotCount;
+				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
+				if ( percent > 100 )
+					percent = 100;
+				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "LMB to rename", ShowRelaxSpotsAround );
+			
 				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodeRelaxSites;
 				root.viewport.relaxCenter = workshop;
 			}
@@ -2102,7 +2117,7 @@ public class Interface : OperationHandler
 					items[i] = boss.ItemIcon( itemType ).Pin( x, y );
 					x += xi;
 				}
-				boss.Text( "?" ).Pin( x, y, 20, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } );
+				boss.Text( "?" ).Pin( x, y, 20, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" );
 				if ( area != null )
 					boss.AreaIcon( area ).Pin( x + 15, y );
 			}
@@ -2418,11 +2433,14 @@ public class Interface : OperationHandler
 			AreaIcon( stock.outputArea ).Link( controls ).Pin( 235, -25, 30, 30 ).name = "Output area";
 			total = Text( "", 16 ).Link( controls ).Pin( 35, 75, 100, iconSize * 2, 0, 0 );
 			total.name = "Total";
+			total.SetTooltip( $"Total number of items in the stock, the maximum is {stock.maxItems}", null, 
+			"The total number of items can exceed the max value temporary, but the stock won't store more items if it is full." );
 			name = Editable( stock.moniker ).Link( controls ).PinCenter( 0, -35, 160, iconSize, 0.5f, 1 );
 			name.alignment = TextAnchor.MiddleCenter;
 			if ( name.text == "" )
 				name.text = "Stock";
 			name.onValueChanged = OnRename;
+			name.SetTooltip( "LMB to rename" );
 
 			int row = -55;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
@@ -2430,7 +2448,11 @@ public class Interface : OperationHandler
 				int offset = j % 2 > 0 ? 140 : 0;
 				var t = (Item.Type)j;
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
-				i.additionalTooltip = "Shift+LMB Show input potentials\nCtrl+LMB Show output potentials\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
+				string tooltip = "LMB Select item type\nShift+LMB Show input potentials\nCtrl+LMB Show output potentials";
+				#if DEBUG
+				tooltip += "\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
+				#endif
+				i.additionalTooltip = tooltip;
 				if ( stock.GetInputRoutes( (Item.Type)j ).Count > 0 )
 					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f );
 				if ( stock.outputRoutes[j].Count > 0 )
@@ -2451,25 +2473,35 @@ public class Interface : OperationHandler
 				counts[i].AddClickHandler( () => SelectItemType( j ) );
 			}
 
-			selected = ItemIcon( selectedItemType ).Link( controls ).Pin( 165, 90, 2 * iconSize, 2 * iconSize, 0, 0 ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
+			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 180, 70, 150, 40, 0, 0 );
+			selectedItemArea.name = "Selected item area";
+			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
 			selected.name = "Selected item";
-			inputMin = Text().Link( selected ).Pin( -40, 0, 40 ).
-			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority" );
-			inputMax = Text().Link( selected ).Pin( 50, 0, 40 ).
-			SetTooltip( "If the stock has at least this many items, it will no longer accept surplus" );
-			outputMin = Text().Link( selected ).Pin( -40, -20, 40 ).
-			SetTooltip( "The stock will only supply other buildings with the item if it has at least this many" );
-			outputMax = Text().Link( selected ).Pin( 50, -20, 40 ).
-			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks" );
+			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock" );
+			inputMin = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 0, 1 ).
+			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority", null, "LMB+drag left/right to change" );
+			inputMin.alignment = TextAnchor.MiddleCenter;
+			inputMax = Text().Link( selectedItemArea ).Pin( -40, 0, 40, iconSize, 1, 1 ).
+			SetTooltip( "If the stock has at least this many items, it will no longer accept surplus", null, "LMB+drag left/right to change" );
+			inputMax.alignment = TextAnchor.MiddleCenter;
+			outputMin = Text().Link( selectedItemArea ).Pin( 0, 20, 40, iconSize, 0, 0 ).
+			SetTooltip( "The stock will only supply other buildings with the item if it has at least this many", null, "LMB+drag left/right to change" );
+			outputMin.alignment = TextAnchor.MiddleCenter;
+			outputMax = Text().Link( selectedItemArea ).Pin( -40, 20, 40, iconSize, 1, 0 ).
+			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks", null, "LMB+drag left/right to change" );
+			outputMax.alignment = TextAnchor.MiddleCenter;
 			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 0, 0.7f );
 			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.7f );
 			selectedInputCount = Text( "0" ).Link( selectedInput ).PinCenter( 0, -20, iconSize / 2, iconSize, 0.5f, 0.5f ).AddOutline();
 			selectedOutputCount = Text( "0" ).Link( selectedOutput ).PinCenter( 0, -20, iconSize / 2, iconSize, 0.5f, 0.5f ).AddOutline();
 			selectedInputCount.color = selectedOutputCount.color = Color.green;
 
-			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).name = "Reset";
-			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).name = "Show cart";
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).name = "Remover";
+			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).SetTooltip( "Reset all values to default" ).name = "Reset";
+			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).SetTooltip( "Show the cart of the stock", null, 
+			$"Every stock has a cart which can transport {Constants.Stock.cartCapacity} items at the same time. " +
+			"For optimal performance the cart should be used for long range transport, haulers should be restricted by areas only to short range local transport. " +
+			"Carts are not automatically distribute the items, you have to specify routes between stocks first. Open the routes panel to see more details." ).name = "Show cart";
+			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
 			UpdateRouteIcons();
 		}
 
@@ -2513,7 +2545,7 @@ public class Interface : OperationHandler
 				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ")";
 			}
 			total.text = stock.total + " => " + stock.totalTarget;
-			selected?.SetType( selectedItemType );
+			selected?.SetType( selectedItemType, false );
 			int t = (int)selectedItemType;
 			inputMin.text = stock.inputMin[t] + "<";
 			outputMin.text = stock.outputMin[t] + "<";
@@ -2814,13 +2846,14 @@ public class Interface : OperationHandler
 			base.Open( road, 0, 0, 210, 165 );
 			this.road = road;
 			this.node = node;
-			Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, -10 ).AddClickHandler( Hauler );
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 150, -10 ).AddClickHandler( Remove );
-			Image( iconTable.GetMediaData( Icon.junction ) ).Pin( 130, -10, 20, 20 ).AddClickHandler( Split );
+			Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, -10 ).AddClickHandler( Hauler ).SetTooltip( "Show the hauler working on this road" );
+			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 150, -10 ).AddClickHandler( Remove ).SetTooltip( "Remove the road" );
+			Image( iconTable.GetMediaData( Icon.junction ) ).Pin( 130, -10, 20, 20 ).AddClickHandler( Split ).SetTooltip( "Split the road by inserting a junction at the selected location" );
 			jam = Text( "Jam" ).Pin( 12, -4, 120 );
 			workers = Text( "Worker count" ).Pin( 12, -28, 120 );
 			name = "Road panel";
-			targetWorkerCount = Dropdown().Pin( 20, -44, 150, 25 );
+			targetWorkerCount = Dropdown().Pin( 20, -44, 150, 25 ).SetTooltip( "Number of haluers working on the road", null, 
+			"By default new haluers will automatically assigned to the road when needed (and retire when not needed any longer), but you can also specify the desired number of workers on the road." );
 			targetWorkerCount.AddOptions( new List<string> { "Auto", "1", "2", "3", "4" } );
 			targetWorkerCount.value = road.targetWorkerCount;
 			targetWorkerCount.onValueChanged.AddListener( TargetWorkerCountChanged );
@@ -2969,11 +3002,12 @@ public class Interface : OperationHandler
 
 			this.flag = flag;
 			int col = 16;
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove );
-			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad );
-			Image( iconTable.GetMediaData( Icon.magnet ) ).Pin( 45, -45 ).AddClickHandler( CaptureRoads );
-			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).Pin( 65, -45 ).AddClickHandler( Flatten );
-			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).Pin( 85, -45 ).AddClickHandler( Convert );
+			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
+			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Start a new road from this junction" );
+			Image( iconTable.GetMediaData( Icon.magnet ) ).Pin( 45, -45 ).AddClickHandler( CaptureRoads ).SetTooltip( "Merge nearby roads to this junction" );
+			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).Pin( 65, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
+			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).Pin( 85, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
+			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
@@ -3096,7 +3130,7 @@ public class Interface : OperationHandler
 			statusImage1.gameObject.SetActive( false );
 			itemCount = Text( "Items" ).Pin( 20, -70, 160 );
 
-			Image( Icon.home ).Pin( 160, 20, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowHome );
+			Image( Icon.home ).Pin( 160, 20, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowHome ).SetTooltip( "Show the home of the unit" );
 
 			if ( show )
 				World.instance.eye.GrabFocus( this );
@@ -4994,13 +5028,13 @@ if ( cart )
 					};
 				}
 				if ( result.remote && !result.incoming && result.result == ItemDispatcher.Result.outOfItems )
-					message = "Full";
+					message = "Not needed";
 				if ( !result.remote && result.result == ItemDispatcher.Result.outOfItems )
 				{
 					if ( direction == ItemDispatcher.Potential.Type.offer )
 						message = "Out of items";
 					else
-						message = "Full";
+						message = "Not needed";
 				}
 				Text( message ).Link( scroll.content ).Pin( 250, row, 200, 40 );
 				row -= iconSize + 5;
