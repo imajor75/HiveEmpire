@@ -2447,7 +2447,7 @@ public class Interface : OperationHandler
 			total = Text( "", 16 ).Link( controls ).Pin( 35, 75, 100, iconSize * 2, 0, 0 );
 			total.name = "Total";
 			total.SetTooltip( $"Total number of items in the stock, the maximum is {stock.maxItems}", null, 
-			"The total number of items can exceed the max value temporary, but the stock won't store more items if it is full." );
+			"The total number of items can exceed the max value temporarily, but the stock won't store more items if it is full." );
 			name = Editable( stock.moniker ).Link( controls ).PinCenter( 0, -35, 160, iconSize, 0.5f, 1 );
 			name.alignment = TextAnchor.MiddleCenter;
 			if ( name.text == "" )
