@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -2814,29 +2814,25 @@ public class Interface : OperationHandler
 
 		void AddFlag()
 		{
-			root.viewport.constructionMode = Viewport.Construct.flag;
-			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
+			NewBuildingPanel.Create( NewBuildingPanel.Construct.flag );
 			Close();
 		}
 
 		void AddCrossing()
 		{
-			root.viewport.constructionMode = Viewport.Construct.crossing;
-			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
+			NewBuildingPanel.Create( NewBuildingPanel.Construct.crossing );
 			Close();
 		}
 
 		void AddStock()
 		{
-			root.viewport.constructionMode = Viewport.Construct.stock;
-			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
+			NewBuildingPanel.Create( NewBuildingPanel.Construct.stock );
 			Close();
 		}
 
 		void AddGuardHouse()
 		{
-			root.viewport.constructionMode = Viewport.Construct.guardHouse;
-			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
+			NewBuildingPanel.Create( NewBuildingPanel.Construct.guardHouse );
 			Close();
 		}
 
@@ -2860,12 +2856,232 @@ public class Interface : OperationHandler
 				showID = 0;
 				return;
 			}
-			root.viewport.constructionMode = Viewport.Construct.workshop;
-			root.viewport.workshopType = type;
-			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
+			NewBuildingPanel.Create( NewBuildingPanel.Construct.workshop, type );
 			Close();
 		}
 	}
+
+	public class NewBuildingPanel : Panel, IInputHandler
+	{
+		public HiveObject currentBlueprint;
+		public WorkshopPanel currentBlueprintPanel;
+		public Construct constructionMode = Construct.nothing;
+		public Workshop.Type workshopType;
+		public static int currentFlagDirection = 1;    // 1 is a legacy value.
+
+		static public Hotkey showNearestPossibleHotkey = new Hotkey( "Show nearest construction site", KeyCode.Alpha5 );
+		static public Hotkey showNearestPossibleAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Alpha6 );
+		static public Hotkey rotateCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.Period );
+		static public Hotkey rotateCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.Comma );
+
+		public enum Construct
+		{
+			nothing,
+			workshop,
+			stock,
+			guardHouse,
+			flag,
+			crossing
+		}
+
+		public static NewBuildingPanel Create( Construct type, Workshop.Type workshopType = Workshop.Type.unknown )
+		{
+			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
+			var p = new GameObject( "New building panel" ).AddComponent<NewBuildingPanel>();
+			p.Open( type, workshopType );
+			return p;
+		}
+
+		void Open( Construct type, Workshop.Type workshopType = Workshop.Type.unknown )
+		{
+			constructionMode = type;
+			this.workshopType = workshopType;
+
+			base.Open( 500, 150 );
+			this.Pin( 40, 200, 500, 150, 0, 0 );
+			Text( $"Building a new {(type==Construct.workshop?workshopType.ToString():type.ToString()).GetPrettyName( false )}", 14 ).Pin( borderWidth, -borderWidth, 460, 30 );
+			Text( $"Press {rotateCWHotkey.keyName} or {rotateCCWHotkey.keyName} to rotate" ).PinDownwards( borderWidth, 0, 460 );
+			Text( $"Press {showNearestPossibleAnyDirectionHotkey.keyName} to see the nearest possible constructuion site" ).PinDownwards( borderWidth, 0, 460 );
+			Text( $"or {showNearestPossibleHotkey.keyName} to see the nearest possible place with this facing" ).PinDownwards( borderWidth, 0, 460 );
+
+			root.viewport.inputHandler = this;
+		}
+
+		public void CancelBlueprint()
+		{
+			currentBlueprint?.Remove();
+			currentBlueprint = null;
+			if ( currentBlueprintPanel )
+				currentBlueprintPanel.Close();
+			currentBlueprintPanel = null;
+		}
+
+        public void OnLostInput()
+        {
+			CancelBlueprint();
+			Close();
+        }
+
+		new void OnDestroy()
+		{
+			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.none;
+			base.OnDestroy();
+		}
+
+        public bool OnMovingOverNode( Node node )
+        {
+			root.viewport.SetCursorType( Viewport.CursorType.building, currentFlagDirection );
+			if ( currentBlueprint && currentBlueprint.location != node )
+				CancelBlueprint();
+			if ( currentBlueprint )
+				return true;
+			switch ( constructionMode )
+			{
+				case Construct.workshop:
+				{
+					var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
+					if ( workshop && workshop.gatherer )
+					{
+						currentBlueprintPanel = WorkshopPanel.Create();
+						currentBlueprintPanel.offset = new Vector2( 100, 0 );
+						currentBlueprintPanel.Open( workshop, WorkshopPanel.Content.resourcesLeft );
+					}
+					currentBlueprint = workshop;
+					break;
+				};
+				case Construct.flag:
+				{
+					currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true );
+					break;
+				};
+				case Construct.crossing:
+				{
+					currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true, true );
+					break;
+				};
+				case Construct.stock:
+				{
+					currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
+					break;
+				};
+				case Construct.guardHouse:
+				{
+					currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
+					break;
+				};
+			};
+			return true;
+        }
+
+        public bool OnNodeClicked( Node node )
+        {
+			if ( !currentBlueprint )
+				return true;
+
+			currentBlueprint.Materialize();
+			if ( currentBlueprint is Building building )
+				root.RegisterCreateBuilding( building );
+			if ( currentBlueprint is Flag flag )
+				root.RegisterCreateFlag( flag );
+			currentBlueprint = null;
+			currentBlueprintPanel?.Close();
+			currentBlueprintPanel = null;
+			constructionMode = Construct.nothing;
+			return false;
+        }
+
+        public bool OnObjectClicked(HiveObject target)
+        {
+			return true;
+        }
+
+		new void Update()
+		{
+			base.Update();
+			if ( showNearestPossibleHotkey.IsDown() )
+				ShowNearestPossible( false );
+			if ( showNearestPossibleAnyDirectionHotkey.IsDown() )
+				ShowNearestPossible( true );
+			if ( rotateCWHotkey.IsDown() )
+			{
+				if ( currentFlagDirection == 0 )
+					currentFlagDirection = 5;
+				else
+					currentFlagDirection--;
+				CancelBlueprint();
+			}
+			if ( rotateCCWHotkey.IsDown() )
+			{
+				if ( currentFlagDirection == 5 )
+					currentFlagDirection = 0;
+				else
+					currentFlagDirection++;
+				CancelBlueprint();
+			}
+		}
+
+		void ShowNearestPossible( bool anyDirection )
+		{
+			List<int> possibleDirections = new List<int>();
+			if ( anyDirection )
+			{
+				for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+					possibleDirections.Add( i );
+			}
+			else
+				possibleDirections.Add( currentFlagDirection );
+
+			Node bestSite = null;
+			int bestDistance = int.MaxValue;
+			int bestFlagDirection = -1;
+			foreach ( var o in Ground.areas[Constants.Ground.maxArea - 1] )
+			{
+				Node node = root.viewport.currentNode + o;
+				foreach ( int flagDirection in possibleDirections )
+				{
+					bool suitable = false;
+					switch ( constructionMode )
+					{
+						case Construct.workshop:
+						{
+							suitable = Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), flagDirection );
+							break;
+						}
+						case Construct.stock:
+						{
+							suitable = Stock.IsNodeSuitable( node, root.mainPlayer, flagDirection );
+							break;
+						}
+						case Construct.guardHouse:
+						{
+							suitable = GuardHouse.IsNodeSuitable( node, root.mainPlayer, flagDirection );
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					if ( suitable )
+					{
+						int distance = node.DistanceFrom( root.viewport.currentNode );
+						if ( distance < bestDistance )
+						{
+							bestDistance = distance;
+							bestSite = node;
+							bestFlagDirection = flagDirection;
+						}
+					}
+				}
+			}
+			if ( bestSite )
+			{
+				root.world.eye.FocusOn( bestSite, true, true );
+				currentFlagDirection = bestFlagDirection;
+			}
+		}
+
+    }
 
 
 	public class RoadPanel : Panel
@@ -4155,24 +4371,12 @@ if ( cart )
 		static int gridMaskXID;
 		static int gridMaskZID;
 		public bool showGridAtMouse;
-		public OverlayInfoType     nodeInfoToShow;
+		public OverlayInfoType nodeInfoToShow;
 		public Building relaxCenter;
 		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
-		public HiveObject currentBlueprint;
-		public WorkshopPanel currentBlueprintPanel;
 		public Node currentNode;  // Node currently under the cursor
 		static GameObject marker;
 		public bool markEyePosition;
-
-		public enum Construct
-		{
-			nothing,
-			workshop,
-			stock,
-			guardHouse,
-			flag,
-			crossing
-		}
 
 		public enum OverlayInfoType
 		{
@@ -4184,9 +4388,6 @@ if ( cart )
 		}
 
 		public bool showCursor;
-		public Construct constructionMode = Construct.nothing;
-		public Workshop.Type workshopType;
-		public int currentFlagDirection = 1;    // 1 is a legacy value.
 
 		struct BuildPossibility
 		{
@@ -4280,16 +4481,7 @@ if ( cart )
 		public bool ResetInputHandler()
 		{
 			if ( inputHandler == this as IInputHandler )
-			{
-				if ( constructionMode != Construct.nothing )
-				{
-					constructionMode = Construct.nothing;
-					CancelBlueprint();
-					nodeInfoToShow = OverlayInfoType.none;
-					return true;
-				}
 				return false;
-			}
 			inputHandler = this;
 			return true;
 		}
@@ -4309,15 +4501,6 @@ if ( cart )
 			direction4,
 			direction5,
 			total
-		}
-
-		public void CancelBlueprint()
-		{
-			currentBlueprint?.Remove();
-			currentBlueprint = null;
-			if ( currentBlueprintPanel )
-				currentBlueprintPanel.Close();
-			currentBlueprintPanel = null;
 		}
 
 		public static void Initialize()
@@ -4465,21 +4648,6 @@ if ( cart )
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			if ( currentBlueprint )
-			{
-				currentBlueprint.Materialize();
-				if ( currentBlueprint is Building building )
-					root.RegisterCreateBuilding( building );
-				if ( currentBlueprint is Flag flag )
-					root.RegisterCreateFlag( flag );
-				currentBlueprint = null;
-				currentBlueprintPanel?.Close();
-				currentBlueprintPanel = null;
-				constructionMode = Construct.nothing;
-				nodeInfoToShow = OverlayInfoType.none;
-				return;
-			}
-
 			var hiveObject = FindObjectAt( Input.mousePosition );
 			if ( hiveObject == null )
 			{
@@ -4507,35 +4675,8 @@ if ( cart )
 			mouseOver = false;
 		}
 
-		static public Hotkey showNearestPossibleConstructionSiteHotkey = new Hotkey( "Show nearest construction site", KeyCode.Alpha5 );
-		static public Hotkey showNearestPossibleConstructionSiteAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Alpha6 );
-		static public Hotkey rotateConstructionCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.Period );
-		static public Hotkey rotateConstructionCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.Comma );
-
-
 		public void Update()
 		{
-			if ( showNearestPossibleConstructionSiteHotkey.IsDown() )
-				ShowNearestPossibleConstructionSite( false );
-			if ( showNearestPossibleConstructionSiteAnyDirectionHotkey.IsDown() )
-				ShowNearestPossibleConstructionSite( true );
-			if ( rotateConstructionCCWHotkey.IsDown() )
-			{
-				if ( currentFlagDirection == 0 )
-					currentFlagDirection = 5;
-				else
-					currentFlagDirection--;
-				CancelBlueprint();
-			}
-			if ( rotateConstructionCWHotkey.IsDown() )
-			{
-				if ( currentFlagDirection == 5 )
-					currentFlagDirection = 0;
-				else
-					currentFlagDirection++;
-				CancelBlueprint();
-			}
-
 			if ( inputHandler == null || inputHandler.Equals( null ) )
 				inputHandler = this;
 
@@ -4582,7 +4723,7 @@ if ( cart )
 						{
 							if ( p.configuration != null )
 							{
-								if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration, currentFlagDirection ) )
+								if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration, NewBuildingPanel.currentFlagDirection ) )
 									continue;
 							}
 							else
@@ -4639,130 +4780,25 @@ if ( cart )
 			}
 		}
 
-		void ShowNearestPossibleConstructionSite( bool anyDirection )
-		{
-			List<int> possibleDirections = new List<int>();
-			if ( anyDirection )
-			{
-				for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
-					possibleDirections.Add( i );
-			}
-			else
-				possibleDirections.Add( currentFlagDirection );
-
-			Node bestSite = null;
-			int bestDistance = int.MaxValue;
-			int bestFlagDirection = -1;
-			foreach ( var o in Ground.areas[Constants.Ground.maxArea - 1] )
-			{
-				Node node = currentNode + o;
-				foreach ( int flagDirection in possibleDirections )
-				{
-					bool suitable = false;
-					switch ( constructionMode )
-					{
-						case Construct.workshop:
-						{
-							suitable = Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), flagDirection );
-							break;
-						}
-						case Construct.stock:
-						{
-							suitable = Stock.IsNodeSuitable( node, root.mainPlayer, flagDirection );
-							break;
-						}
-						case Construct.guardHouse:
-						{
-							suitable = GuardHouse.IsNodeSuitable( node, root.mainPlayer, flagDirection );
-							break;
-						}
-						default:
-						{
-							break;
-						}
-					}
-					if ( suitable )
-					{
-						int distance = node.DistanceFrom( currentNode );
-						if ( distance < bestDistance )
-						{
-							bestDistance = distance;
-							bestSite = node;
-							bestFlagDirection = flagDirection;
-						}
-					}
-				}
-			}
-			if ( bestSite )
-			{
-				root.world.eye.FocusOn( bestSite, true, true );
-				currentFlagDirection = bestFlagDirection;
-			}
-		}
-
 		public bool OnMovingOverNode( Node node )
 		{
 			if ( node != null )
 			{
-				if ( constructionMode == Construct.nothing )
-				{
-					CursorType t = CursorType.nothing;
-					Node flagNode = node.Neighbour( currentFlagDirection );
-					bool hasFlagAround = false, hasFlagAroundFlag = false;
-					foreach ( var o in Ground.areas[1] )
-						if ( node.Add( o ).flag != null )
-							hasFlagAround = true;
-					foreach ( var o in Ground.areas[1] )
-						if ( flagNode.Add( o ).flag != null )
-							hasFlagAroundFlag = true;
-					if ( !node.IsBlocking( false ) && !hasFlagAround )
-						t = CursorType.flag;
-					if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
-						t = CursorType.building;
-					SetCursorType( t );
-					return true;
-				}
-
-				SetCursorType( CursorType.building, currentFlagDirection );
-				if ( currentBlueprint && currentBlueprint.location != node )
-					CancelBlueprint();
-				if ( currentBlueprint )
-					return true;
-				switch ( constructionMode )
-				{
-					case Construct.workshop:
-					{
-						var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
-						if ( workshop && workshop.gatherer )
-						{
-							currentBlueprintPanel = WorkshopPanel.Create();
-							currentBlueprintPanel.offset = new Vector2( 100, 0 );
-							currentBlueprintPanel.Open( workshop, WorkshopPanel.Content.resourcesLeft );
-						}
-						currentBlueprint = workshop;
-						break;
-					};
-					case Construct.flag:
-					{
-						currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true );
-						break;
-					};
-					case Construct.crossing:
-					{
-						currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true, true );
-						break;
-					};
-					case Construct.stock:
-					{
-						currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
-						break;
-					};
-					case Construct.guardHouse:
-					{
-						currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
-						break;
-					};
-				};
+				CursorType t = CursorType.nothing;
+				Node flagNode = node.Neighbour( NewBuildingPanel.currentFlagDirection );
+				bool hasFlagAround = false, hasFlagAroundFlag = false;
+				foreach ( var o in Ground.areas[1] )
+					if ( node.Add( o ).flag != null )
+						hasFlagAround = true;
+				foreach ( var o in Ground.areas[1] )
+					if ( flagNode.Add( o ).flag != null )
+						hasFlagAroundFlag = true;
+				if ( !node.IsBlocking( false ) && !hasFlagAround )
+					t = CursorType.flag;
+				if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
+					t = CursorType.building;
+				SetCursorType( t );
+				return true;
 			}
 			return true;
 		}
