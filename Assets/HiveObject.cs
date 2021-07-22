@@ -84,4 +84,34 @@ public abstract class HiveObject : MonoBehaviour
 	public virtual void Validate( bool chainCall )
 	{
 	}
+
+	public class SiteTestResult
+	{
+		public Result code;
+		public Node.Type groundTypeMissing;
+
+		public SiteTestResult( Result code, Node.Type groundTypeMissing = Node.Type.anything )
+		{
+			this.code = code;
+			this.groundTypeMissing = groundTypeMissing;
+		}
+
+		public static implicit operator bool( SiteTestResult result )
+		{
+			return result.code == Result.fit;
+		}
+
+		public enum Result
+		{
+			fit,
+			wrongGroundType,
+			wrongGroundTypeAtEdge,
+			blocked,
+			flagTooClose,
+			buildingTooClose,
+			heightAlreadyFixed,
+			outsideBorder,
+			crossingInTheWay
+		}
+	}
 }

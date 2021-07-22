@@ -399,7 +399,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		return new GameObject().AddComponent<Stock>();
 	}
 
-	public static bool IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
+	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
 	{
 		return Building.IsNodeSuitable( placeToBuild, owner, stockConfiguration, flagDirection );
 	}

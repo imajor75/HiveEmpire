@@ -22,7 +22,7 @@ public class GuardHouse : Building
 		guardHouseConfiguration.constructionTime = 5000;
 	}
 
-	public static bool IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
+	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
 	{
 		return Building.IsNodeSuitable( placeToBuild, owner, guardHouseConfiguration, flagDirection );
 	}

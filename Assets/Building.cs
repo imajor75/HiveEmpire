@@ -444,7 +444,7 @@ abstract public class Building : HiveObject
 		Construction.Initialize();
 	}
 
-	static public bool IsNodeSuitable( Node placeToBuild, Player owner, Configuration configuration, int flagDirection )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, Configuration configuration, int flagDirection )
 	{
 		var area = GetFoundation( configuration.huge, flagDirection );
 
@@ -453,18 +453,18 @@ abstract public class Building : HiveObject
 		{
 			var basis = placeToBuild.Add( o );
 			if ( basis.IsBlocking() )
-				return false;
+				return new SiteTestResult( SiteTestResult.Result.blocked );
 			if ( basis.owner != owner )
-				return false;
+				return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 			foreach ( var b in Ground.areas[1] )
 			{
 				var perim = basis.Add( b );
 				if ( configuration.flatteningNeeded )
 				{
 					if ( perim.owner != owner )
-						return false;
+						return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 					if ( perim.fixedHeight )
-						return false;
+						return new SiteTestResult( SiteTestResult.Result.heightAlreadyFixed );
 				}
 				if ( perim.CheckType( configuration.groundTypeNeededAtEdge ) )
 					edgeCondition = true;
@@ -472,19 +472,22 @@ abstract public class Building : HiveObject
 			}
 			foreach ( var p in Ground.areas[1] )
 				if ( basis.Add( p ).building )
-					return false;
+					return new SiteTestResult( SiteTestResult.Result.buildingTooClose );
 			if ( !basis.CheckType( configuration.groundTypeNeeded ) )
-				return false;
+				return new SiteTestResult( SiteTestResult.Result.wrongGroundType, configuration.groundTypeNeeded );
 		}
 		if ( !edgeCondition )
-			return false;
+			return new SiteTestResult( SiteTestResult.Result.wrongGroundTypeAtEdge, configuration.groundTypeNeededAtEdge );
 		Node flagLocation = placeToBuild.Neighbour( flagDirection );
 		if ( flagLocation.flag && flagLocation.flag.crossing )
-			return false;
-		return flagLocation.validFlag || Flag.IsNodeSuitable( flagLocation, owner );
+			return new SiteTestResult( SiteTestResult.Result.crossingInTheWay );
+		if ( flagLocation.validFlag )
+			return new SiteTestResult( SiteTestResult.Result.fit );
+
+		return Flag.IsNodeSuitable( flagLocation, owner );
 	}
 
-	public Building Setup( Node node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
+	public Building Setup(  Node node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
 	{
 		this.configuration = configuration;
 		if ( !IsNodeSuitable( node, owner, configuration, flagDirection ) )

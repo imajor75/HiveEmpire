@@ -414,22 +414,22 @@ public class Flag : HiveObject
 		base.DestroyThis( noAssert );
 	}
 
-	static public bool IsNodeSuitable( Node placeToBuildOn, Player owner )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Player owner )
 	{
 		if ( placeToBuildOn.type == Node.Type.underWater )
-			return false;
+			return new SiteTestResult( SiteTestResult.Result.wrongGroundType, Node.Type.aboveWater );
 
 		if ( ( placeToBuildOn.IsBlocking() && placeToBuildOn.road == null ) || placeToBuildOn.flag )
-			return false;
+			return new SiteTestResult( SiteTestResult.Result.blocked );
 
 		foreach ( var o in Ground.areas[1] )
 			if ( placeToBuildOn.Add( o ).flag )
-				return false;
+				return new SiteTestResult( SiteTestResult.Result.flagTooClose );
 
 		if ( placeToBuildOn.owner != owner )
-			return false;
+			return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 
-		return true;
+		return new SiteTestResult( SiteTestResult.Result.fit );
 	}
 }
  

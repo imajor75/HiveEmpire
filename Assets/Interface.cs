@@ -1020,6 +1020,7 @@ public class Interface : OperationHandler
 		public bool noCloseButton;
 		public bool noResize;
 		public bool noPin;
+		public bool reopen;
 		public Image pin;
 		public bool pinned;
 		bool dragResizes;
@@ -1047,7 +1048,7 @@ public class Interface : OperationHandler
 				var r = IsTheSame( panel );
 				if ( r != CompareResult.different )
 					panel.Close();
-				if ( r == CompareResult.same )
+				if ( r == CompareResult.same && !reopen )
 				{
 					Destroy( gameObject );
 					return true;
@@ -2868,6 +2869,7 @@ public class Interface : OperationHandler
 		public Construct constructionMode = Construct.nothing;
 		public Workshop.Type workshopType;
 		public static int currentFlagDirection = 1;    // 1 is a legacy value.
+		public Text testResult;
 
 		static public Hotkey showNearestPossibleHotkey = new Hotkey( "Show nearest construction site", KeyCode.Alpha5 );
 		static public Hotkey showNearestPossibleAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Alpha6 );
@@ -2897,12 +2899,14 @@ public class Interface : OperationHandler
 			constructionMode = type;
 			this.workshopType = workshopType;
 
+			reopen = true;
 			base.Open( 500, 150 );
 			this.Pin( 40, 200, 500, 150, 0, 0 );
 			Text( $"Building a new {(type==Construct.workshop?workshopType.ToString():type.ToString()).GetPrettyName( false )}", 14 ).Pin( borderWidth, -borderWidth, 460, 30 );
 			Text( $"Press {rotateCWHotkey.keyName} or {rotateCCWHotkey.keyName} to rotate" ).PinDownwards( borderWidth, 0, 460 );
 			Text( $"Press {showNearestPossibleAnyDirectionHotkey.keyName} to see the nearest possible constructuion site" ).PinDownwards( borderWidth, 0, 460 );
 			Text( $"or {showNearestPossibleHotkey.keyName} to see the nearest possible place with this facing" ).PinDownwards( borderWidth, 0, 460 );
+			testResult = Text() .PinDownwards( borderWidth, 0, 460 );
 
 			root.viewport.inputHandler = this;
 		}
@@ -2928,6 +2932,23 @@ public class Interface : OperationHandler
 			base.OnDestroy();
 		}
 
+		void ShowTestResult( SiteTestResult t )
+		{
+			testResult.text = t.code switch
+			{
+				SiteTestResult.Result.fit => "Location is good, press LMB to finalize",
+				SiteTestResult.Result.blocked => "Location is blocked",
+				SiteTestResult.Result.buildingTooClose => "Another building is too close",
+				SiteTestResult.Result.crossingInTheWay => "There is a crossing where the junction should be",
+				SiteTestResult.Result.flagTooClose => "Another junction is too close",
+				SiteTestResult.Result.heightAlreadyFixed => "This area already has a fixed height",
+				SiteTestResult.Result.outsideBorder => "Outside of empire border",
+				SiteTestResult.Result.wrongGroundType => $"Ground type not found: {t.groundTypeMissing.ToString().GetPrettyName( false )}",
+				SiteTestResult.Result.wrongGroundTypeAtEdge => $"Ground type not found at edge: {t.groundTypeMissing.ToString().GetPrettyName( false )}",
+				_ => "Unknown"
+			};
+		}
+
         public bool OnMovingOverNode( Node node )
         {
 			root.viewport.SetCursorType( Viewport.CursorType.building, currentFlagDirection );
@@ -2939,6 +2960,7 @@ public class Interface : OperationHandler
 			{
 				case Construct.workshop:
 				{
+					ShowTestResult( Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), currentFlagDirection ) );
 					var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
 					if ( workshop && workshop.gatherer )
 					{
@@ -2951,21 +2973,25 @@ public class Interface : OperationHandler
 				};
 				case Construct.flag:
 				{
+					ShowTestResult( Flag.IsNodeSuitable( node, root.mainPlayer ) );
 					currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true );
 					break;
 				};
 				case Construct.crossing:
 				{
+					ShowTestResult( Flag.IsNodeSuitable( node, root.mainPlayer ) );
 					currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true, true );
 					break;
 				};
 				case Construct.stock:
 				{
+					ShowTestResult( Stock.IsNodeSuitable( node, root.mainPlayer, currentFlagDirection ) );
 					currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
 					break;
 				};
 				case Construct.guardHouse:
 				{
+					ShowTestResult( GuardHouse.IsNodeSuitable( node, root.mainPlayer, currentFlagDirection ) );
 					currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
 					break;
 				};
