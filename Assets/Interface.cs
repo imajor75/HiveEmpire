@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -43,6 +43,8 @@ public class Interface : OperationHandler
 	public static Material materialUIPath;
 	static bool focusOnInputField;
 	static KeyCode ignoreKey = KeyCode.None;
+
+	public Image buildButton;
 
 	static public Hotkey hotkeyListHotkey = new Hotkey( "Hotkey list", KeyCode.H, true );
 
@@ -440,7 +442,7 @@ public class Interface : OperationHandler
 		tooltip.Open();
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
-		var buildButton = this.Image( Icon.hammer ).AddClickHandler( () => BuildPanel.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Alpha1 );
+		buildButton = this.Image( Icon.hammer ).AddClickHandler( () => BuildPanel.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Alpha1 );
 		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
 
 		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
@@ -485,6 +487,7 @@ public class Interface : OperationHandler
 			mainPlayer = world.players[0];
 		else
 			mainPlayer = null;
+		WelcomePanel.Create();
 	}
 
 	public void Load( string fileName )
@@ -5712,6 +5715,35 @@ if ( cart )
 		void RandomizeSeed()
 		{
 			seed.text = new System.Random().Next().ToString();
+		}
+	}
+
+	public class WelcomePanel : Panel
+	{
+		public static WelcomePanel Create()
+		{
+			var p = new GameObject( "Welcome panel" ).AddComponent<WelcomePanel>();
+			p.Open();
+			return p;
+		}
+
+		void Open()
+		{
+			noResize = noPin = true;
+			base.Open( 300, 200 );
+			this.PinCenter( 0, 0, 300, 200, 0.5f, 0.5f );
+			Text( $"Your goal in this game is to create an economy which produces a lot of soldiers, the first milestone is {root.world.productivityGoal}/min. " +
+				$"To see an update on this, open the world progress dialog (hotkey: {root.worldProgressButton.GetHotkey().keyName}). " +
+				$"The only building you got at the beginning is your headquarter. It behaves like a stock, but you cannot destroy or move it. It also has " +
+				$"somewhat higher capacity than a normal stock (can store {Constants.Stock.defaultmaxItemsForMain} items instead of {Constants.Stock.defaultmaxItems}). " +
+				$"First thing you need to do is build more buildings, open the build panel (hotkey: {root.buildButton.GetHotkey().keyName})" ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
+		}
+
+		new void Update()
+		{
+			base.Update();
+			if ( root.panels.Count > 2 )
+				Close();
 		}
 	}
 
