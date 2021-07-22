@@ -3582,6 +3582,9 @@ if ( cart )
 				d.AddOptions( options );
 				d.value = currentValue;
 				d.onValueChanged.AddListener( OnStockChanged );
+				d.SetTooltip( "Selected stock", null, "You can select a stock here, " +
+					"in which case only the routes starting or ending there will be listed. By selecting \"All\" every route for the " +
+					"selected item type will be listed. Remember, each building can be renamed." );
 			}
 
 			{
@@ -3592,12 +3595,27 @@ if ( cart )
 				d.AddOptions( options );
 				d.value = (int)itemType;
 				d.onValueChanged.AddListener( OnItemTypeChanged );
+				d.SetTooltip( "Selected item type", null, "Only routes with the selected item type will be listed." );
 			}
 
 			direction = Text( outputs ? "Output" : "Input" ).PinSideways( 5, -borderWidth, 100, iconSize ).AddClickHandler( OnChangeDirecton );
 			direction.alignment = TextAnchor.MiddleLeft;
+			direction.SetTooltip( "Direction of the listed routes", null, "When a stock is selected, this will control if the output or input routes of that stock will be listed" );
 
-			Button( "Add" ).PinSideways( 0, -borderWidth, 50, iconSize ).AddClickHandler( Add );
+			Button( "Add" ).PinSideways( 0, -borderWidth, 50, iconSize ).AddClickHandler( Add ).SetTooltip( "Create a new route", null, "If a stock is selected, you can create a new route by " +
+				"selecting another stock. The already selected stock will be used as a starting or end point depending on which " +
+				"direction is active now. If no stock is selected, you have to select two stocks, a new route starting at the first and ending at the second will be created" );
+			Text( "?", 20 ).PinSideways( 20, -borderWidth, 40, 40 ).SetTooltip( "This is a list of transfer routes", null, 
+				"Transfer routes are used to transfer a lot of items to bigger distances. A transfer route is defined by " +
+				$"the starting stock, a destination stock, and an item type. Each stock has a cart, which can carry {Constants.Stock.cartCapacity} " +
+				$"items at the same time, these carts are moving items along routes. A cart will start to carry items to the destination of the route, if all the following are met:\n" +
+				$"- The start stock has at least {Constants.Stock.cartCapacity} items stored\n" +
+				$"- Destination stock is willing to accept at least {Constants.Stock.cartCapacity} items to store\n" +
+				"- Cart of the start stock is free\n" +
+				"- Junction in front of the staring stock is free\n" +
+				$"- Destination has at least {Constants.Stock.cartCapacity} free space\n" +
+				"Once the cart started moving it uses the roads to get to the destination. If a route is used by a cart right now, a cart icon will appear in the row of the route, " +
+				"clicking that icon will let you follow the cart." );
 
 			Text( "Start" ).Pin( 20, -borderWidth - iconSize, 120, iconSize );
 			Text( "End" ).PinSideways( 0, -borderWidth - iconSize, 120, iconSize );
@@ -3685,11 +3703,11 @@ if ( cart )
 				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				if ( stock && outputs )
 				{
-					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( delegate { route.MoveUp(); } );
-					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( delegate { route.MoveDown(); } );
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( delegate { route.MoveUp(); } ).SetTooltip( "Increase the priority of the route" );
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( delegate { route.MoveDown(); } ).SetTooltip( "Decrease the priority of the route" );
 				}
-				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } ).SetTooltip( "", null, null, x => toHighlight = x ? route : null );
-				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) );
+				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } ).SetTooltip( "Remove route", null, null, x => toHighlight = x ? route : null );
+				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) ).SetTooltip( "Follow the cart which is currently working on the route" );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( 0, -row );
