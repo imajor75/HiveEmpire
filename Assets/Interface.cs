@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -44,7 +44,8 @@ public class Interface : OperationHandler
 	static bool focusOnInputField;
 	static KeyCode ignoreKey = KeyCode.None;
 
-	public Image buildButton;
+	public Image buildButton, worldProgressButton;
+	public bool roadTutorialShowed;
 
 	static public Hotkey hotkeyListHotkey = new Hotkey( "Hotkey list", KeyCode.H, true );
 
@@ -455,7 +456,7 @@ public class Interface : OperationHandler
 		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
 		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R );
 		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
-		var worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => WorldProgressPanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
+		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => WorldProgressPanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
 		worldProgressButton.SetTooltip( () => $"Show world progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
 		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
@@ -488,6 +489,7 @@ public class Interface : OperationHandler
 		else
 			mainPlayer = null;
 		WelcomePanel.Create();
+		roadTutorialShowed = false;
 	}
 
 	public void Load( string fileName )
@@ -3008,6 +3010,8 @@ public class Interface : OperationHandler
 				return true;
 
 			currentBlueprint.Materialize();
+			if ( !root.roadTutorialShowed )
+				RoadTutorialPanel.Create();
 			if ( currentBlueprint is Building building )
 				root.RegisterCreateBuilding( building );
 			if ( currentBlueprint is Flag flag )
@@ -3294,7 +3298,7 @@ public class Interface : OperationHandler
 			this.flag = flag;
 			int col = 16;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
-			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Start a new road from this junction" );
+			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
 			Image( iconTable.GetMediaData( Icon.magnet ) ).Pin( 45, -45 ).AddClickHandler( CaptureRoads ).SetTooltip( "Merge nearby roads to this junction" );
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).Pin( 65, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).Pin( 85, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
@@ -5744,6 +5748,31 @@ if ( cart )
 			base.Update();
 			if ( root.panels.Count > 2 )
 				Close();
+		}
+	}
+
+	public class RoadTutorialPanel : Panel
+	{
+		public static RoadTutorialPanel Create()
+		{
+			var p = new GameObject( "Road tutorial" ).AddComponent<RoadTutorialPanel>();
+			p.Open();
+			return p;
+		}
+
+		void Open()
+		{
+			noResize = noPin = true;
+			base.Open( 350, 250 );
+			this.PinCenter( 0, 0, 350, 250, 0.5f, 0.5f );
+			root.roadTutorialShowed = true;
+
+			Text( "Every building has a junction in front of it, that is where the building is connected to the economy. On the other hand a junction might have zero " +
+				"buildings using it as an exit, but can also have multiple ones, if the buildings are facing different directions. " +
+				$"Junctions act as a temporary storage of items, a junction can have {Constants.Flag.maxItems} items placed at it. Junctions need to be connected with roads. " +
+				$"A road is always connecting two junctions. Roads cannot cross each other. Every road has at least one hauler assigned to it, who is carrying items between the two " +
+				$"ends of the road, but never leaves the road itself. Roads are free and has no limit on their length, haulers are also free. Roads are also " +
+				$"instantly built. To build a road select a junction, and press the road button." ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
 		}
 	}
 
