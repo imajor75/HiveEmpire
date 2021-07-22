@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -64,8 +64,8 @@ public class Interface : OperationHandler
 	static public Hotkey cameraRightHotkey = new Hotkey( "Camera move right (continuous)", KeyCode.D );
 	static public Hotkey cameraUpHotkey = new Hotkey( "Camera move up (continuous)", KeyCode.W );
 	static public Hotkey cameraDownHotkey = new Hotkey( "Camera move down (continuous)", KeyCode.S );
-	static public Hotkey cameraRotateCWHotkey = new Hotkey( "Camera rotate CW (continuous)", KeyCode.E );
-	static public Hotkey cameraRotateCCWHotkey = new Hotkey( "Camera rotate CCW (continuous)", KeyCode.Q );
+	static public Hotkey cameraRotateCCWHotkey = new Hotkey( "Camera rotate CW (continuous)", KeyCode.E );
+	static public Hotkey cameraRotateCWHotkey = new Hotkey( "Camera rotate CCW (continuous)", KeyCode.Q );
 	static public Hotkey cameraZoomInHotkey = new Hotkey( "Camera zoom in", KeyCode.Z );
 	static public Hotkey cameraZoomOutHotkey = new Hotkey( "Camera zoom out", KeyCode.Y );
 

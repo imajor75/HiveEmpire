@@ -238,12 +238,12 @@ public class Eye : HiveObject
 		if ( Interface.cameraRotateCCWHotkey.IsHold() )
 		{
 			rotateAround = false;
-			direction += Constants.Eye.rotateSpeed;
+			direction -= Constants.Eye.rotateSpeed;
 		}
 		if ( Interface.cameraRotateCWHotkey.IsHold() )
 		{
 			rotateAround = false;
-			direction -= Constants.Eye.rotateSpeed;
+			direction += Constants.Eye.rotateSpeed;
 		}
 		if ( rotateAround )
 			direction += Constants.Eye.autoRotateSpeed;
