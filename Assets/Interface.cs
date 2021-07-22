@@ -3542,7 +3542,7 @@ if ( cart )
 		public ScrollRect scroll;
 		public List<Stock.Route> list;
 		public static Material arrowMaterial, arrowMaterialWithHighlight;
-		public Text[] last, rate, total;
+		public Text[] last, rate, total, status;
 		public Image[] cart;
 		public Watch listWatcher = new Watch();
 		public List<Stock> stockOptions = new List<Stock>();
@@ -3558,7 +3558,7 @@ if ( cart )
 
 		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
 		{
-			base.Open( null, 560, 350 );
+			base.Open( null, 660, 350 );
 			this.stock = stock;
 			this.itemType = itemType;
 			this.outputs = outputs;
@@ -3623,6 +3623,7 @@ if ( cart )
 			Text( "Last" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
 			Text( "Rate" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
 			Text( "Total" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
+			Text( "Status" ).PinSideways( 0, -borderWidth - iconSize, 100, iconSize );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 2 );
 			return this;
 		}
@@ -3691,6 +3692,7 @@ if ( cart )
 			rate = new Text[list.Count];
 			total = new Text[list.Count];
 			cart = new Image[list.Count];
+			status = new Text[list.Count];
 			int row = 0;
 			for ( int i = 0; i < list.Count; i++ )
 			{
@@ -3701,6 +3703,7 @@ if ( cart )
 				last[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				rate[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
+				status[i] = Text( "", 8 ).Link( scroll.content ).PinSideways( 0, row, 100, 2 * iconSize );
 				if ( stock && outputs )
 				{
 					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( delegate { route.MoveUp(); } ).SetTooltip( "Increase the priority of the route" );
@@ -3738,6 +3741,16 @@ if ( cart )
 				rate[i].text = $"~{(list[i].averageTransferRate*50*60).ToString( "F2" )}/m";
 				total[i].text = list[i].itemsDelivered.ToString();
 				cart[i].gameObject.SetActive( list[i].start.cart.currentRoute == list[i] );
+				status[i].text = list[i].state switch
+				{
+					Stock.Route.State.noSourceItems => "Not enough items at source",
+					Stock.Route.State.destinationNotAccepting => "Destination has enough",
+					Stock.Route.State.flagJammed => "Junction is not free at start",
+					Stock.Route.State.inProgress => "In progress",
+					Stock.Route.State.noFreeCart => "Cart is not free",
+					Stock.Route.State.noFreeSpaceAtDestination => "Destination is full",
+					_ => "Unknown"
+				};
 			}
 
 			if ( arrowMaterial == null )

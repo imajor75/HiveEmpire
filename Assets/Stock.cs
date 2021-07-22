@@ -93,6 +93,18 @@ public class Stock : Building, Worker.Callback.IHandler
 		public Item.Type itemType;
 		public int lastDelivery;
 		public float averageTransferRate;
+		public State state;
+
+		public enum State
+		{
+			noSourceItems,
+			destinationNotAccepting,
+			noFreeSpaceAtDestination,
+			noFreeCart,
+			flagJammed,
+			inProgress,
+			unknown
+		}
 
 		[Obsolete( "Compatibility with old files", true )]
 		float averateTransferRate { set { averageTransferRate = value; } }
@@ -126,6 +138,41 @@ public class Stock : Building, Worker.Callback.IHandler
 			list[i] = list[i+1];
 			list[i+1] = this;
 			start.outputRouteVersion.Trigger();
+		}
+
+		public bool IsAvailable()
+		{
+			if ( state == State.inProgress )
+				return false;
+
+			int itemIndex = (int)itemType;
+			if ( start.content[itemIndex] < Constants.Stock.cartCapacity )
+			{
+				state = State.noSourceItems;
+				return false;
+			}
+			if ( end.content[itemIndex] + end.onWay[itemIndex] + Constants.Stock.cartCapacity > end.inputMax[itemIndex] )
+			{
+				state = State.destinationNotAccepting;
+				return false;
+			}
+			if ( !start.cart.IsIdle( true ) )
+			{
+				state = State.noFreeCart;
+				return false;
+			}
+			if ( start.flag.user )
+			{
+				state = State.flagJammed;
+				return false;
+			}
+			if ( end.total + Constants.Stock.cartCapacity > end.maxItems )
+			{
+				state = State.noFreeSpaceAtDestination;
+				return false;
+			}
+			state = State.unknown;
+			return true;
 		}
 	}
 
@@ -165,6 +212,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			itemQuantity = Constants.Stock.cartCapacity;
 			this.itemType = route.itemType;
 			currentRoute = route;
+			route.state = Route.State.inProgress;
 
 			ScheduleWalkToNeighbour( boss.flag.node );
 			DeliverItems( route.end );
@@ -186,6 +234,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			base.Reset();
 			itemQuantity = 0;
+			currentRoute.state = Route.State.unknown;
 			currentRoute = null;
 		}
 
@@ -206,6 +255,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			if ( itemQuantity > 0 && destination == null )
 			{
+				currentRoute.state = Route.State.unknown;
 				currentRoute = null;
 				destination = null; // Real null, not the unity style fake one
 				ResetTasks();
@@ -307,6 +357,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					}
 					cart.currentRoute.itemsDelivered += cart.itemQuantity;
 					cart.currentRoute.lastDelivery = World.instance.time;
+					cart.currentRoute.state = Route.State.unknown;
 					cart.currentRoute = null;
 				}
 				cart.itemsDelivered += cart.itemQuantity;
@@ -503,15 +554,8 @@ public class Stock : Building, Worker.Callback.IHandler
 					continue;
 				}
 
-				if (
-					content[itemType] >= Constants.Stock.cartCapacity &&
-					cart.IsIdle( true ) &&
-					flag.user == null &&
-					destination.total + Constants.Stock.cartCapacity <= maxItems &&
-					destination.content[itemType] + destination.onWay[itemType] + Constants.Stock.cartCapacity <= destination.inputMax[itemType] )
-				{
+				if ( outputRoutes[itemType][i].IsAvailable() )
 					cart.TransferItems( outputRoutes[itemType][i] );
-				}
 			}
 
 			int current = content[itemType] + onWay[itemType];
