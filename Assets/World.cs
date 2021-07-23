@@ -34,6 +34,7 @@ public class World : MonoBehaviour
 	public int randomSeed;
 	public int overseas = 2;
 	public Goal currentWinLevel;
+	public bool roadTutorialShowed;
 
 	static public Water water;
 	static public GameObject nodes;
@@ -201,6 +202,7 @@ public class World : MonoBehaviour
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
 		SetTimeFactor( 1 );
+		roadTutorialShowed = false;
 		overseas = 2;
 		var oldEye = eye;
 		currentWinLevel = World.Goal.none;

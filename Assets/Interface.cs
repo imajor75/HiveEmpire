@@ -45,7 +45,6 @@ public class Interface : OperationHandler
 	static KeyCode ignoreKey = KeyCode.None;
 
 	public Image buildButton, worldProgressButton;
-	public bool roadTutorialShowed;
 
 	static public Hotkey hotkeyListHotkey = new Hotkey( "Hotkey list", KeyCode.H, true );
 
@@ -488,7 +487,6 @@ public class Interface : OperationHandler
 		else
 			mainPlayer = null;
 		WelcomePanel.Create();
-		roadTutorialShowed = false;
 	}
 
 	public void Load( string fileName )
@@ -3002,7 +3000,7 @@ public class Interface : OperationHandler
 				return true;
 
 			currentBlueprint.Materialize();
-			if ( !root.roadTutorialShowed )
+			if ( !root.world.roadTutorialShowed )
 				RoadTutorialPanel.Create();
 			if ( currentBlueprint is Building building )
 				root.RegisterCreateBuilding( building );
@@ -5757,7 +5755,7 @@ if ( cart )
 			noResize = noPin = true;
 			base.Open( 350, 250 );
 			this.PinCenter( 0, 0, 350, 250, 0.5f, 0.5f );
-			root.roadTutorialShowed = true;
+			root.world.roadTutorialShowed = true;
 
 			Text( "Every building has a junction in front of it, that is where the building is connected to the economy. On the other hand a junction might have zero " +
 				"buildings using it as an exit, but can also have multiple ones, if the buildings are facing different directions. " +
