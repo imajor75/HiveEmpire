@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1115,7 +1115,7 @@ public class Worker : HiveObject
 	new public void Start()
 	{
 		node.ground.Link( this, walkBase?.location );
-		transform.position = node.position;
+		transform.position = node.position + Vector3.up * standingHeight;
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
 		links[(int)LinkType.haulingBoxLight] = World.FindChildRecursive( body.transform, "haulingBoxLight" )?.gameObject;
