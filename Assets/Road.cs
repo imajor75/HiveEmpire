@@ -6,7 +6,7 @@ using System;
 using Newtonsoft.Json;
 using System.Linq;
 
-[SelectionBase]
+[SelectionBase, RequireComponent( typeof( MeshRenderer ) )]
 public class Road : HiveObject, Interface.IInputHandler
 {
 	public Player owner;
@@ -200,7 +200,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		else
 			name = "Road";
 
-		var renderer = gameObject.AddComponent<MeshRenderer>();
+		var renderer = gameObject.GetComponent<MeshRenderer>();
 		renderer.material = material;
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		var filter = gameObject.AddComponent<MeshFilter>();
