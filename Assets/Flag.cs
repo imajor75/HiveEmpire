@@ -67,6 +67,7 @@ public class Flag : HiveObject
 			return this;
 		}
 		DestroyThis();
+		noAssert = true;
 		return null;
 	}
 
@@ -345,6 +346,8 @@ public class Flag : HiveObject
 
 	override public void Validate( bool chain )
     {
+		if ( noAssert )
+			return;
 		foreach ( var building in Buildings() )
 			assert.AreEqual( building.flag, this );
         assert.AreEqual( this, node.flag );
