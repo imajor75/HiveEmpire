@@ -429,7 +429,7 @@ public class Ground : HiveObject
 
 		new public void Start()
 		{
-			gameObject.layer = World.layerIndexPickable;
+			gameObject.layer = World.layerIndexGround;
 			MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 			collider = gameObject.GetComponent<MeshCollider>();
 			mesh = meshFilter.mesh = new Mesh();

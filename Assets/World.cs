@@ -23,6 +23,7 @@ public class World : MonoBehaviour
 	static public int layerIndexNotOnMap;
 	static public int layerIndexMapOnly;
 	static public int layerIndexPickable;
+	static public int layerIndexGround;
 	static public int layerIndexPPVolume;
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
@@ -144,6 +145,7 @@ public class World : MonoBehaviour
 		layerIndexNotOnMap = LayerMask.NameToLayer( "Not on map" );
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
 		layerIndexPickable = LayerMask.NameToLayer( "Pickable" );
+		layerIndexGround = LayerMask.NameToLayer( "Ground" );
 		layerIndexPPVolume = LayerMask.NameToLayer( "PPVolume" );
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );

@@ -811,6 +811,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				Remove( false );
 			Interface.root.RegisterCreateRoad( this );
 			Interface.root.viewport.showGridAtMouse = false;
+			Interface.root.viewport.pickGroundOnly = false;
 			return false;
 		}
 		else
@@ -933,5 +934,6 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.IsTrue( removed );
 		}
 		Interface.root.viewport.showGridAtMouse = false;
+		Interface.root.viewport.pickGroundOnly = false;
 	}
 }

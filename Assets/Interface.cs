@@ -3322,6 +3322,7 @@ public class Interface : OperationHandler
 				Road road = Road.Create().Setup( flag );
 				root.viewport.inputHandler = road;
 				root.viewport.showGridAtMouse = true;
+				root.viewport.pickGroundOnly = true;
 			}
 			Close();
 		}
@@ -4400,6 +4401,7 @@ if ( cart )
 		public Node currentNode;  // Node currently under the cursor
 		static GameObject marker;
 		public bool markEyePosition;
+		public bool pickGroundOnly;
 
 		public enum OverlayInfoType
 		{
@@ -4608,7 +4610,10 @@ if ( cart )
 			if ( camera == null )
 				camera = World.instance.eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexPickable ) ) // TODO How long the ray should really be?
+			int layer = 1 << World.layerIndexGround;
+			if ( !pickGroundOnly ) 
+				layer += 1 << World.layerIndexPickable;
+			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layer ) ) // TODO How long the ray should really be?
 				return null;
 
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
