@@ -965,10 +965,10 @@ public class Interface : OperationHandler
         public void OnPointerEnter( PointerEventData eventData )
         {
 			print( $"enter {name}" );
-			if ( textGenerator != null )
-				tooltip.SetText( this, textGenerator(), image, additionalText );
 			if ( onShow != null && !active )
 				onShow( true );
+			if ( textGenerator != null )
+				tooltip.SetText( this, textGenerator(), image, additionalText );
 			active = true;
         }
 
@@ -1902,11 +1902,7 @@ public class Interface : OperationHandler
 				title = Editable( name ).Pin( 20, row, 160, 20 );
 				title.onValueChanged = Rename;
 				title.name = "Title";
-				var r = workshop.relaxSpotCount;
-				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
-				if ( percent > 100 )
-					percent = 100;
-				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, null, ShowRelaxSpotsAround );
+				title.SetTooltip( "LMB to rename" );
 				row -= 20;
 			}
 
@@ -1932,7 +1928,7 @@ public class Interface : OperationHandler
 					row -= iconSize * 3 / 2;
 				}
 				int progressWidth = ( iconSize + 5 ) * 7;
-				progressBar = Progress().Pin( iconSize, row, iconSize + progressWidth, iconSize );
+				progressBar = Progress().Pin( iconSize, row, iconSize + progressWidth, iconSize ).SetTooltip( ShowProgressBarTooltip );
 				status = Text().Link( progressBar ).Stretch().AddOutline();
 				status.alignment = TextAnchor.MiddleCenter;
 				status.color = Color.white;
@@ -2019,12 +2015,6 @@ public class Interface : OperationHandler
 
 			if ( progressBar )
 			{
-				progressBar.SetTooltip( 
-					$"Time needed to produce a new item: {( workshop.productionConfiguration.productionTime * Time.fixedDeltaTime ).ToString( "F2" )}s", 
-					null, 
-					$"Resting time needed between two item production: {( workshop.restTime * Time.fixedDeltaTime ).ToString( "F2" )}s\n" +
-					"This time depends on the number of relaxing spots around the building. The more relaxing spots, the less resting time the building needs (ideally zero). " +
-					"Hover the cursor above the title of the building to see the relaxing spots." );
 				if ( workshop.resting.inProgress )
 				{
 					progressBar.progress = (float)( -workshop.resting.age ) / workshop.restTime;
@@ -2079,7 +2069,7 @@ public class Interface : OperationHandler
 				changeModeImage.sprite = GetModeIcon();
 		}
 
-		void ShowRelaxSpotsAround( bool on )
+		void ShowProgressBarTooltip( bool on )
 		{
 			if ( on )
 			{
@@ -2088,7 +2078,10 @@ public class Interface : OperationHandler
 				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
 				if ( percent > 100 )
 					percent = 100;
-				title.SetTooltip( $"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null, "LMB to rename", ShowRelaxSpotsAround );
+				progressBar.SetTooltip( $"Time needed to produce a new item: {( workshop.productionConfiguration.productionTime * Time.fixedDeltaTime ).ToString( "F2" )}s\n" +
+					$"Resting needed between item productions: {( workshop.restTime * Time.fixedDeltaTime ).ToString( "F2" )}s\n" +
+					$"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null,
+					$"Resting time depends on the number of relaxing spots around the building. The more relaxing spots, the less resting time the building needs (ideally zero). ", ShowProgressBarTooltip );
 			
 				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodeRelaxSites;
 				root.viewport.relaxCenter = workshop;
@@ -5973,6 +5966,11 @@ public static class UIHelpers
 	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
 	{
 		return SetTooltip( g, () => text, image, additionalText, onShow );
+	}
+
+	public static UIElement SetTooltip<UIElement>( this UIElement g, Action<bool> onShow ) where UIElement : Component
+	{
+		return SetTooltip( g, "", null, null, onShow );
 	}
 
 	public static UIElement AddHotkey<UIElement>( this UIElement g, string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false ) where UIElement : Component
