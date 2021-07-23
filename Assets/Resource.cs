@@ -143,7 +143,15 @@ public class Resource : HiveObject
 			}
 		}
 
-		if ( ( underGround && node.type != Node.Type.hill ) || ( !underGround && !node.CheckType( Node.Type.land ) ) )
+		Node.Type needed = Node.Type.aboveWater;
+		if ( underGround )
+			needed = Node.Type.hill;
+		if ( type == Type.cornfield )
+			needed = Node.Type.grass;
+		if ( type == Type.tree )
+			needed = Node.Type.land;
+
+		if ( !node.CheckType( needed ) )
 		{
 			DestroyThis();
 			return null;
