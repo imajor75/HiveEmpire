@@ -325,9 +325,8 @@ public class Interface : OperationHandler
 
 		if ( mainPlayer && mainPlayer.mainProductivity >= world.productivityGoal )
 		{
-			World.Goal reached = (World.Goal)( world.currentWinLevel + 1 );
-			WorldProgressPanel.Create().Open( reached );
-			world.currentWinLevel = reached;
+			world.currentWinLevel = world.currentWinLevel + 1;
+			WorldProgressPanel.Create().Open( world.currentWinLevel );
 		}
 	}
 
@@ -5549,7 +5548,7 @@ if ( cart )
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			if ( reached != World.Goal.gold )
-				Text( $"Next goal: {World.instance.productivityGoal} ({root.world.currentWinLevel+1})" ).
+				Text( $"Next goal: {World.instance.productivityGoal} ({reached+1})" ).
 			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
 			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			recordProductivity.alignment = TextAnchor.MiddleCenter;
