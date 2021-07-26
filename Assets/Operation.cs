@@ -83,15 +83,23 @@ public class OperationHandler : HiveObject
             ExecuteRemoveBuilding( building, merge );
             merge = true;
         }
+        List<Road> realRoads = new List<Road>();
         foreach ( var road in flag.roadsStartingHere )
+            if ( road )
+                realRoads.Add( road );
+        if ( realRoads.Count != 2 )
         {
-            if ( road == null )
-                continue;
-            ExecuteRemoveRoad( road, merge );
+            foreach ( var road in realRoads )
+                ExecuteRemoveRoad( road, merge );
             merge = true;
         }
         
 		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag, merge ) );
+	}
+
+	public void ExecuteCreateFlag( Node location, bool crossing = false )
+	{
+		ExecuteOperation( Operation.Create().SetupAsCreateFlag( location, crossing ) );
 	}
 
 	public void RegisterCreateFlag( Flag flag )

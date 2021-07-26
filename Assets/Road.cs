@@ -11,12 +11,12 @@ public class Road : HiveObject, Interface.IInputHandler
 {
 	public Player owner;
 	public List<Worker> workers = new List<Worker>();
-	public bool ready = false;
 	public int tempNodes = 0;
 	public List<Node> nodes = new List<Node>();
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
 	public World.Timer workerAdded;
+	public bool underConstruction;
 	public bool decorationOnly;
 	public float cachedCost = 0;
 	public int targetWorkerCount;   // Zero means automaic
@@ -29,6 +29,19 @@ public class Road : HiveObject, Interface.IInputHandler
 	Mesh mapMesh;
 	public static Material material;
 	public Mesh mesh;
+
+	public bool ready
+	{
+		get
+		{
+			return !underConstruction;
+		}
+		[Obsolete( "Compatibility with old files", true )]
+		set
+		{
+			underConstruction = !ready;
+		}
+	}
 
 	public Ground ground 
 	{ 
@@ -100,6 +113,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return null;
 		nodes.Add( flag.node );
 		owner = flag.owner;
+		underConstruction = true;
 		return this;
 	}
 
@@ -143,7 +157,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public bool Finish()
 	{
-		assert.IsFalse( ready );
+		assert.IsTrue( underConstruction );
 		if ( !lastNode.validFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
@@ -151,15 +165,13 @@ public class Road : HiveObject, Interface.IInputHandler
 		foreach ( var n in nodes )
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
 			workerAtNodes.Add( null );
-		ends[0] = nodes[0].flag;
-		ends[1] = lastNode.flag;
 		CallNewWorker();
 		transform.localPosition = centerNode.position;
 		ground.Link( this );
 		referenceLocation = centerNode;
 		curves = new List<CubicCurve>[3];
 		CreateCurves();
-		ready = true;
+		underConstruction = false;
 		RebuildMesh();
 		AttachWatches();
 		RegisterOnGround();
@@ -395,9 +407,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		if ( node.validFlag )
 		{
-			if ( nodes[0] == node )
+			if ( nodes.First() == node )
 				return 0;
-			if ( GetNodeFromEnd( 0 ) == node )
+			if ( nodes.Last() == node )
 				return nodes.Count - 1;
 		}
 		return -1;
@@ -537,14 +549,10 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 
 		for ( int i = splitPoint; i > splitPoint - forget; i-- )
-		{
-			if ( workerAtNodes[i] )
-				workerAtNodes[i].onRoad = false;
-		}
+			workerAtNodes[i]?.LeaveExclusivity();
 
 		Road first = Create(), second = Create();
 		first.owner = second.owner = owner;	
-		first.ready = second.ready = true;
 		first.nodes = nodes.GetRange( 0, splitPoint + 1 - forget );
 		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 - forget );
 		second.nodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
@@ -559,9 +567,9 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		foreach ( var worker in workers )
         {
-			// TODO What if worker is not yet onRoad?
+			// TODO What if worker is not yet exclusiveMode?
 			int workerPoint = worker.IndexOnRoad();
-			if ( worker.onRoad )
+			if ( worker.exclusiveMode )
 			{
 				if ( flag.node == worker.node )
 				{
@@ -595,10 +603,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		first.AttachWatches();
 		second.AttachWatches();
 
-		first.ends[0] = ends[0];
-		first.ends[1] = second.ends[0] = flag;
-		second.ends[1] = ends[1];
-
 		if ( first.workers.Count == 0 )
 			first.CallNewWorker();
 		if ( second.workers.Count == 0 )
@@ -612,6 +616,46 @@ public class Road : HiveObject, Interface.IInputHandler
 		flag.Validate( false );
 
 		owner.versionedRoadNetworkChanged.Trigger();
+	}
+
+	public void Merge( Road another )
+	{
+		var newRoad = Road.Create();
+		newRoad.owner = owner;
+
+  		if ( ends[1] == another.ends[0] || ends[1] == another.ends[1] )
+		{
+			for ( int i = 0; i < nodes.Count; i++ )
+				newRoad.nodes.Add( nodes[i] );
+		}
+		else
+		{
+			for ( int i = nodes.Count - 1; i >= 0; i-- )
+				newRoad.nodes.Add( nodes[i] );
+		}
+
+		if ( another.ends[0] == ends[0] || another.ends[0] == ends[1] )
+		{
+			assert.AreEqual( newRoad.nodes.Last(), another.nodes.First() );
+			for ( int i = 1; i < another.nodes.Count; i++ )
+				newRoad.nodes.Add( another.nodes[i] );
+		}
+		else
+		{
+			assert.AreEqual( newRoad.nodes.Last(), another.nodes.Last() );
+			for ( int i = another.nodes.Count - 2; i >= 0; i-- )
+				newRoad.nodes.Add( another.nodes[i] );
+		}
+
+		while ( newRoad.workerAtNodes.Count < newRoad.nodes.Count )
+			newRoad.workerAtNodes.Add( null );
+
+		ReassignWorkersTo( newRoad );
+		another.ReassignWorkersTo( newRoad );
+
+		Remove( false );
+		another.Remove( false );
+		newRoad.RegisterOnGround();
 	}
 
 	void RegisterOnGround()
@@ -628,6 +672,10 @@ public class Road : HiveObject, Interface.IInputHandler
 			nodes[i].road = this;
 			nodes[i].roadIndex = i;
 		}
+		assert.IsTrue( nodes.First().flag );
+		assert.IsTrue( nodes.Last().flag );
+		ends[0] = nodes.First().flag;
+		ends[1] = nodes.Last().flag;
 	}
 
 	void UnregisterOnGround()
@@ -716,7 +764,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			int activeWorkers = 0;
 			foreach ( var worker in workers )
-				if ( worker.onRoad )
+				if ( worker.exclusiveMode )
 					activeWorkers++;
 			return activeWorkers;
 		}
@@ -829,6 +877,18 @@ public class Road : HiveObject, Interface.IInputHandler
 		Interface.RoadPanel.Create().Open( this, centerNode );
 	}
 
+	public void ReassignWorkersTo( Road another )
+	{
+		foreach ( var worker in workers )
+		{
+			var node = worker.LeaveExclusivity();
+			worker.EnterExclusivity( another, node );
+			worker.road = another;
+			another.workers.Add( worker );
+		}
+		workers.Clear();
+	}
+
 	public override void Reset()
 	{
 		while ( workers.Count > 1 )
@@ -887,7 +947,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		foreach ( var worker in workers )
 		{
 			assert.IsValid( worker );
-			if ( !worker.onRoad )
+			assert.AreEqual( worker.type, Worker.Type.hauler );
+			if ( !worker.exclusiveMode )
 				continue;
 			int i = 0;
 			foreach ( var w in workerAtNodes )

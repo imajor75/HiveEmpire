@@ -303,10 +303,15 @@ public class Flag : HiveObject
 		foreach ( var building in Buildings() )
 			if ( !building.Remove( takeYourTime ) )
 				return false;
+		List<Road> roads = new List<Road>();
 		foreach ( var road in roadsStartingHere )
-			road?.Remove( takeYourTime );
-		foreach ( var item in items )
-			item?.Remove( takeYourTime );
+			if ( road )
+				roads.Add( road );
+		if ( roads.Count == 2 )
+			roads[0].Merge( roads[1] );
+		else
+			foreach ( var road in roads )
+				road?.Remove( takeYourTime );
 
 		node.flag = null;
 		DestroyThis();
@@ -375,7 +380,7 @@ public class Flag : HiveObject
 			assert.IsTrue( user.type == Worker.Type.hauler || user.type == Worker.Type.cart );
 			if ( user.type == Worker.Type.hauler )
 				assert.IsNotNull( user.road );
-			assert.IsTrue( user.onRoad );
+			assert.IsTrue( user.exclusiveMode );
 			assert.AreEqual( user.exclusiveFlag, this );
 		}
 		if ( crossing )

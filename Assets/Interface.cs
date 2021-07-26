@@ -3175,8 +3175,7 @@ public class Interface : OperationHandler
 
 		void Split()
 		{
-			if ( Flag.Create().Setup( node, node.owner ) != null )
-				Close();
+			root.ExecuteCreateFlag( node );
 			ValidateAll();
 		}
 
@@ -5551,7 +5550,7 @@ if ( cart )
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			if ( reached != World.Goal.gold )
-				Text( $"Next goal: {World.instance.productivityGoal} ({reached+1})" ).
+				Text( $"Next goal: {World.instance.productivityGoal} ({World.instance.currentWinLevel+1})" ).
 			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
 			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			recordProductivity.alignment = TextAnchor.MiddleCenter;

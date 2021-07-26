@@ -9,7 +9,7 @@ public class Worker : HiveObject
 {
 	public Type type;
 	public Road road;
-	public bool onRoad;
+	public bool exclusiveMode;
 	public Building building;
 	public Player owner;
 	public Node walkFrom;
@@ -65,6 +65,8 @@ public class Worker : HiveObject
 	Item itemInHands { set { itemsInHands[0] = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	Color cachedColor;
+	[Obsolete( "Compatibility with old files", true )]
+	public bool onRoad { set { exclusiveMode = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	GameObject haulingBox;
 
@@ -294,29 +296,12 @@ public class Worker : HiveObject
 		}
 		public override bool ExecuteFrame()
 		{
+			bool wasExclusive = boss.exclusiveMode;
+			if ( exclusive )
+				boss.LeaveExclusivity();
+
 			if ( boss.node.flag == target || target == null )	// Target could be n
-			{
-				if ( exclusive )
-				{
-					// Leave exclusivity
-
-					if ( boss.node.flag.crossing == false )
-					{
-						boss.assert.IsTrue( boss.exclusiveFlag );
-						boss.assert.AreEqual( boss.exclusiveFlag.user, boss );
-						boss.exclusiveFlag.user = null;
-						boss.exclusiveFlag = null;
-					}
-
-					boss.assert.IsTrue( boss.onRoad );
-					int i = boss.IndexOnRoad();
-					boss.assert.AreEqual( boss, boss.road.workerAtNodes[i] );
-					boss.road.workerAtNodes[i] = null;
-					boss.road = null;
-					boss.onRoad = false;
-				}
 				return true;
-			}
 
 			if ( path == null || path.road == null )
 			{
@@ -335,30 +320,18 @@ public class Worker : HiveObject
 				point = nextRoad.nodes.Count - 1;
 			if ( exclusive )
 			{
-				if ( boss.road && boss.onRoad )
-				{
-					int index = boss.road.NodeIndex( boss.node );
-					boss.assert.IsTrue( index >= 0 );
-					boss.assert.AreEqual( boss.road.workerAtNodes[index], boss );
-					boss.road.workerAtNodes[index] = null;
-					boss.onRoad = false;
-				}
-				if ( !boss.node.flag.crossing )
-					boss.assert.AreEqual( boss.node.flag.user, boss );
-				int i = nextRoad.NodeIndex( boss.node );
-				if ( nextRoad.workerAtNodes[i] == null )
-				{
-					nextRoad.workerAtNodes[i] = boss;
-					boss.road = nextRoad;
-					boss.onRoad = true;
-				}
-				else
+				if ( !boss.EnterExclusivity( nextRoad, boss.node ) )
 				{
 					// Boss is trying to move to the next road. This is always possible when the flag is not a crossing, since no workers 
 					// can use the same entry as the cart. But when the flag is a crossing, it is possible that the cart cannot jump to the 
 					// road in an exclusive way, because a worker is in the way. In that case the cart simply waits.
-					boss.assert.IsTrue( boss.node.flag.crossing );
+					if ( wasExclusive )
+					{
+						var s = boss.EnterExclusivity( boss.road, boss.node );
+						boss.assert.IsTrue( s );
+					}
 					path.progress--;    // cancel advancement
+					boss.assert.IsTrue( boss.node.flag.crossing || path.progress == 0 );	// TODO Triggered when a cart full of fish just started to deliver stuff, there was a normal hauler in the way
 					return false;
 				}
 			}
@@ -481,7 +454,7 @@ public class Worker : HiveObject
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
-					if ( other.onRoad && other.type == Type.hauler && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
+					if ( other.exclusiveMode && other.type == Type.hauler && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
 						other.Remove( true );
 					else
 					{
@@ -857,18 +830,7 @@ public class Worker : HiveObject
 				boss.Remove( true );
 				return true;    // Task failed
 			}
-			int i = road.NodeIndex( boss.node );
-			if ( i < 0 || boss.node.flag != null )
-				return true;    // Task failed
-			boss.assert.IsFalse( boss.onRoad );
-			if ( road.workerAtNodes[i] == null )
-			{
-				road.workerAtNodes[i] = boss;
-				boss.onRoad = true;
-				boss.Color = Color.white;
-				return true;
-			}
-			return false;
+			return boss.EnterExclusivity( road, boss.node );
 		}
 	}
 
@@ -1012,7 +974,7 @@ public class Worker : HiveObject
 		Building main = road.owner.mainBuilding;
 		SetNode( main.node );
 		this.road = road;
-		onRoad = false;
+		exclusiveMode = false;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( road.ends[0] ); // TODO Pick the end closest to the main building
 		ScheduleWalkToRoadNode( road, road.centerNode, false );
@@ -1315,26 +1277,7 @@ public class Worker : HiveObject
 			assert.AreEqual( origin.type, Resource.Type.animalSpawner );
 			origin.animals.Remove( this );
 		}
-		if ( road != null && onRoad )
-		{
-			int currentPoint = road.NodeIndex( node );
-			if ( currentPoint < 0 )
-			{
-				// There was a building at node, but it was already destroyed
-				currentPoint = 0;
-				if ( road.workerAtNodes[0] != this )
-					currentPoint = road.nodes.Count - 1;
-			}
-			assert.AreEqual( road.workerAtNodes[currentPoint], this );
-			road.workerAtNodes[currentPoint] = null;
-			onRoad = false;
-		}
-		if ( exclusiveFlag )
-		{
-			assert.AreEqual( exclusiveFlag.user, this );
-			exclusiveFlag.user = null;
-			exclusiveFlag = null;
-		}
+		LeaveExclusivity();
 		if ( road != null )
 		{
 			road.workers.Remove( this );
@@ -1491,7 +1434,7 @@ public class Worker : HiveObject
 			return;
 		}
 
-		if ( !onRoad )
+		if ( !exclusiveMode )
 		{
 			ScheduleWalkToNode( road.centerNode, false );
 			ScheduleStartWorkingOnRoad( road );
@@ -1872,7 +1815,7 @@ public class Worker : HiveObject
 
 	public bool Call( Road road, int point )
 	{
-		if ( this.road != road || !onRoad )
+		if ( this.road != road || !exclusiveMode )
 			return false;
 		if ( IsIdle() )
 		{
@@ -1911,7 +1854,7 @@ public class Worker : HiveObject
 
 	public int IndexOnRoad()
 	{
-		if ( !onRoad )
+		if ( !exclusiveMode )
 			return -1;
 		assert.IsNotNull( road );
 		int i = road.NodeIndex( node );
@@ -1939,31 +1882,18 @@ public class Worker : HiveObject
 		assert.IsNull( itemsInHands[1] );
 		walkTo = walkFrom = null;
 		walkProgress = 0;
-		if ( onRoad )
-		{
-			int index = IndexOnRoad();
-			assert.AreEqual( this, road.workerAtNodes[index] );
-			road.workerAtNodes[index] = null;
-			onRoad = false;
-		}
+		LeaveExclusivity();
 		if ( type == Type.hauler )
 		{
 			assert.IsNotNull( road );
 			int newIndex = road.nodes.Count / 2;
 			SetNode( road.nodes[newIndex] );
-			road.workerAtNodes[newIndex] = this;
-			onRoad = true;
+			EnterExclusivity( road, road.nodes[newIndex] );
 		}
 		if ( type == Type.tinkerer || type == Type.tinkererMate || type == Type.cart )
 			SetNode( building.node );
 		if ( type == Type.constructor || type == Type.unemployed )
 			Remove( false );
-		if ( exclusiveFlag )
-		{
-			assert.AreEqual( exclusiveFlag.user, this );
-			exclusiveFlag.user = null;
-			exclusiveFlag = null;
-		}
 	}
 
 	public override Node location { get { return node; } }
@@ -2018,6 +1948,55 @@ public class Worker : HiveObject
 		transform.localPosition = node.position + Vector3.up * standingHeight;
 	}
 
+	public Node LeaveExclusivity()
+	{
+		if ( !exclusiveMode || road == null )
+			return null;
+
+		int index = road.workerAtNodes.IndexOf( this );
+		if ( index < 0 )
+		{
+			assert.IsTrue( false );
+			return null;
+		}
+		road.workerAtNodes[index] = null;
+
+		if ( exclusiveFlag )
+		{
+			assert.AreEqual( exclusiveFlag.user, this );
+			exclusiveFlag.user = null;
+			exclusiveFlag = null;
+		}
+
+		exclusiveMode = false;
+		return road.nodes[index];
+	}
+
+	public bool EnterExclusivity( Road road, Node node )
+	{
+		if ( node == null )
+			return false;
+		if ( node.flag && !node.flag.crossing && node.flag.user )
+			return false;
+		int index = road.nodes.IndexOf( node );	// This could be Road.NodeIndex, which is faster, but that depends on RegisterOnRoad, which is not always called at this moment
+		if ( index < 0 )
+			return false;
+		if ( road.workerAtNodes[index] )
+			return false;
+
+		road.workerAtNodes[index] = this;
+
+		if ( node.flag && !node.flag.crossing )
+		{
+			node.flag.user = this;
+			exclusiveFlag = node.flag;
+		}
+
+		exclusiveMode = true;
+		this.road = road;
+		return true;
+	}
+
 	public override void Validate( bool chain )
 	{
 		if ( type == Type.wildAnimal )
@@ -2029,8 +2008,9 @@ public class Worker : HiveObject
 			assert.IsNull( origin );
 		if ( type == Type.hauler )
 			assert.IsTrue( road == null || building == null );
-		if ( road && onRoad )
+		if ( exclusiveMode )
 		{
+			assert.IsValid( road );
 			if ( type == Type.hauler )
 				assert.IsTrue( road.workers.Contains( this ) );
 			int point = road.NodeIndex( node );
@@ -2070,8 +2050,9 @@ public class Worker : HiveObject
 			assert.IsTrue( type == Type.hauler || type == Type.cart );
 			if ( type != Type.cart )
 			{
-				assert.IsTrue( onRoad );
+				assert.IsTrue( exclusiveMode );
 				assert.IsNotNull( road );
+				assert.IsTrue( road.ends[0] == exclusiveFlag || road.ends[1] == exclusiveFlag );
 			}
 			assert.AreEqual( exclusiveFlag.user, this, "Flag exclusivity mismatch" );
 		}

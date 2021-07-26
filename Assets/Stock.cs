@@ -220,12 +220,6 @@ public class Stock : Building, Worker.Callback.IHandler
 			ScheduleWalkToFlag( boss.flag, true );
 			ScheduleWalkToNeighbour( node );
 
-			if ( !boss.flag.crossing )
-			{
-				boss.flag.user = this;
-				exclusiveFlag = boss.flag;
-			}
-			onRoad = true;
 			SetActive( true );
 			UpdateLook();
 		}
@@ -273,6 +267,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			}
 			if ( node != boss.node )
 			{
+				ScheduleWalkToNeighbour( boss.flag.node );
 				DeliverItems( destination ?? boss );
 				return;
 			}
@@ -305,7 +300,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			assert.IsTrue( type == Worker.Type.cart || type == Worker.Type.unemployed );
 			if ( building )		// Can be null, if the user removed the stock
 				assert.IsTrue( building is Stock );
-			if ( road && onRoad )
+			if ( road && exclusiveMode )
 			{
 				int index = IndexOnRoad();
 				assert.IsTrue( index >= 0 );
@@ -366,21 +361,6 @@ public class Stock : Building, Worker.Callback.IHandler
 					stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
 				cart.itemQuantity = 0;
 				cart.UpdateLook();
-			}
-			if ( cartStock != stock )
-			{
-				// Not at home yet, so the following tasks supposed to get the cart back
-				boss.assert.IsTrue( boss.taskQueue.Count > 1 );
-				if ( !stock.flag.crossing )
-				{
-					if ( stock.flag.user )
-						return false;
-
-					stock.flag.user = boss;
-					boss.exclusiveFlag = stock.flag;
-				}
-				boss.onRoad = true;
-
 			}
 			boss.assert.AreEqual( cart.destination, stock );
 			cart.destination = null;
