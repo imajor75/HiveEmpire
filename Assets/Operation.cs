@@ -56,9 +56,9 @@ public class OperationHandler : HiveObject
 		    ExecuteOperation( Operation.Create().SetupAsRemoveBuilding( building, merge ) );
 	}
 
-	public void RegisterCreateBuilding( Building building )
+	public void RegisterCreateBuilding( Building building, bool merge = false )
 	{
-		ExecuteOperation( Operation.Create().SetupAsRemoveBuilding( building ), true );
+		ExecuteOperation( Operation.Create().SetupAsRemoveBuilding( building, merge ), true );
 	}
 
 	public void ExecuteRemoveRoad( Road road, bool merge = false )
@@ -102,9 +102,9 @@ public class OperationHandler : HiveObject
 		ExecuteOperation( Operation.Create().SetupAsCreateFlag( location, crossing ) );
 	}
 
-	public void RegisterCreateFlag( Flag flag )
+	public void RegisterCreateFlag( Flag flag, bool merge = false )
 	{
-		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), true );
+		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag, merge ), true );
 	}
 
 	public void RegisterChangeArea( Ground.Area area, Node oldCenter, int oldRadius )

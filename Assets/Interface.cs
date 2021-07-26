@@ -2999,13 +2999,21 @@ public class Interface : OperationHandler
 			if ( !currentBlueprint )
 				return true;
 
-			currentBlueprint.Materialize();
 			if ( !root.world.roadTutorialShowed )
 				RoadTutorialPanel.Create();
 			if ( currentBlueprint is Building building )
-				root.RegisterCreateBuilding( building );
+			{
+				bool merge = false;
+				if ( building.flag.blueprintOnly )
+				{
+					root.RegisterCreateFlag( building.flag );
+					merge = true;
+				}
+				root.RegisterCreateBuilding( building, merge );
+			}
 			if ( currentBlueprint is Flag flag )
 				root.RegisterCreateFlag( flag );
+			currentBlueprint.Materialize();
 			currentBlueprint = null;
 			currentBlueprintPanel?.Close();
 			currentBlueprintPanel = null;

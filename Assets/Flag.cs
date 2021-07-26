@@ -313,6 +313,11 @@ public class Flag : HiveObject
 			foreach ( var road in roads )
 				road?.Remove( takeYourTime );
 
+		if ( user )
+		{
+			assert.AreEqual( user.exclusiveFlag, this );
+			user.exclusiveFlag = null;
+		}
 		node.flag = null;
 		DestroyThis();
 		return true;

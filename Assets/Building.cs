@@ -685,11 +685,7 @@ abstract public class Building : HiveObject
 			assert.AreEqual( basis.building, this );
 			basis.building = null;
 		}
-		int roads = 0;
-		foreach ( var road in flag.roadsStartingHere )
-			if ( road )
-				roads++;
-		if ( roads == 0 )
+		if ( flag.blueprintOnly )
 			flag.Remove();
 		owner?.versionedBuildingDelete.Trigger();
 		DestroyThis();
