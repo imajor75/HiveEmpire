@@ -416,6 +416,77 @@ public class Flag : HiveObject
 		return list;
 	}
 
+	public bool Move( int direction )
+	{
+		Node target = node.Neighbour( direction );
+		if ( !IsNodeSuitable( target, owner, this ) )
+			return false;
+
+		List<Road> shorten = new List<Road>(), change = new List<Road>(), extend = new List<Road>();
+
+		for ( int i = direction - 1; i < direction + Constants.Node.neighbourCount - 1; i++ )
+		{
+			int d = ( i + Constants.Node.neighbourCount ) % Constants.Node.neighbourCount;
+			var road = roadsStartingHere[d];
+			if ( road )
+			{
+				if ( i == direction )
+					shorten.Add( road );
+				else if ( i - direction == -1 || i - direction == 1 )
+					change.Add( road );
+				else
+					extend.Add( road );
+			}
+		}
+		if ( extend.Count() > 1 )
+			return false;
+
+		assert.IsTrue( shorten.Count <= 1 );
+		assert.IsTrue( change.Count <= 2 );
+		assert.IsTrue( extend.Count <= Constants.Node.neighbourCount - 3 );
+
+		void CloneRoad( Road road, Node remove, Node addition = null )
+		{
+			assert.IsTrue( road.ends[0] == this || road.ends[1] == this );
+
+			Road newRoad = Road.Create();
+			newRoad.owner = owner;
+			foreach( var node in road.nodes )
+				newRoad.nodes.Add( node );
+			if ( remove )
+				newRoad.nodes.Remove( remove );
+			if ( addition )
+			{
+				if ( road.ends[1] == this )
+					newRoad.nodes.Add( addition );
+				else
+					newRoad.nodes.Insert( 0, addition );
+			}
+			road.ReassignWorkersTo( newRoad );
+			road.Remove( false );
+			newRoad.RegisterOnGround();
+		}
+
+		node.flag = null;
+		var oldNode = node;
+		node = target;
+		node.flag = this;
+
+		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+			roadsStartingHere[i] = null;
+
+		foreach ( var road in shorten )
+			CloneRoad( road, oldNode );
+		foreach ( var road in change )
+			CloneRoad( road, oldNode, node );
+		foreach ( var road in extend )
+			CloneRoad( road, null, node );
+
+		UpdateBody();
+
+		return true;
+	}
+
 	public override void DestroyThis( bool noAssert = false )
 	{
 		if ( noAssert == false )
@@ -427,7 +498,7 @@ public class Flag : HiveObject
 		base.DestroyThis( noAssert );
 	}
 
-	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Player owner )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Player owner, Flag ignore = null )
 	{
 		if ( placeToBuildOn.type == Node.Type.underWater )
 			return new SiteTestResult( SiteTestResult.Result.wrongGroundType, Node.Type.aboveWater );
@@ -436,8 +507,11 @@ public class Flag : HiveObject
 			return new SiteTestResult( SiteTestResult.Result.blocked );
 
 		foreach ( var o in Ground.areas[1] )
-			if ( placeToBuildOn.Add( o ).flag )
+		{
+			var otherFlag = placeToBuildOn.Add( o ).flag;
+			if ( otherFlag && otherFlag != ignore )
 				return new SiteTestResult( SiteTestResult.Result.flagTooClose );
+		}
 
 		if ( placeToBuildOn.owner != owner )
 			return new SiteTestResult( SiteTestResult.Result.outsideBorder );

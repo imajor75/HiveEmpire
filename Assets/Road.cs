@@ -658,7 +658,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		newRoad.RegisterOnGround();
 	}
 
-	void RegisterOnGround()
+	public void RegisterOnGround()
 	{
 		var a0 = nodes[0].flag.roadsStartingHere; var i0 = nodes[0].DirectionTo( nodes[1] );
 		var a1 = lastNode.flag.roadsStartingHere; var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
@@ -682,15 +682,21 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		if ( ready )
 		{
-			var a0 = nodes[0].flag.roadsStartingHere;
-			var i0 = nodes[0].DirectionTo( nodes[1] );
-			assert.AreEqual( a0[i0], this );
-			a0[i0] = null;
+			if ( nodes[0].flag )	// This is always true, except when moving a flag
+			{
+				var a0 = nodes[0].flag.roadsStartingHere;
+				var i0 = nodes[0].DirectionTo( nodes[1] );
+				assert.AreEqual( a0[i0], this );
+				a0[i0] = null;
+			}
 
-			var a1 = lastNode.flag.roadsStartingHere;
-			var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
-			assert.AreEqual( a1[i1], this );
-			a1[i1] = null;
+			if ( lastNode.flag )
+			{
+				var a1 = lastNode.flag.roadsStartingHere;
+				var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
+				assert.AreEqual( a1[i1], this );
+				a1[i1] = null;
+			}
 		}
 
 		for ( int i = 1; i < nodes.Count; i++ )
@@ -879,6 +885,9 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public void ReassignWorkersTo( Road another )
 	{
+		while ( another.workerAtNodes.Count < another.nodes.Count )
+			another.workerAtNodes.Add( null );
+
 		foreach ( var worker in workers )
 		{
 			var node = worker.LeaveExclusivity();

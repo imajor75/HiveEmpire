@@ -126,6 +126,8 @@ public class Worker : HiveObject
 
 	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
 	{
+		protected const bool finished = true;
+		protected const bool needModeCalls = false;
 		public Worker boss;
 
 		public Task Setup( Worker boss )
@@ -771,7 +773,7 @@ public class Worker : HiveObject
 			}
 
 			if ( !timer.done )
-				return false;
+				return needModeCalls;
 
 			boss.itemsDelivered++;
 			if ( items[1] )
@@ -809,7 +811,7 @@ public class Worker : HiveObject
 			}
 
 			boss.ScheduleWait( putdownTimeStart - putdownRelinkTime, true );
-			return true;
+			return finished;
 		}
 	}
 
@@ -828,8 +830,10 @@ public class Worker : HiveObject
 			if ( road == null )
 			{
 				boss.Remove( true );
-				return true;    // Task failed
+				return finished;    // Task failed
 			}
+			if ( road.NodeIndex( boss.node ) == -1 )
+				return finished;
 			return boss.EnterExclusivity( road, boss.node );
 		}
 	}
