@@ -5793,7 +5793,7 @@ if ( cart )
 			this.PinCenter( 0, 0, 300, 200, 0.5f, 0.5f );
 			Text( $"Your goal in this game is to create an economy which produces a lot of soldiers, the first milestone is {root.world.productivityGoal}/min. " +
 				$"To see an update on this, open the world progress dialog (hotkey: {root.worldProgressButton.GetHotkey().keyName}). " +
-				$"The only building you got at the beginning is your headquarter. It behaves like a stock, but you cannot destroy or move it. It also has " +
+				$"The only building you got at the beginning is your headquarters. It behaves like a stock, but you cannot destroy or move it. It also has " +
 				$"somewhat higher capacity than a normal stock (can store {Constants.Stock.defaultmaxItemsForMain} items instead of {Constants.Stock.defaultmaxItems}). " +
 				$"First thing you need to do is build more buildings, open the build panel (hotkey: {root.buildButton.GetHotkey().keyName})" ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
 		}
