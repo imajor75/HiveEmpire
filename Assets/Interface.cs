@@ -3302,7 +3302,7 @@ public class Interface : OperationHandler
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
-			moveToggle = Image( iconTable.GetMediaData( Icon.move ) ).PinSideways( 0, -45 ).AddToggleHandler( SetMove ).SetTooltip( "Move the flag if possible" );
+			moveToggle = Image( iconTable.GetMediaData( Icon.move ) ).PinSideways( 0, -45 ).AddToggleHandler( SetMove ).SetTooltip( "Move the junction if possible", null, "Move is disabled for junctions which serve as an exit for a building" );
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
@@ -3329,6 +3329,8 @@ public class Interface : OperationHandler
 
 		void SetMove( bool on )
 		{
+			if ( flag.Buildings().Count > 0 )
+				return;
 			moveMode = on;
 			if ( on )
 				root.viewport.inputHandler = this;
@@ -5215,7 +5217,7 @@ if ( cart )
 				}
 				string message = result.result switch
 				{
-					ItemDispatcher.Result.flagJam => "Jam at output flag",
+					ItemDispatcher.Result.flagJam => "Jam at output junction",
 					ItemDispatcher.Result.match => "Matched",
 					ItemDispatcher.Result.noDispatcher => "Dispatcher is not free",
 					ItemDispatcher.Result.notInArea => "Outside of area",
@@ -5227,7 +5229,7 @@ if ( cart )
 				{
 					message = result.result switch
 					{
-						ItemDispatcher.Result.flagJam => "Jam at their output flag",
+						ItemDispatcher.Result.flagJam => "Jam at their output junction",
 						ItemDispatcher.Result.noDispatcher => "Their dispatcher is not free",
 						ItemDispatcher.Result.notInArea => "Their area excludes this",
 						ItemDispatcher.Result.outOfItems => "They are out of items",
