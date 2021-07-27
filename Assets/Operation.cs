@@ -117,6 +117,21 @@ public class OperationHandler : HiveObject
     {
         ExecuteOperation( Operation.Create().SetupAsMoveFlag( flag, direction ) );
     }
+
+    public void ExecuteChangePriority( Stock.Route route, int direction )
+    {
+        ExecuteOperation( Operation.Create().SetupAsChangePriority( route, direction ) );
+    }
+
+    public void ExecuteRemoveRoute( Stock.Route route )
+    {
+        ExecuteOperation( Operation.Create().SetupAsRemoveRoute( route ) );
+    }
+
+    public void ExecuteCreateRoute( Stock start, Stock end, Item.Type itemType )
+    {
+        ExecuteOperation( Operation.Create().SetupAsCreateRoute( start, end, itemType ) );
+    }
 }
 
 public class Operation : ScriptableObject
@@ -135,6 +150,9 @@ public class Operation : ScriptableObject
     public bool merge;
     public Ground.Area area;
     public int radius;
+    public Stock.Route route;
+    public Stock start, end;
+    public Item.Type itemType;
 
     public enum BuildingType
     {
@@ -153,7 +171,10 @@ public class Operation : ScriptableObject
         removeFlag,
         createFlag,
         changeArea,
-        moveFlag
+        moveFlag,
+        changeRoutePriority,
+        removeRoute,
+        createRoute
     }
 
     public static Operation Create()
@@ -242,6 +263,33 @@ public class Operation : ScriptableObject
         this.location = center;
         this.radius = radius;
         name = "Change Area";
+        return this;
+    }
+
+    public Operation SetupAsChangePriority( Stock.Route route, int direction )
+    {
+        type = Type.changeRoutePriority;
+        this.route = route;
+        this.direction = direction;
+        name = "Change Route Priority";
+        return this;
+    }
+
+    public Operation SetupAsRemoveRoute( Stock.Route route )
+    {
+        type = Type.removeRoute;
+        this.route = route;
+        name = "Remove Route";
+        return this;
+    }
+
+    public Operation SetupAsCreateRoute( Stock start, Stock end, Item.Type itemType )
+    {
+        type = Type.createRoute;
+        this.start = start;
+        this.end = end;
+        this.itemType = itemType;
+        name = "Create Route";
         return this;
     }
 
@@ -347,6 +395,34 @@ public class Operation : ScriptableObject
                 radius = oldRadius;
                 break;
             }
+            case Type.changeRoutePriority:
+            {
+                if ( route == null )
+                    return null;
+                if ( direction > 0 )
+                    route.MoveDown();
+                else
+                    route.MoveUp();
+                direction *= -1;
+                break;
+            }
+            case Type.removeRoute:
+            {
+                if ( route == null )
+                    return null;
+                SetupAsCreateRoute( route.start, route.end, route.itemType );
+                route.Remove();
+                break;
+            }
+            case Type.createRoute:
+            {
+                if ( start == null || end == null )
+                    return null;
+                var newRoute = start.AddNewRoute( itemType, end );
+                SetupAsRemoveRoute( newRoute );
+                break;
+            }
+
         }
         return this;
     }

@@ -68,11 +68,11 @@ public class Stock : Building, Worker.Callback.IHandler
 		}
 	}
 
-	public void AddNewRoute( Item.Type itemType, Stock destination )
+	public Route AddNewRoute( Item.Type itemType, Stock destination )
 	{
 		foreach ( var route in outputRoutes[(int)itemType] )
 			if ( route.end == destination && route.itemType == itemType )
-				return;
+				return null;
 
 		var newRoute = new Route();
 		newRoute.start = this;
@@ -81,6 +81,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		outputRoutes[(int)itemType].Add( newRoute );
 		outputRouteVersion.Trigger();
 		destination.inputMax[(int)itemType] = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.inputMax[(int)itemType] );
+		return newRoute;
 	}
 
 	[Obsolete( "Compatibility for old files", true )]

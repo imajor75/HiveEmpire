@@ -3843,7 +3843,6 @@ if ( cart )
 		public static Material arrowMaterial, arrowMaterialWithHighlight;
 		public Text[] last, rate, total, status;
 		public Image[] cart;
-		public Watch listWatcher = new Watch();
 		public List<Stock> stockOptions = new List<Stock>();
 		public bool forceRefill;
 		public Text direction;
@@ -3970,15 +3969,17 @@ if ( cart )
 			}
 			else
 			{
-				currentList = stock.outputRoutes[(int)itemType];
+				currentList = new List<Stock.Route>( stock.outputRoutes[(int)itemType] );
 				if ( !outputs )
 					currentList = stock.GetInputRoutes( itemType );
 			}
 			bool needRefill = list == null || currentList.Count != list.Count;
+
+			if ( !needRefill )
+				for ( int i = 0; i < list.Count; i++ )
+					needRefill |= list[i] != currentList[i];
 			
 			list = currentList;
-			listWatcher.Attach( stock && outputs ? stock.outputRouteVersion : null );
-
 			return needRefill;
 		}
 
@@ -4005,10 +4006,10 @@ if ( cart )
 				status[i] = Text( "", 8 ).Link( scroll.content ).PinSideways( 0, row, 100, 2 * iconSize );
 				if ( stock && outputs )
 				{
-					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( delegate { route.MoveUp(); } ).SetTooltip( "Increase the priority of the route" );
-					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( delegate { route.MoveDown(); } ).SetTooltip( "Decrease the priority of the route" );
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => root.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Increase the priority of the route" );
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => root.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Decrease the priority of the route" );
 				}
-				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( delegate { route.Remove(); } ).SetTooltip( "Remove route", null, null, x => toHighlight = x ? route : null );
+				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => root.ExecuteRemoveRoute( route ) ).SetTooltip( "Remove route", null, null, x => toHighlight = x ? route : null );
 				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) ).SetTooltip( "Follow the cart which is currently working on the route" );
 				row -= iconSize + 5;
 			}
@@ -4025,7 +4026,7 @@ if ( cart )
 		{
 			base.Update();
 
-			if ( UpdateList() || listWatcher.Check() || forceRefill )
+			if ( UpdateList() || forceRefill )
 				Fill();
 
 			for ( int i = 0; i < list.Count; i++ )
@@ -4107,15 +4108,15 @@ if ( cart )
 					tempPickedStock = targetStock;
 					return true;
 				}
-				tempPickedStock.AddNewRoute( itemType, targetStock );
+				root.ExecuteCreateRoute( tempPickedStock, targetStock, itemType );
 				tempPickedStock = null;
 			}
 			else
 			{
 				if ( outputs )
-					stock.AddNewRoute( itemType, targetStock );
+					root.ExecuteCreateRoute( stock, targetStock, itemType );
 				else
-					targetStock.AddNewRoute( itemType, stock );
+					root.ExecuteCreateRoute( targetStock, stock, itemType );
 			}
 
 			root.highlightType = HighlightType.none;
