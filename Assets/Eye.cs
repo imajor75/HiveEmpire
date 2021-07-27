@@ -162,14 +162,22 @@ public class Eye : HiveObject
 		rotateAround = false;
 	}
 
-	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false )
+	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false, bool useLogicalPosition = false )
 	{
 		if ( target == null )
 			return;
 		oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
 
-		x = target.transform.position.x;
-		y = target.transform.position.z;
+		if ( useLogicalPosition )
+		{
+			x = target.location.positionInViewport.x;
+			y = target.location.positionInViewport.z;
+		}
+		else
+		{
+			x = target.transform.position.x;
+			y = target.transform.position.z;
+		}
 		height = -1;
 		director = null;
 		this.rotateAround = rotateAround;

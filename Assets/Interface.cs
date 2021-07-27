@@ -5700,7 +5700,7 @@ if ( cart )
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
 				grabbedEye = root.world.eye;
-				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true );
+				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true, false, true );
 				escCloses = false;
 			}
 		}
