@@ -218,7 +218,8 @@ public class Interface : OperationHandler
 		cup,
 		cursor,
 		grid,
-		buildings
+		buildings,
+		move
 	}
 
 
@@ -961,7 +962,6 @@ public class Interface : OperationHandler
 
         public void OnPointerEnter( PointerEventData eventData )
         {
-			print( $"enter {name}" );
 			if ( onShow != null && !active )
 				onShow( true );
 			if ( textGenerator != null )
@@ -971,7 +971,6 @@ public class Interface : OperationHandler
 
         public void OnPointerExit( PointerEventData eventData )
         {
-			print( $"exit {name}" );
 			if ( tooltip.origin == this )
 				tooltip.Clear();
 			if ( onShow != null && active )
@@ -3270,12 +3269,15 @@ public class Interface : OperationHandler
 				targetWorkerCount.value = road.targetWorkerCount;
 		}
 	}
-	public class FlagPanel : Panel
+	public class FlagPanel : Panel, IInputHandler
 	{
 		public Flag flag;
 		public ItemImage[] items = new ItemImage[Constants.Flag.maxItems];
 		public Image[] itemTimers = new Image[Constants.Flag.maxItems];
 		public Image shovelingIcon, convertIcon;
+		public bool moveMode;
+		Material arrowMaterial;
+		Image moveToggle;
 
 		public static FlagPanel Create()
 		{
@@ -3296,10 +3298,11 @@ public class Interface : OperationHandler
 			int col = 16;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
 			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
-			Image( iconTable.GetMediaData( Icon.magnet ) ).Pin( 45, -45 ).AddClickHandler( CaptureRoads ).SetTooltip( "Merge nearby roads to this junction" );
-			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).Pin( 65, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
-			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).Pin( 85, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
+			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( CaptureRoads ).SetTooltip( "Merge nearby roads to this junction" );
+			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
+			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
+			moveToggle = Image( iconTable.GetMediaData( Icon.move ) ).PinSideways( 0, -45 ).AddToggleHandler( SetMove ).SetTooltip( "Move the flag if possible" );
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
@@ -3312,6 +3315,8 @@ public class Interface : OperationHandler
 			name = "Flag panel";
 			if ( show )
 				root.world.eye.FocusOn( flag, true );
+			arrowMaterial = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
+			arrowMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 			Update();
 		}
 
@@ -3320,6 +3325,15 @@ public class Interface : OperationHandler
 			if ( flag )
 				root.ExecuteRemoveFlag( flag );
 			Close();
+		}
+
+		void SetMove( bool on )
+		{
+			moveMode = on;
+			if ( on )
+				root.viewport.inputHandler = this;
+			else if ( root.viewport.inputHandler == (IInputHandler)this )
+				root.viewport.inputHandler = null;
 		}
 
 		void StartRoad()
@@ -3364,6 +3378,9 @@ public class Interface : OperationHandler
 
 		public override void Update()
 		{
+			if ( GetKeyDown( KeyCode.Alpha0 ) )
+				flag.Move( 0 );
+
 			base.Update();
 
 			// TODO Skip empty slots
@@ -3389,8 +3406,43 @@ public class Interface : OperationHandler
 			if ( flag.flattening != null )	// This should never be null unless after loaded old files.
 				shovelingIcon.color = flag.flattening.worker ? Color.grey : Color.white;
 			convertIcon.color = flag.crossing ? Color.red : Color.white;
+
+			if ( moveMode )
+			{
+				for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+				{
+					var n = flag.node.Neighbour( i );
+					if ( !flag.Move( i, true ) )
+						continue;
+					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), arrowMaterial, 0 );
+				}
+			}
 		}
-	}
+
+        public bool OnMovingOverNode(Node node)
+        {
+			return true;
+        }
+
+        public bool OnNodeClicked(Node node)
+        {
+			int i = flag.node.DirectionTo( node );
+			if ( i >= 0 )
+				flag.Move( i );
+			return keepGoing;
+        }
+
+        public bool OnObjectClicked(HiveObject target)
+        {
+			return true;
+        }
+
+        public void OnLostInput()
+        {
+			if ( moveToggle )
+				moveToggle.SetToggleState( false );
+        }
+    }
 
 	public class WorkerPanel : Panel, Eye.IDirector
 	{
@@ -4394,8 +4446,8 @@ if ( cart )
 		public GameObject cursor;
 		IInputHandler inputHandlerData;
 		readonly GameObject[] cursorTypes = new GameObject[(int)CursorType.total];
-		static Material greenCheckOnGround;
-		static Material redCrossOnGround;
+		public static Material greenCheckOnGround;
+		public static Material redCrossOnGround;
 		public static Mesh plane;
 		public new Camera camera;
 		public Vector3 lastMouseOnGround;
@@ -5785,6 +5837,9 @@ if ( cart )
 		bool OnObjectClicked( HiveObject target );
 		void OnLostInput();
 	}
+
+	protected const bool keepGoing = true;	// possible return values for IInputHandler functions
+	protected const bool finished = false;
 }
 
 public static class UIHelpers
@@ -5871,7 +5926,14 @@ public static class UIHelpers
 
 		public void Toggle()
 		{
-			toggleState =! toggleState;
+			SetToggleState( !toggleState );
+		}
+
+		public void SetToggleState( bool state )
+		{
+			if ( toggleState == state )
+				return;
+			toggleState = state;
 			UpdateLook();
 			if ( toggleHandler != null )
 				toggleHandler( toggleState );
@@ -5882,7 +5944,6 @@ public static class UIHelpers
 			var i = GetComponent<Image>();
 			if ( i )
 				i.color = toggleState ? Color.white : Color.grey;
-
 		}
     }
 
@@ -5920,6 +5981,14 @@ public static class UIHelpers
 
 		return g;
 	}
+
+	public static UIElement SetToggleState<UIElement>( this UIElement g, bool state ) where UIElement : Component
+	{
+		var b = g.gameObject.GetComponent<Button>();
+		b?.SetToggleState( state );
+		return g;
+	}
+
 
 	public static UIElement Link<UIElement>( this UIElement g, Component parent ) where UIElement : Component
 	{

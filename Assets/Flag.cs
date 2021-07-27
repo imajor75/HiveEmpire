@@ -416,7 +416,7 @@ public class Flag : HiveObject
 		return list;
 	}
 
-	public bool Move( int direction )
+	public bool Move( int direction, bool checkOnly = false )
 	{
 		Node target = node.Neighbour( direction );
 		if ( !IsNodeSuitable( target, owner, this ) )
@@ -444,6 +444,9 @@ public class Flag : HiveObject
 		assert.IsTrue( shorten.Count <= 1 );
 		assert.IsTrue( change.Count <= 2 );
 		assert.IsTrue( extend.Count <= Constants.Node.neighbourCount - 3 );
+
+		if ( checkOnly )
+			return true;
 
 		void CloneRoad( Road road, Node remove, Node addition = null )
 		{
