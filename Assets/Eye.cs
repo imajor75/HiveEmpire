@@ -182,6 +182,7 @@ public class Eye : HiveObject
 		director = null;
 		this.rotateAround = rotateAround;
 		Interface.root.viewport.markEyePosition = mark;
+		autoStorePositionCounter = 0;
 	}
 
 	void OnPositionChanged()
