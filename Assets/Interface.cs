@@ -3428,7 +3428,7 @@ public class Interface : OperationHandler
         {
 			int i = flag.node.DirectionTo( node );
 			if ( i >= 0 )
-				flag.Move( i );
+				root.ExecuteMoveFlag( flag, i );
 			return keepGoing;
         }
 

@@ -112,6 +112,11 @@ public class OperationHandler : HiveObject
         if ( area != null )
 		    ExecuteOperation( Operation.Create().SetupAsChangeArea( area, oldCenter, oldRadius ), true );
 	}
+
+    public void ExecuteMoveFlag( Flag flag, int direction )
+    {
+        ExecuteOperation( Operation.Create().SetupAsMoveFlag( flag, direction ) );
+    }
 }
 
 public class Operation : ScriptableObject
@@ -147,7 +152,8 @@ public class Operation : ScriptableObject
         createRoad,
         removeFlag,
         createFlag,
-        changeArea
+        changeArea,
+        moveFlag
     }
 
     public static Operation Create()
@@ -216,6 +222,16 @@ public class Operation : ScriptableObject
         this.location = location;
         this.crossing = crossing;
         name = "Create Flag";
+        return this;
+    }
+
+    public Operation SetupAsMoveFlag( Flag flag, int direction, bool merge = false )
+    {
+        type = Type.moveFlag;
+        this.flag = flag;
+        this.direction = direction;
+        this.merge = merge;
+        name = "Move Flag";
         return this;
     }
 
@@ -309,6 +325,14 @@ public class Operation : ScriptableObject
                 if ( newFlag == null )
                     return null;
                 SetupAsRemoveFlag( newFlag );
+                break;
+            }
+            case Type.moveFlag:
+            {
+                if ( !flag.Move( direction ) )
+                return null;
+                direction += Constants.Node.neighbourCount / 2;
+                direction %= Constants.Node.neighbourCount;
                 break;
             }
             case Type.changeArea:
