@@ -3322,7 +3322,7 @@ public class Interface : OperationHandler
 
 		void Remove()
 		{
-			if ( flag )
+			if ( flag && flag != root.mainPlayer.mainBuilding.flag )
 				root.ExecuteRemoveFlag( flag );
 			Close();
 		}
