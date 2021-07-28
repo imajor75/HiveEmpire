@@ -37,6 +37,7 @@ public class World : MonoBehaviour
 	public Goal currentWinLevel;
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
+	public string fileName;
 
 	static public Water water;
 	static public GameObject nodes;
@@ -205,6 +206,7 @@ public class World : MonoBehaviour
 	public void NewGame( int seed, bool keepCameraLocation = false )
 	{
 		SetTimeFactor( 1 );
+		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
 		overseas = 2;
@@ -278,6 +280,7 @@ public class World : MonoBehaviour
 
 		World world = Serializer.Read<World>( fileName );
 		Assert.global.AreEqual( world, this );
+		this.fileName = fileName;
 
 		rnd = new System.Random( randomSeed );
 
@@ -404,6 +407,7 @@ public class World : MonoBehaviour
 
 	public void Save( string fileName )
 	{
+		this.fileName = fileName;
 		randomSeed = rnd.Next();
 		rnd = new System.Random( randomSeed );
 

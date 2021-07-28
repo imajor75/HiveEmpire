@@ -269,7 +269,7 @@ public class Interface : OperationHandler
 
 	public void OnApplicationQuit()
 	{
-		if ( !Assert.error )
+		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save();
 
 		foreach ( var item in Resources.FindObjectsOfTypeAll<Item>() )
@@ -475,7 +475,7 @@ public class Interface : OperationHandler
 				Load( myFiles.First().FullName );
 		}
 		if ( !world.gameInProgress )
-			NewGame( 1299783286 );
+			Load( "Assets/StreamingAssets/demolevel.json" );
 
 		MainPanel.Create().Open( true );
 	}
@@ -2943,7 +2943,7 @@ public class Interface : OperationHandler
 				SiteTestResult.Result.buildingTooClose => "Another building is too close",
 				SiteTestResult.Result.crossingInTheWay => "There is a crossing where the junction should be",
 				SiteTestResult.Result.flagTooClose => "Another junction is too close",
-				SiteTestResult.Result.heightAlreadyFixed => "This area already has a fixed height",
+				SiteTestResult.Result.heightAlreadyFixed => "This area already has a fixed height, cannot be flatten",
 				SiteTestResult.Result.outsideBorder => "Outside of empire border",
 				SiteTestResult.Result.wrongGroundType => $"Ground type not found: {t.groundTypeMissing.ToString().GetPrettyName( false )}",
 				SiteTestResult.Result.wrongGroundTypeAtEdge => $"Ground type not found at edge: {t.groundTypeMissing.ToString().GetPrettyName( false )}",
@@ -5681,31 +5681,46 @@ if ( cart )
 			noCloseButton = true;
 			noResize = true;
 			noPin = true;
+			bool demoMode = World.instance.fileName.Contains( "demolevel" );
 			Open( null, 0, 0, 300, 250 );
 			this.PinCenter( 0, 0, 300, 250, 0.5f, 0.3f );
 
-			Button( "Continue" ).PinCenter( 0, -34, 100, 25, 0.5f ).AddClickHandler( Close );
-			Image().PinCenter( 0, -50, 260, 1, 0.5f ).color = Color.black;
+			int row = -borderWidth - 14;
 
-			Button( "Start New World" ).PinCenter( 0, -67, 120, 25, 0.5f ).AddClickHandler( StartNewGame );
-			Text( "Seed", 12 ).Pin( 20, -85, 40, 20 );
-			seed = InputField().Pin( 60, -80, 100, 25 );
+			if ( !demoMode )
+			{
+				Button( "Continue" ).PinCenter( 0, row, 100, 25, 0.5f ).AddClickHandler( Close );
+				Image().PinCenter( 0, row - 16, 260, 1, 0.5f ).color = Color.black;
+				row -= 33;
+			}
+
+			Button( "Start New World" ).PinCenter( 0, row, 120, 25, 0.5f ).AddClickHandler( StartNewGame );
+			row -= 18;
+			Text( "Seed", 12 ).Pin( 20, row, 40, 20 );
+			seed = InputField().Pin( 60, row + 5, 100, 25 );
 			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
-			Button( "Randomize" ).Pin( 165, -83, 60, 25 ).AddClickHandler( RandomizeSeed );
-			Text( "Size", 12 ).Pin( 20, -115, 30 );
-			size = Dropdown().Pin( 60, -110, 80, 25 );
+			Button( "Randomize" ).Pin( 165, row + 2, 60, 25 ).AddClickHandler( RandomizeSeed );
+			row -= 30;
+			Text( "Size", 12 ).Pin( 20, row, 30 );
+			size = Dropdown().Pin( 60, row + 5, 80, 25 );
 			size.ClearOptions();
 			size.AddOptions( new List<string>() { "Small (24x24)", "Medium (32x32)", "Big (48x48)" } );
 			size.value = savedSize;
-			Image().PinCenter( 0, -140, 260, 1, 0.5f ).color = Color.black;
+			Image().PinCenter( 0, row - 25, 260, 1, 0.5f ).color = Color.black;
+			row -= 30;
 
-			Button( "Load" ).Pin( 20, -148, 60, 25 ).AddClickHandler( Load );
-			loadNames = Dropdown().Pin( 80, -145, 200, 25 );
-			Image().Pin( 20, -173, 260, 1 ).color = Color.black;
+			Button( "Load" ).Pin( 20, row - 3, 60, 25 ).AddClickHandler( Load );
+			loadNames = Dropdown().Pin( 80, row, 200, 25 );
+			Image().Pin( 20, row - 28, 260, 1 ).color = Color.black;
+			row -= 35;
 
-			Button( "Save" ).Pin( 20, -178, 60, 25 ).AddClickHandler( Save );
-			saveName = InputField().Pin( 80, -180, 100, 25 );
-			saveName.text = new System.Random().Next().ToString();
+			if ( !demoMode )
+			{
+				Button( "Save" ).Pin( 20, row + 2, 60, 25 ).AddClickHandler( Save );
+				saveName = InputField().Pin( 80, row, 100, 25 );
+				saveName.text = new System.Random().Next().ToString();
+				row -= 30;
+			}
 
 			RandomizeSeed();
 			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
@@ -5713,7 +5728,7 @@ if ( cart )
 			watcher.Deleted += SaveFolderChanged;
 			watcher.EnableRaisingEvents = true;
 
-			Button( "Exit" ).PinCenter( 0, -220, 100, 25, 0.5f ).AddClickHandler( Application.Quit );
+			Button( "Exit" ).PinCenter( 0, row - 10, 100, 25, 0.5f ).AddClickHandler( Application.Quit );
 
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
@@ -5721,6 +5736,8 @@ if ( cart )
 				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true, false, true );
 				escCloses = false;
 			}
+
+			SetSize( 300, -row + 40 );
 		}
 
 		public new void OnDestroy()
