@@ -2953,7 +2953,10 @@ public class Interface : OperationHandler
 
         public bool OnMovingOverNode( Node node )
         {
-			root.viewport.SetCursorType( Viewport.CursorType.building, currentFlagDirection );
+			if ( constructionMode == Construct.flag || constructionMode == Construct.crossing )
+				root.viewport.SetCursorType( Viewport.CursorType.building );
+			else
+				root.viewport.SetCursorType( Viewport.CursorType.building, currentFlagDirection );
 			if ( currentBlueprint && currentBlueprint.location != node )
 				CancelBlueprint();
 			if ( currentBlueprint )
