@@ -435,7 +435,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		return null;
 	}
 
-	public int cachedJam;
+	public int cachedJam = -1;
 	public int jam
 	{
 		get
@@ -443,7 +443,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( !ready )
 				return 0;
 
-			if ( watchStartFlag.Check() || watchEndFlag.Check() )
+			if ( watchStartFlag.Check() || watchEndFlag.Check() || cachedJam == -1 )
 			{
 				cachedJam = 0;
 				for ( int e = 0; e < 2; e++ )
@@ -983,6 +983,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			}
 		}
 		assert.AreEqual( realJam, jam );	// TODO Triggered (realJam=7, Jam=8), triggered again (realJam=10, Jam=11, max=12) and again (realJam==3, Jam==4). Potential fix was made. Triggered again (4, 5)(2, 3).
+											// Triggered again after moving a flag (1, 0)
+											// Is jam recalculated after an item reroutes?
 			for ( int i = 0; i < nodes.Count - 1; i++ )
 			assert.AreEqual( nodes[i].DistanceFrom( nodes[i + 1] ), 1 );
 		if ( !ready )
