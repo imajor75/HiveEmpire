@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -2882,7 +2882,15 @@ public class Interface : OperationHandler
 
 		public static NewBuildingPanel Create( Construct type, Workshop.Type workshopType = Workshop.Type.unknown )
 		{
-			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
+			if ( 
+				workshopType == Workshop.Type.coalMine || 
+				workshopType == Workshop.Type.saltMine || 
+				workshopType == Workshop.Type.goldMine ||
+				workshopType == Workshop.Type.ironMine ||
+				workshopType == Workshop.Type.stoneMine )
+				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodeUndergroundResources;
+			else
+				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
 			var p = new GameObject( "New building panel" ).AddComponent<NewBuildingPanel>();
 			p.Open( type, workshopType );
 			return p;
