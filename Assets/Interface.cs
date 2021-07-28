@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -4790,13 +4790,13 @@ if ( cart )
 				cursor.transform.localPosition = currentNode.position;
 				cursor.transform.SetParent( currentNode.ground.FindClosestBlock( currentNode ).transform, false );
 			}
-			if ( !inputHandler.OnMovingOverNode( currentNode ) )
+			if ( currentNode && !inputHandler.OnMovingOverNode( currentNode ) )
 				inputHandler = this;
 #if DEBUG
 			if ( GetKeyDown( KeyCode.PageUp ) && currentNode )
-				currentNode.SetHeight( currentNode.height + 0.05f );
+				currentNode?.SetHeight( currentNode.height + 0.05f );
 			if ( GetKeyDown( KeyCode.PageDown ) && currentNode )
-				currentNode.SetHeight( currentNode.height - 0.05f );
+				currentNode?.SetHeight( currentNode.height - 0.05f );
 #endif
 		}
 
