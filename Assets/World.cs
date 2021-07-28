@@ -282,8 +282,7 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 
-		if ( water == null )
-			water = Water.Create().Setup( ground );
+		water = Water.Create().Setup( ground );
 		water.transform.localPosition = Vector3.up * waterLevel;
 
 		{
