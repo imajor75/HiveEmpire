@@ -1007,5 +1007,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		Interface.root.viewport.showGridAtMouse = false;
 		Interface.root.viewport.pickGroundOnly = false;
+		Interface.tooltip.Clear();
 	}
 }

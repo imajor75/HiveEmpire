@@ -27,7 +27,7 @@ public class Interface : OperationHandler
 	public static Interface root;
 	public bool heightStrips;
 	public Player mainPlayer;
-	static Tooltip tooltip;
+	public static Tooltip tooltip;
 	public int autoSave = autoSaveInterval;
 	const int autoSaveInterval = 15000;
 	public int fullValidate = fullValidateInterval;
@@ -3354,6 +3354,11 @@ public class Interface : OperationHandler
 				root.viewport.inputHandler = road;
 				root.viewport.showGridAtMouse = true;
 				root.viewport.pickGroundOnly = true;
+				if ( !root.world.createRoadTutorialShowed )
+				{
+					root.world.createRoadTutorialShowed = true;
+					tooltip.SetText( road, "Connect to another junction or middle of another road, or press Shift+LMB on an open spot to create a new junction" );
+				}
 			}
 			Close();
 		}

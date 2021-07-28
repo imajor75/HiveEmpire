@@ -36,6 +36,7 @@ public class World : MonoBehaviour
 	public int overseas = 2;
 	public Goal currentWinLevel;
 	public bool roadTutorialShowed;
+	public bool createRoadTutorialShowed;
 
 	static public Water water;
 	static public GameObject nodes;
@@ -205,6 +206,7 @@ public class World : MonoBehaviour
 	{
 		SetTimeFactor( 1 );
 		roadTutorialShowed = false;
+		createRoadTutorialShowed = false;
 		overseas = 2;
 		var oldEye = eye;
 		currentWinLevel = World.Goal.none;
