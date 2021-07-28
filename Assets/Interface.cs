@@ -5621,7 +5621,7 @@ if ( cart )
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			if ( reached != World.Goal.gold && World.instance.currentWinLevel != World.Goal.gold )
-				Text( $"Next goal: {World.instance.productivityGoal} ({World.instance.currentWinLevel+1})" ).
+				Text( $"Next goal: {World.instance.productivityGoal} soldier/min ({World.instance.currentWinLevel+1})" ).
 			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
 			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			recordProductivity.alignment = TextAnchor.MiddleCenter;
@@ -5636,8 +5636,8 @@ if ( cart )
 			var t = World.instance.time;
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
 			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( ( t / 60 / 60 / 50 ) % 24 ).ToString( "D2" )}:{( ( t / 60 / 50) % 60 ).ToString( "D2" )}";
-			recordProductivity.text = $"Record productivity: {m.record}";
-			currentProductivity.text = $"Current productivity: {m.current}";
+			recordProductivity.text = $"Record productivity: {m.record} soldier/min";
+			currentProductivity.text = $"Current productivity: {m.current} soldier/min";
 			productivityProgress.progress = m.current / World.instance.productivityGoal;
 			base.Update();
 		}
