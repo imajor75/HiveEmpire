@@ -440,7 +440,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		get
 		{
-			if ( !ready )
+			if ( !ready || decorationOnly )
 				return 0;
 
 			if ( watchStartFlag.Check() || watchEndFlag.Check() || cachedJam == -1 )
