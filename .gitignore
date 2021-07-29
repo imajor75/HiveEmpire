@@ -63,3 +63,5 @@ LinuxPlayer_s.debug
 UnityPlayer_s.debug
 
 UnityPlayer.so
+
+linuxbuild/
