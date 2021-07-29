@@ -496,7 +496,7 @@ public class Flag : HiveObject
 		{
 			foreach ( var f in frames )
 				if ( f )
-					assert.AreEqual( f.transform.childCount, 0 );
+					assert.AreEqual( f.transform.childCount, 0 );	// TODO Triggered when deleting a flag
 		}
 		base.DestroyThis( noAssert );
 	}
