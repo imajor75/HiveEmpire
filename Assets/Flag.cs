@@ -313,6 +313,9 @@ public class Flag : HiveObject
 			foreach ( var road in roads )
 				road?.Remove( takeYourTime );
 
+		foreach ( var item in items )
+			item?.Remove( false );
+
 		if ( user )
 		{
 			assert.AreEqual( user.exclusiveFlag, this );
