@@ -475,7 +475,7 @@ public class Interface : OperationHandler
 				Load( myFiles.First().FullName );
 		}
 		if ( !world.gameInProgress )
-			Load( "Assets/StreamingAssets/demolevel.json" );
+			Load( Application.streamingAssetsPath + "/demolevel.json" );
 
 		MainPanel.Create().Open( true );
 	}

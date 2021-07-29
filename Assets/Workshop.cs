@@ -363,7 +363,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public static new void Initialize()
 	{
-		using ( var sw = new StreamReader( "Assets/StreamingAssets/workshops.json" ) )
+		using ( var sw = new StreamReader( Application.streamingAssetsPath + "/workshops.json" ) )
 		using ( var reader = new JsonTextReader( sw ) )
 		{
 			var serializer = JsonSerializer.Create();
