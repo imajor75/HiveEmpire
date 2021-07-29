@@ -2110,8 +2110,13 @@ public class Interface : OperationHandler
 				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
 				if ( percent > 100 )
 					percent = 100;
-				progressBar.SetTooltip( $"Time needed to produce a new item: {( workshop.productionConfiguration.productionTime * Time.fixedDeltaTime ).ToString( "F2" )}s\n" +
-					$"Resting needed between item productions: {( workshop.restTime * Time.fixedDeltaTime ).ToString( "F2" )}s\n" +
+
+				var productionSec = workshop.productionConfiguration.productionTime * Time.fixedDeltaTime;
+				var restSec = workshop.restTime * Time.fixedDeltaTime;
+				progressBar.SetTooltip( 
+					$"Maximum output: {(workshop.productionConfiguration.outputStackSize*60f/(productionSec+restSec)).ToString( "n2" )}/min\n" +
+					$"Time needed to produce a new item: {productionSec.ToString( "F2" )}s\n" +
+					$"Resting needed between item productions: {restSec.ToString( "F2" )}s\n" +
 					$"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null,
 					$"Resting time depends on the number of relaxing spots around the building. The more relaxing spots, the less resting time the building needs (ideally zero). ", ShowProgressBarTooltip );
 			
