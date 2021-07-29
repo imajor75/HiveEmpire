@@ -173,7 +173,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		CreateCurves();
 		underConstruction = false;
 		RebuildMesh();
-		AttachWatches();
 		RegisterOnGround();
 		gameObject.GetComponent<MeshRenderer>().material = material;
 
@@ -471,12 +470,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	void AttachWatches()
-	{
-		watchStartFlag.Attach( nodes[0].flag.itemsStored );
-		watchEndFlag.Attach( lastNode.flag.itemsStored );
-	}
-
 	Vector3 NodePosition( int index )
 	{
 		return nodes[index].GetPositionRelativeTo( referenceLocation );
@@ -600,8 +593,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		UnregisterOnGround();
 		first.RegisterOnGround();
 		second.RegisterOnGround();
-		first.AttachWatches();
-		second.AttachWatches();
 
 		if ( first.workers.Count == 0 )
 			first.CallNewWorker();
@@ -676,6 +667,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.IsTrue( nodes.Last().flag );
 		ends[0] = nodes.First().flag;
 		ends[1] = nodes.Last().flag;
+		watchStartFlag.Attach( nodes[0].flag.itemsStored );
+		watchEndFlag.Attach( lastNode.flag.itemsStored );
 	}
 
 	void UnregisterOnGround()
@@ -985,6 +978,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.AreEqual( realJam, jam );	// TODO Triggered (realJam=7, Jam=8), triggered again (realJam=10, Jam=11, max=12) and again (realJam==3, Jam==4). Potential fix was made. Triggered again (4, 5)(2, 3).
 											// Triggered again after moving a flag (1, 0)
 											// Is jam recalculated after an item reroutes?
+											// Triggered when removing a flag from the middle of a road
+											// and again, but not immediately after removing the flag (1, 0)
 			for ( int i = 0; i < nodes.Count - 1; i++ )
 			assert.AreEqual( nodes[i].DistanceFrom( nodes[i + 1] ), 1 );
 		if ( !ready )
