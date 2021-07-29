@@ -526,6 +526,8 @@ public class Worker : HiveObject
 					{
 						t++;
 						boss.assert.AreEqual( i, cp );	// Triggered for a cart
+														// TODO Triggered again during a stress test, a hauler was delivering two items into a brewery I think. The building was destroyed right when the 
+														// hauler was trying to drop items on the floor. It was 0, -1 I think. Task queue only had this task in it.
 					}
 				}
 				boss.assert.AreEqual( t, 1 );
@@ -1908,7 +1910,7 @@ public class Worker : HiveObject
 		{
 			var box = links[(int)LinkType.haulingBoxLight];
 			if ( box )
-				assert.AreEqual( box.transform.childCount, 0 );
+				assert.AreEqual( box.transform.childCount, 0 );		 // Triggered after undoing building remove
 			box = links[(int)LinkType.haulingBoxHeavy];
 			if ( box )
 				assert.AreEqual( box.transform.childCount, 0 );
@@ -2023,7 +2025,7 @@ public class Worker : HiveObject
 				if ( itemsInHands[0] )
 					assert.IsTrue( node.building || itemsInHands[0].tripCancelled );	// It is possible, that the item destination was destroyed during the last step
 				else
-					assert.IsTrue( node.building );
+					assert.IsTrue( node.building || walkTo == null );		// It is possible, that the building was just destroyed, but the worker did not yet start moving back to the road (?)
 				if ( node.building )
 				{
 					point = road.NodeIndex( node.building.flag.node );
