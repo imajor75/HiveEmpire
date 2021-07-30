@@ -38,6 +38,8 @@ public class Interface : OperationHandler
 	public GameObject highlightVolume;
 	Node highlightVolumeCenter;
 	int highlightVolumeRadius;
+	Image[] speedButtons = new Image[3];
+
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
 	public static Material materialUIPath;
@@ -54,11 +56,6 @@ public class Interface : OperationHandler
 
 	static public Hotkey undoHotkey = new Hotkey( "Undo", KeyCode.Z, true );
 	static public Hotkey redoHotkey = new Hotkey( "Redo", KeyCode.Y, true );
-
-	static public Hotkey fastSpeedHotkey = new Hotkey( "Speed 8x", KeyCode.Insert );
-	static public Hotkey normalSpeedHotkey = new Hotkey( "Speed 1x", KeyCode.Delete );
-	static public Hotkey pauseHotkey = new Hotkey( "Pause", KeyCode.Pause );
-	static public Hotkey speedUpHotkey = new Hotkey( "Speed 5x (continuous)", KeyCode.Space );
 
 	static public Hotkey cameraLeftHotkey = new Hotkey( "Camera move left (continuous)", KeyCode.A );
 	static public Hotkey cameraRightHotkey = new Hotkey( "Camera move right (continuous)", KeyCode.D );
@@ -218,7 +215,10 @@ public class Interface : OperationHandler
 		grid,
 		buildings,
 		move,
-		key
+		key,
+		pause,
+		play,
+		fast
 	}
 
 
@@ -465,6 +465,14 @@ public class Interface : OperationHandler
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.Alpha9 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
+
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetTimeFactor( 0 ) ).Link( this ).Pin( -150, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Pause );
+		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
+		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => world.SetTimeFactor( 1 ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Delete );
+		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
+		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => world.SetTimeFactor( 8 ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Insert );
+		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
+
 		LoadHotkeys();
 
 		world = World.Create().Setup();
@@ -534,13 +542,6 @@ public class Interface : OperationHandler
 
 	public void Update()
 	{
-		if ( world.timeFactor != 0 && world.timeFactor != 8 )
-		{
-			if ( speedUpHotkey.IsHold() )
-				world.SetTimeFactor( 5 );
-			else
-				world.SetTimeFactor( 1 );
-		}
 		// if ( GetKey( KeyCode.R ) )
 		// {
 		// 	bool localReset = false;
@@ -560,18 +561,6 @@ public class Interface : OperationHandler
 		if ( redoHotkey.IsDown() )
 			Redo();
 
-		if ( fastSpeedHotkey.IsDown() )
-			world.SetTimeFactor( 8 );
-		if ( normalSpeedHotkey.IsDown() )
-			world.SetTimeFactor( 1 );
-		if ( pauseHotkey.IsDown() )
-		{
-			print( "pause pressed" );
-			if ( world.timeFactor > 0 )
-				world.SetTimeFactor( 0 );
-			else
-				world.SetTimeFactor( 1 );
-		}
 		if ( headquartersHotkey.IsDown() )
 			mainPlayer.mainBuilding.OnClicked( true );
 		if ( closeWindowHotkey.IsDown() )
@@ -636,6 +625,9 @@ public class Interface : OperationHandler
 #endif
 
 		CheckHighlight();
+		speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey;
+		speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey;
+		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
 	}
 
 	void CheckHighlight()
