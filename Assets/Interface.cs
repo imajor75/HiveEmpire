@@ -2072,8 +2072,8 @@ public class Interface : OperationHandler
 				{
 					foreach ( var resource in node.resources )
 					{
-						if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource )
-							return;
+						if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource || resource.keepAway.inProgress )
+							continue;
 						if ( !resource.underGround || node == workshop.node || resource.node.owner == workshop.owner )
 						{
 							if ( resource.infinite )

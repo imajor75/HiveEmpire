@@ -260,7 +260,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 				}
 			}
 			else
-				resource.keepAway.Start( 500 );   // TODO Settings
+			{
+				resource.keepAway.Start( 500 );   // TODO Settings, is this called at all?
+				boss.assert.IsTrue( false );
+			}
 			boss.assert.AreEqual( resource.hunter, boss );
 			resource.hunter = null;
 			if ( resource.underGround )
