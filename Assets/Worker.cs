@@ -1489,10 +1489,16 @@ public class Worker : HiveObject
 
 		if ( node == road.nodes[0] || node == road.lastNode )
 		{
-			int center = ( road.nodes.Count - 1 ) / 2;
+			int restIndex = ( road.nodes.Count - 1 ) / 2;
 			if ( node == road.nodes[0] )
-				center = road.nodes.Count / 2;
-			ScheduleWalkToRoadPoint( road, center );
+				restIndex = road.nodes.Count / 2;
+			if ( road.workerAtNodes[restIndex] )
+			{
+				for ( restIndex = 1; restIndex < road.nodes.Count - 1; restIndex++ )
+					if ( road.workerAtNodes[restIndex] == null )
+						break;
+			}
+			ScheduleWalkToRoadPoint( road, restIndex );
 			return;
 		}
 	}
