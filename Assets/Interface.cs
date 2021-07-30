@@ -46,8 +46,6 @@ public class Interface : OperationHandler
 
 	public Image buildButton, worldProgressButton;
 
-	static public Hotkey hotkeyListHotkey = new Hotkey( "Hotkey list", KeyCode.H, true );
-
 	static public Hotkey headquartersHotkey = new Hotkey( "Show headquarters", KeyCode.Home );
 	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
 	static public Hotkey cameraBackHotkey = new Hotkey( "Camera back", KeyCode.LeftArrow, false, true );
@@ -219,7 +217,8 @@ public class Interface : OperationHandler
 		cursor,
 		grid,
 		buildings,
-		move
+		move,
+		key
 	}
 
 
@@ -461,6 +460,8 @@ public class Interface : OperationHandler
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
 		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
 		mapButton.SetTooltip( () => $"Minimap (hotkey: {mapButton.GetHotkey().keyName})" );
+		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
+		hotkeyButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.Alpha9 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
@@ -571,8 +572,6 @@ public class Interface : OperationHandler
 			else
 				world.SetTimeFactor( 1 );
 		}
-		if ( hotkeyListHotkey.IsDown() )
-			HotkeyList.Create().Open();
 		if ( headquartersHotkey.IsDown() )
 			mainPlayer.mainBuilding.OnClicked( true );
 		if ( closeWindowHotkey.IsDown() )
