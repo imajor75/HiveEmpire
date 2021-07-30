@@ -421,7 +421,10 @@ public class Node : HiveObject
 			if ( resource.isBlocking == Resource.Blocking.all )
 				o++;
 		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
-		// Triggered again, o == 2 there is a tree and an animalspawner
+											// Triggered during mass stress test, o==2 
+		// Triggered again, o == 2 there is a tree and an animalspawner has a valid flag, and a road, this is 7, 14
+		// road crossing here 14,10, ... 6, 13 contains 7, 14, flag has no roads starting here, no items, but one of the items is a unity null item, flag name correct
+
 		if ( x != ground.dimension && y != ground.dimension )
 			for ( int i = 0; i < 6; i++ )
 				assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );

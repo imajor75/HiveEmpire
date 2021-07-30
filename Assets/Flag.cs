@@ -314,7 +314,10 @@ public class Flag : HiveObject
 				road?.Remove( takeYourTime );
 
 		foreach ( var item in items )
-			item?.Remove( false );
+		{
+			if ( item )		// Could be deleted (how? but it happened), hence ?. is not enought
+				item.Remove( false );
+		}
 
 		if ( user )
 		{
