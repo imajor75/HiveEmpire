@@ -528,6 +528,18 @@ public class Worker : HiveObject
 						boss.assert.AreEqual( i, cp );	// Triggered for a cart
 														// TODO Triggered again during a stress test, a hauler was delivering two items into a brewery I think. The building was destroyed right when the 
 														// hauler was trying to drop items on the floor. It was 0, -1 I think. Task queue only had this task in it.
+														// Triggered again for a hauler during a stress test (5, -1) boss.node is 11,26, road nodes are:
+														// 14 21
+														// 13 22
+														// 13 23
+														// 13 24
+														// 12 25
+														// 12 26	<- worker was here somewhere?
+														// 13 26
+														// 13 27
+														// Task queue is walktoroadpoint and deliveritem
+														// a single fish is in hand, this fish has nextFlag pointing to the beginning of the road (14, 21)
+														// targetpoint is 0, wishedpoint is -1, currentpoint -1
 					}
 				}
 				boss.assert.AreEqual( t, 1 );
@@ -1460,16 +1472,25 @@ public class Worker : HiveObject
 					continue;
 
 				flag.ReserveItem( itemsInHands[0] );
+				bool onRoad = true;
 				if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building, or the road is rearranged by a flag magnet (Road.Split)
 				{
+					onRoad = false;
 					foreach ( var o in Ground.areas[1] )
 					{
 						var nn = node.Add( o );
 						if ( nn.flag == road.ends[0] || nn.flag == road.ends[1] )
+						{
 							ScheduleWalkToNeighbour( nn ); // It is possible, that the building is not there anymore
+							onRoad = true;
+							break;
+						}
 					}
 				}
-				ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
+				if ( onRoad )
+					ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
+				else
+					ScheduleWalkToNode( road.ends[i].node );
 				ScheduleDeliverItem( itemsInHands[0] );
 
 				// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has space
@@ -2022,7 +2043,7 @@ public class Worker : HiveObject
 			assert.IsTrue( road == null || building == null );
 		if ( exclusiveMode )
 		{
-			assert.IsValid( road );
+			assert.IsValid( road );			// TODO Triggered when stress deleting all the roads flags and buildings on a map for a cart (?) going back home
 			if ( type == Type.hauler )
 				assert.IsTrue( road.workers.Contains( this ) );
 			int point = road.NodeIndex( node );
