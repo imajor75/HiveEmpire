@@ -275,10 +275,11 @@ public class Resource : HiveObject
 			}
 			else
 			{
+				if ( !silence.empty )
+					soundSource.Play();
 				silence.Start( (int)( World.rnd.NextDouble() * m.intData ) );
 				soundSource.clip = m.data;
 				soundSource.loop = false;
-				soundSource.Play();
 			}
 		}
 	}
