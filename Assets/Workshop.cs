@@ -158,6 +158,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public int important = Constants.Workshop.defaultImportantInBuffer;
 		public Ground.Area area = new Ground.Area();
 		public Player.InputWeight weight;
+		public bool disabled;
+		public bool optional;
 	}
 
 	new public enum Type
@@ -471,6 +473,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					b.itemType = input.itemType;
 					b.size = input.bufferSize;
 					b.stackSize = input.stackSize;
+					b.optional = productionConfiguration.commonInputs;
 					newList.Add( b );
 					break;
 				}
@@ -641,6 +644,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 			int freeSpaceAtFlag = flag.freeSlots;
 			foreach ( Buffer b in buffers )
 			{
+				if ( b.disabled )
+					continue;
 				int missing = b.size-b.stored-b.onTheWay;
 				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
 				float weight = b.weight != null ? b.weight.weight : 0.5f;

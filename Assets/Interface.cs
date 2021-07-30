@@ -2146,20 +2146,32 @@ public class Interface : OperationHandler
 			public BuildingPanel boss;
 			public Item.Type itemType;
 			Workshop.Buffer buffer;
+			Image disableIndicator;
 
 			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null, bool input = true )
 			{
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
+				int itemsStartX = UIHelpers.currentColumn = x - xi + iconSize;
 				for ( int i = 0; i < itemCount; i++ )
-				{
-					items[i] = boss.ItemIcon( itemType ).Pin( x, y );
-					x += xi;
-				}
-				boss.Text( "?" ).Pin( x, y, 20, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" );
+					items[i] = boss.ItemIcon( itemType ).PinSideways( xi - iconSize, y );
+				int itemsEndX = UIHelpers.currentColumn;
+				boss.Text( "?" ).PinSideways( 0, y, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
 				if ( area != null )
-					boss.AreaIcon( area ).Pin( x + 15, y );
+					boss.AreaIcon( area ).PinSideways( 0, y );
+				if ( buffer != null && buffer.optional )
+				{
+					boss.Image( Icon.exit ).PinSideways( 0, y ).AddToggleHandler( SetDisabled, buffer.disabled );
+					disableIndicator = boss.Image( Icon.emptyFrame ).Pin( itemsStartX, y - iconSize / 2 + 2, itemsEndX - itemsStartX + 4, 4 );
+					disableIndicator.color = Color.Lerp( Color.red, Color.black, 0.5f );
+				}
+
+			}
+
+			void SetDisabled( bool disabled )
+			{
+				buffer.disabled = disabled;
 			}
 
 			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int x, int y, int xi )
@@ -2194,6 +2206,8 @@ public class Interface : OperationHandler
 							items[i].picture.color = new Color( 1, 1, 1, 0 );
 					}
 				}
+				if ( buffer != null && disableIndicator )
+					disableIndicator.gameObject.SetActive( buffer.disabled );
 			}
 
 			public void Update()
