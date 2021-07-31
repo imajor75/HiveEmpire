@@ -641,7 +641,7 @@ public class Worker : HiveObject
 				return false;
 			foreach ( var secondary in boss.node.flag.items )
 			{
-				if ( secondary == null || secondary == items[0] )
+				if ( secondary == null || secondary == items[0] || secondary.flag != boss.node.flag )
 					continue;
 				if ( secondary.worker && secondary.worker.road != boss.road )
 					continue;
