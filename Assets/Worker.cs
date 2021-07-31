@@ -643,7 +643,9 @@ public class Worker : HiveObject
 			{
 				if ( secondary == null || secondary == items[0] )
 					continue;
-				if ( secondary.worker || secondary.buddy )	// Is it possible, that there is a buddy but no worker?
+				if ( secondary.worker && secondary.worker.road != boss.road )
+					continue;
+				if ( secondary.buddy )	// Is it possible, that there is a buddy but no worker?
 					continue;
 				if ( secondary.type != items[0].type )
 					continue;
@@ -664,6 +666,7 @@ public class Worker : HiveObject
 				if ( !checkOnly )
 				{
 					// At this point the item secondary seems like a good one to carry
+					secondary.worker?.ResetTasks();
 					if ( secondary.path.stepsLeft != 1 )
 						target.ReserveItem( secondary );
 					secondary.worker = boss;
