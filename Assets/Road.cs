@@ -884,9 +884,13 @@ public class Road : HiveObject, Interface.IInputHandler
 		foreach ( var worker in workers )
 		{
 			var node = worker.LeaveExclusivity();
-			worker.EnterExclusivity( another, node );
-			worker.road = another;
-			another.workers.Add( worker );
+			if ( worker.EnterExclusivity( another, node ) )
+			{
+				worker.road = another;
+				another.workers.Add( worker );
+			}
+			else
+				worker.type = Worker.Type.unemployed;
 		}
 		workers.Clear();
 	}
