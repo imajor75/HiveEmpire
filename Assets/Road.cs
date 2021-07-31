@@ -161,11 +161,20 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( !lastNode.validFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
-#pragma warning disable IDE0059 // Unnecessary assignment of a value
-		foreach ( var n in nodes )
-#pragma warning restore IDE0059 // Unnecessary assignment of a value
+		foreach ( var node in nodes )
+		{
+			foreach ( var resource in node.resources )
+			{
+				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.cornfield )
+				{
+					resource.Remove( false );
+					break;
+				}
+			}
+		}
+
+		while ( workerAtNodes.Count < nodes.Count )
 			workerAtNodes.Add( null );
-		CallNewWorker();
 		transform.localPosition = centerNode.position;
 		ground.Link( this );
 		referenceLocation = centerNode;
@@ -174,6 +183,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		underConstruction = false;
 		RebuildMesh();
 		RegisterOnGround();
+		CallNewWorker();
 		gameObject.GetComponent<MeshRenderer>().material = material;
 
 		owner.versionedRoadNetworkChanged.Trigger();
@@ -848,7 +858,14 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 
 		if ( node.IsBlocking() && node.flag == null && node.road != this )
-			return true;
+		{
+			bool treeOrFieldBlocking = false;
+			foreach( var r in node.resources )
+				if ( r.type == Resource.Type.tree || r.type == Resource.Type.cornfield )
+					treeOrFieldBlocking = true;
+			if ( !treeOrFieldBlocking )
+				return true;
+		}
 
 		tempNodes = 0;
 		RebuildMesh();

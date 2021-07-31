@@ -231,16 +231,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( boss.node != resource.node && !resource.underGround )
 			{
 				Cancel();
-				return true;
+				return finished;
 			}
+			if ( resource == null )
+				return finished;
 			if ( timer.empty )
 				timer.Start( (boss.building as Workshop).productionConfiguration.productionTime );
 
 			if ( !timer.done )    // TODO Working on the resource
-				return false;
+				return needModeCalls;
 
-			ProcessResource( resource );
-			return true;
+			if ( resource )
+				ProcessResource( resource );
+			return finished;
 		}
 
 		void ProcessResource( Resource resource )
