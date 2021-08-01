@@ -372,7 +372,7 @@ public class Worker : HiveObject
 
 			if ( path == null )
 			{
-				path = Path.Between( boss.node, target, PathFinder.Mode.avoidObjects, boss, ignoreFinalObstacle, ignoreObject );
+				path = Path.Between( boss.node, target, PathFinder.Mode.forWorkers, boss, ignoreFinalObstacle, ignoreObject );
 				if ( path == null )
 				{
 					Debug.Log( "Worker failed to go to " + target.x + ", " + target.y );
@@ -1356,7 +1356,7 @@ public class Worker : HiveObject
 			for ( int i = 0; i < d.Count; i++ )
 			{
 				Node t = node.Add( d[(i+r)%d.Count] );
-				if ( t.IsBlocking( false ) )
+				if ( t.block.IsBlocking( Node.Block.Type.workers ) )
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;

@@ -101,7 +101,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return false;
 
 		// Check if the current node is blocking
-		if ( node.IsBlocking() && node.flag == null )
+		if ( node.block.IsBlocking( Node.Block.Type.roads ) && node.flag == null )
 			return false;
 
 		return true;
@@ -126,7 +126,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( nodes.Count == 2 )
 			name = "Road " + node.x + ", " + node.y;
 
-		if ( !node.IsBlocking( true ) )
+		if ( !node.block.IsBlocking( Node.Block.Type.roads ) )
 		{
 			node.road = this;
 			node.roadIndex = nodes.Count - 1;
@@ -795,7 +795,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.IsTrue( nodes.Count > 0 );
 
 		PathFinder p = ScriptableObject.CreateInstance<PathFinder>();
-		if ( p.FindPathBetween( lastNode, node, PathFinder.Mode.avoidRoadsAndFlags, node.flag || ( node.road && node.road != this && Flag.IsNodeSuitable( node, owner ) ) ) )
+		if ( p.FindPathBetween( lastNode, node, PathFinder.Mode.forRoads, node.flag || ( node.road && node.road != this && Flag.IsNodeSuitable( node, owner ) ) ) )
 		{
 			var j = nodes.Count;
 			for ( int i = 1; i < p.path.Count; i++ )
@@ -857,7 +857,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				return false;
 		}
 
-		if ( node.IsBlocking() && node.flag == null && node.road != this )
+		if ( node.block.IsBlocking( Node.Block.Type.roads ) && node.flag == null && node.road != this )
 		{
 			bool treeOrFieldBlocking = false;
 			foreach( var r in node.resources )

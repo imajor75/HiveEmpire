@@ -30,9 +30,9 @@ public class PathFinder : ScriptableObject
 
 	public enum Mode
 	{
-		avoidRoadsAndFlags,
+		forRoads,
 		onRoad,
-		avoidObjects,
+		forWorkers,
 		total
 	}
 
@@ -69,27 +69,15 @@ public class PathFinder : ScriptableObject
     {
 		if ( !ignoreFinalObstacle || node != target )
 		{
-			if ( node.IsBlocking( mode == Mode.avoidRoadsAndFlags ) )
+			if ( mode == Mode.forRoads && node.block.IsBlocking( Node.Block.Type.roads ) )
+				return;
+			if ( mode == Mode.forWorkers && node.block.IsBlocking( Node.Block.Type.workers ) )
 			{
-				if ( mode == Mode.avoidRoadsAndFlags )
-				{
-					bool treeOrFieldBlocking = false;
-					foreach ( var r in node.resources )
-					{
-						if ( r.type == Resource.Type.tree || r.type == Resource.Type.cornfield )
-						{
-							treeOrFieldBlocking = true;
-							break;
-						}
-					}
-					if ( !treeOrFieldBlocking )
-						return;
-				}
-				else if ( ignoreObject == null || ignoreObject != node.building ) 
+				if ( ignoreObject == null || ignoreObject != node.building ) 
 					return;
 			}
 
-			if ( mode == Mode.avoidRoadsAndFlags && ( node.owner != target.owner || node.road ) )
+			if ( mode == Mode.forRoads && ( node.owner != target.owner || node.road ) )
 				return;
 
 			if ( node.type == Node.Type.underWater )

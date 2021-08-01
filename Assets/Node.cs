@@ -59,6 +59,34 @@ public class Node : HiveObject
 		anything = 0x7fffffff
 	}
 
+	public class Block
+	{
+		public Type type;
+		public Block( Type type )
+		{
+			this.type = type;
+		}
+		public bool IsBlocking( Type type )
+		{
+			return ( this.type & type ) > 0;
+		}
+		public static implicit operator bool( Block block )
+		{
+			return block.type != Type.none;
+		}
+		public enum Type
+		{
+			none = 0,
+			workers = 1,
+			buildings = 2,
+			roads = 4,
+			workersAndBuildings = workers+buildings,
+			workersAndRoads = workers+roads,
+			buildingsAndRoads = buildings+roads,
+			all = workers+buildings+roads
+		}
+	}
+
 	public static void Initialize()
 	{
 		object[] decorationData = {
@@ -301,21 +329,17 @@ public class Node : HiveObject
 		return ground.GetNode( x + o.x, y + o.y );
 	}
 
-	public bool IsBlocking( bool hard = true )
+	public Block block
 	{
-		if ( building )
-			return true;
-		foreach ( var resource in resources )
-			if ( resource.isBlocking == Resource.Blocking.all )
-				return true;
-		if ( !hard )
-			return false;
-
-		foreach ( var resource in resources )
-			if ( resource.isBlocking == Resource.Blocking.everythingButWorkers )
-				return true;
-
-		return flag || road;
+		get
+		{
+			if ( building )
+				return new Block( Block.Type.all );
+			Block.Type type = ( road || flag ) ? Block.Type.buildingsAndRoads : Block.Type.none;
+			foreach ( var resource in resources )
+				type |= resource.block.type;
+			return new Block( type );
+		}
 	}
 
 	public void SetHeight( float height )
@@ -418,7 +442,7 @@ public class Node : HiveObject
 		if ( building )
 			o++;
 		foreach ( var resource in resources )
-			if ( resource.isBlocking == Resource.Blocking.all )
+			if ( resource.block.IsBlocking( Block.Type.roads ) )
 				o++;
 		assert.IsTrue( o == 0 || o == 1 );  // TODO Sometimes this is triggered
 											// Triggered during mass stress test, o==2 

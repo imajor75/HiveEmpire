@@ -2677,11 +2677,11 @@ public class Interface : OperationHandler
 			this.node = node;
 			name = "Node panel";
 #if DEBUG
-			BuildButton( 20, -60, "Tree", !node.IsBlocking( true ) && node.CheckType( Node.Type.land ), AddTree );
-			BuildButton( 20, -80, "Remove", node.IsBlocking( true ), Remove );
+			BuildButton( 20, -60, "Tree", !node.block && node.CheckType( Node.Type.land ), AddTree );
+			BuildButton( 20, -80, "Remove", node.block, Remove );
 			BuildButton( 20, -100, "Raise", true, delegate { AlignHeight( 0.1f ); } );
 			BuildButton( 20, -120, "Lower", true, delegate { AlignHeight( -0.1f ); } );
-			BuildButton( 20, -140, "Cave", !node.IsBlocking( true ), AddCave );
+			BuildButton( 20, -140, "Cave", !node.block, AddCave );
 
 			BuildButton( 200, -60, "Gold patch", true, delegate { AddResourcePatch( Resource.Type.gold ); } );
 			BuildButton( 200, -80, "Coal patch", true, delegate { AddResourcePatch( Resource.Type.coal ); } );
@@ -4942,9 +4942,9 @@ if ( cart )
 				foreach ( var o in Ground.areas[1] )
 					if ( flagNode.Add( o ).flag != null )
 						hasFlagAroundFlag = true;
-				if ( !node.IsBlocking( false ) && !hasFlagAround )
+				if ( !node.block && !hasFlagAround )
 					t = CursorType.flag;
-				if ( !node.IsBlocking() && !flagNode.IsBlocking( false ) && !hasFlagAroundFlag )
+				if ( !node.block && !flagNode.block && !hasFlagAroundFlag )
 					t = CursorType.building;
 				SetCursorType( t );
 				return true;

@@ -22,26 +22,26 @@ public class Resource : HiveObject
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
-	public Blocking isBlocking
+	public Node.Block block
 	{
 		get
 		{
-			return type switch
+			return new Node.Block( type switch
 			{
-				Type.tree => Blocking.all,
-				Type.rock => Blocking.all,
-				Type.fish => Blocking.none,
-				Type.cornfield => Blocking.everythingButWorkers,
-				Type.animalSpawner => Blocking.all,
-				Type.pasturingAnimal => Blocking.everythingButWorkers,
-				Type.salt => Blocking.none,
-				Type.coal => Blocking.none,
-				Type.iron => Blocking.none,
-				Type.gold => Blocking.none,
-				Type.stone => Blocking.none,
-				Type.expose => Blocking.none,
-				_ => Blocking.none
-			};
+				Type.tree => Node.Block.Type.workersAndBuildings,
+				Type.rock => Node.Block.Type.all,
+				Type.fish => Node.Block.Type.none,
+				Type.cornfield => Node.Block.Type.buildings,
+				Type.animalSpawner => Node.Block.Type.all,
+				Type.pasturingAnimal => Node.Block.Type.buildings,
+				Type.salt => Node.Block.Type.none,
+				Type.coal => Node.Block.Type.none,
+				Type.iron => Node.Block.Type.none,
+				Type.gold => Node.Block.Type.none,
+				Type.stone => Node.Block.Type.none,
+				Type.expose => Node.Block.Type.none,
+				_ => Node.Block.Type.none
+			} ); 
 		}
 	}
 	public bool underGround
@@ -74,13 +74,6 @@ public class Resource : HiveObject
 		soil,
 		total,
 		unknown = -1	
-	}
-
-	public enum Blocking
-	{
-		none,
-		everythingButWorkers,
-		all
 	}
 
 	public static void Initialize()
@@ -157,7 +150,7 @@ public class Resource : HiveObject
 			return null;
 		}
 
-		if ( node.IsBlocking() )
+		if ( node.block )
 		{
 			DestroyThis();
 			return null;
@@ -250,7 +243,7 @@ public class Resource : HiveObject
 			foreach ( var o in Ground.areas[1] )
 			{
 				Node n = node.Add( o );
-				if ( n.IsBlocking() )
+				if ( n.block.IsBlocking( Node.Block.Type.workers ) )
 					continue;
 				if ( animals.Count >= 3 )
 					continue;

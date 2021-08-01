@@ -452,7 +452,7 @@ abstract public class Building : HiveObject
 		foreach ( var o in area )
 		{
 			var basis = placeToBuild.Add( o );
-			if ( basis.IsBlocking() )
+			if ( basis.block )
 				return new SiteTestResult( SiteTestResult.Result.blocked );
 			if ( basis.owner != owner )
 				return new SiteTestResult( SiteTestResult.Result.outsideBorder );

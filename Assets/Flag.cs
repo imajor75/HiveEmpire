@@ -512,7 +512,7 @@ public class Flag : HiveObject
 		if ( placeToBuildOn.type == Node.Type.underWater )
 			return new SiteTestResult( SiteTestResult.Result.wrongGroundType, Node.Type.aboveWater );
 
-		if ( ( placeToBuildOn.IsBlocking() && placeToBuildOn.road == null ) || placeToBuildOn.flag )
+		if ( ( placeToBuildOn.block && placeToBuildOn.road == null ) || placeToBuildOn.flag )
 			return new SiteTestResult( SiteTestResult.Result.blocked );
 
 		foreach ( var o in Ground.areas[1] )

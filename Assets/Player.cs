@@ -222,10 +222,10 @@ public class Player : ScriptableObject
 			foreach ( var n in area )
 			{
 				var localNode = node + n;
-				if ( !localNode.CheckType( Node.Type.land ) || localNode.owner != null || localNode.IsBlocking() )
+				if ( !localNode.CheckType( Node.Type.land ) || localNode.owner != null || localNode.block )
 					invalidNode = true;
 			}
-			if ( invalidNode || node.Neighbour( flagDirection ).IsBlocking() )
+			if ( invalidNode || node.Neighbour( flagDirection ).block )
 				continue;
 
 			float min, max;

@@ -305,7 +305,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				return true;
 			}
 
-			if ( node.IsBlocking() )
+			if ( node.block.IsBlocking( Node.Block.Type.workers ) )
 				return true;
 
 			Resource.Create().Setup( node, resourceType );
@@ -718,7 +718,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					foreach ( var o in Ground.areas[3] )
 					{
 						Node place = node.Add( o );
-						if ( place.IsBlocking( true ) || !place.CheckType( Node.Type.grass ) )
+						if ( place.block || !place.CheckType( Node.Type.grass ) )
 							continue;
 						PlantAt( place, Resource.Type.cornfield );
 						return;
@@ -738,12 +738,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 						int x = (i + randomOffset) % o.Count;
 						Node place = node.Add( o[x] );
 						{
-							if ( place.IsBlocking( true ) || !place.CheckType( Node.Type.forest ) || place.fixedHeight )
+							if ( place.block || !place.CheckType( Node.Type.forest ) || place.fixedHeight )
 								continue;
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
 							{
-								if ( place.Add( j ).IsBlocking( false ) )
+								if ( place.Add( j ).block )
 									blockedAdjacentNodes++;
 							}
 							if ( blockedAdjacentNodes >= 2 )
@@ -1047,7 +1047,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public static bool IsNodeGoodForRelax( Node node )
 	{
-		if ( node.IsBlocking() )
+		if ( node.block )
 		{
 			if ( node.building || node.flag )
 				return false;;
