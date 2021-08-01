@@ -3180,6 +3180,7 @@ public class Interface : OperationHandler
 		public Dropdown targetWorkerCount;
 		public Text jam;
 		public Text workers;
+		public Image ring;
 
 		const int itemsDisplayed = 3;
 
@@ -3220,6 +3221,9 @@ public class Interface : OperationHandler
 #if DEBUG
 			Selection.activeGameObject = road.gameObject;
 #endif
+			ring = Image( Icon.ring ).Link( root );
+			ring.transform.SetAsFirstSibling();
+			ring.color = new Color( 0, 1, 1 );
 		}
 
 		void Remove()
@@ -3247,6 +3251,12 @@ public class Interface : OperationHandler
 		{
 			if ( road && road.targetWorkerCount != newValue )
 				root.ExecuteChangeRoadWorkerCount( road, newValue );
+		}
+
+		new public void OnDestroy()
+		{
+			base.OnDestroy();
+			Destroy( ring.gameObject );
 		}
 
 		public override void Update()
@@ -3324,6 +3334,19 @@ public class Interface : OperationHandler
 			}
 			if ( road )
 				targetWorkerCount.value = road.targetWorkerCount;
+
+			var c = root.viewport.camera;
+			var p = c.WorldToScreenPoint( node.positionInViewport );
+			ring.transform.position = p;
+			float scale;
+			if ( c.orthographic )
+			{
+				var f = c.WorldToScreenPoint( node.Neighbour( 0 ). positionInViewport );
+				scale = ( p - f ).magnitude / 200;
+			}
+			else
+				scale = 5 / p.z;
+			ring.transform.localScale = Vector3.one * scale * uiScale;
 		}
 	}
 	public class FlagPanel : Panel, IInputHandler
