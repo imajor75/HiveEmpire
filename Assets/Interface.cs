@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -5011,10 +5011,10 @@ if ( cart )
 			}
 			if ( node.road && node.road.ready )
 			{
-				var worker = node.road.workerAtNodes[node.road.NodeIndex( node )];
-				if ( worker && worker.type == Worker.Type.cart )
-					worker.OnClicked();
-				else
+				// var worker = node.road.workerAtNodes[node.road.NodeIndex( node )];
+				// if ( worker && worker.type == Worker.Type.cart )
+				// 	worker.OnClicked();
+				// else
 					node.road.OnClicked( node );
 				return true;
 			}
