@@ -268,8 +268,10 @@ public class Stock : Building, Worker.Callback.IHandler
 			}
 			if ( node != boss.node )
 			{
-				ScheduleWalkToNeighbour( boss.flag.node );
-				DeliverItems( destination ?? boss );
+				if ( ScheduleGetToFlag() )
+					DeliverItems( destination ?? boss );
+				else
+					ScheduleWalkToNode( boss.flag.node );	// Giving up the delivery
 				return;
 			}
 			assert.IsTrue( itemQuantity == 0 );

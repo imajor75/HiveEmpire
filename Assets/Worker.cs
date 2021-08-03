@@ -296,6 +296,12 @@ public class Worker : HiveObject
 			this.target = target;
 			this.exclusive = exclusive;
 		}
+		public override void Cancel()
+		{
+			boss.LeaveExclusivity();
+			base.Cancel();
+		}
+
 		public override bool ExecuteFrame()
 		{
 			bool wasExclusive = boss.exclusiveMode;
@@ -307,6 +313,11 @@ public class Worker : HiveObject
 
 			if ( path == null || path.road == null )
 			{
+				if ( !boss.node.validFlag )
+				{
+					ResetBossTasks();
+					return finished;
+				}
 				path = Path.Between( boss.node, target.node, PathFinder.Mode.onRoad, boss );
 				if ( path == null )
 				{
@@ -1628,6 +1639,28 @@ public class Worker : HiveObject
 		var instance = ScriptableObject.CreateInstance<WalkToNeighbour>();
 		instance.Setup( this, target );
 		ScheduleTask( instance, first );
+	}
+
+	public bool ScheduleGetToFlag()
+	{
+		if ( node.validFlag )
+			return true;
+
+		Flag destination = null;
+		int closest = int.MaxValue;
+		foreach ( var o in Ground.areas[Constants.Worker.flagSearchDistance] )
+		{
+			var n = node + o;
+			if ( n.validFlag && n.validFlag.owner == owner && n.DistanceFrom( node ) < closest )
+			{
+				destination = n.flag;
+				closest = n.DistanceFrom( node );
+			}
+		}
+		if ( !destination )
+			return false;
+		ScheduleWalkToNode( destination.node );
+		return true;
 	}
 
 	/// <summary>

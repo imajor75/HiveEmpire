@@ -738,6 +738,12 @@ public class Road : HiveObject, Interface.IInputHandler
 				return false;
 		if ( !decorationOnly )
 			UnregisterOnGround();
+		List<Worker> exclusiveWorkers = new List<Worker>();
+		foreach ( var worker in workerAtNodes )
+			if ( worker )
+				exclusiveWorkers.Add( worker );
+		foreach ( var worker in exclusiveWorkers )
+			worker.LeaveExclusivity();
 
 		invalid = true;
 		DestroyThis();
@@ -898,16 +904,30 @@ public class Road : HiveObject, Interface.IInputHandler
 		while ( another.workerAtNodes.Count < another.nodes.Count )
 			another.workerAtNodes.Add( null );
 
-		foreach ( var worker in workers )
+		List<Worker> workersToMove = new List<Worker>();
+		foreach ( var worker in workerAtNodes )
+			if ( worker )
+				workersToMove.Add( worker );
+
+		foreach ( var worker in workersToMove )
 		{
 			var node = worker.LeaveExclusivity();
 			if ( worker.EnterExclusivity( another, node ) )
 			{
-				worker.road = another;
-				another.workers.Add( worker );
+				if ( worker.type == Worker.Type.hauler )	// Can be a cart
+				{
+					worker.road = another;
+					another.workers.Add( worker );
+				}
 			}
 			else
-				worker.type = Worker.Type.unemployed;
+			{
+				if ( worker.type == Worker.Type.hauler)
+					worker.type = Worker.Type.unemployed;
+				else
+					worker.assert.AreEqual( worker.type, Worker.Type.cart );
+			}
+			worker.ResetTasks();
 		}
 		workers.Clear();
 	}
@@ -917,6 +937,65 @@ public class Road : HiveObject, Interface.IInputHandler
 		while ( workers.Count > 1 )
 			workers[1].Remove( false );
 		workers[0].Reset();
+	}
+
+	public Road ChangeNodeList( List<Node> nodes )
+	{
+		Road newRoad = Create();
+		newRoad.owner = owner;
+		newRoad.nodes = nodes;
+		ReassignWorkersTo( newRoad );
+		Remove( false );
+		newRoad.RegisterOnGround();
+		return newRoad;
+	}
+
+	public Road Move( int nodeIndex, int direction, bool checkOnly = false )
+	{
+		if ( nodeIndex < 1 || nodeIndex > nodes.Count-1 )
+			return null;
+		if ( direction < 0 || direction >= Constants.Node.neighbourCount )
+			return null;
+
+		var node = nodes[nodeIndex];
+		var newNode = node.Neighbour( direction );
+
+		if ( newNode.block.IsBlocking( Node.Block.Type.roads ) && newNode.road != this )
+			return null;
+		bool insertBefore = nodes[nodeIndex-1].DistanceFrom( newNode ) > 1;
+		bool insertAfter = nodes[nodeIndex+1].DistanceFrom( newNode ) > 1;
+		if ( insertBefore && insertAfter )
+			return null;
+		if ( checkOnly )
+			return this;
+
+		bool deleteBefore = false;
+		if ( nodeIndex >= 2 && nodes[nodeIndex-2].DistanceFrom( newNode ) < 2 )
+			deleteBefore = true;
+
+		bool deleteAfter = false;
+		if ( nodeIndex < nodes.Count-2 && nodes[nodeIndex+2].DistanceFrom( newNode ) < 2 )
+			deleteAfter = true;
+
+		if ( deleteBefore && insertBefore )
+			insertBefore = false;
+		if ( deleteAfter && insertAfter )
+			insertAfter = false;
+
+		var newNodes = new List<Node>( nodes );
+		newNodes[nodeIndex] = newNode;
+
+		if ( insertAfter )
+			newNodes.Insert( nodeIndex+1, node );
+		if ( deleteAfter )
+			newNodes.RemoveAt( nodeIndex+1 );
+
+		if ( insertBefore )
+			newNodes.Insert( nodeIndex, node );
+		if ( deleteBefore )
+			newNodes.RemoveAt( nodeIndex-1 );
+
+		return ChangeNodeList( newNodes );
 	}
 
 	public override Node location

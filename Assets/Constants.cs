@@ -124,6 +124,7 @@ public static class Constants
     {
        	public const int stuckTimeout = 3000;
     	public const int boredTimeBeforeRemove = 6000;
+        public const int flagSearchDistance = 6;
     }
 
     public static class Workshop

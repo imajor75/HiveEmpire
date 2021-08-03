@@ -458,22 +458,17 @@ public class Flag : HiveObject
 		{
 			assert.IsTrue( road.ends[0] == this || road.ends[1] == this );
 
-			Road newRoad = Road.Create();
-			newRoad.owner = owner;
-			foreach( var node in road.nodes )
-				newRoad.nodes.Add( node );
+			var newNodes = new List<Node>( road.nodes );
 			if ( remove )
-				newRoad.nodes.Remove( remove );
+				newNodes.Remove( remove );
 			if ( addition )
 			{
 				if ( road.ends[1] == this )
-					newRoad.nodes.Add( addition );
+					newNodes.Add( addition );
 				else
-					newRoad.nodes.Insert( 0, addition );
+					newNodes.Insert( 0, addition );
 			}
-			road.ReassignWorkersTo( newRoad );
-			road.Remove( false );
-			newRoad.RegisterOnGround();
+			road.ChangeNodeList( newNodes );
 		}
 
 		node.flag = null;

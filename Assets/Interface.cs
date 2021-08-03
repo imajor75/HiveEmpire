@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -3170,8 +3170,7 @@ public class Interface : OperationHandler
 
     }
 
-
-	public class RoadPanel : Panel
+	public class RoadPanel : Panel, IInputHandler
 	{
 		public Road road;
 		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>(), centerItems = new List<ItemImage>();
@@ -3193,6 +3192,7 @@ public class Interface : OperationHandler
 		{
 			borderWidth = 10;
 			noResize = true;
+			offset = new Vector2( 100, 0 );
 			base.Open( road, 0, 0, 210, 165 );
 			this.road = road;
 			this.node = node;
@@ -3224,6 +3224,9 @@ public class Interface : OperationHandler
 			ring = Image( Icon.ring ).Link( root );
 			ring.transform.SetAsFirstSibling();
 			ring.color = new Color( 0, 1, 1 );
+
+			root.viewport.inputHandler = this;
+			root.viewport.pickGroundOnly = true;	// TODO This should be a virtual property of the inputhandler
 		}
 
 		void Remove()
@@ -3261,6 +3264,12 @@ public class Interface : OperationHandler
 
 		public override void Update()
 		{
+			if ( road == null )
+			{
+				Close();
+				return;
+			}
+
 			base.Update();
 			jam.text = "Items waiting: " + road.jam;
 			workers.text = "Worker count: " + road.workers.Count;
@@ -3283,7 +3292,7 @@ public class Interface : OperationHandler
 					if ( item )
 					{
 						Flag flag = item.nextFlag;
-						if ( flag == null )
+						if ( flag == null && item.destination )
 							flag = item.destination.flag;
 						if ( flag == road.ends[reversed ? 1 : 0] )
 							centerDirections[i].text = "<";
@@ -3347,17 +3356,56 @@ public class Interface : OperationHandler
 			else
 				scale = 5 / p.z;
 			ring.transform.localScale = Vector3.one * scale * uiScale;
+
+			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+			{
+				if ( !road.Move( road.nodes.IndexOf( node ), i, true ) )
+					continue;
+
+				var n = node.Neighbour( i );
+				Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), Viewport.arrowMaterial, 0 );
+			}
 		}
-	}
+
+        public bool OnMovingOverNode(Node node)
+        {
+			return keepGoing;
+        }
+
+        public bool OnNodeClicked(Node node)
+        {
+			if ( !root.viewport.rightButton )
+				root.ExecuteMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
+
+			if ( node.road )
+			{
+				road = node.road;
+				target = this.node = node;
+			}
+			else
+				return root.viewport.OnNodeClicked( node );
+
+			return keepGoing;
+        }
+
+        public bool OnObjectClicked(HiveObject target)
+        {
+			return root.viewport.OnObjectClicked( target );
+        }
+
+        public void OnLostInput()
+        {
+			root.viewport.pickGroundOnly = false;
+			Close();
+        }
+    }
+
 	public class FlagPanel : Panel, IInputHandler
 	{
 		public Flag flag;
 		public ItemImage[] items = new ItemImage[Constants.Flag.maxItems];
 		public Image[] itemTimers = new Image[Constants.Flag.maxItems];
 		public Image shovelingIcon, convertIcon;
-		public bool moveMode;
-		Material arrowMaterial;
-		Image moveToggle;
 
 		public static FlagPanel Create()
 		{
@@ -3382,7 +3430,6 @@ public class Interface : OperationHandler
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
-			moveToggle = Image( iconTable.GetMediaData( Icon.move ) ).PinSideways( 0, -45 ).AddToggleHandler( SetMove ).SetTooltip( "Move the junction if possible", null, "Move is disabled for junctions which serve as an exit for a building" );
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
@@ -3395,9 +3442,9 @@ public class Interface : OperationHandler
 			name = "Flag panel";
 			if ( show )
 				root.world.eye.FocusOn( flag, true );
-			arrowMaterial = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
-			arrowMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 			Update();
+
+			root.viewport.inputHandler = this;
 		}
 
 		void Remove()
@@ -3405,17 +3452,6 @@ public class Interface : OperationHandler
 			if ( flag && flag != root.mainPlayer.mainBuilding.flag )
 				root.ExecuteRemoveFlag( flag );
 			Close();
-		}
-
-		void SetMove( bool on )
-		{
-			if ( flag.Buildings().Count > 0 )
-				return;
-			moveMode = on;
-			if ( on )
-				root.viewport.inputHandler = this;
-			else if ( root.viewport.inputHandler == (IInputHandler)this )
-				root.viewport.inputHandler = null;
 		}
 
 		void StartRoad()
@@ -3491,40 +3527,40 @@ public class Interface : OperationHandler
 				shovelingIcon.color = flag.flattening.worker ? Color.grey : Color.white;
 			convertIcon.color = flag.crossing ? Color.red : Color.white;
 
-			if ( moveMode )
+			if ( flag.Buildings().Count > 0 )
+				return;
+			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 			{
-				for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
-				{
-					var n = flag.node.Neighbour( i );
-					if ( !flag.Move( i, true ) )
-						continue;
-					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), arrowMaterial, 0 );
-				}
+				var n = flag.node.Neighbour( i );
+				if ( !flag.Move( i, true ) )
+					continue;
+				Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), Viewport.arrowMaterial, 0 );
 			}
 		}
 
         public bool OnMovingOverNode(Node node)
         {
-			return true;
+			return keepGoing;
         }
 
         public bool OnNodeClicked(Node node)
         {
 			int i = flag.node.DirectionTo( node );
-			if ( i >= 0 )
+			if ( i >= 0 && !root.viewport.rightButton )
 				root.ExecuteMoveFlag( flag, i );
+			else
+				root.viewport.OnNodeClicked( node );
 			return keepGoing;
         }
 
         public bool OnObjectClicked(HiveObject target)
         {
-			return true;
+			return root.viewport.OnObjectClicked( target );
         }
 
         public void OnLostInput()
         {
-			if ( moveToggle )
-				moveToggle.SetToggleState( false );
+			Close();
         }
     }
 
@@ -4546,6 +4582,9 @@ if ( cart )
 		static GameObject marker;
 		public bool markEyePosition;
 		public bool pickGroundOnly;
+		public bool rightButton;
+
+		public static Material arrowMaterial;
 
 		public enum OverlayInfoType
 		{
@@ -4573,7 +4612,8 @@ if ( cart )
 			{
 				if ( inputHandlerData == value )
 					return;
-				inputHandlerData?.OnLostInput();
+				if ( inputHandlerData != null && ( inputHandlerData as MonoBehaviour ) != null )
+					inputHandlerData.OnLostInput();
 				inputHandlerData = value;
 			}
 
@@ -4630,6 +4670,9 @@ if ( cart )
 			var showStockContentButton = this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.F5 );
 			showStockContentButton.SetTooltip( () => $"Show stock contents (hotkey: {showStockContentButton.GetHotkey().keyName})" );
 			root.LoadHotkeys();
+
+			arrowMaterial = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
+			arrowMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 		}
 
 		void ShowPossibleBuildings( bool state )
@@ -4783,7 +4826,7 @@ if ( cart )
 		}
 
 		public Node FindNodeAt( Vector3 screenPosition )
-		{
+		{ 
 			RaycastHit hit = new RaycastHit();
 			if ( camera == null )
 				camera = World.instance.eye.camera;
@@ -4820,6 +4863,9 @@ if ( cart )
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
+			rightButton = eventData.button == PointerEventData.InputButton.Right;
+			if ( inputHandler == null )
+				inputHandler = this;
 			var hiveObject = FindObjectAt( Input.mousePosition );
 			if ( hiveObject == null )
 			{

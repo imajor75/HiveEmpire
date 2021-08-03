@@ -132,6 +132,12 @@ public class OperationHandler : HiveObject
     {
         ExecuteOperation( Operation.Create().SetupAsCreateRoute( start, end, itemType ) );
     }
+
+    public void ExecuteMoveRoad( Road road, int index, int direction )
+    {
+        ExecuteOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ) );
+    }
+
 }
 
 public class Operation : ScriptableObject
@@ -174,7 +180,8 @@ public class Operation : ScriptableObject
         moveFlag,
         changeRoutePriority,
         removeRoute,
-        createRoute
+        createRoute,
+        moveRoad
     }
 
     public static Operation Create()
@@ -293,6 +300,16 @@ public class Operation : ScriptableObject
         return this;
     }
 
+    public Operation SetupAsMoveRoad( Road road, int index, int direction, bool merge = false )
+    {
+        type = Type.moveRoad;
+        location = road.nodes[index];
+        this.direction = direction;
+        this.merge = merge;
+        name = "Move Road";
+        return this;
+    }
+
     public Operation ExecuteAndInvert()
     {
         switch ( type )
@@ -378,7 +395,7 @@ public class Operation : ScriptableObject
             case Type.moveFlag:
             {
                 if ( !flag.Move( direction ) )
-                return null;
+                    return null;
                 direction += Constants.Node.neighbourCount / 2;
                 direction %= Constants.Node.neighbourCount;
                 break;
@@ -422,7 +439,15 @@ public class Operation : ScriptableObject
                 SetupAsRemoveRoute( newRoute );
                 break;
             }
-
+            case Type.moveRoad:
+            {
+                if ( !location.road.Move( location.road.nodes.IndexOf( location ), direction ) )
+                    return null;
+                location = location.Neighbour( direction );
+                direction += Constants.Node.neighbourCount / 2;
+                direction %= Constants.Node.neighbourCount;
+                break;
+            }
         }
         return this;
     }
