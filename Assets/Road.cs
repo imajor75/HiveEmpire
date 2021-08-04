@@ -19,7 +19,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool underConstruction;
 	public bool decorationOnly;
 	public float cachedCost = 0;
-	public int targetWorkerCount;   // Zero means automaic
+	public int targetWorkerCount;   // Zero means automatic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	public Node referenceLocation;
@@ -260,7 +260,6 @@ public class Road : HiveObject, Interface.IInputHandler
 			CallNewWorker();
 	}
 
-	static readonly int blocksInSection = 8;
 	public void RebuildMesh( bool force = false )
 	{
 		const float width = 0.3f;
@@ -271,7 +270,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			curves = new List<CubicCurve>[3];
 		CreateCurves();
 
-		int vertexRows = (nodes.Count - 1) * blocksInSection + 1;
+		int vertexRows = (nodes.Count - 1) * Constants.Road.blocksInSection + 1;
 		Vector3 h = Vector3.up*Constants.Node.size*Constants.Road.bodyHeight;
 		mesh.Clear();
 		mapMesh.Clear();
@@ -295,16 +294,16 @@ public class Road : HiveObject, Interface.IInputHandler
 				else
 					vertexColor = Color.yellow;
 			}
-			for ( int b = 0; b < blocksInSection; b++ )
+			for ( int b = 0; b < Constants.Road.blocksInSection; b++ )
             {
 				if (i == nodes.Count - 1 && b > 0)
 					continue;
 
-				float tv = 1.0f / blocksInSection * b * 2;
+				float tv = 1.0f / Constants.Road.blocksInSection * b * 2;
 				if ( tv > 1 )
 					tv = 2 - tv;
-				var pos = PositionAt(i, 1.0f / blocksInSection * b);
-				var dir = DirectionAt( i, 1.0f / blocksInSection * b);
+				var pos = PositionAt(i, 1.0f / Constants.Road.blocksInSection * b);
+				var dir = DirectionAt( i, 1.0f / Constants.Road.blocksInSection * b);
 				var side = new Vector3
 				{
 					x = dir.z / 2,
@@ -342,7 +341,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		mesh.colors = colors;
 		mapMesh.vertices = mapVertices;
 
-		int blockCount = (nodes.Count - 1) * blocksInSection;
+		int blockCount = (nodes.Count - 1) * Constants.Road.blocksInSection;
 		var triangles = new int[blockCount * 4 * 3];
 		for ( int j = 0; j < blockCount	; j++ )
 		{
@@ -808,6 +807,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				AddNode( p.path[i] );
 
 			tempNodes = nodes.Count - j;
+			referenceLocation = centerNode;
 		}
 		RebuildMesh( true );
 

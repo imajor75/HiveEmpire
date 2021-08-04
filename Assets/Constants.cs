@@ -101,6 +101,7 @@ public static class Constants
     {
     	public const int timeBetweenWorkersAdded = 3000;
     	public const float bodyHeight = 1.0f/20;
+    	public const int blocksInSection = 8;
     }
 
     public static class Stock
