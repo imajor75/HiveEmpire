@@ -1315,7 +1315,7 @@ public class Interface : OperationHandler
 			text.AddClickHandler( delegate { SelectBuilding( building ); } );
 			var d = text.gameObject.AddComponent<BuildingIconData>();
 			d.building = building;
-			d.SetTooltip( "", null, null, show => d.track = show );
+			d.SetTooltip( null as string, null, null, show => d.track = show );
 			return text;
 		}
 
@@ -6212,7 +6212,7 @@ public static class UIHelpers
 
 	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
 	{
-		return SetTooltip( g, () => text, image, additionalText, onShow );
+		return SetTooltip( g, text == null ? null as Func<string> : () => text, image, additionalText, onShow );
 	}
 
 	public static UIElement SetTooltip<UIElement>( this UIElement g, Action<bool> onShow ) where UIElement : Component
