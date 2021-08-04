@@ -202,7 +202,7 @@ public class Eye : HiveObject
 	void FixedUpdate()
 	{
 		while ( oldPositions.Count > Constants.Eye.maxNumberOfSavedPositions )
-			oldPositions.RemoveAt( oldPositions.Count-1 );
+			oldPositions.RemoveAt( 0 );
 
 		if ( autoStorePositionCounter++ == Constants.Eye.autoStorePositionAfter )
 			oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
