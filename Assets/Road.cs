@@ -808,6 +808,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 			tempNodes = nodes.Count - j;
 			referenceLocation = centerNode;
+			ground.Link( this );
 		}
 		RebuildMesh( true );
 
