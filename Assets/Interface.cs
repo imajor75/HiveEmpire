@@ -777,7 +777,6 @@ public class Interface : OperationHandler
 	public class PathVisualization : MonoBehaviour
 	{
 	    Vector3 lastAbsoluteEyePosition;
-		Node start;
 		Path path;
 		int lastProgress;
 
@@ -817,8 +816,30 @@ public class Interface : OperationHandler
 					}
 					if ( currentPosition == null )
 					{
-						start = road.nodes[c];
-						currentPosition = road.nodes[c].GetPositionRelativeTo( view ) + Vector3.up * 0.1f;
+						float bestDistance = float.MaxValue;
+						int bestRoad = 0;
+						for ( int k = 0; k < path.roadPath.Count; k++ )
+						{
+							float distance = ( path.roadPath[k].nodes[0].position - root.world.eye.position ).magnitude;
+							if ( distance < bestDistance )
+							{
+								bestDistance = distance;
+								bestRoad = k;
+							}
+						}
+						var t = bestRoad;
+						if ( path.roadPathReversed[t] )
+							currentPosition = path.roadPath[t].ends[1].node.position;
+						else
+							currentPosition = path.roadPath[t].ends[0].node.position;
+						while ( t > 0 )
+						{
+							t--;
+							if ( path.roadPathReversed[t] )
+								currentPosition += path.roadPath[t].difference;
+							else
+								currentPosition -= path.roadPath[t].difference;
+						}
 					}
 					Vector3 dif = road.nodes[n].GetPositionRelativeTo( road.nodes[c] ) - road.nodes[c].position;
 

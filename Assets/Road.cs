@@ -1006,6 +1006,14 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
+	public Vector3 difference
+	{
+		get
+		{
+			return nodes.Last().position - nodes.First().GetPositionRelativeTo( nodes.Last() );
+		}
+	}
+
 	public override void Validate( bool chain )
 	{
 		if ( invalid )	// Already destroyed, should not be validated
