@@ -731,6 +731,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			{
 				if ( worker.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
+					ChangeStatus( Status.waitingForResource );
 					var o = Ground.areas[productionConfiguration.gatheringRange];
 					for ( int i = 0; i < o.Count; i++ )
 					{
@@ -1079,7 +1080,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			Workshop.Status.waitingForInput2 => $"Waiting for {buffers[2].itemType.ToString().GetPrettyName( false )}",
 			Workshop.Status.waitingForInput3 => $"Waiting for {buffers[3].itemType.ToString().GetPrettyName( false )}",
 			Workshop.Status.waitingForOutputSlot => "Waiting for output slot",
-			Workshop.Status.waitingForResource => "Waiting for resource",
+			Workshop.Status.waitingForResource => type != Type.forester ? "Waiting for resource" : "Waiting for free spot",
 			Workshop.Status.resting => "Resting",
 			_ => "Unknown"
 		};
