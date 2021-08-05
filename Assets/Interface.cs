@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -5105,8 +5105,8 @@ if ( cart )
 		ScrollRect scroll;
 		Player player;
 		float timeSpeedToRestore;
-		Comparison<Item> lastComparison;
-		bool reversed;
+		static Comparison<Item> comparison = CompareByAge;
+		static bool reversed;
 
 		public static ItemList Create()
 		{
@@ -5115,20 +5115,20 @@ if ( cart )
 
 		public void Open( Player player )
 		{
-			if ( base.Open( null, 0, 0, 400, 320 ) )
+			if ( base.Open( null, 0, 0, 420, 320 ) )
 				return;
 			name = "Item list panel";
 			this.player = player;
 			timeSpeedToRestore = World.instance.timeFactor;
 			World.instance.SetTimeFactor( 0 );
 
-			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { Fill( CompareByOrigin ); } );
-			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { Fill( CompareByDestination ); } );
-			Text( "Age" ).Pin( 250, -20, 100 ).AddClickHandler( delegate { Fill( CompareByAge ); } );
-			Text( "Route" ).Pin( 300, -20, 100 ).AddClickHandler( delegate { Fill( CompareByPathLength ); } );
+			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
+			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
+			Text( "Age (sec)" ).Pin( 250, -20, 120 ).AddClickHandler( delegate { ChangeComparison( CompareByAge ); } );
+			Text( "Route" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByPathLength ); } );
 
 			scroll = ScrollRect().Stretch( 20, 20, -20, -40 );
-			Fill( CompareByAge );
+			Fill();
 		}
 
 		public override void Close()
@@ -5137,16 +5137,20 @@ if ( cart )
 			World.instance.SetTimeFactor( timeSpeedToRestore );
 		}
 
-		void Fill( Comparison<Item> comparison )
+		void ChangeComparison( Comparison<Item> newComparison )
 		{
-			int row = 0;
-			scroll.Clear();
-
-			if ( comparison == lastComparison )
+			if ( comparison == newComparison )
 				reversed = !reversed;
 			else
 				reversed = true;
-			lastComparison = comparison;
+			comparison = newComparison;
+			Fill();
+		}
+
+		void Fill()
+		{
+			int row = 0;
+			scroll.Clear();
 
 			List<Item> sortedItems = new List<Item>();
 			foreach ( var item in player.items )
@@ -5168,7 +5172,7 @@ if ( cart )
 					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
 				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
 				if ( item.path )
-					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 280, row, 30 );				
+					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 300, row, 30 );				
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( -1, sortedItems.Count * ( iconSize + 5 ) );
