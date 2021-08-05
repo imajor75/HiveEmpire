@@ -744,7 +744,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
 							{
-								if ( place.Add( j ).block )
+								if ( place.Add( j ).block.IsBlocking( Node.Block.Type.workers ) )
 									blockedAdjacentNodes++;
 							}
 							if ( blockedAdjacentNodes >= 2 )
