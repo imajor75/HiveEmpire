@@ -1529,7 +1529,7 @@ public class Worker : HiveObject
 				restIndex = road.nodes.Count / 2;
 			if ( road.workerAtNodes[restIndex] )
 			{
-				for ( restIndex = 1; restIndex < road.nodes.Count - 1; restIndex++ )
+				for ( restIndex = 1; restIndex < road.nodes.Count - 2; restIndex++ )
 					if ( road.workerAtNodes[restIndex] == null )
 						break;
 			}
