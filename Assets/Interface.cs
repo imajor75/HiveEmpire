@@ -2439,8 +2439,8 @@ public class Interface : OperationHandler
 		public InputField renamer;
 
 		float lastMouseXPosition;
-		List<int>listToChange;
-		int min, max;
+		public Action<int> limitChanger;
+		int min, max, currentValue;
 
 		public static StockPanel Create()
 		{
@@ -2462,12 +2462,12 @@ public class Interface : OperationHandler
 		{
 			if ( GetKey( KeyCode.LeftAlt ) && GetKey( KeyCode.LeftControl ) )
 			{
-				stock.content[(int)itemType] = 0;
+				stock.itemData[(int)itemType].content = 0;
 				return;
 			}
 			if ( GetKey( KeyCode.LeftShift ) && GetKey( KeyCode.LeftControl ) )
 			{
-				stock.content[(int)itemType]++;
+				stock.itemData[(int)itemType].content++;
 				return;
 			}
 			if ( GetKey( KeyCode.LeftShift ) )
@@ -2491,7 +2491,7 @@ public class Interface : OperationHandler
 			selectedInputCount.gameObject.SetActive( inputCount > 0 );
 			selectedInput.gameObject.SetActive( inputCount > 0 );
 
-			int outputCount = stock.outputRoutes[(int)selectedItemType].Count;
+			int outputCount = stock.itemData[(int)selectedItemType].outputRoutes.Count;
 			selectedOutputCount.text = outputCount.ToString();
 			selectedOutputCount.gameObject.SetActive( outputCount > 0 );
 			selectedOutput.gameObject.SetActive( outputCount > 0 );
@@ -2530,7 +2530,7 @@ public class Interface : OperationHandler
 				i.additionalTooltip = tooltip;
 				if ( stock.GetInputRoutes( (Item.Type)j ).Count > 0 )
 					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f );
-				if ( stock.outputRoutes[j].Count > 0 )
+				if ( stock.itemData[j].outputRoutes.Count > 0 )
 				{
 					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f );
 					offset += 10;
@@ -2590,7 +2590,7 @@ public class Interface : OperationHandler
 
 		void ShowRoutesFor( Item.Type itemType )
 		{
-			RouteList.Create().Open( stock, itemType, stock.outputRoutes[(int)itemType].Count > 0 ? true : false );
+			RouteList.Create().Open( stock, itemType, stock.itemData[(int)itemType].outputRoutes.Count > 0 ? true : false );
 		}
 
 
@@ -2612,20 +2612,20 @@ public class Interface : OperationHandler
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				Color c = Color.black;
-				if ( stock.content[i] < stock.inputMin[i] )
+				if ( stock.itemData[i].content < stock.itemData[i].inputMin )
 					c = Color.red.Dark();
-				if ( stock.content[i] > stock.inputMax[i] )
+				if ( stock.itemData[i].content > stock.itemData[i].inputMax )
 					c = Color.green.Dark();
 				counts[i].color = c;
-				counts[i].text = stock.content[i] + " (+" + stock.onWay[i] + ")";
+				counts[i].text = stock.itemData[i].content + " (+" + stock.itemData[i].onWay + ")";
 			}
 			total.text = stock.total + " => " + stock.totalTarget;
 			selected?.SetType( selectedItemType, false );
 			int t = (int)selectedItemType;
-			inputMin.text = stock.inputMin[t] + "<";
-			outputMin.text = stock.outputMin[t] + "<";
-			inputMax.text = "<" + stock.inputMax[t];
-			outputMax.text = "<" + stock.outputMax[t];
+			inputMin.text = stock.itemData[t].inputMin + "<";
+			outputMin.text = stock.itemData[t].outputMin + "<";
+			inputMax.text = "<" + stock.itemData[t].inputMax;
+			outputMax.text = "<" + stock.itemData[t].outputMax;
 
 			if ( GetKeyDown( KeyCode.Mouse0 ) )
 			{
@@ -2633,50 +2633,54 @@ public class Interface : OperationHandler
 				var g = GetUIElementUnderCursor();
 				if ( g == inputMin.gameObject )
 				{
-					listToChange = stock.inputMin;
+					limitChanger = x => stock.itemData[t].inputMin = x;
+					currentValue = stock.itemData[t].inputMin;
 					min = 0;
-					max = stock.inputMax[t];
+					max = stock.itemData[t].inputMax;
 					disableDrag = true;
 				}
 				if ( g == inputMax.gameObject )
 				{
-					listToChange = stock.inputMax;
-					min = stock.inputMin[t];
+					limitChanger = x => stock.itemData[t].inputMax = x;
+					currentValue = stock.itemData[t].inputMax;
+					min = stock.itemData[t].inputMin;
 					max = stock.maxItems;
 					disableDrag = true;
 				}
 				if ( g == outputMin.gameObject )
 				{
-					listToChange = stock.outputMin;
+					limitChanger = x => stock.itemData[t].outputMin = x;
+					currentValue = stock.itemData[t].outputMin;
 					min = 0;
-					max = stock.outputMax[t];
+					max = stock.itemData[t].outputMax;
 					disableDrag = true;
 				}
 				if ( g == outputMax.gameObject )
 				{
-					listToChange = stock.outputMax;
-					min = stock.outputMin[t];
+					limitChanger = x => stock.itemData[t].outputMax = x;
+					currentValue = stock.itemData[t].outputMax;
+					min = stock.itemData[t].outputMin;
 					max = stock.maxItems;
 					disableDrag = true;
 				}
 			}
 
-			if ( listToChange != null )
+			if ( limitChanger != null )
 			{
 				if ( GetKey( KeyCode.Mouse0 ) )
 				{
-					int newValue = listToChange[(int)selectedItemType] + (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
+					int newValue = currentValue + (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
 					if ( newValue < min )
 						newValue = min;
 					if ( newValue > max )
 						newValue = max;
-					listToChange[(int)selectedItemType] = newValue;
+					limitChanger( currentValue = newValue );
 					lastMouseXPosition = Input.mousePosition.x;
 				}
 				else
 				{
 					disableDrag = false;
-					listToChange = null;
+					limitChanger = null;
 				}
 			}
 		}
@@ -4104,13 +4108,13 @@ if ( cart )
 				currentList = new List<Stock.Route>();
 				foreach ( var stock in root.mainPlayer.stocks )
 				{
-					foreach ( var r in stock.outputRoutes[(int)itemType] )
+					foreach ( var r in stock.itemData[(int)itemType].outputRoutes )
 						currentList.Add( r );
 				}
 			}
 			else
 			{
-				currentList = new List<Stock.Route>( stock.outputRoutes[(int)itemType] );
+				currentList = new List<Stock.Route>( stock.itemData[(int)itemType].outputRoutes );
 				if ( !outputs )
 					currentList = stock.GetInputRoutes( itemType );
 			}
@@ -5009,10 +5013,10 @@ if ( cart )
 
 					for ( int itemType = 0; itemType != (int)Item.Type.total; itemType++ )
 					{
-						if ( stock.content[itemType] < 1 )
+						if ( stock.itemData[itemType].content < 1 )
 							continue;
 						float height = stock.main ? 3f : 1.5f;
-						World.DrawObject( Item.looks.GetMediaData( (Item.Type)itemType ), Matrix4x4.TRS( stock.node.positionInViewport + new Vector3( 0.5f * (float)Math.Sin( angle ), height, 0.5f * (float)Math.Cos( angle ) ), Quaternion.identity, Vector3.one * stock.content[itemType] * 0.02f ) );
+						World.DrawObject( Item.looks.GetMediaData( (Item.Type)itemType ), Matrix4x4.TRS( stock.node.positionInViewport + new Vector3( 0.5f * (float)Math.Sin( angle ), height, 0.5f * (float)Math.Cos( angle ) ), Quaternion.identity, Vector3.one * stock.itemData[itemType].content * 0.02f ) );
 						angle += (float)( Math.PI * 2 / 7 );
 					}
 				}
@@ -5512,12 +5516,12 @@ if ( cart )
 			{
 				for ( int i = 0; i < inStock.Length; i++ )
 				{
-					if ( stock.content[i] > maxStockCount[i] )
+					if ( stock.itemData[i].content > maxStockCount[i] )
 					{
-						maxStockCount[i] = stock.content[i];
+						maxStockCount[i] = stock.itemData[i].content;
 						richestStock[i] = stock;
 					}
-					inStockCount[i] += stock.content[i];
+					inStockCount[i] += stock.itemData[i].content;
 				}
 			}
 

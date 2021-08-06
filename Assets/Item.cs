@@ -388,7 +388,7 @@ public class Item : HiveObject
 		CancelTrip();
 		owner.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )
-			owner.mainBuilding.content[(int)type]++;
+			owner.mainBuilding.itemData[(int)type].content++;
 		DestroyThis();
 		return true;
 	}

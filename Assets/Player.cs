@@ -43,8 +43,8 @@ public class Player : ScriptableObject
 
 	public int soldierCount 
 	{ 
-		set { mainBuilding.content[(int)Item.Type.soldier] = value; }
-		get { return mainBuilding.content[(int)Item.Type.soldier]; } 
+		set { mainBuilding.itemData[(int)Item.Type.soldier].content = value; }
+		get { return mainBuilding.itemData[(int)Item.Type.soldier].content; } 
 	}
 
 	[System.Serializable]

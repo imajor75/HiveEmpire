@@ -6,14 +6,7 @@ using UnityEngine;
 public class Stock : Building, Worker.Callback.IHandler
 {
 	public bool main = false;
-	public List<int> content = new List<int>();
-	public List<int> onWay = new List<int>();
-	public List<int> inputMin = new List<int>();
-	public List<int> inputMax = new List<int>();
-	public List<int> outputMin = new List<int>();
-	public List<int> outputMax = new List<int>();
-	public List<List<Route>> outputRoutes = new List<List<Route>>();
-	public Versioned outputRouteVersion = new Versioned();
+	public List<ItemTypeData> itemData = new List<ItemTypeData>();
 	public List<Worker> returningUnits = new List<Worker>();	// This list is maintained for returning units to store them during save, because they usually have no building
 	public Cart cart;
 	public Ground.Area inputArea = new Ground.Area();
@@ -68,9 +61,27 @@ public class Stock : Building, Worker.Callback.IHandler
 		}
 	}
 
+	[Obsolete( "Compatibility with old files", false )]
+	public List<int> content = new List<int>();
+	[Obsolete( "Compatibility with old files", false )]
+	public List<int> onWay = new List<int>();
+	[Obsolete( "Compatibility with old files", false )]
+	public List<int> inputMin = new List<int>();
+	[Obsolete( "Compatibility with old files", false )]
+	public List<int> inputMax = new List<int>();
+	[Obsolete( "Compatibility with old files", false )]
+	public List<int> outputMin = new List<int>();
+	[Obsolete( "Compatibility with old files", false )]
+	public List<int> outputMax = new List<int>();
+	[Obsolete( "Compatibility with old files", false )]
+	public List<List<Route>> outputRoutes = new List<List<Route>>();
+	[Obsolete( "Compatibility with old files", true )]
+	public Versioned outputRouteVersion = new Versioned();
+
 	public Route AddNewRoute( Item.Type itemType, Stock destination )
 	{
-		foreach ( var route in outputRoutes[(int)itemType] )
+		var itemTypeIndex = (int)itemType;
+		foreach ( var route in itemData[itemTypeIndex].outputRoutes )
 			if ( route.end == destination && route.itemType == itemType )
 				return null;
 
@@ -78,10 +89,18 @@ public class Stock : Building, Worker.Callback.IHandler
 		newRoute.start = this;
 		newRoute.end = destination;
 		newRoute.itemType = itemType;
-		outputRoutes[(int)itemType].Add( newRoute );
-		outputRouteVersion.Trigger();
-		destination.inputMax[(int)itemType] = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.inputMax[(int)itemType] );
+		itemData[itemTypeIndex].outputRoutes.Add( newRoute );
+		destination.itemData[itemTypeIndex].inputMax = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.itemData[itemTypeIndex].inputMax );
 		return newRoute;
+	}
+
+	public class ItemTypeData
+	{
+		public int content;
+		public int onWay;
+		public int inputMax, inputMin;
+		public int outputMax, outputMin;
+		public List<Route> outputRoutes = new List<Route>();
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
@@ -115,30 +134,28 @@ public class Stock : Building, Worker.Callback.IHandler
 		public void Remove()
 		{
 			int itemTypeIndex = (int)itemType;
-			Assert.global.IsTrue( start.outputRoutes[itemTypeIndex].Contains( this ) );
-			start.outputRoutes[itemTypeIndex].Remove( this );
+			Assert.global.IsTrue( start.itemData[itemTypeIndex].outputRoutes.Contains( this ) );
+			start.itemData[itemTypeIndex].outputRoutes.Remove( this );
 		}
 
 		public void MoveUp()
 		{
-			var list = start.outputRoutes[(int)itemType];
+			var list = start.itemData[(int)itemType].outputRoutes;
 			int i = list.IndexOf( this );
 			if ( i < 1 )
 				return;
 			list[i] = list[i-1];
 			list[i-1] = this;
-			start.outputRouteVersion.Trigger();
 		}
 
 		public void MoveDown()
 		{
-			var list = start.outputRoutes[(int)itemType];
+			var list = start.itemData[(int)itemType].outputRoutes;
 			int i = list.IndexOf( this );
 			if ( i < 0 || i == list.Count-1 )
 				return;
 			list[i] = list[i+1];
 			list[i+1] = this;
-			start.outputRouteVersion.Trigger();
 		}
 
 		public bool IsAvailable()
@@ -147,12 +164,12 @@ public class Stock : Building, Worker.Callback.IHandler
 				return false;
 
 			int itemIndex = (int)itemType;
-			if ( start.content[itemIndex] < Constants.Stock.cartCapacity )
+			if ( start.itemData[itemIndex].content < Constants.Stock.cartCapacity )
 			{
 				state = State.noSourceItems;
 				return false;
 			}
-			if ( end.content[itemIndex] + end.onWay[itemIndex] + Constants.Stock.cartCapacity > end.inputMax[itemIndex] )
+			if ( end.itemData[itemIndex].content + end.itemData[itemIndex].onWay + Constants.Stock.cartCapacity > end.itemData[itemIndex].inputMax )
 			{
 				state = State.destinationNotAccepting;
 				return false;
@@ -196,7 +213,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			this.destination = destination;
 
-			destination.onWay[(int)itemType] += itemQuantity;
+			destination.itemData[(int)itemType].onWay += itemQuantity;
 			ScheduleWalkToFlag( destination.flag, true );
 			ScheduleWalkToNeighbour( destination.node );
 
@@ -209,7 +226,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			assert.AreEqual( route.start, boss );
 			int typeIndex = (int)route.itemType;
-			boss.content[typeIndex] -= Constants.Stock.cartCapacity;
+			boss.itemData[typeIndex].content -= Constants.Stock.cartCapacity;
 			itemQuantity = Constants.Stock.cartCapacity;
 			this.itemType = route.itemType;
 			currentRoute = route;
@@ -332,7 +349,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			Cart cart = boss as Cart;
 			if ( stock )
-				stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
+				stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
 			base.Cancel();
 		}
 
@@ -359,9 +376,9 @@ public class Stock : Building, Worker.Callback.IHandler
 					cart.currentRoute = null;
 				}
 				cart.itemsDelivered += cart.itemQuantity;
-				stock.content[(int)cart.itemType] += cart.itemQuantity;
+				stock.itemData[(int)cart.itemType].content += cart.itemQuantity;
 				if ( stock != cartStock )
-					stock.onWay[(int)cart.itemType] -= cart.itemQuantity;
+					stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
 				cart.itemQuantity = 0;
 				cart.UpdateLook();
 			}
@@ -392,11 +409,12 @@ public class Stock : Building, Worker.Callback.IHandler
 		height = 1.5f;
 		maxItems = Constants.Stock.defaultmaxItems;
 
-		CreateMissingArrays();
 		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly ) == null )
 			return null;
 
 		owner.RegisterStock( this );
+		while ( itemData.Count < (int)Item.Type.total )
+			itemData.Add( new ItemTypeData() );
 
 		return this;
 	}
@@ -417,9 +435,9 @@ public class Stock : Building, Worker.Callback.IHandler
 				node.Add( o ).SetHeight( node.height );
 		}
 		construction.done = true;
-		content[(int)Item.Type.plank] = Constants.Stock.startPlankCount;
-		content[(int)Item.Type.stone] = Constants.Stock.startStoneCount;
-		content[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount;
+		itemData[(int)Item.Type.plank].content = Constants.Stock.startPlankCount;
+		itemData[(int)Item.Type.stone].content = Constants.Stock.startStoneCount;
+		itemData[(int)Item.Type.soldier].content = Constants.Stock.startSoldierCount;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );
@@ -434,7 +452,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			if ( stock == this )
 				continue;
-			foreach ( var r in stock.outputRoutes[typeIndex] )
+			foreach ( var r in stock.itemData[typeIndex].outputRoutes )
 			{
 				if ( r.end == this )
 					list.Add( r );
@@ -474,7 +492,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	{
 		if ( worker.type == Worker.Type.soldier )
 		{
-			content[(int)Item.Type.soldier]++;
+			itemData[(int)Item.Type.soldier].content++;
 			soundSource.Play();
 		}
 		assert.IsTrue( returningUnits.Contains( worker ) );
@@ -520,45 +538,45 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			if ( itemType == (int)Item.Type.soldier )
 				continue;
-			int count = content[itemType] + onWay[itemType];
+			int count = itemData[itemType].content + itemData[itemType].onWay;
 			total += count;
-			totalTarget += Math.Max( count, inputMin[itemType] );
+			totalTarget += Math.Max( count, itemData[itemType].inputMin );
 		}
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
-			for ( int i = 0; i < outputRoutes[itemType].Count; i++ )
+			for ( int i = 0; i < itemData[itemType].outputRoutes.Count; i++ )
 			{
-				var destination = outputRoutes[itemType][i].end;
+				var destination = itemData[itemType].outputRoutes[i].end;
 				if ( destination == null )	// unity like null
 				{
-					outputRoutes[itemType].RemoveAt( i );
+					itemData[itemType].outputRoutes.RemoveAt( i );
 					i--;
 					continue;
 				}
 
-				if ( outputRoutes[itemType][i].IsAvailable() )
-					cart.TransferItems( outputRoutes[itemType][i] );
+				if ( itemData[itemType].outputRoutes[i].IsAvailable() )
+					cart.TransferItems( itemData[itemType].outputRoutes[i] );
 			}
 
-			int current = content[itemType] + onWay[itemType];
+			int current = itemData[itemType].content + itemData[itemType].onWay;
 			if ( maxItems > total )
 			{
 				var p = ItemDispatcher.Priority.stock;
-				if ( current < inputMin[itemType] )
+				if ( current < itemData[itemType].inputMin )
 					p = ItemDispatcher.Priority.high;
-				if ( current > inputMax[itemType] )
+				if ( current > itemData[itemType].inputMax )
 					p = ItemDispatcher.Priority.zero;
-				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, inputMax[itemType] - current ), p, inputArea ); // TODO Should not order more than what fits
+				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea ); // TODO Should not order more than what fits
 			}
-			if ( content.Count > itemType )
+			if ( itemData.Count > itemType )
 			{
 				var p = ItemDispatcher.Priority.stock;
-				if ( current < outputMin[itemType] )
+				if ( current < itemData[itemType].outputMin )
 					p = ItemDispatcher.Priority.zero;
-				if ( current > outputMax[itemType] )
+				if ( current > itemData[itemType].outputMax )
 					p = ItemDispatcher.Priority.high;
-				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, content[itemType], p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
+				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
 	}
@@ -580,11 +598,11 @@ public class Stock : Building, Worker.Callback.IHandler
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
 	{
-		assert.IsTrue( content[(int)itemType] > 0 );	// TODO Triggered?
+		assert.IsTrue( itemData[(int)itemType].content > 0 );	// TODO Triggered?
 		Item item = base.SendItem( itemType, destination, priority );
 		if ( item != null )
 		{
-			content[(int)itemType]--;
+			itemData[(int)itemType].content--;
 			dispenser = worker.IsIdle() ? worker : workerMate;
 			offersSuspended.Start( 50 );	// Cosmetic reasons only
 		}
@@ -595,9 +613,9 @@ public class Stock : Building, Worker.Callback.IHandler
 	public override void ItemOnTheWay( Item item, bool cancel = false )
 	{
 		if ( cancel )
-			onWay[(int)item.type]--;
+			itemData[(int)item.type].onWay--;
 		else
-			onWay[(int)item.type]++;
+			itemData[(int)item.type].onWay++;
 		base.ItemOnTheWay( item, cancel );
 	}
 
@@ -605,22 +623,22 @@ public class Stock : Building, Worker.Callback.IHandler
 	{
 		base.ItemArrived( item );
 
-		assert.IsTrue( onWay[(int)item.type] > 0 );
-		onWay[(int)item.type]--;
+		assert.IsTrue( itemData[(int)item.type].onWay > 0 );
+		itemData[(int)item.type].onWay--;
 		if ( !construction.done )
 			return;
 
-		while ( content.Count <= (int)item.type )
-			content.Add( 0 );
-		content[(int)item.type]++;
+		while ( itemData.Count <= (int)item.type )
+			itemData.Add( new ItemTypeData() );
+		itemData[(int)item.type].content++;
 	}
 
 	public void ClearSettings()
 	{
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
-			inputMin[i] = inputMax[i] = outputMin[i] = 0;
-			outputMax[i] = maxItems / 4;
+			itemData[i].inputMin = itemData[i].inputMax = itemData[i].outputMin = 0;
+			itemData[i].outputMax = maxItems / 4;
 		}
 
 		inputArea.center = outputArea.center = node;
@@ -631,25 +649,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	{
 		base.Reset();
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
-			content[i] = 0;
-	}
-
-	public void CreateMissingArrays()
-	{
-		while ( content.Count < (int)Item.Type.total )
-			content.Add( 0 );
-		while ( inputMin.Count < (int)Item.Type.total )
-			inputMin.Add( 0 );
-		while ( inputMax.Count < (int)Item.Type.total )
-			inputMax.Add( 0 );
-		while ( outputMin.Count < (int)Item.Type.total )
-			outputMin.Add( 0 );
-		while ( outputMax.Count < (int)Item.Type.total )
-			outputMax.Add(  maxItems / 4 );
-		while ( onWay.Count < (int)Item.Type.total )
-			onWay.Add( 0 );
-		while ( outputRoutes.Count < (int)Item.Type.total )
-			outputRoutes.Add( new List<Route>() );
+			itemData[i].content = 0;
 	}
 
 	public override void Validate( bool chain )
@@ -663,6 +663,6 @@ public class Stock : Building, Worker.Callback.IHandler
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.AreEqual( ( onWay[i] - onWayCounted[i] ) % Constants.Stock.cartCapacity, 0 );
+			assert.AreEqual( ( itemData[i].onWay - onWayCounted[i] ) % Constants.Stock.cartCapacity, 0 );
 	}
 }
