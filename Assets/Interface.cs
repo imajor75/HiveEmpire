@@ -2431,6 +2431,7 @@ public class Interface : OperationHandler
 		public Text total;
 		public Item.Type selectedItemType = Item.Type.log;
 		public ItemImage selected;
+		public Dropdown cartOrder;
 		public Text inputMin, inputMax, outputMin, outputMax;
 		public RectTransform controls;
 		public Text selectedInputCount, selectedOutputCount;
@@ -2481,20 +2482,37 @@ public class Interface : OperationHandler
 				return;
 			}
 			selectedItemType = itemType;
+			cartOrder.value = ((int)stock.itemData[(int)itemType].cartOrder) + 3;
 			UpdateRouteIcons();
 		}
 
 		void UpdateRouteIcons()
 		{
-			int inputCount = stock.GetInputRoutes( selectedItemType ).Count;
-			selectedInputCount.text = inputCount.ToString();
-			selectedInputCount.gameObject.SetActive( inputCount > 0 );
-			selectedInput.gameObject.SetActive( inputCount > 0 );
+			{
+				int inputCount = stock.GetInputRoutes( selectedItemType, true ).Count;
+				selectedInputCount.text = inputCount.ToString();
+				selectedInputCount.gameObject.SetActive( inputCount > 0 );
+				Color inputColor = Color.black;
+				if ( stock.itemData[(int)selectedItemType].cartOrder < Stock.ItemTypeData.CartOrder.ignore )
+					inputColor = Color.green;
+				if ( inputCount > 0 )
+					inputColor = Color.white;
+				selectedInput.color = inputColor;
+				selectedInput.gameObject.SetActive( inputColor != Color.black );
+			}
 
-			int outputCount = stock.itemData[(int)selectedItemType].outputRoutes.Count;
-			selectedOutputCount.text = outputCount.ToString();
-			selectedOutputCount.gameObject.SetActive( outputCount > 0 );
-			selectedOutput.gameObject.SetActive( outputCount > 0 );
+			{
+				int outputCount = stock.GetOutputRoutes( selectedItemType, true ).Count;
+				selectedOutputCount.text = outputCount.ToString();
+				selectedOutputCount.gameObject.SetActive( outputCount > 0 );
+				Color outputColor = Color.black;
+				if ( stock.itemData[(int)selectedItemType].cartOrder > Stock.ItemTypeData.CartOrder.ignore )
+					outputColor = Color.green;
+				if ( outputCount > 0 )
+					outputColor = Color.white;
+				selectedOutput.color = outputColor;
+				selectedOutput.gameObject.SetActive( outputColor != Color.black );
+			}
 		}
 
 		void RecreateControls()
@@ -2528,11 +2546,23 @@ public class Interface : OperationHandler
 				tooltip += "\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
 				#endif
 				i.additionalTooltip = tooltip;
-				if ( stock.GetInputRoutes( (Item.Type)j ).Count > 0 )
-					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f );
-				if ( stock.itemData[j].outputRoutes.Count > 0 )
+
+				Color inputColor = Color.black;
+				if ( stock.itemData[j].cartOrder < Stock.ItemTypeData.CartOrder.ignore )
+					inputColor = Color.green;
+				if ( stock.GetInputRoutes( (Item.Type)j, true ).Count > 0 )
+					inputColor = Color.white;
+				if ( inputColor != Color.black )
+					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f ).color = inputColor;
+
+				Color outputColor = Color.black;
+				if ( stock.itemData[j].cartOrder > Stock.ItemTypeData.CartOrder.ignore )
+					outputColor = Color.green;
+				if ( stock.itemData[j].hasManualRoute )
+					outputColor = Color.white;
+				if ( outputColor != Color.black )
 				{
-					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f );
+					Image( iconTable.GetMediaData( Icon.rightArrow ) ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f ).color = outputColor;
 					offset += 10;
 				}
 				i.AddClickHandler( () => SelectItemType( t ) );
@@ -2550,9 +2580,13 @@ public class Interface : OperationHandler
 
 			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 180, 70, 150, 40, 0, 0 );
 			selectedItemArea.name = "Selected item area";
-			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
+			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) ).AddClickHandler( () => cartOrder.Show(), UIHelpers.ClickType.right );
 			selected.name = "Selected item";
-			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock" );
+			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock\nRMB to change cart orders for this item" );
+			cartOrder = Dropdown().Link( selectedItemArea ).Pin( 0, 0, 100, 0, 0, 0 );
+			cartOrder.AddOptions( new List<string> { "Get (low priority)", "Get (medium priority", "Get (high priority", "Ignore", "Offer (low priority)", "Offer (medium priority)", "Offer (high priority)" } );
+			cartOrder.onValueChanged.AddListener( OnCartOrderChanged );
+			cartOrder.SetTooltip( "Give order to the stock how to handle the given item type. If anything elso than ignore is selected, the stock will automatically create routes to other stocks if the card orders are allowing." );
 			inputMin = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 0, 1 ).
 			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority", null, "LMB+drag left/right to change" );
 			inputMin.alignment = TextAnchor.MiddleCenter;
@@ -2586,6 +2620,12 @@ public class Interface : OperationHandler
 				return;
 
 			WorkerPanel.Create().Open( stock.cart, true );
+		}
+
+		void OnCartOrderChanged( int value )
+		{
+			stock.itemData[(int)selectedItemType].cartOrder = (Stock.ItemTypeData.CartOrder)value - 3;
+			stock.owner.UpdateStockRoutes( selectedItemType );
 		}
 
 		void ShowRoutesFor( Item.Type itemType )
@@ -3985,8 +4025,8 @@ if ( cart )
 		public bool outputs;
 		public ScrollRect scroll;
 		public List<Stock.Route> list;
-		public static Material arrowMaterial, arrowMaterialWithHighlight;
-		public Text[] last, rate, total, status;
+		public static Material arrowMaterial, arrowMaterialWithHighlight, arrowAutoMaterial;
+		public Text[] last, rate, total, status, priority;
 		public Image[] cart;
 		public List<Stock> stockOptions = new List<Stock>();
 		public bool forceRefill;
@@ -4001,7 +4041,7 @@ if ( cart )
 
 		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
 		{
-			base.Open( null, 660, 350 );
+			base.Open( null, 710, 350 );
 			this.stock = stock;
 			this.itemType = itemType;
 			this.outputs = outputs;
@@ -4060,8 +4100,10 @@ if ( cart )
 				"Once the cart started moving it uses the roads to get to the destination. If a route is used by a cart right now, a cart icon will appear in the row of the route, " +
 				"clicking that icon will let you follow the cart." );
 
-			Text( "Start" ).Pin( 20, -borderWidth - iconSize, 120, iconSize );
+			Text( "#" ).Pin( 20, -borderWidth - iconSize, 20, iconSize ).SetTooltip( "Priority" );
+			Text( "Start" ).PinSideways( 0, -borderWidth - iconSize, 120, iconSize );
 			Text( "End" ).PinSideways( 0, -borderWidth - iconSize, 120, iconSize );
+			Text( "Type" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
 			Text( "Distance" ).PinSideways( 0, -borderWidth - iconSize, 30, iconSize );
 			Text( "Last" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
 			Text( "Rate" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
@@ -4138,23 +4180,27 @@ if ( cart )
 			total = new Text[list.Count];
 			cart = new Image[list.Count];
 			status = new Text[list.Count];
+			priority = new Text[list.Count];
 			int row = 0;
 			for ( int i = 0; i < list.Count; i++ )
 			{
 				var route = list[i];
-				BuildingIcon( route.start ).Link( scroll.content ).Pin( 0, row, 120, iconSize );
+				priority[i] = Text( route.priority.ToString() ).Link( scroll.content ).Pin( 0, row, 20, iconSize ).SetTooltip( "Priority" );
+				BuildingIcon( route.start ).Link( scroll.content ).PinSideways( 0, row, 120, iconSize );
 				BuildingIcon( route.end ).Link( scroll.content ).PinSideways( 0, row, 120, iconSize );
+				Text( route.type == Stock.Route.Type.manual ? "manual" : "auto" ).Link( scroll.content ).PinSideways( 0, row, 50, iconSize ).SetTooltip( "How the route was created", null, "Manual means the route was created by you, and will only be deleted by you. Auto means the route was automatically created and will be managed by the game. To See more details for automatic routes, see the tooltip of the currently selected item in a stock window, look for cart orders." );
 				Text( route.start.node.DistanceFrom( route.end.node ).ToString() ).Link( scroll.content ).PinSideways( 0, row, 30, iconSize );
 				last[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				rate[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				status[i] = Text( "", 8 ).Link( scroll.content ).PinSideways( 0, row, 100, 2 * iconSize );
-				if ( stock && outputs )
+				if ( stock && outputs && route.type == Stock.Route.Type.manual )
 				{
-					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => root.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Increase the priority of the route" );
-					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => root.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Decrease the priority of the route" );
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => root.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" );
+					Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => root.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" );
 				}
-				Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => root.ExecuteRemoveRoute( route ) ).SetTooltip( "Remove route", null, null, x => toHighlight = x ? route : null );
+				if ( route.type == Stock.Route.Type.manual )
+					Image( Icon.exit ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => root.ExecuteRemoveRoute( route ) ).SetTooltip( "Remove route", null, null, x => toHighlight = x ? route : null );
 				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) ).SetTooltip( "Follow the cart which is currently working on the route" );
 				row -= iconSize + 5;
 			}
@@ -4186,6 +4232,7 @@ if ( cart )
 				rate[i].text = $"~{(list[i].averageTransferRate*50*60).ToString( "F2" )}/m";
 				total[i].text = list[i].itemsDelivered.ToString();
 				cart[i].gameObject.SetActive( list[i].start.cart.currentRoute == list[i] );
+				priority[i].text = list[i].priority.ToString();
 				status[i].text = list[i].state switch
 				{
 					Stock.Route.State.noSourceItems => "Not enough items at source",
@@ -4208,11 +4255,19 @@ if ( cart )
 				arrowMaterialWithHighlight.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 				World.SetRenderMode( arrowMaterialWithHighlight, World.BlendMode.Cutout );
 				arrowMaterialWithHighlight.color = Color.red;
+
+				arrowAutoMaterial = new Material( Resources.Load<Shader>( "shaders/Route" ) );
+				arrowAutoMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
+				World.SetRenderMode( arrowAutoMaterial, World.BlendMode.Cutout );
+				arrowAutoMaterial.color = Color.green;
 			}
 
 			foreach ( var route in list )
 			{
-				var material = route == toHighlight ? arrowMaterialWithHighlight : arrowMaterial;
+				var material = route.type == Stock.Route.Type.automatic ? arrowAutoMaterial : arrowMaterial;
+				if ( route == toHighlight )
+					material = arrowMaterialWithHighlight;
+
 				var startPosition = route.start.node.positionInViewport;
 				var endPosition = route.end.node.positionInViewport;
 				var dif = endPosition-startPosition;

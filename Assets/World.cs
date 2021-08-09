@@ -345,7 +345,15 @@ public class World : MonoBehaviour
 				if ( t )
 				{
 					while ( t.itemData.Count < (int)Item.Type.total )
-						t.itemData.Add( new Stock.ItemTypeData() );
+						t.itemData.Add( new Stock.ItemTypeData( t, (Item.Type)t.itemData.Count ) );
+					for ( int j = 0; j < t.itemData.Count; j++ )
+					{
+						if ( t.itemData[j].boss == null )
+						{
+							t.itemData[j].boss = t;
+							t.itemData[j].itemType = (Item.Type)j;
+						}
+					}
 #pragma warning disable 0618
 					if ( t.content != null )
 					{

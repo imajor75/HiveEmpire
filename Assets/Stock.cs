@@ -62,45 +62,117 @@ public class Stock : Building, Worker.Callback.IHandler
 	}
 
 	[Obsolete( "Compatibility with old files", false )]
-	public List<int> content = new List<int>();
+	public List<int> content;
 	[Obsolete( "Compatibility with old files", false )]
-	public List<int> onWay = new List<int>();
+	public List<int> onWay;
 	[Obsolete( "Compatibility with old files", false )]
-	public List<int> inputMin = new List<int>();
+	public List<int> inputMin;
 	[Obsolete( "Compatibility with old files", false )]
-	public List<int> inputMax = new List<int>();
+	public List<int> inputMax;
 	[Obsolete( "Compatibility with old files", false )]
-	public List<int> outputMin = new List<int>();
+	public List<int> outputMin;
 	[Obsolete( "Compatibility with old files", false )]
-	public List<int> outputMax = new List<int>();
+	public List<int> outputMax;
 	[Obsolete( "Compatibility with old files", false )]
-	public List<List<Route>> outputRoutes = new List<List<Route>>();
+	public List<List<Route>> outputRoutes;
 	[Obsolete( "Compatibility with old files", true )]
-	public Versioned outputRouteVersion = new Versioned();
+	public Versioned outputRouteVersion;
 
-	public Route AddNewRoute( Item.Type itemType, Stock destination )
-	{
-		var itemTypeIndex = (int)itemType;
-		foreach ( var route in itemData[itemTypeIndex].outputRoutes )
-			if ( route.end == destination && route.itemType == itemType )
-				return null;
-
-		var newRoute = new Route();
-		newRoute.start = this;
-		newRoute.end = destination;
-		newRoute.itemType = itemType;
-		itemData[itemTypeIndex].outputRoutes.Add( newRoute );
-		destination.itemData[itemTypeIndex].inputMax = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.itemData[itemTypeIndex].inputMax );
-		return newRoute;
-	}
-
+	[Serializable]
 	public class ItemTypeData
 	{
+		[Obsolete( "Compatibility with old files", true )]
+		public ItemTypeData()
+		{}
+		public ItemTypeData( Stock boss, Item.Type itemType )
+		{
+			this.boss = boss;
+			this.itemType = itemType;
+		}
 		public int content;
 		public int onWay;
 		public int inputMax, inputMin;
 		public int outputMax, outputMin;
 		public List<Route> outputRoutes = new List<Route>();
+		public CartOrder cartOrder;
+		public Stock boss;
+		public Item.Type itemType;
+
+		public void UpdateRoutes()
+		{
+			int typeIndex = (int)itemType;
+			for ( int i = 0; i < outputRoutes.Count; )
+			{
+				var route = outputRoutes[i];
+				if ( route.type == Route.Type.automatic && ( route.start.itemData[typeIndex].cartOrder <= ItemTypeData.CartOrder.ignore || route.end.itemData[typeIndex].cartOrder >= ItemTypeData.CartOrder.ignore ) )
+					route.Remove();
+				else
+					i++;
+			}
+
+			foreach ( var stock in boss.owner.stocks )
+			{
+				if ( stock == boss )
+					continue;
+				if ( cartOrder > ItemTypeData.CartOrder.ignore && stock.itemData[typeIndex].cartOrder < ItemTypeData.CartOrder.ignore )
+				{
+					var route = AddNewRoute( stock, Route.Type.automatic );
+					if ( route != null && route.type == Route.Type.automatic )
+						route.priority = (int)( cartOrder ) + (int)( stock.itemData[typeIndex].cartOrder );
+				}
+			}	
+
+			outputRoutes.Sort( (x, y) => y.priority.CompareTo( x.priority ) );
+		}
+
+		public Route AddNewRoute( Stock destination, Route.Type type = Route.Type.manual )
+		{
+			var itemTypeIndex = (int)itemType;
+			foreach ( var route in outputRoutes )
+			{
+				if ( route.end == destination && route.itemType == itemType )
+				{
+					if ( route.type == Route.Type.automatic )
+					{
+						route.type = type;
+						return route;
+					}
+					else
+						return null;
+				}
+			}
+
+			var newRoute = new Route();
+			newRoute.start = boss;
+			newRoute.end = destination;
+			newRoute.itemType = itemType;
+			newRoute.type = type;
+			outputRoutes.Add( newRoute );
+			destination.itemData[itemTypeIndex].inputMax = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.itemData[itemTypeIndex].inputMax );	// Here?
+			return newRoute;
+		}
+
+		public bool hasManualRoute
+		{
+			get
+			{
+				foreach ( var route in outputRoutes )
+					if ( route.type == Route.Type.manual )
+						return true;
+				return false;
+			}
+		}
+
+		public enum CartOrder
+		{
+			getLow = -3,
+			getMedium = -2,
+			getHigh = -1,
+			ignore = 0,
+			offerLow = 1,
+			offerMedium = 2,
+			offerHigh = 3
+		}
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
@@ -114,6 +186,8 @@ public class Stock : Building, Worker.Callback.IHandler
 		public int lastDelivery;
 		public float averageTransferRate;
 		public State state;
+		public int priority;
+		public Type type;
 
 		public enum State
 		{
@@ -126,6 +200,12 @@ public class Stock : Building, Worker.Callback.IHandler
 			unknown
 		}
 
+		public enum Type
+		{
+			manual,
+			automatic
+		}
+
 		[Obsolete( "Compatibility with old files", true )]
 		float averateTransferRate { set { averageTransferRate = value; } }
 
@@ -133,29 +213,10 @@ public class Stock : Building, Worker.Callback.IHandler
 
 		public void Remove()
 		{
-			int itemTypeIndex = (int)itemType;
-			Assert.global.IsTrue( start.itemData[itemTypeIndex].outputRoutes.Contains( this ) );
-			start.itemData[itemTypeIndex].outputRoutes.Remove( this );
-		}
-
-		public void MoveUp()
-		{
-			var list = start.itemData[(int)itemType].outputRoutes;
-			int i = list.IndexOf( this );
-			if ( i < 1 )
-				return;
-			list[i] = list[i-1];
-			list[i-1] = this;
-		}
-
-		public void MoveDown()
-		{
-			var list = start.itemData[(int)itemType].outputRoutes;
-			int i = list.IndexOf( this );
-			if ( i < 0 || i == list.Count-1 )
-				return;
-			list[i] = list[i+1];
-			list[i+1] = this;
+			start.assert.AreEqual( type, Route.Type.manual );
+			var itemData = start.itemData[(int)itemType];
+			Assert.global.IsTrue( itemData.outputRoutes.Contains( this ) );
+			itemData.outputRoutes.Remove( this );
 		}
 
 		public bool IsAvailable()
@@ -414,7 +475,7 @@ public class Stock : Building, Worker.Callback.IHandler
 
 		owner.RegisterStock( this );
 		while ( itemData.Count < (int)Item.Type.total )
-			itemData.Add( new ItemTypeData() );
+			itemData.Add( new ItemTypeData( this, (Item.Type)itemData.Count ) );
 
 		return this;
 	}
@@ -444,7 +505,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		return this;
 	}
 
-	public List<Route> GetInputRoutes( Item.Type itemType )
+	public List<Route> GetInputRoutes( Item.Type itemType, bool manualOnly = false )
 	{
 		int typeIndex = (int)itemType;
 		List<Route> list = new List<Route>();
@@ -454,12 +515,24 @@ public class Stock : Building, Worker.Callback.IHandler
 				continue;
 			foreach ( var r in stock.itemData[typeIndex].outputRoutes )
 			{
-				if ( r.end == this )
+				if ( r.end == this && ( !manualOnly || r.type == Route.Type.manual ) )
 					list.Add( r );
-
 			}
 		}
 		return list;
+	}
+
+	public List<Route> GetOutputRoutes( Item.Type itemType, bool manualOnly = false )
+	{
+		int typeIndex = (int)itemType;
+		List<Route> list = new List<Route>();
+		foreach ( var r in itemData[typeIndex].outputRoutes )
+		{
+			if ( !manualOnly || r.type == Route.Type.manual )
+				list.Add( r );
+		}
+		return list;
+
 	}
 
 	public override bool Remove( bool takeYourTime )
@@ -629,7 +702,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			return;
 
 		while ( itemData.Count <= (int)item.type )
-			itemData.Add( new ItemTypeData() );
+			itemData.Add( new ItemTypeData( this, (Item.Type)itemData.Count ) );
 		itemData[(int)item.type].content++;
 	}
 
@@ -664,5 +737,10 @@ public class Stock : Building, Worker.Callback.IHandler
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
 			assert.AreEqual( ( itemData[i].onWay - onWayCounted[i] ) % Constants.Stock.cartCapacity, 0 );
+		for ( int j = 0; j < itemData.Count; j++ )
+		{
+			assert.AreEqual( this, itemData[j].boss );
+			assert.AreEqual( j, (int)itemData[j].itemType );
+		}
 	}
 }

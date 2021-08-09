@@ -173,6 +173,12 @@ public class Player : ScriptableObject
 		return null;
 	}
 
+	public void UpdateStockRoutes( Item.Type itemType )
+	{
+		foreach ( var stock in stocks )
+			stock.itemData[(int)itemType].UpdateRoutes();
+	}
+
 	public void Start()
 	{
 		while ( itemHaulPriorities.Count < (int)Item.Type.total )

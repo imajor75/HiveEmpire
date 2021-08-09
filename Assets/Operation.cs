@@ -416,10 +416,8 @@ public class Operation : ScriptableObject
             {
                 if ( route == null )
                     return null;
-                if ( direction > 0 )
-                    route.MoveDown();
-                else
-                    route.MoveUp();
+                route.priority += direction;
+                route.start.owner.UpdateStockRoutes( route.itemType );
                 direction *= -1;
                 break;
             }
@@ -429,14 +427,16 @@ public class Operation : ScriptableObject
                     return null;
                 SetupAsCreateRoute( route.start, route.end, route.itemType );
                 route.Remove();
+                route.start.owner.UpdateStockRoutes( route.itemType );
                 break;
             }
             case Type.createRoute:
             {
                 if ( start == null || end == null )
                     return null;
-                var newRoute = start.AddNewRoute( itemType, end );
+                var newRoute = start.itemData[(int)itemType].AddNewRoute( end );
                 SetupAsRemoveRoute( newRoute );
+                route.start.owner.UpdateStockRoutes( route.itemType );
                 break;
             }
             case Type.moveRoad:
