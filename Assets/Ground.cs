@@ -135,6 +135,18 @@ public class Ground : HiveObject
 		var camera = Interface.root.viewport.visibleAreaCenter;
 		foreach ( var block in blocks )
 			block.UpdateOffset( camera );
+			
+		var overseas = world.overseas;
+		for ( int x = -overseas; x <= overseas; x++ )
+		{
+			for ( int y = -overseas; y <= overseas; y++ )
+			{
+				if ( x == 0 && y == 0 )
+					continue;
+				foreach ( var block in blocks )
+					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, 0 );
+			}
+		}
 	}
 
 	static void CreateAreas()
@@ -193,21 +205,6 @@ public class Ground : HiveObject
 			if ( d < World.instance.settings.waterLevel )
 				n.type = Node.Type.underWater;
 			n.transform.localPosition = n.position;
-		}
-	}
-
-	void Update()
-	{
-		var overseas = world.overseas;
-		for ( int x = -overseas; x <= overseas; x++ )
-		{
-			for ( int y = -overseas; y <= overseas; y++ )
-			{
-				if ( x == 0 && y == 0 )
-					continue;
-				foreach ( var block in blocks )
-					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, 0 );
-			}
 		}
 	}
 
