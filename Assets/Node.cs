@@ -333,7 +333,7 @@ public class Node : HiveObject
 	{
 		get
 		{
-			if ( building )
+			if ( building || this.type == Type.underWater )
 				return new Block( Block.Type.all );
 			Block.Type type = ( road || flag ) ? Block.Type.buildingsAndRoads : Block.Type.none;
 			foreach ( var resource in resources )
