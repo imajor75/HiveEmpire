@@ -2178,7 +2178,8 @@ public class Interface : OperationHandler
 				for ( int i = 0; i < itemCount; i++ )
 					items[i] = boss.ItemIcon( itemType ).PinSideways( xi - iconSize, y );
 				int itemsEndX = UIHelpers.currentColumn;
-				boss.Text( "?" ).PinSideways( 0, y, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
+				if ( itemCount > 0 )
+					boss.Text( "?" ).PinSideways( 0, y, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
 				if ( area != null )
 					boss.AreaIcon( area ).PinSideways( 0, y );
 				if ( buffer != null && buffer.optional )
@@ -3875,6 +3876,7 @@ if ( cart )
 		public Building.Construction construction;
 		public WorkshopPanel.Buffer planks;
 		public WorkshopPanel.Buffer stones;
+		public Text neededText, hereText, onWayText, missingText;
 
 		public static ConstructionPanel Create()
 		{
@@ -3883,18 +3885,41 @@ if ( cart )
 
 		public void Open( Building.Construction construction, bool show = false )
 		{
-			base.Open( construction.boss, 150, 150 );
+			base.Open( construction.boss, 220, 250 );
 			this.construction = construction;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( -40, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 
 			Text( construction.boss.title ).Pin( 20, -20, 160 );
+			Text( "Under construction", 10 ).PinDownwards( 20, 0, 160 );
+
+			neededText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			neededText.alignment = TextAnchor.MiddleLeft;
+
+			hereText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			hereText.alignment = TextAnchor.MiddleLeft;
+
+			onWayText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			onWayText.alignment = TextAnchor.MiddleLeft;
+
+			missingText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			missingText.alignment = TextAnchor.MiddleLeft;
+			var row = UIHelpers.currentRow;
+
+			ItemIcon( Item.Type.plank ).Link( neededText ).Pin( 60, 0 );
+			ItemIcon( Item.Type.stone ).Link( neededText ).Pin( 120, 0 );
+			ItemIcon( Item.Type.plank ).Link( hereText ).Pin( 57, 0 );
+			ItemIcon( Item.Type.stone ).Link( hereText ).Pin( 117, 0 );
+			ItemIcon( Item.Type.plank ).Link( onWayText ).Pin( 80, 0 );
+			ItemIcon( Item.Type.stone ).Link( onWayText ).Pin( 140, 0 );
+			ItemIcon( Item.Type.plank ).Link( missingText ).Pin( 60, 0 );
+			ItemIcon( Item.Type.stone ).Link( missingText ).Pin( 120, 0 );
 
 			planks = new WorkshopPanel.Buffer();
-			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, 20, -40, iconSize + 5 );
+			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, 20, row - 5, iconSize + 5 );
 			stones = new WorkshopPanel.Buffer();
-			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, 20, -64, iconSize + 5 );
+			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, 120, row - 5, iconSize + 5 );
 
-			progress = Progress().Pin( 20, -90, ( iconSize + 5 ) * 4 );
+			progress = Progress().Pin( 20, row - 30, ( iconSize + 5 ) * 4 );
 
 			if ( show )
 				root.world.eye.FocusOn( construction.boss, true );
@@ -3917,6 +3942,11 @@ if ( cart )
 			planks.Update( construction.plankArrived, construction.plankOnTheWay );
 			stones.Update( construction.stoneArrived, construction.stoneOnTheWay );
 			progress.progress = construction.progress;
+
+			neededText.text = $"Needed: {construction.boss.configuration.plankNeeded}         and {construction.boss.configuration.stoneNeeded}";
+			hereText.text = $"Arrived: {construction.plankArrived}         and {construction.stoneArrived}";
+			onWayText.text = $"On the way: {construction.plankOnTheWay}         and {construction.stoneOnTheWay}";
+			missingText.text = $"Missing: {construction.plankMissing}         and {construction.stoneMissing}";
 		}
 
 		void Remove()

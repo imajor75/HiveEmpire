@@ -238,6 +238,8 @@ abstract public class Building : HiveObject
 		public int plankArrived;
 		public int stoneOnTheWay;
 		public int stoneArrived;
+		public int plankMissing { get { return boss.configuration.plankNeeded - plankOnTheWay - plankArrived; } }
+		public int stoneMissing { get { return boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived; } }
 		public static Shader shader;
 		public static int sliceLevelID;
 		public Worker.DoAct hammering;
