@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -2626,6 +2626,8 @@ public class Interface : OperationHandler
 		void OnCartOrderChanged( int value )
 		{
 			stock.itemData[(int)selectedItemType].cartOrder = (Stock.ItemTypeData.CartOrder)value - 3;
+			if ( value != 3 && stock.itemData[(int)selectedItemType].inputMax < (int)( Constants.Stock.cartCapacity * 1.5f ) )
+				stock.itemData[(int)selectedItemType].inputMax = (int)( Constants.Stock.cartCapacity * 1.5f );
 			stock.owner.UpdateStockRoutes( selectedItemType );
 		}
 
