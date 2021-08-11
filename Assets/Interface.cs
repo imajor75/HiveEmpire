@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -43,7 +43,7 @@ public class Interface : OperationHandler
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
 	public static Material materialUIPath;
-	static bool focusOnInputField;
+	static bool focusOnInputField, focusOnDropdown;
 	static KeyCode ignoreKey = KeyCode.None;
 
 	public Image buildButton, worldProgressButton;
@@ -298,10 +298,11 @@ public class Interface : OperationHandler
 
 	public void FixedUpdate()
 	{
-		if ( EventSystem.current.currentSelectedGameObject != null && EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null )
-			focusOnInputField = true;
-		else
-			focusOnInputField = false;
+		if ( EventSystem.current.currentSelectedGameObject != null )
+		{ 
+			focusOnInputField = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
+			focusOnDropdown = EventSystem.current.currentSelectedGameObject.GetComponent<Toggle>() != null;
+		}
 
 #if DEBUG
 		if ( --fullValidate < 0 )
@@ -1010,6 +1011,8 @@ public class Interface : OperationHandler
 
         public void OnPointerEnter( PointerEventData eventData )
         {
+			if ( focusOnDropdown )
+				return;
 			if ( onShow != null && !active )
 				onShow( true );
 			if ( textGenerator != null )
@@ -2462,26 +2465,6 @@ public class Interface : OperationHandler
 
 		void SelectItemType( Item.Type itemType )
 		{
-			if ( GetKey( KeyCode.LeftAlt ) && GetKey( KeyCode.LeftControl ) )
-			{
-				stock.itemData[(int)itemType].content = 0;
-				return;
-			}
-			if ( GetKey( KeyCode.LeftShift ) && GetKey( KeyCode.LeftControl ) )
-			{
-				stock.itemData[(int)itemType].content++;
-				return;
-			}
-			if ( GetKey( KeyCode.LeftShift ) )
-			{
-				LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.request );
-				return;
-			}
-			if ( GetKey( KeyCode.LeftControl ) )
-			{
-				LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.offer );
-				return;
-			}
 			selectedItemType = itemType;
 			cartOrder.value = ((int)stock.itemData[(int)itemType].cartOrder) + 3;
 			UpdateRouteIcons();
@@ -2542,10 +2525,7 @@ public class Interface : OperationHandler
 				int offset = j % 2 > 0 ? 140 : 0;
 				var t = (Item.Type)j;
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
-				string tooltip = "LMB Select item type\nShift+LMB Show input potentials\nCtrl+LMB Show output potentials";
-				#if DEBUG
-				tooltip += "\nShift+Ctrl+LMB Add one more\nAlt+Ctrl+LMB Clear";
-				#endif
+				string tooltip = "LMB Select item type\nRMB Popup menu";
 				i.additionalTooltip = tooltip;
 
 				Color inputColor = Color.black;
@@ -2567,7 +2547,18 @@ public class Interface : OperationHandler
 					offset += 10;
 				}
 				i.AddClickHandler( () => SelectItemType( t ) );
-				i.AddClickHandler( () => ShowRoutesFor( t ), UIHelpers.ClickType.right );
+				var d = Dropdown().Link( i ).Pin( 0, 0, 100, 0, 0, 0 );
+				d.ClearOptions();
+				var options = new List<String> { "Select", "Show routes", "Show input potentials", "Show output potentials" };
+#if DEBUG
+				options.Add( "Clear" );
+				options.Add( "Add one" );
+#endif
+				options.Add( "Cancel" );
+				d.AddOptions( options );
+				Item.Type y = (Item.Type)j;
+				d.onValueChanged.AddListener( (x) => ItemTypeAction( y, x ) );
+				i.AddClickHandler( () => PopupForItemType( d ), UIHelpers.ClickType.right );
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				if ( j % 2 > 0 )
 					row -= iconSize + 5;
@@ -2613,6 +2604,49 @@ public class Interface : OperationHandler
 			"Carts are not automatically distribute the items, you have to specify routes between stocks first. Open the routes panel to see more details." ).name = "Show cart";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
 			UpdateRouteIcons();
+		}
+
+		void ItemTypeAction( Item.Type itemType, int code )
+		{
+			switch ( code )
+			{
+				case 0:
+				{
+					SelectItemType( itemType );
+					break;
+				}
+				case 1:
+				{
+					ShowRoutesFor( itemType );
+					break;
+				}
+				case 2:
+				{
+					LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.request );
+					break;
+				}
+				case 3:
+				{
+					LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.offer );
+					break;
+				}
+				case 4:
+				{
+					stock.itemData[(int)itemType].content = 0;
+					break;
+				}
+				case 5:
+				{
+					stock.itemData[(int)itemType].content++;
+					break;
+				}
+			}
+		}
+
+		void PopupForItemType( Dropdown d )
+		{
+			d.value = d.options.Count - 1;
+			d.Show();
 		}
 
 		void ShowCart()
