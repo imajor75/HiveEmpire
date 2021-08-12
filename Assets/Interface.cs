@@ -1356,7 +1356,7 @@ public class Interface : OperationHandler
 				// A null reference crash happened here in map mode, so safety check
 				if ( c == null || building == null || building.node == null )
 				{
-					Assert.global.IsTrue( false );	// TODO Triggered while the building list was open, and selecting a building type as a filter
+					Assert.global.IsTrue( false );	// TODO Triggered while the building list was open, and selecting a building type as a filter. And again.
 					return;
 				}
 				var p = c.WorldToScreenPoint( building.node.positionInViewport );
@@ -2549,7 +2549,7 @@ public class Interface : OperationHandler
 				i.AddClickHandler( () => SelectItemType( t ) );
 				var d = Dropdown().Link( i ).Pin( 0, 0, 100, 0, 0, 0 );
 				d.ClearOptions();
-				var options = new List<String> { "Select", "Show routes", "Show input potentials", "Show output potentials" };
+				var options = new List<String> { "Select", "Show routes", "Show input potentials", "Show output potentials", "Set cart order" };
 #if DEBUG
 				options.Add( "Clear" );
 				options.Add( "Add one" );
@@ -2557,7 +2557,7 @@ public class Interface : OperationHandler
 				options.Add( "Cancel" );
 				d.AddOptions( options );
 				Item.Type y = (Item.Type)j;
-				d.onValueChanged.AddListener( (x) => ItemTypeAction( y, x ) );
+				d.onValueChanged.AddListener( (x) => ItemTypeAction( i, y, x ) );
 				i.AddClickHandler( () => PopupForItemType( d ), UIHelpers.ClickType.right );
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				if ( j % 2 > 0 )
@@ -2572,13 +2572,13 @@ public class Interface : OperationHandler
 
 			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 180, 70, 150, 40, 0, 0 );
 			selectedItemArea.name = "Selected item area";
-			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) ).AddClickHandler( () => cartOrder.Show(), UIHelpers.ClickType.right );
-			selected.name = "Selected item";
+			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
+			selected.AddClickHandler( () => CartOrderPopup( selected, selectedItemType ), UIHelpers.ClickType.right ).name = "Selected item";
 			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock\nRMB to change cart orders for this item" );
 			cartOrder = Dropdown().Link( selectedItemArea ).Pin( 0, 0, 100, 0, 0, 0 );
 			cartOrder.AddOptions( new List<string> { "Get (low priority)", "Get (medium priority", "Get (high priority", "Ignore", "Offer (low priority)", "Offer (medium priority)", "Offer (high priority)" } );
-			cartOrder.onValueChanged.AddListener( OnCartOrderChanged );
-			cartOrder.SetTooltip( "Give order to the stock how to handle the given item type. If anything elso than ignore is selected, the stock will automatically create routes to other stocks if the card orders are allowing." );
+			cartOrder.onValueChanged.AddListener( (x) => OnCartOrderChanged( selectedItemType, x ) );
+			cartOrder.SetTooltip( "Give order to the stock how to handle the given item type. If anything else than ignore is selected, the stock will automatically create routes to other stocks if the card orders are allowing." );
 			inputMin = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 0, 1 ).
 			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority", null, "LMB+drag left/right to change" );
 			inputMin.alignment = TextAnchor.MiddleCenter;
@@ -2606,8 +2606,9 @@ public class Interface : OperationHandler
 			UpdateRouteIcons();
 		}
 
-		void ItemTypeAction( Item.Type itemType, int code )
+		void ItemTypeAction( ItemImage image, Item.Type itemType, int code )
 		{
+			print( code );
 			switch ( code )
 			{
 				case 0:
@@ -2632,15 +2633,29 @@ public class Interface : OperationHandler
 				}
 				case 4:
 				{
-					stock.itemData[(int)itemType].content = 0;
+					CartOrderPopup( image, itemType );
 					break;
 				}
 				case 5:
+				{
+					stock.itemData[(int)itemType].content = 0;
+					break;
+				}
+				case 6:
 				{
 					stock.itemData[(int)itemType].content++;
 					break;
 				}
 			}
+		}
+
+		void CartOrderPopup( MonoBehaviour parent, Item.Type itemType )
+		{
+			cartOrder.Link( parent );
+			cartOrder.onValueChanged.RemoveAllListeners();
+			cartOrder.value = (int)( stock.itemData[(int)itemType].cartOrder ) + 3;
+			cartOrder.onValueChanged.AddListener( (x) => OnCartOrderChanged( itemType, x ) );
+			cartOrder.Show();
 		}
 
 		void PopupForItemType( Dropdown d )
@@ -2657,12 +2672,13 @@ public class Interface : OperationHandler
 			WorkerPanel.Create().Open( stock.cart, true );
 		}
 
-		void OnCartOrderChanged( int value )
+		void OnCartOrderChanged( Item.Type itemType, int value )
 		{
-			stock.itemData[(int)selectedItemType].cartOrder = (Stock.ItemTypeData.CartOrder)value - 3;
-			if ( value != 3 && stock.itemData[(int)selectedItemType].inputMax < (int)( Constants.Stock.cartCapacity * 1.5f ) )
-				stock.itemData[(int)selectedItemType].inputMax = (int)( Constants.Stock.cartCapacity * 1.5f );
-			stock.owner.UpdateStockRoutes( selectedItemType );
+			stock.itemData[(int)itemType].cartOrder = (Stock.ItemTypeData.CartOrder)value - 3;
+			if ( value != 3 && stock.itemData[(int)itemType].inputMax < (int)( Constants.Stock.cartCapacity * 1.5f ) )
+				stock.itemData[(int)itemType].inputMax = (int)( Constants.Stock.cartCapacity * 1.5f );
+			stock.owner.UpdateStockRoutes( itemType );
+			RecreateControls();
 		}
 
 		void ShowRoutesFor( Item.Type itemType )

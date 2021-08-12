@@ -213,7 +213,6 @@ public class Stock : Building, Worker.Callback.IHandler
 
 		public void Remove()
 		{
-			start.assert.AreEqual( type, Route.Type.manual );
 			var itemData = start.itemData[(int)itemType];
 			Assert.global.IsTrue( itemData.outputRoutes.Contains( this ) );
 			itemData.outputRoutes.Remove( this );
