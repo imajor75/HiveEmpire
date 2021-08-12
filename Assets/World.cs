@@ -335,17 +335,22 @@ public class World : MonoBehaviour
 				if ( o.construction.done )
 					o.construction.worker = null;
 				o.flagDirection = o.node.DirectionTo( o.flag.node );
-				var s = o as Workshop;
-				if ( s && s.working && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
-					s.working = false;
-				if ( s && s.outputPriority == ItemDispatcher.Priority.stock )
-					s.outputPriority = ItemDispatcher.Priority.low;
-				if ( s && s.mode == Workshop.Mode.unknown )
+				if ( o is Workshop s )
 				{
-					if ( s.outputPriority == ItemDispatcher.Priority.low )
-						s.mode = Workshop.Mode.whenNeeded;
-					if ( s.outputPriority == ItemDispatcher.Priority.high )
-						s.mode = Workshop.Mode.always;
+					if ( s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
+						s.working = false;
+					if ( s.outputPriority == ItemDispatcher.Priority.stock )
+						s.outputPriority = ItemDispatcher.Priority.low;
+					if ( s.mode == Workshop.Mode.unknown )
+					{
+						if ( s.outputPriority == ItemDispatcher.Priority.low )
+							s.mode = Workshop.Mode.whenNeeded;
+						if ( s.outputPriority == ItemDispatcher.Priority.high )
+							s.mode = Workshop.Mode.always;
+					}
+					foreach ( var b in s.buffers )
+						if ( b.stored > b.size )
+							b.stored = b.size;
 				}
 
 				var t = o as Stock;

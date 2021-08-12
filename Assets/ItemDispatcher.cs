@@ -93,6 +93,8 @@ public class ItemDispatcher : HiveObject
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 	{
 		Assert.global.IsNotNull( area );
+		if ( quantity < 0 )
+			quantity = 0;
 		if ( priority == Priority.zero )
 			return;
 

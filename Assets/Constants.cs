@@ -140,9 +140,9 @@ public static class Constants
         public const int defaultProductionTime = 1500;
         public const int defaultMaxRestTime = 3000;
         public const int defaultRelaxSpotNeeded = 20;
-        public const int defaultOutputMax = 6;
+        public const int defaultOutputMax = 4;
         public const int defaultGatheringRange = 6;
-        public const int defaultBufferSize = 6;
+        public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
     }
 }
