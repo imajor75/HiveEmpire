@@ -26,35 +26,35 @@ public class Assert
 	public void IsTrue( bool condition, string message = "" )
 	{
 		if ( !condition )
-			Fail( message );
+			Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
 	public void IsFalse( bool condition, string message = "" )
 	{
 		if ( condition )
-			Fail( message );
+			Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
 	public void IsNull<T>( T reference, string message = "" )
 	{
 		if ( reference != null && !reference.Equals( null ) )
-			Fail( message );
+			Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
 	public void IsNotNull<T>( T reference, string message = "" )
 	{
 		if ( reference == null || reference.Equals( null ) )
-			Fail( message );
+			Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
 	public void IsValid( UnityEngine.Object reference, string message = "" )
 	{
 		if ( reference == null )
-			Fail( message );
+			Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -64,7 +64,7 @@ public class Assert
 			return;
 
 		message += $" ({a}=={b})";
-		Fail( message );
+		Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -74,7 +74,7 @@ public class Assert
 			return;
 
 		message += $" ({a}=={b})";
-		Fail( message );
+		Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -83,13 +83,13 @@ public class Assert
 		if ( a == null )
 		{
 			if ( b != null )
-				Fail( message );
+				Fail( message, 2 );
 			return;
 		}
 		if ( a.Equals( b ) )
 			return;
 
-		Fail( message );
+		Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -99,7 +99,7 @@ public class Assert
 			return;
 
 		message += $" ({a}=={b})";
-		Fail( message );
+		Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -109,19 +109,19 @@ public class Assert
 			return;
 
 		message += $" ({a}=={b})";
-		Fail( message );
+		Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
 	public void AreNotEqual<T>(T a, T b, string message = "")
 	{
 		if ( b == null && a == null )
-			Fail( message );
+			Fail( message, 2 );
 		if ( b == null || a == null )
 			return;
 		
 		if ( a.Equals( b ) )
-			Fail( message );
+			Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -130,7 +130,7 @@ public class Assert
 		if ( Math.Abs( a - b ) < tolerance )
 			return;
 
-		Fail( message );
+		Fail( message, 2 );
 	}
 
 	[Conditional( "DEBUG" )]
@@ -146,16 +146,16 @@ public class Assert
 #endif
 	}
 
-	public void Fail( string message = "Something went wrong" )
+	public void Fail( string message = "Something went wrong", int depth = 1 )
 	{
+#if DEBUG
 		var stackTrace = new StackTrace();
-		var stackFrame = stackTrace.GetFrame( 2 );
+		var stackFrame = stackTrace.GetFrame( depth );
 		var method = stackFrame.GetMethod();
-		message = Caller( 3 ) + " : " + message;
+		message = Caller( depth + 1 ) + " : " + message;
 		if ( message != "" )
 			UnityEngine.Debug.LogAssertion( message );
 
-#if DEBUG
 		if ( boss != null && !problemSelected )
 		{
 			Selection.activeGameObject = boss.gameObject;
@@ -163,8 +163,8 @@ public class Assert
 		}
 
 		EditorApplication.isPaused = true;
-#endif
 		throw new Exception();
+#endif
 	}
 
 	string Caller( int depth )
