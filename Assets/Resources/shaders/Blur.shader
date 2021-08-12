@@ -3,6 +3,8 @@
 	Properties
 	{
 		_MainTex("Main Texture", 2D) = "white" {}
+		_OffsetX("Offset X", Float) = 0.002
+		_OffsetY("Offset Y", Float) = 0.003
 	}
 		
 	SubShader
@@ -35,7 +37,8 @@
 			};
 
 			sampler _MainTex;
-			static float offset = 0.003f;
+            float _OffsetX;
+            float _OffsetY;
 
             v2f vert (appdata v)
             {
@@ -48,10 +51,10 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float4 col = tex2D(_MainTex, i.uv);
-				col += tex2D(_MainTex, i.uv + float2(offset, -offset));
-				col += tex2D(_MainTex, i.uv + float2(offset, offset));
-				col += tex2D(_MainTex, i.uv + float2(-offset, offset));
-				col += tex2D(_MainTex, i.uv + float2(-offset, -offset));
+				col += tex2D(_MainTex, i.uv + float2(_OffsetX, -_OffsetY));
+				col += tex2D(_MainTex, i.uv + float2(_OffsetX, _OffsetY));
+				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, _OffsetY));
+				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, -_OffsetY));
 				return col * 0.2f;
             }
             ENDCG

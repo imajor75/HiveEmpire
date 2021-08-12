@@ -3,6 +3,8 @@
 	Properties
 	{
 		_MainTex("Main Texture", 2D) = "white" {}
+		_OffsetX("Offset X", Float) = 0.004
+		_OffsetY("Offset Y", Float) = 0.006
 		[IntRange] _StencilRef("Stencil Reference Value", Range(0,255)) = 0
 	}
 
@@ -42,7 +44,8 @@
 			};
 
 			sampler _MainTex;
-			static float offset = 0.007f;
+            float _OffsetX;
+            float _OffsetY;
 
             v2f vert (appdata v)
             {
@@ -55,10 +58,10 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float4 col = tex2D(_MainTex, i.uv);
-				col += tex2D(_MainTex, i.uv + float2(0, -offset));
-				col += tex2D(_MainTex, i.uv + float2(0, offset));
-				col += tex2D(_MainTex, i.uv + float2(-offset, 0));
-				col += tex2D(_MainTex, i.uv + float2(offset, 0));
+				col += tex2D(_MainTex, i.uv + float2(_OffsetX, -_OffsetY));
+				col += tex2D(_MainTex, i.uv + float2(_OffsetX, _OffsetY));
+				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, _OffsetY));
+				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, -_OffsetY));
 				return col * 0.15f;
             }
             ENDCG

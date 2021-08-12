@@ -342,6 +342,14 @@ public class CameraHighlight : HiveObject
 		RenderTexture.ReleaseTemporary( tempRT );
 	}
 
+	void Update()
+	{
+		blurMaterial.SetFloat( "_OffsetX", 1f / Screen.width );
+		blurMaterial.SetFloat( "_OffsetY", 1f / Screen.height );
+		highlightMaterial.SetFloat( "_OffsetX", 2f / Screen.width );
+		highlightMaterial.SetFloat( "_OffsetY", 2f / Screen.height );
+	}
+
 	public override Node location { get { return null; } }
 }
 
