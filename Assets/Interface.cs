@@ -1356,7 +1356,7 @@ public class Interface : OperationHandler
 				// A null reference crash happened here in map mode, so safety check
 				if ( c == null || building == null || building.node == null )
 				{
-					Assert.global.IsTrue( false );
+					Assert.global.IsTrue( false );	// TODO Triggered while the building list was open, and selecting a building type as a filter
 					return;
 				}
 				var p = c.WorldToScreenPoint( building.node.positionInViewport );
@@ -5104,8 +5104,12 @@ if ( cart )
 					{
 						foreach ( var resource in n.resources )
 						{
-
-							if ( n.owner != root.mainPlayer || !resource.underGround )
+						#if DEBUG
+						#else
+							if ( n.owner != root.mainPlayer )
+								continue;
+						#endif
+							if ( !resource.underGround )
 								continue;
 							var itemType = Resource.ItemType( resource.type );
 							var body = Item.looks.GetMediaData( itemType );
