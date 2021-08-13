@@ -303,6 +303,8 @@ public class Interface : OperationHandler
 			focusOnInputField = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
 			focusOnDropdown = EventSystem.current.currentSelectedGameObject.GetComponent<Toggle>() != null;
 		}
+		else
+			focusOnDropdown = focusOnInputField = false;
 
 #if DEBUG
 		if ( --fullValidate < 0 )
