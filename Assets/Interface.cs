@@ -1995,6 +1995,17 @@ public class Interface : OperationHandler
 			if ( workshop.gatherer && ( contentToShow & Content.resourcesLeft ) > 0 )
 			{
 				resourcesLeft = Text( "Resources left: 0" ).Pin( 20, row, 150, 20 );
+				string tooltip = workshop.type switch
+				{
+					Workshop.Type.hunter => "Hunters needs to be build around wild animal spawners, otherwise they will not able to catch anything. Animal spawners are always spawning new animals, so this is an endless resource.",
+					Workshop.Type.stonemason => "Rocks on the ground have multiple charges, but they are eventually running out. In that case the stonemason should be destroyed. Build stone mines if you need more stone.",
+					Workshop.Type.woodcutter => "If the ground is good for planting trees (brown) build a forester nearby to replant trees, that way the woodcutter will be able to work forever.",
+					Workshop.Type.forester => "",
+					Workshop.Type.farm => "If there are enough free spots around the farm, the farmer will plant and create new fields, so it will never run out of grain.",
+					Workshop.Type.fishingHut => "Fish willl never run out, it just needs time to respawn, so it is pointless to put too much fishing hut around a small lake.",
+					_ => "When an ore is mined it becomes unavailable for a while, and need some time to recharge. This time is always the same, and ores are always recharging, so ore deposits are never running out."
+				};
+				resourcesLeft.SetTooltip( tooltip );
 				if ( ( contentToShow & Content.controlIcons ) == 0 )
 					row -= 25;
 			}
@@ -2112,7 +2123,17 @@ public class Interface : OperationHandler
 				CheckNode( workshop.node );
 				foreach ( var o in Ground.areas[workshop.productionConfiguration.gatheringRange] )
 					CheckNode( workshop.node + o );
-				resourcesLeft.text = "Resources left: " + left;
+				string text = workshop.type switch
+				{
+					Workshop.Type.woodcutter => $"Trees left: {left}",
+					Workshop.Type.farm => $"Fields left: {left}",
+					Workshop.Type.forester => "",
+					Workshop.Type.stonemason => $"Rock charges left: {left}",
+					Workshop.Type.fishingHut => $"Fish left: {left}",
+					Workshop.Type.hunter => $"Wild animals left: {left}",
+					_ => $"Ore left: {left}"
+				};
+				resourcesLeft.text = text;
 			}
 			if ( changeModeImage )
 				changeModeImage.sprite = GetModeIcon();
