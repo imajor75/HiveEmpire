@@ -91,8 +91,8 @@ public class Stock : Building, Worker.Callback.IHandler
 		}
 		public int content;
 		public int onWay;
-		public int inputMax, inputMin;
-		public int outputMax, outputMin;
+		public int inputMax = Constants.Stock.defaultInputMax, inputMin = Constants.Stock.defaultInputMin;
+		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
 		public List<Route> outputRoutes = new List<Route>();
 		public CartOrder cartOrder;
 		public Stock boss;
