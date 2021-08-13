@@ -700,7 +700,7 @@ public class World : MonoBehaviour
 				var resourceCount = node.AddResourcePatch( ore.resourceType, settings.size / 6, 10 );
 				ore.resourceCount += resourceCount;
 				oreCount += resourceCount;
-				return true;
+				return resourceCount > 0;
 			}
 			Assert.global.Fail();
 			return true;

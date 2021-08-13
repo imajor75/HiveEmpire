@@ -321,7 +321,7 @@ public class Node : HiveObject
 		Resource resource = Resource.Create().Setup( this, type );
 		if ( resource && type == Resource.Type.tree )
 			resource.life.Start( -2 * Constants.Resource.treeGrowthTime );
-		return true;
+		return resource != null;
 	}
 
 	public Node Add( Ground.Offset o )
