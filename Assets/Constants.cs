@@ -14,7 +14,7 @@ public static class Constants
         public const float maxAltitude = 15.0f;
         public const float defaultViewDistance = 5.0f;
         public const float defaultViewDistanceWithDirector = 2.0f;
-        public const float forwardForGroundBlocks = 20;
+        public const float forwardForGroundBlocks = 10;
         public const float heightFollowSpeed = 0.04f;
         public const float moveSpeed = 0.1f;
         public const float rotateSpeed = 0.03f;
