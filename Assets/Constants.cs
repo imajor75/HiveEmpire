@@ -134,7 +134,7 @@ public static class Constants
 
     public static class Workshop
     {
-	    public const int mineOreRestTime = 24000;
+	    public const int mineOreRestTime = 20000;
 	    public const int fishRestTime = 16000;
 	    public const int pasturingTime = 100;
 	    public const float pasturingPrayChance = 0.2f;  
