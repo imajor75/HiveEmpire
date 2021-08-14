@@ -3962,7 +3962,8 @@ if ( cart )
 		{
 			base.Open( construction.boss, 220, 250 );
 			this.construction = construction;
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( -40, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
+			Image( Icon.house ).Pin( -60, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( OpenFinalPanel ).SetTooltip( "Open the final panel which will become actual only after the construction has been finished" );
+			Image( Icon.destroy ).PinSideways( 0, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 
 			Text( construction.boss.title ).Pin( 20, -20, 160 );
 			Text( "Under construction", 10 ).PinDownwards( 20, 0, 160 );
@@ -3998,6 +3999,23 @@ if ( cart )
 
 			if ( show )
 				root.world.eye.FocusOn( construction.boss, true );
+		}
+
+		public void OpenFinalPanel( )
+		{
+			if ( construction.boss is Stock s )
+			{
+				var p = StockPanel.Create();
+				p.reopen = true;
+				p.Open( s );
+
+			}
+			if ( construction.boss is Workshop w )
+			{
+				var p = WorkshopPanel.Create();
+				p.reopen = true;
+				p.Open( w );
+			}
 		}
 
 		public new void Update()
