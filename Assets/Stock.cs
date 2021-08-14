@@ -428,7 +428,10 @@ public class Stock : Building, Worker.Callback.IHandler
 					if ( cart.currentRoute.lastDelivery > 0 )
 					{
 						float rate = ((float)cart.itemQuantity) / ( World.instance.time - cart.currentRoute.lastDelivery );
-						cart.currentRoute.averageTransferRate = cart.currentRoute.averageTransferRate * 0.5f + rate * 0.5f;
+						if ( cart.currentRoute.averageTransferRate == 0 )
+							cart.currentRoute.averageTransferRate = rate;
+						else
+							cart.currentRoute.averageTransferRate = cart.currentRoute.averageTransferRate * 0.5f + rate * 0.5f;
 					}
 					cart.currentRoute.itemsDelivered += cart.itemQuantity;
 					cart.currentRoute.lastDelivery = World.instance.time;
