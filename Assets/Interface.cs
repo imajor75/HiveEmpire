@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1183,6 +1183,7 @@ public class Interface : OperationHandler
 		public void OnDestroy()
 		{
 			root.panels.Remove( this );
+			root.world.eye.rotateAround = false;
 		}
 
 		public void SetSize( int x, int y )
