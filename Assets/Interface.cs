@@ -324,12 +324,6 @@ public class Interface : OperationHandler
 		if ( o.y < 0 )
 			o.y += 1;
 		materialUIPath.mainTextureOffset = o;
-
-		if ( mainPlayer && mainPlayer.mainProductivity >= world.productivityGoal )
-		{
-			world.currentWinLevel = world.currentWinLevel + 1;
-			WorldProgressPanel.Create().Open( world.currentWinLevel );
-		}
 	}
 
 	static void Initialize()
@@ -5826,12 +5820,12 @@ if ( cart )
 			return new GameObject( "World Progress Panel" ).AddComponent<WorldProgressPanel>();
 		}
 
-		public void Open( World.Goal reached = World.Goal.none )
+		public void Open( World.Milestone reached = null )
 		{
-			worldStopped = reached != World.Goal.none;
+			worldStopped = reached != null;
 			noResize = true;
 			noPin = true;
-			if ( base.Open( 200, 200 ) )
+			if ( base.Open( 300, 200 ) )
 				return;
 			name = "World Progress Panel";
 			this.Pin( -200, -100, 200, 100, 0.5f, 0.5f );
@@ -5841,19 +5835,19 @@ if ( cart )
 				var t = Text();
 				t.PinDownwards( -100, 0, 200, 30, 0.5f ).AddOutline();
 				t.alignment = TextAnchor.MiddleCenter;
-				if ( reached == World.Goal.gold )
+				if ( reached.goal == World.Goal.gold )
 				{
 					t.color = Color.yellow;
 					t.text = "VICTORY!";
 				}
-				else if (reached == World.Goal.silver )
+				else if (reached.goal == World.Goal.silver )
 				{
 					t.color = Color.grey;
 					t.text = "Silver level reached";
 				}
 				else
 				{
-					Assert.global.AreEqual( reached, World.Goal.bronze );
+					Assert.global.AreEqual( reached.goal, World.Goal.bronze );
 					t.color = Color.yellow.Dark();
 					t.text = "Bronze level reached";
 				}
@@ -5863,25 +5857,31 @@ if ( cart )
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
-			if ( reached != World.Goal.gold && World.instance.currentWinLevel != World.Goal.gold )
-				Text( $"Next goal: {World.instance.productivityGoal.ToString( "n2" )} soldier/min ({World.instance.currentWinLevel+1})" ).
+			
+			if ( World.instance.currentMilestone != null )
+				Text( $"Next goal: {World.instance.currentMilestone.goal} ({World.instance.currentMilestone.ToString()})" ).
 			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
+
 			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			recordProductivity.alignment = TextAnchor.MiddleCenter;
 			currentProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			currentProductivity.alignment = TextAnchor.MiddleCenter;
 			productivityProgress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
-			this.SetSize( 300, -UIHelpers.currentRow + 30 );
+			this.SetSize( 400, -UIHelpers.currentRow + 30 );
 		}
 
 		new public void Update()
 		{
 			var t = World.instance.time;
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
-			worldTime.text = $"World time: {t / 24 / 60 / 60 / 50}:{( ( t / 60 / 60 / 50 ) % 24 ).ToString( "D2" )}:{( ( t / 60 / 50) % 60 ).ToString( "D2" )}";
+			var c = World.instance.currentMilestone;
+			worldTime.text = $"World time: {World.Timer.TimeToString( t )}";
 			recordProductivity.text = $"Record productivity: {m.record.ToString( "n2" )} soldier/min";
 			currentProductivity.text = $"Current productivity: {m.current.ToString( "n2" )} soldier/min";
-			productivityProgress.progress = m.current / World.instance.productivityGoal;
+			if ( World.instance.goalReached.inProgress ) 
+				currentProductivity.text += $" (maintain {c.productivityGoal} for {World.Timer.TimeToString( -World.instance.goalReached.age )})";
+			if ( c != null )
+				productivityProgress.progress = m.current / c.productivityGoal;
 			base.Update();
 		}
 
@@ -6061,7 +6061,7 @@ if ( cart )
 			noResize = noPin = true;
 			base.Open( 300, 200 );
 			this.PinCenter( 0, 0, 300, 200, 0.5f, 0.5f );
-			Text( $"Your goal in this game is to create an economy which produces a lot of soldiers, the first milestone is {root.world.productivityGoal}/min. " +
+			Text( $"Your goal in this game is to create an economy which produces a lot of soldiers, the first milestone is {root.world.currentMilestone.productivityGoal}/min. " +
 				$"To see an update on this, open the world progress dialog (hotkey: {root.worldProgressButton.GetHotkey().keyName}). " +
 				$"The only building you got at the beginning is your headquarters. It behaves like a stock, but you cannot destroy or move it. It also has " +
 				$"somewhat higher capacity than a normal stock (can store {Constants.Stock.defaultmaxItemsForMain} items instead of {Constants.Stock.defaultmaxItems}). " +

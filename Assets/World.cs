@@ -34,7 +34,6 @@ public class World : MonoBehaviour
 	public int time;
 	public int randomSeed;
 	public int overseas = 2;
-	public Goal currentWinLevel;
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public string fileName;
@@ -67,6 +66,8 @@ public class World : MonoBehaviour
 	float saltChance { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	float goldChance { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	Goal currentWinLevel { set {} }
 
 	public Settings settings;
 
@@ -96,6 +97,48 @@ public class World : MonoBehaviour
 		bronze,
 		silver,
 		gold
+	}
+
+	public class Milestone
+	{
+		public Goal goal;
+		public int maintain;
+		public float productivityGoal
+		{
+			get
+			{
+				var d = World.instance.ground.dimension;
+				var groundSize = d * d;
+				var goldGoal = groundSize / 512.0f;
+				if ( goal == Goal.gold )
+					return goldGoal;
+				if ( goal == Goal.silver )
+					return goldGoal * 0.75f;
+				if ( goal == Goal.bronze )
+					return goldGoal * 0.5f;
+
+				Assert.global.Fail();
+				return float.MaxValue;
+			}
+		}
+
+		public override string ToString()
+		{
+			return $"reach {productivityGoal.ToString( "N2" )} soldier/min and maintain it for {World.Timer.TimeToString( maintain )}";
+		}
+	}
+
+	public List<Milestone> milestones = new List<Milestone>();
+	public int currentMilestoneIndex;
+	public Timer goalReached;
+	public Milestone currentMilestone
+	{
+		get
+		{
+			if ( currentMilestoneIndex < milestones.Count )
+				return milestones[currentMilestoneIndex];
+			return null;
+		}
 	}
 
 	public int oreCount;
@@ -210,6 +253,21 @@ public class World : MonoBehaviour
 		time += (int)timeFactor;
 		foreach ( var player in players )
 			player.FixedUpdate();
+
+		if ( currentMilestone != null && currentMilestone.productivityGoal <= Interface.root.mainPlayer.mainProductivity )
+		{
+			if ( goalReached.empty )
+				goalReached.Start( currentMilestone.maintain );
+			if ( goalReached.done )
+			{
+				var reached = currentMilestone;
+				currentMilestoneIndex++;
+				Interface.WorldProgressPanel.Create().Open( reached );
+				goalReached.Reset();
+			}
+		}
+		else
+			goalReached.Reset();
 	}
 		
 	public void NewGame( int seed, bool keepCameraLocation = false )
@@ -220,7 +278,7 @@ public class World : MonoBehaviour
 		createRoadTutorialShowed = false;
 		overseas = 2;
 		var oldEye = eye;
-		currentWinLevel = World.Goal.none;
+		currentMilestoneIndex = 0;
 		time = 0;
 
 		Debug.Log( "Starting new game with seed " + seed );
@@ -279,6 +337,10 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
+		milestones.Add( new Milestone{ goal = Goal.bronze, maintain = 50 * 60 } );
+		milestones.Add( new Milestone{ goal = Goal.silver, maintain = 50 * 60 } );
+		milestones.Add( new Milestone{ goal = Goal.gold, maintain = 50 * 60 } );
+		milestones.Add( new Milestone{ goal = Goal.gold, maintain = 50 * 60 * 20 } );
 	}
 
     public void Load( string fileName )
@@ -739,24 +801,6 @@ public class World : MonoBehaviour
 			o.pitch = factor;
 	}
 
-	public float productivityGoal
-	{
-		get
-		{
-			var groundSize = ground.dimension * ground.dimension;
-			var goldGoal = groundSize / 512.0f;
-			if ( currentWinLevel == Goal.none )
-				return goldGoal * 0.5f;
-			if ( currentWinLevel == Goal.bronze )
-				return goldGoal * 0.75f;
-			if ( currentWinLevel == Goal.silver )				
-				return goldGoal;
-			if ( currentWinLevel == Goal.gold )
-				return float.MaxValue;
-			return goldGoal;
-		}
-	}
-
 	public static int hourTickCount { get { return (int)( 60 * 60 / UnityEngine.Time.fixedDeltaTime ); } }
 
 	public float waterLevel
@@ -805,6 +849,25 @@ public class World : MonoBehaviour
 					return 0;
 				return instance.time - reference;
 			}
+		}
+		public static string TimeToString( int time )
+		{
+			string result = "";
+			bool hasHours = false, hasDays = false;
+			if ( time >= 24*60*60*50 )
+			{
+				result = $"{time/24/60/60/50}:";
+				hasDays = true;
+			}
+			if ( time >= 50*60*60 )
+			{
+				result += $"{((time/50/60/60)%24).ToString( hasDays ? "d2" : "d1" )}:";
+				hasHours = true;
+			}
+			result += $"{((time/50/60)%60).ToString( hasHours ? "d2" : "d1" )}";
+			if ( !hasDays )
+				result += $":{((time/50)%60).ToString( "d2" )}";
+			return result;
 		}
 		public bool done { get { return !empty && age >= 0; } }
 		[SerializeField]
