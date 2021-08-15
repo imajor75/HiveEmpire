@@ -138,7 +138,7 @@ public class Resource : HiveObject
 
 		Node.Type needed = Node.Type.aboveWater;
 		if ( underGround )
-			needed = Node.Type.hill;
+			needed = Node.Type.high;
 		if ( type == Type.cornfield )
 			needed = Node.Type.grass;
 		if ( type == Type.tree )
