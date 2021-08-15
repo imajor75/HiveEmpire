@@ -2509,7 +2509,7 @@ public class Interface : OperationHandler
 
 			AreaIcon( stock.inputArea ).Link( controls ).Pin( 30, -25, 30, 30 ).name = "Input area";
 			AreaIcon( stock.outputArea ).Link( controls ).Pin( 235, -25, 30, 30 ).name = "Output area";
-			total = Text( "", 16 ).Link( controls ).Pin( 35, 75, 100, iconSize * 2, 0, 0 );
+			total = Text( "", 16 ).Link( controls ).Pin( 25, 75, 100, iconSize * 2, 0, 0 );
 			total.name = "Total";
 			total.SetTooltip( $"Total number of items in the stock, the maximum is {stock.maxItems}", null, 
 			"The total number of items can exceed the max value temporarily, but the stock won't store more items if it is full." );
@@ -2561,7 +2561,7 @@ public class Interface : OperationHandler
 				counts[i].AddClickHandler( () => SelectItemType( j ) );
 			}
 
-			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 140, 70, 100, 40, 0, 0 );
+			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 180, 70, 100, 40, 0, 0 );
 			selectedItemArea.name = "Selected item area";
 			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
 			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock\nRMB to change cart orders for this item" ).name = "Selected item";;
@@ -2581,9 +2581,11 @@ public class Interface : OperationHandler
 			cartInput = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 1, 1 ).
 			SetTooltip( "The stock will try to order items from other stocks by cart, if the number of items in this stock is less than this number", null, "LMB+drag left/right to change"  );
 			cartInput.alignment = TextAnchor.MiddleCenter;
+			cartInput.AddOutline().color = Color.white;
 			cartOutput = Text().Link( selectedItemArea ).Pin( 0, 20, 40, iconSize, 1, 0 ).
 			SetTooltip( "If the stock has more items than this number, then the cart will distribute it to other stocks if needed", null, "LMB+drag left/right to change" );
 			cartOutput.alignment = TextAnchor.MiddleCenter;
+			cartOutput.AddOutline().color = Color.white;
 			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 0, 0.7f );
 			selectedInput.color = new Color( 1, 0.75f, 0.15f );
 			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.7f );
@@ -2734,6 +2736,9 @@ public class Interface : OperationHandler
 					min = 0;
 					max = Constants.Stock.defaultmaxItems;
 					disableDrag = true;
+					var l = (int)(Constants.Stock.cartCapacity * 1.5);
+					if ( stock.itemData[t].inputMax < l )
+						stock.itemData[t].inputMax = l;
 				}
 				if ( g == cartOutput.gameObject )
 				{
@@ -2742,6 +2747,9 @@ public class Interface : OperationHandler
 					min = 0;
 					max = Constants.Stock.defaultmaxItems;
 					disableDrag = true;
+					var l = (int)(Constants.Stock.cartCapacity * 1.5);
+					if ( stock.itemData[t].inputMax < l )
+						stock.itemData[t].inputMax = l;
 				}
 			}
 

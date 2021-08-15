@@ -157,7 +157,6 @@ public class Stock : Building, Worker.Callback.IHandler
 			newRoute.end = destination;
 			newRoute.itemType = itemType;
 			outputRoutes.Add( newRoute );
-			destination.itemData[itemTypeIndex].inputMax = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.itemData[itemTypeIndex].inputMax );	// Here?
 			return newRoute;
 		}
 
