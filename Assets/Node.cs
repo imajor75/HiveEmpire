@@ -404,8 +404,10 @@ public class Node : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
+		#if DEBUG
 		Interface.root.viewport.nodeInfoToShow = Interface.Viewport.OverlayInfoType.none;
 		Interface.NodePanel.Create().Open( this, show );
+		#endif
 	}
 
 	public bool CheckType( Type type )
