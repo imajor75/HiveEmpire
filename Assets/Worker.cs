@@ -1175,7 +1175,9 @@ public class Worker : HiveObject
 		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
 		arrowObject.transform.SetParent( transform, false );
-		arrowObject.AddComponent<SpriteRenderer>().sprite = arrowSprite;
+		var sr = arrowObject.AddComponent<SpriteRenderer>();
+		sr.sprite = arrowSprite;
+		sr.color = new Color( 1, 0.75f, 0.15f );
 		arrowObject.transform.localScale = Vector3.one * 0.4f;
 
 		itemOnMap = new GameObject().AddComponent<SpriteRenderer>();

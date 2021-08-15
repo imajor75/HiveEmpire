@@ -337,7 +337,7 @@ public class World : MonoBehaviour
 				o.flagDirection = o.node.DirectionTo( o.flag.node );
 				if ( o is Workshop s )
 				{
-					if ( s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
+					if ( s.worker && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
 						s.working = false;
 					if ( s.outputPriority == ItemDispatcher.Priority.stock )
 						s.outputPriority = ItemDispatcher.Priority.low;

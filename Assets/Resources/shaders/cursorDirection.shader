@@ -50,6 +50,7 @@ Shader "Unlit/cursorDirection"
             {
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
+                col *= fixed4( 1, 0.75, 0.15, 1 );
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;

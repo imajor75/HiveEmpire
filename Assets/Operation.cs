@@ -123,16 +123,6 @@ public class OperationHandler : HiveObject
         ExecuteOperation( Operation.Create().SetupAsChangePriority( route, direction ) );
     }
 
-    public void ExecuteRemoveRoute( Stock.Route route )
-    {
-        ExecuteOperation( Operation.Create().SetupAsRemoveRoute( route ) );
-    }
-
-    public void ExecuteCreateRoute( Stock start, Stock end, Item.Type itemType )
-    {
-        ExecuteOperation( Operation.Create().SetupAsCreateRoute( start, end, itemType ) );
-    }
-
     public void ExecuteMoveRoad( Road road, int index, int direction )
     {
         ExecuteOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ) );
@@ -179,8 +169,6 @@ public class Operation : ScriptableObject
         changeArea,
         moveFlag,
         changeRoutePriority,
-        removeRoute,
-        createRoute,
         moveRoad
     }
 
@@ -279,24 +267,6 @@ public class Operation : ScriptableObject
         this.route = route;
         this.direction = direction;
         name = "Change Route Priority";
-        return this;
-    }
-
-    public Operation SetupAsRemoveRoute( Stock.Route route )
-    {
-        type = Type.removeRoute;
-        this.route = route;
-        name = "Remove Route";
-        return this;
-    }
-
-    public Operation SetupAsCreateRoute( Stock start, Stock end, Item.Type itemType )
-    {
-        type = Type.createRoute;
-        this.start = start;
-        this.end = end;
-        this.itemType = itemType;
-        name = "Create Route";
         return this;
     }
 
@@ -419,24 +389,6 @@ public class Operation : ScriptableObject
                 route.priority += direction;
                 route.start.owner.UpdateStockRoutes( route.itemType );
                 direction *= -1;
-                break;
-            }
-            case Type.removeRoute:
-            {
-                if ( route == null )
-                    return null;
-                SetupAsCreateRoute( route.start, route.end, route.itemType );
-                route.Remove();
-                route.start.owner.UpdateStockRoutes( route.itemType );
-                break;
-            }
-            case Type.createRoute:
-            {
-                if ( start == null || end == null )
-                    return null;
-                var newRoute = start.itemData[(int)itemType].AddNewRoute( end );
-                SetupAsRemoveRoute( newRoute );
-                route.start.owner.UpdateStockRoutes( route.itemType );
                 break;
             }
             case Type.moveRoad:

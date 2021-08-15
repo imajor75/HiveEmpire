@@ -113,6 +113,8 @@ public static class Constants
 	    public const int defaultInputMax = 0;
 	    public const int defaultOutputMin = 0;
 	    public const int defaultOutputMax = 50;
+	    public const int defaultCartInput = 0;
+	    public const int defaultCartOutput = 0;
         public const int plankNeeded = 3;
         public const int stoneNeeded = 3;
         public const bool flatteningNeeded = true;

@@ -93,10 +93,32 @@ public class Stock : Building, Worker.Callback.IHandler
 		public int onWay;
 		public int inputMax = Constants.Stock.defaultInputMax, inputMin = Constants.Stock.defaultInputMin;
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
+		public int cartOutput = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
 		public List<Route> outputRoutes = new List<Route>();
-		public CartOrder cartOrder;
 		public Stock boss;
 		public Item.Type itemType;
+
+		[Obsolete( "Compatibility with old files", true )]
+		CartOrder cartOrder
+		{
+			set
+			{
+				cartInput = value switch
+				{
+					CartOrder.getHigh => 15,
+					CartOrder.getMedium => 10,
+					CartOrder.getLow => 5,
+					_ => 0
+				};
+				cartOutput = value switch
+				{
+					CartOrder.offerHigh => Constants.Stock.cartCapacity + 0,
+					CartOrder.offerMedium => Constants.Stock.cartCapacity + 5,
+					CartOrder.offerLow => Constants.Stock.cartCapacity + 10,
+					_ => 0
+				};
+			}
+		}
 
 		public void UpdateRoutes()
 		{
@@ -104,7 +126,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			for ( int i = 0; i < outputRoutes.Count; )
 			{
 				var route = outputRoutes[i];
-				if ( route.type == Route.Type.automatic && ( route.start.itemData[typeIndex].cartOrder <= ItemTypeData.CartOrder.ignore || route.end.itemData[typeIndex].cartOrder >= ItemTypeData.CartOrder.ignore ) )
+				if ( route.start.itemData[typeIndex].cartOutput < Constants.Stock.cartCapacity || route.end.itemData[typeIndex].cartInput == 0 )
 					route.Remove();
 				else
 					i++;
@@ -114,53 +136,29 @@ public class Stock : Building, Worker.Callback.IHandler
 			{
 				if ( stock == boss )
 					continue;
-				if ( cartOrder > ItemTypeData.CartOrder.ignore && stock.itemData[typeIndex].cartOrder < ItemTypeData.CartOrder.ignore )
-				{
-					var route = AddNewRoute( stock, Route.Type.automatic );
-					if ( route != null && route.type == Route.Type.automatic )
-						route.priority = (int)( cartOrder ) + (int)( stock.itemData[typeIndex].cartOrder );
-				}
+				if ( cartOutput >= Constants.Stock.cartCapacity && stock.itemData[typeIndex].cartInput > 0 )
+					AddNewRoute( stock );
 			}	
 
 			outputRoutes.Sort( (x, y) => y.priority.CompareTo( x.priority ) );
 		}
 
-		public Route AddNewRoute( Stock destination, Route.Type type = Route.Type.manual )
+		public Route AddNewRoute( Stock destination )
 		{
 			var itemTypeIndex = (int)itemType;
 			foreach ( var route in outputRoutes )
 			{
 				if ( route.end == destination && route.itemType == itemType )
-				{
-					if ( route.type == Route.Type.automatic )
-					{
-						route.type = type;
-						return route;
-					}
-					else
-						return null;
-				}
+					return route;
 			}
 
 			var newRoute = new Route();
 			newRoute.start = boss;
 			newRoute.end = destination;
 			newRoute.itemType = itemType;
-			newRoute.type = type;
 			outputRoutes.Add( newRoute );
 			destination.itemData[itemTypeIndex].inputMax = Math.Max( (int)( Constants.Stock.cartCapacity * 1.5f ), destination.itemData[itemTypeIndex].inputMax );	// Here?
 			return newRoute;
-		}
-
-		public bool hasManualRoute
-		{
-			get
-			{
-				foreach ( var route in outputRoutes )
-					if ( route.type == Route.Type.manual )
-						return true;
-				return false;
-			}
 		}
 
 		public enum CartOrder
@@ -187,7 +185,6 @@ public class Stock : Building, Worker.Callback.IHandler
 		public float averageTransferRate;
 		public State state;
 		public int priority;
-		public Type type;
 
 		public enum State
 		{
@@ -208,6 +205,8 @@ public class Stock : Building, Worker.Callback.IHandler
 
 		[Obsolete( "Compatibility with old files", true )]
 		float averateTransferRate { set { averageTransferRate = value; } }
+		[Obsolete( "Compatibility with old files", true )]
+		Type type { set {} }
 
 		public int itemsDelivered;
 
@@ -251,6 +250,22 @@ public class Stock : Building, Worker.Callback.IHandler
 			}
 			state = State.unknown;
 			return true;
+		}
+
+		public ItemTypeData endData
+		{
+			get
+			{
+				return end.itemData[(int)itemType];
+			}
+		}
+
+		public ItemTypeData startData
+		{
+			get
+			{
+				return start.itemData[(int)itemType];
+			}
 		}
 	}
 
@@ -507,7 +522,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		return this;
 	}
 
-	public List<Route> GetInputRoutes( Item.Type itemType, bool manualOnly = false )
+	public List<Route> GetInputRoutes( Item.Type itemType )
 	{
 		int typeIndex = (int)itemType;
 		List<Route> list = new List<Route>();
@@ -517,24 +532,11 @@ public class Stock : Building, Worker.Callback.IHandler
 				continue;
 			foreach ( var r in stock.itemData[typeIndex].outputRoutes )
 			{
-				if ( r.end == this && ( !manualOnly || r.type == Route.Type.manual ) )
+				if ( r.end == this )
 					list.Add( r );
 			}
 		}
 		return list;
-	}
-
-	public List<Route> GetOutputRoutes( Item.Type itemType, bool manualOnly = false )
-	{
-		int typeIndex = (int)itemType;
-		List<Route> list = new List<Route>();
-		foreach ( var r in itemData[typeIndex].outputRoutes )
-		{
-			if ( !manualOnly || r.type == Route.Type.manual )
-				list.Add( r );
-		}
-		return list;
-
 	}
 
 	public override bool Remove( bool takeYourTime )
