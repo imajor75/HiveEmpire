@@ -218,7 +218,8 @@ public class Interface : OperationHandler
 		key,
 		pause,
 		play,
-		fast
+		fast,
+		stock
 	}
 
 
@@ -460,7 +461,7 @@ public class Interface : OperationHandler
 		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
 		hotkeyButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
 
-		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F6 );
+		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
 		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetTimeFactor( 0 ) ).Link( this ).Pin( -150, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
@@ -4784,7 +4785,7 @@ if ( cart )
 			redCrossOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
 			redCrossOnGround.mainTexture = Resources.Load<Texture>( "icons/redCross" );
 
-			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -200, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.F1 );
+			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -240, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.F1 );
 			showGridButton.SetTooltip( () => $"Show grid (hotkey: {showGridButton.GetHotkey().keyName})" );
 			var showNodeButton = this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show node at cursor", KeyCode.F2 );
 			showNodeButton.SetTooltip( () => $"Show node at cursor (hotkey: {showNodeButton.GetHotkey().keyName})" );
@@ -4794,6 +4795,8 @@ if ( cart )
 			showUndergroundResourcesButton.SetTooltip( () => $"Show underground resources (hotkey: {showUndergroundResourcesButton.GetHotkey().keyName})" );
 			var showStockContentButton = this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.F5 );
 			showStockContentButton.SetTooltip( () => $"Show stock contents (hotkey: {showStockContentButton.GetHotkey().keyName})" );
+			var showStocksButton = this.Image( Icon.stock ).AddToggleHandler( HighlightStocks ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Highlight stocks", KeyCode.F6 );
+			showStocksButton.SetTooltip( () => $"Show stocks (hotkey: {showStocksButton.GetHotkey().keyName})" );
 			root.LoadHotkeys();
 
 			arrowMaterial = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
@@ -4814,6 +4817,23 @@ if ( cart )
 		void ShowStockContent( bool state )
 		{
 			nodeInfoToShow = state ? OverlayInfoType.stockContent : OverlayInfoType.none;
+		}
+
+		void HighlightStocks( bool state )
+		{
+			if ( state )
+			{
+				root.highlightType = HighlightType.buildingType;
+				root.highlightOwner = gameObject;
+				root.highlightBuildingTypes.Clear();
+				root.highlightBuildingTypes.Add( Building.Type.headquarters );
+				root.highlightBuildingTypes.Add( Building.Type.stock );
+			}
+			else
+			{
+				if ( root.highlightOwner == gameObject )
+					root.highlightType = HighlightType.none;
+			}
 		}
 
 		public bool ResetInputHandler()
