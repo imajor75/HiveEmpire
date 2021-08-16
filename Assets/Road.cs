@@ -550,69 +550,16 @@ public class Road : HiveObject, Interface.IInputHandler
 			forget = end - 2 - start;
 		}
 
-		for ( int i = splitPoint; i > splitPoint - forget; i-- )
-			workerAtNodes[i]?.LeaveExclusivity();
-
-		Road first = Create(), second = Create();
-		first.owner = second.owner = owner;	
-		first.nodes = nodes.GetRange( 0, splitPoint + 1 - forget );
-		first.workerAtNodes = workerAtNodes.GetRange( 0, splitPoint + 1 - forget );
-		second.nodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
-		second.workerAtNodes = workerAtNodes.GetRange( splitPoint, workerAtNodes.Count - splitPoint );
-		second.workerAtNodes[0] = null;
+		var firstNodes = nodes.GetRange( 0, splitPoint + 1 - forget );
+		var secondNodes = nodes.GetRange( splitPoint, nodes.Count - splitPoint );
 		if ( external )
 		{
-			first.nodes.Add( flag.node );
-			first.workerAtNodes.Add( null );
-			second.nodes[0] = flag.node;
+			firstNodes.Add( flag.node );
+			secondNodes[0] = flag.node;
 		}
 
-		foreach ( var worker in workers )
-        {
-			// TODO What if worker is not yet exclusiveMode?
-			int workerPoint = worker.IndexOnRoad();
-			if ( worker.exclusiveMode )
-			{
-				if ( flag.node == worker.node )
-				{
-					assert.IsFalse( external );
-					assert.AreEqual( workerPoint, splitPoint ); // TODO Triggered
-				}
-				if ( !external )
-					assert.AreNotEqual( workerPoint, -1 );
-				if ( splitPoint == workerPoint && !external )
-				{
-					flag.user = worker;
-					worker.exclusiveFlag = flag;
-				}
-			}
-			if ( workerPoint <= splitPoint )
-			{
-				first.workers.Add( worker );
-				worker.road = first;
-			}
-			else
-			{
-				second.workers.Add( worker );
-				worker.road = second;
-			}
-			worker.ResetTasks();
-		}
+		SplitNodeList( firstNodes, secondNodes );
 
-		UnregisterOnGround();
-		first.RegisterOnGround();
-		second.RegisterOnGround();
-
-		if ( first.workers.Count == 0 )
-			first.CallNewWorker();
-		if ( second.workers.Count == 0 )
-			second.CallNewWorker();
-
-		invalid = true;
-		DestroyThis();
-
-		first.Validate( false );
-		second.Validate( false );
 		flag.Validate( false );
 
 		owner.versionedRoadNetworkChanged.Trigger();
@@ -900,10 +847,15 @@ public class Road : HiveObject, Interface.IInputHandler
 		Interface.RoadPanel.Create().Open( this, centerNode );
 	}
 
-	public void ReassignWorkersTo( Road another )
+	public void ReassignWorkersTo( Road another, Road second = null )
 	{
 		while ( another.workerAtNodes.Count < another.nodes.Count )
 			another.workerAtNodes.Add( null );
+		if ( second )
+		{
+			while ( second.workerAtNodes.Count < second.nodes.Count )
+				second.workerAtNodes.Add( null );
+		}
 
 		List<Worker> workersToMove = new List<Worker>();
 		foreach ( var worker in workerAtNodes )
@@ -915,18 +867,25 @@ public class Road : HiveObject, Interface.IInputHandler
 			var node = worker.LeaveExclusivity();
 			if ( worker.EnterExclusivity( another, node ) )
 			{
+				worker.road = another;
 				if ( worker.type == Worker.Type.hauler )	// Can be a cart
-				{
-					worker.road = another;
 					another.workers.Add( worker );
-				}
 			}
 			else
 			{
-				if ( worker.type == Worker.Type.hauler)
-					worker.type = Worker.Type.unemployed;
+				if ( second && worker.EnterExclusivity( second, node ) )
+				{
+					second.workers.Add( worker );
+					if ( worker.type == Worker.Type.hauler )	// Can be a cart
+						worker.road = second;
+				}
 				else
-					worker.assert.AreEqual( worker.type, Worker.Type.cart );
+				{
+					if ( worker.type == Worker.Type.hauler)
+						worker.type = Worker.Type.unemployed;
+					else
+						worker.assert.AreEqual( worker.type, Worker.Type.cart );
+				}
 			}
 			worker.ResetTasks();
 		}
@@ -940,14 +899,22 @@ public class Road : HiveObject, Interface.IInputHandler
 		workers[0].Reset();
 	}
 
-	public Road ChangeNodeList( List<Node> nodes )
+	public Road SplitNodeList( List<Node> nodes, List<Node> secondNodes = null )
 	{
-		Road newRoad = Create();
+		Road newRoad = Create(), secondRoad = null;
 		newRoad.owner = owner;
 		newRoad.nodes = nodes;
-		ReassignWorkersTo( newRoad );
+		if ( secondNodes != null )
+		{
+			secondRoad = Create();
+			secondRoad.owner = owner;
+			secondRoad.nodes = secondNodes;
+		}
+	
+		ReassignWorkersTo( newRoad, secondRoad );
 		Remove( false );
 		newRoad.RegisterOnGround();
+		secondRoad?.RegisterOnGround();
 		return newRoad;
 	}
 
@@ -996,7 +963,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( deleteBefore )
 			newNodes.RemoveAt( nodeIndex-1 );
 
-		return ChangeNodeList( newNodes );
+		return SplitNodeList( newNodes );
 	}
 
 	public override Node location

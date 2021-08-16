@@ -468,7 +468,7 @@ public class Flag : HiveObject
 				else
 					newNodes.Insert( 0, addition );
 			}
-			road.ChangeNodeList( newNodes );
+			road.SplitNodeList( newNodes );
 		}
 
 		node.flag = null;
