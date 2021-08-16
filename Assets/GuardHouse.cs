@@ -12,6 +12,7 @@ public class GuardHouse : Building
 	public bool ready;
 	public static GameObject template;
 	static readonly Configuration guardHouseConfiguration = new Configuration();
+	bool removing;
 
 	public static new void Initialize()
 	{
@@ -82,6 +83,10 @@ public class GuardHouse : Building
 
 	public override bool Remove( bool takeYourTime )
 	{
+		if ( removing )
+			return true;
+
+		removing = true;
 		owner.UnregisterInfuence( this );
 		return base.Remove( takeYourTime );
 	}

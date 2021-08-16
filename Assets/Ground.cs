@@ -328,6 +328,13 @@ public class Ground : HiveObject
 						node.borders[j] = BorderEdge.Create().Setup( node, j );
 				}
 			}
+
+			if ( node.building && node.building.owner != node.owner )
+				node.building.Remove( false );
+			if ( node.flag && node.flag.owner != node.owner )
+				node.flag.Remove( false );
+			if ( node.road && node.road.owner != node.owner )
+				node.road.Remove( false );
 		}
 	}
 
