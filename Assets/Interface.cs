@@ -2572,12 +2572,12 @@ public class Interface : OperationHandler
 			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks", null, "LMB+drag left/right to change" );
 			outputMax.alignment = TextAnchor.MiddleCenter;
 			Image( Icon.cart ).Link( selectedItemArea ).PinCenter( 20, 0, iconSize * 2, iconSize * 2, 1, 0.5f );
-			cartInput = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 1, 1 ).
-			SetTooltip( "The stock will try to order items from other stocks by cart, if the number of items in this stock is less than this number", null, "LMB+drag left/right to change"  );
+			cartInput = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 1, 1 ).AddClickHandler( () => StartCart( true ), UIHelpers.ClickType.right ).
+			SetTooltip( "The stock will try to order items from other stocks by cart, if the number of items in this stock is less than this number", null, "LMB+drag left/right to change\nRMB to set a value which start the route" );
 			cartInput.alignment = TextAnchor.MiddleCenter;
 			cartInput.AddOutline().color = Color.white;
-			cartOutput = Text().Link( selectedItemArea ).Pin( 0, 20, 40, iconSize, 1, 0 ).
-			SetTooltip( "If the stock has more items than this number, then the cart will distribute it to other stocks if needed", null, "LMB+drag left/right to change" );
+			cartOutput = Text().Link( selectedItemArea ).Pin( 0, 20, 40, iconSize, 1, 0 ).AddClickHandler( () => StartCart( false ), UIHelpers.ClickType.right ).
+			SetTooltip( "If the stock has more items than this number, then the cart will distribute it to other stocks if needed", null, "LMB+drag left/right to change\nRMB to set a value which start the route" );
 			cartOutput.alignment = TextAnchor.MiddleCenter;
 			cartOutput.AddOutline().color = Color.white;
 			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 0, 0.7f );
@@ -2589,14 +2589,13 @@ public class Interface : OperationHandler
 			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).SetTooltip( "Show the cart of the stock", null, 
 			$"Every stock has a cart which can transport {Constants.Stock.cartCapacity} items at the same time. " +
 			"For optimal performance the cart should be used for long range transport, haulers should be restricted by areas only to short range local transport. " +
-			"Carts are not automatically distribute the items, you have to specify routes between stocks first. Open the routes panel to see more details." ).name = "Show cart";
+			"To utilize carts, you have to increase either the cart input or cart output numbers. Select an item type and look for the two numbers above the cart icon on the bottom." ).name = "Show cart";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
 			UpdateRouteIcons();
 		}
 
 		void ItemTypeAction( ItemImage image, Item.Type itemType, int code )
 		{
-			print( code );
 			switch ( code )
 			{
 				case 0:
@@ -2766,6 +2765,24 @@ public class Interface : OperationHandler
 					limitChanger = null;
 				}
 			}
+		}
+
+		void StartCart( bool input )
+		{
+			var t = stock.itemData[(int)selectedItemType];
+			var l = (int)( Constants.Stock.cartCapacity * 1.5 );
+			if ( input )
+			{
+				if ( t.cartInput == 0 )
+					t.cartInput = 5;
+			}
+			else
+			{
+				if ( t.cartOutput == 0 )
+					t.cartOutput = Constants.Stock.cartCapacity;
+			}
+			if ( t.inputMax < l )
+				t.inputMax = l;
 		}
 	}
 

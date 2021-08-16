@@ -2082,6 +2082,10 @@ public class Worker : HiveObject
 		if ( exclusiveMode )
 		{
 			assert.IsValid( road );			// TODO Triggered when stress deleting all the roads flags and buildings on a map for a cart (?) going back home
+											// TODO Triggered again when pressing the magnet icon on a flag. Worker is a cart which was rolling on the road which was merged to the flag by the magnet
+											// The cart is just walking to the end of the road (an unaffected flag) the segment between walkTo and walkFrom is not affected by the magnet
+											// It is in an exclusive mode, exclusiveFlag is correct, but the road field is referring to the old deleted road. The new road correctly has the card in the
+											// workerAtNodes array
 			if ( type == Type.hauler )
 				assert.IsTrue( road.workers.Contains( this ) );
 			int point = road.NodeIndex( node );
