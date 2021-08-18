@@ -5862,7 +5862,7 @@ if ( cart )
 	{
 		Text worldTime, currentProductivity, recordProductivity, maintain, timeLeft;
 
-		ProgressBar productivityProgress;
+		ProgressBar progress;
 		float originalSpeed = -1;
 		bool worldStopped;
 
@@ -5925,7 +5925,7 @@ if ( cart )
 				timeLeft = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				timeLeft.alignment = TextAnchor.MiddleCenter;
 			}
-			productivityProgress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
+			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			this.SetSize( 400, -UIHelpers.currentRow + 30 );
 		}
 
@@ -5970,6 +5970,7 @@ if ( cart )
 				GoalLeft( World.Goal.silver, 4f/3 );
 				GoalLeft( World.Goal.gold, 1 );
 			}
+			progress.progress = challenge.progress;
 			base.Update();
 		}
 

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -135,6 +135,7 @@ public class World : MonoBehaviour
 		public bool randomSeed;
 		public int seed;
 		public Timer maintainBronze, maintainSilver, maintainGold;
+		public float progress;
 		public Timer life;
 		public List<float> productivityGoals;
 		public int timeLimit;
@@ -161,6 +162,7 @@ public class World : MonoBehaviour
 		{
 			var player = Interface.root.mainPlayer;
 			var currentLevel = Goal.gold;
+			progress = 1;
 
 			void CheckCondition( float current, float limit, bool reversed = false )
 			{
@@ -169,6 +171,7 @@ public class World : MonoBehaviour
 				if ( current < limit * 0.01f )
 				{
 					currentLevel = Goal.none;
+					progress = 0;
 					return;
 				}
 				if ( reversed )
@@ -176,18 +179,27 @@ public class World : MonoBehaviour
 					current = 1 / current;
 					limit = 1 / limit;
 				}
-				if ( current < limit && currentLevel > Goal.silver )
+				var localProgress = current / limit;
+				if ( localProgress < 1 && currentLevel > Goal.silver )
 					currentLevel = Goal.silver;
-				if ( current < limit * 0.75f && currentLevel > Goal.bronze )
+				if ( localProgress < 0.75f && currentLevel > Goal.bronze )
 					currentLevel = Goal.bronze;
-				if ( current < limit * 0.5f && currentLevel > Goal.none )
+				if ( localProgress < 0.5f && currentLevel > Goal.none )
 					currentLevel = Goal.none;
+				if ( progress > localProgress && !reversed )
+					progress = localProgress;
 			}
 
 			if ( productivityGoals != null )
 			{
-				for ( int i = 0; i < (int)Item.Type.total; i++ )
+				for ( int i = 0; i < productivityGoals.Count; i++ )
 					CheckCondition( player.itemProductivityHistory[i].current, productivityGoals[i] );
+			}
+
+			if ( mainBuildingContent != null )
+			{
+				for ( int i = 0; i < mainBuildingContent.Count; i++ )
+					CheckCondition( player.mainBuilding.itemData[i].content, mainBuildingContent[i] );
 			}
 
 			if ( timeLimit > 0 )
