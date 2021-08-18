@@ -66,7 +66,7 @@ public class Serializer : JsonSerializer
 		if ( type == typeof( World ) )
 			return World.instance;
 		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
-			return CreateSceneObject( type ) as HiveObject;
+			return CreateSceneObject( type ) as MonoBehaviour;
 		if ( typeof( ScriptableObject ).IsAssignableFrom( type ) )
 		{
 			if ( scriptableObjectCreator == null )
@@ -138,10 +138,11 @@ public class Serializer : JsonSerializer
 		Assert.global.IsTrue( i != null || p != null, $"No field with the name {name} found in {type.FullName}" );
 		reader.Read();
 
+		var target = Object();
 		if ( p != null && ( i == null || p.DeclaringType.IsSubclassOf( i.DeclaringType ) ) )
-			p.SetValue( Object(), ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
+			p.SetValue( target, ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
 		else
-			i.SetValue( Object(), ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
+			i.SetValue( target, ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
 	}
 
 	object ProcessFieldValue( Type type, string owner )

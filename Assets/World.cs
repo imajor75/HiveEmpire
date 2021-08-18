@@ -128,18 +128,69 @@ public class World : MonoBehaviour
 		}
 	}
 
-	public List<Milestone> milestones = new List<Milestone>();
-	public int currentMilestoneIndex;
-	public Timer goalReached;
-	public Milestone currentMilestone
+	public class Challenge : MonoBehaviour
 	{
-		get
+		public Goal reachedLevel = Goal.none;
+		public int maintain;
+		public bool randomSeed;
+		public int seed;
+		public float soldierProductivityGoal;
+		public Timer maintainBronze, maintainSilver, maintainGold;
+
+		public static Challenge Create()
 		{
-			if ( currentMilestoneIndex < milestones.Count )
-				return milestones[currentMilestoneIndex];
-			return null;
+			return new GameObject( "Challenge" ).AddComponent<Challenge>();
+		}
+
+		void Start()
+		{
+			transform.SetParent( World.instance.transform );
+		}
+
+		void FixedUpdate()
+		{
+			var player = Interface.root.mainPlayer;
+			var currentLevel = Goal.none;
+			if ( player.mainProductivity >= soldierProductivityGoal * 0.5f )
+				currentLevel = Goal.bronze;
+			if ( player.mainProductivity >= soldierProductivityGoal * 0.75f )
+				currentLevel = Goal.silver;
+			if ( player.mainProductivity >= soldierProductivityGoal )
+				currentLevel = Goal.gold;
+
+			void CheckGoal( Goal goal, ref Timer timer )
+			{
+				if ( reachedLevel >= goal )
+					return;
+				if ( currentLevel >= goal )
+				{
+					if ( timer.empty )
+						timer.Start( maintain );
+					if ( timer.done )
+					{
+						Interface.root.OnGoalReached( goal );
+						reachedLevel = goal;
+						return;
+					}
+				}
+				else
+					timer.Reset();
+			}
+
+			CheckGoal( Goal.gold, ref maintainGold );
+			CheckGoal( Goal.silver, ref maintainSilver );
+			CheckGoal( Goal.bronze, ref maintainBronze );
 		}
 	}
+
+	[Obsolete( "Compatibility with old files", true )]
+	List<Milestone> milestones { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int currentMilestoneIndex { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	Timer goalReached { set {} }
+
+	public Challenge challenge;
 
 	public int oreCount;
 	public List<Ore> ores = new List<Ore>();
@@ -246,41 +297,32 @@ public class World : MonoBehaviour
 		if ( settings.apply )
 		{
 			settings.apply = false;
-			instance.NewGame( instance.currentSeed, true );
+			var c = instance.challenge;
+			c.randomSeed = false;
+			c.seed = instance.currentSeed;
+			instance.NewGame( instance.challenge, true );
 			Interface.root.mainPlayer = instance.players[0];
 		}
 		massDestroy = false;
 		time += (int)timeFactor;
 		foreach ( var player in players )
 			player.FixedUpdate();
-
-		if ( currentMilestone != null && currentMilestone.productivityGoal <= Interface.root.mainPlayer.mainProductivity )
-		{
-			if ( goalReached.empty )
-				goalReached.Start( currentMilestone.maintain );
-			if ( goalReached.done )
-			{
-				var reached = currentMilestone;
-				currentMilestoneIndex++;
-				Interface.WorldProgressPanel.Create().Open( reached );
-				goalReached.Reset();
-			}
-		}
-		else
-			goalReached.Reset();
 	}
 		
-	public void NewGame( int seed, bool keepCameraLocation = false )
+	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
+		this.challenge = challenge;
 		SetTimeFactor( 1 );
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
 		overseas = 2;
 		var oldEye = eye;
-		currentMilestoneIndex = 0;
 		time = 0;
 
+		var seed = challenge.seed;
+		if ( challenge.randomSeed )
+			seed = rnd.Next();
 		Debug.Log( "Starting new game with seed " + seed );
 
 		rnd = new System.Random( seed );
@@ -337,10 +379,6 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
-		milestones.Add( new Milestone{ goal = Goal.bronze, maintain = 50 * 60 } );
-		milestones.Add( new Milestone{ goal = Goal.silver, maintain = 50 * 60 } );
-		milestones.Add( new Milestone{ goal = Goal.gold, maintain = 50 * 60 } );
-		milestones.Add( new Milestone{ goal = Goal.gold, maintain = 50 * 60 * 20 } );
 	}
 
     public void Load( string fileName )
@@ -348,12 +386,20 @@ public class World : MonoBehaviour
    		Clear();
 		Prepare();
 		Interface.ValidateAll();
+		challenge = null;
 
 		World world = Serializer.Read<World>( fileName );
 		Assert.global.AreEqual( world, this );
 		this.fileName = fileName;
 
 		rnd = new System.Random( randomSeed );
+
+		if ( !challenge )
+		{
+			challenge = Challenge.Create();
+			challenge.soldierProductivityGoal = 2;
+			challenge.maintain = 50 * 60;
+		}
 
 		foreach ( var player in players )
 			player.Start();

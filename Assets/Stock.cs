@@ -61,21 +61,21 @@ public class Stock : Building, Worker.Callback.IHandler
 		}
 	}
 
-	[Obsolete( "Compatibility with old files", false )]
+	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> content;
-	[Obsolete( "Compatibility with old files", false )]
+	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> onWay;
-	[Obsolete( "Compatibility with old files", false )]
+	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> inputMin;
-	[Obsolete( "Compatibility with old files", false )]
+	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> inputMax;
-	[Obsolete( "Compatibility with old files", false )]
+	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> outputMin;
-	[Obsolete( "Compatibility with old files", false )]
+	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> outputMax;
-	[Obsolete( "Compatibility with old files", false )]
+	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<List<Route>> outputRoutes;
-	[Obsolete( "Compatibility with old files", true )]
+	[Obsolete( "Compatibility with old files", true ), JsonIgnore]
 	public Versioned outputRouteVersion;
 
 	[Serializable]

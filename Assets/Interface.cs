@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -489,7 +489,10 @@ public class Interface : OperationHandler
 
 	void NewGame( int seed )
 	{
-		world.NewGame( seed );
+		var challenge = World.Challenge.Create();
+		challenge.soldierProductivityGoal = 2;
+		challenge.maintain = 50 * 60;
+		world.NewGame( challenge );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
 		else
@@ -536,6 +539,11 @@ public class Interface : OperationHandler
 			else
 				list[i].CopyTo( list[i+1] );
 		}
+	}
+
+	public void OnGoalReached( World.Goal goal )
+	{
+		WorldProgressPanel.Create().Open( goal );
 	}
 
 	public void Update()
@@ -5857,9 +5865,9 @@ if ( cart )
 			return new GameObject( "World Progress Panel" ).AddComponent<WorldProgressPanel>();
 		}
 
-		public void Open( World.Milestone reached = null )
+		public void Open( World.Goal reached = World.Goal.none )
 		{
-			worldStopped = reached != null;
+			worldStopped = reached != World.Goal.none;
 			noResize = true;
 			noPin = true;
 			if ( base.Open( 300, 200 ) )
@@ -5872,19 +5880,19 @@ if ( cart )
 				var t = Text();
 				t.PinDownwards( -100, 0, 200, 30, 0.5f ).AddOutline();
 				t.alignment = TextAnchor.MiddleCenter;
-				if ( reached.goal == World.Goal.gold )
+				if ( reached == World.Goal.gold )
 				{
 					t.color = Color.yellow;
 					t.text = "VICTORY!";
 				}
-				else if (reached.goal == World.Goal.silver )
+				else if (reached == World.Goal.silver )
 				{
 					t.color = Color.grey;
 					t.text = "Silver level reached";
 				}
 				else
 				{
-					Assert.global.AreEqual( reached.goal, World.Goal.bronze );
+					Assert.global.AreEqual( reached, World.Goal.bronze );
 					t.color = Color.yellow.Dark();
 					t.text = "Bronze level reached";
 				}
@@ -5895,10 +5903,6 @@ if ( cart )
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			
-			if ( World.instance.currentMilestone != null )
-				Text( $"Next goal: {World.instance.currentMilestone.goal} ({World.instance.currentMilestone.ToString()})" ).
-			PinDownwards( -200, 0, 400, iconSize, 0.5f ).alignment = TextAnchor.MiddleCenter;
-
 			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			recordProductivity.alignment = TextAnchor.MiddleCenter;
 			currentProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
@@ -5911,14 +5915,9 @@ if ( cart )
 		{
 			var t = World.instance.time;
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
-			var c = World.instance.currentMilestone;
 			worldTime.text = $"World time: {World.Timer.TimeToString( t )}";
 			recordProductivity.text = $"Record productivity: {m.record.ToString( "n2" )} soldier/min";
 			currentProductivity.text = $"Current productivity: {m.current.ToString( "n2" )} soldier/min";
-			if ( World.instance.goalReached.inProgress ) 
-				currentProductivity.text += $" (maintain {c.productivityGoal} for {World.Timer.TimeToString( -World.instance.goalReached.age )})";
-			if ( c != null )
-				productivityProgress.progress = m.current / c.productivityGoal;
 			base.Update();
 		}
 
@@ -6098,7 +6097,7 @@ if ( cart )
 			noResize = noPin = true;
 			base.Open( 300, 200 );
 			this.PinCenter( 0, 0, 300, 200, 0.5f, 0.5f );
-			Text( $"Your goal in this game is to create an economy which produces a lot of soldiers, the first milestone is {root.world.currentMilestone.productivityGoal}/min. " +
+			Text( $"Your goal in this game is to complete challenges. " +
 				$"To see an update on this, open the world progress dialog (hotkey: {root.worldProgressButton.GetHotkey().keyName}). " +
 				$"The only building you got at the beginning is your headquarters. It behaves like a stock, but you cannot destroy or move it. It also has " +
 				$"somewhat higher capacity than a normal stock (can store {Constants.Stock.defaultmaxItemsForMain} items instead of {Constants.Stock.defaultmaxItems}). " +
