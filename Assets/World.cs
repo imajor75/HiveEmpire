@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -138,6 +138,7 @@ public class World : MonoBehaviour
 		public float progress;
 		public Timer life;
 		public List<float> productivityGoals;
+		public List<int> mainBuildingContent;
 		public int timeLimit;
 
 		[Obsolete( "Compatibility with old files", true )]
@@ -445,14 +446,14 @@ public class World : MonoBehaviour
 		if ( !challenge )
 		{
 			challenge = Challenge.Create();
-			challenge.productivityGoals = new List<float>();
 			challenge.timeLimit = 50 * 60;
+			challenge.mainBuildingContent = new List<int>();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				if ( i == (int)Item.Type.soldier )
-					challenge.productivityGoals.Add( 2 );
+					challenge.mainBuildingContent.Add( 10000 );
 				else
-					challenge.productivityGoals.Add( -1 );
+					challenge.mainBuildingContent.Add( -1 );
 			}
 			challenge.Begin();
 		}
