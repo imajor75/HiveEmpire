@@ -134,8 +134,11 @@ public class World : MonoBehaviour
 		public int maintain;
 		public bool randomSeed;
 		public int seed;
-		public float soldierProductivityGoal;
 		public Timer maintainBronze, maintainSilver, maintainGold;
+		public List<float> productivityGoals;
+
+		[Obsolete( "Compatibility with old files", true )]
+		float soldierProductivityGoal { set {} }
 
 		public static Challenge Create()
 		{
@@ -150,13 +153,22 @@ public class World : MonoBehaviour
 		void FixedUpdate()
 		{
 			var player = Interface.root.mainPlayer;
-			var currentLevel = Goal.none;
-			if ( player.mainProductivity >= soldierProductivityGoal * 0.5f )
-				currentLevel = Goal.bronze;
-			if ( player.mainProductivity >= soldierProductivityGoal * 0.75f )
-				currentLevel = Goal.silver;
-			if ( player.mainProductivity >= soldierProductivityGoal )
-				currentLevel = Goal.gold;
+			var currentLevel = Goal.gold;
+
+			if ( productivityGoals != null )
+			{
+				for ( int i = 0; i < (int)Item.Type.total; i++ )
+				{
+					if ( productivityGoals[i] < 0 )
+						continue;
+					if ( player.itemProductivityHistory[i].current < productivityGoals[i] && currentLevel < Goal.silver )
+						currentLevel = Goal.silver;
+					if ( player.itemProductivityHistory[i].current < productivityGoals[i] * 0.75f && currentLevel > Goal.bronze )
+						currentLevel = Goal.bronze;
+					if ( player.itemProductivityHistory[i].current < productivityGoals[i] * 0.5f && currentLevel > Goal.none )
+						currentLevel = Goal.none;
+				}
+			}
 
 			void CheckGoal( Goal goal, ref Timer timer )
 			{
@@ -397,7 +409,14 @@ public class World : MonoBehaviour
 		if ( !challenge )
 		{
 			challenge = Challenge.Create();
-			challenge.soldierProductivityGoal = 2;
+			challenge.productivityGoals = new List<float>();
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+			{
+				if ( i == (int)Item.Type.soldier )
+					challenge.productivityGoals.Add( 2 );
+				else
+					challenge.productivityGoals.Add( -1 );
+			}
 			challenge.maintain = 50 * 60;
 		}
 

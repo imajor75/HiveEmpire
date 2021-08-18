@@ -490,7 +490,14 @@ public class Interface : OperationHandler
 	void NewGame( int seed )
 	{
 		var challenge = World.Challenge.Create();
-		challenge.soldierProductivityGoal = 2;
+		challenge.productivityGoals = new List<float>();
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+		{
+			if ( i == (int)Item.Type.soldier )
+				challenge.productivityGoals.Add( 2 );
+			else
+				challenge.productivityGoals.Add( -1 );
+		}
 		challenge.maintain = 50 * 60;
 		world.NewGame( challenge );
 		if ( world.players.Count > 0 )

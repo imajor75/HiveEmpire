@@ -14,7 +14,6 @@ public class Player : ScriptableObject
 	public List<Building> influencers = new List<Building>();
 	public World.Timer productivityTimer;
 	public List<Chart> itemProductivityHistory = new List<Chart>();
-	public float mainProductivity { get { return itemProductivityHistory[(int)Item.Type.soldier].current; } }
 	public List<Stock> stocks = new List<Stock>();
 	public List<Item> items = new List<Item>();
 	public int firstPossibleEmptyItemSlot = 0;
