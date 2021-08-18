@@ -168,8 +168,8 @@ public class World : MonoBehaviour
 						timer.Start( maintain );
 					if ( timer.done )
 					{
-						Interface.root.OnGoalReached( goal );
 						reachedLevel = goal;
+						Interface.root.OnGoalReached( goal );
 						return;
 					}
 				}

@@ -452,7 +452,7 @@ public class Interface : OperationHandler
 		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
 		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R );
 		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
-		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => WorldProgressPanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
+		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
 		worldProgressButton.SetTooltip( () => $"Show world progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
 		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
@@ -543,7 +543,7 @@ public class Interface : OperationHandler
 
 	public void OnGoalReached( World.Goal goal )
 	{
-		WorldProgressPanel.Create().Open( goal );
+		ChallengePanel.Create().Open( goal );
 	}
 
 	public void Update()
@@ -5851,18 +5851,19 @@ if ( cart )
 		}
 	}
 
-	public class WorldProgressPanel : Panel
+	public class ChallengePanel : Panel
 	{
 		Text worldTime;
 		Text currentProductivity;
 		Text recordProductivity;
+		Text maintain;
 		ProgressBar productivityProgress;
 		float originalSpeed = -1;
 		bool worldStopped;
 
-		public static WorldProgressPanel Create()
+		public static ChallengePanel Create()
 		{
-			return new GameObject( "World Progress Panel" ).AddComponent<WorldProgressPanel>();
+			return new GameObject( "World Progress Panel" ).AddComponent<ChallengePanel>();
 		}
 
 		public void Open( World.Goal reached = World.Goal.none )
@@ -5870,6 +5871,8 @@ if ( cart )
 			worldStopped = reached != World.Goal.none;
 			noResize = true;
 			noPin = true;
+			if ( reached != World.Goal.none )
+				reopen = true;
 			if ( base.Open( 300, 200 ) )
 				return;
 			name = "World Progress Panel";
@@ -5907,6 +5910,11 @@ if ( cart )
 			recordProductivity.alignment = TextAnchor.MiddleCenter;
 			currentProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 			currentProductivity.alignment = TextAnchor.MiddleCenter;
+			if ( World.instance.challenge.maintain > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
+			{
+				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
+				maintain.alignment = TextAnchor.MiddleCenter;
+			}
 			productivityProgress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			this.SetSize( 400, -UIHelpers.currentRow + 30 );
 		}
@@ -5918,6 +5926,27 @@ if ( cart )
 			worldTime.text = $"World time: {World.Timer.TimeToString( t )}";
 			recordProductivity.text = $"Record productivity: {m.record.ToString( "n2" )} soldier/min";
 			currentProductivity.text = $"Current productivity: {m.current.ToString( "n2" )} soldier/min";
+			if ( maintain )
+			{
+				World.Goal level = World.Goal.none;
+				int time = 0;
+				var challenge = World.instance.challenge;
+				void CheckLevel( World.Goal levelToCheck, World.Timer timer )
+				{
+					if ( timer.inProgress )
+					{
+						level = levelToCheck;
+						time = -challenge.maintainBronze.age;
+					}
+				}
+				CheckLevel( World.Goal.bronze, challenge.maintainBronze );
+				CheckLevel( World.Goal.silver, challenge.maintainSilver );
+				CheckLevel( World.Goal.gold, challenge.maintainGold );
+				if ( level != World.Goal.none )
+					maintain.text = $"Maintain {level} level for {World.Timer.TimeToString( time )} more!";
+				else
+					maintain.text = "No appraisable level reached yet";
+			}
 			base.Update();
 		}
 
