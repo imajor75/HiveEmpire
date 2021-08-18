@@ -5860,10 +5860,8 @@ if ( cart )
 
 	public class ChallengePanel : Panel
 	{
-		Text worldTime;
-		Text currentProductivity;
-		Text recordProductivity;
-		Text maintain;
+		Text worldTime, currentProductivity, recordProductivity, maintain, timeLeft;
+
 		ProgressBar productivityProgress;
 		float originalSpeed = -1;
 		bool worldStopped;
@@ -5922,6 +5920,11 @@ if ( cart )
 				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				maintain.alignment = TextAnchor.MiddleCenter;
 			}
+			if ( World.instance.challenge.timeLimit > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
+			{
+				timeLeft = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
+				timeLeft.alignment = TextAnchor.MiddleCenter;
+			}
 			productivityProgress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			this.SetSize( 400, -UIHelpers.currentRow + 30 );
 		}
@@ -5930,6 +5933,7 @@ if ( cart )
 		{
 			var t = World.instance.time;
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
+			var challenge = World.instance.challenge;
 			worldTime.text = $"World time: {World.Timer.TimeToString( t )}";
 			recordProductivity.text = $"Record productivity: {m.record.ToString( "n2" )} soldier/min";
 			currentProductivity.text = $"Current productivity: {m.current.ToString( "n2" )} soldier/min";
@@ -5937,7 +5941,6 @@ if ( cart )
 			{
 				World.Goal level = World.Goal.none;
 				int time = 0;
-				var challenge = World.instance.challenge;
 				void CheckLevel( World.Goal levelToCheck, World.Timer timer )
 				{
 					if ( timer.inProgress )
@@ -5953,6 +5956,19 @@ if ( cart )
 					maintain.text = $"Maintain {level} level for {World.Timer.TimeToString( time )} more!";
 				else
 					maintain.text = "No appraisable level reached yet";
+			}
+			if ( timeLeft )
+			{
+				void GoalLeft( World.Goal goal, float multiplier )
+				{
+					var left = (int)(challenge.timeLimit * multiplier - challenge.life.age);
+					if ( left >= 0 )
+						timeLeft.text = $"Time left: {World.Timer.TimeToString( left )} ({goal})";
+				}
+				timeLeft.text = "Out of time";
+				GoalLeft( World.Goal.bronze, 2 );
+				GoalLeft( World.Goal.silver, 4f/3 );
+				GoalLeft( World.Goal.gold, 1 );
 			}
 			base.Update();
 		}

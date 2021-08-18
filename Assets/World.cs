@@ -135,7 +135,9 @@ public class World : MonoBehaviour
 		public bool randomSeed;
 		public int seed;
 		public Timer maintainBronze, maintainSilver, maintainGold;
+		public Timer life;
 		public List<float> productivityGoals;
+		public int timeLimit;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float soldierProductivityGoal { set {} }
@@ -150,25 +152,46 @@ public class World : MonoBehaviour
 			transform.SetParent( World.instance.transform );
 		}
 
+		public void Begin()
+		{
+			life.Start();
+		}
+
 		void FixedUpdate()
 		{
 			var player = Interface.root.mainPlayer;
 			var currentLevel = Goal.gold;
 
+			void CheckCondition( float current, float limit, bool reversed = false )
+			{
+				if ( limit < 0 )
+					return;
+				if ( current < limit * 0.01f )
+				{
+					currentLevel = Goal.none;
+					return;
+				}
+				if ( reversed )
+				{
+					current = 1 / current;
+					limit = 1 / limit;
+				}
+				if ( current < limit && currentLevel > Goal.silver )
+					currentLevel = Goal.silver;
+				if ( current < limit * 0.75f && currentLevel > Goal.bronze )
+					currentLevel = Goal.bronze;
+				if ( current < limit * 0.5f && currentLevel > Goal.none )
+					currentLevel = Goal.none;
+			}
+
 			if ( productivityGoals != null )
 			{
 				for ( int i = 0; i < (int)Item.Type.total; i++ )
-				{
-					if ( productivityGoals[i] < 0 )
-						continue;
-					if ( player.itemProductivityHistory[i].current < productivityGoals[i] && currentLevel < Goal.silver )
-						currentLevel = Goal.silver;
-					if ( player.itemProductivityHistory[i].current < productivityGoals[i] * 0.75f && currentLevel > Goal.bronze )
-						currentLevel = Goal.bronze;
-					if ( player.itemProductivityHistory[i].current < productivityGoals[i] * 0.5f && currentLevel > Goal.none )
-						currentLevel = Goal.none;
-				}
+					CheckCondition( player.itemProductivityHistory[i].current, productivityGoals[i] );
 			}
+
+			if ( timeLimit > 0 )
+				CheckCondition( life.age, timeLimit, true );
 
 			void CheckGoal( Goal goal, ref Timer timer )
 			{
@@ -324,6 +347,7 @@ public class World : MonoBehaviour
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
 		this.challenge = challenge;
+		challenge.Begin();
 		SetTimeFactor( 1 );
 		fileName = "";
 		roadTutorialShowed = false;
@@ -410,6 +434,7 @@ public class World : MonoBehaviour
 		{
 			challenge = Challenge.Create();
 			challenge.productivityGoals = new List<float>();
+			challenge.timeLimit = 50 * 60;
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				if ( i == (int)Item.Type.soldier )
@@ -417,7 +442,7 @@ public class World : MonoBehaviour
 				else
 					challenge.productivityGoals.Add( -1 );
 			}
-			challenge.maintain = 50 * 60;
+			challenge.Begin();
 		}
 
 		foreach ( var player in players )
