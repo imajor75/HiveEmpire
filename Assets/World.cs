@@ -128,7 +128,8 @@ public class World : MonoBehaviour
 		}
 	}
 
-	public class Challenge : MonoBehaviour
+	public class 
+	Challenge : MonoBehaviour
 	{
 		public Goal reachedLevel = Goal.none;
 		public int maintain;
@@ -139,6 +140,7 @@ public class World : MonoBehaviour
 		public Timer life;
 		public List<float> productivityGoals;
 		public List<int> mainBuildingContent;
+		public List<int> buildingMax;
 		public int timeLimit;
 
 		[Obsolete( "Compatibility with old files", true )]
@@ -204,6 +206,12 @@ public class World : MonoBehaviour
 			{
 				for ( int i = 0; i < mainBuildingContent.Count; i++ )
 					CheckCondition( player.mainBuilding.itemData[i].content, mainBuildingContent[i] );
+			}
+
+			if ( buildingMax != null )
+			{
+				for ( int i = 0; i < buildingMax.Count; i++ )
+					CheckCondition( player.buildingCounts[i], buildingMax[i], true );
 			}
 
 			if ( timeLimit > 0 )
@@ -458,6 +466,14 @@ public class World : MonoBehaviour
 				else
 					challenge.mainBuildingContent.Add( -1 );
 			}
+			challenge.buildingMax = new List<int>();
+			for ( int i = 0; i < (int)Building.Type.total; i++ )
+			{
+				if ( i == (int)Building.Type.guardHouse )
+					challenge.buildingMax.Add( 4 );
+				else
+					challenge.buildingMax.Add( -1 );
+			}
 			challenge.Begin();
 		}
 
@@ -465,7 +481,22 @@ public class World : MonoBehaviour
 		{
 			while ( player.stocksHaveNeed.Count < (int)Item.Type.total )
 				player.stocksHaveNeed.Add( false );
+			if ( player.buildingCounts.Count < (int)Building.Type.total )
+			{
+				while ( player.buildingCounts.Count < (int)Building.Type.total )
+					player.buildingCounts.Add( 0 );
+				for ( int i = 0; i < (int)Building.Type.total; i++ )
+					player.buildingCounts[i] = 0;
+
+				var buildingList = Resources.FindObjectsOfTypeAll<Building>();
+				foreach ( var building in buildingList )
+				{
+					if ( building.owner == player )
+						player.buildingCounts[(int)building.type]++;
+				}
+			}
 			player.Start();
+
 		}
 
 		water = Water.Create().Setup( ground );

@@ -16,6 +16,7 @@ public class Player : ScriptableObject
 	public List<Chart> itemProductivityHistory = new List<Chart>();
 	public List<Stock> stocks = new List<Stock>();
 	public List<bool> stocksHaveNeed = new List<bool>();
+	public List<int> buildingCounts = new List<int>();
 	public List<Item> items = new List<Item>();
 	public int firstPossibleEmptyItemSlot = 0;
 	public int[] surplus = new int[(int)Item.Type.total];
@@ -127,6 +128,9 @@ public class Player : ScriptableObject
 		}
 		productivityTimer.Start( Constants.Player.productivityUpdateTime );
 		CreateInputWeights();
+
+		while ( buildingCounts.Count < (int)Building.Type.total )
+			buildingCounts.Add( 0 );
 
 		return this;
 	}
@@ -343,6 +347,15 @@ public class Player : ScriptableObject
 		foreach ( var stock in stocks )
 			Assert.global.IsNotNull( stock );
 		Assert.global.AreEqual( itemHaulPriorities.Count, (int)Item.Type.total );
+		int[] bc = new int[(int)Building.Type.total];
+		var list = Resources.FindObjectsOfTypeAll<Building>();
+		foreach ( var building in list )
+		{
+			if ( building.owner == this )
+				bc[(int)building.type]++;
+		}
+		for ( int i = 0; i < (int)Building.Type.total; i++ )
+			Assert.global.AreEqual( bc[i], buildingCounts[i] );
 	}
 }
 

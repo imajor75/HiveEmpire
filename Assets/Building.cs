@@ -527,6 +527,8 @@ abstract public class Building : HiveObject
 
 	public override void Materialize()
 	{
+		owner.buildingCounts[(int)type]++;
+
 		if ( flag.blueprintOnly )
 			flag.Materialize();
 		base.Materialize();
@@ -666,6 +668,7 @@ abstract public class Building : HiveObject
 	public override bool Remove( bool takeYourTime )
 	{
 		construction.Remove( takeYourTime );
+		owner.buildingCounts[(int)type]--;
 
 		var list = itemsOnTheWay.GetRange( 0, itemsOnTheWay.Count );
 		foreach ( var item in list )
