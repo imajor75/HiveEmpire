@@ -15,6 +15,7 @@ public class Player : ScriptableObject
 	public World.Timer productivityTimer;
 	public List<Chart> itemProductivityHistory = new List<Chart>();
 	public List<Stock> stocks = new List<Stock>();
+	public List<bool> stocksHaveNeed = new List<bool>();
 	public List<Item> items = new List<Item>();
 	public int firstPossibleEmptyItemSlot = 0;
 	public int[] surplus = new int[(int)Item.Type.total];
@@ -174,8 +175,15 @@ public class Player : ScriptableObject
 
 	public void UpdateStockRoutes( Item.Type itemType )
 	{
+		var i = (int)itemType;
+		bool hasInput = false;
 		foreach ( var stock in stocks )
-			stock.itemData[(int)itemType].UpdateRoutes();
+		{
+			stock.itemData[i].UpdateRoutes();
+			if ( stock.itemData[i].cartInput > 0 )
+				hasInput = true;
+		}
+		stocksHaveNeed[i] = hasInput;
 	}
 
 	public void Start()

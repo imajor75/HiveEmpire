@@ -165,6 +165,9 @@ public class World : MonoBehaviour
 			var currentLevel = Goal.gold;
 			progress = 1;
 
+			if ( !player )
+				return;		// Right after load this happens sometimes
+
 			void CheckCondition( float current, float limit, bool reversed = false )
 			{
 				if ( limit < 0 )
@@ -459,7 +462,11 @@ public class World : MonoBehaviour
 		}
 
 		foreach ( var player in players )
+		{
+			while ( player.stocksHaveNeed.Count < (int)Item.Type.total )
+				player.stocksHaveNeed.Add( false );
 			player.Start();
+		}
 
 		water = Water.Create().Setup( ground );
 		water.transform.localPosition = Vector3.up * waterLevel;

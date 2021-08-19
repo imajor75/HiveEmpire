@@ -744,6 +744,8 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			assert.AreEqual( this, itemData[j].boss );
 			assert.AreEqual( j, (int)itemData[j].itemType );
+			if ( itemData[j].cartOutput >= Constants.Stock.cartCapacity && owner.stocksHaveNeed[j] )
+				assert.AreNotEqual( itemData[j].outputRoutes.Count, 0 );
 		}
 	}
 }
