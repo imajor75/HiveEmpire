@@ -142,6 +142,7 @@ public class World : MonoBehaviour
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
 		public int timeLimit;
+		public int worldSize;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float soldierProductivityGoal { set {} }
@@ -372,6 +373,7 @@ public class World : MonoBehaviour
 	{
 		this.challenge = challenge;
 		challenge.Begin();
+		settings.size = challenge.worldSize;
 		SetTimeFactor( 1 );
 		fileName = "";
 		roadTutorialShowed = false;

@@ -487,18 +487,8 @@ public class Interface : OperationHandler
 		MainPanel.Create().Open( true );
 	}
 
-	void NewGame( int seed )
+	void NewGame( World.Challenge challenge )
 	{
-		var challenge = World.Challenge.Create();
-		challenge.productivityGoals = new List<float>();
-		for ( int i = 0; i < (int)Item.Type.total; i++ )
-		{
-			if ( i == (int)Item.Type.soldier )
-				challenge.productivityGoals.Add( 2 );
-			else
-				challenge.productivityGoals.Add( -1 );
-		}
-		challenge.maintain = 50 * 60;
 		world.NewGame( challenge );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
@@ -6082,18 +6072,29 @@ if ( cart )
 		void StartNewGame()
 		{
 			root.world.settings = ScriptableObject.CreateInstance<World.Settings>();
-			root.world.settings.size = size.value switch 
+			if ( size.value == 0 )
+				root.world.settings.maxHeight = 3;
+			if ( size.value == 2 )
+				root.world.settings.randomness = 2.1f;
+			var challenge = World.Challenge.Create();
+			challenge.productivityGoals = new List<float>();
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+			{
+				if ( i == (int)Item.Type.soldier )
+					challenge.productivityGoals.Add( 2 );
+				else
+					challenge.productivityGoals.Add( -1 );
+			}
+			challenge.maintain = 50 * 60;
+			challenge.seed = int.Parse( seed.text );
+			challenge.worldSize = size.value switch 
 			{
 				0 => 24,
 				1 => 32,
 				2 => 48,
 				_ => 32
 			};
-			if ( size.value == 0 )
-				root.world.settings.maxHeight = 3;
-			if ( size.value == 2 )
-				root.world.settings.randomness = 2.1f;
-			root.NewGame( int.Parse( seed.text ) );
+			root.NewGame( challenge );
 			Close();
 		}
 
