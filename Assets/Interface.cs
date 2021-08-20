@@ -5905,7 +5905,7 @@ if ( cart )
 
 	public class ChallengePanel : Panel
 	{
-		Text worldTime, currentProductivity, recordProductivity, maintain, timeLeft;
+		Text worldTime, maintain, timeLeft;
 
 		ProgressBar progress;
 		float originalSpeed = -1;
@@ -5918,6 +5918,7 @@ if ( cart )
 
 		public void Open( World.Goal reached = World.Goal.none )
 		{
+			var challenge = World.instance.challenge;
 			worldStopped = reached != World.Goal.none;
 			noResize = true;
 			noPin = true;
@@ -5955,10 +5956,8 @@ if ( cart )
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			
-			recordProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
-			recordProductivity.alignment = TextAnchor.MiddleCenter;
-			currentProductivity = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
-			currentProductivity.alignment = TextAnchor.MiddleCenter;
+			Text( $"Current challenge: {challenge.title}" ).PinDownwards( borderWidth, 0, 300, iconSize );
+			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
 			if ( World.instance.challenge.maintain > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
 			{
 				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
@@ -5979,8 +5978,6 @@ if ( cart )
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
 			var challenge = World.instance.challenge;
 			worldTime.text = $"World time: {World.Timer.TimeToString( t )}";
-			recordProductivity.text = $"Record productivity: {m.record.ToString( "n2" )} soldier/min";
-			currentProductivity.text = $"Current productivity: {m.current.ToString( "n2" )} soldier/min";
 			if ( maintain )
 			{
 				World.Goal level = World.Goal.none;
