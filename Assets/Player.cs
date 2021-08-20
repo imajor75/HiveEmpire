@@ -124,7 +124,7 @@ public class Player : ScriptableObject
 
 		while ( buildingCounts.Count < (int)Building.Type.total )
 			buildingCounts.Add( 0 );
-			
+
 		if ( !CreateMainBuilding() )
 		{
 			Destroy( this );
@@ -352,7 +352,7 @@ public class Player : ScriptableObject
 		var list = Resources.FindObjectsOfTypeAll<Building>();
 		foreach ( var building in list )
 		{
-			if ( building.owner == this )
+			if ( building.owner == this && !building.blueprintOnly )
 				bc[(int)building.type]++;
 		}
 		for ( int i = 0; i < (int)Building.Type.total; i++ )
