@@ -128,12 +128,12 @@ public class World : MonoBehaviour
 		}
 	}
 
-	public class 
-	Challenge : MonoBehaviour
+	public class Challenge : MonoBehaviour
 	{
+		public string title, description;
 		public Goal reachedLevel = Goal.none;
 		public int maintain;
-		public bool randomSeed;
+		public bool fixedSeed;
 		public int seed;
 		public Timer maintainBronze, maintainSilver, maintainGold;
 		public float progress;
@@ -142,10 +142,13 @@ public class World : MonoBehaviour
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
 		public int timeLimit;
-		public int worldSize;
+		public int worldSize = 32;
+		public List<string> conditions;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float soldierProductivityGoal { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		bool randomSeed { set {} }
 
 		public static Challenge Create()
 		{
@@ -160,6 +163,9 @@ public class World : MonoBehaviour
 		public void Begin()
 		{
 			life.Start();
+			maintainBronze.Reset();
+			maintainSilver.Reset();
+			maintainGold.Reset();
 		}
 
 		void FixedUpdate()
@@ -241,6 +247,59 @@ public class World : MonoBehaviour
 			CheckGoal( Goal.silver, ref maintainSilver );
 			CheckGoal( Goal.bronze, ref maintainBronze );
 		}
+
+		public void ParseConditions()
+		{
+			foreach ( var condition in conditions )
+			{
+				var p = condition.Split( ' ' );
+				switch ( p[0] )
+				{
+					case "headquarters":
+					{
+						if ( mainBuildingContent == null )
+							mainBuildingContent = new List<int>();
+						Item.Type itemType;
+						if ( !Enum.TryParse( p[1], out itemType ) )
+						{
+							print( $"Unknown item: {p[1]}" );
+							break;
+						}
+						while ( mainBuildingContent.Count < (int)Item.Type.total )
+							mainBuildingContent.Add( -1 );
+						mainBuildingContent[(int)itemType] = int.Parse( p[2] );
+						break;
+					}
+					case "production":
+					{
+						if ( productivityGoals == null )
+							productivityGoals = new List<float>();
+						Item.Type itemType;
+						if ( !Enum.TryParse( p[1], out itemType ) )
+						{
+							print( $"Unknown item: {p[1]}" );
+							break;
+						}
+						while ( productivityGoals.Count < (int)Item.Type.total )
+							productivityGoals.Add( -1 );
+						productivityGoals[(int)itemType] = float.Parse( p[2] );
+						break;
+					}
+					default:
+					{
+						print( $"Unknown condition type: {p[0]}" );
+						break;
+					}
+				}
+			}
+
+			conditions.Clear();
+		}
+
+		public class List
+		{
+			public List<Challenge> list;
+		}
 	}
 
 	[Obsolete( "Compatibility with old files", true )]
@@ -274,11 +333,11 @@ public class World : MonoBehaviour
 		public float forestChance = 0.006f;
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
-		public float ironRatio = 0.05f;
-		public float coalRatio = 0.1f;
-		public float goldRatio = 0.04f;
-		public float saltRatio = 0.02f;
-		public float stoneRatio = 0.01f;
+		public float idealIron = 0.05f;
+		public float idealCoal = 0.1f;
+		public float idealGold = 0.04f;
+		public float idealSalt = 0.02f;
+		public float idealStone = 0.01f;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float ironChance;
@@ -292,6 +351,16 @@ public class World : MonoBehaviour
 		float goldChance;
 		[Obsolete( "Compatibility with old files", true )]
 		float oreChance;
+		[Obsolete( "Compatibility with old files", true )]
+		float ironRatio { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float coalRatio { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float goldRatio { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float saltRatio { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float stoneRatio { set {} }
 
 		[JsonIgnore]
 		public bool apply;  // For debug purposes only
@@ -358,7 +427,7 @@ public class World : MonoBehaviour
 		{
 			settings.apply = false;
 			var c = instance.challenge;
-			c.randomSeed = false;
+			c.fixedSeed = true;
 			c.seed = instance.currentSeed;
 			instance.NewGame( instance.challenge, true );
 			Interface.root.mainPlayer = instance.players[0];
@@ -383,8 +452,6 @@ public class World : MonoBehaviour
 		time = 0;
 
 		var seed = challenge.seed;
-		if ( challenge.randomSeed )
-			seed = rnd.Next();
 		Debug.Log( "Starting new game with seed " + seed );
 
 		rnd = new System.Random( seed );
@@ -834,11 +901,11 @@ public class World : MonoBehaviour
 		ores.Clear();
 		oreCount = 0;
 		animalSpawnerCount = 0;
-		ores.Add( new Ore{ resourceType = Resource.Type.coal, ideal = settings.coalRatio } );
-		ores.Add( new Ore{ resourceType = Resource.Type.iron, ideal = settings.ironRatio } );
-		ores.Add( new Ore{ resourceType = Resource.Type.gold, ideal = settings.goldRatio } );
-		ores.Add( new Ore{ resourceType = Resource.Type.salt, ideal = settings.saltRatio } );
-		ores.Add( new Ore{ resourceType = Resource.Type.stone, ideal = settings.stoneRatio } );
+		ores.Add( new Ore{ resourceType = Resource.Type.coal, ideal = settings.idealCoal } );
+		ores.Add( new Ore{ resourceType = Resource.Type.iron, ideal = settings.idealIron } );
+		ores.Add( new Ore{ resourceType = Resource.Type.gold, ideal = settings.idealGold } );
+		ores.Add( new Ore{ resourceType = Resource.Type.salt, ideal = settings.idealSalt } );
+		ores.Add( new Ore{ resourceType = Resource.Type.stone, ideal = settings.idealStone } );
 
 		int TotalMissing() { int total = 0; foreach ( var ore in ores ) total += ore.missing; return total; };
 
@@ -882,7 +949,7 @@ public class World : MonoBehaviour
 			if ( !created )
 			{
 				print( "Could not create enough	underground resources, not enough hills in the world? ");
-				Assert.global.Fail();
+				//Assert.global.Fail();
 				break;
 			}
 		}

@@ -1,0 +1,20 @@
+{
+  "list": [
+    {
+      "title": "Soldiers",
+      "description": "Produce 500 soldiers in 4 hours",
+      "timeLimit": 720000,
+      "conditions": [
+        "headquarters soldier 500"
+      ]
+    },
+    {
+      "title": "Soldier production",
+      "description": "Reach soldiers production 2/minute, and maintain it for 20 minutes",
+      "maintain": 60000,
+      "conditions": [
+        "production soldier 2"
+      ]
+    }
+  ]
+}

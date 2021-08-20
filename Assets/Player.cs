@@ -121,6 +121,10 @@ public class Player : ScriptableObject
 
 		itemDispatcher = ItemDispatcher.Create();
 		itemDispatcher.Setup( this );
+
+		while ( buildingCounts.Count < (int)Building.Type.total )
+			buildingCounts.Add( 0 );
+			
 		if ( !CreateMainBuilding() )
 		{
 			Destroy( this );
@@ -128,9 +132,6 @@ public class Player : ScriptableObject
 		}
 		productivityTimer.Start( Constants.Player.productivityUpdateTime );
 		CreateInputWeights();
-
-		while ( buildingCounts.Count < (int)Building.Type.total )
-			buildingCounts.Add( 0 );
 
 		return this;
 	}

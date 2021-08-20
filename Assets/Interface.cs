@@ -39,6 +39,7 @@ public class Interface : OperationHandler
 	Node highlightVolumeCenter;
 	int highlightVolumeRadius;
 	Image[] speedButtons = new Image[3];
+	public List<World.Challenge> challenges;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -219,7 +220,8 @@ public class Interface : OperationHandler
 		pause,
 		play,
 		fast,
-		stock
+		stock,
+		exc
 	}
 
 
@@ -452,14 +454,16 @@ public class Interface : OperationHandler
 		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
 		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R );
 		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
-		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "World progress", KeyCode.P );
-		worldProgressButton.SetTooltip( () => $"Show world progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
+		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
+		worldProgressButton.SetTooltip( () => $"Show challenge progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
 		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
 		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
 		mapButton.SetTooltip( () => $"Minimap (hotkey: {mapButton.GetHotkey().keyName})" );
 		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
 		hotkeyButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
+		var challengesButton = this.Image( Icon.exc ).AddClickHandler( () => ChallengeList.Create() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
+		challengesButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
@@ -472,6 +476,14 @@ public class Interface : OperationHandler
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
 		LoadHotkeys();
+		challenges = Serializer.Read<World.Challenge.List>( Application.streamingAssetsPath + "/challenges.json" ).list;
+		var challengeContainer = new GameObject( "Challenges" );
+		challengeContainer.transform.SetParent( transform );
+		foreach ( var challenge in challenges )
+		{
+			challenge.ParseConditions();
+			challenge.transform.SetParent( challengeContainer.transform );
+		}
 
 		world = World.Create().Setup();
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
@@ -5848,6 +5860,49 @@ if ( cart )
 		}
 	}
 
+	public class ChallengeList : Panel
+	{
+		public InputField manualSeed;
+
+		public static ChallengeList Create()
+		{
+			var p = new GameObject( "Challenge list" ).AddComponent<ChallengeList>();
+			p.Open();
+			return p;
+		}
+
+		void Open()
+		{
+			base.Open( 500, 300 );
+			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize, -borderWidth, -borderWidth - iconSize );
+			Text( "Manual seed:" ).Pin( -330, borderWidth + iconSize, 150, iconSize, 1, 0 );
+			manualSeed = InputField( new System.Random().Next().ToString() ).PinSideways( 0, borderWidth + iconSize, 150, iconSize, 1, 0 );
+			Text( "Challenge name" ).Pin( borderWidth, -borderWidth, 140, iconSize );
+			Text( "Time limit" ).PinSideways( 0, -borderWidth, 70, iconSize );
+			Text( "World size" ).PinSideways( 0, -borderWidth, 70, iconSize );
+			var view = scroll.content;
+
+			int row = 0;
+			foreach ( var challenge in root.challenges )
+			{
+				Text( challenge.title ).Pin( 0, row, 140, iconSize ).Link( view ).SetTooltip( challenge.description );
+				Text( challenge.timeLimit > 0 ? World.Timer.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
+				Text( challenge.worldSize switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
+				Button( "Begin " ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
+				row -= iconSize;
+			}
+			scroll.SetContentSize( 0, -row );
+		}
+
+		void StartChallenge( World.Challenge challenge )
+		{
+			if ( !challenge.fixedSeed )
+				challenge.seed = int.Parse( manualSeed.text );
+			root.NewGame( challenge );
+			Close();
+		}
+	}
+
 	public class ChallengePanel : Panel
 	{
 		Text worldTime, currentProductivity, recordProductivity, maintain, timeLeft;
@@ -5858,7 +5913,7 @@ if ( cart )
 
 		public static ChallengePanel Create()
 		{
-			return new GameObject( "World Progress Panel" ).AddComponent<ChallengePanel>();
+			return new GameObject( "Challenge Progress Panel" ).AddComponent<ChallengePanel>();
 		}
 
 		public void Open( World.Goal reached = World.Goal.none )
@@ -5870,7 +5925,6 @@ if ( cart )
 				reopen = true;
 			if ( base.Open( 300, 200 ) )
 				return;
-			name = "World Progress Panel";
 			this.Pin( -200, -100, 200, 100, 0.5f, 0.5f );
 			UIHelpers.currentRow = -30;
 			if ( worldStopped )
@@ -5980,9 +6034,7 @@ if ( cart )
 		InputField saveName;
 		Dropdown loadNames;
 		FileSystemWatcher watcher;
-		Dropdown size;
 		bool loadNamesRefreshNeeded = true;
-		static int savedSize = 1;
 		Eye grabbedEye;
 
 		public static MainPanel Create()
@@ -6008,20 +6060,9 @@ if ( cart )
 				row -= 33;
 			}
 
-			Button( "Start New World" ).PinCenter( 0, row, 120, 25, 0.5f ).AddClickHandler( StartNewGame );
+			Button( "View Challenges" ).PinCenter( 0, row, 120, 25, 0.5f ).AddClickHandler( () => { ChallengeList.Create(); Close(); } );
 			row -= 18;
-			Text( "Seed", 12 ).Pin( 20, row, 40, 20 );
-			seed = InputField().Pin( 60, row + 5, 100, 25 );
-			seed.contentType = UnityEngine.UI.InputField.ContentType.IntegerNumber;
-			Button( "Randomize" ).Pin( 165, row + 2, 60, 25 ).AddClickHandler( RandomizeSeed );
-			row -= 30;
-			Text( "Size", 12 ).Pin( 20, row, 30 );
-			size = Dropdown().Pin( 60, row + 5, 80, 25 );
-			size.ClearOptions();
-			size.AddOptions( new List<string>() { "Small (24x24)", "Medium (32x32)", "Big (48x48)" } );
-			size.value = savedSize;
 			Image().PinCenter( 0, row - 25, 260, 1, 0.5f ).color = Color.black;
-			row -= 30;
 
 			Button( "Load" ).Pin( 20, row - 3, 60, 25 ).AddClickHandler( Load );
 			loadNames = Dropdown().Pin( 80, row, 200, 25 );
@@ -6036,7 +6077,6 @@ if ( cart )
 				row -= 30;
 			}
 
-			RandomizeSeed();
 			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
 			watcher.Created += SaveFolderChanged;
 			watcher.Deleted += SaveFolderChanged;
@@ -6066,36 +6106,6 @@ if ( cart )
 			base.Update();
 			if ( loadNamesRefreshNeeded )
 				UpdateLoadNames();
-			savedSize = size.value;
-		}
-
-		void StartNewGame()
-		{
-			root.world.settings = ScriptableObject.CreateInstance<World.Settings>();
-			if ( size.value == 0 )
-				root.world.settings.maxHeight = 3;
-			if ( size.value == 2 )
-				root.world.settings.randomness = 2.1f;
-			var challenge = World.Challenge.Create();
-			challenge.productivityGoals = new List<float>();
-			for ( int i = 0; i < (int)Item.Type.total; i++ )
-			{
-				if ( i == (int)Item.Type.soldier )
-					challenge.productivityGoals.Add( 2 );
-				else
-					challenge.productivityGoals.Add( -1 );
-			}
-			challenge.maintain = 50 * 60;
-			challenge.seed = int.Parse( seed.text );
-			challenge.worldSize = size.value switch 
-			{
-				0 => 24,
-				1 => 32,
-				2 => 48,
-				_ => 32
-			};
-			root.NewGame( challenge );
-			Close();
 		}
 
 		void Load()
@@ -6130,11 +6140,6 @@ if ( cart )
 
 			loadNames.AddOptions( files );
 		}
-
-		void RandomizeSeed()
-		{
-			seed.text = new System.Random().Next().ToString();
-		}
 	}
 
 	public class WelcomePanel : Panel
@@ -6152,7 +6157,7 @@ if ( cart )
 			base.Open( 300, 200 );
 			this.PinCenter( 0, 0, 300, 200, 0.5f, 0.5f );
 			Text( $"Your goal in this game is to complete challenges. " +
-				$"To see an update on this, open the world progress dialog (hotkey: {root.worldProgressButton.GetHotkey().keyName}). " +
+				$"To see an update on this, open the challenge progress dialog (hotkey: {root.worldProgressButton.GetHotkey().keyName}). " +
 				$"The only building you got at the beginning is your headquarters. It behaves like a stock, but you cannot destroy or move it. It also has " +
 				$"somewhat higher capacity than a normal stock (can store {Constants.Stock.defaultmaxItemsForMain} items instead of {Constants.Stock.defaultmaxItems}). " +
 				$"First thing you need to do is build more buildings, open the build panel (hotkey: {root.buildButton.GetHotkey().keyName})" ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );

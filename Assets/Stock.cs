@@ -517,6 +517,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		itemData[(int)Item.Type.soldier].content = Constants.Stock.startSoldierCount;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
+		owner.buildingCounts[(int)type]++;
 		flag.ConvertToCrossing( false );
 		return this;
 	}
