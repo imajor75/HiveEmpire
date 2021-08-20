@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -440,17 +440,17 @@ public class World : MonoBehaviour
 		
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
-		this.challenge = challenge;
-		challenge.Begin();
-		settings.size = challenge.worldSize;
+		time = 1;	// This should be 0, but then timers started right in the beginning (f.e. challenge.life) will be considered as empty
 		SetTimeFactor( 1 );
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
 		overseas = 2;
 		var oldEye = eye;
-		time = 0;
 
+		this.challenge = challenge;
+		challenge.Begin();
+		settings.size = challenge.worldSize;
 		var seed = challenge.seed;
 		Debug.Log( "Starting new game with seed " + seed );
 
