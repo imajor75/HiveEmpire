@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -4978,7 +4978,7 @@ if ( cart )
 			var ground = World.instance.ground;
 
 			var b = hiveObject as Building;
-			if ( b && !b.construction.done )
+			if ( b && b.blueprintOnly )
 				hiveObject = ground;
 
 			if ( hiveObject is Ground.Block || hiveObject == ground )
