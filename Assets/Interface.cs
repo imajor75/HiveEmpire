@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1297,7 +1297,7 @@ public class Interface : OperationHandler
 			if ( type != Item.Type.unknown )
 				i.picture.sprite = Item.sprites[(int)type];
 			else
-				i.enabled = false;
+				i.picture.enabled = false;
 			i.itemType = type;
 			i.Stretch();
 			i.transform.SetParent( transform );
@@ -3648,7 +3648,6 @@ public class Interface : OperationHandler
 		{
 			base.Update();
 
-			// TODO Skip empty slots
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
 				items[i].SetItem( flag.items[i] );
