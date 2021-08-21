@@ -2799,6 +2799,8 @@ public class Interface : OperationHandler
 				if ( t.cartOutput == 0 )
 					t.cartOutput = Constants.Stock.cartCapacity;
 			}
+			root.mainPlayer.UpdateStockRoutes( selectedItemType );
+
 			if ( t.inputMax < l )
 				t.inputMax = l;
 		}
