@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1825,6 +1825,8 @@ public class Interface : OperationHandler
 				if ( itemType == Item.Type.unknown )
 				{
 					picture.enabled = false;
+					if ( updateTooltip )
+						this.RemoveTooltip();
 					return;
 				}
 				picture.enabled = true;
@@ -6413,6 +6415,16 @@ public static class UIHelpers
 	public static UIElement SetTooltip<UIElement>( this UIElement g, Action<bool> onShow ) where UIElement : Component
 	{
 		return SetTooltip( g, "", null, null, onShow );
+	}
+
+	public static UIElement RemoveTooltip<UIElement>( this UIElement g ) where UIElement : Component
+	{
+		var s = g.gameObject.GetComponent<Interface.TooltipSource>();
+		if ( s )
+			UnityEngine.Object.Destroy( s );
+		foreach ( Transform t in g.transform )
+			t.RemoveTooltip();
+		return g;
 	}
 
 	public static UIElement AddHotkey<UIElement>( this UIElement g, string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false ) where UIElement : Component
