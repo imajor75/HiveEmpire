@@ -5914,7 +5914,7 @@ if ( cart )
 
 	public class ChallengePanel : Panel
 	{
-		Text worldTime, maintain, timeLeft;
+		Text worldTime, maintain, timeLeft, conditions;
 
 		ProgressBar progress;
 		float originalSpeed = -1;
@@ -5967,6 +5967,7 @@ if ( cart )
 			
 			Text( $"Current challenge: {challenge.title}" ).PinDownwards( borderWidth, 0, 300, iconSize );
 			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
+			conditions = Text( "", 10 ).PinDownwards( borderWidth, 0, 300, 3 * iconSize );
 			if ( World.instance.challenge.maintain > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
 			{
 				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
@@ -5987,6 +5988,7 @@ if ( cart )
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
 			var challenge = World.instance.challenge;
 			worldTime.text = $"World time: {World.Timer.TimeToString( t )}";
+			conditions.text = challenge.conditionsText;
 			if ( maintain )
 			{
 				World.Goal level = World.Goal.none;

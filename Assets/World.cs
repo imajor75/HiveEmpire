@@ -144,6 +144,7 @@ public class World : MonoBehaviour
 		public int timeLimit;
 		public int worldSize = 32;
 		public List<string> conditions;
+		public string conditionsText;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float soldierProductivityGoal { set {} }
@@ -172,15 +173,19 @@ public class World : MonoBehaviour
 		{
 			var player = Interface.root.mainPlayer;
 			var currentLevel = Goal.gold;
+			conditionsText = "";
 			progress = 1;
 
 			if ( !player )
 				return;		// Right after load this happens sometimes
 
-			void CheckCondition( float current, float limit, bool reversed = false )
+			void CheckCondition( float current, float limit, string text = null, bool reversed = false )
 			{
 				if ( limit < 0 )
 					return;
+
+				if ( text != null )
+					conditionsText += String.Format( text, current, limit ) + "\n";
 				if ( current < limit * 0.01f )
 				{
 					currentLevel = Goal.none;
@@ -206,23 +211,23 @@ public class World : MonoBehaviour
 			if ( productivityGoals != null )
 			{
 				for ( int i = 0; i < productivityGoals.Count; i++ )
-					CheckCondition( player.itemProductivityHistory[i].current, productivityGoals[i] );
+					CheckCondition( player.itemProductivityHistory[i].current, productivityGoals[i], $"{(Item.Type)i} productivity {{0}}/{{1}}" );
 			}
 
 			if ( mainBuildingContent != null )
 			{
 				for ( int i = 0; i < mainBuildingContent.Count; i++ )
-					CheckCondition( player.mainBuilding.itemData[i].content, mainBuildingContent[i] );
+					CheckCondition( player.mainBuilding.itemData[i].content, mainBuildingContent[i], $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
 			}
 
 			if ( buildingMax != null )
 			{
 				for ( int i = 0; i < buildingMax.Count; i++ )
-					CheckCondition( player.buildingCounts[i], buildingMax[i], true );
+					CheckCondition( player.buildingCounts[i], buildingMax[i], null, true );
 			}
 
 			if ( timeLimit > 0 )
-				CheckCondition( life.age, timeLimit, true );
+				CheckCondition( life.age, timeLimit, null, true );
 
 			void CheckGoal( Goal goal, ref Timer timer )
 			{
