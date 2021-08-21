@@ -220,6 +220,9 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			if ( state == State.inProgress )
 				return false;
+			
+			if ( !start.construction.done || !end.construction.done )
+				return false;
 
 			int itemIndex = (int)itemType;
 			if ( start.itemData[itemIndex].content < Constants.Stock.cartCapacity )
