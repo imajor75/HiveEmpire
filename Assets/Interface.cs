@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1821,7 +1821,6 @@ public class Interface : OperationHandler
 				pathVisualization = null;
 
 				this.itemType = itemType;
-				gameObject.SetActive( itemType != Item.Type.unknown );
 				if ( itemType == Item.Type.unknown )
 				{
 					picture.enabled = false;
@@ -3812,6 +3811,8 @@ public class Interface : OperationHandler
 				targetObject = null;
 				statusImage0.SetItem( null );
 				statusImage1.SetItem( null );
+				statusImage0.gameObject.SetActive( false );
+				statusImage1.gameObject.SetActive( false );
 				switch( worker.type )
 				{
 					case Worker.Type.hauler:
@@ -3821,6 +3822,7 @@ public class Interface : OperationHandler
 						{
 							status.text = "Picking up";
 							statusImage0.SetItem( pickup.items[0] );
+							statusImage0.gameObject.SetActive( true );
 							targetObject = pickup.items[0].flag;
 							break;
 						}
@@ -3829,10 +3831,12 @@ public class Interface : OperationHandler
 						{
 							status.text = "Delivering";
 							statusImage0.SetItem( deliver.items[0] );
+							statusImage0.gameObject.SetActive( true );
 							if ( deliver.items[1] )
 							{
 								status.text += "          and";
 								statusImage1.SetItem( deliver.items[1] );
+								statusImage1.gameObject.SetActive( true );
 							}
 							targetObject = (HiveObject)deliver.items[0].nextFlag ?? deliver.items[0].destination;
 							break;
@@ -3871,6 +3875,7 @@ public class Interface : OperationHandler
 							else
 								status.text = "Releasing";
 							statusImage0.SetItem( deliver.items[0] );
+							statusImage0.gameObject.SetActive( true );
 							break;
 						}
 						var step = worker.FindTaskInQueue<Worker.WalkToNeighbour>();
@@ -3909,6 +3914,7 @@ public class Interface : OperationHandler
 						{
 							status.text = $"Transporting {Constants.Stock.cartCapacity}";
 							statusImage1.SetType( (worker as Stock.Cart).itemType );
+							statusImage1.gameObject.SetActive( true );
 							targetObject = massDeliver.stock;
 							break;
 						}
