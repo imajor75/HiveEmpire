@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -195,7 +195,7 @@ public class World : MonoBehaviour
 				var localProgress = current / limit;
 				if ( localProgress < 1 && currentLevel > Goal.silver )
 					currentLevel = Goal.silver;
-				if ( localProgress < 0.75f && currentLevel > Goal.bronze )
+				if ( localProgress < (reversed ? 2f/3 : 3f/4) && currentLevel > Goal.bronze )
 					currentLevel = Goal.bronze;
 				if ( localProgress < 0.5f && currentLevel > Goal.none )
 					currentLevel = Goal.none;
