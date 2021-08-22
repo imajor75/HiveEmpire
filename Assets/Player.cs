@@ -124,6 +124,8 @@ public class Player : ScriptableObject
 
 		while ( buildingCounts.Count < (int)Building.Type.total )
 			buildingCounts.Add( 0 );
+		while ( stocksHaveNeed.Count < (int)Item.Type.total )
+			stocksHaveNeed.Add( false );
 
 		if ( !CreateMainBuilding() )
 		{
