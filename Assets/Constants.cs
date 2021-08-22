@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public static class Constants
 {
     public static class Building
@@ -81,6 +83,29 @@ public static class Constants
 		    0,     //pork
 		    0,     //goldBar
 		    0      //soldier
+        };
+        public static Vector3[] secondItemOffset = new Vector3[(int)(global::Item.Type.total)]
+        {
+		    new Vector3( 0, 0.45f, 0 ),     //log
+		    new Vector3( 0, 1.0f, 0 ),     //stone
+		    new Vector3( 0, 0, -0.25f ),     //plank
+		    new Vector3( 0, 0, -0.35f ),     //fish
+		    new Vector3( 0, 0.7f, 0 ),     //grain
+		    new Vector3( 0, 0.9f, 0 ),     //flour
+		    new Vector3( 0, 1.0f, 0 ),     //salt
+		    new Vector3( 0, 0.3f, 0 ),     //pretzel
+		    new Vector3( 0, 0, 0 ),    //hide
+		    new Vector3( 0, 0, -0.25f ),     //iron
+		    new Vector3( 0, 0.8f, 0 ),     //coal
+		    new Vector3( 0, 0.7f, 0 ),     //gold
+		    new Vector3( 0, 0, -0.25f ),     //bow
+		    new Vector3( 0, 0.3f, 0 ),     //steel
+		    new Vector3( 0, 0, -0.25f ),     //weapon
+		    new Vector3( 0, 0.7f, 0 ),     //water
+		    new Vector3( 0, 0.7f, 0 ),     //beer
+		    new Vector3( 0, 0.4f, 0 ),     //pork
+		    new Vector3( 0, 0.3f, 0 ),     //goldBar
+		    new Vector3( 0, 0, 0 )      //soldier
         };
     }
 

@@ -81,6 +81,7 @@ public class Worker : HiveObject
 	{
 		haulingBoxLight,
 		haulingBoxHeavy,
+		haulingBoxSecondary,
 		rightHand,
 		leftHand,
 		total
@@ -683,7 +684,12 @@ public class Worker : HiveObject
 					secondary.worker = boss;
 					items[1] = secondary;
 					deliverTask.items[1] = secondary;
-					secondary.transform.SetParent( boss.links[(int)LinkType.haulingBoxHeavy]?.transform, false );
+					var box = boss.links[(int)LinkType.haulingBoxSecondary]?.transform;
+					if ( box )
+					{
+						secondary.transform.SetParent( box, false );
+						box.localPosition = Constants.Item.secondItemOffset[(int)secondary.type];
+					}
 				}
 				return true;
 			}
@@ -1114,6 +1120,7 @@ public class Worker : HiveObject
 		body = Instantiate( looks.GetMediaData( look ), transform );
 		links[(int)LinkType.haulingBoxLight] = World.FindChildRecursive( body.transform, "haulingBoxLight" )?.gameObject;
 		links[(int)LinkType.haulingBoxHeavy] = World.FindChildRecursive( body.transform, "haulingBoxHeavy" )?.gameObject;
+		links[(int)LinkType.haulingBoxSecondary] = World.FindChildRecursive( body.transform, "haulingBoxSecondary" )?.gameObject;
 		links[(int)LinkType.rightHand] = World.FindChildRecursive( body.transform, "Hand_R" )?.gameObject;
 		links[(int)LinkType.leftHand] = World.FindChildRecursive( body.transform, "Hand_L" )?.gameObject;
 		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
@@ -1196,7 +1203,7 @@ public class Worker : HiveObject
 		{
 			if ( itemsInHands[0] )
 				itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
-			itemsInHands[1].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
+			itemsInHands[1].transform.SetParent( links[(int)LinkType.haulingBoxSecondary].transform, false );
 		}
 		else if ( itemsInHands[0] )
 			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxLight].transform, false );
@@ -1978,7 +1985,7 @@ public class Worker : HiveObject
 				assert.AreEqual( box.transform.childCount, 0 );		 // Triggered after undoing building remove
 			box = links[(int)LinkType.haulingBoxHeavy];
 			if ( box )
-				assert.AreEqual( box.transform.childCount, 0 );
+				assert.AreEqual( box.transform.childCount, 1 );
 		}
 		// TODO Triggered, called from Worker:FindTask() line 1342
 		// Triggered again called from worker.FindTask, worker still has the plank in hand, after entering the headquarters. 
