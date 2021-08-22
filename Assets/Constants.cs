@@ -36,7 +36,52 @@ public static class Constants
     public static class Item
     {
     	public const bool creditOnRemove = true;
-
+        public static float[] bottomHeights = new float[(int)(global::Item.Type.total)]
+        {
+		    float.MaxValue,     //log
+		    float.MaxValue,     //stone
+		    float.MaxValue,     //plank
+		    float.MaxValue,     //fish
+		    float.MaxValue,     //grain
+		    float.MaxValue,     //flour
+		    float.MaxValue,     //salt
+		    float.MaxValue,     //pretzel
+		    -0.2f,     //hide
+		    float.MaxValue,     //iron
+		    float.MaxValue,     //coal
+		    float.MaxValue,     //gold
+		    float.MaxValue,     //bow
+		    float.MaxValue,     //steel
+		    float.MaxValue,     //weapon
+		    float.MaxValue,     //water
+		    float.MaxValue,     //beer
+		    float.MaxValue,     //pork
+		    float.MaxValue,     //goldBar
+		    float.MaxValue      //soldier
+        };
+        public static float[] yawAtFlag = new float[(int)(global::Item.Type.total)]
+        {
+		    0,     //log
+		    0,     //stone
+		    0,     //plank
+		    0,     //fish
+		    0,     //grain
+		    0,     //flour
+		    0,     //salt
+		    0,     //pretzel
+		    -100,    //hide
+		    0,     //iron
+		    0,     //coal
+		    0,     //gold
+		    0,     //bow
+		    0,     //steel
+		    0,     //weapon
+		    0,     //water
+		    0,     //beer
+		    0,     //pork
+		    0,     //goldBar
+		    0      //soldier
+        };
     }
 
     public static class Ground

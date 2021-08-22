@@ -37,7 +37,6 @@ public class Item : HiveObject
 	public World.Timer life;
 	public World.Timer atFlag;
 	const int timeoutAtFlag = 9000;
-	public float bottomHeight;		// y coordinate of the plane at the bottom of the item in the parent transformation
 	public Item buddy;  // This reference is used when two items at the different end of a road are swapping space, one goes to one direction, while the other one is going the opposite. 
 						// Otherwise this member is null. Without this feature a deadlock at a road can very easily occur. When a worker notices that there is a possibility to swap two items, 
 						// it can do that even if both flags are full without free space. In this case the two items get a reference in this member to each other. Picking up the first item is 
@@ -51,6 +50,15 @@ public class Item : HiveObject
 						// 3. A is already delivered, the worker is now carrying B as normal. Both A.buddy and B.buddy is null. The latter got cleared in Flag.FinalizeItem
 	public int index = -1;
 	public Watch roadNetworkChangeListener = new Watch();
+	public float bottomHeight	// y coordinate of the plane at the bottom of the item in the parent transformation
+	{
+		get
+		{
+			return Constants.Item.bottomHeights[(int)type];
+		}
+		[Obsolete( "Compatibility with old files", true )]
+		set {}
+	}
 
 	public Ground ground
 	{
@@ -168,7 +176,8 @@ public class Item : HiveObject
 		if ( transform.parent == null )
 			transform.SetParent( World.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
 		body = Instantiate( looks.GetMediaData( type ) );
-		bottomHeight = body.GetComponent<MeshRenderer>().bounds.min.y;
+		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )
+			Constants.Item.bottomHeights[(int)type] = body.GetComponent<MeshRenderer>().bounds.min.y;
 		body.transform.SetParent( transform, false );
 		assert.IsNotNull( body );
 		name = type.ToString();

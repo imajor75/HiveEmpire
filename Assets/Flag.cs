@@ -285,6 +285,8 @@ public class Flag : HiveObject
 				// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
 				Vector3 framePos = frames[i].transform.position;
 				framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
+				frames[i].transform.LookAt( transform );
+				frames[i].transform.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)items[i].type], 0, 0 );
 				t.position = framePos;
 				break;
 			}
