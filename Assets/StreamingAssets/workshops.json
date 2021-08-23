@@ -163,7 +163,6 @@
   },
   {
     "type": "stoneMine",
-    "stoneNeeded": 2,
     "flatteningNeeded": false,
 	  "groundTypeNeeded": "hill",
     "gatheredResource": "stone",
