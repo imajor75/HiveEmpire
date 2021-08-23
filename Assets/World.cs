@@ -179,7 +179,7 @@ public class World : MonoBehaviour
 			if ( !player )
 				return;		// Right after load this happens sometimes
 
-			void CheckCondition( float current, float limit, string text = null, bool reversed = false )
+			void CheckCondition( float current, float limit, bool allowLevels, string text = null, bool reversed = false )
 			{
 				if ( limit < 0 )
 					return;
@@ -198,36 +198,45 @@ public class World : MonoBehaviour
 					limit = 1 / limit;
 				}
 				var localProgress = current / limit;
-				if ( localProgress < 1 && currentLevel > Goal.silver )
-					currentLevel = Goal.silver;
-				if ( localProgress < (reversed ? 2f/3 : 3f/4) && currentLevel > Goal.bronze )
-					currentLevel = Goal.bronze;
-				if ( localProgress < 0.5f && currentLevel > Goal.none )
-					currentLevel = Goal.none;
-				if ( progress > localProgress && !reversed )
-					progress = localProgress;
+				if ( allowLevels )
+				{
+					if ( localProgress < 1 && currentLevel > Goal.silver )
+						currentLevel = Goal.silver;
+					if ( localProgress < (reversed ? 2f/3 : 3f/4) && currentLevel > Goal.bronze )
+						currentLevel = Goal.bronze;
+					if ( localProgress < 0.5f && currentLevel > Goal.none )
+						currentLevel = Goal.none;
+					if ( progress > localProgress && !reversed )
+						progress = localProgress;
+				}
+				else
+					if ( localProgress < 1 )
+						currentLevel = Goal.none;
 			}
 
 			if ( productivityGoals != null )
 			{
 				for ( int i = 0; i < productivityGoals.Count; i++ )
-					CheckCondition( player.itemProductivityHistory[i].current, productivityGoals[i], $"{(Item.Type)i} productivity {{0}}/{{1}}" );
+					CheckCondition( player.itemProductivityHistory[i].current, productivityGoals[i], true, $"{(Item.Type)i} productivity {{0}}/{{1}}" );
 			}
 
 			if ( mainBuildingContent != null )
 			{
 				for ( int i = 0; i < mainBuildingContent.Count; i++ )
-					CheckCondition( player.mainBuilding.itemData[i].content, mainBuildingContent[i], $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
+					CheckCondition( player.mainBuilding.itemData[i].content, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
 			}
 
 			if ( buildingMax != null )
 			{
 				for ( int i = 0; i < buildingMax.Count; i++ )
-					CheckCondition( player.buildingCounts[i], buildingMax[i], null, true );
+				{
+					string buildingName = i < (int)Building.Type.stock ? ((Workshop.Type)i).ToString() : ((Building.Type)i).ToString();
+					CheckCondition( player.buildingCounts[i], buildingMax[i], false, $"number of {buildingName}s {{0}}/{{1}}", true );
+				}
 			}
 
 			if ( timeLimit > 0 )
-				CheckCondition( life.age, timeLimit, null, true );
+				CheckCondition( life.age, timeLimit, false, null, true );
 
 			void CheckGoal( Goal goal, ref Timer timer )
 			{
