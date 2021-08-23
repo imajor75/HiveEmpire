@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -192,7 +192,10 @@ public class World : MonoBehaviour
 					currentLevel = Goal.none;
 					progress = 0;
 					if ( text != null )
-						conditionsText += " (level: none)\n";
+					{
+						var currentLevel = reversed ? Goal.gold : Goal.none;
+						conditionsText += $" (level: {currentLevel})\n";
+					}
 					return;
 				}
 				if ( reversed )
