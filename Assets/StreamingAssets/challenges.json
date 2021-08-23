@@ -2,18 +2,54 @@
   "list": [
     {
       "title": "Soldiers",
-      "description": "Produce 500 soldiers in 4 hours",
-      "timeLimit": 720000,
+      "description": "Produce 50 soldiers in 2 hours",
+      "timeLimit": 360000,
       "conditions": [
-        "headquarters soldier 500"
+        "headquarters soldier 50"
       ]
     },
     {
       "title": "Soldier production",
-      "description": "Reach soldiers production 2/minute, and maintain it for 20 minutes",
-      "maintain": 60000,
+      "description": "Reach soldiers production 2/minute, and maintain it for 30 minutes on a medium map",
+      "maintain": 90000,
       "conditions": [
         "production soldier 2"
+      ]
+    },
+    {
+      "title": "Soldier production small",
+      "description": "Reach soldiers production 1/minute, and maintain it for 30 minutes on a small map",
+      "maintain": 90000,
+      "worldSize": 24,
+      "conditions": [
+        "production soldier 1"
+      ]
+    },
+    {
+      "title": "Soldier production big",
+      "description": "Reach soldiers production 4.5/minute, and maintain it for 30 minutes on a big map",
+      "maintain": 90000,
+      "worldSize": 48,
+      "conditions": [
+        "production soldier 4.5"
+      ]
+    },
+    {
+      "title": "One barrack",
+      "description": "Reach soldiers production 1.49/minute, and maintain it for 10 minutes with a single barrack",
+      "maintain": 30000,
+      "conditions": [
+        "production soldier 1.49",
+        "buildingMax barrack 1"
+      ]
+    },
+    {
+      "title": "Limited area",
+      "description": "Reach soldiers production 1/minute, and maintain it for 10 minutes with only three guardhouses",
+      "maintain": 30000,
+      "conditions": [
+        "production soldier 1",
+        "buildingMax guardHouse 3"
       ]
     }
   ]

@@ -5883,12 +5883,13 @@ if ( cart )
 		void Open()
 		{
 			base.Open( 500, 300 );
-			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize, -borderWidth, -borderWidth - iconSize );
+			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize * 3, -borderWidth, -borderWidth - iconSize );
 			Text( "Manual seed:" ).Pin( -330, borderWidth + iconSize, 150, iconSize, 1, 0 );
 			manualSeed = InputField( new System.Random().Next().ToString() ).PinSideways( 0, borderWidth + iconSize, 150, iconSize, 1, 0 );
 			Text( "Challenge name" ).Pin( borderWidth, -borderWidth, 140, iconSize );
 			Text( "Time limit" ).PinSideways( 0, -borderWidth, 70, iconSize );
 			Text( "World size" ).PinSideways( 0, -borderWidth, 70, iconSize );
+			Text( "The game can be continued no matter if the current challenge is lost or won, so you can play with any of these as a free game" ).PinCenter( 0, 3 * iconSize, 400, 2 * iconSize, 0.5f, 0 ).alignment = TextAnchor.MiddleCenter;
 			var view = scroll.content;
 
 			int row = 0;

@@ -290,6 +290,26 @@ public class World : MonoBehaviour
 						productivityGoals[(int)itemType] = float.Parse( p[2] );
 						break;
 					}
+					case "buildingMax":
+					{
+						if ( buildingMax == null )
+							buildingMax = new List<int>();
+						Building.Type buildingType;
+						if ( !Enum.TryParse( p[1], out buildingType ) )
+						{
+							Workshop.Type workshopType;
+							if ( !Enum.TryParse( p[1], out workshopType ) )
+							{
+								print( $"Unknown building: {p[1]}" );
+								break;
+							}
+							buildingType = (Building.Type)workshopType;
+						}
+						while ( buildingMax.Count < (int)Building.Type.total )
+							buildingMax.Add( -1 );
+						buildingMax[(int)buildingType] = int.Parse( p[2] );
+						break;
+					}
 					default:
 					{
 						print( $"Unknown condition type: {p[0]}" );
