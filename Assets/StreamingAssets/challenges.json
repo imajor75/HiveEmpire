@@ -47,6 +47,7 @@
       "title": "Limited area",
       "description": "Reach soldiers production 1/minute, and maintain it for 10 minutes with only three guardhouses",
       "maintain": 30000,
+      "worldSize": 48,
       "conditions": [
         "production soldier 1",
         "buildingMax guardHouse 3"
