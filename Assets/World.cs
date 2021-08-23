@@ -185,11 +185,13 @@ public class World : MonoBehaviour
 					return;
 
 				if ( text != null )
-					conditionsText += String.Format( text, current, limit ) + "\n";
+					conditionsText += String.Format( text, current.ToString( "n2" ), limit.ToString( "n2" ) );	// TODO don't display fractions when number is integer
 				if ( current < limit * 0.01f )
 				{
 					currentLevel = Goal.none;
 					progress = 0;
+					if ( text != null )
+						conditionsText += " (level: none)\n";
 					return;
 				}
 				if ( reversed )
@@ -198,20 +200,25 @@ public class World : MonoBehaviour
 					limit = 1 / limit;
 				}
 				var localProgress = current / limit;
+				var localLevel = Goal.gold;
 				if ( allowLevels )
 				{
-					if ( localProgress < 1 && currentLevel > Goal.silver )
-						currentLevel = Goal.silver;
-					if ( localProgress < (reversed ? 2f/3 : 3f/4) && currentLevel > Goal.bronze )
-						currentLevel = Goal.bronze;
-					if ( localProgress < 0.5f && currentLevel > Goal.none )
-						currentLevel = Goal.none;
+					if ( localProgress < 1 )
+						localLevel = Goal.silver;
+					if ( localProgress < (reversed ? 2f/3 : 3f/4) )
+						localLevel = Goal.bronze;
+					if ( localProgress < 0.5f )
+						localLevel = Goal.none;
 					if ( progress > localProgress && !reversed )
 						progress = localProgress;
 				}
 				else
 					if ( localProgress < 1 )
-						currentLevel = Goal.none;
+						localLevel = Goal.none;
+				if ( text != null )
+					conditionsText += $" (level: {localLevel})\n";
+				if ( localLevel < currentLevel )
+					currentLevel = localLevel;
 			}
 
 			if ( productivityGoals != null )
