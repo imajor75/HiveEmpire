@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -158,7 +158,8 @@ public class World : MonoBehaviour
 
 		void Start()
 		{
-			transform.SetParent( World.instance.transform );
+			if ( transform.parent == null )
+				transform.SetParent( World.instance.transform );
 		}
 
 		public void Begin()
