@@ -108,9 +108,8 @@ public class Flag : HiveObject
 			pos.x = Mathf.Sin( Mathf.PI * 2 / Constants.Flag.maxItems * i ) * Constants.Flag.itemSpread * Constants.Node.size;
 			pos.z = Mathf.Cos( Mathf.PI * 2 / Constants.Flag.maxItems * i ) * Constants.Flag.itemSpread * Constants.Node.size;
 			// Adjust the height of the frame so that the item in it should be just above the tiles of the flag
-			pos.y = node.ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + Constants.Flag.tilesHeight;
+			pos.y = node.ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + Constants.Flag.tilesHeight;	// TODO This is world pos, isn't it?
 			t.localPosition = pos;
-			t.LookAt( transform );
 			if ( items[i] != null )
 				items[i].transform.SetParent( frames[i].transform, false );
 		}
@@ -285,9 +284,10 @@ public class Flag : HiveObject
 				// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
 				Vector3 framePos = frames[i].transform.position;
 				framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
+				t.position = framePos;
+				
 				frames[i].transform.LookAt( transform );
 				frames[i].transform.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)items[i].type], 0, 0 );
-				t.position = framePos;
 				break;
 			}
 		}
