@@ -5915,7 +5915,7 @@ if ( cart )
 
 	public class ChallengePanel : Panel
 	{
-		Text worldTime, maintain, timeLeft, conditions;
+		Text worldTime, maintain, timeLeft, conditions, currentChallenge;
 
 		ProgressBar progress;
 		float originalSpeed = -1;
@@ -5966,7 +5966,7 @@ if ( cart )
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			
-			Text( $"Current challenge: {challenge.title}" ).PinDownwards( borderWidth, 0, 300, iconSize );
+			currentChallenge = Text().PinDownwards( borderWidth, 0, 300, iconSize );
 			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
 			conditions = Text( "", 10 ).PinDownwards( borderWidth, 0, 300, 3 * iconSize );
 			if ( World.instance.challenge.maintain > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
@@ -6024,6 +6024,7 @@ if ( cart )
 				GoalLeft( World.Goal.gold, 1 );
 			}
 			progress.progress = challenge.progress;
+			currentChallenge.text =  $"Current challenge: {challenge.title}, level reached yet: {challenge.reachedLevel}";
 			base.Update();
 		}
 
