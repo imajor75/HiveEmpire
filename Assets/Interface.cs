@@ -5934,9 +5934,9 @@ if ( cart )
 			noPin = true;
 			if ( reached != World.Goal.none )
 				reopen = true;
-			if ( base.Open( 300, 200 ) )
+			if ( base.Open( 400, 220 ) )
 				return;
-			this.Pin( -200, -100, 200, 100, 0.5f, 0.5f );
+			this.Pin( -200, -110, 200, 110, 0.5f, 0.5f );
 			UIHelpers.currentRow = -30;
 			if ( worldStopped )
 			{
@@ -5980,7 +5980,19 @@ if ( cart )
 				timeLeft.alignment = TextAnchor.MiddleCenter;
 			}
 			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
-			this.SetSize( 400, -UIHelpers.currentRow + 30 );
+			var row = UIHelpers.currentRow - iconSize / 2;
+			Button( "Restart" ).PinCenter( 0, row, 100, iconSize, 0.25f ).AddClickHandler( () => Restart( false ) );
+			Button( "Restart with different seed" ).PinCenter( 0, row, 150, iconSize, 0.75f ).AddClickHandler( () => Restart( true ) );
+			
+			this.SetSize( 400, -row + 30 );
+		}
+
+		void Restart( bool randomizeSeed )
+		{
+			var c = World.instance.challenge;
+			if ( randomizeSeed && !c.fixedSeed )
+				c.seed = World.rnd.Next();
+			root.NewGame( c );
 		}
 
 		new public void Update()
