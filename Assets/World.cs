@@ -168,6 +168,7 @@ public class World : MonoBehaviour
 			maintainBronze.Reset();
 			maintainSilver.Reset();
 			maintainGold.Reset();
+			reachedLevel = Goal.none;
 		}
 
 		void FixedUpdate()
