@@ -173,6 +173,9 @@ public class World : MonoBehaviour
 
 		void FixedUpdate()
 		{
+			if ( World.instance.challenge != this )
+				return;
+
 			var player = Interface.root.mainPlayer;
 			var currentLevel = Goal.gold;
 			conditionsText = "";
