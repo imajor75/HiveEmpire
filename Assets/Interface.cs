@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -5999,7 +5999,7 @@ if ( cart )
 					if ( timer.inProgress )
 					{
 						level = levelToCheck;
-						time = -challenge.maintainBronze.age;
+						time = -timer.age;
 					}
 				}
 				CheckLevel( World.Goal.bronze, challenge.maintainBronze );
