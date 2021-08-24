@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -5966,7 +5966,7 @@ if ( cart )
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			
-			currentChallenge = Text().PinDownwards( borderWidth, 0, 300, iconSize );
+			currentChallenge = Text().PinDownwards( borderWidth, 0, 400, iconSize );
 			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
 			conditions = Text( "", 10 ).PinDownwards( borderWidth, 0, 300, 3 * iconSize );
 			if ( World.instance.challenge.maintain > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
