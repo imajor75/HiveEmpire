@@ -12,7 +12,7 @@ public class Player : ScriptableObject
 	public Versioned versionedRoadNetworkChanged = new Versioned();
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
-	public World.Timer productivityTimer;
+	public World.Timer chartAdvanceTimer, productivityUpdateTimer;
 	public List<Chart> itemProductivityHistory = new List<Chart>();
 	public List<Stock> stocks = new List<Stock>();
 	public List<bool> stocksHaveNeed = new List<bool>();
@@ -26,7 +26,7 @@ public class Player : ScriptableObject
 	[Obsolete( "Compatibility with old files", true )]
 	float totalEfficiency { set {} }
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer efficiencyTimer { set { productivityTimer = value; } }
+	World.Timer efficiencyTimer { set { chartAdvanceTimer = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	Chart averageEfficiencyHistory { set {} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -38,9 +38,11 @@ public class Player : ScriptableObject
 	[Obsolete( "Compatibility with old files", true )]
 	int soldiersProduced { set { soldierCount = value; } }
 	[Obsolete( "Compatibility with old files", true )]
-	int bowmansProduced;
+	int bowmansProduced { set {} }
 	[Obsolete( "Compatibility with old files", true )]
-	int coinsProduced;
+	int coinsProduced { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer productivityTimer { set { chartAdvanceTimer = value; } }
 
 	public int soldierCount 
 	{ 
@@ -86,12 +88,16 @@ public class Player : ScriptableObject
 			return this;
 		}
 
+		public void UpdateCurrent()
+		{
+			current = current * ( Constants.Player.productionUpdateFactor ) + production * ( 3000 / Constants.Player.productivityUpdateTime ) * ( 1 - Constants.Player.productionUpdateFactor );
+			production = 0;
+		}
+
 		public void Advance()
 		{
 			if ( data == null )
 				data = new List<float>();
-
-			current = current * ( 1 - Constants.Player.productionUpdateFactor ) + production * Constants.Player.productionUpdateFactor;
 
 			if ( current > record )
 			{
@@ -100,7 +106,6 @@ public class Player : ScriptableObject
 			}
 
 			data.Add( current );
-			production = 0;
 		}
 	}
 
@@ -132,7 +137,8 @@ public class Player : ScriptableObject
 			Destroy( this );
 			return null;
 		}
-		productivityTimer.Start( Constants.Player.productivityUpdateTime );
+		chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );
+		productivityUpdateTimer.Start( Constants.Player.productivityUpdateTime );
 		CreateInputWeights();
 
 		return this;
@@ -209,12 +215,20 @@ public class Player : ScriptableObject
 
 	public void FixedUpdate()
 	{
-		if ( !productivityTimer.done )
-			return;
-		productivityTimer.Start( Constants.Player.productivityUpdateTime );
+		if ( chartAdvanceTimer.done )
+		{
+			chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );
 
-		foreach ( var chart in itemProductivityHistory )
-			chart.Advance();
+			foreach ( var chart in itemProductivityHistory )
+				chart.Advance();
+		}
+		if ( productivityUpdateTimer.done || productivityUpdateTimer.empty )
+		{
+			productivityUpdateTimer.Start( Constants.Player.productivityUpdateTime );
+
+			foreach ( var chart in itemProductivityHistory )
+				chart.UpdateCurrent();
+		}
 	}
 
 	bool CreateMainBuilding()

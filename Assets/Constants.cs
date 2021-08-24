@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public static class Constants
@@ -154,8 +155,9 @@ public static class Constants
 
     public static class Player
     {
-    	public const int productivityUpdateTime = 3000;
-		public const float productionUpdateFactor = 0.1f;
+    	public const int productivityAdvanceTime = 3000;
+    	public const int productivityUpdateTime = 50;
+		public static float productionUpdateFactor = (float)Math.Pow( 0.9, 1.0/60 );
 		public const float defaultInputWeight = 0.5f;
     }
 

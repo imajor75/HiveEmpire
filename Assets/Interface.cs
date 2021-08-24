@@ -5763,7 +5763,7 @@ if ( cart )
 				Vector3[] corners = new Vector3[4];
 				chart.rectTransform.GetWorldCorners( corners );
 				var cursorInsideChart = Input.mousePosition - corners[0];
-				int ticks = Constants.Player.productivityUpdateTime * (int)( corners[2].x - Input.mousePosition.x );
+				int ticks = Constants.Player.productivityAdvanceTime * (int)( corners[2].x - Input.mousePosition.x );
 				var hours = ticks / 60 / 60 / 50;
 				string time = $"{(ticks/60/50)%60} minutes ago";
 				if ( hours > 1 )
@@ -5831,11 +5831,11 @@ if ( cart )
 				for ( int x = 0; x < t.width; x++ )
 					t.SetPixel( x, y, c );
 			}
-			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Constants.Player.productivityUpdateTime;
+			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Constants.Player.productivityAdvanceTime;
 			while ( xh >= 0 )
 			{
 				VerticalLine( xh, Color.grey );
-				xh -= World.hourTickCount / Constants.Player.productivityUpdateTime;
+				xh -= World.hourTickCount / Constants.Player.productivityAdvanceTime;
 			}
 
 			int recordColumn = t.width - ( a.data.Count - a.recordIndex );
