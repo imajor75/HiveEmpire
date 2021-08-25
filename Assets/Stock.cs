@@ -380,6 +380,7 @@ public class Stock : Building, Worker.Callback.IHandler
 				for ( int i = 0; i < frameCount; i++ )
 				{
 					var itemBody = Instantiate( Item.looks.GetMediaData( itemType ) );
+					itemBody.transform.rotation *= Quaternion.Euler( -Constants.Item.yawAtFlag[(int)itemType], 0, 0 );
 					itemBody.transform.SetParent( frames[i].transform, false );
 				}
 			}
