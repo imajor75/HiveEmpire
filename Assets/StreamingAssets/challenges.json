@@ -39,7 +39,7 @@
       "description": "Reach soldiers production 1.49/minute, and maintain it for 10 minutes with a single barrack",
       "maintain": 30000,
       "conditions": [
-        "production soldier 1.49",
+        "production soldier 1.5",
         "buildingMax barrack 1"
       ]
     },
