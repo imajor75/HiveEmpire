@@ -279,6 +279,11 @@ public class Node : HiveObject
 		return Mathf.Max( h, Mathf.Max( v, d ) );
 	}
 
+	public Vector3 Offset( Node another )
+	{
+		return another.GetPositionRelativeTo( this ) - position;
+	}
+
 	public int AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false )
 	{
 		int count = 0;

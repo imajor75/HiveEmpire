@@ -24,6 +24,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	public Node referenceLocation;
 	public bool invalid;
+	public List<Vector3> nodePositions;
 
 	Material mapMaterial;
 	Mesh mapMesh;
@@ -178,6 +179,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		transform.localPosition = centerNode.position;
 		ground.Link( this );
 		referenceLocation = centerNode;
+		nodePositions = null;
 		curves = new List<CubicCurve>[3];
 		CreateCurves();
 		underConstruction = false;
@@ -302,8 +304,8 @@ public class Road : HiveObject, Interface.IInputHandler
 				float tv = 1.0f / Constants.Road.blocksInSection * b * 2;
 				if ( tv > 1 )
 					tv = 2 - tv;
-				var pos = PositionAt(i, 1.0f / Constants.Road.blocksInSection * b);
-				var dir = DirectionAt( i, 1.0f / Constants.Road.blocksInSection * b);
+				var pos = PositionAt( i, 1.0f / Constants.Road.blocksInSection * b );
+				var dir = DirectionAt( i, 1.0f / Constants.Road.blocksInSection * b );
 				var side = new Vector3
 				{
 					x = dir.z / 2,
@@ -481,7 +483,29 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	Vector3 NodePosition( int index )
 	{
-		return nodes[index].GetPositionRelativeTo( referenceLocation );
+		if ( nodePositions == null || nodePositions.Count != nodes.Count )
+		{
+			nodePositions = new List<Vector3>();
+
+			int i = 0;
+			while ( nodes[i] != referenceLocation && i < nodes.Count - 1 )
+				i++;
+			Vector3 current = nodes[i].position;
+			while ( i > 0 )
+			{
+				current += nodes[i].Offset( nodes[i - 1] );
+				i--;
+			}
+			while ( i < nodes.Count )
+			{
+				nodePositions.Add( current );
+				if ( i < nodes.Count - 1 )
+					current += nodes[i].Offset( nodes[i + 1] );
+				i++;
+			}
+		}
+
+		return nodePositions[index];
 	}
 
 	public void CreateCurves()
