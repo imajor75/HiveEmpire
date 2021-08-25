@@ -270,7 +270,10 @@ public class Road : HiveObject, Interface.IInputHandler
 			return; // The road was already destroyed in the past, but a reference keeps the script alive
 
 		if ( force )
+		{
+			nodePositions = null;
 			curves = new List<CubicCurve>[3];
+		}
 		CreateCurves();
 
 		int vertexRows = (nodes.Count - 1) * Constants.Road.blocksInSection + 1;
