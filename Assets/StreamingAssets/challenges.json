@@ -49,7 +49,7 @@
       "maintain": 30000,
       "worldSize": 48,
       "conditions": [
-        "production soldier 1",
+        "production soldier 1.2",
         "buildingMax guardHouse 3"
       ]
     }
