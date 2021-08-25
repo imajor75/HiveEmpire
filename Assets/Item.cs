@@ -54,7 +54,10 @@ public class Item : HiveObject
 	{
 		get
 		{
-			return Constants.Item.bottomHeights[(int)type];
+			var b = Constants.Item.bottomHeights[(int)type];
+			if ( b == float.MaxValue ) 
+				return 0;
+			return b;
 		}
 		[Obsolete( "Compatibility with old files", true )]
 		set {}
