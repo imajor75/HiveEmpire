@@ -24,6 +24,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	public Node referenceLocation;
 	public bool invalid;
+	[JsonIgnore]
 	public List<Vector3> nodePositions;
 
 	Material mapMaterial;
