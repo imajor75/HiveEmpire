@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6073,30 +6073,30 @@ if ( cart )
 			Open( null, 0, 0, 300, 250 );
 			this.PinCenter( 0, 0, 300, 250, 0.5f, 0.3f );
 
-			int row = -borderWidth - 14;
+			UIHelpers.currentRow = -borderWidth;
 
 			if ( !demoMode )
 			{
-				Button( "Continue" ).PinCenter( 0, row, 100, 25, 0.5f ).AddClickHandler( Close );
-				Image().PinCenter( 0, row - 16, 260, 1, 0.5f ).color = Color.black;
-				row -= 33;
+				Button( "Continue" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Close );
+				Image().PinDownwards( 0, 0, 260, 1, 0.5f, 1, true ).color = Color.black;
 			}
 
-			Button( "View Challenges" ).PinCenter( 0, row, 120, 25, 0.5f ).AddClickHandler( () => { ChallengeList.Create(); Close(); } );
-			row -= 18;
-			Image().PinCenter( 0, row - 25, 260, 1, 0.5f ).color = Color.black;
-
-			Button( "Load" ).Pin( 20, row - 3, 60, 25 ).AddClickHandler( Load );
-			loadNames = Dropdown().Pin( 80, row, 200, 25 );
-			Image().Pin( 20, row - 28, 260, 1 ).color = Color.black;
-			row -= 35;
+			Button( "View Challenges" ).PinDownwards( 0, 0, 120, 25, 0.5f, 1, true ).AddClickHandler( () => { ChallengeList.Create(); Close(); } );
+			Image().PinDownwards( 0, 0, 260, 1, 0.5f, 1, true ).color = Color.black;
 
 			if ( !demoMode )
 			{
-				Button( "Save" ).Pin( 20, row + 2, 60, 25 ).AddClickHandler( Save );
-				saveName = InputField().Pin( 80, row, 100, 25 );
+				var loadRow = UIHelpers.currentRow;
+				Button( "Load" ).PinDownwards( 20, 0, 60, 25 ).AddClickHandler( Load );
+				UIHelpers.currentRow = loadRow;
+				loadNames = Dropdown().PinDownwards( 80, 0, 200, 25 );
+				Image().PinDownwards( 20, 0, 260, 1 ).color = Color.black;
+
+				var saveRow = UIHelpers.currentRow;
+				Button( "Save" ).PinDownwards( 20, 0, 60, 25 ).AddClickHandler( Save );
+				UIHelpers.currentRow = saveRow;
+				saveName = InputField().PinDownwards( 80, 0, 100, 25 );
 				saveName.text = new System.Random().Next().ToString();
-				row -= 30;
 			}
 
 			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
@@ -6104,7 +6104,7 @@ if ( cart )
 			watcher.Deleted += SaveFolderChanged;
 			watcher.EnableRaisingEvents = true;
 
-			Button( "Exit" ).PinCenter( 0, row - 10, 100, 25, 0.5f ).AddClickHandler( Application.Quit );
+			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
 
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
@@ -6113,7 +6113,7 @@ if ( cart )
 				escCloses = false;
 			}
 
-			SetSize( 300, -row + 40 );
+			SetSize( 300, -UIHelpers.currentRow + 20 );
 		}
 
 		public new void OnDestroy()
@@ -6132,6 +6132,8 @@ if ( cart )
 
 		void Load()
 		{
+			if ( loadNames.options.Count <= loadNames.value )
+				return;
 			root.Load( Application.persistentDataPath + "/Saves/" + loadNames.options[loadNames.value].text );
 			Close();
 		}
@@ -6149,6 +6151,8 @@ if ( cart )
 		void UpdateLoadNames()
 		{
 			loadNamesRefreshNeeded = false;
+			if ( loadNames == null )
+				return;
 			loadNames.ClearOptions();
 
 			List<string> files = new List<string>();
@@ -6248,8 +6252,13 @@ public static class UIHelpers
 		return panel.Image( Interface.iconTable.GetMediaData( icon ) );
 	}
 
-	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
+	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
+		if ( center )
+		{
+			x -= xs / 2;
+			y += ys / 2;
+		}
 		currentColumn = x + xs;
 		currentRow = y - ys;
 		if ( g.transform is RectTransform t )
@@ -6263,18 +6272,18 @@ public static class UIHelpers
 
 	public static UIElement PinCenter<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
 	{
-		return g.Pin( x - xs / 2, y + ys / 2, xs, ys, xa, ya );
+		return g.Pin( x, y, xs, ys, xa, ya, true );
 	}
 
-	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
+	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
-		g.Pin( x, y + currentRow, xs, ys, xa, ya );
+		g.Pin( x, y + currentRow - (center ? ys / 2 : 0), xs, ys, xa, ya, center );
 		return g;
 	}
 
-	public static UIElement PinSideways<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
+	public static UIElement PinSideways<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
-		g.Pin( x + currentColumn, y, xs, ys, xa, ya );
+		g.Pin( x + currentColumn + (center ? xs / 2 : 0), y, xs, ys, xa, ya, center );
 		return g;
 	}
 
