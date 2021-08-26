@@ -27,7 +27,7 @@
     },
     {
       "title": "Soldier production big",
-      "description": "Reach soldiers production 4.5/minute, and maintain it for 30 minutes on a big map",
+      "description": "Reach soldier production 4.5/minute, and maintain it for 30 minutes on a big map",
       "maintain": 90000,
       "worldSize": 48,
       "conditions": [
@@ -36,7 +36,7 @@
     },
     {
       "title": "One barrack",
-      "description": "Reach soldiers production 1.49/minute, and maintain it for 10 minutes with a single barrack",
+      "description": "Maximize soldier production with a single barrack supplying it with materials continuously",
       "maintain": 30000,
       "conditions": [
         "production soldier 1.5",
@@ -45,7 +45,7 @@
     },
     {
       "title": "Limited area",
-      "description": "Reach soldiers production 1/minute, and maintain it for 10 minutes with only three guardhouses",
+      "description": "Reach soldier production 1/minute, and maintain it for 10 minutes with only three guardhouses",
       "maintain": 30000,
       "worldSize": 48,
       "conditions": [
