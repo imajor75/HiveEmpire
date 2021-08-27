@@ -37,6 +37,7 @@ public class World : MonoBehaviour
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public string fileName;
+	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>();
 
 	static public Water water;
 	static public GameObject nodes;
@@ -485,6 +486,9 @@ public class World : MonoBehaviour
 		time += (int)timeFactor;
 		foreach ( var player in players )
 			player.FixedUpdate();
+
+		foreach ( var ho in hiveObjects )
+			ho.CriticalUpdate();
 	}
 		
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
@@ -672,6 +676,11 @@ public class World : MonoBehaviour
 					foreach ( var b in s.buffers )
 						if ( b.stored > b.size )
 							b.stored = b.size;
+					if ( !hiveObjects.Contains( s ) )
+					{
+						print( $"Adding {s.title} to list of hive objects" );
+						hiveObjects.AddFirst( s );
+					}
 				}
 
 				var t = o as Stock;

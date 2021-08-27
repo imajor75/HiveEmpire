@@ -442,6 +442,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly ) == null )
 			return null;
 
+		base.Setup();
+
 		return this;
 	}
 
@@ -671,7 +673,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 		mapIndicator.transform.localScale = new Vector3( Constants.Node.size * productivity.current / 10, 1, Constants.Node.size * 0.02f );
 		mapIndicator.transform.rotation = Quaternion.Euler( 0, (float)( World.instance.eye.direction / Math.PI * 180 ), 0 );
 		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
+	}
 
+	public override void CriticalUpdate()
+	{
+		if ( !construction.done || blueprintOnly )
+			return;
 
 		if ( worker == null )
 			dispenser = worker = Worker.Create().SetupForBuilding( this );

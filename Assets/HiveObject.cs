@@ -22,6 +22,11 @@ public abstract class HiveObject : MonoBehaviour
 		assert = new Assert( this );
 	}
 
+	public void Setup()
+	{
+		World.instance.hiveObjects.AddFirst( this );
+	}
+
 	static public string Nice( string raw )
 	{
 		string nice = "";
@@ -44,7 +49,15 @@ public abstract class HiveObject : MonoBehaviour
 	public virtual void DestroyThis( bool noAssert = false )
 	{
 		this.noAssert = noAssert;
+		World.instance.hiveObjects.Remove( this );
 		Destroy( gameObject );
+	}
+
+	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, sucs as when woodcutters decide which tree to cut. 
+	// So when this function is called by World.FixedUpdate it is always called in the same order.
+	public virtual void CriticalUpdate()
+	{
+
 	}
 
 	public virtual bool Remove( bool takeYourTime = false )
