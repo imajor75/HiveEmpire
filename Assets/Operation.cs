@@ -288,21 +288,21 @@ public class Operation : ScriptableObject
             {
                 int oldCount = road.targetWorkerCount;
                 road.targetWorkerCount = workerCount;
-                workerCount = oldCount;
-                break;
+                return Create().SetupAsChangeWorkerCount( road, oldCount );
             }
             case Type.removeBuilding:
             {
                 Building building = this.building;
+                var inverse = Operation.Create();
                 if ( building is Workshop workshop )
-                    SetupAsCreateBuilding( building.node, building.flagDirection, BuildingType.workshop, workshop.type );
+                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, BuildingType.workshop, workshop.type );
                 if ( building is Stock )
-                    SetupAsCreateBuilding( building.node, building.flagDirection, BuildingType.stock );
+                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, BuildingType.stock );
                 if ( building is GuardHouse )
-                    SetupAsCreateBuilding( building.node, building.flagDirection, BuildingType.guardHouse );
+                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, BuildingType.guardHouse );
 
                 building.Remove( true );
-                break;
+                return inverse;
             }
             case Type.createBuilding:
             {
@@ -315,18 +315,16 @@ public class Operation : ScriptableObject
                     newBuilding = GuardHouse.Create().Setup( location, Interface.root.mainPlayer, direction );
 
                 if ( newBuilding )
-                    SetupAsRemoveBuilding( newBuilding );
+                    return Create().SetupAsRemoveBuilding( newBuilding );
                 else
                     return null;
-                
-                break;
             }
             case Type.removeRoad:
             {
                 if ( road == null || !road.Remove( true ) )
                     return null;
-                SetupAsCreateRoad( road.nodes );
-                break;
+                }
+                return Create().SetupAsCreateRoad( road.nodes );    // TODO Seems to be dangerous to use the road after it was removed
             }
             case Type.createRoad:
             {
@@ -337,38 +335,33 @@ public class Operation : ScriptableObject
                     for ( int i = 1; i < roadPath.Count; i++ )
                         allGood &= newRoad.AddNode( roadPath[i] );
                     if ( allGood && newRoad.Finish() )
-                        SetupAsRemoveRoad( newRoad );
-                    else
-                    {
-                        newRoad.Remove( false );
-                        return null;
+                            newRoad.Finish();
                     }
                 }
-                break;
+                else
+                    newRoad = roadPath[1].road;
+                if ( newRoad )
+                    return Create().SetupAsRemoveRoad( newRoad );
+                else
+                    return null;
             }
             case Type.removeFlag:
             {
-                if ( flag == null || !flag.Remove( true ) )
-                    return null;
 
-                SetupAsCreateFlag( flag.node, flag.crossing );
-                break;
+                return Create().SetupAsCreateFlag( flag.node, flag.crossing );
             }
             case Type.createFlag:
             {
                 var newFlag = Flag.Create().Setup( location, Interface.root.mainPlayer, false, crossing );
                 if ( newFlag == null )
                     return null;
-                SetupAsRemoveFlag( newFlag );
-                break;
+                return Create().SetupAsRemoveFlag( newFlag );
             }
             case Type.moveFlag:
             {
                 if ( !flag.Move( direction ) )
                     return null;
-                direction += Constants.Node.neighbourCount / 2;
-                direction %= Constants.Node.neighbourCount;
-                break;
+                return Create().SetupAsMoveFlag( flag, ( direction + Constants.Node.neighbourCount / 2 ) % Constants.Node.neighbourCount );
             }
             case Type.changeArea:
             {
@@ -378,9 +371,7 @@ public class Operation : ScriptableObject
                 var oldRadius = area.radius;
                 area.center = location;
                 area.radius = radius;
-                location = oldCenter;
-                radius = oldRadius;
-                break;
+                return Create().SetupAsChangeArea( area, oldCenter, oldRadius );
             }
             case Type.changeRoutePriority:
             {
@@ -388,19 +379,19 @@ public class Operation : ScriptableObject
                     return null;
                 route.priority += direction;
                 route.start.owner.UpdateStockRoutes( route.itemType );
-                direction *= -1;
-                break;
+                }
+                return Create().SetupAsChangePriority( route, direction * -1 );
             }
             case Type.moveRoad:
             {
                 if ( !location.road.Move( location.road.nodes.IndexOf( location ), direction ) )
                     return null;
-                location = location.Neighbour( direction );
-                direction += Constants.Node.neighbourCount / 2;
-                direction %= Constants.Node.neighbourCount;
+                return Create().SetupAsMoveRoad( road, index, ( direction + Constants.Node.neighbourCount / 2 ) % Constants.Node.neighbourCount );
+            }
+            case Type.CRC:
                 break;
             }
         }
-        return this;
+        return null;
     }
 }
