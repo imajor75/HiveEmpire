@@ -1216,7 +1216,7 @@ public class Worker : HiveObject
 	{
 		float heightDifference = Math.Abs( a.height - b.height );
 		float time = 2f + heightDifference * 4f;    // Number of seconds it takes for the worker to reach the other node
-		return 1 / time / 50;
+		return 1 / time / Constants.World.normalSpeedPerSecond;
 	}
 
 	public void Walk( Node target )
@@ -1463,7 +1463,7 @@ public class Worker : HiveObject
 			ScheduleWalkToNeighbour( owner.mainBuilding.node );
 		};
 		ScheduleCall( owner.mainBuilding );
-		ScheduleWait( 50 );	// Wait to prevent further calls to this function once the unit reached the headquarters
+		ScheduleWait( Constants.World.normalSpeedPerSecond );	// Wait to prevent further calls to this function once the unit reached the headquarters
 		recalled = true;
 	}
 

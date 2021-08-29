@@ -90,7 +90,7 @@ public class Player : ScriptableObject
 
 		public void UpdateCurrent()
 		{
-			current = current * ( Constants.Player.productionUpdateFactor ) + production * ( 3000 / Constants.Player.productivityUpdateTime ) * ( 1 - Constants.Player.productionUpdateFactor );
+			current = current * ( Constants.Player.productionUpdateFactor ) + production * ( Constants.World.normalSpeedPerSecond * 60 / Constants.Player.productivityUpdateTime ) * ( 1 - Constants.Player.productionUpdateFactor );
 			production = 0;
 		}
 

@@ -3,6 +3,17 @@ using UnityEngine;
 
 public static class Constants
 {
+    public static class Interface
+    {
+    	public const float autoSaveInterval = 5 * 60;
+    }
+
+    public static class World
+    {
+        public const float fastSpeedFactor = 8;
+        public const int normalSpeedPerSecond = 50;
+    }
+
     public static class Building
     {
         public const int flatteningTime = 220;
@@ -18,14 +29,14 @@ public static class Constants
         public const float defaultViewDistance = 5.0f;
         public const float defaultViewDistanceWithDirector = 2.0f;
         public const float forwardForGroundBlocks = 10;
-        public const float heightFollowSpeed = 0.04f;
-        public const float moveSpeed = 0.1f;
-        public const float rotateSpeed = 0.03f;
-        public const float autoRotateSpeed = 0.001f;
-        public const float altitudeChangeSpeed = 1.01f;
-        public const float altitudeSmoothness = 0.1f;
-        public const float altitudeChangeSpeedWithMouseWheel = 0.5f;
-        public const int autoStorePositionAfter = 100; // 2 seconds
+        public const float heightFollowSpeed = 2;
+        public const float moveSpeed = 5;
+        public const float rotateSpeed = 1.5f;
+        public const float autoRotateSpeed = 0.15f;
+        public const float altitudeChangeSpeed = 5;
+        public const float altitudeSmoothness = 1;
+        public const float altitudeChangeSpeedWithMouseWheel = 25;
+        public const float autoStorePositionAfter = 2;
         public const int maxNumberOfSavedPositions = 10;
     }
 
@@ -155,7 +166,7 @@ public static class Constants
 
     public static class Player
     {
-    	public const int productivityAdvanceTime = 3000;
+    	public const int productivityAdvanceTime = Constants.World.normalSpeedPerSecond * 60;
     	public const int productivityUpdateTime = 50;
 		public static float productionUpdateFactor = (float)Math.Pow( 0.9, 1.0/60 );
 		public const float defaultInputWeight = 0.5f;
@@ -171,7 +182,7 @@ public static class Constants
 
     public static class Road
     {
-    	public const int timeBetweenWorkersAdded = 3000;
+    	public const int timeBetweenWorkersAdded = Constants.World.normalSpeedPerSecond * 60;
     	public const float bodyHeight = 1.0f/20;
     	public const int blocksInSection = 8;
     }
@@ -190,7 +201,7 @@ public static class Constants
         public const int plankNeeded = 3;
         public const int stoneNeeded = 3;
         public const bool flatteningNeeded = true;
-        public const int constructionTime = 6000;
+        public const int constructionTime = Constants.World.normalSpeedPerSecond * 120;
         public const global::Node.Type groundTypeNeeded = global::Node.Type.aboveWater;
 		public const int cartCapacity = 25;
         public const float cartSpeed = 1.25f;
@@ -201,22 +212,22 @@ public static class Constants
 
     public static class Worker
     {
-       	public const int stuckTimeout = 3000;
-    	public const int boredTimeBeforeRemove = 6000;
+       	public const int stuckTimeout = Constants.World.normalSpeedPerSecond * 60;
+    	public const int boredTimeBeforeRemove = Constants.World.normalSpeedPerSecond * 120;
         public const int flagSearchDistance = 6;
     }
 
     public static class Workshop
     {
-	    public const int mineOreRestTime = 20000;
-	    public const int fishRestTime = 16000;
-	    public const int pasturingTime = 100;
+	    public const int mineOreRestTime = Constants.World.normalSpeedPerSecond * 400;
+	    public const int fishRestTime = Constants.World.normalSpeedPerSecond * 320;
+	    public const int pasturingTime = Constants.World.normalSpeedPerSecond * 2;
 	    public const float pasturingPrayChance = 0.2f;  
-    	public const int maxSavedStatusTime = 50 * 60 * 60 * 10;
+    	public const int maxSavedStatusTime = Constants.World.normalSpeedPerSecond * 60 * 60 * 10;
         public const int productivityTimingLength = 300;
         public const float productivityWeight = 0.05f;
-        public const int defaultProductionTime = 1500;
-        public const int defaultMaxRestTime = 3000;
+        public const int defaultProductionTime = Constants.World.normalSpeedPerSecond * 30;
+        public const int defaultMaxRestTime = Constants.World.normalSpeedPerSecond * 60;
         public const int defaultRelaxSpotNeeded = 20;
         public const int defaultOutputMax = 4;
         public const int defaultGatheringRange = 6;

@@ -6,12 +6,34 @@ using UnityEngine;
 public class OperationHandler : HiveObject
 {
 	public List<Operation> undoQueue = new List<Operation>(), redoQueue = new List<Operation>(), repeatBuffer = new List<Operation>();
+    public Mode mode;
+
+	static public Interface.Hotkey undoHotkey = new Interface.Hotkey( "Undo", KeyCode.Z, true );
+	static public Interface.Hotkey redoHotkey = new Interface.Hotkey( "Redo", KeyCode.Y, true );
+
+    public enum Mode
+    {
+        recording,
+        repeating
+    }
 
     public override Node location => throw new System.NotImplementedException();
 
+    public static OperationHandler Create()
+    {
+        return new GameObject( "Operation handler").AddComponent<OperationHandler>();
+    }
+
+    void Update()
+    {
+		if ( undoHotkey.IsDown() )
+			Undo();
+		if ( redoHotkey.IsDown() )
+			Redo();
+    }
+
     public void ExecuteOperation( Operation operation, bool doneAlready = false )
 	{
-        operation.scheduleAt = World.instance.time;
         repeatBuffer.Add( operation );
 		var inverse = operation.ExecuteAndInvert( doneAlready );
         if ( inverse )
@@ -415,9 +437,6 @@ public class Operation : ScriptableObject
                 if ( !location.road.Move( index, direction ) )
                     return null;
                 return Create().SetupAsMoveRoad( road, index, ( direction + Constants.Node.neighbourCount / 2 ) % Constants.Node.neighbourCount );
-            }
-            case Type.CRC:
-                break;
             }
         }
         return null;

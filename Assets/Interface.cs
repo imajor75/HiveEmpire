@@ -11,7 +11,7 @@ using UnityEngine.Profiling;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 
-public class Interface : OperationHandler
+public class Interface : HiveObject
 {
 	public List<Panel> panels = new List<Panel>();
 	public PostProcessResources postProcessResources;
@@ -28,8 +28,7 @@ public class Interface : OperationHandler
 	public bool heightStrips;
 	public Player mainPlayer;
 	public static Tooltip tooltip;
-	public int autoSave = autoSaveInterval;
-	const int autoSaveInterval = 15000;
+	public float lastAutoSave = -1;
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
 	public HighlightType highlightType;
@@ -55,17 +54,14 @@ public class Interface : OperationHandler
 
 	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M, true );
 
-	static public Hotkey undoHotkey = new Hotkey( "Undo", KeyCode.Z, true );
-	static public Hotkey redoHotkey = new Hotkey( "Redo", KeyCode.Y, true );
-
 	static public Hotkey cameraLeftHotkey = new Hotkey( "Camera move left (continuous)", KeyCode.A );
 	static public Hotkey cameraRightHotkey = new Hotkey( "Camera move right (continuous)", KeyCode.D );
 	static public Hotkey cameraUpHotkey = new Hotkey( "Camera move up (continuous)", KeyCode.W );
 	static public Hotkey cameraDownHotkey = new Hotkey( "Camera move down (continuous)", KeyCode.S );
 	static public Hotkey cameraRotateCCWHotkey = new Hotkey( "Camera rotate CW (continuous)", KeyCode.E );
 	static public Hotkey cameraRotateCWHotkey = new Hotkey( "Camera rotate CCW (continuous)", KeyCode.Q );
-	static public Hotkey cameraZoomInHotkey = new Hotkey( "Camera zoom in", KeyCode.Z );
-	static public Hotkey cameraZoomOutHotkey = new Hotkey( "Camera zoom out", KeyCode.Y );
+	static public Hotkey cameraZoomInHotkey = new Hotkey( "Camera zoom in (continuous)", KeyCode.Z );
+	static public Hotkey cameraZoomOutHotkey = new Hotkey( "Camera zoom out (continuous)", KeyCode.Y );
 
 	static public Hotkey mapZoomInHotkey = new Hotkey( "Map zoom in", KeyCode.KeypadPlus );
 	static public Hotkey mapZoomOutHotkey = new Hotkey( "Map zoom out", KeyCode.KeypadMinus );
@@ -317,11 +313,6 @@ public class Interface : OperationHandler
 		}
 #endif
 
-		if ( --autoSave < 0 )
-		{
-			Save();
-			autoSave = autoSaveInterval;
-		}
 		var o = materialUIPath.mainTextureOffset;
 		o.y -= 0.015f;
 		if ( o.y < 0 )
@@ -423,6 +414,7 @@ public class Interface : OperationHandler
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
+		Directory.CreateDirectory( Application.persistentDataPath + "/Replays" );
 
 		canvas = gameObject.AddComponent<Canvas>();
 		canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -468,11 +460,11 @@ public class Interface : OperationHandler
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
-		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetTimeFactor( 0 ) ).Link( this ).Pin( -150, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetSpeed( World.Speed.pause ) ).Link( this ).Pin( -150, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
-		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => world.SetTimeFactor( 1 ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
+		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => world.SetSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
-		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => world.SetTimeFactor( 8 ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
+		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => world.SetSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
 		LoadHotkeys();
@@ -571,10 +563,11 @@ public class Interface : OperationHandler
 		// 	if ( !localReset )
 		// 		world.Reset();
 		// }
-		if ( undoHotkey.IsDown() )
-			Undo();
-		if ( redoHotkey.IsDown() )
-			Redo();
+		if ( Time.time - lastAutoSave > Constants.Interface.autoSaveInterval )
+		{
+			Save();
+			lastAutoSave = Time.time;
+		}
 
 		if ( headquartersHotkey.IsDown() )
 			mainPlayer.mainBuilding.OnClicked( true );
@@ -610,7 +603,7 @@ public class Interface : OperationHandler
 			if ( flag != mainPlayer.mainBuilding.flag )
 			{
 				world.eye.FocusOn( flag );
-				ExecuteRemoveFlag( flag );
+				World.instance.operationHandler.ExecuteRemoveFlag( flag );
 			}
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad1 ) )
@@ -634,7 +627,7 @@ public class Interface : OperationHandler
 			if ( building != mainPlayer.mainBuilding )
 			{
 				world.eye.FocusOn( building );
-				ExecuteRemoveBuilding( building );
+				world.operationHandler.ExecuteRemoveBuilding( building );
 			}
 		}
 #endif
@@ -1653,7 +1646,7 @@ public class Interface : OperationHandler
 					root.highlightType = HighlightType.none;
 					root.highlightArea = null;
 				}
-				root.RegisterChangeArea( area, oldCenter, oldRadius );
+				World.instance.operationHandler.RegisterChangeArea( area, oldCenter, oldRadius );
 				return false;
 			}
 
@@ -2051,7 +2044,7 @@ public class Interface : OperationHandler
 		void Remove()
 		{
 			if ( workshop )
-				root.ExecuteRemoveBuilding( workshop );
+				World.instance.operationHandler.ExecuteRemoveBuilding( workshop );
 
 			Close();
 		}
@@ -2287,7 +2280,7 @@ public class Interface : OperationHandler
 			public Workshop workshop;
 			public World.Timer autoRefresh;
 			public Image circle;
-			const int autoRefreshInterval = 3000;
+			const int autoRefreshInterval = Constants.World.normalSpeedPerSecond * 60;
 			public List<Text> intervalTexts = new List<Text>();
 
 			public static PastStatuses Create()
@@ -2302,7 +2295,7 @@ public class Interface : OperationHandler
 
 				this.workshop = workshop;
 				autoRefresh.Start( autoRefreshInterval );
-				SetInterval( 50 * 60 * 10 );
+				SetInterval( Constants.World.normalSpeedPerSecond * 60 * 10 );
 			}
 			
 			public void Fill()
@@ -2347,7 +2340,7 @@ public class Interface : OperationHandler
 				statusColors = new Color[] { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light(), Color.Lerp( Color.green, Color.blue, 0.5f ).Light() };
 				Assert.global.AreEqual( statusColors.Length, (int)Workshop.Status.total );
 
-				Text( $"Last {totalTicks / 60 / 50} minutes" ).Pin( -150, -borderWidth, 300, iconSize, 1, 1 );
+				Text( $"Last {totalTicks / 60 / Constants.World.normalSpeedPerSecond} minutes" ).Pin( -150, -borderWidth, 300, iconSize, 1, 1 );
 				for ( int i = 0; i < (int)Workshop.Status.total; i++ )
 				{
 					if ( ticksInStatus[i] == 0 )
@@ -2372,11 +2365,11 @@ public class Interface : OperationHandler
 					t.color = interval == this.interval ? Color.white : Color.grey;
 				}
 				UIHelpers.currentColumn = -180;
-				AddIntervalText( "10h", 50 * 60 * 60 * 10 );
-				AddIntervalText( "1h", 50 * 60 * 60 );
-				AddIntervalText( "30m", 50 * 60 * 30 );
-				AddIntervalText( "10m", 50 * 60 * 10 );
-				AddIntervalText( "1m", 50 * 60 );
+				AddIntervalText( "10h", Constants.World.normalSpeedPerSecond * 60 * 60 * 10 );
+				AddIntervalText( "1h", Constants.World.normalSpeedPerSecond * 60 * 60 );
+				AddIntervalText( "30m", Constants.World.normalSpeedPerSecond * 60 * 30 );
+				AddIntervalText( "10m", Constants.World.normalSpeedPerSecond * 60 * 10 );
+				AddIntervalText( "1m", Constants.World.normalSpeedPerSecond * 60 );
 			}
 
 			void FillCircle()
@@ -2461,7 +2454,7 @@ public class Interface : OperationHandler
 		void Remove()
 		{
 			if ( guardHouse )
-				root.ExecuteRemoveBuilding( guardHouse );
+				World.instance.operationHandler.ExecuteRemoveBuilding( guardHouse );
 			Close();
 		}
 	}
@@ -2673,7 +2666,7 @@ public class Interface : OperationHandler
 		void Remove()
 		{
 			if ( stock )
-				root.ExecuteRemoveBuilding( stock );
+				World.instance.operationHandler.ExecuteRemoveBuilding( stock );
 			Close();
 		}
 
@@ -3208,13 +3201,13 @@ public class Interface : OperationHandler
 				bool merge = false;
 				if ( building.flag.blueprintOnly )
 				{
-					root.RegisterCreateFlag( building.flag );
+					World.instance.operationHandler.RegisterCreateFlag( building.flag );
 					merge = true;
 				}
-				root.RegisterCreateBuilding( building, merge );
+				World.instance.operationHandler.RegisterCreateBuilding( building, merge );
 			}
 			if ( currentBlueprint is Flag flag )
-				root.RegisterCreateFlag( flag );
+				World.instance.operationHandler.RegisterCreateFlag( flag );
 			currentBlueprint.Materialize();
 			currentBlueprint = null;
 			currentBlueprintPanel?.Close();
@@ -3378,7 +3371,7 @@ public class Interface : OperationHandler
 		void Remove()
 		{
 			if ( road )
-				root.ExecuteRemoveRoad( road );
+				World.instance.operationHandler.ExecuteRemoveRoad( road );
 			Close();
 		}
 
@@ -3392,14 +3385,14 @@ public class Interface : OperationHandler
 
 		void Split()
 		{
-			root.ExecuteCreateFlag( node );
+			World.instance.operationHandler.ExecuteCreateFlag( node );
 			ValidateAll();
 		}
 
 		void TargetWorkerCountChanged( int newValue )
 		{
 			if ( road && road.targetWorkerCount != newValue )
-				root.ExecuteChangeRoadWorkerCount( road, newValue );
+				World.instance.operationHandler.ExecuteChangeRoadWorkerCount( road, newValue );
 		}
 
 		new public void OnDestroy()
@@ -3521,7 +3514,7 @@ public class Interface : OperationHandler
         public bool OnNodeClicked(Node node)
         {
 			if ( !root.viewport.rightButton )
-				root.ExecuteMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
+				World.instance.operationHandler.ExecuteMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
 
 			if ( node.road )
 			{
@@ -3596,7 +3589,7 @@ public class Interface : OperationHandler
 		void Remove()
 		{
 			if ( flag && flag != root.mainPlayer.mainBuilding.flag )
-				root.ExecuteRemoveFlag( flag );
+				World.instance.operationHandler.ExecuteRemoveFlag( flag );
 			Close();
 		}
 
@@ -3660,8 +3653,8 @@ public class Interface : OperationHandler
 						itemTimers[i].enabled = true;
 						items[i].SetInTransit( false );
 						int timeAtFlag = flag.items[i].atFlag.age;
-						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / 3000 ), 3 );
-						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / 30000f );
+						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / Constants.World.normalSpeedPerSecond * 60 ), 3 );
+						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / Constants.World.normalSpeedPerSecond * 600f );
 					}
 					else
 						items[i].SetInTransit( true );
@@ -3692,7 +3685,7 @@ public class Interface : OperationHandler
         {
 			int i = flag.node.DirectionTo( node );
 			if ( i >= 0 && !root.viewport.rightButton )
-				root.ExecuteMoveFlag( flag, i );
+				World.instance.operationHandler.ExecuteMoveFlag( flag, i );
 			else
 				root.viewport.OnNodeClicked( node );
 			return keepGoing;
@@ -4116,9 +4109,9 @@ if ( cart )
 			}
 
 			if ( item.flag )
-				stats.text = "Age: " + item.life.age / 50 + " secs, at flag for " + item.atFlag.age / 50 + " secs";
+				stats.text = "Age: " + item.life.age / Constants.World.normalSpeedPerSecond + " secs, at flag for " + item.atFlag.age / Constants.World.normalSpeedPerSecond + " secs";
 			else
-				stats.text = "Age: " + item.life.age / 50 + " secs";
+				stats.text = "Age: " + item.life.age / Constants.World.normalSpeedPerSecond + " secs";
 
 			if ( item.destination && route == null )
 				route = PathVisualization.Create().Setup( item.path, Interface.root.viewport.visibleAreaCenter );
@@ -4313,8 +4306,8 @@ if ( cart )
 				rate[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				status[i] = Text( "", 8 ).Link( scroll.content ).PinSideways( 0, row, 100, 2 * iconSize );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => root.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => root.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
+				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => World.instance.operationHandler.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
+				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => World.instance.operationHandler.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
 				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) ).SetTooltip( "Follow the cart which is currently working on the route" );
 				row -= iconSize + 5;
 			}
@@ -4343,7 +4336,7 @@ if ( cart )
 				}
 				else
 					last[i].text = "-";
-				rate[i].text = $"~{(list[i].averageTransferRate*50*60).ToString( "F2" )}/m";
+				rate[i].text = $"~{(list[i].averageTransferRate*Constants.World.normalSpeedPerSecond*60).ToString( "F2" )}/m";
 				total[i].text = list[i].itemsDelivered.ToString();
 				cart[i].gameObject.SetActive( list[i].start.cart.currentRoute == list[i] );
 				priority[i].text = list[i].priority.ToString();
@@ -5259,7 +5252,7 @@ if ( cart )
 	{
 		ScrollRect scroll;
 		Player player;
-		float timeSpeedToRestore;
+		World.Speed speedToRestore;
 		static Comparison<Item> comparison = CompareByAge;
 		static bool reversed;
 
@@ -5274,8 +5267,8 @@ if ( cart )
 				return;
 			name = "Item list panel";
 			this.player = player;
-			timeSpeedToRestore = World.instance.timeFactor;
-			World.instance.SetTimeFactor( 0 );
+			speedToRestore = World.instance.speed;
+			World.instance.SetSpeed( World.Speed.pause );
 
 			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
 			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
@@ -5289,7 +5282,7 @@ if ( cart )
 		public override void Close()
 		{
 			base.Close();
-			World.instance.SetTimeFactor( timeSpeedToRestore );
+			World.instance.SetSpeed( speedToRestore );
 		}
 
 		void ChangeComparison( Comparison<Item> newComparison )
@@ -5453,7 +5446,7 @@ if ( cart )
 		Building building;
 		Item.Type itemType;
 		ItemDispatcher.Potential.Type direction;
-		float timeSpeedToRestore;
+		World.Speed speedToRestore;
 		bool filled;
 
 		public static LogisticList Create()
@@ -5463,8 +5456,8 @@ if ( cart )
 
 		public void Open( Building building, Item.Type itemType, ItemDispatcher.Potential.Type direction )
 		{
-			timeSpeedToRestore = World.instance.timeFactor;
-			World.instance.SetTimeFactor( 0 );
+			speedToRestore = World.instance.speed;
+			World.instance.SetSpeed( World.Speed.pause );
 			root.mainPlayer.itemDispatcher.queryBuilding = this.building = building;
 			root.mainPlayer.itemDispatcher.queryItemType = this.itemType = itemType;
 			root.mainPlayer.itemDispatcher.queryType = this.direction = direction;
@@ -5492,7 +5485,7 @@ if ( cart )
 			base.OnDestroy();
 			root.mainPlayer.itemDispatcher.queryBuilding = null;
 			root.mainPlayer.itemDispatcher.queryItemType = Item.Type.unknown;
-			World.instance.SetTimeFactor( timeSpeedToRestore );
+			World.instance.SetSpeed( speedToRestore );
 		}
 
 		new public void Update()
@@ -5764,8 +5757,8 @@ if ( cart )
 				chart.rectTransform.GetWorldCorners( corners );
 				var cursorInsideChart = Input.mousePosition - corners[0];
 				int ticks = Constants.Player.productivityAdvanceTime * (int)( corners[2].x - Input.mousePosition.x );
-				var hours = ticks / 60 / 60 / 50;
-				string time = $"{(ticks/60/50)%60} minutes ago";
+				var hours = ticks / 60 / 60 / Constants.World.normalSpeedPerSecond;
+				string time = $"{(ticks/60/Constants.World.normalSpeedPerSecond)%60} minutes ago";
 				if ( hours > 1 )
 					time = $"{hours} hours and " + time;
 				else if ( hours == 1 )
@@ -5918,7 +5911,7 @@ if ( cart )
 		Text worldTime, maintain, timeLeft, conditions, currentChallenge;
 
 		ProgressBar progress;
-		float originalSpeed = -1;
+		World.Speed originalSpeed = (World.Speed)(-1);
 		bool worldStopped;
 
 		public static ChallengePanel Create()
@@ -5959,9 +5952,9 @@ if ( cart )
 					t.color = Color.yellow.Dark();
 					t.text = "Bronze level reached";
 				}
-				originalSpeed = root.world.timeFactor;
+				originalSpeed = root.world.speed;
 				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
-				root.world.SetTimeFactor( 0 );
+				root.world.SetSpeed( World.Speed.pause );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
@@ -6043,7 +6036,7 @@ if ( cart )
 		new public void OnDestroy()
 		{
 			if ( originalSpeed > 0 )
-				root.world.SetTimeFactor( originalSpeed );
+				root.world.SetSpeed( originalSpeed );
 			if ( worldStopped )
 				root.world.eye.ReleaseFocus( null, true );
 			base.OnDestroy();

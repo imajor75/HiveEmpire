@@ -685,7 +685,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			itemData[(int)itemType].content--;
 			dispenser = worker.IsIdle() ? worker : workerMate;
-			offersSuspended.Start( 50 );	// Cosmetic reasons only
+			offersSuspended.Start( Constants.World.normalSpeedPerSecond );	// Cosmetic reasons only
 		}
 
 		return item;

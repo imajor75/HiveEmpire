@@ -11,14 +11,22 @@ public class World : MonoBehaviour
 {
 	public Ground ground;
 	public int currentSeed;
-
-	[JsonProperty]
-	public float timeFactor = 1;
-	public static bool massDestroy;
-	static public System.Random rnd;
 	public List<Player> players = new List<Player>();
-	static public World instance;
 	public Eye eye;
+	public bool gameInProgress;
+	public int time;
+	public int randomSeed;
+	public int overseas = 2;
+	public bool roadTutorialShowed;
+	public bool createRoadTutorialShowed;
+	public string fileName;
+	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>();
+	public Speed speed;
+	public OperationHandler operationHandler;
+
+	static public bool massDestroy;
+	static public System.Random rnd;
+	static public World instance;
 	static public int soundMaxDistance = 7;
 	static public int layerIndexNotOnMap;
 	static public int layerIndexMapOnly;
@@ -30,18 +38,33 @@ public class World : MonoBehaviour
 	static public Shader defaultMapShader;
 	static public Shader defaultTextureShader;
 	static public Shader defaultCutoutTextureShader;
-	public bool gameInProgress;
-	public int time;
-	public int randomSeed;
-	public int overseas = 2;
-	public bool roadTutorialShowed;
-	public bool createRoadTutorialShowed;
-	public string fileName;
-	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>();
-
 	static public Water water;
 	static public GameObject nodes;
 	static public GameObject itemsJustCreated;
+
+	public float timeFactor 
+	{
+		[Obsolete( "Compatibility with old files", true )]
+		private set
+		{
+			if ( value == 0 )
+				speed = Speed.pause;
+			if ( value == 1 )
+				speed = Speed.normal;
+			if ( value == 8 )
+				speed = Speed.fast;
+		}
+		get
+		{
+			return speed switch
+			{
+				Speed.pause => 0,
+				Speed.normal => 1,
+				Speed.fast => Constants.World.fastSpeedFactor,
+				_ => 1
+			};
+		}
+	}
 
 	[Obsolete( "Compatibility with old files", true )]
 	bool victory { set {} }
@@ -69,7 +92,6 @@ public class World : MonoBehaviour
 	float goldChance { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	Goal currentWinLevel { set {} }
-
 	public Settings settings;
 
 	[System.Serializable]
@@ -98,6 +120,13 @@ public class World : MonoBehaviour
 		bronze,
 		silver,
 		gold
+	}
+
+	public enum Speed
+	{
+		pause,
+		normal,
+		fast
 	}
 
 	public class Milestone
@@ -466,7 +495,7 @@ public class World : MonoBehaviour
 		var soundSource = component.gameObject.AddComponent<AudioSource>();
 		soundSource.spatialBlend = 1;
 		soundSource.minDistance = 1;
-		soundSource.pitch = instance.timeFactor;
+		soundSource.pitch = instance.speed == Speed.fast ? Constants.World.fastSpeedFactor : 1;
 		soundSource.maxDistance = Constants.Node.size * World.soundMaxDistance;
 		return soundSource;
 	}
@@ -483,7 +512,9 @@ public class World : MonoBehaviour
 			Interface.root.mainPlayer = instance.players[0];
 		}
 		massDestroy = false;
-		time += (int)timeFactor;
+
+		if ( speed != Speed.pause )
+			time++;
 		foreach ( var player in players )
 			player.FixedUpdate();
 
@@ -494,7 +525,7 @@ public class World : MonoBehaviour
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
 		time = 1;	// This should be 0, but then timers started right in the beginning (f.e. challenge.life) will be considered as empty
-		SetTimeFactor( 1 );
+		SetSpeed( Speed.normal );
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
@@ -558,6 +589,8 @@ public class World : MonoBehaviour
 	void Start()
 	{
 		name = "World";
+		operationHandler = OperationHandler.Create();
+		operationHandler.transform.SetParent( transform );
 		foreach ( var player in players )
 			player.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
@@ -579,7 +612,7 @@ public class World : MonoBehaviour
 		if ( !challenge )
 		{
 			challenge = Challenge.Create();
-			challenge.timeLimit = 50 * 60;
+			challenge.timeLimit = Constants.World.normalSpeedPerSecond * 60;
 			challenge.mainBuildingContent = new List<int>();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
@@ -779,7 +812,7 @@ public class World : MonoBehaviour
 				node.AlignType();
 		}
 		gameInProgress = true;
-		SetTimeFactor( timeFactor );    // Just for the animators and sound
+		SetSpeed( speed );    // Just for the animators and sound
 
 		Interface.ValidateAll();
 	}
@@ -1048,12 +1081,12 @@ public class World : MonoBehaviour
 		}
 	}
 
-	public void SetTimeFactor( float factor )
+	public void SetSpeed( Speed speed )
 	{
-		timeFactor = factor;
+		this.speed = speed;
 		var list1 = Resources.FindObjectsOfTypeAll<Animator>();
 		foreach ( var o in list1 )
-			o.speed = factor;
+			o.speed = timeFactor;
 		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
 		foreach ( var o in list2 )
 		{
@@ -1062,11 +1095,13 @@ public class World : MonoBehaviour
 				continue;
 #endif
 			var mainModule = o.main;
-			mainModule.simulationSpeed = factor;
+			mainModule.simulationSpeed = timeFactor;
 		}
 		var list3 = Resources.FindObjectsOfTypeAll<AudioSource>();
 		foreach ( var o in list3 )
-			o.pitch = factor;
+			o.pitch = timeFactor;
+		if ( speed != Speed.pause )
+		Time.fixedDeltaTime = 1f / ( timeFactor * Constants.World.normalSpeedPerSecond );
 	}
 
 	public static int hourTickCount { get { return (int)( 60 * 60 / UnityEngine.Time.fixedDeltaTime ); } }
@@ -1122,19 +1157,19 @@ public class World : MonoBehaviour
 		{
 			string result = "";
 			bool hasHours = false, hasDays = false;
-			if ( time >= 24*60*60*50 )
+			if ( time >= 24*60*60*Constants.World.normalSpeedPerSecond )
 			{
-				result = $"{time/24/60/60/50}:";
+				result = $"{time/24/60/60/Constants.World.normalSpeedPerSecond}:";
 				hasDays = true;
 			}
-			if ( time >= 50*60*60 )
+			if ( time >= Constants.World.normalSpeedPerSecond*60*60 )
 			{
-				result += $"{((time/50/60/60)%24).ToString( hasDays ? "d2" : "d1" )}:";
+				result += $"{((time/Constants.World.normalSpeedPerSecond/60/60)%24).ToString( hasDays ? "d2" : "d1" )}:";
 				hasHours = true;
 			}
-			result += $"{((time/50/60)%60).ToString( hasHours ? "d2" : "d1" )}";
+			result += $"{((time/Constants.World.normalSpeedPerSecond/60)%60).ToString( hasHours ? "d2" : "d1" )}";
 			if ( !hasDays )
-				result += $":{((time/50)%60).ToString( "d2" )}";
+				result += $":{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
 			return result;
 		}
 		public bool done { get { return !empty && age >= 0; } }

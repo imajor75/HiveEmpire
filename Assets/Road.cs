@@ -855,7 +855,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			if ( !Finish() )
 				Remove( false );
-			Interface.root.RegisterCreateRoad( this );
+			World.instance.operationHandler.RegisterCreateRoad( this );
 			Interface.root.viewport.showGridAtMouse = false;
 			Interface.root.viewport.pickGroundOnly = false;
 			return false;
