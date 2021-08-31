@@ -7,16 +7,16 @@ public class Resource : HiveObject
 {
 	public Node node;
 	public Type type;
-	public World.Timer life;
+	public World.Timer life = new World.Timer();
 	public int charges = 1;
 	public bool infinite;
 	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
-	public World.Timer gathered;
-	public World.Timer keepAway;
-	public World.Timer spawn;
+	public World.Timer gathered = new World.Timer();
+	public World.Timer keepAway = new World.Timer();
+	public World.Timer spawn = new World.Timer();
 	public Worker hunter;
 	public List<Worker> animals = new List<Worker>();
-	public World.Timer silence;
+	public World.Timer silence = new World.Timer();
 
 	GameObject body;
 	static public MediaTable<AudioClip, Type> ambientSounds;
@@ -55,7 +55,7 @@ public class Resource : HiveObject
 	}
 
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer exposed;
+	World.Timer exposed { set {} }
 
 	public enum Type
 	{

@@ -517,6 +517,19 @@ public class Interface : HiveObject
 		print( fileName + " is saved" );
 	}
 
+	public void LoadReplay( string name )
+	{
+		var o = Serializer.Read<OperationHandler>( name );
+		root.NewGame( o.challenge );
+		World.instance.operationHandler = o;
+		o.mode = OperationHandler.Mode.repeating;
+	}
+
+	public void SaveReplay( string name )
+	{
+		Serializer.Write( name, World.instance.operationHandler, true );
+	}
+
 	public void SaveHotkeys()
 	{
 		Serializer.Write( Application.persistentDataPath + "/Settings/hotkeys.json", new Hotkey.List { list = Hotkey.instances }, true, true );
@@ -2278,7 +2291,7 @@ public class Interface : HiveObject
 			public Color[] statusColors;
 			public List<Workshop.Status> statusList;
 			public Workshop workshop;
-			public World.Timer autoRefresh;
+			public World.Timer autoRefresh = new World.Timer();
 			public Image circle;
 			const int autoRefreshInterval = Constants.World.normalSpeedPerSecond * 60;
 			public List<Text> intervalTexts = new List<Text>();
@@ -5889,7 +5902,7 @@ if ( cart )
 			foreach ( var challenge in root.challenges )
 			{
 				Text( challenge.title ).Pin( 0, row, 140, iconSize ).Link( view ).SetTooltip( challenge.description );
-				Text( challenge.timeLimit > 0 ? World.Timer.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
+				Text( challenge.timeLimit > 0 ? UIHelpers.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Text( challenge.worldSize switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Button( "Begin " ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
 				row -= iconSize;
@@ -5974,8 +5987,8 @@ if ( cart )
 			}
 			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			var row = UIHelpers.currentRow - iconSize / 2;
-			Button( "Restart" ).PinCenter( 0, row, 100, iconSize, 0.25f ).AddClickHandler( () => Restart( false ) );
-			Button( "Restart with different seed" ).PinCenter( 0, row, 150, iconSize, 0.75f ).AddClickHandler( () => Restart( true ) );
+			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => Restart( false ) );
+			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => Restart( true ) );
 			
 			this.SetSize( 400, -row + 30 );
 		}
@@ -5993,7 +6006,7 @@ if ( cart )
 			var t = World.instance.time;
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
 			var challenge = World.instance.challenge;
-			worldTime.text = $"World time: {World.Timer.TimeToString( t )}";
+			worldTime.text = $"World time: {UIHelpers.TimeToString( t )}";
 			conditions.text = challenge.conditionsText;
 			if ( maintain )
 			{
@@ -6011,7 +6024,7 @@ if ( cart )
 				CheckLevel( World.Goal.silver, challenge.maintainSilver );
 				CheckLevel( World.Goal.gold, challenge.maintainGold );
 				if ( level != World.Goal.none )
-					maintain.text = $"Maintain {level} level for {World.Timer.TimeToString( time )} more!";
+					maintain.text = $"Maintain {level} level for {UIHelpers.TimeToString( time )} more!";
 				else
 					maintain.text = "No appraisable level reached yet";
 			}
@@ -6021,7 +6034,7 @@ if ( cart )
 				{
 					var left = (int)(challenge.timeLimit * multiplier - challenge.life.age);
 					if ( left >= 0 )
-						timeLeft.text = $"Time left: {World.Timer.TimeToString( left )} ({goal})";
+						timeLeft.text = $"Time left: {UIHelpers.TimeToString( left )} ({goal})";
 				}
 				timeLeft.text = "Out of time";
 				GoalLeft( World.Goal.bronze, 2 );
@@ -6097,6 +6110,11 @@ if ( cart )
 			watcher.Deleted += SaveFolderChanged;
 			watcher.EnableRaisingEvents = true;
 
+			var replayRow = UIHelpers.currentRow;
+			Button( "Load replay" ).PinDownwards( 0, 0, 100, 25, 0.25f, 1, true ).AddClickHandler( () => Replay( true ) );
+			UIHelpers.currentRow = replayRow;
+			Button( "Save replay" ).PinDownwards( 0, 0, 100, 25, 0.75f, 1, true ).AddClickHandler( () => Replay( false ) );
+
 			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
 
 			if ( focusOnMainBuilding && root.mainPlayer )
@@ -6121,6 +6139,25 @@ if ( cart )
 			base.Update();
 			if ( loadNamesRefreshNeeded )
 				UpdateLoadNames();
+		}
+
+		void Replay( bool load )
+		{
+			if ( load )
+			{
+				List<string> files = new List<string>();
+				var directory = new DirectoryInfo( Application.persistentDataPath+"/Replays" );
+				if ( !directory.Exists )
+					return;
+
+				var replayFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+
+				root.LoadReplay( replayFiles.First().FullName );
+			}
+			else
+			{
+				root.SaveReplay( Application.persistentDataPath + $"/Replays/{new System.Random().Next()}.json" );
+			}
 		}
 
 		void Load()
@@ -6507,6 +6544,26 @@ public static class UIHelpers
 		t.offsetMin = Vector2.zero;
 		scroll.verticalNormalizedPosition = 1;
 		return scroll;
+	}
+
+	public static string TimeToString( int time )
+	{
+		string result = "";
+		bool hasHours = false, hasDays = false;
+		if ( time >= 24*60*60*Constants.World.normalSpeedPerSecond )
+		{
+			result = $"{time/24/60/60/Constants.World.normalSpeedPerSecond}:";
+			hasDays = true;
+		}
+		if ( time >= Constants.World.normalSpeedPerSecond*60*60 )
+		{
+			result += $"{((time/Constants.World.normalSpeedPerSecond/60/60)%24).ToString( hasDays ? "d2" : "d1" )}:";
+			hasHours = true;
+		}
+		result += $"{((time/Constants.World.normalSpeedPerSecond/60)%60).ToString( hasHours ? "d2" : "d1" )}";
+		if ( !hasDays )
+			result += $":{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
+		return result;
 	}
 }
 

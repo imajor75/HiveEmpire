@@ -15,7 +15,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<Node> nodes = new List<Node>();
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
-	public World.Timer workerAdded;
+	public World.Timer workerAdded = new World.Timer();
 	public bool underConstruction;
 	public bool decorationOnly;
 	public float cachedCost = 0;

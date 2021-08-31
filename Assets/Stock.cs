@@ -14,7 +14,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	public int total;
 	public int totalTarget;
 	public int maxItems = Constants.Stock.defaultmaxItems;
-	public World.Timer offersSuspended;     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+	public World.Timer offersSuspended = new World.Timer();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
 
@@ -340,7 +340,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			UpdateLook();
 		}
 
-		public new void FixedUpdate()
+		public override void CriticalUpdate()
 		{
 			if ( itemQuantity > 0 && destination == null )
 			{
@@ -350,7 +350,7 @@ public class Stock : Building, Worker.Callback.IHandler
 				ResetTasks();
 				DeliverItems( boss );
 			}
-			base.FixedUpdate();
+			base.CriticalUpdate();
 		}
 
 		override public void FindTask()

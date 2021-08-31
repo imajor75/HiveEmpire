@@ -28,7 +28,7 @@ public class Worker : HiveObject
 	public Flag exclusiveFlag;
 	public bool recalled;
 	public int itemsDelivered;
-	public World.Timer bored;
+	public World.Timer bored = new World.Timer();
 	public BodyState bodyState = BodyState.unknown;
 	public SerializableColor currentColor;
 	public List<Task> taskQueue = new List<Task>();
@@ -190,7 +190,7 @@ public class Worker : HiveObject
 	public class DoAct : Task
 	{
 		public Act act;
-		public World.Timer timer;
+		public World.Timer timer = new World.Timer();
 		public bool started = false;
 		GameObject tool;
 		public bool wasWalking;
@@ -366,7 +366,7 @@ public class Worker : HiveObject
 		public bool ignoreFinalObstacle;
 		public HiveObject ignoreObject;
 
-		public World.Timer interruptionTimer;
+		public World.Timer interruptionTimer = new World.Timer();
 		public Act lastStepInterruption;
 
 		public void Setup( Worker boss, Node target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null )
@@ -406,7 +406,7 @@ public class Worker : HiveObject
 		public int targetPoint;
 		public int wishedPoint = -1;
 		public bool exclusive;
-		public World.Timer stuck;
+		public World.Timer stuck = new World.Timer();
 
 		public void Setup( Worker boss, Road road, int point, bool exclusive )
 		{
@@ -590,7 +590,7 @@ public class Worker : HiveObject
 		public Item[] items = new Item[2];
 		public Path path;  // Save the path just to be able to test if it has been changed
 		public bool[] reparented = new bool[2];	// See PickupItem.Cancel. Originally I wanted to save the Transformation reference, but that cannot be serialized
-		public World.Timer timer;
+		public World.Timer timer = new World.Timer();
 		public bool expectingSecondary;
 
 		[Obsolete( "Compatibility with old files", true )]
@@ -754,7 +754,7 @@ public class Worker : HiveObject
 		static public int putdownTimeStart = 120;
 		static public int putdownRelinkTime = 80;
 		public Item[] items = new Item[2];
-		public World.Timer timer;
+		public World.Timer timer = new World.Timer();
 
 		[Obsolete( "Compatibility with old files", true )]
 		Item item { set { items[0] = value; } }
@@ -875,7 +875,7 @@ public class Worker : HiveObject
 	public class Wait : Task
 	{
 		public int time;
-		public World.Timer timer;
+		public World.Timer timer = new World.Timer();
 
 		public void Setup( Worker boss, int time )
 		{
@@ -1017,6 +1017,7 @@ public class Worker : HiveObject
 		ScheduleWalkToFlag( road.ends[0] ); // TODO Pick the end closest to the main building
 		ScheduleWalkToRoadNode( road, road.centerNode, false );
 		ScheduleStartWorkingOnRoad( road );
+		base.Setup();
 		return this;
 	}
 
@@ -1035,6 +1036,7 @@ public class Worker : HiveObject
 		look = type = Type.constructor;
 		name = "Builder";
 		currentColor = Color.cyan;
+		base.Setup();
 		return SetupForBuildingSite( building );
 	}
 
@@ -1050,6 +1052,7 @@ public class Worker : HiveObject
 		SetNode( main.node );
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( flag );
+		base.Setup();
 		return this;
 	}
 
@@ -1067,6 +1070,7 @@ public class Worker : HiveObject
 		owner = building.owner;
 		this.building = building;
 		SetNode( building.node );
+		base.Setup();
 		return this;
 	}
 
@@ -1084,6 +1088,7 @@ public class Worker : HiveObject
 		}
 		else
 			SetNode( building.node );
+		base.Setup();
 		return this;
 	}
 
@@ -1092,6 +1097,7 @@ public class Worker : HiveObject
 		look = type = Type.wildAnimal;
 		SetNode( node );
 		this.origin = origin;
+		base.Setup();
 		return this;
 	}
 
@@ -1103,6 +1109,7 @@ public class Worker : HiveObject
 		speed = Constants.Stock.cartSpeed;
 		owner = stock.owner;
 		currentColor = Color.white;
+		base.Setup();
 		return this;
 	}
 
@@ -1228,7 +1235,7 @@ public class Worker : HiveObject
 	}
 
 	// Update is called once per frame
-	public void FixedUpdate()
+	public override void CriticalUpdate()
 	{
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
@@ -1241,6 +1248,7 @@ public class Worker : HiveObject
 			debugReset = false;
 			return;
 		}
+
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
@@ -1267,6 +1275,10 @@ public class Worker : HiveObject
 		}
 		if ( IsIdle() )
 			FindTask();
+	}
+
+	void Update()
+	{
 		UpdateBody();
 		UpdateOnMap();
 	}

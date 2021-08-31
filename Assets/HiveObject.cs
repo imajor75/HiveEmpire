@@ -49,8 +49,12 @@ public abstract class HiveObject : MonoBehaviour
 	public virtual void DestroyThis( bool noAssert = false )
 	{
 		this.noAssert = noAssert;
-		World.instance.hiveObjects.Remove( this );
 		Destroy( gameObject );
+	}
+
+	void OnDestroy()
+	{
+		World.instance.hiveObjects.Remove( this );
 	}
 
 	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, sucs as when woodcutters decide which tree to cut. 

@@ -154,7 +154,7 @@ public class World : MonoBehaviour
 
 		public override string ToString()
 		{
-			return $"reach {productivityGoal.ToString( "N2" )} soldier/min and maintain it for {World.Timer.TimeToString( maintain )}";
+			return $"reach {productivityGoal.ToString( "N2" )} soldier/min and maintain it for {UIHelpers.TimeToString( maintain )}";
 		}
 	}
 
@@ -165,9 +165,9 @@ public class World : MonoBehaviour
 		public int maintain;
 		public bool fixedSeed;
 		public int seed;
-		public Timer maintainBronze, maintainSilver, maintainGold;
+		public Timer maintainBronze = new Timer(), maintainSilver = new Timer(), maintainGold = new Timer();
 		public float progress;
-		public Timer life;
+		public Timer life = new Timer();
 		public List<float> productivityGoals;
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
@@ -283,7 +283,7 @@ public class World : MonoBehaviour
 			if ( timeLimit > 0 )
 				CheckCondition( life.age, timeLimit, false, null, true );
 
-			void CheckGoal( Goal goal, ref Timer timer )
+			void CheckGoal( Goal goal, Timer timer )
 			{
 				if ( reachedLevel >= goal )
 					return;
@@ -302,9 +302,9 @@ public class World : MonoBehaviour
 					timer.Reset();
 			}
 
-			CheckGoal( Goal.gold, ref maintainGold );
-			CheckGoal( Goal.silver, ref maintainSilver );
-			CheckGoal( Goal.bronze, ref maintainBronze );
+			CheckGoal( Goal.gold, maintainGold );
+			CheckGoal( Goal.silver, maintainSilver );
+			CheckGoal( Goal.bronze, maintainBronze );
 		}
 
 		public void ParseConditions()
@@ -519,13 +519,20 @@ public class World : MonoBehaviour
 			player.FixedUpdate();
 
 		foreach ( var ho in hiveObjects )
-			ho.CriticalUpdate();
+		{
+			if ( ho )
+				ho.CriticalUpdate();
+		}
 	}
 		
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
-		time = 1;	// This should be 0, but then timers started right in the beginning (f.e. challenge.life) will be considered as empty
+		time = 0;
 		SetSpeed( Speed.normal );
+		if ( operationHandler )
+			Destroy( operationHandler );
+		operationHandler = OperationHandler.Create();
+		operationHandler.challenge = challenge;
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
@@ -589,8 +596,11 @@ public class World : MonoBehaviour
 	void Start()
 	{
 		name = "World";
-		operationHandler = OperationHandler.Create();
-		operationHandler.transform.SetParent( transform );
+		if ( operationHandler == null )
+		{
+			operationHandler = OperationHandler.Create();
+			operationHandler.transform.SetParent( transform );
+		}
 		foreach ( var player in players )
 			player.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
@@ -608,6 +618,12 @@ public class World : MonoBehaviour
 		this.fileName = fileName;
 
 		rnd = new System.Random( randomSeed );
+
+		while ( operationHandler.CRCCodes.Count < time )
+			operationHandler.CRCCodes.Add( 0 );
+		while ( operationHandler.CRCCodes.Count > time )
+			operationHandler.CRCCodes.RemoveAt( 0 );
+		operationHandler.challenge = challenge;
 
 		if ( !challenge )
 		{
@@ -862,8 +878,10 @@ public class World : MonoBehaviour
 		gameInProgress = false;
 		players.Clear();
 		eye = null;
-		foreach ( Transform o in transform )
-			Destroy( o.gameObject );
+		// We could simply destroy each children, which would destroy the whole scene tree, in the end destroying the same objects
+		// but if we do that, then granchilds are only destroyed at a later stage of the frame, making it possible that these objects are
+		// still getting calls like Update. Those calls cause a lot of trouble for objects which supposed to be destroyed already.
+		DestroyChildRecursive( transform );	
 
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 			ho.noAssert = true;
@@ -884,6 +902,15 @@ public class World : MonoBehaviour
 		}
 
 		return null;
+	}
+
+	public static void DestroyChildRecursive( Transform parent )
+	{
+		foreach ( Transform child in parent )
+		{
+			DestroyChildRecursive( child );
+			Destroy( child.gameObject );
+		}
 	}
 
 	public static void SetLayerRecursive( GameObject gameObject, int layer )
@@ -1039,7 +1066,7 @@ public class World : MonoBehaviour
 			}
 			if ( !created )
 			{
-				print( "Could not create enough	underground resources, not enough hills in the world? ");
+				print( "Could not create enough underground resources, not enough hills in the world? ");
 				//Assert.global.Fail();
 				break;
 			}
@@ -1128,12 +1155,13 @@ public class World : MonoBehaviour
 		ground.Validate( true );
 		foreach ( var player in players )
 			player.Validate();
+		Assert.global.AreEqual( challenge, operationHandler.challenge );
 	}
 
 	[System.Serializable]
-	public struct Timer
+	public class Timer
 	{
-		public int reference;
+		public int reference = -1;
 
 		public void Start( int delta = 0 )
 		{
@@ -1141,7 +1169,7 @@ public class World : MonoBehaviour
 		}
 		public void Reset()
 		{
-			reference = 0;
+			reference = -1;
 		}
 		[SerializeField]
 		public int age
@@ -1153,28 +1181,9 @@ public class World : MonoBehaviour
 				return instance.time - reference;
 			}
 		}
-		public static string TimeToString( int time )
-		{
-			string result = "";
-			bool hasHours = false, hasDays = false;
-			if ( time >= 24*60*60*Constants.World.normalSpeedPerSecond )
-			{
-				result = $"{time/24/60/60/Constants.World.normalSpeedPerSecond}:";
-				hasDays = true;
-			}
-			if ( time >= Constants.World.normalSpeedPerSecond*60*60 )
-			{
-				result += $"{((time/Constants.World.normalSpeedPerSecond/60/60)%24).ToString( hasDays ? "d2" : "d1" )}:";
-				hasHours = true;
-			}
-			result += $"{((time/Constants.World.normalSpeedPerSecond/60)%60).ToString( hasHours ? "d2" : "d1" )}";
-			if ( !hasDays )
-				result += $":{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
-			return result;
-		}
 		public bool done { get { return !empty && age >= 0; } }
 		[SerializeField]
-		public bool empty { get { return reference == 0; } }
+		public bool empty { get { return reference == -1; } }
 		public bool inProgress { get { return !empty && !done; } }
 	}
 }

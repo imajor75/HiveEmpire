@@ -20,11 +20,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public Node resourcePlace;
 	public Mode mode = Mode.whenNeeded;
 	public int itemsProduced;
-	public World.Timer resting;
+	public World.Timer resting = new World.Timer();
 	public Productivity productivity = new Productivity( 0.5f );
 	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
 	public Status currentStatus = Status.unknown;
-	public World.Timer statusDuration;
+	public World.Timer statusDuration = new World.Timer();
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
@@ -109,15 +109,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public int startTime;
 	}
 
-	public struct Productivity
+	public class Productivity
 	{
+		public Productivity()
+		{
+			weight = Constants.Workshop.productivityWeight;
+			timinglength = Constants.Workshop.productivityTimingLength;
+		}
 		public Productivity( float current )
 		{
 			this.current = current;
 			workCounter = 0;
 			weight = Constants.Workshop.productivityWeight;
 			timinglength = Constants.Workshop.productivityTimingLength;
-			timer.reference = 0;
 		}
 		public void FixedUpdate( Workshop boss )
 		{
@@ -134,7 +138,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 		}
 		public float current;
-		public World.Timer timer;
+		public World.Timer timer = new World.Timer();
 		public int workCounter;
 		public float weight;
 		public int timinglength;
@@ -198,7 +202,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public Node node;
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public Resource.Type resourceType;
-		public World.Timer timer;
+		public World.Timer timer = new World.Timer();
 		[Obsolete( "Compatibility with old files", true )]
 		Item item
 		{
@@ -279,7 +283,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 	public class Plant : Worker.Task
 	{
 		public Node node;
-		public World.Timer wait;
+		public World.Timer wait = new World.Timer();
 		public bool done;
 		public Resource.Type resourceType;
 
@@ -324,7 +328,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public Resource resource;
 		[Obsolete( "Compatibility with old files", true )]
 		int timer;
-		public World.Timer pasturingTimer;
+		public World.Timer pasturingTimer = new World.Timer();
 		public override bool ExecuteFrame()
 		{
 			if ( pasturingTimer.empty )

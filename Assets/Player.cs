@@ -12,7 +12,7 @@ public class Player : ScriptableObject
 	public Versioned versionedRoadNetworkChanged = new Versioned();
 	public Versioned versionedBuildingDelete = new Versioned();
 	public List<Building> influencers = new List<Building>();
-	public World.Timer chartAdvanceTimer, productivityUpdateTimer;
+	public World.Timer chartAdvanceTimer = new World.Timer(), productivityUpdateTimer = new World.Timer();
 	public List<Chart> itemProductivityHistory = new List<Chart>();
 	public List<Stock> stocks = new List<Stock>();
 	public List<bool> stocksHaveNeed = new List<bool>();

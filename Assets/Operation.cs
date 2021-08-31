@@ -6,7 +6,10 @@ using UnityEngine;
 public class OperationHandler : HiveObject
 {
 	public List<Operation> undoQueue = new List<Operation>(), redoQueue = new List<Operation>(), repeatBuffer = new List<Operation>();
+    public List<int> CRCCodes = new List<int>();
+    public int currentCRCCode;
     public Mode mode;
+    public World.Challenge challenge;
 
 	static public Interface.Hotkey undoHotkey = new Interface.Hotkey( "Undo", KeyCode.Z, true );
 	static public Interface.Hotkey redoHotkey = new Interface.Hotkey( "Redo", KeyCode.Y, true );
@@ -155,6 +158,19 @@ public class OperationHandler : HiveObject
         ExecuteOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ) );
     }
 
+    void FixedUpdate()
+    {
+#if DEBUG
+        if ( mode == Mode.recording && World.instance.speed != World.Speed.pause )
+        {
+            assert.AreEqual( World.instance.time, CRCCodes.Count + 1 );
+            CRCCodes.Add( currentCRCCode );
+        }
+        if ( mode == Mode.repeating )
+            assert.AreEqual( CRCCodes[World.instance.time - 1], currentCRCCode );
+        currentCRCCode = 0;
+#endif
+    }
 }
 
 public class Operation : ScriptableObject
