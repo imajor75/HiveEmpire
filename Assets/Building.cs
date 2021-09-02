@@ -522,6 +522,8 @@ abstract public class Building : HiveObject
 			basis.building = this;
 		}
 
+		if ( !blueprintOnly )
+			owner.buildingCounts[(int)type]++;
 		return this;
 	}
 

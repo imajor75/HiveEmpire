@@ -648,6 +648,23 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 		}
 
+		if ( worker == null )
+			dispenser = worker = Worker.Create().SetupForBuilding( this );
+		if ( workerMate == null )
+		{
+			dispenser = workerMate = Worker.Create().SetupForBuilding( this, true );
+			workerMate.ScheduleWait( 100, true );
+		}
+
+		if ( type == Type.barrack && output > 0 )
+		{
+			output--;
+			Worker.Create().SetupAsSoldier( this ).ScheduleWalkToNeighbour( flag.node, true );
+		}
+
+		if ( gatherer && worker.IsIdle() && worker.node == node )
+			SetWorking( false );
+
 		while ( statuses.Count > 0 && World.instance.time - statuses.First().startTime > Constants.Workshop.maxSavedStatusTime )
 			statuses.RemoveFirst();
 
@@ -683,23 +700,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		if ( !construction.done || blueprintOnly )
 			return;
-
-		if ( worker == null )
-			dispenser = worker = Worker.Create().SetupForBuilding( this );
-		if ( workerMate == null )
-		{
-			dispenser = workerMate = Worker.Create().SetupForBuilding( this, true );
-			workerMate.ScheduleWait( 100, true );
-		}
-
-		if ( gatherer && worker.IsIdle() && worker.node == node )
-			SetWorking( false );
-
-		if ( type == Type.barrack && output > 0 )
-		{
-			output--;
-			Worker.Create().SetupAsSoldier( this ).ScheduleWalkToNeighbour( flag.node, true );
-		}
 
 		switch ( type )
 		{
@@ -869,7 +869,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
-		if ( !worker.IsIdle( true ) || mode == Mode.sleeping )
+		if ( !worker || !worker.IsIdle( true ) || mode == Mode.sleeping )
 			return;
 		if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
 		{

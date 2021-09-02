@@ -32,6 +32,13 @@ public class Node : HiveObject
 		[Obsolete( "Compatibility for old files", true )]
 		set {}
 	}
+	public bool real
+	{
+		get
+		{
+			return this == ground.GetNode( x, y );
+		}
+	}
 
 	[Obsolete( "Compatibility with old files", true )]
 	Resource resource { set { if ( value ) resources.Add( value ); } }

@@ -24,6 +24,8 @@ public abstract class HiveObject : MonoBehaviour
 
 	public void Setup()
 	{
+		assert.IsFalse( World.instance.insideCriticalSection );
+		assert.IsFalse( World.instance.hiveObjects.Contains( this ) );
 		World.instance.hiveObjects.AddFirst( this );
 	}
 

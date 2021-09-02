@@ -30,7 +30,7 @@ public class Serializer : JsonSerializer
 				property.ShouldSerialize = instance => false;
 
 			// We ignore every property
-			if ( member is PropertyInfo )
+			if ( member is PropertyInfo && member.GetCustomAttribute<JsonPropertyAttribute>() == null )
 				property.ShouldSerialize = instance => false;
 
 			// We ignore every member which is declared in a unity base class

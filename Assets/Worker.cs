@@ -1036,7 +1036,6 @@ public class Worker : HiveObject
 		look = type = Type.constructor;
 		name = "Builder";
 		currentColor = Color.cyan;
-		base.Setup();
 		return SetupForBuildingSite( building );
 	}
 
@@ -1255,6 +1254,7 @@ public class Worker : HiveObject
 			if ( taskQueue.Count > 0 && taskQueue[0].InterruptWalk() )
 				return;
 			walkProgress += currentSpeed * ground.world.timeFactor;
+			World.instance.operationHandler.currentCRCCode += node.x + node.y + (int)walkProgress;
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;

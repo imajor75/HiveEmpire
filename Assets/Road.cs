@@ -16,7 +16,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<Worker> workerAtNodes = new List<Worker>();
 	public Flag[] ends = new Flag[2];
 	public World.Timer workerAdded = new World.Timer();
-	public bool underConstruction;
 	public bool decorationOnly;
 	public float cachedCost = 0;
 	public int targetWorkerCount;   // Zero means automatic
@@ -36,7 +35,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		get
 		{
-			return !underConstruction;
+			return !blueprintOnly;
 		}
 		[Obsolete( "Compatibility with old files", true )]
 		set
@@ -53,7 +52,9 @@ public class Road : HiveObject, Interface.IInputHandler
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
-	int timeSinceWorkerAdded;
+	int timeSinceWorkerAdded { set {} }
+	[Obsolete( "Compatibility for old files", true )]
+	bool underConstruction { set {} }
 
 	public static void Initialize()
 	{
@@ -115,7 +116,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return null;
 		nodes.Add( flag.node );
 		owner = flag.owner;
-		underConstruction = true;
+		blueprintOnly = true;
 		return this;
 	}
 
@@ -159,7 +160,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public bool Finish()
 	{
-		assert.IsTrue( underConstruction );
+		assert.IsTrue( blueprintOnly );
 		if ( !lastNode.validFlag || ( nodes.Count == 3 && nodes[0] == nodes[2] ) )
 			return false;
 
@@ -183,7 +184,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		nodePositions = null;
 		curves = new List<CubicCurve>[3];
 		CreateCurves();
-		underConstruction = false;
+		blueprintOnly = false;
 		RebuildMesh();
 		RegisterOnGround();
 		CallNewWorker();
@@ -853,9 +854,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 		if ( node.validFlag )
 		{
-			if ( !Finish() )
-				Remove( false );
-			World.instance.operationHandler.RegisterCreateRoad( this );
+			World.instance.operationHandler.ExecuteCreateRoad( this );
 			Interface.root.viewport.showGridAtMouse = false;
 			Interface.root.viewport.pickGroundOnly = false;
 			return false;

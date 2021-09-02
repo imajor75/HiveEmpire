@@ -66,6 +66,11 @@ public class Interface : HiveObject
 	static public Hotkey mapZoomInHotkey = new Hotkey( "Map zoom in", KeyCode.KeypadPlus );
 	static public Hotkey mapZoomOutHotkey = new Hotkey( "Map zoom out", KeyCode.KeypadMinus );
 
+	public bool playerInCharge
+	{
+		get { return world.operationHandler.mode == OperationHandler.Mode.recording; }
+	}
+
 	public class Hotkey
 	{
 		public string action;
@@ -433,7 +438,7 @@ public class Interface : HiveObject
 		tooltip.Open();
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
-		buildButton = this.Image( Icon.hammer ).AddClickHandler( () => BuildPanel.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
+		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
 		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
 
 		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
@@ -491,6 +496,12 @@ public class Interface : HiveObject
 		MainPanel.Create().Open( true );
 	}
 
+	void OpenBuildPanel()
+	{
+		if ( root.playerInCharge )
+			BuildPanel.Create().Open();
+	}
+
 	void NewGame( World.Challenge challenge )
 	{
 		world.NewGame( challenge );
@@ -522,12 +533,16 @@ public class Interface : HiveObject
 		var o = Serializer.Read<OperationHandler>( name );
 		root.NewGame( o.challenge );
 		World.instance.operationHandler = o;
-		o.mode = OperationHandler.Mode.repeating;
+		o.StartReplay();
 	}
 
 	public void SaveReplay( string name )
 	{
-		Serializer.Write( name, World.instance.operationHandler, true );
+		var oh = World.instance.operationHandler;
+		oh.undoQueue.Clear();		// TODO Is this necessary?
+		oh.redoQueue.Clear();
+		oh.replayLength = oh.finishedFrameIndex;
+		Serializer.Write( name, oh, true );
 	}
 
 	public void SaveHotkeys()
@@ -1628,14 +1643,15 @@ public class Interface : HiveObject
 
 		public class AreaControl : MonoBehaviour, IInputHandler
 		{
-			public Ground.Area area;
-			public Node oldCenter;
-			public int oldRadius;
+			public Ground.Area area, originalArea;
 			public Image image;
 
 			public void Setup( Ground.Area area )
 			{
-				this.area = area;
+				this.originalArea = area;
+				this.area = new Ground.Area();
+				this.area.center = area.center;
+				this.area.radius = area.radius;
 				image = gameObject.GetComponent<Image>();
 				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, 
 				"You can specify the area where this building is sending items or getting " +
@@ -1659,7 +1675,7 @@ public class Interface : HiveObject
 					root.highlightType = HighlightType.none;
 					root.highlightArea = null;
 				}
-				World.instance.operationHandler.RegisterChangeArea( area, oldCenter, oldRadius );
+				World.instance.operationHandler.ExecuteChangeArea( originalArea, area.center, area.radius );
 				return false;
 			}
 
@@ -1667,13 +1683,11 @@ public class Interface : HiveObject
 			{
 				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
-					area.center = null;
+					World.instance.operationHandler.ExecuteChangeArea( originalArea, null, 0 );
 					if ( root.highlightArea == area )
 						root.highlightType = HighlightType.none;
 					return;
 				}
-				oldCenter = area.center;
-				oldRadius = area.radius;
 				area.center = World.instance.ground.nodes[0];
 				area.radius = 2;
 				root.highlightType = HighlightType.area;
@@ -1722,8 +1736,6 @@ public class Interface : HiveObject
 			{
 				if ( root.highlightArea != area )
 					return;
-				area.center = oldCenter;
-				area.radius = oldRadius;
 				root.highlightType = HighlightType.none;
 			}
 
@@ -3214,14 +3226,13 @@ public class Interface : HiveObject
 				bool merge = false;
 				if ( building.flag.blueprintOnly )
 				{
-					World.instance.operationHandler.RegisterCreateFlag( building.flag );
+					World.instance.operationHandler.ExecuteCreateFlag( building.flag.node );
 					merge = true;
 				}
-				World.instance.operationHandler.RegisterCreateBuilding( building, merge );
+				World.instance.operationHandler.ExecuteCreateBuilding( building.node, building.flagDirection, building.type, merge );
 			}
 			if ( currentBlueprint is Flag flag )
-				World.instance.operationHandler.RegisterCreateFlag( flag );
-			currentBlueprint.Materialize();
+				World.instance.operationHandler.ExecuteCreateFlag( flag.node );
 			currentBlueprint = null;
 			currentBlueprintPanel?.Close();
 			currentBlueprintPanel = null;
@@ -3608,7 +3619,7 @@ public class Interface : HiveObject
 
 		void StartRoad()
 		{
-			if ( flag )
+			if ( flag && root.playerInCharge )
 			{
 				Road road = Road.Create().Setup( flag );
 				root.viewport.inputHandler = road;

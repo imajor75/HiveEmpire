@@ -170,6 +170,13 @@ public class Stock : Building, Worker.Callback.IHandler
 			offerMedium = 2,
 			offerHigh = 3
 		}
+		public Route GetRouteForDestination( Stock destination )
+		{
+			foreach ( var route in outputRoutes )
+			if ( route.end == destination )
+				return route;
+			return null;
+		}
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
@@ -521,7 +528,6 @@ public class Stock : Building, Worker.Callback.IHandler
 		itemData[(int)Item.Type.soldier].content = Constants.Stock.startSoldierCount;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
 		owner.RegisterInfluence( this );
-		owner.buildingCounts[(int)type]++;
 		flag.ConvertToCrossing( false );
 		return this;
 	}

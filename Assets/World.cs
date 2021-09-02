@@ -21,6 +21,7 @@ public class World : MonoBehaviour
 	public bool createRoadTutorialShowed;
 	public string fileName;
 	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>();
+	public bool insideCriticalSection;
 	public Speed speed;
 	public OperationHandler operationHandler;
 
@@ -518,21 +519,21 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.FixedUpdate();
 
+		insideCriticalSection = true;
 		foreach ( var ho in hiveObjects )
 		{
 			if ( ho )
 				ho.CriticalUpdate();
 		}
+		insideCriticalSection = false;
 	}
 		
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
-		time = 0;
+		time = -1;
 		SetSpeed( Speed.normal );
 		if ( operationHandler )
 			Destroy( operationHandler );
-		operationHandler = OperationHandler.Create();
-		operationHandler.challenge = challenge;
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
@@ -565,6 +566,8 @@ public class World : MonoBehaviour
 		Prepare();
 		Interface.ValidateAll();
 
+		operationHandler = OperationHandler.Create();
+		operationHandler.challenge = challenge;
 		eye = Eye.Create().Setup( this );
 		ground = Ground.Create();
 		ground.Setup( this, heightMap, forestMap, settings.size );
@@ -619,12 +622,6 @@ public class World : MonoBehaviour
 
 		rnd = new System.Random( randomSeed );
 
-		while ( operationHandler.CRCCodes.Count < time )
-			operationHandler.CRCCodes.Add( 0 );
-		while ( operationHandler.CRCCodes.Count > time )
-			operationHandler.CRCCodes.RemoveAt( 0 );
-		operationHandler.challenge = challenge;
-
 		if ( !challenge )
 		{
 			challenge = Challenge.Create();
@@ -646,6 +643,13 @@ public class World : MonoBehaviour
 					challenge.buildingMax.Add( -1 );
 			}
 			challenge.Begin();
+		}
+
+		if ( operationHandler == null )
+		{
+			operationHandler = OperationHandler.Create();
+			operationHandler.challenge = challenge;
+			operationHandler.finishedFrameIndex = time;
 		}
 
 		foreach ( var player in players )
@@ -696,7 +700,12 @@ public class World : MonoBehaviour
 					o.owner = players[0];
 				//if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 				//	o.itemsInHands[0].SetRawTarget( o.building );
-			}
+				if ( !hiveObjects.Contains( o ) )
+				{
+					print( $"Adding {o.name} to list of hive objects" );
+					hiveObjects.AddFirst( o );
+				}
+}
 		}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Building>();
@@ -878,6 +887,8 @@ public class World : MonoBehaviour
 		gameInProgress = false;
 		players.Clear();
 		eye = null;
+		Destroy( operationHandler );
+		operationHandler = null;
 		// We could simply destroy each children, which would destroy the whole scene tree, in the end destroying the same objects
 		// but if we do that, then granchilds are only destroyed at a later stage of the frame, making it possible that these objects are
 		// still getting calls like Update. Those calls cause a lot of trouble for objects which supposed to be destroyed already.
