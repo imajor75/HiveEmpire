@@ -105,7 +105,7 @@ public class Eye : HiveObject
 		while ( oldPositions.Count > Constants.Eye.maxNumberOfSavedPositions )
 			oldPositions.RemoveAt( 0 );
 
-		autoStorePositionTimer += Time.deltaTime;
+		autoStorePositionTimer += Time.unscaledDeltaTime;
 		if ( autoStorePositionTimer >= Constants.Eye.autoStorePositionAfter && !currentPositionStored )
 		{
 			oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
@@ -116,7 +116,7 @@ public class Eye : HiveObject
 		if ( h < World.instance.waterLevel )
 			h = World.instance.waterLevel;
 		if ( height > 0 )
-			height += ( h - height ) * Constants.Eye.heightFollowSpeed * Time.deltaTime;
+			height += ( h - height ) * Constants.Eye.heightFollowSpeed * Time.unscaledDeltaTime;
 		else
 			height = h;
 		var position = new Vector3( x, height, y );
@@ -138,13 +138,13 @@ public class Eye : HiveObject
 
 		Vector3 movement = autoMovement;
 		if ( Interface.cameraLeftHotkey.IsHold() )
-			movement += Move( -Constants.Eye.moveSpeed * Time.deltaTime, 0 );
+			movement += Move( -Constants.Eye.moveSpeed * Time.unscaledDeltaTime, 0 );
 		if ( Interface.cameraRightHotkey.IsHold() )
-			movement += Move( Constants.Eye.moveSpeed * Time.deltaTime, 0 );
+			movement += Move( Constants.Eye.moveSpeed * Time.unscaledDeltaTime, 0 );
 		if ( Interface.cameraUpHotkey.IsHold() )
-			movement += Move( 0, Constants.Eye.moveSpeed * Time.deltaTime * 1.3f );
+			movement += Move( 0, Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
 		if ( Interface.cameraDownHotkey.IsHold() )
-			movement += Move( 0, -Constants.Eye.moveSpeed * Time.deltaTime * 1.3f );
+			movement += Move( 0, -Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
 		x += movement.x;
 		y += movement.z;
 
@@ -176,30 +176,30 @@ public class Eye : HiveObject
 		if ( Interface.cameraRotateCCWHotkey.IsHold() )
 		{
 			rotateAround = false;
-			direction -= Constants.Eye.rotateSpeed * Time.deltaTime;
+			direction -= Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
 		}
 		if ( Interface.cameraRotateCWHotkey.IsHold() )
 		{
 			rotateAround = false;
-			direction += Constants.Eye.rotateSpeed * Time.deltaTime;
+			direction += Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
 		}
 		if ( rotateAround )
-			direction += Constants.Eye.autoRotateSpeed * Time.deltaTime;
+			direction += Constants.Eye.autoRotateSpeed * Time.unscaledDeltaTime;
 		if ( direction >= Math.PI * 2 )
 			direction -= (float)Math.PI * 2;
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
 
 		if ( Interface.cameraZoomOutHotkey.IsHold() )
-			targetAltitude += Constants.Eye.altitudeChangeSpeed * Time.deltaTime;
+			targetAltitude += Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
 		if ( Interface.cameraZoomInHotkey.IsHold() )
-			targetAltitude -= Constants.Eye.altitudeChangeSpeed * Time.deltaTime;
+			targetAltitude -= Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
 		if ( camera.enabled && Interface.root.viewport.mouseOver )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
-				targetAltitude += Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.deltaTime;
+				targetAltitude += Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.unscaledDeltaTime;
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
-				targetAltitude -= Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.deltaTime;
+				targetAltitude -= Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.unscaledDeltaTime;
 			moveSensitivity = targetAltitude / 6;
 		}
 		if ( targetAltitude < Constants.Eye.minAltitude )
@@ -207,7 +207,7 @@ public class Eye : HiveObject
 		if ( targetAltitude > Constants.Eye.maxAltitude )
 			targetAltitude = Constants.Eye.maxAltitude;
 
-		var f = Constants.Eye.altitudeSmoothness * Time.deltaTime;
+		var f = Constants.Eye.altitudeSmoothness * Time.unscaledDeltaTime;
 		altitude = altitude * ( 1 - f ) + targetAltitude * f;
 	}
 
