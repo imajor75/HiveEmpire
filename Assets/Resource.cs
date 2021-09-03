@@ -166,7 +166,7 @@ public class Resource : HiveObject
 			this.infinite = true;
 		this.node = node;
 		life.Start();
-		bodyRandom = World.rnd.Next();
+		bodyRandom = World.NextRnd();
 		return this;
 	}
 
@@ -260,7 +260,7 @@ public class Resource : HiveObject
 		}
 		if ( silence.done || silence.empty )
 		{
-			var m = ambientSounds.GetMedia( type, World.rnd.Next() );
+			var m = ambientSounds.GetMedia( type, World.NextRnd() );
 			if ( m == null || m.data == null )
 			{
 				silence.Start( 1500 );
@@ -270,7 +270,7 @@ public class Resource : HiveObject
 			{
 				if ( !silence.empty )
 					soundSource.Play();
-				silence.Start( (int)( World.rnd.NextDouble() * m.intData ) );
+				silence.Start( (int)( World.NextFloatRnd() * m.intData ) );
 				soundSource.clip = m.data;
 				soundSource.loop = false;
 			}

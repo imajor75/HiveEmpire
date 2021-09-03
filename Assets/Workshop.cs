@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -746,7 +746,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					var o = Ground.areas[productionConfiguration.gatheringRange];
 					for ( int i = 0; i < o.Count; i++ )
 					{
-						int randomOffset = World.rnd.Next( o.Count );
+						int randomOffset = World.NextRnd( o.Count );
 						int x = (i + randomOffset) % o.Count;
 						Node place = node.Add( o[x] );
 						{
@@ -820,7 +820,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return false;
 		}
 
-		int o = World.rnd.Next();
+		int o = World.NextRnd();
 		for ( int i = 0; i < buffers.Count; i++ )
 		{
 			var b = buffers[(i + o) % buffers.Count];
@@ -886,7 +886,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			range = Ground.areas.Length - 1;
 		Node target;
 		int t = Ground.areas[range].Count;
-		int r = World.rnd.Next( t );
+		int r = World.NextRnd( t );
 		for ( int j = -1; j < t; j++ )
 		{
 			if ( j < 0 )

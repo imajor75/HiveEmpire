@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +26,7 @@ public class World : MonoBehaviour
 	public OperationHandler operationHandler;
 
 	static public bool massDestroy;
-	static public System.Random rnd;
+	static System.Random rnd;
 	static public World instance;
 	static public int soundMaxDistance = 7;
 	static public int layerIndexNotOnMap;
@@ -64,6 +64,16 @@ public class World : MonoBehaviour
 				Speed.fast => Constants.World.fastSpeedFactor,
 				_ => 1
 			};
+		}
+	}
+
+	public static int CRC
+	{
+		set
+		{
+			if ( instance.operationHandler.recordCRC && instance.time > 10 )
+				HiveObject.Log( $"szeycsuan {World.instance.time}: {value} from {Assert.Caller()}t *" );
+			instance.operationHandler.currentCRCCode += value;
 		}
 	}
 
@@ -499,6 +509,21 @@ public class World : MonoBehaviour
 		soundSource.pitch = instance.speed == Speed.fast ? Constants.World.fastSpeedFactor : 1;
 		soundSource.maxDistance = Constants.Node.size * World.soundMaxDistance;
 		return soundSource;
+	}
+
+	static public int NextRnd( int limit = 0 )
+	{
+		HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
+		if ( limit != 0 )
+			return rnd.Next( limit );
+		else
+			return rnd.Next();
+	}
+
+	static public float NextFloatRnd()
+	{
+		HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
+		return (float)rnd.NextDouble();
 	}
 
 	void FixedUpdate()

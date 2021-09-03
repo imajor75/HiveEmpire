@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1383,7 +1383,7 @@ public class Worker : HiveObject
 
 		if ( type == Type.wildAnimal )
 		{
-			int r = World.rnd.Next( 6 );
+			int r = World.NextRnd( 6 );
 			var d = Ground.areas[1];
 			for ( int i = 0; i < d.Count; i++ )
 			{
@@ -1393,7 +1393,7 @@ public class Worker : HiveObject
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
 				ScheduleWalkToNeighbour( t );
-				if ( World.rnd.NextDouble() < Constants.Workshop.pasturingPrayChance )
+				if ( World.NextFloatRnd() < Constants.Workshop.pasturingPrayChance )
 					ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
 				return;
 			}
@@ -1868,7 +1868,7 @@ public class Worker : HiveObject
 		else
 		{
 			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * Constants.Node.size * Constants.Road.bodyHeight;
-			TurnTo( walkTo, walkFrom );
+			TurnTo( walkTo, walkFrom );		// TODO We should not do this in every frame
 		}
 
 		if ( walkTo )

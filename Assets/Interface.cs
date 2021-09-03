@@ -527,7 +527,7 @@ public class Interface : HiveObject
 	public void Save( string fileName = "" )
 	{
 		if ( fileName == "" )
-			fileName = Application.persistentDataPath + "/Saves/" + World.rnd.Next() + ".json";
+			fileName = Application.persistentDataPath + "/Saves/" + new System.Random().Next() + ".json";
 		world.Save( fileName );
 		print( fileName + " is saved" );
 	}
@@ -631,7 +631,7 @@ public class Interface : HiveObject
 		if ( Input.GetKeyDown( KeyCode.Keypad0 ) )
 		{
 			var flagList = Resources.FindObjectsOfTypeAll<Flag>();
-			var flag = flagList[World.rnd.Next( flagList.Length )];
+			var flag = flagList[new System.Random().Next( flagList.Length )];
 			if ( flag != mainPlayer.mainBuilding.flag )
 			{
 				world.eye.FocusOn( flag );
@@ -641,21 +641,21 @@ public class Interface : HiveObject
 		if ( Input.GetKeyDown( KeyCode.Keypad1 ) )
 		{
 			var itemList = Resources.FindObjectsOfTypeAll<Item>();
-			var item = itemList[World.rnd.Next( itemList.Length )];
+			var item = itemList[new System.Random().Next( itemList.Length )];
 			world.eye.FocusOn( item );
 			item.CancelTrip();
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad2 ) )
 		{
 			var workerList = Resources.FindObjectsOfTypeAll<Worker>();
-			var worker = workerList[World.rnd.Next( workerList.Length )];
+			var worker = workerList[new System.Random().Next( workerList.Length )];
 			world.eye.FocusOn( worker );
 			worker.ResetTasks();
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad3 ) )
 		{
 			var buildingList = Resources.FindObjectsOfTypeAll<Building>();
-			var building = buildingList[World.rnd.Next( buildingList.Length )];
+			var building = buildingList[new System.Random().Next( buildingList.Length )];
 			if ( building != mainPlayer.mainBuilding )
 			{
 				world.eye.FocusOn( building );
@@ -6012,7 +6012,7 @@ if ( cart )
 		{
 			var c = World.instance.challenge;
 			if ( randomizeSeed && !c.fixedSeed )
-				c.seed = World.rnd.Next();
+				c.seed = World.NextRnd();
 			root.NewGame( c );
 		}
 
