@@ -178,7 +178,7 @@ abstract public class Building : HiveObject
 		/// 
 		/// </summary>
 		/// <returns>True if the function call was useful</returns>
-		public bool FixedUpdate()
+		public bool CriticalUpdate()
 		{
 			if ( area == null )
 				return false;
@@ -292,7 +292,7 @@ abstract public class Building : HiveObject
 			return true;
 		}
 
-		new public void FixedUpdate()
+		new public void CriticalUpdate()
 		{
 			if ( done || suspend.inProgress || boss.blueprintOnly )
 				return;
@@ -318,7 +318,7 @@ abstract public class Building : HiveObject
 				return;
 			};
 
-			if ( boss.configuration.flatteningNeeded && !flattened && base.FixedUpdate() )
+			if ( boss.configuration.flatteningNeeded && !flattened && base.CriticalUpdate() )
 				return;
 
 		if ( !worker.IsIdle() )
@@ -339,7 +339,7 @@ abstract public class Building : HiveObject
 				hammering.Setup( worker, Worker.constructingAct );
 				hammering.Start();
 			}
-			progress += boss.ground.world.timeFactor / boss.configuration.constructionTime;
+			progress += 1f / boss.configuration.constructionTime;
 			float maxProgress = ((float)plankArrived+stoneArrived)/(boss.configuration.plankNeeded+boss.configuration.stoneNeeded);
 			if ( progress >= maxProgress )
 			{
@@ -524,6 +524,7 @@ abstract public class Building : HiveObject
 
 		if ( !blueprintOnly )
 			owner.buildingCounts[(int)type]++;
+		base.Setup();
 		return this;
 	}
 
@@ -583,9 +584,9 @@ abstract public class Building : HiveObject
 		UpdateLook();
 	}
 
-	public void FixedUpdate()
+	public override void CriticalUpdate()
 	{
-		construction.FixedUpdate();
+		construction.CriticalUpdate();
 	}
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )

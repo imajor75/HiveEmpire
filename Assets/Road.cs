@@ -117,6 +117,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		nodes.Add( flag.node );
 		owner = flag.owner;
 		blueprintOnly = true;
+		base.Setup();
 		return this;
 	}
 
@@ -245,7 +246,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		base.Start();
 	}
 
-	public void FixedUpdate()
+	public override void CriticalUpdate()
 	{
 		if ( !ready || invalid )
 			return;
@@ -253,7 +254,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		int jam = this.jam;
 		const int maxJam = 2 * Constants.Flag.maxItems;
 		float weight = (float)( jam - 2 ) / ( maxJam - 6 );
-		mapMaterial.color = Color.Lerp( Color.green, Color.red, weight );
+		if ( mapMaterial )
+			mapMaterial.color = Color.Lerp( Color.green, Color.red, weight );
 
 		if ( decorationOnly )
 			return;

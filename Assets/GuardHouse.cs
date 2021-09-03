@@ -55,9 +55,9 @@ public class GuardHouse : Building
 		return template;
 	}
 
-	public new void FixedUpdate()
+	public override void CriticalUpdate()
 	{
-		base.FixedUpdate();
+		base.CriticalUpdate();
 		if ( construction.done && soldiers.Count == 0 && !blueprintOnly && owner.soldierCount > 0 )
 		{
 			owner.soldierCount--;

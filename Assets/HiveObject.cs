@@ -13,8 +13,7 @@ public abstract class HiveObject : MonoBehaviour
 	
 	[JsonIgnore]
 	public Assert assert;
-	static System.Random idSource = new System.Random();
-	public int id = idSource.Next();		// Only to help debugging
+	public int id;
 	public bool noAssert;
 
 	public HiveObject()
@@ -24,9 +23,10 @@ public abstract class HiveObject : MonoBehaviour
 
 	public void Setup()
 	{
-		assert.IsFalse( World.instance.insideCriticalSection );
 		assert.IsFalse( World.instance.hiveObjects.Contains( this ) );
-		World.instance.hiveObjects.AddFirst( this );
+		World.instance.newHiveObjects.AddFirst( this );
+		if ( !blueprintOnly )
+			id = World.NextRnd();
 	}
 
 	static public string Nice( string raw )
@@ -99,6 +99,7 @@ public abstract class HiveObject : MonoBehaviour
 	{
 		assert.IsTrue( blueprintOnly );
 		blueprintOnly = false;
+		id = World.NextRnd();
 	}
 
 	public virtual void OnClicked( bool show = false )

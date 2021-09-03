@@ -181,13 +181,15 @@ public class OperationHandler : HiveObject
             assert.AreEqual( World.instance.time, CRCCodes.Count );
             CRCCodes.Add( currentCRCCode );
         }
-        //if ( mode == Mode.repeating && CRCCodes.Count > World.instance.time )
-          //  assert.AreEqual( CRCCodes[World.instance.time], currentCRCCode );
+        if ( mode == Mode.repeating && CRCCodes.Count > World.instance.time )
+            assert.AreEqual( CRCCodes[World.instance.time], currentCRCCode, "CRC mismatch" );
         currentCRCCode = 0;
 #endif
 
+        World.instance.fixedOrderCalls = true;
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == World.instance.time )
         {
+            HiveObject.Log( $"Executing {repeatBuffer[executeIndex].name}" );
             var inverse = repeatBuffer[executeIndex].ExecuteAndInvert();
             if ( inverse )
             {
@@ -199,15 +201,13 @@ public class OperationHandler : HiveObject
             executeIndex++;
         }
 
-        if ( World.instance.speed != World.Speed.pause )
+        finishedFrameIndex++;
+        if ( finishedFrameIndex == replayLength )
         {
-            finishedFrameIndex++;
-            if ( finishedFrameIndex == replayLength )
-            {
-                Assert.global.AreEqual( mode, Mode.repeating );
-                mode = Mode.recording;
-            }
+            Assert.global.AreEqual( mode, Mode.repeating );
+            mode = Mode.recording;
         }
+        World.instance.fixedOrderCalls = false;
 
         assert.AreEqual( finishedFrameIndex, World.instance.time );
     }

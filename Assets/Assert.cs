@@ -151,7 +151,10 @@ public class Assert
 #if DEBUG
 		message = Caller( depth + 1 ) + " : " + message;
 		if ( message != "" )
+		{
+			HiveObject.Log( "! " + message );
 			UnityEngine.Debug.LogAssertion( message );
+		}
 
 		if ( boss != null && !problemSelected )
 		{
@@ -168,6 +171,8 @@ public class Assert
 	{
 		var stackTrace = new StackTrace();
 		var stackFrame = stackTrace.GetFrame( depth );
+		if ( stackFrame == null )
+			return "none";
 		var method = stackFrame.GetMethod();
 		return method.DeclaringType.Name + "." + method.Name;
 	}

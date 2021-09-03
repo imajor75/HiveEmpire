@@ -601,9 +601,9 @@ public class Stock : Building, Worker.Callback.IHandler
 		worker.DestroyThis();
 }
 
-	new void FixedUpdate()
+	public override void CriticalUpdate()
 	{
-		base.FixedUpdate();
+		base.CriticalUpdate();
 		if ( !construction.done || blueprintOnly )
 			return;
 

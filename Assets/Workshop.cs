@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -128,7 +128,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( timer.empty )
 				timer.Start();
 			if ( boss.working )
-				workCounter += (int)World.instance.timeFactor;
+				workCounter++;
 			if ( timer.age >= timinglength )
 			{
 				float p = (float)workCounter / timer.age;
@@ -446,8 +446,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly ) == null )
 			return null;
 
-		base.Setup();
-
 		return this;
 	}
 
@@ -536,11 +534,11 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			PlayWorkingSound();
 		}
-		if ( smoke )
-		{
-			var b = smoke.main;
-			b.simulationSpeed = World.instance.timeFactor;
-		}
+		// if ( smoke )
+		// {
+		// 	var b = smoke.main;
+		// 	b.simulationSpeed = World.instance.timeFactor;
+		// }
 	}
 
 	public override GameObject Template()
@@ -638,22 +636,13 @@ public class Workshop : Building, Worker.Callback.IHandler
 		statusDuration.Start();
 	}
 
-	public new void FixedUpdate()
+	public void FixedUpdate()
 	{
 		productivity.FixedUpdate( this );
 
 		if ( !construction.done || blueprintOnly )
 		{
-			base.FixedUpdate();
 			return;
-		}
-
-		if ( worker == null )
-			dispenser = worker = Worker.Create().SetupForBuilding( this );
-		if ( workerMate == null )
-		{
-			dispenser = workerMate = Worker.Create().SetupForBuilding( this, true );
-			workerMate.ScheduleWait( 100, true );
 		}
 
 		if ( type == Type.barrack && output > 0 )
@@ -698,8 +687,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public override void CriticalUpdate()
 	{
+		base.CriticalUpdate();
+
 		if ( !construction.done || blueprintOnly )
 			return;
+
+		if ( worker == null )
+			dispenser = worker = Worker.Create().SetupForBuilding( this );
+		if ( workerMate == null )
+		{
+			dispenser = workerMate = Worker.Create().SetupForBuilding( this, true );
+			workerMate.ScheduleWait( 100, true );
+		}
 
 		switch ( type )
 		{
@@ -785,7 +784,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 						millWheelSpeed = 1;
 					if ( millWheelSpeed < 0 )
 						millWheelSpeed = 0;
-					millWheel.Rotate( 0, 0, World.instance.timeFactor * millWheelSpeed );
+					millWheel.Rotate( 0, 0, millWheelSpeed );
 				}
 				break;
 			}
@@ -853,7 +852,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 		if ( working )
 		{
-			progress += ground.world.timeFactor / productionConfiguration.productionTime;
+			progress += 1f / productionConfiguration.productionTime;
+			World.CRC = (int)( 10000 * progress );
 			if ( progress > 1 )
 			{
 				output += productionConfiguration.outputStackSize;

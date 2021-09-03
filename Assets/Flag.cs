@@ -64,6 +64,7 @@ public class Flag : HiveObject
 			if ( crossing )
 				requestFlattening = true;
 			freeSlotsWatch.Attach( itemsStored );
+			base.Setup();
 			return this;
 		}
 		DestroyThis();
@@ -117,7 +118,7 @@ public class Flag : HiveObject
 		base.Start();
 	}
 
-	public void FixedUpdate()
+	public override void CriticalUpdate()
 	{
 		if ( requestFlattening && !flattening.worker && !blueprintOnly )
 		{
@@ -130,7 +131,11 @@ public class Flag : HiveObject
 				area.Add( node + o );
 			flattening.Setup( area, false );
 		}
-		flattening?.FixedUpdate();
+#if DEBUG
+		if ( !blueprintOnly )
+			World.CRC = freeSlots;
+#endif
+		flattening?.CriticalUpdate();
 	}
 
 	public void UpdateBody()

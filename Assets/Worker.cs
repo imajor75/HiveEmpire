@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -481,6 +481,7 @@ public class Worker : HiveObject
 
 			wishedPoint = -1;
 			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.workerAtNodes.Count ); // TODO Triggered, happens when a road starts and ends at the same flag
+			// Triggered again, when a road is under construction, and a construction worker walks on the area while the end point is aligned, the road is not yet finalized																								
 			if ( road.workerAtNodes[currentPoint] == boss ) // it is possible that the other worker already took the place, so it must be checked
 				road.workerAtNodes[currentPoint] = null;
 
@@ -1253,8 +1254,11 @@ public class Worker : HiveObject
 		{
 			if ( taskQueue.Count > 0 && taskQueue[0].InterruptWalk() )
 				return;
-			walkProgress += currentSpeed * ground.world.timeFactor;
-			World.instance.operationHandler.currentCRCCode += node.x + node.y + (int)walkProgress;
+			walkProgress += currentSpeed;
+			if ( World.instance.operationHandler.recordCRC )
+				Log( $"worker {id}: {node.x}, {node.y}, {(int)( walkProgress * 10000)}" );
+
+			World.CRC = node.x + node.y + (int)( walkProgress * 10000 );
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;
@@ -1576,6 +1580,7 @@ public class Worker : HiveObject
 			{
 				if ( item == null || item.flag == null )    // It can be nextFlag as well
 					continue;
+				World.CRC = item.id;
 				var ( score, swapOnly ) = CheckItem( item );
 				if ( swapOnly )
 				{

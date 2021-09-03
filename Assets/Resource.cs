@@ -167,6 +167,7 @@ public class Resource : HiveObject
 		this.node = node;
 		life.Start();
 		bodyRandom = World.NextRnd();
+		base.Setup();
 		return this;
 	}
 
@@ -236,7 +237,7 @@ public class Resource : HiveObject
 		}
 	}
 
-	public void FixedUpdate()
+	public override void CriticalUpdate()
 	{
 		if ( type == Type.animalSpawner && ( spawn.done || spawn.empty ) )
 		{

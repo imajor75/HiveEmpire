@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,8 +20,9 @@ public class World : MonoBehaviour
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public string fileName;
-	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>();
-	public bool insideCriticalSection;
+	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>(), newHiveObjects = new LinkedList<HiveObject>();
+	[JsonIgnore]
+	public bool fixedOrderCalls;
 	public Speed speed;
 	public OperationHandler operationHandler;
 
@@ -72,7 +73,7 @@ public class World : MonoBehaviour
 		set
 		{
 			if ( instance.operationHandler.recordCRC && instance.time > 10 )
-				HiveObject.Log( $"szeycsuan {World.instance.time}: {value} from {Assert.Caller()}t *" );
+				HiveObject.Log( $"szeycsuan {World.instance.time}: {value} from {Assert.Caller()}" );
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
@@ -103,6 +104,8 @@ public class World : MonoBehaviour
 	float goldChance { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	Goal currentWinLevel { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	bool insideCriticalSection { set {} }
 	public Settings settings;
 
 	[System.Serializable]
@@ -513,7 +516,9 @@ public class World : MonoBehaviour
 
 	static public int NextRnd( int limit = 0 )
 	{
-		HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
+		Assert.global.IsTrue( instance.fixedOrderCalls );
+		if ( World.instance.time > 10 )
+			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
 		if ( limit != 0 )
 			return rnd.Next( limit );
 		else
@@ -522,12 +527,16 @@ public class World : MonoBehaviour
 
 	static public float NextFloatRnd()
 	{
-		HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
+		Assert.global.IsTrue( instance.fixedOrderCalls );
+		if ( World.instance.time > 10 )
+			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
 		return (float)rnd.NextDouble();
 	}
 
 	void FixedUpdate()
 	{
+		HiveObject.Log( $"========= new frame ({time+1}) ==========" );
+
 		if ( settings.apply )
 		{
 			settings.apply = false;
@@ -539,22 +548,26 @@ public class World : MonoBehaviour
 		}
 		massDestroy = false;
 
-		if ( speed != Speed.pause )
-			time++;
+		time++;
+		CRC = rnd.Next();
 		foreach ( var player in players )
 			player.FixedUpdate();
 
-		insideCriticalSection = true;
-		foreach ( var ho in hiveObjects )
+		foreach ( var newHiveObject in newHiveObjects )
+		hiveObjects.AddLast( newHiveObject );
+		newHiveObjects.Clear();
+		fixedOrderCalls = true;
+		foreach ( var hiveObject in hiveObjects )
 		{
-			if ( ho )
-				ho.CriticalUpdate();
+			if ( hiveObject )
+				hiveObject.CriticalUpdate();
 		}
-		insideCriticalSection = false;
+		fixedOrderCalls = false;
 	}
 		
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
+		fixedOrderCalls = true;
 		time = -1;
 		SetSpeed( Speed.normal );
 		if ( operationHandler )
@@ -593,6 +606,9 @@ public class World : MonoBehaviour
 
 		operationHandler = OperationHandler.Create();
 		operationHandler.challenge = challenge;
+#if DEBUG
+		operationHandler.recordCRC = true;
+#endif
 		eye = Eye.Create().Setup( this );
 		ground = Ground.Create();
 		ground.Setup( this, heightMap, forestMap, settings.size );
@@ -619,6 +635,7 @@ public class World : MonoBehaviour
 			eye.viewDistance = oldEye.viewDistance;
 		}
 		Interface.ValidateAll();
+		fixedOrderCalls = false;
 	}
 
 	void Start()
@@ -710,6 +727,11 @@ public class World : MonoBehaviour
 					o.Remove( false );
 				o.ends[0] = o.nodes[0].flag;
 				o.ends[1] = o.lastNode.flag;
+				if ( !hiveObjects.Contains( o ) )
+				{
+					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
+					hiveObjects.AddFirst( o );
+				}
 			}
 		}
 
@@ -727,7 +749,7 @@ public class World : MonoBehaviour
 				//	o.itemsInHands[0].SetRawTarget( o.building );
 				if ( !hiveObjects.Contains( o ) )
 				{
-					print( $"Adding {o.name} to list of hive objects" );
+					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
 					hiveObjects.AddFirst( o );
 				}
 }
@@ -761,7 +783,7 @@ public class World : MonoBehaviour
 							b.stored = b.size;
 					if ( !hiveObjects.Contains( s ) )
 					{
-						print( $"Adding {s.title} to list of hive objects" );
+						HiveObject.Log( $"Adding {s.title} to list of hive objects" );
 						hiveObjects.AddFirst( s );
 					}
 				}
@@ -817,6 +839,11 @@ public class World : MonoBehaviour
 					o.infinite = true;
 				if ( o.life.empty )
 					o.life.reference = instance.time - 15000;
+				if ( !hiveObjects.Contains( o ) )
+				{
+					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
+					hiveObjects.AddFirst( o );
+				}
 			}
 		}
 		{
@@ -1147,24 +1174,24 @@ public class World : MonoBehaviour
 	public void SetSpeed( Speed speed )
 	{
 		this.speed = speed;
-		var list1 = Resources.FindObjectsOfTypeAll<Animator>();
-		foreach ( var o in list1 )
-			o.speed = timeFactor;
-		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
-		foreach ( var o in list2 )
-		{
-#if UNITY_EDITOR
-			if ( PrefabUtility.IsPartOfAnyPrefab( o ) )
-				continue;
-#endif
-			var mainModule = o.main;
-			mainModule.simulationSpeed = timeFactor;
-		}
+// 		var list1 = Resources.FindObjectsOfTypeAll<Animator>();
+// 		foreach ( var o in list1 )
+// 			o.speed = timeFactor;
+// 		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
+// 		foreach ( var o in list2 )
+// 		{
+// #if UNITY_EDITOR
+// 			if ( PrefabUtility.IsPartOfAnyPrefab( o ) )
+// 				continue;
+// #endif
+// 			var mainModule = o.main;
+// 			mainModule.simulationSpeed = timeFactor;
+// 		}
 		var list3 = Resources.FindObjectsOfTypeAll<AudioSource>();
 		foreach ( var o in list3 )
 			o.pitch = timeFactor;
-		if ( speed != Speed.pause )
-		Time.fixedDeltaTime = 1f / ( timeFactor * Constants.World.normalSpeedPerSecond );
+		//Time.fixedDeltaTime = 1f / ( timeFactor * Constants.World.normalSpeedPerSecond );
+		Time.timeScale = timeFactor;
 	}
 
 	public static int hourTickCount { get { return (int)( 60 * 60 / UnityEngine.Time.fixedDeltaTime ); } }
