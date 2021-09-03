@@ -54,6 +54,11 @@ public abstract class HiveObject : MonoBehaviour
 		Destroy( gameObject );
 	}
 
+	public static void Log( string text )
+	{
+		Interface.root.logFile.Write( text + "\n" );
+	}
+
 	void OnDestroy()
 	{
 		World.instance.hiveObjects.Remove( this );

@@ -13,6 +13,7 @@ using UnityEngine.UI;
 
 public class Interface : HiveObject
 {
+	public StreamWriter logFile;
 	public List<Panel> panels = new List<Panel>();
 	public PostProcessResources postProcessResources;
 	public const int iconSize = 20;
@@ -272,6 +273,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
+		logFile.Close();
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save();
 
@@ -399,6 +401,8 @@ public class Interface : HiveObject
 
 	new public void Start()
 	{
+		logFile = new StreamWriter( Application.persistentDataPath + "/log.txt" );
+
 		Node.Initialize();
 		Assert.Initialize();
 		World.Initialize();
