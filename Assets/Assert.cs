@@ -149,9 +149,6 @@ public class Assert
 	public void Fail( string message = "Something went wrong", int depth = 1 )
 	{
 #if DEBUG
-		var stackTrace = new StackTrace();
-		var stackFrame = stackTrace.GetFrame( depth );
-		var method = stackFrame.GetMethod();
 		message = Caller( depth + 1 ) + " : " + message;
 		if ( message != "" )
 			UnityEngine.Debug.LogAssertion( message );
@@ -167,7 +164,7 @@ public class Assert
 #endif
 	}
 
-	string Caller( int depth )
+	public static string Caller( int depth = 2 )
 	{
 		var stackTrace = new StackTrace();
 		var stackFrame = stackTrace.GetFrame( depth );
