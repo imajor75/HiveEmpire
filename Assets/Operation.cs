@@ -15,6 +15,7 @@ public class OperationHandler : HiveObject
     public int executeIndex = 0;
     public int finishedFrameIndex = -1;
     public int replayLength = -1;
+    public string lastSave;
     public bool recordCRC;
     public bool insideFrame
     {
@@ -40,11 +41,17 @@ public class OperationHandler : HiveObject
         return new GameObject( "Operation handler").AddComponent<OperationHandler>();
     }
 
-    public void StartReplay()
+    new void Start()
+    {
+        transform.SetParent( Interface.root.transform );
+        base.Start();
+    }
+
+    public void StartReplay( int from = 0 )
     {
         mode = Mode.repeating;
-        finishedFrameIndex = -1;
-        executeIndex = 0;
+        finishedFrameIndex = World.instance.time;
+        executeIndex = from;
     }
 
     void Update()
@@ -175,6 +182,9 @@ public class OperationHandler : HiveObject
 
     void FixedUpdate()
     {
+        if ( this != World.instance.operationHandler )
+            return;
+
 #if DEBUG
         if ( recordCRC && mode == Mode.recording && World.instance.speed != World.Speed.pause )
         {

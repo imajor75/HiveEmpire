@@ -897,6 +897,7 @@ public class World : MonoBehaviour
 	public void Save( string fileName )
 	{
 		this.fileName = fileName;
+		operationHandler.lastSave = fileName;
 		randomSeed = rnd.Next();
 		rnd = new System.Random( randomSeed );
 

@@ -534,7 +534,13 @@ public class Interface : HiveObject
 
 	public void LoadReplay( string name )
 	{
+		print( $"Loading replay {name}" );
 		var o = Serializer.Read<OperationHandler>( name );
+		if ( o.lastSave != null )
+		{
+			ReplayLoader.Create( o );
+			return;
+		}
 		root.NewGame( o.challenge );
 		World.instance.operationHandler = o;
 		o.StartReplay();
@@ -542,6 +548,7 @@ public class Interface : HiveObject
 
 	public void SaveReplay( string name )
 	{
+		print( $"Saving replay {name}" );
 		var oh = World.instance.operationHandler;
 		oh.undoQueue.Clear();		// TODO Is this necessary?
 		oh.redoQueue.Clear();
@@ -814,6 +821,42 @@ public class Interface : HiveObject
 
 	public override Node location { get { return null; } }
 
+	public class ReplayLoader : Panel
+	{
+		public OperationHandler replay;
+
+		public static ReplayLoader Create( OperationHandler o )
+		{
+			var h = new GameObject( "Replay loader" ).AddComponent<ReplayLoader>();
+			h.Open( o );
+			return h;
+		}
+
+		void Open( OperationHandler replay )
+		{
+			this.replay = replay;
+			base.Open( 300, 100 );
+			Text( "Do you want to continue from the latest save, or from the beginnin?" ).PinCenter( 0, -borderWidth - iconSize, 200, 2 * iconSize, 0.5f, 1 ).alignment = TextAnchor.UpperCenter;
+			Button( "Load latest save" ).PinCenter( 0, -60, 100, iconSize, 0.25f, 1 ).AddClickHandler( () => StartReplay( true ) );
+			Button( "Start from the beginning" ).PinCenter( 0, -60, 100, iconSize, 0.75f, 1 ).AddClickHandler( () => StartReplay( false ) );
+		}
+
+		void StartReplay( bool loadLatestSave )
+		{
+			int executeIndex = 0;
+			if ( loadLatestSave )
+			{
+				root.Load( replay.lastSave );
+				executeIndex = World.instance.operationHandler.executeIndex;
+				replay.challenge = World.instance.challenge;
+			}
+			else
+				root.NewGame( replay.challenge );
+			World.instance.operationHandler = replay;
+			replay.StartReplay( executeIndex );
+		}
+
+	}
 	public class PathVisualization : MonoBehaviour
 	{
 	    Vector3 lastAbsoluteEyePosition;
