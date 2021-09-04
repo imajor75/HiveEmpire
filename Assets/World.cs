@@ -948,6 +948,8 @@ public class World : MonoBehaviour
 
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 			ho.noAssert = true;
+		hiveObjects.Clear();
+		newHiveObjects.Clear();
 
 		massDestroy = true;
 		Interface.root.Clear();

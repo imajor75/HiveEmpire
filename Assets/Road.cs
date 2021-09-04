@@ -40,7 +40,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		[Obsolete( "Compatibility with old files", true )]
 		set
 		{
-			underConstruction = !ready;
+			blueprintOnly = !ready;
 		}
 	}
 
