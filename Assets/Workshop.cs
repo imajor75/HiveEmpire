@@ -534,11 +534,6 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			PlayWorkingSound();
 		}
-		// if ( smoke )
-		// {
-		// 	var b = smoke.main;
-		// 	b.simulationSpeed = World.instance.timeFactor;
-		// }
 	}
 
 	public override GameObject Template()

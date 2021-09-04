@@ -91,7 +91,8 @@ public class Worker : HiveObject
 	{
 		unknown,
 		standing,
-		walking
+		walking,
+		custom,
 	}
 
 	public Color Color
@@ -192,6 +193,7 @@ public class Worker : HiveObject
 		public Act act;
 		public World.Timer timer = new World.Timer();
 		public bool started = false;
+		public BodyState preState;
 		GameObject tool;
 		public bool wasWalking;
 
@@ -220,6 +222,8 @@ public class Worker : HiveObject
 				wasWalking = boss.animator.GetBool( walkingID );
 			boss.animator?.SetBool( walkingID, false );
 			boss.animator?.SetBool( act.animation, true );
+			preState = boss.bodyState;
+			boss.bodyState = BodyState.custom;
 			if ( act.toolTemplate )
 				tool = Instantiate( act.toolTemplate, boss.links[(int)act.toolSlot]?.transform );
 			timer.Start( act.duration );
@@ -233,6 +237,7 @@ public class Worker : HiveObject
 			timer.Reset();
 			boss.animator?.SetBool( act.animation, false );
 			boss.animator?.SetBool( walkingID, wasWalking );
+			boss.bodyState = preState;
 			if ( tool )
 				Destroy( tool );
 			started = false;
@@ -1144,7 +1149,6 @@ public class Worker : HiveObject
 		animator = body.GetComponent<Animator>();
 		if ( animator )
 		{
-			animator.speed = ground.world.timeFactor;
 			animator.applyRootMotion = false;
 			if ( itemsInHands[0] )
 				animator.Play( "idle light" );
@@ -1831,6 +1835,9 @@ public class Worker : HiveObject
 
 	public void UpdateBody()
 	{
+		if ( bodyState == BodyState.custom )
+			return;
+
 		if ( walkTo == null )
 		{
 			if ( bodyState != BodyState.standing )

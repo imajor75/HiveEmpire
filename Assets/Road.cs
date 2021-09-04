@@ -701,7 +701,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public void OnDestroy()
+	public new void OnDestroy()
 	{
 		owner.versionedRoadDelete.Trigger();
 		owner.versionedRoadNetworkChanged.Trigger();

@@ -1176,19 +1176,6 @@ public class World : MonoBehaviour
 	public void SetSpeed( Speed speed )
 	{
 		this.speed = speed;
-// 		var list1 = Resources.FindObjectsOfTypeAll<Animator>();
-// 		foreach ( var o in list1 )
-// 			o.speed = timeFactor;
-// 		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
-// 		foreach ( var o in list2 )
-// 		{
-// #if UNITY_EDITOR
-// 			if ( PrefabUtility.IsPartOfAnyPrefab( o ) )
-// 				continue;
-// #endif
-// 			var mainModule = o.main;
-// 			mainModule.simulationSpeed = timeFactor;
-// 		}
 		var list3 = Resources.FindObjectsOfTypeAll<AudioSource>();
 		foreach ( var o in list3 )
 			o.pitch = timeFactor;
