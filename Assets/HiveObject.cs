@@ -59,7 +59,7 @@ public abstract class HiveObject : MonoBehaviour
 		Interface.root.logFile.Write( text + "\n" );
 	}
 
-	void OnDestroy()
+	public void OnDestroy()
 	{
 		World.instance.hiveObjects.Remove( this );
 	}

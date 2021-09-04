@@ -406,7 +406,7 @@ public class Item : HiveObject
 	}
 
 	[Conditional( "Debug" )]
-	public void OnDestroy()
+	public new void OnDestroy()
 	{
 		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || World.massDestroy || noAssert );	// TODO Triggered randomly for a beer. 
 		// It has a destination (butcher) has a valid path, no worker, nextFlag null. 
@@ -424,6 +424,7 @@ public class Item : HiveObject
 		// destination.flag 20, 15
 		// origin 12, 9
 		// Item is correctly registered in all 3 places, destination.itemsOnTheWay, flag.items, owner.items
+		base.OnDestroy();
 	}
 
 	public override void Reset()

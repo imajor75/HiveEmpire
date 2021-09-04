@@ -705,6 +705,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		owner.versionedRoadDelete.Trigger();
 		owner.versionedRoadNetworkChanged.Trigger();
+		base.OnDestroy();
 	}
 
 	public override bool Remove( bool takeYourTime )
