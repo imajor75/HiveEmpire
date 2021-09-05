@@ -40,6 +40,7 @@ public class Interface : HiveObject
 	int highlightVolumeRadius;
 	Image[] speedButtons = new Image[3];
 	public List<World.Challenge> challenges;
+	public MonoBehaviour replayIcon;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -223,7 +224,8 @@ public class Interface : HiveObject
 		play,
 		fast,
 		stock,
-		exc
+		exc,
+		replay
 	}
 
 
@@ -469,7 +471,8 @@ public class Interface : HiveObject
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
-		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetSpeed( World.Speed.pause ) ).Link( this ).Pin( -150, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
+		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator );
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetSpeed( World.Speed.pause ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
 		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => world.SetSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
@@ -498,6 +501,13 @@ public class Interface : HiveObject
 			Load( Application.streamingAssetsPath + "/demolevel.json" );
 
 		MainPanel.Create().Open( true );
+	}
+
+	string ReplayTooltipGenerator()
+	{
+		var r = World.instance.operationHandler;
+		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( r.replayLength - r.finishedFrameIndex )}";
+		return text;
 	}
 
 	void OpenBuildPanel()
@@ -675,6 +685,7 @@ public class Interface : HiveObject
 		speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey;
 		speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey;
 		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
+		replayIcon.gameObject.SetActive( !playerInCharge );
 	}
 
 	void CheckHighlight()
@@ -1058,7 +1069,7 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
-			if ( origin == null )
+			if ( origin == null || !origin.gameObject.activeSelf )
 			{
 				gameObject.SetActive( false );
 				return;
@@ -1119,6 +1130,12 @@ public class Interface : HiveObject
 			this.onShow = onShow;
 
 			if ( active )
+				tooltip.SetText( this, textGenerator(), image, additionalText );
+		}
+
+		void Update()
+		{
+			if ( active && textGenerator != null )
 				tooltip.SetText( this, textGenerator(), image, additionalText );
 		}
     }
