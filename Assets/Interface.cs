@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Interface : HiveObject
@@ -283,11 +285,6 @@ public class Interface : HiveObject
 			item.destination = null;    // HACK to silence the assert in Item.OnDestroy
 	}
 
-	public void LateUpdate()
-	{
-		Validate( true );
-	}
-
 	public static bool GetKey( KeyCode key )
 	{
 		if ( focusOnInputField || ignoreKey == key )
@@ -501,6 +498,7 @@ public class Interface : HiveObject
 			Load( Application.streamingAssetsPath + "/demolevel.json" );
 
 		MainPanel.Create().Open( true );
+		StartCoroutine( ValidateCoroutine() );
 	}
 
 	string ReplayTooltipGenerator()
@@ -808,11 +806,23 @@ public class Interface : HiveObject
 		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 );
 	}
 
-	public static void ValidateAll()
+	public static void ValidateAll( bool skipNoAsserts = false )
 	{
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
-			if ( ho && !ho.noAssert )
-				ho.Validate( false );
+		{
+			if ( skipNoAsserts && ho.noAssert )
+				continue;
+			ho.Validate( false );
+		}
+	}
+
+	IEnumerator ValidateCoroutine()
+	{
+		while ( true )
+		{
+			yield return new WaitForEndOfFrame();
+			Validate( true );
+		}
 	}
 
 	public override void Validate( bool chain )
@@ -827,6 +837,8 @@ public class Interface : HiveObject
 			Assert.global.IsNotNull( highlightArea );
 			Assert.global.IsNotNull( highlightArea.center );
 		}
+		var roots = SceneManager.GetActiveScene().GetRootGameObjects();
+		Assert.global.AreEqual( roots.Count(), 3, "Interface, World and the Event System should be the three objects in the root" );
 #endif
 	}
 

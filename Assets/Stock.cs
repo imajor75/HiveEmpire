@@ -377,7 +377,6 @@ public class Stock : Building, Worker.Callback.IHandler
 			}
 			assert.IsTrue( itemQuantity == 0 );
 			destination = null;	// Theoretically not needed
-			SetActive( false );
 		}
 
 		public void UpdateLook()
@@ -397,6 +396,8 @@ public class Stock : Building, Worker.Callback.IHandler
 					if ( f.transform.childCount > 0 )
 						Destroy( f.transform.GetChild( 0 ).gameObject );
 			}
+			if ( taskQueue.Count == 0 && walkTo == null )
+				SetActive( false );
 		}
 
 		public override void Validate( bool chain )

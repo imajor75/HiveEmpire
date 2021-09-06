@@ -162,7 +162,6 @@ public class Assert
 			problemSelected = true;
 		}
 
-		EditorApplication.isPaused = true;
 		throw new Exception();
 #endif
 	}

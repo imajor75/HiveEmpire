@@ -741,5 +741,6 @@ abstract public class Building : HiveObject
 		workerMate?.Validate( true );
 		exit?.Validate( true );
 		construction?.Validate( true );
+		assert.IsTrue( World.instance.players.Contains( owner ) );
 	}
 }

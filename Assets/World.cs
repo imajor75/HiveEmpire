@@ -602,7 +602,7 @@ public class World : MonoBehaviour
 
 		Clear();
 		Prepare();
-		Interface.ValidateAll();
+		Interface.ValidateAll( true );
 
 		operationHandler = OperationHandler.Create();
 		operationHandler.challenge = challenge;
@@ -634,7 +634,7 @@ public class World : MonoBehaviour
 			eye.direction = oldEye.direction;
 			eye.viewDistance = oldEye.viewDistance;
 		}
-		Interface.ValidateAll();
+		Interface.ValidateAll( true );
 		fixedOrderCalls = false;
 	}
 
@@ -655,7 +655,7 @@ public class World : MonoBehaviour
 	{
    		Clear();
 		Prepare();
-		Interface.ValidateAll();
+		Interface.ValidateAll( true );
 		challenge = null;
 
 		World world = Serializer.Read<World>( fileName );
@@ -891,7 +891,7 @@ public class World : MonoBehaviour
 		gameInProgress = true;
 		SetSpeed( speed );    // Just for the animators and sound
 
-		Interface.ValidateAll();
+		Interface.ValidateAll( true );
 	}
 
 	public void Save( string fileName )

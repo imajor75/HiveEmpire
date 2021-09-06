@@ -1097,6 +1097,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		if ( !ready )
 			assert.AreEqual( Interface.root.viewport.inputHandler, this );
+		assert.IsTrue( World.instance.players.Contains( owner ) );
 	}
 
 	public void OnLostInput()

@@ -534,5 +534,6 @@ public class Item : HiveObject
 		}
 		assert.AreNotEqual( index, -1 );
 		assert.AreEqual( owner.items[index], this );
+		assert.IsTrue( World.instance.players.Contains( owner ) );
 	}
 }

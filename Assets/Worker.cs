@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1238,8 +1238,7 @@ public class Worker : HiveObject
 		SetNode( walkTo = target );
 	}
 
-	// Update is called once per frame
-	public override void CriticalUpdate()
+	void FixedUpdate()
 	{
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
@@ -1252,7 +1251,11 @@ public class Worker : HiveObject
 			debugReset = false;
 			return;
 		}
+	}
 
+	// Update is called once per frame
+	public override void CriticalUpdate()
+	{
 		// If worker is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
@@ -1880,6 +1883,7 @@ public class Worker : HiveObject
 		else
 		{
 			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * Constants.Node.size * Constants.Road.bodyHeight;
+			assert.IsTrue( walkTo.valid && walkFrom.valid, "Not valid" );
 			TurnTo( walkTo, walkFrom );		// TODO We should not do this in every frame
 		}
 
@@ -2170,5 +2174,6 @@ public class Worker : HiveObject
 				if ( item && building.worker == this )
 					assert.AreEqual( item.destination, building );
 		}
+		assert.IsTrue( owner == null || World.instance.players.Contains( owner ) );
 	}
 }

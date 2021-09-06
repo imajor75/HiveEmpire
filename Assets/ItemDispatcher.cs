@@ -263,7 +263,6 @@ public class ItemDispatcher : HiveObject
 			oldOffers = offers;
 			requests = new List<Potential>();
 			offers = new List<Potential>();
-
 		}
 
 		// This function is trying to fulfill a request or offer from a list of offers/requests. Returns true, if the request/offer

@@ -53,6 +53,16 @@ public class Node : HiveObject
 		}
 	}
 
+	public bool valid
+	{
+		get
+		{
+			if ( x == ground.dimension || y == ground.dimension )
+				return true;
+			return ground.GetNode( x, y ) == this;
+		}
+	}
+
 	public enum Type
 	{
 		grass = 1,
@@ -448,6 +458,7 @@ public class Node : HiveObject
 
 	public override void Validate( bool chain )
 	{
+		assert.IsTrue( valid );
 		int o = 0;
 		if ( validFlag )
 			o++;

@@ -106,6 +106,15 @@ public abstract class HiveObject : MonoBehaviour
 	{
 	}
 
+	public static HiveObject GetByID( int id )
+	{
+		var list = Resources.FindObjectsOfTypeAll<HiveObject>();
+		foreach ( var hiveObject in list )
+			if ( hiveObject.id == id )
+				return hiveObject;
+		return null;
+	}
+
 	public virtual void Validate( bool chainCall )
 	{
 	}
