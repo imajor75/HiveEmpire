@@ -385,6 +385,16 @@ public class Operation : ScriptableObject
             return text;
         }
     }
+
+    public Node place
+    {
+        get
+        {
+            if ( type == Type.createRoad )
+                return World.instance.ground.GetNode( roadPathX[1], roadPathY[1] );
+            return location;
+        }
+    }
     [JsonProperty]
     public string title
     {

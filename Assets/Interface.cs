@@ -691,7 +691,7 @@ public class Interface : HiveObject
 		{
 			if ( !world.eye.hasTarget || lastShownOperation != next )
 			{
-				world.eye.FocusOn( world.operationHandler.next.location, true, false, false, true );
+				world.eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
 				tooltip.SetText( this, world.operationHandler.next.description, null, null, 0.2f, 0.2f );
 				lastShownOperation = next;
 			}
