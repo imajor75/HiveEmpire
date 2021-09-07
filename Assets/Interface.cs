@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -278,6 +278,7 @@ public class Interface : HiveObject
 	public void OnApplicationQuit()
 	{
 		logFile.Close();
+		SaveReplay( Application.persistentDataPath + $"/Replays/{new System.Random().Next()}.json" );
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save();
 
