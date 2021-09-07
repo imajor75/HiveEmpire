@@ -362,9 +362,17 @@ public class Operation : ScriptableObject
         {
             string text = type switch
             {
+                Type.changeArea => "Change area",
+                Type.changeRoutePriority => "Change route priority",
+                Type.changeWorkerCount => "Change worker count",
                 Type.createBuilding => "Constructing a new ",
                 Type.createFlag => "Creating a new flag",
+                Type.createRoad => "Create new road",
                 Type.moveFlag => "Moving a flag",
+                Type.moveRoad => "Move flag",
+                Type.removeBuilding => "Remove a building",
+                Type.removeFlag => "Remove a flag",
+                Type.removeRoad => "Remove a road",
                 _ => ""
             };
             if ( type == Type.createBuilding )

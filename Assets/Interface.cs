@@ -1034,7 +1034,7 @@ public class Interface : HiveObject
 		public Component origin;
 		Text text, additionalText;
 		Image image;
-		public bool pinned;
+		public new bool pinned;
 		int width, height;
 
 		public static Tooltip Create()
