@@ -353,6 +353,22 @@ public class Operation : ScriptableObject
             }
         }
     }
+    public string description
+    {
+        get
+        {
+            string text = type switch
+            {
+                Type.createBuilding => "Constructing a new ",
+                Type.createFlag => "Creating a new flag",
+                Type.moveFlag => "Moving a flag",
+                _ => ""
+            };
+            if ( type == Type.createBuilding )
+                text += buildingType.ToString();
+            return text;
+        }
+    }
     [JsonProperty]
     public string title
     {

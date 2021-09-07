@@ -686,7 +686,10 @@ public class Interface : HiveObject
 		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
 		replayIcon.gameObject.SetActive( !playerInCharge );
 		if ( !world.eye.hasTarget && !playerInCharge && world.operationHandler.next && world.operationHandler.next.scheduleAt - world.time < Constants.Interface.showNextActionDuringReplay )
+		{
 			world.eye.FocusOn( world.operationHandler.next.location, true, false, false, true );
+			tooltip.SetText( this, world.operationHandler.next.description, null, null, 0.2f, 0.2f );
+		}
 	}
 
 	void CheckHighlight()
@@ -1031,6 +1034,7 @@ public class Interface : HiveObject
 		public Component origin;
 		Text text, additionalText;
 		Image image;
+		public bool pinned;
 		int width, height;
 
 		public static Tooltip Create()
@@ -1055,7 +1059,7 @@ public class Interface : HiveObject
 			FollowMouse();
 		}
 
-		public void SetText( Component origin, string text = null, Sprite imageToShow = null, string additionalText = "" )
+		public void SetText( Component origin, string text = null, Sprite imageToShow = null, string additionalText = "", float pinX = -1, float pinY = -1 )
 		{
 			this.origin = origin;
 			this.text.text = text;
@@ -1073,7 +1077,16 @@ public class Interface : HiveObject
 				SetSize( width = 300, height = (int)( this.text.preferredHeight + this.additionalText.preferredHeight ) + 2 * borderWidth );
 			}
 			gameObject.SetActive( true );
-			FollowMouse();
+			if ( pinX < 0 || pinY < 0 )
+			{
+				pinned = false;
+				FollowMouse();
+			}
+			else
+			{
+				pinned = true;
+				this.Pin( 0, 0, width, height, pinX, pinY );
+			}
 		}
 
 		new public void Clear()
@@ -1090,7 +1103,8 @@ public class Interface : HiveObject
 				return;
 			}
 			base.Update();
-			FollowMouse();
+			if ( !pinned )
+				FollowMouse();
 			transform.SetAsLastSibling();
 		}
 
