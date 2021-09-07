@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -685,6 +685,8 @@ public class Interface : HiveObject
 		speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey;
 		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
 		replayIcon.gameObject.SetActive( !playerInCharge );
+		if ( !world.eye.hasTarget && !playerInCharge && world.operationHandler.next && world.operationHandler.next.scheduleAt - world.time < Constants.Interface.showNextActionDuringReplay )
+			world.eye.FocusOn( world.operationHandler.next.location, true, false, false, true );
 	}
 
 	void CheckHighlight()

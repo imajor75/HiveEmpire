@@ -36,6 +36,16 @@ public class OperationHandler : HiveObject
 
     public override Node location => throw new System.NotImplementedException();
 
+    public Operation next 
+    { 
+        get 
+        { 
+            if ( executeIndex >= repeatBuffer.Count )
+                return null;
+            return repeatBuffer[executeIndex]; 
+        } 
+    }
+
     public static OperationHandler Create()
     {
         return new GameObject( "Operation handler").AddComponent<OperationHandler>();

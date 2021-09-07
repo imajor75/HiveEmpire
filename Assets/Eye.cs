@@ -18,10 +18,14 @@ public class Eye : HiveObject
 	public List<StoredPosition> oldPositions = new List<StoredPosition>();
 	public float autoStorePositionTimer;
 	public bool currentPositionStored;
-	public Vector3 autoMovement;
 	public bool rotateAround;
 	public new Camera camera;
 	public float moveSensitivity;
+
+	public bool hasTarget;
+	public float targetX, targetY;
+	public float targetApproachSpeed;
+
 	[JsonIgnore]
 	public IDirector director;
 
@@ -136,7 +140,7 @@ public class Eye : HiveObject
 			this.director = director;
 		}
 
-		Vector3 movement = autoMovement;
+		Vector3 movement = Vector3.zero;
 		if ( Interface.cameraLeftHotkey.IsHold() )
 			movement += Move( -Constants.Eye.moveSpeed * Time.unscaledDeltaTime, 0 );
 		if ( Interface.cameraRightHotkey.IsHold() )
@@ -145,6 +149,14 @@ public class Eye : HiveObject
 			movement += Move( 0, Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
 		if ( Interface.cameraDownHotkey.IsHold() )
 			movement += Move( 0, -Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
+		if ( hasTarget )
+		{
+			targetApproachSpeed += Time.unscaledDeltaTime;
+			if ( targetApproachSpeed > 1 )
+				targetApproachSpeed = 1;
+			Vector3 targetVector = new Vector3( targetX, 0, targetY );
+			movement += ( targetVector - position ) * targetApproachSpeed * Time.unscaledDeltaTime;
+		}
 		x += movement.x;
 		y += movement.z;
 
@@ -247,7 +259,7 @@ public class Eye : HiveObject
 		rotateAround = false;
 	}
 
-	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false, bool useLogicalPosition = false )
+	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false, bool useLogicalPosition = false, bool approach = false )
 	{
 		if ( target == null )
 			return;
@@ -255,13 +267,21 @@ public class Eye : HiveObject
 
 		if ( useLogicalPosition )
 		{
-			x = target.location.positionInViewport.x;
-			y = target.location.positionInViewport.z;
+			targetX = target.location.positionInViewport.x;
+			targetY = target.location.positionInViewport.z;
 		}
 		else
 		{
-			x = target.transform.position.x;
-			y = target.transform.position.z;
+			targetX = target.transform.position.x;
+			targetY = target.transform.position.z;
+		}
+		if ( approach )
+			hasTarget = true;
+		else
+		{
+			hasTarget = false;
+			x = targetX;
+			y = targetY;
 		}
 		height = -1;
 		director = null;
@@ -283,6 +303,7 @@ public class Eye : HiveObject
 		OnPositionChanged();
 		Interface.root.viewport.markEyePosition = false;
 		director = null;
+		hasTarget = false;
 		return transform.right * side * moveSensitivity + transform.forward * forward * moveSensitivity;
 	}
 
