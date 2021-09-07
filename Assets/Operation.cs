@@ -376,7 +376,12 @@ public class Operation : ScriptableObject
                 _ => ""
             };
             if ( type == Type.createBuilding )
-                text += buildingType.ToString();
+            {
+                if ( buildingType < Building.Type.stock )
+                    text += ((Workshop.Type)buildingType).ToString().GetPrettyName( false );
+                else
+                    text += buildingType.ToString().GetPrettyName( false );
+            }
             return text;
         }
     }
