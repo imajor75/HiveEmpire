@@ -43,6 +43,7 @@ public class Interface : HiveObject
 	Image[] speedButtons = new Image[3];
 	public List<World.Challenge> challenges;
 	public MonoBehaviour replayIcon;
+	Operation lastShownOperation;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -685,10 +686,15 @@ public class Interface : HiveObject
 		speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey;
 		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
 		replayIcon.gameObject.SetActive( !playerInCharge );
-		if ( !world.eye.hasTarget && !playerInCharge && world.operationHandler.next && world.operationHandler.next.scheduleAt - world.time < Constants.Interface.showNextActionDuringReplay )
+		var next = world.operationHandler.next;
+		if ( !playerInCharge && next && next.scheduleAt - world.time < Constants.Interface.showNextActionDuringReplay )
 		{
-			world.eye.FocusOn( world.operationHandler.next.location, true, false, false, true );
-			tooltip.SetText( this, world.operationHandler.next.description, null, null, 0.2f, 0.2f );
+			if ( !world.eye.hasTarget || lastShownOperation != next )
+			{
+				world.eye.FocusOn( world.operationHandler.next.location, true, false, false, true );
+				tooltip.SetText( this, world.operationHandler.next.description, null, null, 0.2f, 0.2f );
+				lastShownOperation = next;
+			}
 		}
 	}
 
