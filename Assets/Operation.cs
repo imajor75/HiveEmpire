@@ -42,7 +42,10 @@ public class OperationHandler : HiveObject
         { 
             if ( executeIndex >= repeatBuffer.Count )
                 return null;
-            return repeatBuffer[executeIndex]; 
+            int skip = 0;
+            while ( executeIndex+skip+1 < repeatBuffer.Count && repeatBuffer[executeIndex+skip+1].merge )
+                skip++;
+            return repeatBuffer[executeIndex+skip]; 
         } 
     }
 
