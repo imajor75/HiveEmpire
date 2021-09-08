@@ -934,11 +934,13 @@ public class Road : HiveObject, Interface.IInputHandler
 		Road newRoad = Create(), secondRoad = null;
 		newRoad.owner = owner;
 		newRoad.nodes = nodes;
+		newRoad.Setup();
 		if ( secondNodes != null )
 		{
 			secondRoad = Create();
 			secondRoad.owner = owner;
 			secondRoad.nodes = secondNodes;
+			secondRoad.Setup();
 		}
 	
 		ReassignWorkersTo( newRoad, secondRoad );
