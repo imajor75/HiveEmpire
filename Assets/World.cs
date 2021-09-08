@@ -519,25 +519,27 @@ public class World : MonoBehaviour
 	static public int NextRnd( int limit = 0 )
 	{
 		Assert.global.IsTrue( instance.fixedOrderCalls );
-		if ( World.instance.time > 10 )
-			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
+		int r = 0;
 		if ( limit != 0 )
-			return rnd.Next( limit );
+			r = rnd.Next( limit );
 		else
-			return rnd.Next();
+			r = rnd.Next();
+		//if ( World.instance.time > 10 )
+			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
+		return r;
 	}
 
 	static public float NextFloatRnd()
 	{
 		Assert.global.IsTrue( instance.fixedOrderCalls );
-		if ( World.instance.time > 10 )
-			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}" );
-		return (float)rnd.NextDouble();
+		var r = (float)rnd.NextDouble();
+		//if ( World.instance.time > 10 )
+			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
+		return r;
 	}
 
 	void FixedUpdate()
 	{
-
 		if ( settings.apply )
 		{
 			settings.apply = false;
@@ -550,16 +552,16 @@ public class World : MonoBehaviour
 		massDestroy = false;
 
 		time++;
-		HiveObject.Log( $"========= new frame ({time}) ==========" );
+		HiveObject.Log( $"========= new frame ({time}, seed: {frameSeed}) ==========" );
 		rnd = new System.Random( frameSeed );
-		CRC = rnd.Next();
+		fixedOrderCalls = true;
+		CRC = NextRnd();
 		foreach ( var player in players )
 			player.FixedUpdate();
 
 		foreach ( var newHiveObject in newHiveObjects )
 		hiveObjects.AddLast( newHiveObject );
 		newHiveObjects.Clear();
-		fixedOrderCalls = true;
 		foreach ( var hiveObject in hiveObjects )
 		{
 			if ( hiveObject )
@@ -591,7 +593,7 @@ public class World : MonoBehaviour
 		settings.size = challenge.worldSize;
 		var seed = challenge.seed;
 		Debug.Log( "Starting new game with seed " + seed );
-		HiveObject.Log( "Starting new game with seed " + seed );
+		HiveObject.Log( $"\n\nStarting new game with seed {seed}\n\n" );
 
 		rnd = new System.Random( seed );
 		currentSeed = seed;
@@ -644,6 +646,7 @@ public class World : MonoBehaviour
 			eye.viewDistance = oldEye.viewDistance;
 		}
 		Interface.ValidateAll( true );
+		frameSeed = NextRnd();
 		fixedOrderCalls = false;
 	}
 
@@ -662,6 +665,7 @@ public class World : MonoBehaviour
 
     public void Load( string fileName )
 	{
+		HiveObject.Log( $"\n\nLoading game {fileName}\n\n" );
    		Clear();
 		Prepare();
 		Interface.ValidateAll( true );
