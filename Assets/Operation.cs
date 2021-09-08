@@ -199,17 +199,23 @@ public class OperationHandler : HiveObject
             return;
 
 #if DEBUG
-        if ( recordCRC && mode == Mode.recording && World.instance.speed != World.Speed.pause )
+        if ( recordCRC && mode == Mode.recording )
         {
             assert.AreEqual( World.instance.time, CRCCodes.Count );
             CRCCodes.Add( currentCRCCode );
+            Log( $"End of frame, CRC {currentCRCCode} was stored" );
         }
-        if ( mode == Mode.repeating && CRCCodes.Count > World.instance.time )
+        if ( mode == Mode.repeating )
+        {
+            assert.IsTrue( CRCCodes.Count > World.instance.time );
             assert.AreEqual( CRCCodes[World.instance.time], currentCRCCode, "CRC mismatch" );
+            Log( $"End of frame, CRC {currentCRCCode} was checked" );
+        }
         currentCRCCode = 0;
 #endif
-
         World.instance.fixedOrderCalls = true;
+        World.instance.OnEndOfLogicalFrame();
+
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == World.instance.time )
         {
             HiveObject.Log( $"Executing {repeatBuffer[executeIndex].name}" );
@@ -223,6 +229,7 @@ public class OperationHandler : HiveObject
                 assert.Fail( "Not invertible operation" );
             executeIndex++;
         }
+        World.instance.fixedOrderCalls = false;
 
         finishedFrameIndex++;
         if ( finishedFrameIndex == replayLength )
@@ -230,7 +237,6 @@ public class OperationHandler : HiveObject
             Assert.global.AreEqual( mode, Mode.repeating );
             mode = Mode.recording;
         }
-        World.instance.fixedOrderCalls = false;
 
         assert.AreEqual( finishedFrameIndex, World.instance.time );
     }

@@ -15,7 +15,7 @@ public class World : MonoBehaviour
 	public Eye eye;
 	public bool gameInProgress;
 	public int time;
-	public int randomSeed;
+	public int frameSeed;
 	public int overseas = 2;
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
@@ -73,7 +73,7 @@ public class World : MonoBehaviour
 		set
 		{
 			if ( instance.operationHandler.recordCRC && instance.time > 10 )
-				HiveObject.Log( $"szeycsuan {World.instance.time}: {value} from {Assert.Caller()}" );
+				HiveObject.Log( $"CRC {World.instance.time}: {value} from {Assert.Caller()}" );
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
@@ -104,6 +104,8 @@ public class World : MonoBehaviour
 	float goldChance { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	Goal currentWinLevel { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int randomSeed { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	bool insideCriticalSection { set {} }
 	public Settings settings;
@@ -535,7 +537,6 @@ public class World : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		HiveObject.Log( $"========= new frame ({time+1}) ==========" );
 
 		if ( settings.apply )
 		{
@@ -549,6 +550,8 @@ public class World : MonoBehaviour
 		massDestroy = false;
 
 		time++;
+		HiveObject.Log( $"========= new frame ({time}) ==========" );
+		rnd = new System.Random( frameSeed );
 		CRC = rnd.Next();
 		foreach ( var player in players )
 			player.FixedUpdate();
@@ -563,6 +566,11 @@ public class World : MonoBehaviour
 				hiveObject.CriticalUpdate();
 		}
 		fixedOrderCalls = false;
+	}
+
+	public void OnEndOfLogicalFrame()
+	{
+		frameSeed = NextRnd();
 	}
 		
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
@@ -583,6 +591,7 @@ public class World : MonoBehaviour
 		settings.size = challenge.worldSize;
 		var seed = challenge.seed;
 		Debug.Log( "Starting new game with seed " + seed );
+		HiveObject.Log( "Starting new game with seed " + seed );
 
 		rnd = new System.Random( seed );
 		currentSeed = seed;
@@ -661,8 +670,6 @@ public class World : MonoBehaviour
 		World world = Serializer.Read<World>( fileName );
 		Assert.global.AreEqual( world, this );
 		this.fileName = fileName;
-
-		rnd = new System.Random( randomSeed );
 
 		if ( !challenge )
 		{
@@ -898,9 +905,6 @@ public class World : MonoBehaviour
 	{
 		this.fileName = fileName;
 		operationHandler.lastSave = fileName;
-		randomSeed = rnd.Next();
-		rnd = new System.Random( randomSeed );
-
 		Serializer.Write( fileName, this, false );
 	}
 

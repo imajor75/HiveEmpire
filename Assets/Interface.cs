@@ -278,10 +278,11 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		logFile.Close();
 		SaveReplay( Application.persistentDataPath + $"/Replays/{new System.Random().Next()}.json" );
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save();
+
+		logFile.Close();
 
 		foreach ( var item in Resources.FindObjectsOfTypeAll<Item>() )
 			item.destination = null;    // HACK to silence the assert in Item.OnDestroy
@@ -540,6 +541,7 @@ public class Interface : HiveObject
 			fileName = Application.persistentDataPath + "/Saves/" + new System.Random().Next() + ".json";
 		world.Save( fileName );
 		print( fileName + " is saved" );
+		Log( fileName + " is saved" );
 	}
 
 	public void LoadReplay( string name )
@@ -562,7 +564,8 @@ public class Interface : HiveObject
 		var oh = World.instance.operationHandler;
 		oh.undoQueue.Clear();		// TODO Is this necessary?
 		oh.redoQueue.Clear();
-		oh.replayLength = oh.finishedFrameIndex;
+		if ( oh.finishedFrameIndex > oh.replayLength )
+			oh.replayLength = oh.finishedFrameIndex;
 		Serializer.Write( name, oh, true );
 	}
 
