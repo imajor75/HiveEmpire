@@ -406,6 +406,7 @@ public class Flag : HiveObject
 		if ( crossing )
 			assert.IsNull( user );
 		assert.IsTrue( World.instance.players.Contains( owner ) );
+		assert.IsTrue( registered );
 	}
 
 	public override Node location

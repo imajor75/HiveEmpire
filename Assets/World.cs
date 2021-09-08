@@ -724,7 +724,6 @@ public class World : MonoBehaviour
 				}
 			}
 			player.Start();
-
 		}
 
 		water = Water.Create().Setup( ground );
@@ -743,6 +742,7 @@ public class World : MonoBehaviour
 					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
 					hiveObjects.AddFirst( o );
 				}
+				o.registered = true;
 			}
 		}
 
@@ -763,7 +763,8 @@ public class World : MonoBehaviour
 					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
 					hiveObjects.AddFirst( o );
 				}
-}
+				o.registered = true;
+			}
 		}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Building>();
@@ -792,11 +793,6 @@ public class World : MonoBehaviour
 					foreach ( var b in s.buffers )
 						if ( b.stored > b.size )
 							b.stored = b.size;
-					if ( !hiveObjects.Contains( s ) )
-					{
-						HiveObject.Log( $"Adding {s.title} to list of hive objects" );
-						hiveObjects.AddFirst( s );
-					}
 				}
 
 				var t = o as Stock;
@@ -840,6 +836,12 @@ public class World : MonoBehaviour
 					}
 #pragma warning restore 0618
 				}
+				if ( !hiveObjects.Contains( o ) )
+				{
+					HiveObject.Log( $"Adding {o.title} to list of hive objects" );
+					hiveObjects.AddFirst( o );
+				}
+				o.registered = true;
 			}
 		}
 		{
@@ -855,6 +857,7 @@ public class World : MonoBehaviour
 					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
 					hiveObjects.AddFirst( o );
 				}
+				o.registered = true;
 			}
 		}
 		{
@@ -879,6 +882,12 @@ public class World : MonoBehaviour
 					f.flattening = new Building.Flattening();
 				if ( !f.freeSlotsWatch.isAttached )
 					f.freeSlotsWatch.Attach( f.itemsStored );
+				if ( !hiveObjects.Contains( f ) )
+				{
+					HiveObject.Log( $"Adding {f.name} to list of hive objects" );
+					hiveObjects.AddFirst( f );
+				}
+				f.registered = true;
 			}
 		}
 

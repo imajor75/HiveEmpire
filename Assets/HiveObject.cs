@@ -15,6 +15,7 @@ public abstract class HiveObject : MonoBehaviour
 	public Assert assert;
 	public int id;
 	public bool noAssert;
+	public bool registered;
 
 	public HiveObject()
 	{
@@ -25,6 +26,7 @@ public abstract class HiveObject : MonoBehaviour
 	{
 		assert.IsFalse( World.instance.hiveObjects.Contains( this ) );
 		World.instance.newHiveObjects.AddFirst( this );
+		registered = true;
 		if ( !blueprintOnly )
 			id = World.NextRnd();
 	}
@@ -62,6 +64,7 @@ public abstract class HiveObject : MonoBehaviour
 	public void OnDestroy()
 	{
 		World.instance.hiveObjects.Remove( this );
+		registered = false;
 	}
 
 	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, sucs as when woodcutters decide which tree to cut. 

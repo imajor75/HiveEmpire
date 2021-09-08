@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -2175,5 +2175,6 @@ public class Worker : HiveObject
 					assert.AreEqual( item.destination, building );
 		}
 		assert.IsTrue( owner == null || World.instance.players.Contains( owner ) );
+		assert.IsTrue( registered );
 	}
 }
