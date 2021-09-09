@@ -51,6 +51,7 @@ public class Flag : HiveObject
 			this.owner = owner;
 			this.blueprintOnly = blueprintOnly;
 			this.crossing = crossing;
+			base.Setup();
 			if ( node.road && !blueprintOnly )
 			{
 				if ( node.road.ready )
@@ -64,7 +65,6 @@ public class Flag : HiveObject
 			if ( crossing )
 				requestFlattening = true;
 			freeSlotsWatch.Attach( itemsStored );
-			base.Setup();
 			return this;
 		}
 		DestroyThis();
