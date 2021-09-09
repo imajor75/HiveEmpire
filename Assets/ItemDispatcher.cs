@@ -372,7 +372,7 @@ public class ItemDispatcher : HiveObject
 			}
 			Assert.global.AreEqual( first.type, Potential.Type.offer, $"Potential types: {first.type}, {second.type}" );
 			Assert.global.AreEqual( second.type, Potential.Type.request, $"Potential types: {first.type}, {second.type}" );
-			World.CRC = first.building.id;
+			World.CRC = second.building.id;
 
 			bool success = false;
 			if ( first.building != null )
