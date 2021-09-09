@@ -193,6 +193,11 @@ public class OperationHandler : HiveObject
         ExecuteOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ) );
     }
 
+    public void ExecuteStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value )
+    {
+        ExecuteOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ) );
+    }
+
     void FixedUpdate()
     {
         if ( this != World.instance.operationHandler )
@@ -256,6 +261,8 @@ public class Operation : ScriptableObject
     public int radius;
     public int endLocationX, endLocationY;
     public Item.Type itemType;
+    public Stock.Channel stockChannel;
+    public int itemCount;
     public int scheduleAt;
 
     public Node location
@@ -379,6 +386,7 @@ public class Operation : ScriptableObject
                 Type.removeBuilding => "Remove a building",
                 Type.removeFlag => "Remove a flag",
                 Type.removeRoad => "Remove a road",
+                Type.stockAdjustment => "Adjust stock item counts",
                 _ => ""
             };
             if ( type == Type.createBuilding )
@@ -423,7 +431,8 @@ public class Operation : ScriptableObject
         changeArea,
         moveFlag,
         changeRoutePriority,
-        moveRoad
+        moveRoad,
+        stockAdjustment
     }
 
     public static Operation Create()
@@ -531,6 +540,17 @@ public class Operation : ScriptableObject
         this.direction = direction;
         this.merge = merge;
         name = "Move Road";
+        return this;
+    }
+
+    public Operation SetupAsStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value )
+    {
+        type = Type.stockAdjustment;
+        building = stock;
+        this.stockChannel = channel;
+        this.itemType = itemType;
+        itemCount = value;
+        name = "Stock Adjustment";
         return this;
     }
 
@@ -672,6 +692,14 @@ public class Operation : ScriptableObject
                 if ( !location.road.Move( index, direction ) )
                     return null;
                 return Create().SetupAsMoveRoad( road, index, ( direction + Constants.Node.neighbourCount / 2 ) % Constants.Node.neighbourCount );
+            }
+            case Type.stockAdjustment:
+            {
+                var i = (building as Stock).itemData[(int)itemType];
+                var oldValue = i.ChannelValue( stockChannel );
+                i.ChannelValue( stockChannel ) = itemCount;
+				building.owner.UpdateStockRoutes( itemType );
+                return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
             }
         }
         return null;

@@ -177,6 +177,30 @@ public class Stock : Building, Worker.Callback.IHandler
 				return route;
 			return null;
 		}
+
+		public ref int ChannelValue( Channel channel )
+		{
+			switch ( channel )
+			{
+				case Channel.inputMin: return ref inputMin;
+				case Channel.inputMax: return ref inputMax;
+				case Channel.outputMin: return ref outputMin;
+				case Channel.outputMax: return ref outputMax;
+				case Channel.cartInput: return ref cartInput;
+				case Channel.cartOutput: return ref cartOutput;		
+			}
+			throw new Exception();
+		}
+	}
+
+	public enum Channel
+	{
+		inputMin,
+		inputMax,
+		outputMin,
+		outputMax,
+		cartInput,
+		cartOutput
 	}
 
 	[Obsolete( "Compatibility for old files", true )]

@@ -2589,6 +2589,9 @@ public class Interface : HiveObject
 	public class StockPanel : BuildingPanel
 	{
 		public Stock stock;
+		public Stock.Channel channel;
+		public Text channelText;
+		public string channelPattern;
 		public Text[] counts = new Text[(int)Item.Type.total];
 		public Text total;
 		public Item.Type selectedItemType = Item.Type.log;
@@ -2600,8 +2603,7 @@ public class Interface : HiveObject
 		public InputField renamer;
 
 		float lastMouseXPosition;
-		public Action<int> limitChanger;
-		int min, max, currentValue;
+		int min, max, currentValue = -1;
 
 		public static StockPanel Create()
 		{
@@ -2818,90 +2820,58 @@ public class Interface : HiveObject
 			total.text = stock.total + " => " + stock.totalTarget;
 			selected?.SetType( selectedItemType, false );
 			int t = (int)selectedItemType;
-			inputMin.text = stock.itemData[t].inputMin + "<";
-			outputMin.text = stock.itemData[t].outputMin + "<";
-			inputMax.text = "<" + stock.itemData[t].inputMax;
-			outputMax.text = "<" + stock.itemData[t].outputMax;
-			cartInput.text = stock.itemData[t].cartInput.ToString();
-			cartOutput.text = stock.itemData[t].cartOutput.ToString();
+			if ( channelText != inputMin ) inputMin.text = stock.itemData[t].inputMin + "<";
+			if ( channelText != outputMin ) outputMin.text = stock.itemData[t].outputMin + "<";
+			if ( channelText != inputMax ) inputMax.text = "<" + stock.itemData[t].inputMax;
+			if ( channelText != outputMax ) outputMax.text = "<" + stock.itemData[t].outputMax;
+			if ( channelText != cartInput ) cartInput.text = stock.itemData[t].cartInput.ToString();
+			if ( channelText != cartOutput ) cartOutput.text = stock.itemData[t].cartOutput.ToString();
 
 			if ( GetKeyDown( KeyCode.Mouse0 ) )
 			{
 				lastMouseXPosition = Input.mousePosition.x;
 				var g = GetUIElementUnderCursor();
-				if ( g == inputMin.gameObject )
+				void CheckChannel( GameObject widget, Stock.Channel channel, int min, int max, string pattern, bool adjustInputMin = false )
 				{
-					limitChanger = x => stock.itemData[t].inputMin = x;
-					currentValue = stock.itemData[t].inputMin;
-					min = 0;
-					max = stock.itemData[t].inputMax;
-					disableDrag = true;
+					if ( g == widget )
+					{
+						this.channel = channel;
+						channelText = widget.GetComponent<Text>();
+						channelPattern = pattern;
+						currentValue = stock.itemData[t].ChannelValue( channel );
+						this.min = min;
+						this.max = max;
+						disableDrag = true;
+						var l = (int)(Constants.Stock.cartCapacity * 1.5);
+						if ( adjustInputMin && stock.itemData[t].inputMax < l )
+							stock.itemData[t].inputMax = l;
+					}
 				}
-				if ( g == inputMax.gameObject )
-				{
-					limitChanger = x => stock.itemData[t].inputMax = x;
-					currentValue = stock.itemData[t].inputMax;
-					min = stock.itemData[t].inputMin;
-					max = stock.maxItems;
-					disableDrag = true;
-				}
-				if ( g == outputMin.gameObject )
-				{
-					limitChanger = x => stock.itemData[t].outputMin = x;
-					currentValue = stock.itemData[t].outputMin;
-					min = 0;
-					max = stock.itemData[t].outputMax;
-					disableDrag = true;
-				}
-				if ( g == outputMax.gameObject )
-				{
-					limitChanger = x => stock.itemData[t].outputMax = x;
-					currentValue = stock.itemData[t].outputMax;
-					min = stock.itemData[t].outputMin;
-					max = stock.maxItems;
-					disableDrag = true;
-				}
-				if ( g == cartInput.gameObject )
-				{
-					limitChanger = x => stock.itemData[t].cartInput = x;
-					currentValue = stock.itemData[t].cartInput;
-					min = 0;
-					max = Constants.Stock.defaultmaxItems;
-					disableDrag = true;
-					var l = (int)(Constants.Stock.cartCapacity * 1.5);
-					if ( stock.itemData[t].inputMax < l )
-						stock.itemData[t].inputMax = l;
-				}
-				if ( g == cartOutput.gameObject )
-				{
-					limitChanger = x => stock.itemData[t].cartOutput = x;
-					currentValue = stock.itemData[t].cartOutput;
-					min = 0;
-					max = Constants.Stock.defaultmaxItems;
-					disableDrag = true;
-					var l = (int)(Constants.Stock.cartCapacity * 1.5);
-					if ( stock.itemData[t].inputMax < l )
-						stock.itemData[t].inputMax = l;
-				}
+				CheckChannel( inputMin.gameObject, Stock.Channel.inputMin, 0, stock.itemData[t].inputMax, "{0}<" );
+				CheckChannel( inputMax.gameObject, Stock.Channel.inputMax, stock.itemData[t].inputMin, stock.maxItems, "<{0}" );
+				CheckChannel( outputMin.gameObject, Stock.Channel.outputMin, 0, stock.itemData[t].outputMax, "{0}<" );
+				CheckChannel( outputMax.gameObject, Stock.Channel.outputMax, stock.itemData[t].outputMin, stock.maxItems, "<{0}" );
+				CheckChannel( cartInput.gameObject, Stock.Channel.cartInput, 0, Constants.Stock.defaultmaxItems, "{0}", true );
+				CheckChannel( cartOutput.gameObject, Stock.Channel.cartOutput, 0, Constants.Stock.defaultmaxItems, "{0}", true );
 			}
 
-			if ( limitChanger != null )
+			if ( currentValue >= 0 )
 			{
 				if ( GetKey( KeyCode.Mouse0 ) )
 				{
-					int newValue = currentValue + (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
-					if ( newValue < min )
-						newValue = min;
-					if ( newValue > max )
-						newValue = max;
-					limitChanger( currentValue = newValue );
-					stock.owner.UpdateStockRoutes( selectedItemType );
+					currentValue += (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
+					if ( currentValue < min )
+						currentValue = min;
+					if ( currentValue > max )
+						currentValue = max;
+					channelText.text = String.Format( channelPattern, currentValue );
 					lastMouseXPosition = Input.mousePosition.x;
 				}
 				else
 				{
+					World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, channel, currentValue );
 					disableDrag = false;
-					limitChanger = null;
+					currentValue = -1;
 				}
 			}
 		}
