@@ -559,6 +559,9 @@ public class World : MonoBehaviour
 		foreach ( var player in players )
 			player.FixedUpdate();
 
+		if ( challenge.life.empty )
+			challenge.Begin();
+
 		foreach ( var newHiveObject in newHiveObjects )
 		hiveObjects.AddLast( newHiveObject );
 		newHiveObjects.Clear();
@@ -589,7 +592,6 @@ public class World : MonoBehaviour
 		var oldEye = eye;
 
 		this.challenge = challenge;
-		challenge.Begin();
 		settings.size = challenge.worldSize;
 		var seed = challenge.seed;
 		Debug.Log( "Starting new game with seed " + seed );
