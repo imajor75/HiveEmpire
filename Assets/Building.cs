@@ -51,6 +51,7 @@ abstract public class Building : HiveObject
 		[Obsolete( "Compatibility for old files", true )]
 		set {}
 	}
+	public virtual List<Ground.Area> areas { get { throw new NotImplementedException(); } }
 
 	public enum Type
 	{

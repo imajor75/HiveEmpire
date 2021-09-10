@@ -40,6 +40,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 	GameObject mapIndicator;
 	Material mapIndicatorMaterial;
 
+	public override List<Ground.Area> areas
+	{
+		get
+		{
+			var areas = new List<Ground.Area>();
+			areas.Add( outputArea );
+			foreach ( var buffer in buffers )
+				areas.Add( buffer.area );
+			return areas;
+		}
+	}
+
 	[Obsolete( "Compatibility with old files", true )]
 	List<PastStatus> previousPastStatuses { set {} }
 	[Obsolete( "Compatibility with old files", true )]

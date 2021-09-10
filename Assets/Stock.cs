@@ -30,6 +30,17 @@ public class Stock : Building, Worker.Callback.IHandler
 
 	public static GameObject template, mainTemplate;
 
+	public override List<Ground.Area> areas
+	{
+		get
+		{
+			var areas = new List<Ground.Area>();
+			areas.Add( inputArea );
+			areas.Add( outputArea );
+			return areas;
+		}
+	}
+
 	[Obsolete( "Compatibility with old files", true )]
 	public Stock[] destinations 
 	{ 

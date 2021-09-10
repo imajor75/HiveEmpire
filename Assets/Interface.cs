@@ -1433,13 +1433,13 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<RectTransform>();
 		}
 
-		public Image AreaIcon( Ground.Area area )
+		public Image AreaIcon( Building building, Ground.Area area )
 		{
 			var bg = Image( iconTable.GetMediaData( Icon.smallFrame ) );
 			bg.color = Color.grey;
 			var i = Image( iconTable.GetMediaData( Icon.crosshair ) ).AddOutline();
 			var a = i.gameObject.AddComponent<AreaControl>();
-			a.Setup( area );
+			a.Setup( building, area );
 			i.Link( bg );
 			i.rectTransform.anchorMin = new Vector2( 0.2f, 0.2f );
 			i.rectTransform.anchorMax = new Vector2( 0.8f, 0.8f );
@@ -1745,15 +1745,17 @@ public class Interface : HiveObject
 
 		public class AreaControl : MonoBehaviour, IInputHandler
 		{
+			public Building building;
 			public Ground.Area area, originalArea;
 			public Image image;
 
-			public void Setup( Ground.Area area )
+			public void Setup( Building building, Ground.Area area )
 			{
 				this.originalArea = area;
 				this.area = new Ground.Area();
 				this.area.center = area.center;
 				this.area.radius = area.radius;
+				this.building = building;
 				image = gameObject.GetComponent<Image>();
 				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, 
 				"You can specify the area where this building is sending items or getting " +
@@ -1777,7 +1779,7 @@ public class Interface : HiveObject
 					root.highlightType = HighlightType.none;
 					root.highlightArea = null;
 				}
-				World.instance.operationHandler.ExecuteChangeArea( originalArea, area.center, area.radius );
+				World.instance.operationHandler.ExecuteChangeArea( building, originalArea, area.center, area.radius );
 				return false;
 			}
 
@@ -1785,7 +1787,7 @@ public class Interface : HiveObject
 			{
 				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
-					World.instance.operationHandler.ExecuteChangeArea( originalArea, null, 0 );
+					World.instance.operationHandler.ExecuteChangeArea( building, originalArea, null, 0 );
 					if ( root.highlightArea == area )
 						root.highlightType = HighlightType.none;
 					return;
@@ -2342,7 +2344,7 @@ public class Interface : HiveObject
 				if ( itemCount > 0 )
 					boss.Text( "?" ).PinSideways( 0, y, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
 				if ( area != null )
-					boss.AreaIcon( area ).PinSideways( 0, y );
+					boss.AreaIcon( boss.building, area ).PinSideways( 0, y );
 				if ( buffer != null && buffer.optional )
 				{
 					boss.Image( Icon.exit ).PinSideways( 0, y ).AddToggleHandler( SetDisabled, buffer.disabled );
@@ -2642,8 +2644,8 @@ public class Interface : HiveObject
 			controls = new GameObject( "Stock controls" ).AddComponent<RectTransform>();
 			controls.Link( this ).Stretch();
 
-			AreaIcon( stock.inputArea ).Link( controls ).Pin( 30, -25, 30, 30 ).name = "Input area";
-			AreaIcon( stock.outputArea ).Link( controls ).Pin( 235, -25, 30, 30 ).name = "Output area";
+			AreaIcon( stock, stock.inputArea ).Link( controls ).Pin( 30, -25, 30, 30 ).name = "Input area";
+			AreaIcon( stock, stock.outputArea ).Link( controls ).Pin( 235, -25, 30, 30 ).name = "Output area";
 			total = Text( "", 16 ).Link( controls ).Pin( 25, 75, 100, iconSize * 2, 0, 0 );
 			total.name = "Total";
 			total.SetTooltip( $"Total number of items in the stock, the maximum is {stock.maxItems}", null, 

@@ -163,10 +163,10 @@ public class OperationHandler : HiveObject
 		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), standalone );
 	}
 
-	public void ExecuteChangeArea( Ground.Area area, Node center, int radius )
+	public void ExecuteChangeArea( Building building, Ground.Area area, Node center, int radius )
 	{
         if ( area != null )
-		    ExecuteOperation( Operation.Create().SetupAsChangeArea( area, center, radius ) );
+		    ExecuteOperation( Operation.Create().SetupAsChangeArea( building, area, center, radius ) );
 	}
 
     public void ExecuteMoveFlag( Flag flag, int direction )
@@ -267,12 +267,13 @@ public class Operation : ScriptableObject
     public Type type;
     public int workerCount;
     public int locationX, locationY;
+    public int areaX, areaY;
     public Building.Type buildingType;
     public int direction;
     public List<int> roadPathX, roadPathY;
     public bool crossing;
     public int group = -1;
-    public Ground.Area area;            // TODO We cannot store references here
+    public int areaIndex;
     public int radius;
     public int endLocationX, endLocationY;
     public Item.Type itemType;
@@ -443,6 +444,8 @@ public class Operation : ScriptableObject
     bool merge { set {} }
 	[Obsolete( "Compatibility for old files", true )]
     Workshop.Type workshopType { set {} }
+	[Obsolete( "Compatibility for old files", true )]
+    Ground.Area area { set {} }
 
     public enum Type
     {
@@ -534,11 +537,18 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsChangeArea( Ground.Area area, Node center, int radius )
+    public Operation SetupAsChangeArea( Building building, Ground.Area area, Node center, int radius )
     {
         type = Type.changeArea;
-        this.area = area;
-        this.location = center;
+        this.building = building;
+        areaIndex = building.areas.IndexOf( area );
+        if ( center )
+        {
+            areaX = center.x;
+            areaY = center.y;
+        }
+        else
+            areaX = areaY = -1;
         this.radius = radius;
         name = "Change Area";
         return this;
@@ -691,13 +701,15 @@ public class Operation : ScriptableObject
             }
             case Type.changeArea:
             {
-                if ( area == null )
-                    return null;
+                var area = building.areas[areaIndex];
                 var oldCenter = area.center;
                 var oldRadius = area.radius;
-                area.center = location;
+                if ( areaX < 0 )
+                    area.center = null;
+                else
+                    area.center = World.instance.ground.GetNode( areaX, areaY );
                 area.radius = radius;
-                return Create().SetupAsChangeArea( area, oldCenter, oldRadius );
+                return Create().SetupAsChangeArea( building, area, oldCenter, oldRadius );
             }
             case Type.changeRoutePriority:
             {
