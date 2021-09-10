@@ -600,6 +600,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		var newRoad = Road.Create();
 		newRoad.owner = owner;
+		newRoad.Setup();
 
   		if ( ends[1] == another.ends[0] || ends[1] == another.ends[1] )
 		{
@@ -824,13 +825,12 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( node != lastNode )
 			return true;
 
-		if ( node.road && node.road != this )
+		bool flagCreated = false;
+		if ( node.road && node.road != this || Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
 		{
-			if ( Flag.Create().Setup( node, owner ) == null )
-				return true;
+			World.instance.operationHandler.ExecuteCreateFlag( node );
+			flagCreated = true;
 		}
-		if ( Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
-			Flag.Create().Setup( node, owner );
 
 		if ( tempNodes == 0 )
 		{
@@ -843,7 +843,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				return false;
 		}
 
-		if ( node.block.IsBlocking( Node.Block.Type.roads ) && node.flag == null && node.road != this )
+		if ( node.block.IsBlocking( Node.Block.Type.roads ) && node.flag == null && node.road != this && !flagCreated )
 		{
 			bool treeOrFieldBlocking = false;
 			foreach( var r in node.resources )
@@ -855,9 +855,9 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		tempNodes = 0;
 		RebuildMesh();
-		if ( node.validFlag )
+		if ( node.validFlag || flagCreated )
 		{
-			World.instance.operationHandler.ExecuteCreateRoad( this );
+			World.instance.operationHandler.ExecuteCreateRoad( this, flagCreated );
 			Interface.root.viewport.showGridAtMouse = false;
 			Interface.root.viewport.pickGroundOnly = false;
 			return false;
@@ -891,6 +891,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		foreach ( var worker in workerAtNodes )
 			if ( worker )
 				workersToMove.Add( worker );
+		foreach ( var worker in workers )
+			if ( !workersToMove.Contains( worker ) )
+				workersToMove.Add( worker );
 
 		foreach ( var worker in workersToMove )
 		{
@@ -912,7 +915,10 @@ public class Road : HiveObject, Interface.IInputHandler
 				else
 				{
 					if ( worker.type == Worker.Type.hauler)
+					{
 						worker.type = Worker.Type.unemployed;
+						worker.road = null;
+					}
 					else
 						worker.assert.AreEqual( worker.type, Worker.Type.cart );
 				}

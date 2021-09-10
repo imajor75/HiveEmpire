@@ -5119,6 +5119,7 @@ if ( cart )
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
+			World.instance.fixedOrderCalls = true;
 			rightButton = eventData.button == PointerEventData.InputButton.Right;
 			if ( inputHandler == null )
 				inputHandler = this;
@@ -5137,6 +5138,7 @@ if ( cart )
 			else
 				if ( !inputHandler.OnObjectClicked( hiveObject ) )
 					inputHandler = this;
+			World.instance.fixedOrderCalls = false;
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )

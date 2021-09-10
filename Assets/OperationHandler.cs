@@ -67,14 +67,6 @@ public class OperationHandler : HiveObject
         executeIndex = from;
     }
 
-    void Update()
-    {
-		if ( undoHotkey.IsDown() )
-			Undo();
-		if ( redoHotkey.IsDown() )
-			Redo();
-    }
-
     public void ExecuteOperation( Operation operation )
 	{
         operation.scheduleAt = World.instance.time;
@@ -141,9 +133,9 @@ public class OperationHandler : HiveObject
 		    ExecuteOperation( Operation.Create().SetupAsRemoveRoad( road, merge ) );
 	}
 
-	public void ExecuteCreateRoad( Road road )
+	public void ExecuteCreateRoad( Road road, bool merge = false )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCreateRoad( road.nodes ) );
+		ExecuteOperation( Operation.Create().SetupAsCreateRoad( road.nodes, merge ) );
 	}
 
 	public void ExecuteRemoveFlag( Flag flag )
@@ -228,6 +220,12 @@ public class OperationHandler : HiveObject
         currentCRCCode = 0;
 #endif
         World.instance.fixedOrderCalls = true;
+
+		if ( undoHotkey.IsDown() )
+			Undo();
+		if ( redoHotkey.IsDown() )
+			Redo();
+
         World.instance.OnEndOfLogicalFrame();
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == World.instance.time )
@@ -487,10 +485,11 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsCreateRoad( List<Node> path )
+    public Operation SetupAsCreateRoad( List<Node> path, bool merge = false )
     {
         type = Type.createRoad;
         this.roadPath = path;
+        this.merge = merge;
         name = "Create Road";
         return this;
     }
@@ -612,6 +611,7 @@ public class Operation : ScriptableObject
             }
             case Type.removeRoad:
             {
+                var road = this.road;
                 if ( road == null || !road.Remove( true ) )
                     return null;
                 return Create().SetupAsCreateRoad( road.nodes );    // TODO Seems to be dangerous to use the road after it was removed
@@ -651,6 +651,7 @@ public class Operation : ScriptableObject
             }
             case Type.removeFlag:
             {
+                var flag = this.flag;
                 if ( flag == null || !flag.Remove( true ) )
                     return null;
 
