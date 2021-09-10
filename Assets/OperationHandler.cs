@@ -15,6 +15,7 @@ public class OperationHandler : HiveObject
     public int executeIndex = 0;
     public int finishedFrameIndex = -1;
     public int replayLength = -1;
+    public int currentGroup = 0;
     public string lastSave;
     public bool recordCRC;
     public bool insideFrame
@@ -43,7 +44,7 @@ public class OperationHandler : HiveObject
             if ( executeIndex >= repeatBuffer.Count )
                 return null;
             int skip = 0;
-            while ( executeIndex+skip+1 < repeatBuffer.Count && repeatBuffer[executeIndex+skip+1].merge )
+            while ( executeIndex+skip+1 < repeatBuffer.Count && repeatBuffer[executeIndex+skip+1].group == repeatBuffer[executeIndex+skip].group )
                 skip++;
             return repeatBuffer[executeIndex+skip]; 
         } 
@@ -67,36 +68,32 @@ public class OperationHandler : HiveObject
         executeIndex = from;
     }
 
-    public void ExecuteOperation( Operation operation )
+    public void StartGroup()
+    {
+        currentGroup++;
+    }
+
+    public void ExecuteOperation( Operation operation, bool standalone = true )
 	{
+        if ( standalone )
+            currentGroup++;
         operation.scheduleAt = World.instance.time;
+        if ( operation.group < 0 )
+            operation.group = currentGroup;
         if ( !insideFrame )
             operation.scheduleAt++;
         repeatBuffer.Add( operation );
 	}
 
-	public void Undo()
+	public void UndoRedo( List<Operation> queue )
 	{
-        if ( undoQueue.Count == 0 )
+        if ( queue.Count == 0 )
             return;
-        var operation = undoQueue.Last();
-        operation.source = Operation.Source.undo;
+        var operation = queue.Last();
         ExecuteOperation( operation );
-        undoQueue.RemoveAt( undoQueue.Count - 1 );
-        if ( operation.merge )
-            Undo();
-	}
-
-	public void Redo()
-	{
-        if ( redoQueue.Count == 0 )
-            return;
-        var operation = redoQueue.Last();
-        operation.source = Operation.Source.redo;
-        ExecuteOperation( operation );
-        redoQueue.RemoveAt( redoQueue.Count - 1 );
-        if ( operation.merge )
-            Redo();
+        queue.RemoveAt( queue.Count - 1 );
+        if ( queue.Count > 0 && operation.group == queue.Last().group )
+            UndoRedo( queue );
 	}
 
     public void SaveReplay( string name )
@@ -113,26 +110,26 @@ public class OperationHandler : HiveObject
 		ExecuteOperation( Operation.Create().SetupAsChangeWorkerCount( road, count ) );
 	}
 
-	public void ExecuteRemoveBuilding( Building building, bool merge = false )
+	public void ExecuteRemoveBuilding( Building building, bool standalone = true )
 	{
         if ( building )
-		    ExecuteOperation( Operation.Create().SetupAsRemoveBuilding( building, merge ) );
+		    ExecuteOperation( Operation.Create().SetupAsRemoveBuilding( building ), standalone );
 	}
 
-	public void ExecuteCreateBuilding( Node location, int direction, Building.Type buildingType, bool merge = false )
+	public void ExecuteCreateBuilding( Node location, int direction, Building.Type buildingType, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType, merge ) );
+		ExecuteOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType ), standalone );
 	}
 
-	public void ExecuteRemoveRoad( Road road, bool merge = false )
+	public void ExecuteRemoveRoad( Road road, bool standalone = true )
 	{
         if ( road )
-		    ExecuteOperation( Operation.Create().SetupAsRemoveRoad( road, merge ) );
+		    ExecuteOperation( Operation.Create().SetupAsRemoveRoad( road ), standalone );
 	}
 
-	public void ExecuteCreateRoad( Road road, bool merge = false )
+	public void ExecuteCreateRoad( Road road, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCreateRoad( road.nodes, merge ) );
+		ExecuteOperation( Operation.Create().SetupAsCreateRoad( road.nodes ), standalone );
 	}
 
 	public void ExecuteRemoveFlag( Flag flag )
@@ -140,12 +137,9 @@ public class OperationHandler : HiveObject
         if ( flag == null )
             return;
 
-        bool merge = false;
+        StartGroup();
         foreach ( var building in flag.Buildings() )
-        {
-            ExecuteRemoveBuilding( building, merge );
-            merge = true;
-        }
+            ExecuteRemoveBuilding( building, false );
         List<Road> realRoads = new List<Road>();
         foreach ( var road in flag.roadsStartingHere )
             if ( road )
@@ -153,21 +147,20 @@ public class OperationHandler : HiveObject
         if ( realRoads.Count != 2 )
         {
             foreach ( var road in realRoads )
-                ExecuteRemoveRoad( road, merge );
-            merge = true;
+                ExecuteRemoveRoad( road, false );
         }
         
-		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag, merge ) );
+		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), false );
 	}
 
-	public void ExecuteCreateFlag( Node location, bool crossing = false )
+	public void ExecuteCreateFlag( Node location, bool crossing = false, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCreateFlag( location, crossing ) );
+		ExecuteOperation( Operation.Create().SetupAsCreateFlag( location, crossing ), standalone );
 	}
 
-	public void ExecuteRemoveFlag( Flag flag, bool merge = false )
+	public void ExecuteRemoveFlag( Flag flag, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag, merge ) );
+		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), standalone );
 	}
 
 	public void ExecuteChangeArea( Ground.Area area, Node center, int radius )
@@ -226,13 +219,23 @@ public class OperationHandler : HiveObject
             var inverse = operation.ExecuteAndInvert();
             if ( inverse )
             {
-                if ( operation.source == Operation.Source.undo )
-                    redoQueue.Add( inverse );
-                else
-                    undoQueue.Add( inverse );
-
-                if ( operation.source == Operation.Source.manual )
-                    redoQueue.Clear();
+                inverse.group = int.MaxValue - operation.group;
+                switch ( operation.source )
+                {
+                    case Operation.Source.manual:
+                        inverse.source = Operation.Source.undo;
+                        undoQueue.Add( inverse );
+                        redoQueue.Clear();
+                        break;
+                    case Operation.Source.undo:
+                        inverse.source = Operation.Source.redo;
+                        redoQueue.Add( inverse );
+                        break;
+                    case Operation.Source.redo:
+                        inverse.source = Operation.Source.undo;
+                        undoQueue.Add( inverse );
+                        break;
+                }
             }
             else
                 assert.Fail( "Not invertible operation" );
@@ -253,9 +256,9 @@ public class OperationHandler : HiveObject
     void Update()
     {
 		if ( undoHotkey.IsDown() )
-			Undo();
+			UndoRedo( undoQueue );
 		if ( redoHotkey.IsDown() )
-			Redo();
+			UndoRedo( redoQueue );
     }
 }
 
@@ -268,7 +271,7 @@ public class Operation : ScriptableObject
     public int direction;
     public List<int> roadPathX, roadPathY;
     public bool crossing;
-    public bool merge;
+    public int group = -1;
     public Ground.Area area;            // TODO We cannot store references here
     public int radius;
     public int endLocationX, endLocationY;
@@ -437,6 +440,8 @@ public class Operation : ScriptableObject
     }
 
 	[Obsolete( "Compatibility for old files", true )]
+    bool merge { set {} }
+	[Obsolete( "Compatibility for old files", true )]
     Workshop.Type workshopType { set {} }
 
     public enum Type
@@ -469,49 +474,44 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsRemoveBuilding( Building building, bool merge = false )
+    public Operation SetupAsRemoveBuilding( Building building )
     {
         type = Type.removeBuilding;
         this.building = building;
-        this.merge = merge;
         name = "Delete Building";
         return this;
     }
 
-    public Operation SetupAsCreateBuilding( Node location, int direction, Building.Type buildingType, bool merge = false )
+    public Operation SetupAsCreateBuilding( Node location, int direction, Building.Type buildingType )
     {
         type = Type.createBuilding;
         this.location = location;
         this.direction = direction;
         this.buildingType = buildingType;
-        this.merge = merge;
         name = "Create Building";
         return this;
     }
 
-    public Operation SetupAsRemoveRoad( Road road, bool merge = false )
+    public Operation SetupAsRemoveRoad( Road road )
     {
         type = Type.removeRoad;
         this.road = road;
-        this.merge = merge;
         name = "Remove Road";
         return this;
     }
 
-    public Operation SetupAsCreateRoad( List<Node> path, bool merge = false )
+    public Operation SetupAsCreateRoad( List<Node> path )
     {
         type = Type.createRoad;
         this.roadPath = path;
-        this.merge = merge;
         name = "Create Road";
         return this;
     }
 
-    public Operation SetupAsRemoveFlag( Flag flag, bool merge = false )
+    public Operation SetupAsRemoveFlag( Flag flag )
     {
         type = Type.removeFlag;
         this.flag = flag;
-        this.merge = merge;
         name = "Remove Flag";
         return this;
     }
@@ -525,12 +525,11 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsMoveFlag( Flag flag, int direction, bool merge = false )
+    public Operation SetupAsMoveFlag( Flag flag, int direction )
     {
         type = Type.moveFlag;
         this.flag = flag;
         this.direction = direction;
-        this.merge = merge;
         name = "Move Flag";
         return this;
     }
@@ -554,12 +553,11 @@ public class Operation : ScriptableObject
         return this;
     }
 
-    public Operation SetupAsMoveRoad( Road road, int index, int direction, bool merge = false )
+    public Operation SetupAsMoveRoad( Road road, int index, int direction )
     {
         type = Type.moveRoad;
         location = road.nodes[index];
         this.direction = direction;
-        this.merge = merge;
         name = "Move Road";
         return this;
     }

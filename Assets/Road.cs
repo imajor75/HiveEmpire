@@ -825,10 +825,12 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( node != lastNode )
 			return true;
 
+		World.instance.operationHandler.StartGroup();
+
 		bool flagCreated = false;
 		if ( node.road && node.road != this || Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
 		{
-			World.instance.operationHandler.ExecuteCreateFlag( node );
+			World.instance.operationHandler.ExecuteCreateFlag( node, false, false );
 			flagCreated = true;
 		}
 
@@ -857,7 +859,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 		if ( node.validFlag || flagCreated )
 		{
-			World.instance.operationHandler.ExecuteCreateRoad( this, flagCreated );
+			World.instance.operationHandler.ExecuteCreateRoad( this, false );
 			Interface.root.viewport.showGridAtMouse = false;
 			Interface.root.viewport.pickGroundOnly = false;
 			return false;

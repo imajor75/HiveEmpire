@@ -3290,13 +3290,10 @@ public class Interface : HiveObject
 				RoadTutorialPanel.Create();
 			if ( currentBlueprint is Building building )
 			{
-				bool merge = false;
+				World.instance.operationHandler.StartGroup();
 				if ( building.flag.blueprintOnly )
-				{
-					World.instance.operationHandler.ExecuteCreateFlag( building.flag.node );
-					merge = true;
-				}
-				World.instance.operationHandler.ExecuteCreateBuilding( building.node, building.flagDirection, building.type, merge );
+					World.instance.operationHandler.ExecuteCreateFlag( building.flag.node, false, false );
+				World.instance.operationHandler.ExecuteCreateBuilding( building.node, building.flagDirection, building.type, false );
 			}
 			if ( currentBlueprint is Flag flag )
 				World.instance.operationHandler.ExecuteCreateFlag( flag.node );
