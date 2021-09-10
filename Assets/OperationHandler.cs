@@ -63,6 +63,7 @@ public class OperationHandler : HiveObject
 
     public void StartReplay( int from = 0 )
     {
+        World.instance.roadTutorialShowed = World.instance.createRoadTutorialShowed = true;
         mode = Mode.repeating;
         finishedFrameIndex = World.instance.time;
         executeIndex = from;
