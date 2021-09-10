@@ -75,31 +75,28 @@ public class OperationHandler : HiveObject
         repeatBuffer.Add( operation );
 	}
 
-	void RepeatOperation( List<Operation> from, List<Operation> to, bool merge = false )
-	{
-		if ( from.Count == 0 )
-			return;
-		var operation = from.Last();
-        var hadMerge = operation.merge;
-		from.Remove( operation );
-		var inverted = operation.ExecuteAndInvert();
-		if ( inverted )
-        {
-            inverted.merge = merge;
-			to.Add( inverted );
-        }
-        if ( hadMerge )
-            RepeatOperation( from, to, true );
-	}
-
 	public void Undo()
 	{
-		RepeatOperation( undoQueue, redoQueue );
+        if ( undoQueue.Count == 0 )
+            return;
+        var operation = undoQueue.Last();
+        operation.source = Operation.Source.undo;
+        ExecuteOperation( operation );
+        undoQueue.RemoveAt( undoQueue.Count - 1 );
+        if ( operation.merge )
+            Undo();
 	}
 
 	public void Redo()
 	{
-		RepeatOperation( redoQueue, undoQueue );
+        if ( redoQueue.Count == 0 )
+            return;
+        var operation = redoQueue.Last();
+        operation.source = Operation.Source.redo;
+        ExecuteOperation( operation );
+        redoQueue.RemoveAt( redoQueue.Count - 1 );
+        if ( operation.merge )
+            Redo();
 	}
 
     public void SaveReplay( string name )
@@ -220,22 +217,22 @@ public class OperationHandler : HiveObject
         currentCRCCode = 0;
 #endif
         World.instance.fixedOrderCalls = true;
-
-		if ( undoHotkey.IsDown() )
-			Undo();
-		if ( redoHotkey.IsDown() )
-			Redo();
-
         World.instance.OnEndOfLogicalFrame();
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == World.instance.time )
         {
-            HiveObject.Log( $"Executing {repeatBuffer[executeIndex].name}" );
-            var inverse = repeatBuffer[executeIndex].ExecuteAndInvert();
+            var operation = repeatBuffer[executeIndex];
+            HiveObject.Log( $"Executing {operation.name}" );
+            var inverse = operation.ExecuteAndInvert();
             if ( inverse )
             {
-                undoQueue.Add( inverse );
-                redoQueue.Clear();
+                if ( operation.source == Operation.Source.undo )
+                    redoQueue.Add( inverse );
+                else
+                {
+                    undoQueue.Add( inverse );
+                    redoQueue.Clear();
+                }
             }
             else
                 assert.Fail( "Not invertible operation" );
@@ -251,6 +248,14 @@ public class OperationHandler : HiveObject
         }
 
         assert.AreEqual( finishedFrameIndex, World.instance.time );
+    }
+
+    void Update()
+    {
+		if ( undoHotkey.IsDown() )
+			Undo();
+		if ( redoHotkey.IsDown() )
+			Redo();
     }
 }
 
@@ -271,6 +276,14 @@ public class Operation : ScriptableObject
     public Stock.Channel stockChannel;
     public int itemCount;
     public int scheduleAt;
+    public Source source;
+
+    public enum Source
+    {
+        manual,
+        undo,
+        redo
+    }
 
     public Node location
     {
