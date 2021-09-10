@@ -229,10 +229,10 @@ public class OperationHandler : HiveObject
                 if ( operation.source == Operation.Source.undo )
                     redoQueue.Add( inverse );
                 else
-                {
                     undoQueue.Add( inverse );
+
+                if ( operation.source == Operation.Source.manual )
                     redoQueue.Clear();
-                }
             }
             else
                 assert.Fail( "Not invertible operation" );
