@@ -690,7 +690,7 @@ public class Interface : HiveObject
 			if ( !world.eye.hasTarget || lastShownOperation != next )
 			{
 				world.eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
-				tooltip.SetText( this, world.operationHandler.next.description, null, null, 0.2f, 0.2f );
+				tooltip.SetText( this, world.operationHandler.next.description, null, null, 0.2f, 0.2f, 2 * Constants.Interface.showNextActionDuringReplay );
 				lastShownOperation = next;
 			}
 		}
@@ -1040,6 +1040,7 @@ public class Interface : HiveObject
 		Image image;
 		public new bool pinned;
 		int width, height;
+		public World.Timer life = new World.Timer();
 
 		public static Tooltip Create()
 		{
@@ -1063,10 +1064,14 @@ public class Interface : HiveObject
 			FollowMouse();
 		}
 
-		public void SetText( Component origin, string text = null, Sprite imageToShow = null, string additionalText = "", float pinX = -1, float pinY = -1 )
+		public void SetText( Component origin, string text = null, Sprite imageToShow = null, string additionalText = "", float pinX = -1, float pinY = -1, int time = 0 )
 		{
 			this.origin = origin;
 			this.text.text = text;
+			if ( time != 0 )
+				life.Start( time );
+			else
+				life.Reset();
 			this.additionalText.text = additionalText;
 			this.additionalText.Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - (int)(this.text.preferredHeight) );
 			if ( imageToShow )
@@ -1101,7 +1106,7 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
-			if ( origin == null || !origin.gameObject.activeSelf )
+			if ( origin == null || !origin.gameObject.activeSelf || life.done )
 			{
 				gameObject.SetActive( false );
 				return;
