@@ -110,6 +110,15 @@ public class OperationHandler : HiveObject
 		RepeatOperation( redoQueue, undoQueue );
 	}
 
+    public void SaveReplay( string name )
+    {
+		undoQueue.Clear();		// TODO Is this necessary?
+		redoQueue.Clear();
+		if ( finishedFrameIndex > replayLength )
+			replayLength = finishedFrameIndex;
+		Serializer.Write( name, this, true );
+    }
+
 	public void ExecuteChangeRoadWorkerCount( Road road, int count )
 	{
 		ExecuteOperation( Operation.Create().SetupAsChangeWorkerCount( road, count ) );

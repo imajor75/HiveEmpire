@@ -10,6 +10,8 @@ using UnityEngine.Rendering.PostProcessing;
 public class World : MonoBehaviour
 {
 	public Ground ground;
+	public new string name;
+	public int saveIndex, replayIndex;
 	public int currentSeed;
 	public List<Player> players = new List<Player>();
 	public Eye eye;
@@ -77,6 +79,9 @@ public class World : MonoBehaviour
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
+
+	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
+	public string nextReplayFileName { get { return $"{name} ({replayIndex})"; } }
 
 	[Obsolete( "Compatibility with old files", true )]
 	bool victory { set {} }
@@ -492,7 +497,7 @@ public class World : MonoBehaviour
 
 	public static World Create()
 	{
-		return new GameObject().AddComponent<World>();
+		return new GameObject( "World" ).AddComponent<World>();
 	}
 
 	public void Awake()
@@ -582,6 +587,9 @@ public class World : MonoBehaviour
 	{
 		fixedOrderCalls = true;
 		time = -1;
+		string pattern = challenge.title + " #{0}";
+		name = String.Format( pattern, Interface.FirstUnusedIndex( Application.persistentDataPath + "/Saves", pattern + " (0).json" ) );
+		saveIndex = 0;
 		SetSpeed( Speed.normal );
 		if ( operationHandler )
 			Destroy( operationHandler );
@@ -654,7 +662,6 @@ public class World : MonoBehaviour
 
 	void Start()
 	{
-		name = "World";
 		if ( operationHandler == null )
 		{
 			operationHandler = OperationHandler.Create();
@@ -676,6 +683,8 @@ public class World : MonoBehaviour
 		World world = Serializer.Read<World>( fileName );
 		Assert.global.AreEqual( world, this );
 		this.fileName = fileName;
+		if ( name == null || name == "" )
+			name = "Incredible";
 
 		if ( !challenge )
 		{
@@ -918,9 +927,18 @@ public class World : MonoBehaviour
 
 	public void Save( string fileName )
 	{
+		if ( System.IO.Path.GetFileNameWithoutExtension( fileName ) == nextSaveFileName )
+			saveIndex++;
 		this.fileName = fileName;
 		operationHandler.lastSave = fileName;
 		Serializer.Write( fileName, this, false );
+	}
+
+	public void SaveReplay( string name )
+	{
+		if ( System.IO.Path.GetFileNameWithoutExtension( name ) == nextReplayFileName )
+			replayIndex++;
+		operationHandler.SaveReplay( name );
 	}
 
 	public void Prepare()

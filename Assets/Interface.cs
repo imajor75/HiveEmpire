@@ -278,7 +278,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		SaveReplay( Application.persistentDataPath + $"/Replays/{new System.Random().Next()}.json" );
+		SaveReplay( Application.persistentDataPath + $"/Replays/{world.nextReplayFileName}.json" );
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save();
 
@@ -538,7 +538,7 @@ public class Interface : HiveObject
 	public void Save( string fileName = "" )
 	{
 		if ( fileName == "" )
-			fileName = Application.persistentDataPath + "/Saves/" + new System.Random().Next() + ".json";
+			fileName = Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json";
 		world.Save( fileName );
 		print( fileName + " is saved" );
 		Log( fileName + " is saved" );
@@ -561,12 +561,7 @@ public class Interface : HiveObject
 	public void SaveReplay( string name )
 	{
 		print( $"Saving replay {name}" );
-		var oh = World.instance.operationHandler;
-		oh.undoQueue.Clear();		// TODO Is this necessary?
-		oh.redoQueue.Clear();
-		if ( oh.finishedFrameIndex > oh.replayLength )
-			oh.replayLength = oh.finishedFrameIndex;
-		Serializer.Write( name, oh, true );
+		World.instance.SaveReplay( name );
 	}
 
 	public void SaveHotkeys()
@@ -6184,8 +6179,8 @@ if ( cart )
 				var saveRow = UIHelpers.currentRow;
 				Button( "Save" ).PinDownwards( 20, 0, 60, 25 ).AddClickHandler( Save );
 				UIHelpers.currentRow = saveRow;
-				saveName = InputField().PinDownwards( 80, 0, 100, 25 );
-				saveName.text = new System.Random().Next().ToString();
+				saveName = InputField().PinDownwards( 80, 0, 200, 25 );
+				saveName.text = World.instance.nextSaveFileName;
 			}
 
 			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
@@ -6254,6 +6249,7 @@ if ( cart )
 		void Save()
 		{
 			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json" );
+			saveName.text = World.instance.nextSaveFileName;
 		}
 
 		void SaveFolderChanged( object sender, FileSystemEventArgs args )
@@ -6345,7 +6341,22 @@ if ( cart )
 
 	protected const bool keepGoing = true;	// possible return values for IInputHandler functions
 	protected const bool finished = false;
+
+	public static int FirstUnusedIndex( string path, string pattern, int limit = 1000 )
+	{
+		var files = Directory.GetFiles( path ).Select(f => System.IO.Path.GetFileName( f ) );
+		var sortedFiles = files.ToList();
+		sortedFiles.Sort();
+
+		for ( int index = 0; index < limit; index++ )
+		{
+			if ( sortedFiles.BinarySearch( String.Format( pattern, index ) ) < 0 )
+				return index;
+		}
+		return -1;
+	}
 }
+
 
 public static class UIHelpers
 {
