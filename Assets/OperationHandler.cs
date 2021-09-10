@@ -164,6 +164,11 @@ public class OperationHandler : HiveObject
 		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), standalone );
 	}
 
+	public void ExecuteCaptureRoad( Flag flag, bool standalone = true )
+	{
+		ExecuteOperation( Operation.Create().SetupAsCaptureRoad( flag ), standalone );
+	}
+
 	public void ExecuteChangeArea( Building building, Ground.Area area, Node center, int radius )
 	{
         if ( area != null )
@@ -238,8 +243,6 @@ public class OperationHandler : HiveObject
                         break;
                 }
             }
-            else
-                assert.Fail( "Not invertible operation" );
             executeIndex++;
         }
         World.instance.fixedOrderCalls = false;
@@ -412,6 +415,7 @@ public class Operation : ScriptableObject
                 Type.removeFlag => "Remove a flag",
                 Type.removeRoad => "Remove a road",
                 Type.stockAdjustment => "Adjust stock item counts",
+                Type.captureRoad => "Capture nearby roads",
                 _ => ""
             };
             if ( type == Type.createBuilding )
@@ -461,7 +465,8 @@ public class Operation : ScriptableObject
         moveFlag,
         changeRoutePriority,
         moveRoad,
-        stockAdjustment
+        stockAdjustment,
+        captureRoad
     }
 
     public static Operation Create()
@@ -517,6 +522,14 @@ public class Operation : ScriptableObject
         type = Type.removeFlag;
         this.flag = flag;
         name = "Remove Flag";
+        return this;
+    }
+
+    public Operation SetupAsCaptureRoad( Flag flag )
+    {
+        type = Type.captureRoad;
+        this.flag = flag;
+        name = "Capture road";
         return this;
     }
 
@@ -734,6 +747,11 @@ public class Operation : ScriptableObject
                 i.ChannelValue( stockChannel ) = itemCount;
 				building.owner.UpdateStockRoutes( itemType );
                 return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
+            }
+            case Type.captureRoad:
+            {
+                flag.CaptureRoads();
+                return null;
             }
         }
         return null;

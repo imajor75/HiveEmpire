@@ -157,6 +157,21 @@ public class Flag : HiveObject
 		tileMesh.vertices = vertices;
 	}
 
+	public void CaptureRoads()
+	{
+		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+		{
+			Node A = node.Neighbour( i ), B = node.Neighbour( ( i + 1 ) % Constants.Node.neighbourCount );
+			if ( A.road && A.road == B.road )
+			{
+				if ( A.road.ends[0] == this || A.road.ends[1] == this )
+					continue;
+				A.road.Split( this );
+				return;
+			}
+		}
+	}
+
 	public bool ConvertToCrossing( bool checkConditions = true )
 	{
 		assert.IsFalse( crossing );

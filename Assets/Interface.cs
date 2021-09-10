@@ -3660,7 +3660,7 @@ public class Interface : HiveObject
 			int col = 16;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
 			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
-			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( CaptureRoads ).SetTooltip( "Merge nearby roads to this junction" );
+			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( () => World.instance.operationHandler.ExecuteCaptureRoad( flag ) ).SetTooltip( "Merge nearby roads to this junction" );
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
@@ -3703,21 +3703,6 @@ public class Interface : HiveObject
 				}
 			}
 			Close();
-		}
-
-		void CaptureRoads()
-		{
-			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
-			{
-				Node A = flag.node.Neighbour( i ), B = flag.node.Neighbour( ( i + 1 ) % Constants.Node.neighbourCount );
-				if ( A.road && A.road == B.road )
-				{
-					if ( A.road.ends[0] == flag || A.road.ends[1] == flag )
-						continue;
-					A.road.Split( flag );
-					return;
-				}
-			}
 		}
 
 		void Convert()
@@ -6443,12 +6428,14 @@ public static class UIHelpers
 
         public void OnPointerClick( PointerEventData eventData )
         {
+			World.instance.fixedOrderCalls = true;
 			if ( eventData.button == PointerEventData.InputButton.Left && leftClickHandler != null )
 				leftClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Right && rightClickHandler != null )
 				rightClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
 				middleClickHandler();
+			World.instance.fixedOrderCalls = false;
         }
 
 		public void Toggle()
