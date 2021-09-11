@@ -235,6 +235,9 @@ public class ItemDispatcher : HiveObject
 							requestItemCount += request.quantity;
 					}
 
+					// TODO what if one of these is zero? if priority is high, it is still possible that there are potentials which can be paired then, but we should not start with the one which has zero items
+					// For example when lots of woodcutters offer log with low priority, so the high priority offers are zero, but there is a request with high priority somewhere? In that case are we finding
+					// pair for a random offer?
 					if ( offerItemCount < requestItemCount && offers.Count > nextOffer )
 						FulfillPotentialFrom( offers[nextOffer++], requests, nextRequest );
 					else if ( requests.Count > nextRequest )
