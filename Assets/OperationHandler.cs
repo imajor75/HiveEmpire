@@ -410,7 +410,7 @@ public class Operation : ScriptableObject
                 Type.createFlag => "Creating a new flag",
                 Type.createRoad => "Create new road",
                 Type.moveFlag => "Moving a flag",
-                Type.moveRoad => "Move flag",
+                Type.moveRoad => "Moving a road block",
                 Type.removeBuilding => "Remove a building",
                 Type.removeFlag => "Remove a flag",
                 Type.removeRoad => "Remove a road",
