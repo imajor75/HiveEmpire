@@ -17,6 +17,7 @@ public class World : MonoBehaviour
 	public Eye eye;
 	public bool gameInProgress;
 	public int time;
+	public int nextID;
 	public int frameSeed;
 	public int overseas = 2;
 	public bool roadTutorialShowed;
@@ -586,6 +587,7 @@ public class World : MonoBehaviour
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
 		fixedOrderCalls = true;
+		nextID = 0;
 		time = -1;
 		string pattern = challenge.title + " #{0}";
 		name = String.Format( pattern, Interface.FirstUnusedIndex( Application.persistentDataPath + "/Saves", pattern + " (0).json" ) );

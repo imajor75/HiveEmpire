@@ -28,7 +28,7 @@ public abstract class HiveObject : MonoBehaviour
 		World.instance.newHiveObjects.AddFirst( this );
 		registered = true;
 		if ( !blueprintOnly )
-			id = World.NextRnd();
+			id = World.instance.nextID++;
 	}
 
 	static public string Nice( string raw )
@@ -102,7 +102,7 @@ public abstract class HiveObject : MonoBehaviour
 	{
 		assert.IsTrue( blueprintOnly );
 		blueprintOnly = false;
-		id = World.NextRnd();
+		id = World.instance.nextID++;
 	}
 
 	public virtual void OnClicked( bool show = false )
