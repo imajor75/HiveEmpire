@@ -44,6 +44,7 @@ public class Interface : HiveObject
 	public List<World.Challenge> challenges;
 	public MonoBehaviour replayIcon;
 	Operation lastShownOperation;
+	public int selectByID;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -610,6 +611,11 @@ public class Interface : HiveObject
 		// 	if ( !localReset )
 		// 		world.Reset();
 		// }
+		if ( selectByID != 0 )
+		{
+			Selection.activeGameObject = HiveObject.GetByID( selectByID )?.gameObject;
+			selectByID = 0;
+		}
 		if ( Time.time - lastAutoSave > Constants.Interface.autoSaveInterval )
 		{
 			Save();
