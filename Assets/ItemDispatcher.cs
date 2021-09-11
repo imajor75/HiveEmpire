@@ -41,6 +41,7 @@ public class ItemDispatcher : HiveObject
 		public float weight = 0.5f;
 		public bool flagJammed;
 		public bool noDispenser;
+		public int id { get { return building ? building.id : item.id; } }
 	}
 
 	public List<Market> markets = new List<Market>();
@@ -205,7 +206,7 @@ public class ItemDispatcher : HiveObject
 		static int ComparePotentials( Potential first, Potential second )
 		{
 			if ( first.priority == second.priority )
-				return 0;
+				return first.id.CompareTo( second.id );
 			if ( first.priority > second.priority )
 				return -1;
 
@@ -375,7 +376,7 @@ public class ItemDispatcher : HiveObject
 			}
 			Assert.global.AreEqual( first.type, Potential.Type.offer, $"Potential types: {first.type}, {second.type}" );
 			Assert.global.AreEqual( second.type, Potential.Type.request, $"Potential types: {first.type}, {second.type}" );
-			World.CRC = second.building.id;
+			World.CRC = first.id + second.id;
 
 			bool success = false;
 			if ( first.building != null )
