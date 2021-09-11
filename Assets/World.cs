@@ -1217,8 +1217,10 @@ public class World : MonoBehaviour
 		var list3 = Resources.FindObjectsOfTypeAll<AudioSource>();
 		foreach ( var o in list3 )
 			o.pitch = timeFactor;
-		//Time.fixedDeltaTime = 1f / ( timeFactor * Constants.World.normalSpeedPerSecond );
-		Time.timeScale = timeFactor;
+		float scale = speed == Speed.pause ? 0 : 1;
+		if ( speed != Speed.pause )
+			Time.fixedDeltaTime = 1f / ( timeFactor * Constants.World.normalSpeedPerSecond );
+		Time.timeScale = scale;
 	}
 
 	public static int hourTickCount { get { return (int)( 60 * 60 / UnityEngine.Time.fixedDeltaTime ); } }
