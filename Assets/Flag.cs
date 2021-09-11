@@ -299,17 +299,22 @@ public class Flag : HiveObject
 		{
 			if ( items[i] == item )
 			{
-				var t = frames[i].transform;
-				item.transform.SetParent( t, false );
+				if ( frames[i] )
+				{
+					var t = frames[i].transform;
+					item.transform.SetParent( t, false );
 
-				// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
-				Vector3 framePos = frames[i].transform.position;
-				framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
-				assert.IsTrue( framePos.y < 10000 && framePos.y > -10000 );
-				t.position = framePos;
-				
-				frames[i].transform.LookAt( transform );
-				frames[i].transform.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)items[i].type], 0, 0 );
+					// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
+					Vector3 framePos = frames[i].transform.position;
+					framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
+					assert.IsTrue( framePos.y < 10000 && framePos.y > -10000 );
+					t.position = framePos;
+					
+					frames[i].transform.LookAt( transform );
+					frames[i].transform.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)items[i].type], 0, 0 );
+				}
+				else	// This only happens rarely, when after load flag.Start is not called before this point is reached
+					item.transform.SetParent( transform, false );	
 				break;
 			}
 		}
