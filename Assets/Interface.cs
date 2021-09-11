@@ -892,7 +892,7 @@ public class Interface : HiveObject
 			else
 				root.NewGame( replay.challenge );
 			World.instance.operationHandler = replay;
-			replay.StartReplay( executeIndex );
+			replay.StartReplay( executeIndex, GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) );
 		}
 
 	}

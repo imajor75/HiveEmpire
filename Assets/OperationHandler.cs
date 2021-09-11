@@ -18,6 +18,7 @@ public class OperationHandler : HiveObject
     public int currentGroup = 0;
     public string lastSave;
     public bool recordCRC;
+    public bool recalculateCRC;
     public bool insideFrame
     {
         get
@@ -61,12 +62,13 @@ public class OperationHandler : HiveObject
         base.Start();
     }
 
-    public void StartReplay( int from = 0 )
+    public void StartReplay( int from = 0, bool recalculateCRC = false )
     {
         World.instance.roadTutorialShowed = World.instance.createRoadTutorialShowed = true;
         mode = Mode.repeating;
         finishedFrameIndex = World.instance.time;
         executeIndex = from;
+        this.recalculateCRC = recalculateCRC;
     }
 
     public void StartGroup()
@@ -210,8 +212,16 @@ public class OperationHandler : HiveObject
         if ( mode == Mode.repeating )
         {
             assert.IsTrue( CRCCodes.Count > World.instance.time );
-            assert.AreEqual( CRCCodes[World.instance.time], currentCRCCode, "CRC mismatch" );
-            Log( $"End of frame, CRC {currentCRCCode} was checked" );
+            if ( !recalculateCRC )
+            {
+                assert.AreEqual( CRCCodes[World.instance.time], currentCRCCode, "CRC mismatch" );
+                Log( $"End of frame, CRC {currentCRCCode} was checked" );
+            }
+            else
+            {
+                CRCCodes[World.instance.time] = currentCRCCode;
+                Log( $"End of frame, CRC recalculated as {currentCRCCode}" );
+            }
         }
         currentCRCCode = 0;
 #endif
