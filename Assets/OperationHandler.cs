@@ -735,6 +735,7 @@ public class Operation : ScriptableObject
             }
             case Type.moveRoad:
             {
+                var road = this.road;
                 var index = location.road.nodes.IndexOf( location );
                 if ( !location.road.Move( index, direction ) )
                     return null;
