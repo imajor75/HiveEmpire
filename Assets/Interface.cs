@@ -472,7 +472,7 @@ public class Interface : HiveObject
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
-		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator );
+		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 );
 		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetSpeed( World.Speed.pause ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
 		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => world.SetSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
@@ -509,6 +509,8 @@ public class Interface : HiveObject
 	{
 		var r = World.instance.operationHandler;
 		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( r.replayLength - r.finishedFrameIndex )}";
+		if ( r.next )
+			text += $"\nNext action is {r.next.description} in {UIHelpers.TimeToString( r.next.scheduleAt - World.instance.time )}";
 		return text;
 	}
 
@@ -696,7 +698,7 @@ public class Interface : HiveObject
 			if ( !world.eye.hasTarget || lastShownOperation != next )
 			{
 				world.eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
-				tooltip.SetText( this, world.operationHandler.next.description, null, null, 0.2f, 0.2f, 2 * Constants.Interface.showNextActionDuringReplay );
+				tooltip.SetText( this, world.operationHandler.next.description, pinX:0.2f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
 				lastShownOperation = next;
 			}
 		}
@@ -1070,7 +1072,7 @@ public class Interface : HiveObject
 			FollowMouse();
 		}
 
-		public void SetText( Component origin, string text = null, Sprite imageToShow = null, string additionalText = "", float pinX = -1, float pinY = -1, int time = 0 )
+		public void SetText( Component origin, string text = null, Sprite imageToShow = null, string additionalText = "", float pinX = -1, float pinY = -1, int time = 0, int width = 300 )
 		{
 			this.origin = origin;
 			this.text.text = text;
@@ -1084,12 +1086,12 @@ public class Interface : HiveObject
 			{
 				image.sprite = imageToShow;
 				image.enabled = true;
-				SetSize( width = (int)( uiScale * 140 ), height = (int)( uiScale * 100 ) );
+				SetSize( this.width = (int)( uiScale * 140 ), height = (int)( uiScale * 100 ) );
 			}
 			else
 			{
 				image.enabled = false;
-				SetSize( width = 300, height = (int)( this.text.preferredHeight + this.additionalText.preferredHeight ) + 2 * borderWidth );
+				SetSize( this.width = width, height = (int)( this.text.preferredHeight + this.additionalText.preferredHeight ) + 2 * borderWidth );
 			}
 			gameObject.SetActive( true );
 			if ( pinX < 0 || pinY < 0 )
@@ -1100,7 +1102,7 @@ public class Interface : HiveObject
 			else
 			{
 				pinned = true;
-				this.Pin( 0, 0, width, height, pinX, pinY );
+				this.Pin( 0, 0, this.width, height, pinX, pinY );
 			}
 		}
 
@@ -1146,6 +1148,7 @@ public class Interface : HiveObject
 		public Sprite image;
 		public Action<bool> onShow;
 		public bool active;
+		public int width;
 
 		public void OnDestroy()
 		{
@@ -1160,7 +1163,7 @@ public class Interface : HiveObject
 			if ( onShow != null && !active )
 				onShow( true );
 			if ( textGenerator != null )
-				tooltip.SetText( this, textGenerator(), image, additionalText );
+				tooltip.SetText( this, textGenerator(), image, additionalText, width:width );
 			active = true;
         }
 
@@ -1173,21 +1176,22 @@ public class Interface : HiveObject
 			active = false;
         }
 
-		public void SetData( Func<string> textGenerator, Sprite image, string additionalText, Action<bool> onShow )
+		public void SetData( Func<string> textGenerator, Sprite image, string additionalText, Action<bool> onShow, int width )
 		{
 			this.textGenerator = textGenerator;
 			this.image = image;
 			this.additionalText = additionalText;
 			this.onShow = onShow;
+			this.width = width;
 
 			if ( active )
-				tooltip.SetText( this, textGenerator(), image, additionalText );
+				tooltip.SetText( this, textGenerator(), image, additionalText, width:width );
 		}
 
 		void Update()
 		{
 			if ( active && textGenerator != null )
-				tooltip.SetText( this, textGenerator(), image, additionalText );
+				tooltip.SetText( this, textGenerator(), image, additionalText, width:width );
 		}
     }
 
@@ -6556,13 +6560,13 @@ public static class UIHelpers
 		return false;
 	}
 	
-	public static UIElement SetTooltip<UIElement>( this UIElement g, Func<string> textGenerator, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
+	public static UIElement SetTooltip<UIElement>( this UIElement g, Func<string> textGenerator, Sprite image = null, string additionalText = "", Action<bool> onShow = null, int width = 300 ) where UIElement : Component
 	{
 			Assert.global.IsTrue( textGenerator != null || onShow != null );
 			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
 			if ( s == null )
 				s = g.gameObject.AddComponent<Interface.TooltipSource>();
-			s.SetData( textGenerator, image, additionalText, onShow );
+			s.SetData( textGenerator, image, additionalText, onShow, width );
 			foreach ( Transform t in g.transform )
 				t.SetTooltip( textGenerator, image, additionalText, onShow );
 			return g;
