@@ -1125,10 +1125,17 @@ public class Interface : HiveObject
 
 		void FollowMouse()
 		{
-			if ( Input.mousePosition.x + width * uiScale > Screen.width )
-				this.Pin( (int)( (Input.mousePosition.x - 20) / uiScale - width ), (int)( (Input.mousePosition.y - Screen.height) / uiScale ), width, height );
+			const int offset = 20;
+			Vector3 pos = Input.mousePosition;
+			if ( pos.x + width * uiScale > Screen.width )
+				pos.x -= (offset + width) * uiScale;
 			else
-				this.Pin( (int)( (Input.mousePosition.x + 20) / uiScale ), (int)( (Input.mousePosition.y - Screen.height) / uiScale ), width, height );
+				pos.x += offset * uiScale;
+			if ( pos.y - height * uiScale < 0 )
+				pos.y += (offset + height) * uiScale;
+			else
+				pos.y -= offset * uiScale;
+			this.Pin( (int)(pos.x / uiScale), (int)(pos.y / uiScale), width, height, 0, 0 );
 		}
 	}
 
