@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2863,7 +2863,7 @@ public class Interface : HiveObject
 						disableDrag = true;
 						var l = (int)(Constants.Stock.cartCapacity * 1.5);
 						if ( adjustInputMin && stock.itemData[t].inputMax < l )
-							stock.itemData[t].inputMax = l;
+							World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l, false );
 					}
 				}
 				CheckChannel( inputMin.gameObject, Stock.Channel.inputMin, 0, stock.itemData[t].inputMax, "{0}<" );
@@ -2899,20 +2899,20 @@ public class Interface : HiveObject
 		{
 			var t = stock.itemData[(int)selectedItemType];
 			var l = (int)( Constants.Stock.cartCapacity * 1.5 );
+			World.instance.operationHandler.StartGroup();
 			if ( input )
 			{
 				if ( t.cartInput == 0 )
-					t.cartInput = 5;
+					World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartInput, 5, false );
 			}
 			else
 			{
 				if ( t.cartOutput == 0 )
-					t.cartOutput = Constants.Stock.cartCapacity;
+					World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
 			}
-			root.mainPlayer.UpdateStockRoutes( selectedItemType );
 
 			if ( t.inputMax < l )
-				t.inputMax = l;
+				World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l, false );
 		}
 	}
 

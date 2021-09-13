@@ -192,9 +192,9 @@ public class OperationHandler : HiveObject
         ExecuteOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ) );
     }
 
-    public void ExecuteStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value )
+    public void ExecuteStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value, bool standalone = true )
     {
-        ExecuteOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ) );
+        ExecuteOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone );
     }
 
     void FixedUpdate()
