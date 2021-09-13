@@ -447,7 +447,7 @@ abstract public class Building : HiveObject
 		Construction.Initialize();
 	}
 
-	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, Configuration configuration, int flagDirection )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, Configuration configuration, int flagDirection, bool ignoreBlockingResources = true )
 	{
 		var area = GetFoundation( configuration.huge, flagDirection );
 
@@ -456,7 +456,16 @@ abstract public class Building : HiveObject
 		{
 			var basis = placeToBuild.Add( o );
 			if ( basis.block )
-				return new SiteTestResult( SiteTestResult.Result.blocked );
+			{
+				bool resourceBlocking = false;
+				foreach ( var resource in basis.resources )
+				{
+					if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock )
+					resourceBlocking = true;
+				}
+				if ( !ignoreBlockingResources || !resourceBlocking )
+					return new SiteTestResult( SiteTestResult.Result.blocked );
+			}
 			if ( basis.owner != owner )
 				return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 			foreach ( var b in Ground.areas[1] )
@@ -487,21 +496,22 @@ abstract public class Building : HiveObject
 		if ( flagLocation.validFlag )
 			return new SiteTestResult( SiteTestResult.Result.fit );
 
-		return Flag.IsNodeSuitable( flagLocation, owner );
+		return Flag.IsNodeSuitable( flagLocation, owner, ignoreBlockingResources:ignoreBlockingResources );
 	}
 
-	public Building Setup(  Node node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false )
+	public Building Setup(  Node node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		this.configuration = configuration;
-		if ( !IsNodeSuitable( node, owner, configuration, flagDirection ) )
+		if ( !IsNodeSuitable( node, owner, configuration, flagDirection, block == Resource.BlockHandling.ignore || block == Resource.BlockHandling.remove ) )
 		{
 			DestroyThis();
 			return null;
 		}
+		
 		var flagNode = node.Neighbour( flagDirection );
 		Flag flag = flagNode.validFlag;
 		if ( flag == null )
-			flag = Flag.Create().Setup( flagNode, owner, blueprintOnly );
+			flag = Flag.Create().Setup( flagNode, owner, blueprintOnly, block:block );
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
@@ -520,6 +530,8 @@ abstract public class Building : HiveObject
 		foreach ( var o in area )
 		{
 			var basis = node.Add( o );
+			if ( block == Resource.BlockHandling.remove )
+				Resource.RemoveFromGround( basis );
 			basis.building = this;
 		}
 
@@ -532,6 +544,8 @@ abstract public class Building : HiveObject
 	public override void Materialize()
 	{
 		owner.buildingCounts[(int)type]++;
+		foreach ( var o in foundation )
+			Resource.RemoveFromGround( node + o );
 
 		if ( flag.blueprintOnly )
 			flag.Materialize();

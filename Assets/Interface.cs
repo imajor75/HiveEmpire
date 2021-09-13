@@ -3267,7 +3267,7 @@ public class Interface : HiveObject
 				case Construct.workshop:
 				{
 					ShowTestResult( Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), currentFlagDirection ) );
-					var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true );
+					var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					if ( workshop && workshop.gatherer )
 					{
 						currentBlueprintPanel = WorkshopPanel.Create();
@@ -3292,13 +3292,13 @@ public class Interface : HiveObject
 				case Construct.stock:
 				{
 					ShowTestResult( Stock.IsNodeSuitable( node, root.mainPlayer, currentFlagDirection ) );
-					currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
+					currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					break;
 				};
 				case Construct.guardHouse:
 				{
 					ShowTestResult( GuardHouse.IsNodeSuitable( node, root.mainPlayer, currentFlagDirection ) );
-					currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, currentFlagDirection, true );
+					currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					break;
 				};
 			};
@@ -3382,17 +3382,17 @@ public class Interface : HiveObject
 					{
 						case Construct.workshop:
 						{
-							suitable = Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), flagDirection );
+							suitable = Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), flagDirection, true );
 							break;
 						}
 						case Construct.stock:
 						{
-							suitable = Stock.IsNodeSuitable( node, root.mainPlayer, flagDirection );
+							suitable = Stock.IsNodeSuitable( node, root.mainPlayer, flagDirection, true );
 							break;
 						}
 						case Construct.guardHouse:
 						{
-							suitable = GuardHouse.IsNodeSuitable( node, root.mainPlayer, flagDirection );
+							suitable = GuardHouse.IsNodeSuitable( node, root.mainPlayer, flagDirection, true );
 							break;
 						}
 						default:

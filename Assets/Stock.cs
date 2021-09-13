@@ -523,17 +523,17 @@ public class Stock : Building, Worker.Callback.IHandler
 		return new GameObject().AddComponent<Stock>();
 	}
 
-	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
+	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection, bool ignoreTreesAndRocks = true )
 	{
-		return Building.IsNodeSuitable( placeToBuild, owner, stockConfiguration, flagDirection );
+		return Building.IsNodeSuitable( placeToBuild, owner, stockConfiguration, flagDirection, ignoreTreesAndRocks );
 	}
 
-	public Stock Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false )
+	public Stock Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		height = 1.5f;
 		maxItems = Constants.Stock.defaultmaxItems;
 
-		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly ) == null )
+		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
 		owner.RegisterStock( this );

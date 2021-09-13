@@ -42,9 +42,9 @@ public class Flag : HiveObject
 		return new GameObject().AddComponent<Flag>();
 	}
 
-	public Flag Setup( Node node, Player owner, bool blueprintOnly = false, bool crossing = false )
+	public Flag Setup( Node node, Player owner, bool blueprintOnly = false, bool crossing = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
-		if ( IsNodeSuitable( node, owner ) )
+		if ( IsNodeSuitable( node, owner, ignoreBlockingResources:block != Resource.BlockHandling.block ) )
 		{
 			node.flag = this;
 			this.node = node;
@@ -64,6 +64,8 @@ public class Flag : HiveObject
 			}
 			if ( crossing )
 				requestFlattening = true;
+			if ( block == Resource.BlockHandling.remove )
+				Resource.RemoveFromGround( node );
 			freeSlotsWatch.Attach( itemsStored );
 			return this;
 		}
@@ -75,6 +77,7 @@ public class Flag : HiveObject
 	public override void Materialize()
 	{
 		base.Materialize();
+		Resource.RemoveFromGround( node );
 		if ( node.road )
 		{
 			if ( node.road.ready )
@@ -427,6 +430,8 @@ public class Flag : HiveObject
 			assert.IsNull( user );
 		assert.IsTrue( World.instance.players.Contains( owner ) );
 		assert.IsTrue( registered );
+		if ( !blueprintOnly )
+			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.workers ) );
 	}
 
 	public override Node location
@@ -533,12 +538,24 @@ public class Flag : HiveObject
 		base.DestroyThis( noAssert );
 	}
 
-	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Player owner, Flag ignore = null )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Player owner, Flag ignore = null, bool ignoreBlockingResources = true )
 	{
 		if ( placeToBuildOn.type == Node.Type.underWater )
 			return new SiteTestResult( SiteTestResult.Result.wrongGroundType, Node.Type.aboveWater );
 
-		if ( ( placeToBuildOn.block && placeToBuildOn.road == null ) || placeToBuildOn.flag )
+		if ( placeToBuildOn.block && placeToBuildOn.road == null )
+		{
+			bool roadOrRockBlocking = false;
+			foreach ( var resource in placeToBuildOn.resources )
+			{
+				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock )
+					roadOrRockBlocking = true;
+			}
+			if ( !ignoreBlockingResources || !roadOrRockBlocking )
+				return new SiteTestResult( SiteTestResult.Result.blocked );
+		}
+
+		if ( placeToBuildOn.flag )
 			return new SiteTestResult( SiteTestResult.Result.blocked );
 
 		foreach ( var o in Ground.areas[1] )

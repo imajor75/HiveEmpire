@@ -360,7 +360,7 @@ public class Node : HiveObject
 			Block.Type type = ( road || flag ) ? Block.Type.buildingsAndRoads : Block.Type.none;
 			foreach ( var resource in resources )
 				type |= resource.block.type;
-			return new Block( type );
+			return new Block( type );	// TODO Couldn't we just return some premade constant objects?
 		}
 	}
 
@@ -464,7 +464,7 @@ public class Node : HiveObject
 			o++;
 		if ( road )
 			o++;
-		if ( building )
+		if ( building && !building.blueprintOnly )
 			o++;
 		foreach ( var resource in resources )
 			if ( resource.block.IsBlocking( Block.Type.roads ) )

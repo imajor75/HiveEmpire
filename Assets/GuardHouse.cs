@@ -23,9 +23,9 @@ public class GuardHouse : Building
 		guardHouseConfiguration.constructionTime = 5000;
 	}
 
-	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection )
+	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection, bool ignoreTreesAndRocks = true )
 	{
-		return Building.IsNodeSuitable( placeToBuild, owner, guardHouseConfiguration, flagDirection );
+		return Building.IsNodeSuitable( placeToBuild, owner, guardHouseConfiguration, flagDirection, ignoreTreesAndRocks );
 	}
 
 	public static GuardHouse Create()
@@ -35,10 +35,10 @@ public class GuardHouse : Building
 
 	override public string title { get { return "Guard House"; } set {} }
 
-	public GuardHouse Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false )
+	public GuardHouse Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		height = 1.2f;
-		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly ) == null )
+		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
 		return this;

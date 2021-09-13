@@ -76,6 +76,25 @@ public class Resource : HiveObject
 		unknown = -1	
 	}
 
+	public enum BlockHandling
+	{
+		block,
+		ignore,
+		remove
+	}
+
+	public static void RemoveFromGround( Node node )
+	{
+		List<Resource> toRemove = new List<Resource>();
+		foreach ( var resource in node.resources )
+		{
+			if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornfield )
+				toRemove.Add( resource );
+		}
+		foreach ( var resource in toRemove )
+			resource.Remove( false );
+	}
+
 	public static void Initialize()
 	{
 		object[] meshes = {

@@ -448,14 +448,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return new GameObject().AddComponent<Workshop>();
 	}
 
-	public Workshop Setup( Node node, Player owner, Type type, int flagDirection, bool blueprintOnly = false )
+	public Workshop Setup( Node node, Player owner, Type type, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		this.type = type;
 		buffers.Clear();
 
 		RefreshConfiguration();
 
-		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly ) == null )
+		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
 		return this;

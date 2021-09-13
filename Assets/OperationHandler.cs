@@ -637,11 +637,11 @@ public class Operation : ScriptableObject
                 if ( !newBuilding )
                 {
                     if ( buildingType < (Building.Type)Workshop.Type.total )
-                        newBuilding = Workshop.Create().Setup( location, Interface.root.mainPlayer, (Workshop.Type)buildingType, direction );
+                        newBuilding = Workshop.Create().Setup( location, Interface.root.mainPlayer, (Workshop.Type)buildingType, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.stock )
-                        newBuilding = Stock.Create().Setup( location, Interface.root.mainPlayer, direction );
+                        newBuilding = Stock.Create().Setup( location, Interface.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.guardHouse )
-                        newBuilding = GuardHouse.Create().Setup( location, Interface.root.mainPlayer, direction );
+                        newBuilding = GuardHouse.Create().Setup( location, Interface.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
                 }
                 else
                 {
