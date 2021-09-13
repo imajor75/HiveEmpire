@@ -3,18 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ) )]
-public class Water : MonoBehaviour
+public class Water : HiveCommon
 {
     public Mesh mesh;
     public Material material;
     static int offset0ID, offset1ID, iterID;
-
-    public Ground ground
-    {
-        get { return World.instance.ground; }
-    	[Obsolete( "Compatibility for old files", true )]
-        set {}
-    }
 
     public static void Initialize()
     {
@@ -52,7 +45,7 @@ public class Water : MonoBehaviour
                 var position = node.position;
                 position.y = 0;
                 vertices.Add( position );
-                heights.Add( new Vector2( ground.world.waterLevel - node.height, 0 ) );
+                heights.Add( new Vector2( world.waterLevel - node.height, 0 ) );
             }
             mesh.vertices = vertices.ToArray();
             mesh.uv = heights.ToArray();
@@ -72,12 +65,12 @@ public class Water : MonoBehaviour
             }
             mesh.triangles = indices.ToArray();
         }
-        var t = ( ground.world.time % 800 ) * 0.005f;
+        var t = ( time % 800 ) * 0.005f;
         material.SetFloat( offset0ID, (float)Math.Sin( t * Math.PI / 2 )    );
         material.SetFloat( offset1ID, (float)Math.Cos( t * Math.PI / 2 ) );
         material.SetFloat( iterID, (float)( t - Math.Floor( t ) ) );
         
-		var overseas = World.instance.overseas + 1;
+		var overseas = world.overseas + 1;
 		for ( int x = -overseas; x <= overseas; x++ )
 		{
 			for ( int y = -overseas; y <= overseas; y++ )

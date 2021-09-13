@@ -60,10 +60,10 @@ public class Map : Interface.Panel
 			c.blocksRaycasts = !fullScreen;
 		}
 		if ( fullScreen )
-			World.instance.eye.moveSensitivity = zoom / 3;
+			eye.moveSensitivity = zoom / 3;
 
-		float rotation = World.instance.eye.direction / (float)Math.PI * 180f;
-		content.SetTarget( new Vector2( World.instance.eye.x, World.instance.eye.y ), zoom, rotation );
+		float rotation = eye.direction / (float)Math.PI * 180f;
+		content.SetTarget( new Vector2( eye.x, eye.y ), zoom, rotation );
 	}
 
 	[RequireComponent( typeof( RawImage ) )]
@@ -93,14 +93,14 @@ public class Map : Interface.Panel
 
 			if ( !camera )
 				camera = new GameObject( "Map camera").AddComponent<Camera>();
-			camera.transform.SetParent( World.instance.ground.transform );
+			camera.transform.SetParent( ground.transform );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
 			camera.gameObject.AddComponent<CameraHighlight>();
 			if ( fullScreen )
-				Interface.root.viewport.SetCamera( camera );
+				root.viewport.SetCamera( camera );
 			else
-				Interface.root.viewport.SetCamera( null );
+				root.viewport.SetCamera( null );
 		}
 
 		public void SetTarget( Vector2 position, float zoom, float rotation )
@@ -115,7 +115,7 @@ public class Map : Interface.Panel
 		{
 			base.OnDestroy();
 			Destroy( camera.gameObject );
-			Interface.root.viewport.SetCamera( null );
+			root.viewport.SetCamera( null );
 		}
 
 		new void OnRectTransformDimensionsChange()

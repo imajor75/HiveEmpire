@@ -44,13 +44,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public Ground ground 
-	{ 
-		get { return World.instance.ground; }
-		[Obsolete( "Compatibility for old files", true )]
-		set {} 
-	}
-
 	[Obsolete( "Compatibility for old files", true )]
 	int timeSinceWorkerAdded { set {} }
 	[Obsolete( "Compatibility for old files", true )]
@@ -794,29 +787,29 @@ public class Road : HiveObject, Interface.IInputHandler
 
   		if ( node == GetNodeFromEnd( tempNodes ) )
 		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
+			root.viewport.SetCursorType( Interface.Viewport.CursorType.remove );
 			return true;
 		}
 
 		if ( node.flag )
 		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
 			return true;
 		}
 
 		if ( node.DistanceFrom( lastNode ) == 1 )
 		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.road );
+			root.viewport.SetCursorType( Interface.Viewport.CursorType.road );
 			return true;
 		}
 
 		if ( Flag.IsNodeSuitable( node, owner ) )
 		{
-			Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
+			root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
 			return true;
 		}
 
-		Interface.root.viewport.SetCursorType( Interface.Viewport.CursorType.nothing );
+		root.viewport.SetCursorType( Interface.Viewport.CursorType.nothing );
 		return true;
 	}
 
@@ -825,12 +818,12 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( node != lastNode )
 			return true;
 
-		World.instance.operationHandler.StartGroup();
+		oh.StartGroup();
 
 		bool flagCreated = false;
 		if ( node.road && node.road != this || Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
 		{
-			World.instance.operationHandler.ExecuteCreateFlag( node, false, false );
+			oh.ExecuteCreateFlag( node, false, false );
 			flagCreated = true;
 		}
 
@@ -859,9 +852,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 		if ( node.validFlag || flagCreated )
 		{
-			World.instance.operationHandler.ExecuteCreateRoad( this, false );
-			Interface.root.viewport.showGridAtMouse = false;
-			Interface.root.viewport.pickGroundOnly = false;
+			oh.ExecuteCreateRoad( this, false );
+			root.viewport.showGridAtMouse = false;
+			root.viewport.pickGroundOnly = false;
 			return false;
 		}
 		else
@@ -1028,7 +1021,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return;
 		if ( !ready && !decorationOnly )
 		{
-			assert.IsTrue( Interface.root.viewport.inputHandler is Road );
+			assert.IsTrue( root.viewport.inputHandler is Road );
 			return;
 		}
 		int length = nodes.Count;
@@ -1106,8 +1099,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.IsTrue( nodes.Count > 1 );
 		}
 		if ( !ready )
-			assert.AreEqual( Interface.root.viewport.inputHandler, this );
-		assert.IsTrue( World.instance.players.Contains( owner ) );
+			assert.AreEqual( root.viewport.inputHandler, this );
+		assert.IsTrue( world.players.Contains( owner ) );
 		assert.IsTrue( registered );
 	}
 
@@ -1118,8 +1111,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			bool removed = Remove( false );
 			assert.IsTrue( removed );
 		}
-		Interface.root.viewport.showGridAtMouse = false;
-		Interface.root.viewport.pickGroundOnly = false;
+		root.viewport.showGridAtMouse = false;
+		root.viewport.pickGroundOnly = false;
 		Interface.tooltip.Clear();
 	}
 }

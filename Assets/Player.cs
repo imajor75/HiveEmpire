@@ -234,7 +234,7 @@ public class Player : ScriptableObject
 	bool CreateMainBuilding()
 	{
 		const int flagDirection = 1;
-		Node center = World.instance.ground.GetCenter(), best = null;
+		Node center = HiveCommon.ground.GetCenter(), best = null;
 		float heightdDif = float.MaxValue;
 		var area = Building.GetFoundation( true, flagDirection );
 		List<Ground.Offset> extendedArea = new List<Ground.Offset>();
@@ -297,20 +297,20 @@ public class Player : ScriptableObject
 		Assert.global.IsNull( mainBuilding );
 		mainBuilding = Stock.Create();
 		mainBuilding.SetupMain( best, this, flagDirection );
-		World.instance.eye.FocusOn( mainBuilding.node );
+		HiveCommon.eye.FocusOn( mainBuilding.node );
 		return true;
 	}
 
 	public void RegisterInfluence( Building building )
 	{
 		influencers.Add( building );
-		mainBuilding.ground.RecalculateOwnership();
+		HiveCommon.ground.RecalculateOwnership();
 	}
 
 	public void UnregisterInfuence( Building building )
 	{
 		influencers.Remove( building );
-		mainBuilding.ground.RecalculateOwnership();
+		HiveCommon.ground.RecalculateOwnership();
 	}
 
 	public void RegisterStock( Stock stock )

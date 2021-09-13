@@ -83,7 +83,7 @@ public class ItemDispatcher : HiveObject
 	new public void Start()
 	{
 		name = "Item displatcher";
-		transform.SetParent( World.instance.transform );
+		transform.SetParent( world.transform );
 
 		foreach ( var market in markets )
 			market.Start();

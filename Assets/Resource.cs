@@ -202,7 +202,7 @@ public class Resource : HiveObject
     // Start is called before the first frame update
     new public void Start()
     {
-		node.ground.Link( this );
+		ground.Link( this );
 		transform.localPosition = node.position;
 
 		name = type.ToString();
@@ -223,7 +223,7 @@ public class Resource : HiveObject
 			{
 				foreach ( Transform c in body.transform )
 				{
-					float h = node.ground.GetHeightAt( c.position.x, c.position.z ) - node.height;
+					float h = ground.GetHeightAt( c.position.x, c.position.z ) - node.height;
 					c.position = c.position + Vector3.up * h;
 				}
 			}

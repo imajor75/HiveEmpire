@@ -7,16 +7,16 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
 
-public class World : MonoBehaviour
+public class World : HiveCommon
 {
-	public Ground ground;
+	public new Ground ground;
 	public new string name;
 	public int saveIndex, replayIndex;
 	public int currentSeed;
 	public List<Player> players = new List<Player>();
-	public Eye eye;
+	public new Eye eye;
 	public bool gameInProgress;
-	public int time;
+	public new int time;
 	public int nextID;
 	public int frameSeed;
 	public int overseas = 2;
@@ -76,7 +76,7 @@ public class World : MonoBehaviour
 		set
 		{
 			if ( instance.operationHandler.recordCRC && instance.time > 10 )
-				HiveObject.Log( $"CRC {World.instance.time}: {value} from {Assert.Caller()}" );
+				HiveObject.Log( $"CRC {HiveCommon.time}: {value} from {Assert.Caller()}" );
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
@@ -126,7 +126,7 @@ public class World : MonoBehaviour
 		{
 			get
 			{
-				int idealCount = (int)( World.instance.nodeCount * ideal );
+				int idealCount = (int)( HiveCommon.world.nodeCount * ideal );
 				return Math.Max( 0, idealCount - resourceCount );
 			}
 
@@ -159,7 +159,7 @@ public class World : MonoBehaviour
 		{
 			get
 			{
-				var d = World.instance.ground.dimension;
+				var d = HiveCommon.ground.dimension;
 				var groundSize = d * d;
 				var goldGoal = groundSize / 512.0f;
 				if ( goal == Goal.gold )
@@ -180,7 +180,7 @@ public class World : MonoBehaviour
 		}
 	}
 
-	public class Challenge : MonoBehaviour
+	public class Challenge : HiveCommon
 	{
 		public string title, description;
 		public Goal reachedLevel = Goal.none;
@@ -211,7 +211,7 @@ public class World : MonoBehaviour
 		void Start()
 		{
 			if ( transform.parent == null )
-				transform.SetParent( World.instance.transform );
+				transform.SetParent( HiveCommon.world.transform );
 		}
 
 		public void Begin()
@@ -225,10 +225,10 @@ public class World : MonoBehaviour
 
 		void FixedUpdate()
 		{
-			if ( World.instance.challenge != this )
+			if ( world.challenge != this )
 				return;
 
-			var player = Interface.root.mainPlayer;
+			var player = root.mainPlayer;
 			var currentLevel = Goal.gold;
 			conditionsText = "";
 			progress = 1;
@@ -316,7 +316,7 @@ public class World : MonoBehaviour
 					if ( timer.done )
 					{
 						reachedLevel = goal;
-						Interface.root.OnGoalReached( goal );
+						root.OnGoalReached( goal );
 						return;
 					}
 				}
@@ -530,7 +530,7 @@ public class World : MonoBehaviour
 			r = rnd.Next( limit );
 		else
 			r = rnd.Next();
-		//if ( World.instance.time > 10 )
+		//if ( time > 10 )
 			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
 		return r;
 	}
@@ -539,7 +539,7 @@ public class World : MonoBehaviour
 	{
 		Assert.global.IsTrue( instance.fixedOrderCalls );
 		var r = (float)rnd.NextDouble();
-		//if ( World.instance.time > 10 )
+		//if ( time > 10 )
 			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
 		return r;
 	}
@@ -553,7 +553,7 @@ public class World : MonoBehaviour
 			c.fixedSeed = true;
 			c.seed = instance.currentSeed;
 			instance.NewGame( instance.challenge, true );
-			Interface.root.mainPlayer = instance.players[0];
+			root.mainPlayer = instance.players[0];
 		}
 		massDestroy = false;
 
@@ -992,7 +992,7 @@ public class World : MonoBehaviour
 		newHiveObjects.Clear();
 
 		massDestroy = true;
-		Interface.root.Clear();
+		root.Clear();
 	}
 
 	public static Transform FindChildRecursive( Transform parent, string substring )

@@ -63,13 +63,6 @@ public class Item : HiveObject
 		set {}
 	}
 
-	public Ground ground
-	{
-		get { return World.instance.ground; }
-		[Obsolete( "Compatibility for old files", true )]
-		set {}
-	}
-
 	public GameObject body;
 
 	[JsonIgnore]
@@ -534,6 +527,6 @@ public class Item : HiveObject
 		}
 		assert.AreNotEqual( index, -1 );
 		assert.AreEqual( owner.items[index], this );
-		assert.IsTrue( World.instance.players.Contains( owner ) );
+		assert.IsTrue( world.players.Contains( owner ) );
 	}
 }

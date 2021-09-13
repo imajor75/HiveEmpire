@@ -93,7 +93,7 @@ public class Flag : HiveObject
 	new public void Start()
 	{
 		name = $"Flag {node.x}:{node.y}";
-		node.ground.Link( this );
+		ground.Link( this );
 		if ( crossing )
 			pole = Instantiate( template, transform );
 
@@ -112,7 +112,7 @@ public class Flag : HiveObject
 			pos.x = Mathf.Sin( Mathf.PI * 2 / Constants.Flag.maxItems * i ) * Constants.Flag.itemSpread * Constants.Node.size;
 			pos.z = Mathf.Cos( Mathf.PI * 2 / Constants.Flag.maxItems * i ) * Constants.Flag.itemSpread * Constants.Node.size;
 			// Adjust the height of the frame so that the item in it should be just above the tiles of the flag
-			pos.y = node.ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + Constants.Flag.tilesHeight;	// TODO This is world pos, isn't it?
+			pos.y = ground.GetHeightAt( node.position.x + pos.x, node.position.z + pos.z ) - t.localScale.y * itemBottomHeight - node.position.y + Constants.Flag.tilesHeight;	// TODO This is world pos, isn't it?
 			assert.IsTrue( pos.y < 10000 && pos.y > -10000 );
 			t.localPosition = pos;
 			if ( items[i] != null )
@@ -149,12 +149,12 @@ public class Flag : HiveObject
 			return;
 
 		var tileMesh = tiles.GetComponent<MeshFilter>().mesh;
-		var gt = node.ground.transform;
+		var gt = ground.transform;
 		var vertices = tileMesh.vertices;
 		for ( int i = 0; i < vertices.Length; i++ )
 		{
 			var groundPosition = gt.InverseTransformPoint( tiles.transform.TransformPoint( vertices[i] ) );
-			groundPosition.y = node.ground.GetHeightAt( groundPosition.x, groundPosition.z ) + Constants.Flag.tilesHeight;
+			groundPosition.y = ground.GetHeightAt( groundPosition.x, groundPosition.z ) + Constants.Flag.tilesHeight;
 			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
 		}
 		tileMesh.vertices = vertices;
@@ -309,7 +309,7 @@ public class Flag : HiveObject
 
 					// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
 					Vector3 framePos = frames[i].transform.position;
-					framePos.y = node.ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
+					framePos.y = ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
 					assert.IsTrue( framePos.y < 10000 && framePos.y > -10000 );
 					t.position = framePos;
 					
@@ -428,7 +428,7 @@ public class Flag : HiveObject
 		}
 		if ( crossing )
 			assert.IsNull( user );
-		assert.IsTrue( World.instance.players.Contains( owner ) );
+		assert.IsTrue( world.players.Contains( owner ) );
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.workers ) );

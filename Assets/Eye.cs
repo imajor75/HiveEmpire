@@ -11,7 +11,6 @@ public class Eye : HiveObject
 	public float targetAltitude = Constants.Eye.defaultAltitude;
 	[JsonIgnore]
 	public float viewDistance = Constants.Eye.defaultViewDistance;
-	public World world;
 	public float x, y, height;
 	public float absoluteX, absoluteY;
 	public float direction;
@@ -28,6 +27,14 @@ public class Eye : HiveObject
 
 	[JsonIgnore]
 	public IDirector director;
+	
+	new World world 
+	{ 
+		get { return HiveCommon.world; } 
+		[Obsolete( "Compatibility with old files", true )]
+		set {} 
+	}
+
 
 	[Obsolete( "Compatibility with old files", true )]
 	float forwardForGroundBlocks { set {} }
@@ -49,7 +56,6 @@ public class Eye : HiveObject
 
 	public Eye Setup( World world )
 	{
-		this.world = world;
 		return this;
 	}
 
@@ -60,10 +66,10 @@ public class Eye : HiveObject
 		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
 		camera.farClipPlane = 50;
 		camera.nearClipPlane = 0.001f;
-		transform.SetParent( World.instance.transform );
+		transform.SetParent( world.transform );
 		gameObject.AddComponent<CameraHighlight>();
 		var ppl = gameObject.AddComponent<PostProcessLayer>();
-		ppl.Init( Interface.root.postProcessResources );
+		ppl.Init( root.postProcessResources );
 		ppl.volumeLayer = 1 << World.layerIndexPPVolume;
 
 		// Disable temporarily, as unity is crashing at the moment with it.
@@ -116,9 +122,9 @@ public class Eye : HiveObject
 			currentPositionStored = true;
 		}
 
-		var h = World.instance.ground.GetHeightAt( x, y );
-		if ( h < World.instance.waterLevel )
-			h = World.instance.waterLevel;
+		var h = ground.GetHeightAt( x, y );
+		if ( h < world.waterLevel )
+			h = world.waterLevel;
 		if ( height > 0 )
 			height += ( h - height ) * Constants.Eye.heightFollowSpeed * Time.unscaledDeltaTime;
 		else
@@ -160,29 +166,29 @@ public class Eye : HiveObject
 		x += movement.x;
 		y += movement.z;
 
-		if ( y < -World.instance.ground.dimension * Constants.Node.size / 2 )
+		if ( y < -ground.dimension * Constants.Node.size / 2 )
 		{
-			y += World.instance.ground.dimension * Constants.Node.size;
-			x += World.instance.ground.dimension * Constants.Node.size / 2;
-			absoluteY -= World.instance.ground.dimension * Constants.Node.size;
-			absoluteX -= World.instance.ground.dimension * Constants.Node.size / 2;
+			y += ground.dimension * Constants.Node.size;
+			x += ground.dimension * Constants.Node.size / 2;
+			absoluteY -= ground.dimension * Constants.Node.size;
+			absoluteX -= ground.dimension * Constants.Node.size / 2;
 		}
-		if ( y > World.instance.ground.dimension * Constants.Node.size / 2 )
+		if ( y > ground.dimension * Constants.Node.size / 2 )
 		{
-			y -= World.instance.ground.dimension * Constants.Node.size;
-			x -= World.instance.ground.dimension * Constants.Node.size / 2;
-			absoluteY += World.instance.ground.dimension * Constants.Node.size;
-			absoluteX += World.instance.ground.dimension * Constants.Node.size / 2;
+			y -= ground.dimension * Constants.Node.size;
+			x -= ground.dimension * Constants.Node.size / 2;
+			absoluteY += ground.dimension * Constants.Node.size;
+			absoluteX += ground.dimension * Constants.Node.size / 2;
 		}
-		if ( x < -World.instance.ground.dimension * Constants.Node.size / 2 + y / 2 )
+		if ( x < -ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
-			x += World.instance.ground.dimension * Constants.Node.size;
-			absoluteX -= World.instance.ground.dimension * Constants.Node.size;
+			x += ground.dimension * Constants.Node.size;
+			absoluteX -= ground.dimension * Constants.Node.size;
 		}
-		if ( x > World.instance.ground.dimension * Constants.Node.size / 2 + y / 2 )
+		if ( x > ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
-			x -= World.instance.ground.dimension * Constants.Node.size;
-			absoluteX += World.instance.ground.dimension * Constants.Node.size;
+			x -= ground.dimension * Constants.Node.size;
+			absoluteX += ground.dimension * Constants.Node.size;
 		}
 
 		if ( Interface.cameraRotateCCWHotkey.IsHold() )
@@ -206,7 +212,7 @@ public class Eye : HiveObject
 			targetAltitude += Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
 		if ( Interface.cameraZoomInHotkey.IsHold() )
 			targetAltitude -= Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
-		if ( camera.enabled && Interface.root.viewport.mouseOver )
+		if ( camera.enabled && root.viewport.mouseOver )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
 				targetAltitude += Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.unscaledDeltaTime;
@@ -286,7 +292,7 @@ public class Eye : HiveObject
 		height = -1;
 		director = null;
 		this.rotateAround = rotateAround;
-		Interface.root.viewport.markEyePosition = mark;
+		root.viewport.markEyePosition = mark;
 		autoStorePositionTimer = 0;
 		currentPositionStored = false;
 	}
@@ -301,7 +307,7 @@ public class Eye : HiveObject
 	Vector3 Move( float side, float forward )
 	{
 		OnPositionChanged();
-		Interface.root.viewport.markEyePosition = false;
+		root.viewport.markEyePosition = false;
 		director = null;
 		hasTarget = false;
 		return transform.right * side * moveSensitivity + transform.forward * forward * moveSensitivity;
@@ -328,7 +334,7 @@ public class CameraHighlight : HiveObject
 
 	void OnRenderImage( RenderTexture src, RenderTexture dst )
 	{
-		var volume = Interface.root.highlightVolume;
+		var volume = root.highlightVolume;
 		if ( volume )
 		{
 			var collider = volume.GetComponent<MeshCollider>();
@@ -352,7 +358,7 @@ public class CameraHighlight : HiveObject
 		// needs to be used (using GL.Begin(GL.QUADS) etc..). Unfortunately the 
 		// practic shows that it is not working for unknown reasons. This needs 
 		// to be tested withmap future versions of unity.
-		if ( Interface.root.highlightType == Interface.HighlightType.none )
+		if ( root.highlightType == Interface.HighlightType.none )
 		{
 			Graphics.Blit( src, dst );
 			return;

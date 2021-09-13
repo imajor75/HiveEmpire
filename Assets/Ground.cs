@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class Ground : HiveObject
 {
-	public World world;
 	public int dimension;
 	public Node[] nodes;
 	public static List<Offset>[] areas = new List<Offset>[Constants.Ground.maxArea];
@@ -22,6 +21,12 @@ public class Ground : HiveObject
 	int overseas { set { world.overseas = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	int layoutVersion, meshVersion;
+	new World world 
+	{ 
+		get { return HiveCommon.world; } 
+		[Obsolete( "Compatibility with old files", true )]
+		set {} 
+	}
 
 	public static Ground Create()
 	{
@@ -52,7 +57,7 @@ public class Ground : HiveObject
 	new public void Start()
 	{
 		gameObject.name = "Ground";
-		transform.SetParent( World.instance.transform );
+		transform.SetParent( world.transform );
 		material = Resources.Load<Material>( "GroundMaterial" );
 
 		if ( blocks.Count == 0 )
@@ -81,7 +86,6 @@ public class Ground : HiveObject
 
 	public Ground Setup( World world, HeightMap heightMap, HeightMap forestMap, int dimension = 64 )
 	{
-		this.world = world;
 		gameObject.name = "Ground";
 		this.dimension = dimension;
 
@@ -132,7 +136,7 @@ public class Ground : HiveObject
 
 	public void LateUpdate()
 	{
-		var camera = Interface.root.viewport.visibleAreaCenter;
+		var camera = root.viewport.visibleAreaCenter;
 		foreach ( var block in blocks )
 			block.UpdateOffset( camera );
 			
@@ -192,17 +196,17 @@ public class Ground : HiveObject
 		foreach ( var n in nodes )
 		{
 			float d = heightMap.data[(int)Math.Round( xf * n.x ), (int)Math.Round( yf * n.y )];
-			n.height = d * World.instance.settings.maxHeight;
+			n.height = d * world.settings.maxHeight;
 			n.type = Node.Type.grass;
 			float forestData = forestMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
 			forestData = forestData - forestMap.averageValue + 0.5f;
-			if ( forestData < World.instance.settings.forestGroundChance )
+			if ( forestData < world.settings.forestGroundChance )
 				n.type = Node.Type.forest;
-			if ( d > World.instance.settings.hillLevel )
+			if ( d > world.settings.hillLevel )
 				n.type = Node.Type.hill;
-			if ( d > World.instance.settings.mountainLevel )
+			if ( d > world.settings.mountainLevel )
 				n.type = Node.Type.mountain;
-			if ( d < World.instance.settings.waterLevel )
+			if ( d < world.settings.waterLevel )
 				n.type = Node.Type.underWater;
 			n.transform.localPosition = n.position;
 		}
@@ -279,7 +283,7 @@ public class Ground : HiveObject
 			n.influence = 0;
 		}
 
-		foreach ( var player in World.instance.players )
+		foreach ( var player in world.players )
 		{
 			foreach ( var building in player.influencers )
 			{

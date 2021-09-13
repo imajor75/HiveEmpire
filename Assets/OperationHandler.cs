@@ -23,7 +23,7 @@ public class OperationHandler : HiveObject
     {
         get
         {
-            return World.instance.time < finishedFrameIndex;
+            return time < finishedFrameIndex;
         }
     }
 
@@ -58,15 +58,15 @@ public class OperationHandler : HiveObject
 
     new void Start()
     {
-        transform.SetParent( Interface.root.transform );
+        transform.SetParent( root.transform );
         base.Start();
     }
 
     public void StartReplay( int from = 0, bool recalculateCRC = false )
     {
-        World.instance.roadTutorialShowed = World.instance.createRoadTutorialShowed = true;
+        world.roadTutorialShowed = world.createRoadTutorialShowed = true;
         mode = Mode.repeating;
-        finishedFrameIndex = World.instance.time;
+        finishedFrameIndex = time;
         executeIndex = from;
         this.recalculateCRC = recalculateCRC;
     }
@@ -80,7 +80,7 @@ public class OperationHandler : HiveObject
 	{
         if ( standalone )
             currentGroup++;
-        operation.scheduleAt = World.instance.time;
+        operation.scheduleAt = time;
         if ( operation.group < 0 )
             operation.group = currentGroup;
         if ( !insideFrame )
@@ -199,36 +199,36 @@ public class OperationHandler : HiveObject
 
     void FixedUpdate()
     {
-        if ( this != World.instance.operationHandler )
+        if ( this != oh )
             return;
 
 #if DEBUG
         if ( recordCRC && mode == Mode.recording )
         {
-            assert.AreEqual( World.instance.time, CRCCodes.Count );
+            assert.AreEqual( time, CRCCodes.Count );
             CRCCodes.Add( currentCRCCode );
             Log( $"End of frame, CRC {currentCRCCode} was stored" );
         }
         if ( mode == Mode.repeating )
         {
-            assert.IsTrue( CRCCodes.Count > World.instance.time );
+            assert.IsTrue( CRCCodes.Count > time );
             if ( !recalculateCRC )
             {
-                assert.AreEqual( CRCCodes[World.instance.time], currentCRCCode, "CRC mismatch" );
+                assert.AreEqual( CRCCodes[time], currentCRCCode, "CRC mismatch" );
                 Log( $"End of frame, CRC {currentCRCCode} was checked" );
             }
             else
             {
-                CRCCodes[World.instance.time] = currentCRCCode;
+                CRCCodes[time] = currentCRCCode;
                 Log( $"End of frame, CRC recalculated as {currentCRCCode}" );
             }
         }
         currentCRCCode = 0;
 #endif
-        World.instance.fixedOrderCalls = true;
-        World.instance.OnEndOfLogicalFrame();
+        world.fixedOrderCalls = true;
+        world.OnEndOfLogicalFrame();
 
-        while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == World.instance.time )
+        while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
         {
             var operation = repeatBuffer[executeIndex];
             HiveObject.Log( $"Executing {operation.name}" );
@@ -255,7 +255,7 @@ public class OperationHandler : HiveObject
             }
             executeIndex++;
         }
-        World.instance.fixedOrderCalls = false;
+        world.fixedOrderCalls = false;
 
         finishedFrameIndex++;
         if ( finishedFrameIndex == replayLength )
@@ -264,7 +264,7 @@ public class OperationHandler : HiveObject
             mode = Mode.recording;
         }
 
-        assert.AreEqual( finishedFrameIndex, World.instance.time );
+        assert.AreEqual( finishedFrameIndex, time );
     }
 
     void Update()
@@ -307,7 +307,7 @@ public class Operation : ScriptableObject
     {
         get
         {
-            return World.instance.ground.GetNode( locationX, locationY );
+            return HiveCommon.ground.GetNode( locationX, locationY );
         }
         set
         {
@@ -363,7 +363,7 @@ public class Operation : ScriptableObject
     {
         get
         {
-            return World.instance.ground.GetNode( endLocationX, endLocationY ).building as Stock;
+            return HiveCommon.ground.GetNode( endLocationX, endLocationY ).building as Stock;
         }
         set
         {
@@ -393,7 +393,7 @@ public class Operation : ScriptableObject
             List<Node> roadPath = new List<Node>();
             Assert.global.AreEqual( roadPathX.Count, roadPathY.Count );
             for ( int i = 0; i < roadPathX.Count; i++ )
-            roadPath.Add( World.instance.ground.GetNode( roadPathX[i], roadPathY[i] ) );
+            roadPath.Add( HiveCommon.ground.GetNode( roadPathX[i], roadPathY[i] ) );
             return roadPath;
         }
         set
@@ -444,7 +444,7 @@ public class Operation : ScriptableObject
         get
         {
             if ( type == Type.createRoad )
-                return World.instance.ground.GetNode( roadPathX[1], roadPathY[1] );
+                return HiveCommon.ground.GetNode( roadPathX[1], roadPathY[1] );
             return location;
         }
     }
@@ -637,11 +637,11 @@ public class Operation : ScriptableObject
                 if ( !newBuilding )
                 {
                     if ( buildingType < (Building.Type)Workshop.Type.total )
-                        newBuilding = Workshop.Create().Setup( location, Interface.root.mainPlayer, (Workshop.Type)buildingType, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = Workshop.Create().Setup( location, HiveCommon.root.mainPlayer, (Workshop.Type)buildingType, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.stock )
-                        newBuilding = Stock.Create().Setup( location, Interface.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = Stock.Create().Setup( location, HiveCommon.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.guardHouse )
-                        newBuilding = GuardHouse.Create().Setup( location, Interface.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = GuardHouse.Create().Setup( location, HiveCommon.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
                 }
                 else
                 {
@@ -706,7 +706,7 @@ public class Operation : ScriptableObject
             {
                 Flag newFlag = location.flag;
                 if ( !newFlag )
-                    newFlag = Flag.Create().Setup( location, Interface.root.mainPlayer, false, crossing );
+                    newFlag = Flag.Create().Setup( location, HiveCommon.root.mainPlayer, false, crossing );
                 else
                 {
                     newFlag.assert.IsTrue( newFlag.blueprintOnly );
@@ -731,7 +731,7 @@ public class Operation : ScriptableObject
                 if ( areaX < 0 )
                     area.center = null;
                 else
-                    area.center = World.instance.ground.GetNode( areaX, areaY );
+                    area.center = HiveCommon.ground.GetNode( areaX, areaY );
                 area.radius = radius;
                 return Create().SetupAsChangeArea( building, area, oldCenter, oldRadius );
             }

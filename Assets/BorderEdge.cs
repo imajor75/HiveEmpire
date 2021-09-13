@@ -29,7 +29,7 @@ public class BorderEdge : HiveObject
 	new public void Start()
 	{
 		transform.localScale = Vector3.one * 0.2f;
-		node.ground.Link( this );
+		ground.Link( this );
 		UpdateBody();
 		base.Start();
 	}
@@ -37,8 +37,8 @@ public class BorderEdge : HiveObject
 	public void UpdateBody()
 	{
 		Vector3 position = Vector3.Lerp( node.position, node.Neighbour( direction ).GetPositionRelativeTo( node ), 0.4f );
-		if ( position.y < World.instance.waterLevel )
-			position.y = World.instance.waterLevel;
+		if ( position.y < world.waterLevel )
+			position.y = world.waterLevel;
 		transform.localPosition = position;
 	}
 

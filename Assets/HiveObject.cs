@@ -6,7 +6,17 @@ using UnityEngine;
 
 #pragma warning disable UNT0001
 
-public abstract class HiveObject : MonoBehaviour
+public class HiveCommon : MonoBehaviour
+{
+	public static World world { get { return World.instance; } }
+	public static Ground ground { get { return world.ground; } }
+	public static int time { get { return world.time; } }
+	public static OperationHandler oh { get { return world.operationHandler; } }
+	public static Eye eye { get { return world.eye; } }
+	public static Interface root { get { return Interface.root; } }
+}
+
+public abstract class HiveObject : HiveCommon
 {
 	public bool blueprintOnly;
 	public bool inactive;
@@ -24,11 +34,11 @@ public abstract class HiveObject : MonoBehaviour
 
 	public void Setup()
 	{
-		assert.IsFalse( World.instance.hiveObjects.Contains( this ) );
-		World.instance.newHiveObjects.AddFirst( this );
+		assert.IsFalse( world.hiveObjects.Contains( this ) );
+		world.newHiveObjects.AddFirst( this );
 		registered = true;
 		if ( !blueprintOnly )
-			id = World.instance.nextID++;
+			id = world.nextID++;
 	}
 
 	static public string Nice( string raw )
@@ -58,12 +68,12 @@ public abstract class HiveObject : MonoBehaviour
 
 	public static void Log( string text )
 	{
-		Interface.root.logFile.Write( text + "\n" );
+		root.logFile.Write( text + "\n" );
 	}
 
 	public void OnDestroy()
 	{
-		World.instance.hiveObjects.Remove( this );
+		world.hiveObjects.Remove( this );
 		registered = false;
 	}
 
@@ -102,7 +112,7 @@ public abstract class HiveObject : MonoBehaviour
 	{
 		assert.IsTrue( blueprintOnly );
 		blueprintOnly = false;
-		id = World.instance.nextID++;
+		id = world.nextID++;
 	}
 
 	public virtual void OnClicked( bool show = false )

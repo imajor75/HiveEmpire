@@ -488,14 +488,14 @@ public class Stock : Building, Worker.Callback.IHandler
 				{
 					if ( cart.currentRoute.lastDelivery > 0 )
 					{
-						float rate = ((float)cart.itemQuantity) / ( World.instance.time - cart.currentRoute.lastDelivery );
+						float rate = ((float)cart.itemQuantity) / ( time - cart.currentRoute.lastDelivery );
 						if ( cart.currentRoute.averageTransferRate == 0 )
 							cart.currentRoute.averageTransferRate = rate;
 						else
 							cart.currentRoute.averageTransferRate = cart.currentRoute.averageTransferRate * 0.5f + rate * 0.5f;
 					}
 					cart.currentRoute.itemsDelivered += cart.itemQuantity;
-					cart.currentRoute.lastDelivery = World.instance.time;
+					cart.currentRoute.lastDelivery = time;
 					cart.currentRoute.state = Route.State.unknown;
 					cart.currentRoute = null;
 				}
@@ -630,7 +630,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			item.CancelTrip();
 			item.SetRawTarget( this );
 			item.Arrived();
-			item.transform.SetParent( node.ground.transform );
+			item.transform.SetParent( ground.transform );
 		}
 		worker.itemsInHands[0] = worker.itemsInHands[1] = null;
 

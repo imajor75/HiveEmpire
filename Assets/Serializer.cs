@@ -64,7 +64,7 @@ public class Serializer : JsonSerializer
 	static object CreateObject( Type type )
 	{
 		if ( type == typeof( World ) )
-			return World.instance;
+			return HiveCommon.world;
 		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
 			return CreateSceneObject( type ) as MonoBehaviour;
 		if ( typeof( ScriptableObject ).IsAssignableFrom( type ) )

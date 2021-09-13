@@ -45,12 +45,6 @@ abstract public class Building : HiveObject
 			configuration.huge = value;
 		}
 	}
-	public Ground ground
-	{
-		get { return World.instance.ground; }
-		[Obsolete( "Compatibility for old files", true )]
-		set {}
-	}
 	public virtual List<Ground.Area> areas { get { throw new NotImplementedException(); } }
 
 	public enum Type
@@ -657,7 +651,7 @@ abstract public class Building : HiveObject
 		if ( !construction.done && !blueprintOnly )
 			level = lowerLimit + ( upperLimit - lowerLimit ) * (float)Math.Pow( construction.progress, levelBrake );
 
-		bool highlight = Interface.root.highlightType == Interface.HighlightType.buildingType && Interface.root.highlightBuildingTypes.Contains( type );
+		bool highlight = root.highlightType == Interface.HighlightType.buildingType && root.highlightBuildingTypes.Contains( type );
 
 		if ( currentHighlight != highlight || currentLevel != level )
 		{
@@ -673,7 +667,7 @@ abstract public class Building : HiveObject
 			}
 		}
 
-		if ( Interface.root.highlightType == Interface.HighlightType.area && Interface.root.highlightArea != null && Interface.root.highlightArea.IsInside( node ) )
+		if ( root.highlightType == Interface.HighlightType.area && root.highlightArea != null && root.highlightArea.IsInside( node ) )
 		{
 			highlightArrow.transform.localPosition = Vector3.up * ( ( float )( height + 0.3f * Math.Sin( 2 * Time.time ) ) );
 			highlightArrow.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
@@ -756,7 +750,7 @@ abstract public class Building : HiveObject
 		workerMate?.Validate( true );
 		exit?.Validate( true );
 		construction?.Validate( true );
-		assert.IsTrue( World.instance.players.Contains( owner ) );
+		assert.IsTrue( world.players.Contains( owner ) );
 		assert.IsTrue( registered );
 	}
 }

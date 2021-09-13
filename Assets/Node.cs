@@ -26,12 +26,6 @@ public class Node : HiveObject
 
 	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
 	public bool hasDecoration { get { return decorationDirection != -1; } }
-	public Ground ground 
-	{ 
-		get { return World.instance.ground; }
-		[Obsolete( "Compatibility for old files", true )]
-		set {}
-	}
 	public bool real
 	{
 		get
@@ -245,7 +239,7 @@ public class Node : HiveObject
 	}
 
 	public Vector3 position { get { return GetPosition( x, y );	} }
-	public Vector3 positionInViewport { get { return GetPositionRelativeTo( World.instance.eye.position ); } }
+	public Vector3 positionInViewport { get { return GetPositionRelativeTo( eye.position ); } }
 
 	public static Node FromPosition( Vector3 position, Ground ground )
 	{
@@ -407,7 +401,7 @@ public class Node : HiveObject
 
 	public void AlignType()
 	{
-		var settings = ground.world.settings;
+		var settings = world.settings;
 		float relativeHeight = height / settings.maxHeight;
 		if ( relativeHeight < settings.waterLevel )
 			type = Type.underWater;
@@ -427,7 +421,7 @@ public class Node : HiveObject
 	public override void OnClicked( bool show = false )
 	{
 		#if DEBUG
-		Interface.root.viewport.nodeInfoToShow = Interface.Viewport.OverlayInfoType.none;
+		root.viewport.nodeInfoToShow = Interface.Viewport.OverlayInfoType.none;
 		Interface.NodePanel.Create().Open( this, show );
 		#endif
 	}

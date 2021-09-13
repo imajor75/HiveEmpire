@@ -70,13 +70,6 @@ public class Worker : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	GameObject haulingBox;
 
-	public Ground ground
-	{
-		get { return World.instance.ground; }
-		[Obsolete( "Compatibility for old files", true )]
-		set {}
-	}
-
 	public enum LinkType
 	{
 		haulingBoxLight,
@@ -1121,12 +1114,12 @@ public class Worker : HiveObject
 	public void SetNode( Node node )
 	{
 		this.node = node;
-		node.ground.Link( this, walkBase?.location );
+		ground.Link( this, walkBase?.location );
 	}
 
 	new public void Start()
 	{
-		node.ground.Link( this, walkBase?.location );
+		ground.Link( this, walkBase?.location );
 		transform.position = node.position + Vector3.up * standingHeight;
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
@@ -1262,7 +1255,7 @@ public class Worker : HiveObject
 			if ( taskQueue.Count > 0 && taskQueue[0].InterruptWalk() )
 				return;
 			walkProgress += currentSpeed;
-			if ( World.instance.operationHandler.recordCRC )
+			if ( oh.recordCRC )
 				Log( $"worker {id}: {node.x}, {node.y}, {(int)( walkProgress * 10000)}" );
 
 			World.CRC = node.x + node.y + (int)( walkProgress * 10000 );
@@ -1847,7 +1840,7 @@ public class Worker : HiveObject
 			{
 				animator?.SetBool( walkingID, false );
 				soundSource?.Stop();
-				node.ground.Link( this );
+				ground.Link( this );
 				transform.localPosition = node.position + Vector3.up * standingHeight;
 				if ( taskQueue.Count > 0 )
 				{
@@ -1900,7 +1893,7 @@ public class Worker : HiveObject
 				{
 					if ( g == null )
 						continue;
-					g.transform.Rotate( World.instance.timeFactor * currentSpeed * 300, 0, 0 );
+					g.transform.Rotate( world.timeFactor * currentSpeed * 300, 0, 0 );
 				}
 				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Constants.Node.size * -50, 0, 0 );
 			}
@@ -2174,7 +2167,7 @@ public class Worker : HiveObject
 				if ( item && building.worker == this )
 					assert.AreEqual( item.destination, building );
 		}
-		assert.IsTrue( owner == null || World.instance.players.Contains( owner ) );
+		assert.IsTrue( owner == null || world.players.Contains( owner ) );
 		assert.IsTrue( registered );
 	}
 }

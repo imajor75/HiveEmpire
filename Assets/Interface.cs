@@ -21,13 +21,13 @@ public class Interface : HiveObject
 	public const int iconSize = 20;
 	public static float uiScale = 1.5f;
 	public static Font font;
-	public World world;
+	public new World world;
 	Canvas canvas;
 	public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	public Viewport viewport;
 	static public MediaTable<Sprite, Icon> iconTable;
 	public GameObject debug;
-	public static Interface root;
+	public new static Interface root;
 	public bool heightStrips;
 	public Player mainPlayer;
 	public static Tooltip tooltip;
@@ -507,10 +507,9 @@ public class Interface : HiveObject
 
 	string ReplayTooltipGenerator()
 	{
-		var r = World.instance.operationHandler;
-		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( r.replayLength - r.finishedFrameIndex )}";
-		if ( r.next )
-			text += $"\nNext action is {r.next.description} in {UIHelpers.TimeToString( r.next.scheduleAt - World.instance.time )}";
+		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - oh.finishedFrameIndex )}";
+		if ( oh.next )
+			text += $"\nNext action is {oh.next.description} in {UIHelpers.TimeToString( oh.next.scheduleAt - time )}";
 		return text;
 	}
 
@@ -557,14 +556,14 @@ public class Interface : HiveObject
 			return;
 		}
 		root.NewGame( o.challenge );
-		World.instance.operationHandler = o;
+		world.operationHandler = o;
 		o.StartReplay();
 	}
 
 	public void SaveReplay( string name )
 	{
 		print( $"Saving replay {name}" );
-		World.instance.SaveReplay( name );
+		world.SaveReplay( name );
 	}
 
 	public void SaveHotkeys()
@@ -647,7 +646,7 @@ public class Interface : HiveObject
 			}
 		}
 		if ( cameraBackHotkey.IsDown() )
-			world.eye.RestoreOldPosition();
+			eye.RestoreOldPosition();
 		if ( mapHotkey.IsDown() )
 			Map.Create().Open( true );
 #if DEBUG
@@ -657,22 +656,22 @@ public class Interface : HiveObject
 			var flag = flagList[new System.Random().Next( flagList.Length )];
 			if ( flag != mainPlayer.mainBuilding.flag )
 			{
-				world.eye.FocusOn( flag );
-				World.instance.operationHandler.ExecuteRemoveFlag( flag );
+				eye.FocusOn( flag );
+				oh.ExecuteRemoveFlag( flag );
 			}
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad1 ) )
 		{
 			var itemList = Resources.FindObjectsOfTypeAll<Item>();
 			var item = itemList[new System.Random().Next( itemList.Length )];
-			world.eye.FocusOn( item );
+			eye.FocusOn( item );
 			item.CancelTrip();
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad2 ) )
 		{
 			var workerList = Resources.FindObjectsOfTypeAll<Worker>();
 			var worker = workerList[new System.Random().Next( workerList.Length )];
-			world.eye.FocusOn( worker );
+			eye.FocusOn( worker );
 			worker.ResetTasks();
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad3 ) )
@@ -681,7 +680,7 @@ public class Interface : HiveObject
 			var building = buildingList[new System.Random().Next( buildingList.Length )];
 			if ( building != mainPlayer.mainBuilding )
 			{
-				world.eye.FocusOn( building );
+				eye.FocusOn( building );
 				world.operationHandler.ExecuteRemoveBuilding( building );
 			}
 		}
@@ -693,11 +692,11 @@ public class Interface : HiveObject
 		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
 		replayIcon.gameObject.SetActive( !playerInCharge );
 		var next = world.operationHandler.next;
-		if ( !playerInCharge && next && next.scheduleAt - world.time < Constants.Interface.showNextActionDuringReplay )
+		if ( !playerInCharge && next && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
 		{
-			if ( !world.eye.hasTarget || lastShownOperation != next )
+			if ( !eye.hasTarget || lastShownOperation != next )
 			{
-				world.eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
+				eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
 				tooltip.SetText( this, world.operationHandler.next.description, pinX:0.2f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
 				lastShownOperation = next;
 			}
@@ -733,7 +732,7 @@ public class Interface : HiveObject
 			{
 				name = "Highlight Volume"
 			};
-			highlightVolume.transform.SetParent( World.instance.transform );
+			highlightVolume.transform.SetParent( world.transform );
 			var f = highlightVolume.AddComponent<MeshFilter>();
 			var r = highlightVolume.AddComponent<MeshRenderer>();
 			r.material = highlightMaterial;
@@ -821,7 +820,7 @@ public class Interface : HiveObject
 	void SetHeightStrips( bool value )
 	{
 		this.heightStrips = value;
-		world.ground.material.SetInt( "_HeightStrips", value ? 1 : 0 );
+		ground.material.SetInt( "_HeightStrips", value ? 1 : 0 );
 	}
 
 	public static void ValidateAll( bool skipNoAsserts = false )
@@ -888,12 +887,12 @@ public class Interface : HiveObject
 			if ( loadLatestSave )
 			{
 				root.Load( replay.lastSave );
-				executeIndex = World.instance.operationHandler.executeIndex;
-				replay.challenge = World.instance.challenge;
+				executeIndex = oh.executeIndex;
+				replay.challenge = world.challenge;
 			}
 			else
 				root.NewGame( replay.challenge );
-			World.instance.operationHandler = replay;
+			world.operationHandler = replay;
 			replay.StartReplay( executeIndex, GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) );
 		}
 
@@ -944,7 +943,7 @@ public class Interface : HiveObject
 						int bestRoad = 0;
 						for ( int k = 0; k < path.roadPath.Count; k++ )
 						{
-							float distance = ( path.roadPath[k].nodes[0].position - root.world.eye.position ).magnitude;
+							float distance = ( path.roadPath[k].nodes[0].position - eye.position ).magnitude;
 							if ( distance < bestDistance )
 							{
 								bestDistance = distance;
@@ -993,7 +992,7 @@ public class Interface : HiveObject
 			route.vertices = vertices.ToArray();
 			route.triangles = triangles.ToArray();
 			route.uv = uvs.ToArray();
-		    lastAbsoluteEyePosition = World.instance.eye.absolutePosition;
+		    lastAbsoluteEyePosition = eye.absolutePosition;
 			AlignColors();
 			return this;
 		}
@@ -1021,7 +1020,7 @@ public class Interface : HiveObject
 
 		public void Start()
 		{
-			transform.SetParent( World.instance.transform );
+			transform.SetParent( HiveCommon.world.transform );
 		}
 
 		public void Update()
@@ -1029,7 +1028,7 @@ public class Interface : HiveObject
 			if ( lastProgress != path.progress )
 				AlignColors();
 
-			var currentAbsoluteEyePosition = World.instance.eye.absolutePosition;
+			var currentAbsoluteEyePosition = eye.absolutePosition;
 			transform.localPosition -= currentAbsoluteEyePosition - lastAbsoluteEyePosition;
 			lastAbsoluteEyePosition = currentAbsoluteEyePosition;
 		}
@@ -1213,7 +1212,7 @@ public class Interface : HiveObject
 		}
 	}
 
-	public class Panel : MonoBehaviour, IDragHandler, IBeginDragHandler, IPointerClickHandler
+	public class Panel : HiveCommon, IDragHandler, IBeginDragHandler, IPointerClickHandler
 	{
 		public HiveObject target;
 		public bool followTarget = true;
@@ -1335,7 +1334,7 @@ public class Interface : HiveObject
 		public void OnDestroy()
 		{
 			root.panels.Remove( this );
-			root.world.eye.rotateAround = false;
+			eye.rotateAround = false;
 		}
 
 		public void SetSize( int x, int y )
@@ -1635,7 +1634,7 @@ public class Interface : HiveObject
 			if ( target == null || !followTarget )
 				return;
 
-			MoveTo( target.location.GetPositionRelativeTo( root.world.eye.position ) + Vector3.up * Constants.Node.size );
+			MoveTo( target.location.GetPositionRelativeTo( eye.position ) + Vector3.up * Constants.Node.size );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -1644,7 +1643,7 @@ public class Interface : HiveObject
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( screenPosition.y > Screen.height )
-				screenPosition = World.instance.eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * Constants.Node.size );
+				screenPosition = eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * Constants.Node.size );
 			screenPosition.y -= Screen.height;
 			if ( transform is RectTransform t )
 			{
@@ -1709,7 +1708,7 @@ public class Interface : HiveObject
 			if ( target == null )
 				return;
 
-			World.instance.eye.FocusOn( target );
+			eye.FocusOn( target );
 			followTarget = true;
 		}
 
@@ -1796,7 +1795,7 @@ public class Interface : HiveObject
 					root.highlightType = HighlightType.none;
 					root.highlightArea = null;
 				}
-				World.instance.operationHandler.ExecuteChangeArea( building, originalArea, area.center, area.radius );
+				oh.ExecuteChangeArea( building, originalArea, area.center, area.radius );
 				return false;
 			}
 
@@ -1804,12 +1803,12 @@ public class Interface : HiveObject
 			{
 				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
-					World.instance.operationHandler.ExecuteChangeArea( building, originalArea, null, 0 );
+					oh.ExecuteChangeArea( building, originalArea, null, 0 );
 					if ( root.highlightArea == area )
 						root.highlightType = HighlightType.none;
 					return;
 				}
-				area.center = World.instance.ground.nodes[0];
+				area.center = ground.nodes[0];
 				area.radius = 2;
 				root.highlightType = HighlightType.area;
 				root.highlightArea = area;
@@ -1996,7 +1995,7 @@ public class Interface : HiveObject
 			public void OnShowTooltip( bool show )
 			{
 				if ( show && pathVisualization == null && item )
-					pathVisualization = PathVisualization.Create().Setup( item.path, Interface.root.viewport.visibleAreaCenter );
+					pathVisualization = PathVisualization.Create().Setup( item.path, root.viewport.visibleAreaCenter );
 				if ( !show )
 				{
 					Destroy( pathVisualization?.gameObject );
@@ -2179,7 +2178,7 @@ public class Interface : HiveObject
 			this.SetSize( 250, 15 - row );
 			Update();
 			if ( show )
-				root.world.eye.FocusOn( workshop, true );
+				eye.FocusOn( workshop, true );
 		}
 
 		void ShowPastStatuses()
@@ -2190,7 +2189,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( workshop )
-				World.instance.operationHandler.ExecuteRemoveBuilding( workshop );
+				oh.ExecuteRemoveBuilding( workshop );
 
 			Close();
 		}
@@ -2454,7 +2453,7 @@ public class Interface : HiveObject
 					if ( s.status == Workshop.Status.unknown )
 						return;
 
-					int start = Math.Max( World.instance.time - interval, s.startTime );
+					int start = Math.Max( time - interval, s.startTime );
 					int end = s.startTime + s.length;
 					int duration = end - start;
 
@@ -2595,12 +2594,12 @@ public class Interface : HiveObject
 			name = "Guard House panel";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( 0, 0, iconSize, iconSize, 0.5f, 0.5f ).AddClickHandler( Remove );
 			if ( show )
-				root.world.eye.FocusOn( guardHouse, true );
+				eye.FocusOn( guardHouse, true );
 		}
 		void Remove()
 		{
 			if ( guardHouse )
-				World.instance.operationHandler.ExecuteRemoveBuilding( guardHouse );
+				oh.ExecuteRemoveBuilding( guardHouse );
 			Close();
 		}
 	}
@@ -2637,7 +2636,7 @@ public class Interface : HiveObject
 				return;
 			RecreateControls();
 			if ( show )
-				root.world.eye.FocusOn( stock, true );
+				eye.FocusOn( stock, true );
 		}
 
 		void SelectItemType( Item.Type itemType )
@@ -2814,7 +2813,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( stock )
-				World.instance.operationHandler.ExecuteRemoveBuilding( stock );
+				oh.ExecuteRemoveBuilding( stock );
 			Close();
 		}
 
@@ -2863,7 +2862,7 @@ public class Interface : HiveObject
 						disableDrag = true;
 						var l = (int)(Constants.Stock.cartCapacity * 1.5);
 						if ( adjustInputMin && stock.itemData[t].inputMax < l )
-							World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l );
+							oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l );
 					}
 				}
 				CheckChannel( inputMin.gameObject, Stock.Channel.inputMin, 0, stock.itemData[t].inputMax, "{0}<" );
@@ -2888,7 +2887,7 @@ public class Interface : HiveObject
 				}
 				else
 				{
-					World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, channel, currentValue );
+					oh.ExecuteStockAdjustment( stock, selectedItemType, channel, currentValue );
 					disableDrag = false;
 					currentValue = -1;
 					channelText = null;
@@ -2900,20 +2899,20 @@ public class Interface : HiveObject
 		{
 			var t = stock.itemData[(int)selectedItemType];
 			var l = (int)( Constants.Stock.cartCapacity * 1.5 );
-			World.instance.operationHandler.StartGroup();
+			oh.StartGroup();
 			if ( input )
 			{
 				if ( t.cartInput < 5 )
-					World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartInput, 5, false );
+					oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartInput, 5, false );
 			}
 			else
 			{
 				if ( t.cartOutput < Constants.Stock.cartCapacity )
-					World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
+					oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
 			}
 
 			if ( t.inputMax < l )
-				World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l, false );
+				oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l, false );
 		}
 	}
 
@@ -2956,7 +2955,7 @@ public class Interface : HiveObject
 			if ( resources != "" )
 				Text( "Resource: " + resources ).Pin( 20, -40, 160 );
 			if ( show )
-				root.world.eye.FocusOn( node, true );
+				eye.FocusOn( node, true );
 		}
 
 		void BuildButton( int x, int y, string title, bool enabled, Action action )
@@ -3315,13 +3314,13 @@ public class Interface : HiveObject
 				RoadTutorialPanel.Create();
 			if ( currentBlueprint is Building building )
 			{
-				World.instance.operationHandler.StartGroup();
+				oh.StartGroup();
 				if ( building.flag.blueprintOnly )
-					World.instance.operationHandler.ExecuteCreateFlag( building.flag.node, false, false );
-				World.instance.operationHandler.ExecuteCreateBuilding( building.node, building.flagDirection, building.type, false );
+					oh.ExecuteCreateFlag( building.flag.node, false, false );
+				oh.ExecuteCreateBuilding( building.node, building.flagDirection, building.type, false );
 			}
 			if ( currentBlueprint is Flag flag )
-				World.instance.operationHandler.ExecuteCreateFlag( flag.node );
+				oh.ExecuteCreateFlag( flag.node );
 			currentBlueprint = null;
 			currentBlueprintPanel?.Close();
 			currentBlueprintPanel = null;
@@ -3415,7 +3414,7 @@ public class Interface : HiveObject
 			}
 			if ( bestSite )
 			{
-				root.world.eye.FocusOn( bestSite, true, true );
+				eye.FocusOn( bestSite, true, true );
 				currentFlagDirection = bestFlagDirection;
 			}
 		}
@@ -3484,7 +3483,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( road )
-				World.instance.operationHandler.ExecuteRemoveRoad( road );
+				oh.ExecuteRemoveRoad( road );
 			Close();
 		}
 
@@ -3498,14 +3497,14 @@ public class Interface : HiveObject
 
 		void Split()
 		{
-			World.instance.operationHandler.ExecuteCreateFlag( node );
+			oh.ExecuteCreateFlag( node );
 			ValidateAll();
 		}
 
 		void TargetWorkerCountChanged( int newValue )
 		{
 			if ( road && road.targetWorkerCount != newValue )
-				World.instance.operationHandler.ExecuteChangeRoadWorkerCount( road, newValue );
+				oh.ExecuteChangeRoadWorkerCount( road, newValue );
 		}
 
 		new public void OnDestroy()
@@ -3527,7 +3526,7 @@ public class Interface : HiveObject
 			workers.text = "Worker count: " + road.workers.Count;
 
 			bool reversed = false;
-			var camera = World.instance.eye.camera;
+			var camera = eye.camera;
 			float x0 = camera.WorldToScreenPoint( road.nodes[0].position ).x;
 			float x1 = camera.WorldToScreenPoint( road.lastNode.position ).x;
 			if ( x1 < x0 )
@@ -3627,7 +3626,7 @@ public class Interface : HiveObject
         public bool OnNodeClicked(Node node)
         {
 			if ( !root.viewport.rightButton )
-				World.instance.operationHandler.ExecuteMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
+				oh.ExecuteMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
 
 			if ( node.road )
 			{
@@ -3678,7 +3677,7 @@ public class Interface : HiveObject
 			int col = 16;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
 			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
-			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( () => World.instance.operationHandler.ExecuteCaptureRoad( flag ) ).SetTooltip( "Merge nearby roads to this junction" );
+			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( () => oh.ExecuteCaptureRoad( flag ) ).SetTooltip( "Merge nearby roads to this junction" );
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
@@ -3693,7 +3692,7 @@ public class Interface : HiveObject
 			}
 			name = "Flag panel";
 			if ( show )
-				root.world.eye.FocusOn( flag, true );
+				eye.FocusOn( flag, true );
 			Update();
 
 			root.viewport.inputHandler = this;
@@ -3702,7 +3701,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( flag && flag != root.mainPlayer.mainBuilding.flag )
-				World.instance.operationHandler.ExecuteRemoveFlag( flag );
+				oh.ExecuteRemoveFlag( flag );
 			Close();
 		}
 
@@ -3783,7 +3782,7 @@ public class Interface : HiveObject
         {
 			int i = flag.node.DirectionTo( node );
 			if ( i >= 0 && !root.viewport.rightButton )
-				World.instance.operationHandler.ExecuteMoveFlag( flag, i );
+				oh.ExecuteMoveFlag( flag, i );
 			else
 				root.viewport.OnNodeClicked( node );
 			return keepGoing;
@@ -3834,7 +3833,7 @@ public class Interface : HiveObject
 			Image( Icon.home ).Pin( 160, 20, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowHome ).SetTooltip( "Show the home of the unit" );
 
 			if ( show )
-				World.instance.eye.GrabFocus( this );
+				eye.GrabFocus( this );
 #if DEBUG
 			Selection.activeGameObject = worker.gameObject;
 #endif
@@ -3843,7 +3842,7 @@ public class Interface : HiveObject
 		void ShowTarget()
 		{
 			if ( targetObject )
-				root.world.eye.FocusOn( targetObject.location, true );
+				eye.FocusOn( targetObject.location, true );
 		}
 
 		void ShowHome()
@@ -3875,7 +3874,7 @@ public class Interface : HiveObject
 
 		public override void OnDoubleClick()
 		{
-			World.instance.eye.GrabFocus( this );
+			eye.GrabFocus( this );
 		}
 
 		public void SetCameraTarget( Eye eye )
@@ -4029,7 +4028,7 @@ if ( cart )
 					cartDestination = cart.destination;
 					var path = cart.FindTaskInQueue<Worker.WalkToFlag>()?.path;
 					Destroy( cartPath );
-					cartPath = PathVisualization.Create().Setup( path, Interface.root.viewport.visibleAreaCenter );
+					cartPath = PathVisualization.Create().Setup( path, root.viewport.visibleAreaCenter );
 				}
 			}
 
@@ -4042,7 +4041,7 @@ if ( cart )
 		public new void OnDestroy()
 		{
 			base.OnDestroy();
-			World.instance.eye.ReleaseFocus( this );
+			eye.ReleaseFocus( this );
 			Destroy( cartPath );
 		}
 	}
@@ -4100,7 +4099,7 @@ if ( cart )
 			progress = Progress().Pin( 20, row - 30, ( iconSize + 5 ) * 4 );
 
 			if ( show )
-				root.world.eye.FocusOn( construction.boss, true );
+				eye.FocusOn( construction.boss, true );
 		}
 
 		public void OpenFinalPanel( )
@@ -4194,7 +4193,7 @@ if ( cart )
 
 		public override void OnDoubleClick()
 		{
-			World.instance.eye.GrabFocus( this );
+			eye.GrabFocus( this );
 		}
 
 		override public void Update()
@@ -4212,7 +4211,7 @@ if ( cart )
 				stats.text = "Age: " + item.life.age / Constants.World.normalSpeedPerSecond + " secs";
 
 			if ( item.destination && route == null )
-				route = PathVisualization.Create().Setup( item.path, Interface.root.viewport.visibleAreaCenter );
+				route = PathVisualization.Create().Setup( item.path, root.viewport.visibleAreaCenter );
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
 			else
@@ -4231,15 +4230,15 @@ if ( cart )
 		public void SetCameraTarget( Eye eye )
 		{
 			if ( item.flag )
-				World.instance.eye.FocusOn( item.flag.node );
+				eye.FocusOn( item.flag.node );
 			else
-				World.instance.eye.FocusOn( item.worker );
+				eye.FocusOn( item.worker );
 		}
 
 		public new void OnDestroy()
 		{
 			base.OnDestroy();
-			World.instance.eye.ReleaseFocus( this );
+			eye.ReleaseFocus( this );
 		}
 	}
 
@@ -4404,8 +4403,8 @@ if ( cart )
 				rate[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				status[i] = Text( "", 8 ).Link( scroll.content ).PinSideways( 0, row, 100, 2 * iconSize );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => World.instance.operationHandler.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => World.instance.operationHandler.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
+				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => oh.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
+				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => oh.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
 				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) ).SetTooltip( "Follow the cart which is currently working on the route" );
 				row -= iconSize + 5;
 			}
@@ -4429,7 +4428,7 @@ if ( cart )
 			{
 				if ( list[i].lastDelivery > 0 )
 				{
-					int ticks = World.instance.time - list[i].lastDelivery;
+					int ticks = time - list[i].lastDelivery;
 					last[i].text = $"{(int)(ticks/60*Time.fixedDeltaTime)}:{((int)(ticks*Time.fixedDeltaTime)%60).ToString( "D2" )} ago";
 				}
 				else
@@ -4804,7 +4803,7 @@ if ( cart )
 		}
 	}
 
-	public class Viewport : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IInputHandler
+	public class Viewport : HiveCommon, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IInputHandler
 	{
 		public bool mouseOver;
 		public GameObject cursor;
@@ -5035,10 +5034,10 @@ if ( cart )
 		{
 			this.camera = camera;
 			if ( camera )
-				World.instance.eye.camera.enabled = false;
+				eye.camera.enabled = false;
 			else
 			{
-				camera = World.instance.eye.camera;
+				camera = eye.camera;
 				camera.enabled = true;
 			}
 		}
@@ -5048,8 +5047,8 @@ if ( cart )
 			// TODO This should be way cleaner
 			get
 			{
-				if ( World.instance.eye && World.instance.eye.camera.enabled )
-					return World.instance.eye.visibleAreaCenter;
+				if ( eye && eye.camera.enabled )
+					return eye.visibleAreaCenter;
 				else
 					return camera.transform.position;
 			}
@@ -5058,7 +5057,7 @@ if ( cart )
 		public HiveObject FindObjectAt( Vector3 screenPosition )
 		{
 			if ( camera == null )
-				camera = World.instance.eye.camera;
+				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
 			int layer = 1 << World.layerIndexGround;
 			if ( !pickGroundOnly ) 
@@ -5072,8 +5071,6 @@ if ( cart )
 			if ( hiveObject == null )
 				hiveObject = hit.collider.transform.parent.parent.GetComponent<HiveObject>();
 			Assert.global.IsNotNull( hiveObject );
-
-			var ground = World.instance.ground;
 
 			var b = hiveObject as Building;
 			if ( b && b.blueprintOnly )
@@ -5092,10 +5089,10 @@ if ( cart )
 		{ 
 			RaycastHit hit = new RaycastHit();
 			if ( camera == null )
-				camera = World.instance.eye.camera;
+				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
 
-			foreach ( var block in World.instance.ground.blocks )
+			foreach ( var block in ground.blocks )
 			{
 				var c = block.collider;
 				if ( c == null )
@@ -5108,25 +5105,24 @@ if ( cart )
 			if ( hit.collider == null )
 				return null;
 
-			var ground = World.instance.ground;
 			lastMouseOnGround = ground.transform.InverseTransformPoint( hit.point );
 
 			if ( showGridAtMouse )
 			{
-				World.instance.ground.material.SetFloat( gridMaskXID, hit.point.x );
-				World.instance.ground.material.SetFloat( gridMaskZID, hit.point.z );
+				ground.material.SetFloat( gridMaskXID, hit.point.x );
+				ground.material.SetFloat( gridMaskZID, hit.point.z );
 			}
 			else
 			{
-				World.instance.ground.material.SetFloat( gridMaskXID, 10000 );
-				World.instance.ground.material.SetFloat( gridMaskZID, 10000 );
+				ground.material.SetFloat( gridMaskXID, 10000 );
+				ground.material.SetFloat( gridMaskZID, 10000 );
 			}
 			return Node.FromPosition( lastMouseOnGround, ground );
 		}
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			World.instance.fixedOrderCalls = true;
+			world.fixedOrderCalls = true;
 			rightButton = eventData.button == PointerEventData.InputButton.Right;
 			if ( inputHandler == null )
 				inputHandler = this;
@@ -5145,7 +5141,7 @@ if ( cart )
 			else
 				if ( !inputHandler.OnObjectClicked( hiveObject ) )
 					inputHandler = this;
-			World.instance.fixedOrderCalls = false;
+			world.fixedOrderCalls = false;
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )
@@ -5166,8 +5162,7 @@ if ( cart )
 			if ( markEyePosition && mouseOver )
 			{
 				marker.SetActive( true );
-				var eye = root.world.eye;
-				marker.transform.position = eye.position + Vector3.up * ( ( float )( root.world.ground.GetHeightAt( eye.x, eye.y ) + 1.5f * Math.Sin( 2 * Time.time ) ) );
+				marker.transform.position = eye.position + Vector3.up * ( ( float )( ground.GetHeightAt( eye.x, eye.y ) + 1.5f * Math.Sin( 2 * Time.time ) ) );
 				marker.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );
 			}
 			else
@@ -5181,7 +5176,7 @@ if ( cart )
 			if ( cursor && currentNode )
 			{
 				cursor.transform.localPosition = currentNode.position;
-				cursor.transform.SetParent( currentNode.ground.FindClosestBlock( currentNode ).transform, false );
+				cursor.transform.SetParent( ground.FindClosestBlock( currentNode ).transform, false );
 			}
 			if ( currentNode && !inputHandler.OnMovingOverNode( currentNode ) )
 				inputHandler = this;
@@ -5297,7 +5292,7 @@ if ( cart )
 			if ( cursor == null )
 			{
 				cursor = Instantiate( Resources.Load<GameObject>( "prefabs/others/cursor" ) );
-				cursor.transform.SetParent( World.instance.ground.transform );
+				cursor.transform.SetParent( ground.transform );
 				for ( int i = 0; i < cursorTypes.Length; i++ )
 				{
 					cursorTypes[i] = World.FindChildRecursive( cursor.transform, ( (CursorType)i ).ToString() )?.gameObject;
@@ -5367,8 +5362,8 @@ if ( cart )
 				return;
 			name = "Item list panel";
 			this.player = player;
-			speedToRestore = World.instance.speed;
-			World.instance.SetSpeed( World.Speed.pause );
+			speedToRestore = world.speed;
+			world.SetSpeed( World.Speed.pause );
 
 			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
 			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
@@ -5382,7 +5377,7 @@ if ( cart )
 		public override void Close()
 		{
 			base.Close();
-			World.instance.SetSpeed( speedToRestore );
+			world.SetSpeed( speedToRestore );
 		}
 
 		void ChangeComparison( Comparison<Item> newComparison )
@@ -5556,8 +5551,8 @@ if ( cart )
 
 		public void Open( Building building, Item.Type itemType, ItemDispatcher.Potential.Type direction )
 		{
-			speedToRestore = World.instance.speed;
-			World.instance.SetSpeed( World.Speed.pause );
+			speedToRestore = world.speed;
+			world.SetSpeed( World.Speed.pause );
 			root.mainPlayer.itemDispatcher.queryBuilding = this.building = building;
 			root.mainPlayer.itemDispatcher.queryItemType = this.itemType = itemType;
 			root.mainPlayer.itemDispatcher.queryType = this.direction = direction;
@@ -5585,7 +5580,7 @@ if ( cart )
 			base.OnDestroy();
 			root.mainPlayer.itemDispatcher.queryBuilding = null;
 			root.mainPlayer.itemDispatcher.queryItemType = Item.Type.unknown;
-			World.instance.SetSpeed( speedToRestore );
+			world.SetSpeed( speedToRestore );
 		}
 
 		new public void Update()
@@ -5924,7 +5919,7 @@ if ( cart )
 				for ( int x = 0; x < t.width; x++ )
 					t.SetPixel( x, y, c );
 			}
-			int xh = t.width - ( World.instance.time % World.hourTickCount ) / Constants.Player.productivityAdvanceTime;
+			int xh = t.width - ( time % World.hourTickCount ) / Constants.Player.productivityAdvanceTime;
 			while ( xh >= 0 )
 			{
 				VerticalLine( xh, Color.grey );
@@ -6021,7 +6016,7 @@ if ( cart )
 
 		public void Open( World.Goal reached = World.Goal.none )
 		{
-			var challenge = World.instance.challenge;
+			var challenge = world.challenge;
 			worldStopped = reached != World.Goal.none;
 			noResize = true;
 			noPin = true;
@@ -6053,7 +6048,7 @@ if ( cart )
 					t.text = "Bronze level reached";
 				}
 				originalSpeed = root.world.speed;
-				root.world.eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
+				eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
 				root.world.SetSpeed( World.Speed.pause );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
@@ -6062,12 +6057,12 @@ if ( cart )
 			currentChallenge = Text().PinDownwards( borderWidth, 0, 400, iconSize );
 			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
 			conditions = Text( "", 10 ).PinDownwards( borderWidth, 0, 300, 3 * iconSize );
-			if ( World.instance.challenge.maintain > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
+			if ( world.challenge.maintain > 0 && world.challenge.reachedLevel < World.Goal.gold )
 			{
 				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				maintain.alignment = TextAnchor.MiddleCenter;
 			}
-			if ( World.instance.challenge.timeLimit > 0 && World.instance.challenge.reachedLevel < World.Goal.gold )
+			if ( world.challenge.timeLimit > 0 && world.challenge.reachedLevel < World.Goal.gold )
 			{
 				timeLeft = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				timeLeft.alignment = TextAnchor.MiddleCenter;
@@ -6082,7 +6077,7 @@ if ( cart )
 
 		void Restart( bool randomizeSeed )
 		{
-			var c = World.instance.challenge;
+			var c = world.challenge;
 			if ( randomizeSeed && !c.fixedSeed )
 				c.seed = World.NextRnd();
 			root.NewGame( c );
@@ -6090,10 +6085,9 @@ if ( cart )
 
 		new public void Update()
 		{
-			var t = World.instance.time;
 			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
-			var challenge = World.instance.challenge;
-			worldTime.text = $"World time: {UIHelpers.TimeToString( t )}";
+			var challenge = world.challenge;
+			worldTime.text = $"World time: {UIHelpers.TimeToString( time )}";
 			conditions.text = challenge.conditionsText;
 			if ( maintain )
 			{
@@ -6138,7 +6132,7 @@ if ( cart )
 			if ( originalSpeed > 0 )
 				root.world.SetSpeed( originalSpeed );
 			if ( worldStopped )
-				root.world.eye.ReleaseFocus( null, true );
+				eye.ReleaseFocus( null, true );
 			base.OnDestroy();
 		}
 	}
@@ -6162,7 +6156,7 @@ if ( cart )
 			noCloseButton = true;
 			noResize = true;
 			noPin = true;
-			bool demoMode = World.instance.fileName.Contains( "demolevel" );
+			bool demoMode = world.fileName.Contains( "demolevel" );
 			Open( null, 0, 0, 300, 250 );
 			this.PinCenter( 0, 0, 300, 250, 0.5f, 0.3f );
 
@@ -6189,7 +6183,7 @@ if ( cart )
 				Button( "Save" ).PinDownwards( 20, 0, 60, 25 ).AddClickHandler( Save );
 				UIHelpers.currentRow = saveRow;
 				saveName = InputField().PinDownwards( 80, 0, 200, 25 );
-				saveName.text = World.instance.nextSaveFileName;
+				saveName.text = world.nextSaveFileName;
 			}
 
 			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
@@ -6206,7 +6200,7 @@ if ( cart )
 
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
-				grabbedEye = root.world.eye;
+				grabbedEye = eye;
 				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true, false, true );
 				escCloses = false;
 			}
@@ -6217,7 +6211,7 @@ if ( cart )
 		public new void OnDestroy()
 		{
 			base.OnDestroy();
-			if ( grabbedEye == root.world.eye )
+			if ( grabbedEye == eye )
 				root?.world?.eye?.ReleaseFocus( null, true );
 		}
 
@@ -6258,7 +6252,7 @@ if ( cart )
 		void Save()
 		{
 			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json" );
-			saveName.text = World.instance.nextSaveFileName;
+			saveName.text = world.nextSaveFileName;
 		}
 
 		void SaveFolderChanged( object sender, FileSystemEventArgs args )
@@ -6446,14 +6440,14 @@ public static class UIHelpers
 
         public void OnPointerClick( PointerEventData eventData )
         {
-			World.instance.fixedOrderCalls = true;
+			HiveCommon.world.fixedOrderCalls = true;
 			if ( eventData.button == PointerEventData.InputButton.Left && leftClickHandler != null )
 				leftClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Right && rightClickHandler != null )
 				rightClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
 				middleClickHandler();
-			World.instance.fixedOrderCalls = false;
+			HiveCommon.world.fixedOrderCalls = false;
         }
 
 		public void Toggle()
