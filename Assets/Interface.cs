@@ -2891,6 +2891,7 @@ public class Interface : HiveObject
 					World.instance.operationHandler.ExecuteStockAdjustment( stock, selectedItemType, channel, currentValue );
 					disableDrag = false;
 					currentValue = -1;
+					channelText = null;
 				}
 			}
 		}
