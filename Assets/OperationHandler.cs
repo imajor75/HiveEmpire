@@ -77,6 +77,7 @@ public class OperationHandler : HiveObject
         mode = Mode.recording;
         repeatBuffer.RemoveRange( executeIndex, repeatBuffer.Count - executeIndex );
         CRCCodes.RemoveRange( time + 1, CRCCodes.Count - time - 1 );
+        replayLength = 0;
     }
 
     public void StartGroup()
