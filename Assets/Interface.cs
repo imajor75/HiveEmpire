@@ -29,6 +29,7 @@ public class Interface : HiveObject
 	public GameObject debug;
 	public new static Interface root;
 	public bool heightStrips;
+	public bool showReplayAction = true;
 	public Player mainPlayer;
 	public static Tooltip tooltip;
 	public float lastAutoSave = -1;
@@ -229,9 +230,10 @@ public class Interface : HiveObject
 		fast,
 		stock,
 		exc,
-		replay
+		replay,
+		yes,
+		no
 	}
-
 
 	public Interface()
 	{
@@ -381,6 +383,8 @@ public class Interface : HiveObject
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.global.IsNotNull( font );
 		object[] table = {
+		"greenCheck", Icon.yes,
+		"redCross", Icon.no,
 		"arrow", Icon.rightArrow,
 		"brick", Icon.progress,
 		"mainIcon", Icon.crate,
@@ -472,7 +476,7 @@ public class Interface : HiveObject
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
-		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 );
+		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
 		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetSpeed( World.Speed.pause ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
 		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => world.SetSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
@@ -692,7 +696,7 @@ public class Interface : HiveObject
 		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
 		replayIcon.gameObject.SetActive( !playerInCharge );
 		var next = world.operationHandler.next;
-		if ( !playerInCharge && next && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
+		if ( showReplayAction && !playerInCharge && next && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
 		{
 			if ( !eye.hasTarget || lastShownOperation != next )
 			{
@@ -895,7 +899,6 @@ public class Interface : HiveObject
 			world.operationHandler = replay;
 			replay.StartReplay( executeIndex, GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) );
 		}
-
 	}
 	public class PathVisualization : MonoBehaviour
 	{
@@ -1353,6 +1356,11 @@ public class Interface : HiveObject
 			return UIHelpers.Image( this, icon );
 		}
 
+		public UIHelpers.Button CheckBox( string text )
+		{
+			return UIHelpers.CheckBox( this, text );
+		}
+
 		public ProgressBar Progress( Sprite picture = null )
 		{
 			Image i = new GameObject().AddComponent<Image>();
@@ -1574,14 +1582,7 @@ public class Interface : HiveObject
 
 		public Text Text( string text = "", int fontSize = 12 )
 		{
-			Text t = new GameObject().AddComponent<Text>();
-			t.name = "Text";
-			t.transform.SetParent( transform );
-			t.font = Interface.font;
-			t.fontSize = (int)( fontSize * uiScale );
-			t.color = Color.black;
-			t.text = text;
-			return t;
+			return UIHelpers.Text( this, text, fontSize );
 		}
 
 		public EditableText Editable( string text = "", int fontSize = 12 )
@@ -6001,6 +6002,30 @@ if ( cart )
 		}
 	}
 
+	public class ReplayPanel : Panel
+	{
+		public static ReplayPanel Create()
+		{
+			var p = new GameObject( "Replay Panel" ).AddComponent<ReplayPanel>();
+			p.Open();
+			return p;
+		}
+
+		void Open()
+		{
+			base.Open( 300, 100 );
+			CheckBox( "Show next action" ).AddToggleHandler( value => root.showReplayAction = value, root.showReplayAction ).Pin( borderWidth, -borderWidth, 150, iconSize );
+			Button( "Cancel" ).AddClickHandler( () => oh.CancelReplay() ).PinDownwards( borderWidth, -5, 80, iconSize );
+		}
+
+		new void Update()
+		{
+			 if ( root.playerInCharge )
+			 	Close();
+			base.Update();
+		}
+	}
+
 	public class ChallengePanel : Panel
 	{
 		Text worldTime, maintain, timeLeft, conditions, currentChallenge;
@@ -6379,6 +6404,33 @@ public static class UIHelpers
 		return panel.Image( Interface.iconTable.GetMediaData( icon ) );
 	}
 
+	public static Button CheckBox( this Component panel, string text )
+	{
+		Button b = new GameObject( "Checkbox" ).AddComponent<Button>();
+		b.transform.SetParent( panel.transform );
+		var i = new GameObject( "Checkbox image" ).AddComponent<Image>();
+		i.Link( b ).Pin( 0, 0, Interface.iconSize, Interface.iconSize ).AddOutline();
+		void UpdateCheckboxLook( bool on )
+		{
+			i.sprite = Interface.iconTable.GetMediaData( on ? Interface.Icon.yes : Interface.Icon.no );
+		}
+		b.visualizer = UpdateCheckboxLook;
+		Text( b, text ).Link( b ).Pin( Interface.iconSize, 0, 200, Interface.iconSize ).alignment = TextAnchor.MiddleLeft;
+		return b;
+	}
+
+	public static Text Text( this Component panel, string text = "", int fontSize = 12 )
+	{
+		Text t = new GameObject().AddComponent<Text>();
+		t.name = "Text";
+		t.transform.SetParent( panel.transform );
+		t.font = Interface.font;
+		t.fontSize = (int)( fontSize * Interface.uiScale );
+		t.color = Color.black;
+		t.text = text;
+		return t;
+	}
+
 	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
 		if ( center )
@@ -6432,10 +6484,12 @@ public static class UIHelpers
 		return g;
 	}
 
+	[RequireComponent( typeof( RectTransform ) )]
 	public class Button : MonoBehaviour, IPointerClickHandler
 	{
 		public Action leftClickHandler, rightClickHandler, middleClickHandler;
 		public Action<bool> toggleHandler;
+		public Action<bool> visualizer;
 		public bool toggleState;
 
         public void OnPointerClick( PointerEventData eventData )
@@ -6460,16 +6514,18 @@ public static class UIHelpers
 			if ( toggleState == state )
 				return;
 			toggleState = state;
-			UpdateLook();
+			if ( visualizer == null )
+				visualizer = UpdateLook;
+			visualizer( toggleState );
 			if ( toggleHandler != null )
 				toggleHandler( toggleState );
 		}
 
-		public void UpdateLook()
+		public void UpdateLook( bool on )
 		{
 			var i = GetComponent<Image>();
 			if ( i )
-				i.color = toggleState ? Color.white : Color.grey;
+				i.color = on ? Color.white : Color.grey;
 		}
     }
 
@@ -6503,7 +6559,9 @@ public static class UIHelpers
 		b.leftClickHandler = b.Toggle;
 		b.toggleHandler = callBack;
 		b.toggleState = initialState;
-		b.UpdateLook();
+		if ( b.visualizer == null )
+			b.visualizer = b.UpdateLook;
+		b.visualizer( initialState );
 
 		return g;
 	}

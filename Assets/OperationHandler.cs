@@ -71,6 +71,14 @@ public class OperationHandler : HiveObject
         this.recalculateCRC = recalculateCRC;
     }
 
+    public void CancelReplay()
+    {
+        Assert.global.AreEqual( mode, Mode.repeating );
+        mode = Mode.recording;
+        repeatBuffer.RemoveRange( executeIndex, repeatBuffer.Count - executeIndex );
+        CRCCodes.RemoveRange( time + 1, CRCCodes.Count - time - 1 );
+    }
+
     public void StartGroup()
     {
         currentGroup++;
