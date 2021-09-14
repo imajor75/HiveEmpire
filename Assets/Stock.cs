@@ -665,6 +665,7 @@ public class Stock : Building, Worker.Callback.IHandler
 			total += count;
 			totalTarget += Math.Max( count, itemData[itemType].inputMin );
 		}
+		int CRC = total;
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
@@ -678,10 +679,12 @@ public class Stock : Building, Worker.Callback.IHandler
 					continue;
 				}
 
+				CRC += destination.id;
 				if ( itemData[itemType].outputRoutes[i].IsAvailable() )
 					cart.TransferItems( itemData[itemType].outputRoutes[i] );
 			}
 
+			CRC += itemData[itemType].inputMin + itemData[itemType].inputMax + itemData[itemType].outputMin + itemData[itemType].outputMax + itemData[itemType].content;
 			int current = itemData[itemType].content + itemData[itemType].onWay;
 			if ( maxItems > total )
 			{
@@ -702,6 +705,7 @@ public class Stock : Building, Worker.Callback.IHandler
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
+		World.CRC = CRC;
 	}
 
 	public override int Influence( Node node )
