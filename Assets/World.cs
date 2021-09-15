@@ -17,7 +17,7 @@ public class World : HiveCommon
 	public new Eye eye;
 	public bool gameInProgress;
 	public new int time;
-	public int nextID;
+	public int nextID = 1;
 	public int frameSeed;
 	public int overseas = 2;
 	public bool roadTutorialShowed;
@@ -573,7 +573,7 @@ public class World : HiveCommon
 		newHiveObjects.Clear();
 		foreach ( var hiveObject in hiveObjects )
 		{
-			if ( hiveObject )
+			if ( hiveObject && !hiveObject.destroyed )
 				hiveObject.CriticalUpdate();
 		}
 		fixedOrderCalls = false;
@@ -587,7 +587,7 @@ public class World : HiveCommon
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
 		fixedOrderCalls = true;
-		nextID = 0;
+		nextID = 1;
 		time = -1;
 		string pattern = challenge.title + " #{0}";
 		name = String.Format( pattern, Interface.FirstUnusedIndex( Application.persistentDataPath + "/Saves", pattern + " (0).json" ) );
@@ -742,6 +742,13 @@ public class World : HiveCommon
 		water = Water.Create().Setup( ground );
 		water.transform.localPosition = Vector3.up * waterLevel;
 
+		{
+			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
+			{
+				if ( ho.id == 0 )
+					ho.id = nextID++;
+			}
+		}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
@@ -1250,6 +1257,8 @@ public class World : HiveCommon
 		foreach ( var player in players )
 			player.Validate();
 		Assert.global.AreEqual( challenge, operationHandler.challenge );
+		if ( chain )
+			eye.Validate( true );
 	}
 
 	[System.Serializable]

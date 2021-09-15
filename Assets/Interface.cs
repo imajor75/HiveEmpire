@@ -616,11 +616,6 @@ public class Interface : HiveObject
 		// 	if ( !localReset )
 		// 		world.Reset();
 		// }
-		if ( selectByID != 0 )
-		{
-			Selection.activeGameObject = HiveObject.GetByID( selectByID )?.gameObject;
-			selectByID = 0;
-		}
 		if ( Time.time - lastAutoSave > Constants.Interface.autoSaveInterval )
 		{
 			Save();
@@ -704,6 +699,15 @@ public class Interface : HiveObject
 				tooltip.SetText( this, world.operationHandler.next.description, pinX:0.2f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
 				lastShownOperation = next;
 			}
+		}
+	}
+
+	void OnValidate()
+	{
+		if ( selectByID != 0 )
+		{
+			Selection.activeGameObject = HiveObject.GetByID( selectByID )?.gameObject;
+			selectByID = 0;
 		}
 	}
 
@@ -833,7 +837,8 @@ public class Interface : HiveObject
 		{
 			if ( skipNoAsserts && ho.noAssert )
 				continue;
-			ho.Validate( false );
+			if ( !ho.destroyed )
+				ho.Validate( false );
 		}
 	}
 

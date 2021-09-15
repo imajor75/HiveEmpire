@@ -56,6 +56,7 @@ public class Eye : HiveObject
 
 	public Eye Setup( World world )
 	{
+		base.Setup();
 		return this;
 	}
 
@@ -319,7 +320,7 @@ public class Eye : HiveObject
 	}
 }
 
-public class CameraHighlight : HiveObject
+public class CameraHighlight : HiveCommon
 {
 	public static Material highlightMaterial;
 	static Material blurMaterial;
@@ -380,7 +381,5 @@ public class CameraHighlight : HiveObject
 		highlightMaterial.SetFloat( "_OffsetX", 2f / Screen.width );
 		highlightMaterial.SetFloat( "_OffsetY", 2f / Screen.height );
 	}
-
-	public override Node location { get { return null; } }
 }
 

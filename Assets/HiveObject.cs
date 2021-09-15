@@ -20,12 +20,13 @@ public abstract class HiveObject : HiveCommon
 {
 	public bool blueprintOnly;
 	public bool inactive;
-	
-	[JsonIgnore]
-	public Assert assert;
 	public int id;
 	public bool noAssert;
 	public bool registered;
+	public bool destroyed;
+	
+	[JsonIgnore]
+	public Assert assert;
 
 	public HiveObject()
 	{
@@ -62,6 +63,7 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void DestroyThis( bool noAssert = false )
 	{
+		destroyed = true;
 		this.noAssert = noAssert;
 		Destroy( gameObject );
 	}
@@ -74,6 +76,7 @@ public abstract class HiveObject : HiveCommon
 	public void OnDestroy()
 	{
 		world.hiveObjects.Remove( this );
+		destroyed = true;
 		registered = false;
 	}
 
@@ -81,7 +84,6 @@ public abstract class HiveObject : HiveCommon
 	// So when this function is called by World.FixedUpdate it is always called in the same order.
 	public virtual void CriticalUpdate()
 	{
-
 	}
 
 	public virtual bool Remove( bool takeYourTime = false )
@@ -106,6 +108,8 @@ public abstract class HiveObject : HiveCommon
 	public void Start()
 	{
 		gameObject.SetActive( !inactive );
+		if ( destroyed )	// If this is true, and this function is called, we are right after load. We should let unity know that this object should be treated as nonexistent
+			DestroyThis();
 	}
 
 	public virtual void Materialize()
@@ -130,6 +134,7 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Validate( bool chainCall )
 	{
+		assert.IsFalse( id == 0 );
 	}
 
 	public class SiteTestResult

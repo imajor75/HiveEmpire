@@ -752,5 +752,6 @@ abstract public class Building : HiveObject
 		construction?.Validate( true );
 		assert.IsTrue( world.players.Contains( owner ) );
 		assert.IsTrue( registered );
+		base.Validate( chain );
 	}
 }

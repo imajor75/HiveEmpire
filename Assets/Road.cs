@@ -22,7 +22,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	public Node referenceLocation;
-	public bool invalid;
 	[JsonIgnore]
 	public List<Vector3> nodePositions;
 
@@ -48,6 +47,8 @@ public class Road : HiveObject, Interface.IInputHandler
 	int timeSinceWorkerAdded { set {} }
 	[Obsolete( "Compatibility for old files", true )]
 	bool underConstruction { set {} }
+	[Obsolete( "Compatibility for old files", true )]
+	bool invalid { set {} }
 
 	public static void Initialize()
 	{
@@ -211,9 +212,6 @@ public class Road : HiveObject, Interface.IInputHandler
 			transform.localPosition = centerNode.position;
 			referenceLocation = centerNode;
 		}
-		if ( invalid )
-			return;
-
 		if ( nodes.Count > 1 )
 			name = $"Road {nodes[1].x}:{nodes[1].y}";
 		else
@@ -241,7 +239,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override void CriticalUpdate()
 	{
-		if ( !ready || invalid )
+		if ( !ready )
 			return;
 
 		int jam = this.jam;
@@ -412,6 +410,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		if ( node.road )
 		{
+			assert.AreEqual( this, node.road );
 			assert.AreEqual( nodes[node.roadIndex], node );
 			return node.roadIndex;
 		}
@@ -717,7 +716,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		foreach ( var worker in exclusiveWorkers )
 			worker.LeaveExclusivity();
 
-		invalid = true;
 		DestroyThis();
 		return true;
 	}
@@ -1017,8 +1015,6 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override void Validate( bool chain )
 	{
-		if ( invalid )	// Already destroyed, should not be validated
-			return;
 		if ( !ready && !decorationOnly )
 		{
 			assert.IsTrue( root.viewport.inputHandler is Road );
@@ -1037,7 +1033,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.IsNotNull( ends[1] );
 		assert.AreEqual( ends[0].node, nodes[0] );
 		assert.AreEqual( ends[1].node, lastNode );
-		assert.IsTrue( ends[0].roadsStartingHere.Contains( this ) );	// TODO Triggered whe trying to add a flag to an existing road
+		assert.IsTrue( ends[0].roadsStartingHere.Contains( this ) );	// TODO Triggered when trying to add a flag to an existing road
 		// Called from RoadPanel.Split
 		assert.IsTrue( ends[1].roadsStartingHere.Contains( this ) );
 
@@ -1102,6 +1098,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( root.viewport.inputHandler, this );
 		assert.IsTrue( world.players.Contains( owner ) );
 		assert.IsTrue( registered );
+		base.Validate( chain );
 	}
 
 	public void OnLostInput()

@@ -164,6 +164,7 @@ public class Item : HiveObject
 			}
 		}
 		owner.RegisterItem( this );
+		base.Setup();
 		return this;
 	}
 
@@ -484,7 +485,7 @@ public class Item : HiveObject
 				assert.IsFalse( worker.itemsInHands.Contains( this ) );
 			if ( destination )
 				assert.IsNotNull( path );	// TODO Triggered when switching a building to overclock mode, and the items had nowhere to go
-			if ( destination && !path.isFinished && !path.road.invalid )
+			if ( destination && !path.isFinished && path.road )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.road ) );
 		}
 		else
@@ -528,5 +529,6 @@ public class Item : HiveObject
 		assert.AreNotEqual( index, -1 );
 		assert.AreEqual( owner.items[index], this );
 		assert.IsTrue( world.players.Contains( owner ) );
+		base.Validate( chain );
 	}
 }

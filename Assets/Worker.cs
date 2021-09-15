@@ -2169,5 +2169,6 @@ public class Worker : HiveObject
 		}
 		assert.IsTrue( owner == null || world.players.Contains( owner ) );
 		assert.IsTrue( registered );
+		base.Validate( chain );
 	}
 }

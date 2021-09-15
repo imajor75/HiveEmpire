@@ -432,6 +432,7 @@ public class Flag : HiveObject
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.workers ) );
+		base.Validate( chain );
 	}
 
 	public override Node location
