@@ -134,7 +134,8 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Validate( bool chainCall )
 	{
-		assert.IsFalse( id == 0 );
+		if ( !blueprintOnly )
+			assert.IsFalse( id == 0 );
 	}
 
 	public class SiteTestResult

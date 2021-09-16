@@ -179,13 +179,13 @@ public class Road : HiveObject, Interface.IInputHandler
 		nodePositions = null;
 		curves = new List<CubicCurve>[3];
 		CreateCurves();
-		blueprintOnly = false;
 		RebuildMesh();
 		RegisterOnGround();
 		CallNewWorker();
 		gameObject.GetComponent<MeshRenderer>().material = material;
 
 		owner.versionedRoadNetworkChanged.Trigger();
+		base.Materialize();
 		
 		return true;
 	}
