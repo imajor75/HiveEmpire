@@ -424,7 +424,7 @@ public class Ground : HiveObject
 
 		public static Block Create()
 		{
-			return new GameObject().AddComponent<Block>();
+			return new GameObject( "Ground Block" ).AddComponent<Block>();
 		}
 
 		public Block Setup( Ground boss, Node center, int dimension )
@@ -432,6 +432,7 @@ public class Ground : HiveObject
 			this.boss = boss;
 			this.center = center;
 			this.dimension = dimension;
+			base.Setup();
 			return this;
 		}
 
@@ -443,9 +444,6 @@ public class Ground : HiveObject
 			mesh = meshFilter.mesh = new Mesh();
 			mesh.name = "GroundMesh";
 			GetComponent<MeshRenderer>().material = boss.material;
-
-			mesh = meshFilter.mesh = new Mesh();
-			mesh.name = "GroundMesh";
 
 			transform.SetParent( boss.transform );
 			name = $"Ground block {center.x}:{center.y}";

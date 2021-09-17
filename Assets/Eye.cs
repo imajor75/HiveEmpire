@@ -51,7 +51,7 @@ public class Eye : HiveObject
 
 	public static Eye Create()
 	{
-		return new GameObject().AddComponent<Eye>();
+		return new GameObject( "Eye" ).AddComponent<Eye>();
 	}
 
 	public Eye Setup( World world )
@@ -62,7 +62,6 @@ public class Eye : HiveObject
 
 	new public void Start()
 	{
-		name = "Eye";
 		camera = GetComponent<Camera>();
 		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
 		camera.farClipPlane = 50;

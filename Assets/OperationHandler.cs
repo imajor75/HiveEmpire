@@ -56,6 +56,12 @@ public class OperationHandler : HiveObject
         return new GameObject( "Operation handler").AddComponent<OperationHandler>();
     }
 
+    public new OperationHandler Setup()
+    {
+        base.Setup();
+        return this;
+    }
+
     new void Start()
     {
         transform.SetParent( root.transform );

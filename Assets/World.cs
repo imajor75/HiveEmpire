@@ -76,7 +76,7 @@ public class World : HiveCommon
 		set
 		{
 			if ( instance.operationHandler.recordCRC && instance.time > 10 )
-				HiveObject.Log( $"CRC {HiveCommon.time}: {value} from {Assert.Caller()}" );
+				HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
@@ -627,7 +627,7 @@ public class World : HiveCommon
 		Prepare();
 		Interface.ValidateAll( true );
 
-		operationHandler = OperationHandler.Create();
+		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = challenge;
 #if DEBUG
 		operationHandler.recordCRC = true;
@@ -745,8 +745,19 @@ public class World : HiveCommon
 		{
 			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 			{
+				if ( ho.destroyed || ho is Interface )
+					continue;
 				if ( ho.id == 0 )
+				{
+					HiveObject.Log( $"Fixing the ID for {ho.name}" );
 					ho.id = nextID++;
+				}
+				if ( !hiveObjects.Contains( ho ) )
+				{
+					HiveObject.Log( $"Adding {ho.name} to list of hive objects" );
+					hiveObjects.AddFirst( ho );
+				}
+				ho.registered = true;
 			}
 		}
 		{
@@ -757,12 +768,6 @@ public class World : HiveCommon
 					o.Remove( false );
 				o.ends[0] = o.nodes[0].flag;
 				o.ends[1] = o.lastNode.flag;
-				if ( !hiveObjects.Contains( o ) )
-				{
-					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
-					hiveObjects.AddFirst( o );
-				}
-				o.registered = true;
 			}
 		}
 
@@ -778,12 +783,6 @@ public class World : HiveCommon
 					o.owner = players[0];
 				//if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 				//	o.itemsInHands[0].SetRawTarget( o.building );
-				if ( !hiveObjects.Contains( o ) )
-				{
-					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
-					hiveObjects.AddFirst( o );
-				}
-				o.registered = true;
 			}
 		}
 		{
@@ -856,12 +855,6 @@ public class World : HiveCommon
 					}
 #pragma warning restore 0618
 				}
-				if ( !hiveObjects.Contains( o ) )
-				{
-					HiveObject.Log( $"Adding {o.title} to list of hive objects" );
-					hiveObjects.AddFirst( o );
-				}
-				o.registered = true;
 			}
 		}
 		{
@@ -872,12 +865,6 @@ public class World : HiveCommon
 					o.infinite = true;
 				if ( o.life.empty )
 					o.life.reference = instance.time - 15000;
-				if ( !hiveObjects.Contains( o ) )
-				{
-					HiveObject.Log( $"Adding {o.name} to list of hive objects" );
-					hiveObjects.AddFirst( o );
-				}
-				o.registered = true;
 			}
 		}
 		{
@@ -902,12 +889,6 @@ public class World : HiveCommon
 					f.flattening = new Building.Flattening();
 				if ( !f.freeSlotsWatch.isAttached )
 					f.freeSlotsWatch.Attach( f.itemsStored );
-				if ( !hiveObjects.Contains( f ) )
-				{
-					HiveObject.Log( $"Adding {f.name} to list of hive objects" );
-					hiveObjects.AddFirst( f );
-				}
-				f.registered = true;
 			}
 		}
 
@@ -930,6 +911,8 @@ public class World : HiveCommon
 		}
 		gameInProgress = true;
 		SetSpeed( speed );    // Just for the animators and sound
+
+		HiveObject.Log( $"Next ID: {nextID}" );
 
 		Interface.ValidateAll( true );
 	}
@@ -994,7 +977,10 @@ public class World : HiveCommon
 		DestroyChildRecursive( transform );	
 
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
+		{
 			ho.noAssert = true;
+			ho.destroyed = true;	// To prevent decoration only roads getting an IS and registered after load
+		}
 		hiveObjects.Clear();
 		newHiveObjects.Clear();
 
