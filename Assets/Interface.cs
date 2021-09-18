@@ -896,6 +896,7 @@ public class Interface : HiveObject
 			if ( loadLatestSave )
 			{
 				root.Load( replay.lastSave );
+				replay.destroyed = false;	// TODO This is a hack. World.Load sets this bool field to true for every hive object in the memory, not only for those which were really destroyed
 				executeIndex = oh.executeIndex;
 				replay.challenge = world.challenge;
 			}
