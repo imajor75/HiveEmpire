@@ -693,7 +693,7 @@ public class Interface : HiveObject
 		var next = world.operationHandler.next;
 		if ( showReplayAction && !playerInCharge && next && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
 		{
-			if ( !eye.hasTarget || lastShownOperation != next )
+			if ( !eye.target || lastShownOperation != next )
 			{
 				eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
 				tooltip.SetText( this, world.operationHandler.next.description, pinX:0.2f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );

@@ -21,8 +21,7 @@ public class Eye : HiveObject
 	public new Camera camera;
 	public float moveSensitivity;
 
-	public bool hasTarget;
-	public float targetX, targetY;
+	public Node target;
 	public float targetApproachSpeed;
 
 	[JsonIgnore]
@@ -48,6 +47,12 @@ public class Eye : HiveObject
 	bool hasStoredValues { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int autoStorePositionCounter { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	float targetX { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	float targetY { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	bool hasTarget { set {} }
 
 	public static Eye Create()
 	{
@@ -155,13 +160,12 @@ public class Eye : HiveObject
 			movement += Move( 0, Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
 		if ( Interface.cameraDownHotkey.IsHold() )
 			movement += Move( 0, -Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
-		if ( hasTarget )
+		if ( target )
 		{
 			targetApproachSpeed += Time.unscaledDeltaTime;
 			if ( targetApproachSpeed > 1 )
 				targetApproachSpeed = 1;
-			Vector3 targetVector = new Vector3( targetX, 0, targetY );
-			movement += ( targetVector - position ) * targetApproachSpeed * Time.unscaledDeltaTime;
+			movement += ( target.GetPositionRelativeTo( position ) - position ) * targetApproachSpeed * Time.unscaledDeltaTime;
 		}
 		x += movement.x;
 		y += movement.z;
@@ -271,23 +275,21 @@ public class Eye : HiveObject
 			return;
 		oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
 
-		if ( useLogicalPosition )
-		{
-			targetX = target.location.positionInViewport.x;
-			targetY = target.location.positionInViewport.z;
-		}
-		else
-		{
-			targetX = target.transform.position.x;
-			targetY = target.transform.position.z;
-		}
 		if ( approach )
-			hasTarget = true;
+			this.target = target.location;
 		else
 		{
-			hasTarget = false;
-			x = targetX;
-			y = targetY;
+			this.target = null;
+			if ( useLogicalPosition )
+			{
+				x = target.location.positionInViewport.x;
+				y = target.location.positionInViewport.z;
+			}
+			else
+			{
+				x = target.transform.position.x;
+				y = target.transform.position.z;
+			}
 		}
 		height = -1;
 		director = null;
@@ -309,7 +311,7 @@ public class Eye : HiveObject
 		OnPositionChanged();
 		root.viewport.markEyePosition = false;
 		director = null;
-		hasTarget = false;
+		target = null;
 		return transform.right * side * moveSensitivity + transform.forward * forward * moveSensitivity;
 	}
 
