@@ -31,7 +31,7 @@ public class Interface : HiveObject
 	public bool heightStrips;
 	public bool showReplayAction = true;
 	public Player mainPlayer;
-	public static Tooltip tooltip;
+	public static Tooltip tooltip, status;
 	public float lastAutoSave = -1;
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
@@ -274,7 +274,7 @@ public class Interface : HiveObject
 			Destroy( d.gameObject );
 		foreach ( var panel in panels )
 		{
-			if ( panel != tooltip )
+			if ( panel != tooltip && panel != status )
 				panel.Close();
 		}
 	}
@@ -447,6 +447,8 @@ public class Interface : HiveObject
 
 		tooltip = Tooltip.Create();
 		tooltip.Open();
+		status = Tooltip.Create();
+		status.Open();
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
 		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
@@ -696,7 +698,7 @@ public class Interface : HiveObject
 			if ( !eye.target || lastShownOperation != next )
 			{
 				eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
-				tooltip.SetText( this, world.operationHandler.next.description, pinX:0.2f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
+				status.SetText( this, world.operationHandler.next.description, pinX:0.5f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
 				lastShownOperation = next;
 			}
 		}
@@ -1069,6 +1071,8 @@ public class Interface : HiveObject
 			noCloseButton = true;
 			noResize = true;
 			noPin = true;
+			base.pinned = true;
+			reopen = true;
 			base.Open( width = 100, height = 100 );
 			escCloses = false;
 
@@ -1110,7 +1114,7 @@ public class Interface : HiveObject
 			else
 			{
 				pinned = true;
-				this.Pin( 0, 0, this.width, height, pinX, pinY );
+				this.PinCenter( 0, 0, this.width, height, pinX, pinY );
 			}
 		}
 
@@ -6335,7 +6339,7 @@ if ( cart )
 		new void Update()
 		{
 			base.Update();
-			if ( root.panels.Count > 2 )
+			if ( root.panels.Count > 3 )
 				Close();
 		}
 	}
