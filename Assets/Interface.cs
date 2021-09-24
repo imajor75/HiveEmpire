@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -4159,6 +4159,11 @@ if ( cart )
 
 		public new void Update()
 		{
+			if ( construction.boss.destroyed )
+			{
+				Close();
+				return;
+			}
 			if ( construction.done )
 			{
 				Workshop workshop = construction.boss as Workshop;
@@ -4183,8 +4188,8 @@ if ( cart )
 
 		void Remove()
 		{
-			if ( construction != null && construction.boss != null && construction.boss.Remove( true ) )
-				Close();
+			if ( construction != null && construction.boss != null )
+				oh.ExecuteRemoveBuilding( construction.boss );
 		}
 	}
 
