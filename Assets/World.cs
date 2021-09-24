@@ -765,7 +765,10 @@ public class World : HiveCommon
 			foreach ( var o in list )
 			{
 				if ( !o.ready )
+				{
+					HiveObject.Log( $"Removing road at {o.nodes[0].x}:{o.nodes[0].y}" );
 					o.Remove( false );
+				}
 				o.ends[0] = o.nodes[0].flag;
 				o.ends[1] = o.lastNode.flag;
 			}
