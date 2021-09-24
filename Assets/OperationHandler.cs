@@ -192,6 +192,11 @@ public class OperationHandler : HiveObject
 		    ScheduleOperation( Operation.Create().SetupAsChangeArea( building, area, center, radius ) );
 	}
 
+	public void ScheduleChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, bool enabled )
+	{
+	    ScheduleOperation( Operation.Create().SetupAsChangeBufferUsage( workshop, buffer, enabled ) );
+	}
+
     public void ScheduleMoveFlag( Flag flag, int direction )
     {
         ScheduleOperation( Operation.Create().SetupAsMoveFlag( flag, direction ) );
@@ -318,6 +323,8 @@ public class Operation : ScriptableObject
     public int itemCount;
     public int scheduleAt;
     public Source source;
+    public int bufferIndex;
+    public bool useBuffer;
 
     public enum Source
     {
@@ -449,6 +456,7 @@ public class Operation : ScriptableObject
                 Type.removeRoad => "Remove a road",
                 Type.stockAdjustment => "Adjust stock item counts",
                 Type.captureRoad => "Capture nearby roads",
+                Type.changeBufferUsage => "Change Buffer Usage",
                 _ => ""
             };
             if ( type == Type.createBuilding )
@@ -499,7 +507,8 @@ public class Operation : ScriptableObject
         changeRoutePriority,
         moveRoad,
         stockAdjustment,
-        captureRoad
+        captureRoad,
+        changeBufferUsage
     }
 
     public static Operation Create()
@@ -598,6 +607,19 @@ public class Operation : ScriptableObject
             areaX = areaY = -1;
         this.radius = radius;
         name = "Change Area";
+        return this;
+    }
+
+    public Operation SetupAsChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, bool use )
+    {
+        int index = workshop.buffers.IndexOf( buffer );
+        if ( index < 0 )
+            return null;
+        type = Type.changeBufferUsage;
+        this.building = workshop;
+        this.bufferIndex = index;
+        this.useBuffer = use;
+        name = "Change Buffer Usage";
         return this;
     }
 
@@ -786,6 +808,12 @@ public class Operation : ScriptableObject
             {
                 flag.CaptureRoads();
                 return null;
+            }
+            case Type.changeBufferUsage:
+            {
+                var workshop = building as Workshop;
+                workshop.buffers[bufferIndex].disabled = useBuffer;
+                return Create().SetupAsChangeBufferUsage( workshop, workshop.buffers[bufferIndex], !useBuffer );
             }
         }
         return null;

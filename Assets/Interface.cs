@@ -2413,7 +2413,7 @@ public class Interface : HiveObject
 
 			void SetDisabled( bool disabled )
 			{
-				buffer.disabled = disabled;
+				oh.ScheduleChangeBufferUsage( boss.building as Workshop, buffer, disabled );
 			}
 
 			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int x, int y, int xi )
