@@ -569,7 +569,10 @@ public class World : HiveCommon
 			challenge.Begin();
 
 		foreach ( var newHiveObject in newHiveObjects )
-		hiveObjects.AddLast( newHiveObject );
+		{
+			Assert.global.IsFalse( hiveObjects.Contains( newHiveObject ) );
+			hiveObjects.AddLast( newHiveObject );
+		}
 		newHiveObjects.Clear();
 		foreach ( var hiveObject in hiveObjects )
 		{
@@ -752,7 +755,7 @@ public class World : HiveCommon
 					HiveObject.Log( $"Fixing the ID for {ho.name}" );
 					ho.id = nextID++;
 				}
-				if ( !hiveObjects.Contains( ho ) )
+				if ( !hiveObjects.Contains( ho ) && !newHiveObjects.Contains( ho ) )
 				{
 					HiveObject.Log( $"Adding {ho.name} to list of hive objects" );
 					hiveObjects.AddFirst( ho );

@@ -36,6 +36,7 @@ public abstract class HiveObject : HiveCommon
 	public void Setup()
 	{
 		assert.IsFalse( world.hiveObjects.Contains( this ) );
+		assert.IsFalse( world.newHiveObjects.Contains( this ) );
 		world.newHiveObjects.AddFirst( this );
 		registered = true;
 		if ( !blueprintOnly )
