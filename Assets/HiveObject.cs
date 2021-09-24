@@ -68,9 +68,11 @@ public abstract class HiveObject : HiveCommon
 		Destroy( gameObject );
 	}
 
-	public static void Log( string text )
+	public static void Log( string text, bool important = false )
 	{
 		root.logFile.Write( text + "\n" );
+		if ( important )
+			print( text );
 	}
 
 	public void OnDestroy()
