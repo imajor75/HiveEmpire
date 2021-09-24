@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2072,6 +2072,9 @@ public class Interface : HiveObject
 		}
 		public override CompareResult IsTheSame( Panel other )
 		{
+			if ( other is ConstructionPanel && !(this is ConstructionPanel) )	// TODO Not so nice, what if IsTheSame called on the construction panel
+				return CompareResult.different;
+
 			var p = other as BuildingPanel;
 			if ( p == null )
 				return CompareResult.different;
