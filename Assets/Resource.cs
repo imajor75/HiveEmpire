@@ -116,7 +116,7 @@ public class Resource : HiveObject
 		"prefabs/rocks/rock03", Type.rock,
 		"prefabs/rocks/rock04", Type.rock,
 
-		"AnimalCave/animRock(Clone)", Type.animalSpawner,
+		"prefabs/others/cave", Type.animalSpawner,
 		"prefabs/others/field", Type.cornfield };
 		Resource.meshes.Fill( meshes );
 
