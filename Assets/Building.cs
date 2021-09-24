@@ -692,7 +692,7 @@ abstract public class Building : HiveObject
 		var list = itemsOnTheWay.GetRange( 0, itemsOnTheWay.Count );
 		foreach ( var item in list )
 			item.CancelTrip();
-		if ( !exit.Remove( takeYourTime ) )		// TODO null reference exception happened here when trying to build a woodcutter in a forest
+		if ( exit && !exit.Remove( takeYourTime ) )		// TODO null reference exception happened here when trying to build a woodcutter in a forest. Again when trying to build a bow maker
 			return false;
 		if ( worker != null && !worker.Remove() )
 			return false;
