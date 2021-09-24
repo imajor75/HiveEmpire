@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -409,6 +409,7 @@ public class Interface : HiveObject
 
 	new public void Start()
 	{
+		try { File.Move( Application.persistentDataPath + "/log.txt", Application.persistentDataPath + "/log-prev.txt" ); } catch ( Exception ) {}
 		logFile = new StreamWriter( Application.persistentDataPath + "/log.txt" );
 
 		Node.Initialize();
