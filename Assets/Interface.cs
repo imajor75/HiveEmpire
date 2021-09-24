@@ -6103,7 +6103,7 @@ if ( cart )
 				timeLeft.alignment = TextAnchor.MiddleCenter;
 			}
 			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
-			var row = UIHelpers.currentRow - iconSize / 2;
+			var row = UIHelpers.currentRow - iconSize / 2 - 10;
 			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => Restart( false ) );
 			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => Restart( true ) );
 			
