@@ -653,6 +653,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	void UnregisterOnGround()
 	{
+		if ( destroyed )
+			return;
 		if ( ready )
 		{
 			if ( nodes[0].flag )	// This is always true, except when moving a flag
