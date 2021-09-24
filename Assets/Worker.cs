@@ -615,13 +615,19 @@ public class Worker : HiveObject
 				items[i].worker = null;
 				// It is possible in rare cases, that the worker was reset AFTER relinking the item to its hand, but before this task would actually take the item in hands. This leads to a crash when the worker arrives back at the HQ, as the 
 				// worker object gets destroyed, the item gets destroyed too, because it is linked to the hauling box of the worker, but still sitting at the flag. In this case the item should be linked back to the previous parent (the frame at the flag)
+				bool backParented = false;
 				if ( reparented[i] && items[i].flag )
 				{
 					for ( int j = 0; j < items[i].flag.items.Length; j++ )
 					{
-						if ( items[i].flag.items[j] == items[i] )
+						if ( items[i].flag.items[j] == items[i] && items[i].flag.frames[j] )
+						{
 							items[i].transform.SetParent( items[i].flag.frames[j].transform, false );
+							backParented = true;
+						}
 					}
+					if ( !backParented )
+						items[i].transform.SetParent( items[i].flag.transform );
 					boss.animator?.Play( "idle" );
 				}
 				// items[i].flag should never be zero here, but it was after a global reset
