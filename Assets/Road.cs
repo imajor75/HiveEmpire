@@ -823,7 +823,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		bool flagCreated = false;
 		if ( node.road && node.road != this || Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
 		{
-			oh.ExecuteCreateFlag( node, false, false );
+			oh.ScheduleCreateFlag( node, false, false );
 			flagCreated = true;
 		}
 
@@ -852,7 +852,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 		if ( node.validFlag || flagCreated )
 		{
-			oh.ExecuteCreateRoad( this, false );
+			oh.ScheduleCreateRoad( this, false );
 			root.viewport.showGridAtMouse = false;
 			root.viewport.pickGroundOnly = false;
 			return false;

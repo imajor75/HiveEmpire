@@ -685,7 +685,7 @@ public class Interface : HiveObject
 			if ( flag != mainPlayer.mainBuilding.flag )
 			{
 				eye.FocusOn( flag );
-				oh.ExecuteRemoveFlag( flag );
+				oh.ScheduleRemoveFlag( flag );
 			}
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad1 ) )
@@ -709,7 +709,7 @@ public class Interface : HiveObject
 			if ( building != mainPlayer.mainBuilding )
 			{
 				eye.FocusOn( building );
-				world.operationHandler.ExecuteRemoveBuilding( building );
+				world.operationHandler.ScheduleRemoveBuilding( building );
 			}
 		}
 #endif
@@ -1833,7 +1833,7 @@ public class Interface : HiveObject
 					root.highlightType = HighlightType.none;
 					root.highlightArea = null;
 				}
-				oh.ExecuteChangeArea( building, originalArea, area.center, area.radius );
+				oh.ScheduleChangeArea( building, originalArea, area.center, area.radius );
 				return false;
 			}
 
@@ -1841,7 +1841,7 @@ public class Interface : HiveObject
 			{
 				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
-					oh.ExecuteChangeArea( building, originalArea, null, 0 );
+					oh.ScheduleChangeArea( building, originalArea, null, 0 );
 					if ( root.highlightArea == area )
 						root.highlightType = HighlightType.none;
 					return;
@@ -2227,7 +2227,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( workshop )
-				oh.ExecuteRemoveBuilding( workshop );
+				oh.ScheduleRemoveBuilding( workshop );
 
 			Close();
 		}
@@ -2637,7 +2637,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( guardHouse )
-				oh.ExecuteRemoveBuilding( guardHouse );
+				oh.ScheduleRemoveBuilding( guardHouse );
 			Close();
 		}
 	}
@@ -2851,7 +2851,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( stock )
-				oh.ExecuteRemoveBuilding( stock );
+				oh.ScheduleRemoveBuilding( stock );
 			Close();
 		}
 
@@ -2900,7 +2900,7 @@ public class Interface : HiveObject
 						disableDrag = true;
 						var l = (int)(Constants.Stock.cartCapacity * 1.5);
 						if ( adjustInputMin && stock.itemData[t].inputMax < l )
-							oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l );
+							oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l );
 					}
 				}
 				CheckChannel( inputMin.gameObject, Stock.Channel.inputMin, 0, stock.itemData[t].inputMax, "{0}<" );
@@ -2925,7 +2925,7 @@ public class Interface : HiveObject
 				}
 				else
 				{
-					oh.ExecuteStockAdjustment( stock, selectedItemType, channel, currentValue );
+					oh.ScheduleStockAdjustment( stock, selectedItemType, channel, currentValue );
 					disableDrag = false;
 					currentValue = -1;
 					channelText = null;
@@ -2941,16 +2941,16 @@ public class Interface : HiveObject
 			if ( input )
 			{
 				if ( t.cartInput < 5 )
-					oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartInput, 5, false );
+					oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.cartInput, 5, false );
 			}
 			else
 			{
 				if ( t.cartOutput < Constants.Stock.cartCapacity )
-					oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
+					oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
 			}
 
 			if ( t.inputMax < l )
-				oh.ExecuteStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l, false );
+				oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l, false );
 		}
 	}
 
@@ -3354,11 +3354,11 @@ public class Interface : HiveObject
 			{
 				oh.StartGroup();
 				if ( building.flag.blueprintOnly )
-					oh.ExecuteCreateFlag( building.flag.node, false, false );
-				oh.ExecuteCreateBuilding( building.node, building.flagDirection, building.type, false );
+					oh.ScheduleCreateFlag( building.flag.node, false, false );
+				oh.ScheduleCreateBuilding( building.node, building.flagDirection, building.type, false );
 			}
 			if ( currentBlueprint is Flag flag )
-				oh.ExecuteCreateFlag( flag.node );
+				oh.ScheduleCreateFlag( flag.node );
 			currentBlueprint = null;
 			currentBlueprintPanel?.Close();
 			currentBlueprintPanel = null;
@@ -3521,7 +3521,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( road )
-				oh.ExecuteRemoveRoad( road );
+				oh.ScheduleRemoveRoad( road );
 			Close();
 		}
 
@@ -3535,14 +3535,14 @@ public class Interface : HiveObject
 
 		void Split()
 		{
-			oh.ExecuteCreateFlag( node );
+			oh.ScheduleCreateFlag( node );
 			ValidateAll();
 		}
 
 		void TargetWorkerCountChanged( int newValue )
 		{
 			if ( road && road.targetWorkerCount != newValue )
-				oh.ExecuteChangeRoadWorkerCount( road, newValue );
+				oh.ScheduleChangeRoadWorkerCount( road, newValue );
 		}
 
 		new public void OnDestroy()
@@ -3664,7 +3664,7 @@ public class Interface : HiveObject
         public bool OnNodeClicked(Node node)
         {
 			if ( !root.viewport.rightButton )
-				oh.ExecuteMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
+				oh.ScheduleMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
 
 			if ( node.road )
 			{
@@ -3715,7 +3715,7 @@ public class Interface : HiveObject
 			int col = 16;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
 			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
-			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( () => oh.ExecuteCaptureRoad( flag ) ).SetTooltip( "Merge nearby roads to this junction" );
+			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( () => oh.ScheduleCaptureRoad( flag ) ).SetTooltip( "Merge nearby roads to this junction" );
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
@@ -3739,7 +3739,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( flag && flag != root.mainPlayer.mainBuilding.flag )
-				oh.ExecuteRemoveFlag( flag );
+				oh.ScheduleRemoveFlag( flag );
 			Close();
 		}
 
@@ -3820,7 +3820,7 @@ public class Interface : HiveObject
         {
 			int i = flag.node.DirectionTo( node );
 			if ( i >= 0 && !root.viewport.rightButton )
-				oh.ExecuteMoveFlag( flag, i );
+				oh.ScheduleMoveFlag( flag, i );
 			else
 				root.viewport.OnNodeClicked( node );
 			return keepGoing;
@@ -4189,7 +4189,7 @@ if ( cart )
 		void Remove()
 		{
 			if ( construction != null && construction.boss != null )
-				oh.ExecuteRemoveBuilding( construction.boss );
+				oh.ScheduleRemoveBuilding( construction.boss );
 		}
 	}
 
@@ -4446,8 +4446,8 @@ if ( cart )
 				rate[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
 				status[i] = Text( "", 8 ).Link( scroll.content ).PinSideways( 0, row, 100, 2 * iconSize );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => oh.ExecuteChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => oh.ExecuteChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
+				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => oh.ScheduleChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
+				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => oh.ScheduleChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
 				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) ).SetTooltip( "Follow the cart which is currently working on the route" );
 				row -= iconSize + 5;
 			}
