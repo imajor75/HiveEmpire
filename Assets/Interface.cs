@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -4097,7 +4097,7 @@ if ( cart )
 
 		public static ConstructionPanel Create()
 		{
-			return new GameObject( "Contruction panel").AddComponent<ConstructionPanel>();
+			return new GameObject( "Contruction panel" ).AddComponent<ConstructionPanel>();
 		}
 
 		public void Open( Building.Construction construction, bool show = false )
@@ -6271,7 +6271,7 @@ if ( cart )
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
 				grabbedEye = eye;
-				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true, false, true );
+				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true, false, true, false );
 				escCloses = false;
 			}
 
