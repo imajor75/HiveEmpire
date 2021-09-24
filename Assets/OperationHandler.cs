@@ -91,14 +91,14 @@ public class OperationHandler : HiveObject
         currentGroup++;
     }
 
-    public void ExecuteOperation( Operation operation, bool standalone = true )
+    public void ScheduleOperation( Operation operation, bool standalone = true )
 	{
         if ( standalone )
             currentGroup++;
         operation.scheduleAt = time;
         if ( operation.group < 0 )
             operation.group = currentGroup;
-        if ( !insideFrame )
+        if ( !insideFrame && world.speed != World.Speed.pause )
             operation.scheduleAt++;
         repeatBuffer.Add( operation );
 	}
@@ -131,23 +131,23 @@ public class OperationHandler : HiveObject
 	public void ExecuteRemoveBuilding( Building building, bool standalone = true )
 	{
         if ( building )
-		    ExecuteOperation( Operation.Create().SetupAsRemoveBuilding( building ), standalone );
+		    ScheduleOperation( Operation.Create().SetupAsRemoveBuilding( building ), standalone );
 	}
 
 	public void ExecuteCreateBuilding( Node location, int direction, Building.Type buildingType, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType ), standalone );
 	}
 
 	public void ExecuteRemoveRoad( Road road, bool standalone = true )
 	{
         if ( road )
-		    ExecuteOperation( Operation.Create().SetupAsRemoveRoad( road ), standalone );
+		    ScheduleOperation( Operation.Create().SetupAsRemoveRoad( road ), standalone );
 	}
 
 	public void ExecuteCreateRoad( Road road, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCreateRoad( road.nodes ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCreateRoad( road.nodes ), standalone );
 	}
 
 	public void ExecuteRemoveFlag( Flag flag )
@@ -168,22 +168,22 @@ public class OperationHandler : HiveObject
                 ExecuteRemoveRoad( road, false );
         }
         
-		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), false );
+		ScheduleOperation( Operation.Create().SetupAsRemoveFlag( flag ), false );
 	}
 
 	public void ExecuteCreateFlag( Node location, bool crossing = false, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCreateFlag( location, crossing ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCreateFlag( location, crossing ), standalone );
 	}
 
 	public void ExecuteRemoveFlag( Flag flag, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsRemoveFlag( flag ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsRemoveFlag( flag ), standalone );
 	}
 
 	public void ExecuteCaptureRoad( Flag flag, bool standalone = true )
 	{
-		ExecuteOperation( Operation.Create().SetupAsCaptureRoad( flag ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCaptureRoad( flag ), standalone );
 	}
 
 	public void ExecuteChangeArea( Building building, Ground.Area area, Node center, int radius )
@@ -209,7 +209,7 @@ public class OperationHandler : HiveObject
 
     public void ExecuteStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value, bool standalone = true )
     {
-        ExecuteOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone );
+        ScheduleOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone );
     }
 
     void FixedUpdate()
@@ -244,32 +244,8 @@ public class OperationHandler : HiveObject
         world.OnEndOfLogicalFrame();
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
-        {
-            var operation = repeatBuffer[executeIndex];
-            HiveObject.Log( $"Executing {operation.name}" );
-            var inverse = operation.ExecuteAndInvert();
-            if ( inverse )
-            {
-                inverse.group = int.MaxValue - operation.group;
-                switch ( operation.source )
-                {
-                    case Operation.Source.manual:
-                        inverse.source = Operation.Source.undo;
-                        undoQueue.Add( inverse );
-                        redoQueue.Clear();
-                        break;
-                    case Operation.Source.undo:
-                        inverse.source = Operation.Source.redo;
-                        redoQueue.Add( inverse );
-                        break;
-                    case Operation.Source.redo:
-                        inverse.source = Operation.Source.undo;
-                        undoQueue.Add( inverse );
-                        break;
-                }
-            }
-            executeIndex++;
-        }
+            ExecuteOperation( repeatBuffer[executeIndex++] );
+
         world.fixedOrderCalls = false;
 
         finishedFrameIndex++;
@@ -284,10 +260,42 @@ public class OperationHandler : HiveObject
 
     void Update()
     {
+        while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
+        {
+            assert.AreEqual( world.speed, World.Speed.pause );
+            ExecuteOperation( repeatBuffer[executeIndex++] );
+        }
+        
 		if ( undoHotkey.IsDown() )
 			UndoRedo( undoQueue );
 		if ( redoHotkey.IsDown() )
 			UndoRedo( redoQueue );
+    }
+
+    void ExecuteOperation( Operation operation )
+    {
+        HiveObject.Log( $"Executing {operation.name}" );
+        var inverse = operation.ExecuteAndInvert();
+        if ( inverse )
+        {
+            inverse.group = int.MaxValue - operation.group;
+            switch ( operation.source )
+            {
+                case Operation.Source.manual:
+                    inverse.source = Operation.Source.undo;
+                    undoQueue.Add( inverse );
+                    redoQueue.Clear();
+                    break;
+                case Operation.Source.undo:
+                    inverse.source = Operation.Source.redo;
+                    redoQueue.Add( inverse );
+                    break;
+                case Operation.Source.redo:
+                    inverse.source = Operation.Source.undo;
+                    undoQueue.Add( inverse );
+                    break;
+            }
+        }
     }
 }
 
