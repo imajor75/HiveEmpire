@@ -232,7 +232,8 @@ public class Interface : HiveObject
 		exc,
 		replay,
 		yes,
-		no
+		no,
+		cave
 	}
 
 	public Interface()
@@ -473,7 +474,9 @@ public class Interface : HiveObject
 		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
 		hotkeyButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
 		var challengesButton = this.Image( Icon.exc ).AddClickHandler( () => ChallengeList.Create() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
-		challengesButton.SetTooltip( () => $"Show list of possible challenges (hotkey: {hotkeyButton.GetHotkey().keyName})" );
+		challengesButton.SetTooltip( () => $"Show list of possible challenges (hotkey: {challengesButton.GetHotkey().keyName})" );
+		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
+		showNearestCaveButton.SetTooltip( () => $"Show nearest animal cave (hotkey: {showNearestCaveButton.GetHotkey().keyName})" );
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
@@ -523,6 +526,29 @@ public class Interface : HiveObject
 	{
 		if ( root.playerInCharge )
 			BuildPanel.Create().Open();
+	}
+
+	void ShowNearestCave()
+	{
+		Resource closest = null;
+		int closestDistance = int.MaxValue;
+		foreach ( var node in ground.nodes )
+		{
+			foreach ( var resource in node.resources )
+			{
+				if ( resource.type == Resource.Type.animalSpawner )
+				{
+					int distance = resource.node.DistanceFrom( eye.location );
+					if ( distance < closestDistance )
+					{
+						closestDistance = distance;
+						closest = resource;
+					}
+				}
+			}
+		}
+		if ( closest )
+			eye.FocusOn( closest, true );
 	}
 
 	void NewGame( World.Challenge challenge )

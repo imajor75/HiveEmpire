@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -113,7 +113,13 @@ public class Eye : HiveObject
 		}
 	}
 
-    public override Node location => throw new NotImplementedException();
+    public override Node location
+	{
+		get
+		{	
+			return world.ground.GetNode( (int)x, (int)y );
+		}
+	}
 
     private void Update()
 	{
