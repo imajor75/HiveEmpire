@@ -548,6 +548,12 @@ abstract public class Building : HiveObject
 
 	new public void Start()
 	{
+		if ( destroyed )
+		{
+			base.Start();
+			return;
+		}
+
 		name = $"Building {node.x}:{node.y}";
 		ground.Link( this );
 		UpdateBody();

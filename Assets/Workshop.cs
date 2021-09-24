@@ -517,6 +517,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( levelBrake < 1 )
 			levelBrake = 1;
 		base.Start();
+		if ( destroyed )
+			return;
 		assert.IsNotNull( body );
 		if ( type == Type.mill )
 			millWheel = body.transform.Find( "SM_Bld_Preset_House_Windmill_01_Blades_Optimized" );
