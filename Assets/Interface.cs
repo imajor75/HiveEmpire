@@ -744,6 +744,8 @@ public class Interface : HiveObject
 	{
 		if ( highlightOwner == null )
 			highlightType = HighlightType.none;
+		if ( highlightType == HighlightType.area && highlightArea.center == null )
+			highlightType = HighlightType.none;
 		if ( highlightType != HighlightType.area || highlightArea.center == null )
 		{
 			Destroy( highlightVolume );
@@ -888,10 +890,7 @@ public class Interface : HiveObject
 		if ( highlightType == HighlightType.volume )
 			Assert.global.IsNotNull( highlightVolume );
 		if ( highlightType == HighlightType.area )
-		{
 			Assert.global.IsNotNull( highlightArea );
-			Assert.global.IsNotNull( highlightArea.center );
-		}
 		var roots = SceneManager.GetActiveScene().GetRootGameObjects();
 		Assert.global.AreEqual( roots.Count(), 3, "Interface, World and the Event System should be the three objects in the root" );
 #endif
@@ -1860,16 +1859,16 @@ public class Interface : HiveObject
 			{
 				if ( show )
 				{
-					if ( area.center == null )
+					if ( originalArea.center == null )
 						return;
 
 					root.highlightType = HighlightType.area;
 					root.highlightOwner = gameObject;
-					root.highlightArea = area;
+					root.highlightArea = originalArea;
 				}
 				else
 				{
-					if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == area )
+					if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == originalArea )
 						root.highlightType = HighlightType.none;
 				}
 			}
@@ -1879,7 +1878,7 @@ public class Interface : HiveObject
 
 			public void Update()
 			{
-				image.color = area.center != null ? Color.green : Color.white;
+				image.color = originalArea.center != null ? Color.green : Color.white;
 				if ( decreaseSizeHotkey.IsDown() )
 				{
 					if ( area.radius > 1 )
