@@ -266,10 +266,7 @@ public class OperationHandler : HiveObject
     void Update()
     {
         if ( this != oh )
-        {
-            DestroyThis();
             return;
-        }
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
         {
@@ -307,6 +304,11 @@ public class OperationHandler : HiveObject
                     break;
             }
         }
+    }
+
+    public override void Validate( bool chain )
+    {
+        assert.IsFalse( destroyed );
     }
 }
 

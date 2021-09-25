@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -931,6 +931,8 @@ public class Interface : HiveObject
 			}
 			else
 				root.NewGame( replay.challenge );
+			if ( world.operationHandler )
+				world.operationHandler.DestroyThis();
 			world.operationHandler = replay;
 			replay.StartReplay( executeIndex, GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) );
 		}

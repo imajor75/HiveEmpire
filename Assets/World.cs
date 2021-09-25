@@ -1250,7 +1250,10 @@ public class World : HiveCommon
 			player.Validate();
 		Assert.global.AreEqual( challenge, operationHandler.challenge );
 		if ( chain )
+		{
 			eye.Validate( true );
+			operationHandler?.Validate( true );
+		}
 	}
 
 	[System.Serializable]
