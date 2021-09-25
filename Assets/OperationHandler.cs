@@ -265,6 +265,12 @@ public class OperationHandler : HiveObject
 
     void Update()
     {
+        if ( this != oh )
+        {
+            DestroyThis();
+            return;
+        }
+
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
         {
             assert.AreEqual( world.speed, World.Speed.pause );
