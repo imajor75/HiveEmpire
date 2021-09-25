@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2387,7 +2387,7 @@ public class Interface : HiveObject
 			public BuildingPanel boss;
 			public Item.Type itemType;
 			Workshop.Buffer buffer;
-			Image disableIndicator;
+			Image disableIndicator, disableIcon;
 
 			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null, bool input = true )
 			{
@@ -2404,7 +2404,7 @@ public class Interface : HiveObject
 					boss.AreaIcon( boss.building, area ).PinSideways( 0, y );
 				if ( buffer != null && buffer.optional )
 				{
-					boss.Image( Icon.exit ).PinSideways( 0, y ).AddToggleHandler( SetDisabled, buffer.disabled );
+					disableIcon = boss.Image( Icon.exit ).PinSideways( 0, y ).AddToggleHandler( SetDisabled, buffer.disabled );
 					disableIndicator = boss.Image( Icon.emptyFrame ).Pin( itemsStartX, y - iconSize / 2 + 2, itemsEndX - itemsStartX + 4, 4 );
 					disableIndicator.color = Color.Lerp( Color.red, Color.black, 0.5f );
 				}
@@ -2449,7 +2449,10 @@ public class Interface : HiveObject
 					}
 				}
 				if ( buffer != null && disableIndicator )
+				{
+					disableIcon.SetToggleState( buffer.disabled );
 					disableIndicator.gameObject.SetActive( buffer.disabled );
+				}
 			}
 
 			public void Update()
@@ -6552,6 +6555,8 @@ public static class UIHelpers
 		public void Toggle()
 		{
 			SetToggleState( !toggleState );
+			if ( toggleHandler != null )
+				toggleHandler( toggleState );
 		}
 
 		public void SetToggleState( bool state )
@@ -6562,8 +6567,6 @@ public static class UIHelpers
 			if ( visualizer == null )
 				visualizer = UpdateLook;
 			visualizer( toggleState );
-			if ( toggleHandler != null )
-				toggleHandler( toggleState );
 		}
 
 		public void UpdateLook( bool on )
