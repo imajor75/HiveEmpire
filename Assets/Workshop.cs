@@ -698,6 +698,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 	{
 		base.CriticalUpdate();
 
+		int disabledBufferCount = 0;
+		foreach ( var buffer in buffers )
+			if ( buffer.disabled )
+				disabledBufferCount++;
+		World.CRC = disabledBufferCount;				
+
 		if ( !construction.done || blueprintOnly )
 			return;
 
