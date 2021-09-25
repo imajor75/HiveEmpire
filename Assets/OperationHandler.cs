@@ -108,7 +108,7 @@ public class OperationHandler : HiveObject
         if ( queue.Count == 0 )
             return;
         var operation = queue.Last();
-        ExecuteOperation( operation );
+        ScheduleOperation( operation );
         queue.RemoveAt( queue.Count - 1 );
         if ( queue.Count > 0 && operation.group == queue.Last().group )
             UndoRedo( queue );
