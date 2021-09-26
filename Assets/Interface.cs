@@ -733,11 +733,13 @@ public class Interface : HiveObject
 
 	void OnValidate()
 	{
+#if DEBUG
 		if ( selectByID != 0 )
 		{
 			Selection.activeGameObject = HiveObject.GetByID( selectByID )?.gameObject;
 			selectByID = 0;
 		}
+#endif
 	}
 
 	void CheckHighlight()
