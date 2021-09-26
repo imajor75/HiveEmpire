@@ -1261,8 +1261,6 @@ public class Worker : HiveObject
 			if ( taskQueue.Count > 0 && taskQueue[0].InterruptWalk() )
 				return;
 			walkProgress += currentSpeed;
-			if ( oh.recordCRC )
-				Log( $"worker {id}: {node.x}, {node.y}, {(int)( walkProgress * 10000)}" );
 
 			World.CRC = node.x + node.y + (int)( walkProgress * 10000 );
 			if ( walkProgress >= 1 )

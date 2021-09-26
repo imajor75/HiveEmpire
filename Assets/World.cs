@@ -75,8 +75,8 @@ public class World : HiveCommon
 	{
 		set
 		{
-			if ( instance.operationHandler.recordCRC && instance.time > 10 )
-				HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
+			// if ( instance.operationHandler.recordCRC && instance.time > 10 )
+			// 	HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
@@ -531,7 +531,7 @@ public class World : HiveCommon
 		else
 			r = rnd.Next();
 		//if ( time > 10 )
-			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
+			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
 		return r;
 	}
 
@@ -540,7 +540,7 @@ public class World : HiveCommon
 		Assert.global.IsTrue( instance.fixedOrderCalls );
 		var r = (float)rnd.NextDouble();
 		//if ( time > 10 )
-			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
+			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
 		return r;
 	}
 
