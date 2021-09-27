@@ -297,7 +297,7 @@ public class Player : ScriptableObject
 		Assert.global.IsNull( mainBuilding );
 		mainBuilding = Stock.Create();
 		mainBuilding.SetupMain( best, this, flagDirection );
-		HiveCommon.eye.FocusOn( mainBuilding.node );
+		HiveCommon.eye.FocusOn( mainBuilding.node, approach:false );	// TODO UI related stuff should not be here
 		return true;
 	}
 

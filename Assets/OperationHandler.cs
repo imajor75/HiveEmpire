@@ -16,7 +16,7 @@ public class OperationHandler : HiveObject
     public int finishedFrameIndex = -1;
     public int replayLength = -1;
     public int currentGroup = 0;
-    public string lastSave;
+    public List<string> saveFileNames = new List<string>();
     public bool recordCRC;
     public bool recalculateCRC;
     public bool insideFrame
@@ -37,6 +37,9 @@ public class OperationHandler : HiveObject
     }
 
     public override Node location => throw new System.NotImplementedException();
+
+	[Obsolete( "Compatibility with old files", true )]
+    string lastSave { set {} }
 
     public Operation next 
     { 
@@ -68,12 +71,26 @@ public class OperationHandler : HiveObject
         base.Start();
     }
 
-    public void StartReplay( int from = 0, bool recalculateCRC = false )
+    public void StartReplay( int saveFileIndex = -1, bool recalculateCRC = false )
     {
+        executeIndex = 0;
+        if ( saveFileIndex != -1 )
+        {
+            root.Load( Application.persistentDataPath + "/Saves/" + saveFileNames[saveFileIndex] );  // TODO This should call World.Load and World.NewGame
+            executeIndex = oh.executeIndex;
+            challenge = world.challenge;
+        }
+        else
+            root.NewGame( challenge );
+        destroyed = false;	// TODO This is a hack. World.Clear sets this bool field to true for every hive object in the memory, not only for those which were really destroyed
+
+        if ( world.operationHandler )
+            world.operationHandler.DestroyThis();
+        world.operationHandler = this;
+
         world.roadTutorialShowed = world.createRoadTutorialShowed = true;
         mode = Mode.repeating;
         finishedFrameIndex = time;
-        executeIndex = from;
         this.recalculateCRC = recalculateCRC;
     }
 

@@ -78,6 +78,7 @@ public class ItemDispatcher : HiveObject
 			markets.Add( ScriptableObject.CreateInstance<Market>() );
 			markets[i].Setup( this, (Item.Type)i );
 		}
+		base.Setup();
 	}
 
 	new public void Start()

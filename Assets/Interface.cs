@@ -552,7 +552,7 @@ public class Interface : HiveObject
 			eye.FocusOn( closest, true );
 	}
 
-	void NewGame( World.Challenge challenge )
+	public void NewGame( World.Challenge challenge )
 	{
 		world.NewGame( challenge );
 		if ( world.players.Count > 0 )
@@ -583,14 +583,7 @@ public class Interface : HiveObject
 	{
 		print( $"Loading replay {name}" );
 		var o = Serializer.Read<OperationHandler>( name );
-		if ( o.lastSave != null )
-		{
-			ReplayLoader.Create( o );
-			return;
-		}
-		root.NewGame( o.challenge );
-		world.operationHandler = o;
-		o.StartReplay();
+		ReplayLoader.Create( o );
 	}
 
 	public void SaveReplay( string name )
@@ -903,6 +896,7 @@ public class Interface : HiveObject
 	public class ReplayLoader : Panel
 	{
 		public OperationHandler replay;
+		public Dropdown saves;
 
 		public static ReplayLoader Create( OperationHandler o )
 		{
@@ -915,27 +909,16 @@ public class Interface : HiveObject
 		{
 			this.replay = replay;
 			base.Open( 300, 100 );
-			Text( "Do you want to continue from the latest save, or from the beginnin?" ).PinCenter( 0, -borderWidth - iconSize, 200, 2 * iconSize, 0.5f, 1 ).alignment = TextAnchor.UpperCenter;
-			Button( "Load latest save" ).PinCenter( 0, -60, 100, iconSize, 0.25f, 1 ).AddClickHandler( () => StartReplay( true ) );
-			Button( "Start from the beginning" ).PinCenter( 0, -60, 100, iconSize, 0.75f, 1 ).AddClickHandler( () => StartReplay( false ) );
+			Text( "Start from:" ).Pin( borderWidth, -borderWidth, 80, 2 * iconSize );
+			saves = Dropdown().Pin( 80, -borderWidth, 200, iconSize );
+			saves.AddOptions( new List<string>{ "Beginning" } );
+			saves.AddOptions( replay.saveFileNames );
+			Button( "Start" ).PinCenter( 0, -60, 100, 25, 0.5f, 1 ).AddClickHandler( StartReplay );
 		}
 
-		void StartReplay( bool loadLatestSave )
+		void StartReplay()
 		{
-			int executeIndex = 0;
-			if ( loadLatestSave )
-			{
-				root.Load( replay.lastSave );
-				replay.destroyed = false;	// TODO This is a hack. World.Load sets this bool field to true for every hive object in the memory, not only for those which were really destroyed
-				executeIndex = oh.executeIndex;
-				replay.challenge = world.challenge;
-			}
-			else
-				root.NewGame( replay.challenge );
-			if ( world.operationHandler )
-				world.operationHandler.DestroyThis();
-			world.operationHandler = replay;
-			replay.StartReplay( executeIndex, GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) );
+			replay.StartReplay( saves.value - 1, GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) );
 		}
 	}
 	public class PathVisualization : MonoBehaviour

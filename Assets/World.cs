@@ -76,7 +76,7 @@ public class World : HiveCommon
 		set
 		{
 			// if ( instance.operationHandler.recordCRC && instance.time > 10 )
-			// 	HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
+			 	HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
@@ -531,7 +531,7 @@ public class World : HiveCommon
 		else
 			r = rnd.Next();
 		//if ( time > 10 )
-			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
+			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
 		return r;
 	}
 
@@ -540,7 +540,7 @@ public class World : HiveCommon
 		Assert.global.IsTrue( instance.fixedOrderCalls );
 		var r = (float)rnd.NextDouble();
 		//if ( time > 10 )
-			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
+			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
 		return r;
 	}
 
@@ -746,24 +746,6 @@ public class World : HiveCommon
 		water.transform.localPosition = Vector3.up * waterLevel;
 
 		{
-			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
-			{
-				if ( ho.destroyed || ho is Interface )
-					continue;
-				if ( ho.id == 0 )
-				{
-					HiveObject.Log( $"Fixing the ID for {ho.name}" );
-					ho.id = nextID++;
-				}
-				if ( !hiveObjects.Contains( ho ) && !newHiveObjects.Contains( ho ) )
-				{
-					HiveObject.Log( $"Adding {ho.name} to list of hive objects" );
-					hiveObjects.AddFirst( ho );
-				}
-				ho.registered = true;
-			}
-		}
-		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
 			{
@@ -928,7 +910,7 @@ public class World : HiveCommon
 		if ( System.IO.Path.GetFileNameWithoutExtension( fileName ) == nextSaveFileName )
 			saveIndex++;
 		this.fileName = fileName;
-		operationHandler.lastSave = fileName;
+		operationHandler.saveFileNames.Add( System.IO.Path.GetFileName( fileName ) );
 		Serializer.Write( fileName, this, false );
 	}
 
@@ -985,7 +967,7 @@ public class World : HiveCommon
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 		{
 			ho.noAssert = true;
-			ho.destroyed = true;	// To prevent decoration only roads getting an IS and registered after load
+			ho.destroyed = true;	// To prevent decoration only roads getting an ID and registered after load
 		}
 		hiveObjects.Clear();
 		newHiveObjects.Clear();
