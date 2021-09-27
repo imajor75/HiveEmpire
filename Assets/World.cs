@@ -76,7 +76,7 @@ public class World : HiveCommon
 		set
 		{
 			// if ( instance.operationHandler.recordCRC && instance.time > 10 )
-			 	HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
+			 	//HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
 			instance.operationHandler.currentCRCCode += value;
 		}
 	}
@@ -531,7 +531,7 @@ public class World : HiveCommon
 		else
 			r = rnd.Next();
 		//if ( time > 10 )
-			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
+			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
 		return r;
 	}
 
@@ -540,7 +540,7 @@ public class World : HiveCommon
 		Assert.global.IsTrue( instance.fixedOrderCalls );
 		var r = (float)rnd.NextDouble();
 		//if ( time > 10 )
-			HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
+			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
 		return r;
 	}
 
@@ -558,7 +558,7 @@ public class World : HiveCommon
 		massDestroy = false;
 
 		time++;
-		HiveObject.Log( $"========= new frame ({time}, seed: {frameSeed}) ==========" );
+		//Log( $"========= new frame ({time}, seed: {frameSeed}) ==========" );
 		rnd = new System.Random( frameSeed );
 		fixedOrderCalls = true;
 		CRC = NextRnd();
@@ -1104,7 +1104,8 @@ public class World : HiveCommon
 	{	
 		ores.Clear();
 		oreCount = 0;
-		animalSpawnerCount = 0;
+		animalSpawnerCount = 0; 
+		int treeCount = 0, rockCount = 0;
 		ores.Add( new Ore{ resourceType = Resource.Type.coal, ideal = settings.idealCoal } );
 		ores.Add( new Ore{ resourceType = Resource.Type.iron, ideal = settings.idealIron } );
 		ores.Add( new Ore{ resourceType = Resource.Type.gold, ideal = settings.idealGold } );
@@ -1117,9 +1118,9 @@ public class World : HiveCommon
 		{
 			var r = new System.Random( rnd.Next() );
 			if ( r.NextDouble() < settings.forestChance )
-				node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
+				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
 			if ( r.NextDouble() < settings.rocksChance )
-				node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
+				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
 
 			if ( node.CheckType( Node.Type.land ) )
 			{
@@ -1192,6 +1193,13 @@ public class World : HiveCommon
 			if ( Resource.Create().Setup( location, Resource.Type.animalSpawner ) != null )
 				animalSpawnerCount++;
 		}
+
+		Log( "Generated resources:" );
+		Log( $" - trees: {treeCount}" );
+		Log( $" - rocks: {rockCount}" );
+		Log( $" - caves: {animalSpawnerCount}" );
+		foreach ( var ore in ores )
+			Log( $" - {ore.resourceType}: {ore.resourceCount} (missing: {ore.missing})" );
 	}
 
 	public void SetSpeed( Speed speed )

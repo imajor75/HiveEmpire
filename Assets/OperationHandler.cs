@@ -244,7 +244,7 @@ public class OperationHandler : HiveObject
         {
             assert.AreEqual( time, CRCCodes.Count );
             CRCCodes.Add( currentCRCCode );
-            Log( $"End of frame, CRC {currentCRCCode} was stored" );
+            //Log( $"End of frame, CRC {currentCRCCode} was stored" );
         }
         if ( mode == Mode.repeating )
         {
@@ -252,12 +252,12 @@ public class OperationHandler : HiveObject
             if ( !recalculateCRC )
             {
                 assert.AreEqual( CRCCodes[time], currentCRCCode, "CRC mismatch" );
-                Log( $"End of frame, CRC {currentCRCCode} was checked" );
+                //Log( $"End of frame, CRC {currentCRCCode} was checked" );
             }
             else
             {
                 CRCCodes[time] = currentCRCCode;
-                Log( $"End of frame, CRC recalculated as {currentCRCCode}" );
+                //Log( $"End of frame, CRC recalculated as {currentCRCCode}" );
             }
         }
         currentCRCCode = 0;

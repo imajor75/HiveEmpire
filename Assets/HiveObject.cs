@@ -14,6 +14,13 @@ public class HiveCommon : MonoBehaviour
 	public static OperationHandler oh { get { return world.operationHandler; } }
 	public static Eye eye { get { return world.eye; } }
 	public static Interface root { get { return Interface.root; } }
+
+	public static void Log( string text, bool important = false )
+	{
+		root.logFile.Write( text + "\n" );
+		if ( important )
+			print( text );
+	}
 }
 
 public abstract class HiveObject : HiveCommon
@@ -67,13 +74,6 @@ public abstract class HiveObject : HiveCommon
 		destroyed = true;
 		this.noAssert = noAssert;
 		Destroy( gameObject );
-	}
-
-	public static void Log( string text, bool important = false )
-	{
-		root.logFile.Write( text + "\n" );
-		if ( important )
-			print( text );
 	}
 
 	public void OnDestroy()
