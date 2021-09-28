@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -295,7 +295,7 @@ public class Node : HiveObject
 		return another.GetPositionRelativeTo( this ) - position;
 	}
 
-	public int AddResourcePatch( Resource.Type type, int size, float density, bool overwrite = false )
+	public int AddResourcePatch( Resource.Type type, int size, float density, float strength = 1, bool overwrite = false )
 	{
 		int count = 0;
 		for ( int x = -size; x < size; x++ )
@@ -306,14 +306,14 @@ public class Node : HiveObject
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > World.NextRnd( 100 ) )
-					if ( n.AddResource( type, overwrite ) )
+					if ( n.AddResource( type, strength, overwrite ) )
 						count++;
 			}
 		}
 		return count;
 	}
 
-	public bool AddResource( Resource.Type type, bool overwrite = false )
+	public bool AddResource( Resource.Type type, float strength = 1, bool overwrite = false )
 	{
 		if ( resources.Count > 0  )
 		{
@@ -334,7 +334,7 @@ public class Node : HiveObject
 			if ( building || flag || road )
 				return false;
 		}
-		Resource resource = Resource.Create().Setup( this, type );
+		Resource resource = Resource.Create().Setup( this, type, strength:strength );
 		if ( resource && type == Resource.Type.tree )
 			resource.life.Start( -2 * Constants.Resource.treeGrowthTime );
 		return resource != null;

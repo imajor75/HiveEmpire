@@ -234,7 +234,7 @@ public class Player : ScriptableObject
 	bool CreateMainBuilding()
 	{
 		const int flagDirection = 1;
-		Node center = HiveCommon.ground.GetCenter(), best = null;
+		Node best = null;
 		float heightdDif = float.MaxValue;
 		var area = Building.GetFoundation( true, flagDirection );
 		List<Ground.Offset> extendedArea = new List<Ground.Offset>();
@@ -248,10 +248,8 @@ public class Player : ScriptableObject
 			}
 		}
 
-		foreach ( var o in Ground.areas[8] )
+		foreach ( var node in HiveCommon.ground.nodes )
 		{
-			Node node = center + o;
-
 			bool invalidNode = false;
 			foreach ( var n in area )
 			{

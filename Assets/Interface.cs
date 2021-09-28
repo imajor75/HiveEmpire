@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3001,7 +3001,7 @@ public class Interface : HiveObject
 
 		void AddResourcePatch( Resource.Type resourceType )
 		{
-			node.AddResourcePatch( resourceType, 3, 10, true );
+			node.AddResourcePatch( resourceType, 3, 10, overwrite:true );
 		}
 
 		void AddTree()

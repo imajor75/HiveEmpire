@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +9,7 @@ public class Resource : HiveObject
 	public Type type;
 	public World.Timer life = new World.Timer();
 	public int charges = 1;
+	public float strength = 1;
 	public bool infinite;
 	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
 	public World.Timer gathered = new World.Timer();
@@ -139,9 +140,10 @@ public class Resource : HiveObject
 		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
 	}
 
-	public Resource Setup( Node node, Type type, int charges = -1 )
+	public Resource Setup( Node node, Type type, int charges = -1, float strength = 1 )
 	{
 		this.type = type;
+		this.strength = strength;
 		if ( charges < 1 )
 		{
 			if ( underGround || type == Type.fish )

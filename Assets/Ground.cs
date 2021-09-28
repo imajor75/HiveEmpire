@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -268,11 +268,6 @@ public class Ground : HiveObject
 			float wxy = gridXFrac + gridYFrac - 1;
 			return GetNode( gridXNode + 1, gridYNode + 1 ).height * wxy + GetNode( gridXNode, gridYNode + 1 ).height * wx + GetNode( gridXNode + 1, gridYNode ).height * wy;
 		}
-	}
-
-	public Node GetCenter()
-	{
-		return GetNode( dimension / 2, dimension / 2 );
 	}
 
 	public void RecalculateOwnership()

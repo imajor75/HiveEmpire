@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -552,7 +552,7 @@ public class World : HiveCommon
 			var c = instance.challenge;
 			c.fixedSeed = true;
 			c.seed = instance.currentSeed;
-			instance.NewGame( instance.challenge, true );
+			instance.NewGame( instance.challenge, true, false );
 			root.mainPlayer = instance.players[0];
 		}
 		massDestroy = false;
@@ -587,8 +587,10 @@ public class World : HiveCommon
 		frameSeed = NextRnd();
 	}
 		
-	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
+	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
 	{
+		if ( resetSettings )
+			settings = ScriptableObject.CreateInstance<Settings>();
 		fixedOrderCalls = true;
 		nextID = 1;
 		time = -1;
@@ -1100,20 +1102,30 @@ public class World : HiveCommon
 		Validate( true );
 	}
 
-	public void GenerateResources()
+	public void GenerateResources( float oreStrength = 1 )
 	{	
+		List<Resource> toRemove = new List<Resource>();
+		foreach ( var node in ground.nodes )
+		{
+			foreach ( var resource in node.resources )
+				toRemove.Add( resource );
+		}
+		foreach ( var resource in toRemove )
+			resource.Remove( false );
+
 		ores.Clear();
 		oreCount = 0;
 		animalSpawnerCount = 0; 
 		int treeCount = 0, rockCount = 0;
-		ores.Add( new Ore{ resourceType = Resource.Type.coal, ideal = settings.idealCoal } );
-		ores.Add( new Ore{ resourceType = Resource.Type.iron, ideal = settings.idealIron } );
-		ores.Add( new Ore{ resourceType = Resource.Type.gold, ideal = settings.idealGold } );
-		ores.Add( new Ore{ resourceType = Resource.Type.salt, ideal = settings.idealSalt } );
-		ores.Add( new Ore{ resourceType = Resource.Type.stone, ideal = settings.idealStone } );
+		ores.Add( new Ore{ resourceType = Resource.Type.coal, ideal = settings.idealCoal / oreStrength } );
+		ores.Add( new Ore{ resourceType = Resource.Type.iron, ideal = settings.idealIron / oreStrength } );
+		ores.Add( new Ore{ resourceType = Resource.Type.gold, ideal = settings.idealGold / oreStrength } );
+		ores.Add( new Ore{ resourceType = Resource.Type.salt, ideal = settings.idealSalt / oreStrength } );
+		ores.Add( new Ore{ resourceType = Resource.Type.stone, ideal = settings.idealStone / oreStrength } );
 
 		int TotalMissing() { int total = 0; foreach ( var ore in ores ) total += ore.missing; return total; };
 
+		Log( $"Total hill spots needed: {TotalMissing()}" );
 		foreach ( var node in ground.nodes )
 		{
 			var r = new System.Random( rnd.Next() );
@@ -1143,7 +1155,7 @@ public class World : HiveCommon
 			{
 				for ( int y = 0; y < ground.dimension; y++ )
 				{
-					created = CreateOrePatch( ground.GetNode( ( x + randomX ) % ground.dimension, (y + randomY ) % ground.dimension ) );
+					created = CreateOrePatch( ground.GetNode( ( x + randomX ) % ground.dimension, (y + randomY ) % ground.dimension ), oreStrength );
 
 					if ( created )
 						break;
@@ -1153,13 +1165,13 @@ public class World : HiveCommon
 			}
 			if ( !created )
 			{
-				print( "Could not create enough underground resources, not enough hills in the world? ");
-				//Assert.global.Fail();
-				break;
+				Log( $"Failed with strength {oreStrength}, trying with {1.25f * oreStrength}" );
+				GenerateResources( oreStrength * 1.25f );
+				return;
 			}
 		}
 
-		bool CreateOrePatch( Node node )
+		bool CreateOrePatch( Node node, float strength )
 		{
 			bool hasOre = false;
 			foreach ( var resource in node.resources )
@@ -1174,7 +1186,7 @@ public class World : HiveCommon
 				if ( ore.missing == 0 )
 					continue;
 
-				var resourceCount = node.AddResourcePatch( ore.resourceType, settings.size / 6, 10 );
+				var resourceCount = node.AddResourcePatch( ore.resourceType, settings.size / 6, 10, strength );
 				ore.resourceCount += resourceCount;
 				oreCount += resourceCount;
 				return resourceCount > 0;
@@ -1182,7 +1194,6 @@ public class World : HiveCommon
 			Assert.global.Fail();
 			return true;
 		}
-
 
 		int idealAnimalSpawnerCount = (int)( settings.size * settings.size * settings.animalSpawnerChance );
 		if ( idealAnimalSpawnerCount == 0 )
