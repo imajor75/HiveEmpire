@@ -136,7 +136,7 @@ public class Flag : HiveObject
 		}
 #if DEBUG
 		if ( !blueprintOnly )
-			World.CRC = freeSlots;
+			World.CRC( freeSlots, OperationHandler.Event.CodeLocation.flagFreeSlots );
 #endif
 		flattening?.CriticalUpdate();
 	}

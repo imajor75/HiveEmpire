@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -146,11 +146,11 @@ public class Node : HiveObject
 		this.x = x;
 		this.y = y;
 
-		if ( World.NextFloatRnd() <= Constants.Node.decorationDensity )
+		if ( World.NextFloatRnd( OperationHandler.Event.CodeLocation.nodeSetup ) <= Constants.Node.decorationDensity )
 		{
-			decorationPosition = Constants.Node.decorationSpreadMin + World.NextFloatRnd() * ( Constants.Node.decorationSpreadMax - Constants.Node.decorationSpreadMin );
-			decorationDirection = World.NextRnd( Constants.Node.neighbourCount );
-			decorationType = World.NextRnd( 1000000 );		// TODO not so nice
+			decorationPosition = Constants.Node.decorationSpreadMin + World.NextFloatRnd( OperationHandler.Event.CodeLocation.nodeSetup ) * ( Constants.Node.decorationSpreadMax - Constants.Node.decorationSpreadMin );
+			decorationDirection = World.NextRnd( OperationHandler.Event.CodeLocation.nodeSetup, Constants.Node.neighbourCount );
+			decorationType = World.NextRnd( OperationHandler.Event.CodeLocation.nodeSetup, 1000000 );		// TODO not so nice
 			// At this moment we don't really know the count for the different decorations, so a big random number is generated. MediaTable is doing a %, so it is ok
 			// The reason why we use an upper limit here is to avoid the value -1, which is OK, but gives an assert fail
 		}
@@ -305,7 +305,7 @@ public class Node : HiveObject
 				Node n = ground.GetNode( this.x + x, this.y + y );
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
-				if ( chance * 100 > World.NextRnd( 100 ) )
+				if ( chance * 100 > World.NextRnd( OperationHandler.Event.CodeLocation.nodeAddResourcePatch, 100 ) )
 					if ( n.AddResource( type, strength, overwrite ) )
 						count++;
 			}

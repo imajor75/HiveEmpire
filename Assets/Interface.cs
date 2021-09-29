@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -282,7 +282,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		SaveReplay( Application.persistentDataPath + $"/Replays/{world.nextReplayFileName}.json" );
+		oh.SaveReplay();
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save();
 
@@ -582,14 +582,14 @@ public class Interface : HiveObject
 	public void LoadReplay( string name )
 	{
 		print( $"Loading replay {name}" );
-		var o = Serializer.Read<OperationHandler>( name );
+		var o = OperationHandler.LoadReplay( name );
 		ReplayLoader.Create( o );
 	}
 
 	public void SaveReplay( string name )
 	{
 		print( $"Saving replay {name}" );
-		world.SaveReplay( name );
+		oh.SaveReplay( name );
 	}
 
 	public void SaveHotkeys()
@@ -6138,7 +6138,7 @@ if ( cart )
 		{
 			var c = world.challenge;
 			if ( randomizeSeed && !c.fixedSeed )
-				c.seed = World.NextRnd();
+				c.seed = World.NextRnd( OperationHandler.Event.CodeLocation.challengePanelRestart );
 			root.NewGame( c );
 		}
 
@@ -6290,7 +6290,7 @@ if ( cart )
 				if ( !directory.Exists )
 					return;
 
-				var replayFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+				var replayFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
 
 				root.LoadReplay( replayFiles.First().FullName );
 			}

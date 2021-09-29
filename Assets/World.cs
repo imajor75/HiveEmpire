@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +11,7 @@ public class World : HiveCommon
 {
 	public new Ground ground;
 	public new string name;
-	public int saveIndex, replayIndex;
+	public int saveIndex;
 	public int currentSeed;
 	public List<Player> players = new List<Player>();
 	public new Eye eye;
@@ -71,18 +71,13 @@ public class World : HiveCommon
 		}
 	}
 
-	public static int CRC
+	public static void CRC( int code, OperationHandler.Event.CodeLocation caller )
 	{
-		set
-		{
-			// if ( instance.operationHandler.recordCRC && instance.time > 10 )
-			 	//HiveObject.Log( $"CRC {oh.currentCRCCode}: {value} from {Assert.Caller()}" );
-			instance.operationHandler.currentCRCCode += value;
-		}
+		instance.operationHandler.RegisterEvent( OperationHandler.Event.Type.CRC, caller, code );
+		instance.operationHandler.currentCRCCode += code;
 	}
 
 	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
-	public string nextReplayFileName { get { return $"{name} ({replayIndex})"; } }
 
 	[Obsolete( "Compatibility with old files", true )]
 	bool victory { set {} }
@@ -114,6 +109,8 @@ public class World : HiveCommon
 	int randomSeed { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	bool insideCriticalSection { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int replayIndex { set {} }
 	public Settings settings;
 
 	[System.Serializable]
@@ -522,7 +519,7 @@ public class World : HiveCommon
 		return soundSource;
 	}
 
-	static public int NextRnd( int limit = 0 )
+	static public int NextRnd( OperationHandler.Event.CodeLocation caller, int limit = 0 )
 	{
 		Assert.global.IsTrue( instance.fixedOrderCalls );
 		int r = 0;
@@ -530,17 +527,15 @@ public class World : HiveCommon
 			r = rnd.Next( limit );
 		else
 			r = rnd.Next();
-		//if ( time > 10 )
-			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r}" );
+		oh.RegisterEvent( OperationHandler.Event.Type.rndRequest, caller );
 		return r;
 	}
 
-	static public float NextFloatRnd()
+	static public float NextFloatRnd( OperationHandler.Event.CodeLocation caller )
 	{
 		Assert.global.IsTrue( instance.fixedOrderCalls );
 		var r = (float)rnd.NextDouble();
-		//if ( time > 10 )
-			//HiveObject.Log( $"Rnd requested from {Assert.Caller()}, {Assert.Caller(3)}: {r.ToString()}" );
+		oh.RegisterEvent( OperationHandler.Event.Type.frameEnd, caller );
 		return r;
 	}
 
@@ -558,10 +553,10 @@ public class World : HiveCommon
 		massDestroy = false;
 
 		time++;
-		//Log( $"========= new frame ({time}, seed: {frameSeed}) ==========" );
 		rnd = new System.Random( frameSeed );
 		fixedOrderCalls = true;
-		CRC = NextRnd();
+		oh.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
+		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
 		foreach ( var player in players )
 			player.FixedUpdate();
 
@@ -584,9 +579,9 @@ public class World : HiveCommon
 
 	public void OnEndOfLogicalFrame()
 	{
-		frameSeed = NextRnd();
+		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 	}
-		
+
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
 	{
 		if ( resetSettings )
@@ -663,7 +658,7 @@ public class World : HiveCommon
 			eye.viewDistance = oldEye.viewDistance;
 		}
 		Interface.ValidateAll( true );
-		frameSeed = NextRnd();
+		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
 		fixedOrderCalls = false;
 	}
 
@@ -914,13 +909,6 @@ public class World : HiveCommon
 		this.fileName = fileName;
 		operationHandler.saveFileNames.Add( System.IO.Path.GetFileName( fileName ) );
 		Serializer.Write( fileName, this, false );
-	}
-
-	public void SaveReplay( string name )
-	{
-		if ( System.IO.Path.GetFileNameWithoutExtension( name ) == nextReplayFileName )
-			replayIndex++;
-		operationHandler.SaveReplay( name );
 	}
 
 	public void Prepare()

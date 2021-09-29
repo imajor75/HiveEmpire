@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -35,6 +37,94 @@ public class OperationHandler : HiveObject
         recording,
         repeating
     }
+
+    public struct Event
+    {
+        public Type type;
+        public int code, current;
+        public CodeLocation origin;
+
+        public enum Type
+        {
+            frameStart,
+            frameEnd,
+            CRC,
+            rndRequest,
+            rndRequestFloat,
+            execution
+        }
+
+        public enum CodeLocation
+        {
+            worldFrameStart,
+            nodeSetup,
+            nodeAddResourcePatch,
+            stockCriticalUpdate,
+            workerWalk,
+            workerCarryItem,
+            flagFreeSlots,
+            itemDispatcherAttach,
+            workshopDisabledBuffers,
+            workshopForester,
+            workshopWorkProgress,
+            workshopBufferSelection,
+            workshopCollectResource,
+            operationHandlerFixedUpdate,
+            worldOnEndOfLogicalFrame,
+            worldNewGame,
+            worldNewFrame,
+            resourceSetup,
+            resourceSound,
+            resourceSilence,
+            challengePanelRestart,
+            animalDirection,
+            animalPasturing
+        }
+    }
+
+    List<Event> events = new List<Event>();
+
+	[Conditional( "DEBUG" )]
+    public void RegisterEvent( Event.Type type, Event.CodeLocation caller, int code = 0 )
+    {
+        if ( mode == Mode.recording )
+            events.Add( new Event{ type = type, code = code, current = currentCRCCode, origin = caller } );
+    }
+
+    public void SaveEvents( string file )
+    {
+        using ( BinaryWriter writer = new BinaryWriter(File.Open( file, FileMode.Create ) ) )
+        {
+            writer.Write( events.Count );
+            foreach ( var e in events )
+            {
+                writer.Write( (int)e.type );
+                writer.Write( (int)e.code );
+                writer.Write( (int)e.current );
+                writer.Write( (int)e.origin );
+            }
+        }
+    }
+
+    public void LoadEvents( string file )
+    {
+        using ( BinaryReader reader = new BinaryReader(File.Open( file, FileMode.Open ) ) )
+        {
+            int count = reader.ReadInt32();
+            while ( count-- > 0 )
+            {
+                Event e;
+                e.type = (Event.Type)reader.ReadInt32();
+                e.code = reader.ReadInt32();
+                e.current = reader.ReadInt32();
+                e.origin = (Event.CodeLocation)reader.ReadInt32();
+                events.Add( e );
+            }
+        }
+    }
+
+    public int fileIndex;
+	public string nextFileName { get { return $"{world.name} ({fileIndex})"; } }
 
     public override Node location => throw new System.NotImplementedException();
 
@@ -131,13 +221,25 @@ public class OperationHandler : HiveObject
             UndoRedo( queue );
 	}
 
-    public void SaveReplay( string name )
+    public void SaveReplay( string name = null )
     {
+        if ( name == null )
+            name = Application.persistentDataPath + $"/Replays/{nextFileName}.json";
+        if ( name.Contains( nextFileName ) )
+            fileIndex++;
 		undoQueue.Clear();		// TODO Is this necessary?
 		redoQueue.Clear();
 		if ( finishedFrameIndex > replayLength )
 			replayLength = finishedFrameIndex;
 		Serializer.Write( name, this, true );
+        SaveEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
+    }
+
+    public static OperationHandler LoadReplay( string name )
+    {
+        var t = Serializer.Read<OperationHandler>( name );
+        t.LoadEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
+        return t;
     }
 
 	public void ScheduleChangeRoadWorkerCount( Road road, int count )
@@ -244,7 +346,7 @@ public class OperationHandler : HiveObject
         {
             assert.AreEqual( time, CRCCodes.Count );
             CRCCodes.Add( currentCRCCode );
-            //Log( $"End of frame, CRC {currentCRCCode} was stored" );
+            RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
         }
         if ( mode == Mode.repeating )
         {
@@ -252,12 +354,12 @@ public class OperationHandler : HiveObject
             if ( !recalculateCRC )
             {
                 assert.AreEqual( CRCCodes[time], currentCRCCode, "CRC mismatch" );
-                //Log( $"End of frame, CRC {currentCRCCode} was checked" );
+                RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate, CRCCodes[time] );
             }
             else
             {
                 CRCCodes[time] = currentCRCCode;
-                //Log( $"End of frame, CRC recalculated as {currentCRCCode}" );
+                RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
             }
         }
         currentCRCCode = 0;

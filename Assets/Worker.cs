@@ -1262,7 +1262,7 @@ public class Worker : HiveObject
 				return;
 			walkProgress += currentSpeed;
 
-			World.CRC = node.x + node.y + (int)( walkProgress * 10000 );
+			World.CRC( node.x + node.y + (int)( walkProgress * 10000 ), OperationHandler.Event.CodeLocation.workerWalk );
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;
@@ -1391,7 +1391,7 @@ public class Worker : HiveObject
 
 		if ( type == Type.wildAnimal )
 		{
-			int r = World.NextRnd( 6 );
+			int r = World.NextRnd( OperationHandler.Event.CodeLocation.animalDirection, 6 );
 			var d = Ground.areas[1];
 			for ( int i = 0; i < d.Count; i++ )
 			{
@@ -1401,7 +1401,7 @@ public class Worker : HiveObject
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
 				ScheduleWalkToNeighbour( t );
-				if ( World.NextFloatRnd() < Constants.Workshop.pasturingPrayChance )
+				if ( World.NextFloatRnd( OperationHandler.Event.CodeLocation.animalPasturing ) < Constants.Workshop.pasturingPrayChance )
 					ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
 				return;
 			}
@@ -1584,7 +1584,7 @@ public class Worker : HiveObject
 			{
 				if ( item == null || item.flag == null )    // It can be nextFlag as well
 					continue;
-				World.CRC = item.id;
+				World.CRC( item.id, OperationHandler.Event.CodeLocation.workerCarryItem );
 				var ( score, swapOnly ) = CheckItem( item );
 				if ( swapOnly )
 				{

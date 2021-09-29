@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -187,7 +187,7 @@ public class Resource : HiveObject
 			this.infinite = true;
 		this.node = node;
 		life.Start();
-		bodyRandom = World.NextRnd();
+		bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
 		base.Setup();
 		return this;
 	}
@@ -282,7 +282,7 @@ public class Resource : HiveObject
 		}
 		if ( silence.done || silence.empty )
 		{
-			var m = ambientSounds.GetMedia( type, World.NextRnd() );
+			var m = ambientSounds.GetMedia( type, World.NextRnd( OperationHandler.Event.CodeLocation.resourceSound ) );
 			if ( m == null || m.data == null )
 			{
 				silence.Start( 1500 );
@@ -292,7 +292,7 @@ public class Resource : HiveObject
 			{
 				if ( !silence.empty )
 					soundSource.Play();
-				silence.Start( (int)( World.NextFloatRnd() * m.intData ) );
+				silence.Start( (int)( World.NextFloatRnd( OperationHandler.Event.CodeLocation.resourceSilence ) * m.intData ) );
 				soundSource.clip = m.data;
 				soundSource.loop = false;
 			}

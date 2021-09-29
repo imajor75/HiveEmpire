@@ -705,7 +705,7 @@ public class Stock : Building, Worker.Callback.IHandler
 				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
-		World.CRC = CRC;
+		World.CRC( CRC, OperationHandler.Event.CodeLocation.stockCriticalUpdate );
 	}
 
 	public override int Influence( Node node )

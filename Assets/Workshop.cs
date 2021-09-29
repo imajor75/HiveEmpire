@@ -273,7 +273,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				else
 				{
 					if ( resource.underGround )
-						resource.keepAway.Start( Constants.Workshop.mineOreRestTime );
+						resource.keepAway.Start( (int)( Constants.Workshop.mineOreRestTime / resource.strength ) );
 					if ( resource.type == Resource.Type.fish )
 						resource.keepAway.Start( Constants.Workshop.fishRestTime );
 				}
@@ -704,7 +704,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			foreach ( var buffer in buffers )
 				if ( buffer.disabled )
 					disabledBufferCRC++;
-			World.CRC = disabledBufferCRC;				
+			World.CRC( disabledBufferCRC, OperationHandler.Event.CodeLocation.workshopDisabledBuffers );
 		}
 
 		if ( !construction.done || blueprintOnly )
@@ -763,7 +763,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 					var o = Ground.areas[productionConfiguration.gatheringRange];
 					for ( int i = 0; i < o.Count; i++ )
 					{
-						int randomOffset = World.NextRnd( o.Count );
+						int randomOffset = World.NextRnd( OperationHandler.Event.CodeLocation.workshopForester, o.Count );
 						int x = (i + randomOffset) % o.Count;
 						Node place = node.Add( o[x] );
 						{
@@ -837,7 +837,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return false;
 		}
 
-		int o = World.NextRnd();
+		int o = World.NextRnd( OperationHandler.Event.CodeLocation.workshopBufferSelection );
 		for ( int i = 0; i < buffers.Count; i++ )
 		{
 			var b = buffers[(i + o) % buffers.Count];
@@ -871,7 +871,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( working )
 		{
 			progress += 1f / productionConfiguration.productionTime;
-			World.CRC = (int)( 10000 * progress );
+			World.CRC( (int)( 10000 * progress ), OperationHandler.Event.CodeLocation.workshopWorkProgress );
 			if ( progress > 1 )
 			{
 				output += productionConfiguration.outputStackSize;
@@ -904,7 +904,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			range = Ground.areas.Length - 1;
 		Node target;
 		int t = Ground.areas[range].Count;
-		int r = World.NextRnd( t );
+		int r = World.NextRnd( OperationHandler.Event.CodeLocation.workshopCollectResource, t );
 		for ( int j = -1; j < t; j++ )
 		{
 			if ( j < 0 )
