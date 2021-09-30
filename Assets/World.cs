@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -800,8 +800,6 @@ public class World : HiveCommon
 				}
 
 				var t = o as Stock;
-				if ( t && t.cart == null )
-					t.cart = Stock.Cart.Create().SetupAsCart( t ) as Stock.Cart;
 				if ( t )
 				{
 					while ( t.itemData.Count < (int)Item.Type.total )
