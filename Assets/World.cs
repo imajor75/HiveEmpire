@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -896,17 +896,22 @@ public class World : HiveCommon
 		SetSpeed( speed );    // Just for the animators and sound
 
 		HiveObject.Log( $"Next ID: {nextID}" );
+		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
 		Interface.ValidateAll( true );
 	}
 
 	public void Save( string fileName )
 	{
-		if ( System.IO.Path.GetFileNameWithoutExtension( fileName ) == nextSaveFileName )
+		if ( fileName.Contains( nextSaveFileName ) )
 			saveIndex++;
 		this.fileName = fileName;
-		operationHandler.saveFileNames.Add( System.IO.Path.GetFileName( fileName ) );
-		Serializer.Write( fileName, this, false );
+		if ( root.playerInCharge )
+		{
+			operationHandler.SaveEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
+			operationHandler.saveFileNames.Add( System.IO.Path.GetFileName( fileName ) );
+			Serializer.Write( fileName, this, false );
+		}
 	}
 
 	public void Prepare()

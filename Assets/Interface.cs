@@ -504,7 +504,7 @@ public class Interface : HiveObject
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 		if ( directory.Exists )
 		{
-			var myFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+			var myFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
 			if ( myFiles.Count() > 0 )
 				Load( myFiles.First().FullName );
 		}
@@ -6331,7 +6331,7 @@ if ( cart )
 			if ( !directory.Exists )
 				return;
 
-			var saveGameFiles = directory.GetFiles().OrderByDescending( f => f.LastWriteTime );
+			var saveGameFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
 			foreach ( var f in saveGameFiles )
 				files.Add( f.Name );
 
