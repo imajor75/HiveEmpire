@@ -44,6 +44,14 @@ public class OperationHandler : HiveObject
         public int code, current;
         public CodeLocation origin;
 
+        public string description
+        {
+            get
+            {
+                return $"{current}: {type} (code: {code}) from {origin}";
+            }
+        }
+
         public enum Type
         {
             frameStart,
@@ -82,18 +90,22 @@ public class OperationHandler : HiveObject
         }
     }
 
-    List<Event> events = new List<Event>();
+    List<Event> events = new List<Event>(), frameEvents = new List<Event>();
+    bool eventDifDumped;
 
 	[Conditional( "DEBUG" )]
     public void RegisterEvent( Event.Type type, Event.CodeLocation caller, int code = 0 )
     {
+        var e = new Event{ type = type, code = code, current = currentCRCCode, origin = caller };
         if ( mode == Mode.recording )
-            events.Add( new Event{ type = type, code = code, current = currentCRCCode, origin = caller } );
+            events.Add( e );
+        if ( mode == Mode.repeating )
+            frameEvents.Add( e );
     }
 
     public void SaveEvents( string file )
     {
-        using ( BinaryWriter writer = new BinaryWriter(File.Open( file, FileMode.Create ) ) )
+        using ( BinaryWriter writer = new BinaryWriter( File.Open( file, FileMode.Create ) ) )
         {
             writer.Write( events.Count );
             foreach ( var e in events )
@@ -108,7 +120,11 @@ public class OperationHandler : HiveObject
 
     public void LoadEvents( string file )
     {
-        using ( BinaryReader reader = new BinaryReader(File.Open( file, FileMode.Open ) ) )
+        if ( !System.IO.File.Exists( file ) )
+            return;
+
+        events.Clear();
+        using ( BinaryReader reader = new BinaryReader( File.Open( file, FileMode.Open ) ) )
         {
             int count = reader.ReadInt32();
             while ( count-- > 0 )
@@ -119,6 +135,15 @@ public class OperationHandler : HiveObject
                 e.current = reader.ReadInt32();
                 e.origin = (Event.CodeLocation)reader.ReadInt32();
                 events.Add( e );
+            }
+        }
+        assert.AreEqual( events.First().type, Event.Type.frameStart );
+        for ( int i = events.Count - 1; i > 0; i-- )
+        {
+            if ( events[i].type == Event.Type.frameStart )
+            {
+                Log( $"Events loaded from {file}, first frame: {events.First().code}, last frame: {events[i].code}" );
+                break;
             }
         }
     }
@@ -353,7 +378,33 @@ public class OperationHandler : HiveObject
             assert.IsTrue( CRCCodes.Count > time );
             if ( !recalculateCRC )
             {
-                assert.AreEqual( CRCCodes[time], currentCRCCode, "CRC mismatch" );
+                if ( CRCCodes[time] != currentCRCCode )
+                {
+                    if ( !eventDifDumped )
+                    {
+                        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-replay.txt" ) )
+                        {
+                            foreach ( var e in frameEvents )
+                                writer.Write( e.description + "\n" );
+                        }
+                        for ( int i = 0; i < events.Count; i++ )
+                        {
+                            var ie = events[i];
+                            if ( ie.type == Event.Type.frameStart && ie.code == time )
+                            {
+                                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-orig.txt" ) )
+                                {
+                                    int j = i;
+                                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time + 1 ) )
+                                        writer.Write( events[j++].description + "\n" );
+                                }
+                                break;
+                            }
+                        }
+                        eventDifDumped = true;
+                    }
+                    assert.Fail("CRC mismatch" );
+                }
                 RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate, CRCCodes[time] );
             }
             else
@@ -366,6 +417,7 @@ public class OperationHandler : HiveObject
 #endif
         world.fixedOrderCalls = true;
         world.OnEndOfLogicalFrame();
+        frameEvents.Clear();
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( repeatBuffer[executeIndex++] );
