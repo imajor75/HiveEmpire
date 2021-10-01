@@ -6167,16 +6167,27 @@ if ( cart )
 			}
 			if ( timeLeft )
 			{
-				void GoalLeft( World.Goal goal, float multiplier )
+				if ( challenge.allowTimeLeftLevels )
 				{
-					var left = (int)(challenge.timeLimit * multiplier - challenge.life.age);
-					if ( left >= 0 )
-						timeLeft.text = $"Time left: {UIHelpers.TimeToString( left )} ({goal})";
+					void GoalLeft( World.Goal goal, float multiplier )
+					{
+						var left = (int)(challenge.timeLimit * multiplier - challenge.life.age);
+						if ( left >= 0 )
+							timeLeft.text = $"Time left: {UIHelpers.TimeToString( left )} ({goal})";
+					}
+					timeLeft.text = "Out of time";
+					GoalLeft( World.Goal.bronze, 2 );
+					GoalLeft( World.Goal.silver, 4f/3 );
+					GoalLeft( World.Goal.gold, 1 );
 				}
-				timeLeft.text = "Out of time";
-				GoalLeft( World.Goal.bronze, 2 );
-				GoalLeft( World.Goal.silver, 4f/3 );
-				GoalLeft( World.Goal.gold, 1 );
+				else
+				{
+					int left = (int)(challenge.timeLimit - challenge.life.age);
+					if ( left > 0 )
+						timeLeft.text = $"Time left: {UIHelpers.TimeToString( left )}";
+					else
+						timeLeft.text = "Out of time";
+				}
 			}
 			progress.progress = challenge.progress;
 			currentChallenge.text =  $"Current challenge: {challenge.title}, level reached yet: {challenge.reachedLevel}";

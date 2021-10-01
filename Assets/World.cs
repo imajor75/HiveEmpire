@@ -194,6 +194,7 @@ public class World : HiveCommon
 		public int worldSize = 32;
 		public List<string> conditions;
 		public string conditionsText;
+		public bool allowTimeLeftLevels;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float soldierProductivityGoal { set {} }
@@ -300,7 +301,7 @@ public class World : HiveCommon
 			}
 
 			if ( timeLimit > 0 )
-				CheckCondition( life.age, timeLimit, false, null, true );
+				CheckCondition( life.age, timeLimit, allowTimeLeftLevels, null, true );
 
 			void CheckGoal( Goal goal, Timer timer )
 			{
