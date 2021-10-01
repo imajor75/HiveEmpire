@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1262,7 +1262,7 @@ public class Worker : HiveObject
 				return;
 			walkProgress += currentSpeed;
 
-			World.CRC( id << 16 + node.x + node.y + (int)( walkProgress * 10000 ), OperationHandler.Event.CodeLocation.workerWalk );
+			World.CRC( ( id << 16 ) + node.x + node.y + (int)( walkProgress * 10000 ), OperationHandler.Event.CodeLocation.workerWalk );
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;
