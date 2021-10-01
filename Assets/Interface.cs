@@ -6027,6 +6027,7 @@ if ( cart )
 			Text( "Challenge name" ).Pin( borderWidth, -borderWidth, 140, iconSize );
 			Text( "Time limit" ).PinSideways( 0, -borderWidth, 70, iconSize );
 			Text( "World size" ).PinSideways( 0, -borderWidth, 70, iconSize );
+			Text( "Best solution" ).PinSideways( 0, -borderWidth, 100, iconSize );
 			Text( "The game can be continued no matter if the current challenge is lost or won, so you can play with any of these as a free game" ).PinCenter( 0, 3 * iconSize, 400, 2 * iconSize, 0.5f, 0 ).alignment = TextAnchor.MiddleCenter;
 			var view = scroll.content;
 
@@ -6036,7 +6037,10 @@ if ( cart )
 				Text( challenge.title ).Pin( 0, row, 140, iconSize ).Link( view ).SetTooltip( challenge.description );
 				Text( challenge.timeLimit > 0 ? UIHelpers.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Text( challenge.worldSize switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
-				Button( "Begin " ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
+				Button( "Begin" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
+				Text( challenge.bestSolutionLevel.ToString() ).Link( view ).PinSideways( 0, row, 60, iconSize );
+				if ( challenge.bestSolutionLevel != World.Goal.none )
+					Button( "Replay" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => root.LoadReplay( challenge.bestSolutionReplayFileName ) );
 				row -= iconSize;
 			}
 			scroll.SetContentSize( 0, -row );
