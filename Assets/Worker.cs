@@ -1010,6 +1010,7 @@ public class Worker : HiveObject
 
 	public Worker SetupForRoad( Road road )
 	{
+		World.CRC( road.id, OperationHandler.Event.CodeLocation.workerSetupAsHauler );
 		look = type = Type.hauler;
 		name = "Hauler";
 		owner = road.owner;
@@ -1028,6 +1029,7 @@ public class Worker : HiveObject
 
 	public Worker SetupForBuilding( Building building, bool mate = false )
 	{
+		World.CRC( building.id, OperationHandler.Event.CodeLocation.workerSetupAsTinkerer );
 		look = type = Type.tinkerer;
 		if ( mate )
 			look = Type.tinkererMate;
@@ -1038,6 +1040,7 @@ public class Worker : HiveObject
 
 	public Worker SetupForConstruction( Building building )
 	{
+		World.CRC( building.id, OperationHandler.Event.CodeLocation.workerSetupAsBuilder );
 		look = type = Type.constructor;
 		name = "Builder";
 		currentColor = Color.cyan;
@@ -1046,6 +1049,7 @@ public class Worker : HiveObject
 
 	public Worker SetupForFlattening( Flag flag )
 	{
+		World.CRC( flag.id, OperationHandler.Event.CodeLocation.workerSetupAsBuilder );
 		assert.IsNotNull( flag );
 
 		look = type = Type.constructor;
@@ -1062,6 +1066,7 @@ public class Worker : HiveObject
 
 	public Worker SetupAsSoldier( Building building )
 	{
+		World.CRC( building.id, OperationHandler.Event.CodeLocation.workerSetupAsSoldier );
 		look = type = Type.soldier;
 		name = "Soldier";
 		currentColor = Color.red;
@@ -1098,6 +1103,7 @@ public class Worker : HiveObject
 
 	public Worker SetupAsAnimal( Resource origin, Node node )
 	{
+		World.CRC( node.id, OperationHandler.Event.CodeLocation.workerSetupAsAnimal );
 		look = type = Type.wildAnimal;
 		SetNode( node );
 		this.origin = origin;
@@ -1107,6 +1113,7 @@ public class Worker : HiveObject
 
 	public Worker SetupAsCart( Stock stock )
 	{
+		World.CRC( stock.id, OperationHandler.Event.CodeLocation.workerSetupAsCart );
 		look = type = Type.cart;
 		building = stock;
 		SetNode( stock.node );
