@@ -3754,15 +3754,12 @@ public class Interface : HiveObject
 
 		void Convert()
 		{
-			if ( !flag.crossing )
-				flag.ConvertToCrossing();
-			else
-				flag.ConvertToNormal();
+			oh.ScheduleChangeFlagType( flag );
 		}
 
 		void Flatten()
 		{
-			flag.requestFlattening = true;
+			oh.ScheduleFlattenFlag( flag );
 		}
 
 		public override void Update()

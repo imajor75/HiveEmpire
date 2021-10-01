@@ -331,6 +331,16 @@ public class OperationHandler : HiveObject
 		ScheduleOperation( Operation.Create().SetupAsRemoveFlag( flag ), standalone );
 	}
 
+	public void ScheduleFlattenFlag( Flag flag, bool standalone = true )
+	{
+		ScheduleOperation( Operation.Create().SetupAsFlattenFlag( flag ), standalone );
+	}
+
+	public void ScheduleChangeFlagType( Flag flag, bool standalone = true )
+	{
+		ScheduleOperation( Operation.Create().SetupAsChangeFlagType( flag ), standalone );
+	}
+
 	public void ScheduleCaptureRoad( Flag flag, bool standalone = true )
 	{
 		ScheduleOperation( Operation.Create().SetupAsCaptureRoad( flag ), standalone );
@@ -642,6 +652,8 @@ public class Operation : ScriptableObject
                 Type.stockAdjustment => "Adjust stock item counts",
                 Type.captureRoad => "Capture nearby roads",
                 Type.changeBufferUsage => "Change Buffer Usage",
+                Type.changeFlagType => "Convert a junction to crossing or vice versa",
+                Type.flattenFlag => "Flatten the area around a junction",
                 _ => ""
             };
             if ( type == Type.createBuilding )
@@ -693,7 +705,9 @@ public class Operation : ScriptableObject
         moveRoad,
         stockAdjustment,
         captureRoad,
-        changeBufferUsage
+        changeBufferUsage,
+        flattenFlag,
+        changeFlagType
     }
 
     public static Operation Create()
@@ -749,6 +763,22 @@ public class Operation : ScriptableObject
         type = Type.removeFlag;
         this.flag = flag;
         name = "Remove Flag";
+        return this;
+    }
+
+    public Operation SetupAsFlattenFlag( Flag flag )
+    {
+        type = Type.flattenFlag;
+        this.flag = flag;
+        name = "Flatten Flag";
+        return this;
+    }
+
+    public Operation SetupAsChangeFlagType( Flag flag )
+    {
+        type = Type.changeFlagType;
+        this.flag = flag;
+        name = "Change Flag Type";
         return this;
     }
 
@@ -999,6 +1029,19 @@ public class Operation : ScriptableObject
                 var workshop = building as Workshop;
                 workshop.buffers[bufferIndex].disabled = useBuffer;
                 return Create().SetupAsChangeBufferUsage( workshop, workshop.buffers[bufferIndex], !useBuffer );
+            }
+            case Type.flattenFlag:
+            {
+                flag.requestFlattening = true;
+                return null;
+            }
+            case Type.changeFlagType:
+            {
+                if ( !flag.crossing )
+                    flag.ConvertToCrossing();
+                else
+                    flag.ConvertToNormal();
+                return Create().SetupAsChangeFlagType( flag );
             }
         }
         return null;
