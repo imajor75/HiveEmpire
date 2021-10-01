@@ -3795,8 +3795,8 @@ public class Interface : HiveObject
 						itemTimers[i].enabled = true;
 						items[i].SetInTransit( false );
 						int timeAtFlag = flag.items[i].atFlag.age;
-						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / Constants.World.normalSpeedPerSecond * 60 ), 3 );
-						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / Constants.World.normalSpeedPerSecond * 600f );
+						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / Constants.World.normalSpeedPerSecond / 60 ), 3 );
+						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / Constants.World.normalSpeedPerSecond / 600f );
 					}
 					else
 						items[i].SetInTransit( true );
