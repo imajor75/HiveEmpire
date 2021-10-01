@@ -252,7 +252,7 @@ public class OperationHandler : HiveObject
             UndoRedo( queue );
 	}
 
-    public void SaveReplay( string name = null )
+    public string SaveReplay( string name = null )
     {
         if ( name == null )
             name = Application.persistentDataPath + $"/Replays/{nextFileName}.json";
@@ -264,6 +264,7 @@ public class OperationHandler : HiveObject
 			replayLength = finishedFrameIndex;
 		Serializer.Write( name, this, true );
         SaveEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
+        return name;
     }
 
     public static OperationHandler LoadReplay( string name )

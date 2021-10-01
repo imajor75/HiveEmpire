@@ -491,14 +491,7 @@ public class Interface : HiveObject
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
 		LoadHotkeys();
-		challenges = Serializer.Read<World.Challenge.List>( Application.streamingAssetsPath + "/challenges.json" ).list;
-		var challengeContainer = new GameObject( "Challenges" );
-		challengeContainer.transform.SetParent( transform );
-		foreach ( var challenge in challenges )
-		{
-			challenge.ParseConditions();
-			challenge.transform.SetParent( challengeContainer.transform );
-		}
+		LoadChallenges();
 
 		world = World.Create().Setup();
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
@@ -617,8 +610,33 @@ public class Interface : HiveObject
 		}
 	}
 
+	public void LoadChallenges()
+	{
+		string file = Application.persistentDataPath + "/challenges.json";
+		if ( !File.Exists( file ) )
+			file = Application.streamingAssetsPath + "/challenges.json";
+		challenges = Serializer.Read<World.Challenge.List>( file ).list;
+		var challengeContainer = new GameObject( "Challenges" );
+		challengeContainer.transform.SetParent( transform );
+		foreach ( var challenge in challenges )
+		{
+			challenge.ParseConditions();
+			challenge.transform.SetParent( challengeContainer.transform );
+		}
+	}
+
 	public void OnGoalReached( World.Goal goal )
 	{
+		foreach ( var challenge in challenges )
+		{
+			if ( challenge.title == world.challenge.title && challenge.bestSolutionLevel < goal )
+			{
+				challenge.bestSolutionLevel = goal;
+				challenge.bestSolutionReplayFileName = oh.SaveReplay();
+				Serializer.Write( Application.persistentDataPath + "/challenges.json", new World.Challenge.List { list = challenges }, true, false );
+			}
+		}
+
 		ChallengePanel.Create().Open( goal );
 	}
 

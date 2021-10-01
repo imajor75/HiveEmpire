@@ -195,6 +195,8 @@ public class World : HiveCommon
 		public List<string> conditions;
 		public string conditionsText;
 		public bool allowTimeLeftLevels;
+		public string bestSolutionReplayFileName;
+		public Goal bestSolutionLevel;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float soldierProductivityGoal { set {} }
