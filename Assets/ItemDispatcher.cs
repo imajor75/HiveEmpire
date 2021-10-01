@@ -326,7 +326,7 @@ public class ItemDispatcher : HiveObject
 			Result r = Result.match;
 			if ( first.flagJammed )
 				r = Result.flagJam;
-			else if ( first.noDispenser )
+			else if ( first.noDispenser || ( first.building && first.building.itemDispatchedThisFrame ) )
 				r = Result.noDispatcher;
 			else if ( first.quantity == 0 )
 				r = Result.outOfItems;

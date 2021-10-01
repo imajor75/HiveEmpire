@@ -24,6 +24,7 @@ abstract public class Building : HiveObject
 	public List<Item> itemsOnTheWay = new List<Item>();
 	static List<Ground.Offset> foundationHelper;
 	public Configuration configuration;
+	public bool itemDispatchedThisFrame;
 
 	protected GameObject body;
 	GameObject highlightArrow;
@@ -601,6 +602,7 @@ abstract public class Building : HiveObject
 
 	public override void CriticalUpdate()
 	{
+		itemDispatchedThisFrame = false;
 		construction.CriticalUpdate();
 	}
 
@@ -609,6 +611,7 @@ abstract public class Building : HiveObject
 		if ( dispenser == null || !dispenser.IsIdle( true ) || flag.freeSlots == 0 )
 			return null;
 
+		itemDispatchedThisFrame = true;
 		dispenser.SetActive( true );
 		// TODO Don't create the item, if there is no path between this and destination
 		Item item = Item.Create().Setup( itemType, this, destination, priority );
