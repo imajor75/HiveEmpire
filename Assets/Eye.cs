@@ -176,26 +176,26 @@ public class Eye : HiveObject
 		x += movement.x;
 		y += movement.z;
 
-		if ( y < -ground.dimension * Constants.Node.size / 2 )
+		while ( y < -ground.dimension * Constants.Node.size / 2 )
 		{
 			y += ground.dimension * Constants.Node.size;
 			x += ground.dimension * Constants.Node.size / 2;
 			absoluteY -= ground.dimension * Constants.Node.size;
 			absoluteX -= ground.dimension * Constants.Node.size / 2;
 		}
-		if ( y > ground.dimension * Constants.Node.size / 2 )
+		while ( y > ground.dimension * Constants.Node.size / 2 )
 		{
 			y -= ground.dimension * Constants.Node.size;
 			x -= ground.dimension * Constants.Node.size / 2;
 			absoluteY += ground.dimension * Constants.Node.size;
 			absoluteX += ground.dimension * Constants.Node.size / 2;
 		}
-		if ( x < -ground.dimension * Constants.Node.size / 2 + y / 2 )
+		while ( x < -ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
 			x += ground.dimension * Constants.Node.size;
 			absoluteX -= ground.dimension * Constants.Node.size;
 		}
-		if ( x > ground.dimension * Constants.Node.size / 2 + y / 2 )
+		while ( x > ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
 			x -= ground.dimension * Constants.Node.size;
 			absoluteX += ground.dimension * Constants.Node.size;
