@@ -336,10 +336,11 @@ public class Worker : HiveObject
 				{
 					// Boss is trying to move to the next road. This is always possible when the flag is not a crossing, since no workers 
 					// can use the same entry as the cart. But when the flag is a crossing, it is possible that the cart cannot jump to the 
-					// road in an exclusive way, because a worker is in the way. In that case the cart simply waits.
+					// road in an exclusive way, because a worker is in the way. In that case the cart simply waits while already left the exclusivity
+					// of the previous road.
 					if ( wasExclusive )
 					{
-						var s = boss.EnterExclusivity( boss.road, boss.node );
+						var s = boss.EnterExclusivity( null, boss.node );
 						boss.assert.IsTrue( s );
 					}
 					path.progress--;    // cancel advancement
@@ -2088,13 +2089,16 @@ public class Worker : HiveObject
 			return false;
 		if ( node.flag && !node.flag.crossing && node.flag.user )
 			return false;
-		int index = road.nodes.IndexOf( node );	// This could be Road.NodeIndex, which is faster, but that depends on RegisterOnRoad, which is not always called at this moment
-		if ( index < 0 )
-			return false;
-		if ( road.workerAtNodes[index] )
-			return false;
+		if ( road )
+		{
+			int index = road.nodes.IndexOf( node );	// This could be Road.NodeIndex, which is faster, but that depends on RegisterOnRoad, which is not always called at this moment
+			if ( index < 0 )
+				return false;
+			if ( road.workerAtNodes[index] )
+				return false;
 
-		road.workerAtNodes[index] = this;
+			road.workerAtNodes[index] = this;
+		}
 
 		if ( node.flag && !node.flag.crossing )
 		{
@@ -2120,28 +2124,32 @@ public class Worker : HiveObject
 			assert.IsTrue( road == null || building == null );
 		if ( exclusiveMode )
 		{
-			assert.IsValid( road );			// TODO Triggered when stress deleting all the roads flags and buildings on a map for a cart (?) going back home
-											// TODO Triggered again when pressing the magnet icon on a flag. Worker is a cart which was rolling on the road which was merged to the flag by the magnet
-											// The cart is just walking to the end of the road (an unaffected flag) the segment between walkTo and walkFrom is not affected by the magnet
-											// It is in an exclusive mode, exclusiveFlag is correct, but the road field is referring to the old deleted road. The new road correctly has the card in the
-											// workerAtNodes array
+			if ( type != Type.cart )
+				assert.IsValid( road );			// TODO Triggered when stress deleting all the roads flags and buildings on a map for a cart (?) going back home
+												// TODO Triggered again when pressing the magnet icon on a flag. Worker is a cart which was rolling on the road which was merged to the flag by the magnet
+												// The cart is just walking to the end of the road (an unaffected flag) the segment between walkTo and walkFrom is not affected by the magnet
+												// It is in an exclusive mode, exclusiveFlag is correct, but the road field is referring to the old deleted road. The new road correctly has the card in the
+												// workerAtNodes array
 			if ( type == Type.hauler )
 				assert.IsTrue( road.workers.Contains( this ) );
-			int point = road.NodeIndex( node );
-			if ( point < 0 && type == Type.hauler )
+			if ( road )
 			{
-				if ( itemsInHands[0] )
-					assert.IsTrue( node.building || itemsInHands[0].tripCancelled );	// It is possible, that the item destination was destroyed during the last step
-				else
-					assert.IsTrue( node.building || walkTo == null );		// It is possible, that the building was just destroyed, but the worker did not yet start moving back to the road (?)
-				if ( node.building )
+				int point = road.NodeIndex( node );
+				if ( point < 0 && type == Type.hauler )
 				{
-					point = road.NodeIndex( node.building.flag.node );
-					assert.IsTrue( point >= 0 );
+					if ( itemsInHands[0] )
+						assert.IsTrue( node.building || itemsInHands[0].tripCancelled );	// It is possible, that the item destination was destroyed during the last step
+					else
+						assert.IsTrue( node.building || walkTo == null );		// It is possible, that the building was just destroyed, but the worker did not yet start moving back to the road (?)
+					if ( node.building )
+					{
+						point = road.NodeIndex( node.building.flag.node );
+						assert.IsTrue( point >= 0 );
+					}
 				}
+				if ( point >= 0 )
+					assert.AreEqual( road.workerAtNodes[point], this );
 			}
-			if ( point >= 0 )
-				assert.AreEqual( road.workerAtNodes[point], this );
 		}
 		foreach ( var item in itemsInHands )
 		{
