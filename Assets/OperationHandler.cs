@@ -981,6 +981,7 @@ public class Operation : ScriptableObject
             }
             case Type.moveFlag:
             {
+                var flag = this.flag;
                 if ( !flag.Move( direction ) )
                     return null;
                 return Create().SetupAsMoveFlag( flag, ( direction + Constants.Node.neighbourCount / 2 ) % Constants.Node.neighbourCount );
