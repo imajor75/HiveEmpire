@@ -205,6 +205,8 @@ public class OperationHandler : HiveObject
             root.NewGame( challenge );
         destroyed = false;	// TODO This is a hack. World.Clear sets this bool field to true for every hive object in the memory, not only for those which were really destroyed
 
+        frameEvents = world.operationHandler.events;
+        currentCRCCode = world.operationHandler.currentCRCCode;
         if ( world.operationHandler )
             world.operationHandler.DestroyThis();
         world.operationHandler = this;
