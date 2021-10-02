@@ -143,7 +143,6 @@ public class OperationHandler : HiveObject
                 events.Add( e );
             }
         }
-        assert.AreEqual( events.First().type, Event.Type.frameStart );
         for ( int i = events.Count - 1; i > 0; i-- )
         {
             if ( events[i].type == Event.Type.frameStart )
@@ -409,7 +408,7 @@ public class OperationHandler : HiveObject
                         for ( int i = 0; i < events.Count; i++ )
                         {
                             var ie = events[i];
-                            if ( ie.type == Event.Type.frameStart && ie.code == time )
+                            if ( ( ie.type == Event.Type.frameStart && ie.code == time ) || time == 0 )
                             {
                                 using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-orig.txt" ) )
                                 {
