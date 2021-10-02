@@ -538,7 +538,7 @@ public class World : HiveCommon
 	{
 		Assert.global.IsTrue( instance.fixedOrderCalls );
 		var r = (float)rnd.NextDouble();
-		oh.RegisterEvent( OperationHandler.Event.Type.frameEnd, caller );
+		oh.RegisterEvent( OperationHandler.Event.Type.rndRequestFloat, caller );
 		return r;
 	}
 
