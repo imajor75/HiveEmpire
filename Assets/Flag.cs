@@ -546,13 +546,13 @@ public class Flag : HiveObject
 
 		if ( placeToBuildOn.block && placeToBuildOn.road == null )
 		{
-			bool roadOrRockBlocking = false;
+			bool resourceBlocking = false;
 			foreach ( var resource in placeToBuildOn.resources )
 			{
-				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock )
-					roadOrRockBlocking = true;
+				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornfield )
+					resourceBlocking = true;
 			}
-			if ( !ignoreBlockingResources || !roadOrRockBlocking )
+			if ( !ignoreBlockingResources || !resourceBlocking )
 				return new SiteTestResult( SiteTestResult.Result.blocked );
 		}
 

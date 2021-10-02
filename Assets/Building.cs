@@ -455,7 +455,7 @@ abstract public class Building : HiveObject
 				bool resourceBlocking = false;
 				foreach ( var resource in basis.resources )
 				{
-					if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock )
+					if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornfield )
 					resourceBlocking = true;
 				}
 				if ( !ignoreBlockingResources || !resourceBlocking )
