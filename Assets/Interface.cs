@@ -284,7 +284,7 @@ public class Interface : HiveObject
 	{
 		oh.SaveReplay();
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
-			Save();
+			Save( manualSave:false );
 
 		logFile.Close();
 
@@ -557,31 +557,30 @@ public class Interface : HiveObject
 
 	public void Load( string fileName )
 	{
-		print( "Loading " + fileName );
+		Log( "Loading " + fileName, true );
 		world.Load( fileName );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
 	}
 
-	public void Save( string fileName = "" )
+	public void Save( string fileName = "", bool manualSave = false )
 	{
 		if ( fileName == "" )
 			fileName = Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json";
-		world.Save( fileName );
-		print( fileName + " is saved" );
-		Log( fileName + " is saved" );
+		world.Save( fileName, manualSave );
+		Log( fileName + " is saved", true );
 	}
 
 	public void LoadReplay( string name )
 	{
-		print( $"Loading replay {name}" );
+		Log( $"Loading replay {name}", true );
 		var o = OperationHandler.LoadReplay( name );
 		ReplayLoader.Create( o );
 	}
 
 	public void SaveReplay( string name )
 	{
-		print( $"Saving replay {name}" );
+		Log( $"Saving replay {name}", true );
 		oh.SaveReplay( name );
 	}
 
@@ -658,7 +657,7 @@ public class Interface : HiveObject
 		// }
 		if ( Time.time - lastAutoSave > Constants.Interface.autoSaveInterval )
 		{
-			Save();
+			Save( manualSave:false );
 			lastAutoSave = Time.time;
 		}
 
@@ -6340,7 +6339,7 @@ if ( cart )
 
 		void Save()
 		{
-			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json" );
+			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json", true );
 			saveName.text = world.nextSaveFileName;
 		}
 

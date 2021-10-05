@@ -904,12 +904,12 @@ public class World : HiveCommon
 		Interface.ValidateAll( true );
 	}
 
-	public void Save( string fileName )
+	public void Save( string fileName, bool manualSave )
 	{
 		if ( fileName.Contains( nextSaveFileName ) )
 			saveIndex++;
 		this.fileName = fileName;
-		if ( root.playerInCharge )
+		if ( root.playerInCharge || manualSave )
 		{
 			operationHandler.SaveEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 			operationHandler.saveFileNames.Add( System.IO.Path.GetFileName( fileName ) );
