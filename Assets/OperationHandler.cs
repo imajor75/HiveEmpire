@@ -226,7 +226,8 @@ public class OperationHandler : HiveObject
         Assert.global.AreEqual( mode, Mode.repeating );
         mode = Mode.recording;
         repeatBuffer.RemoveRange( executeIndex, repeatBuffer.Count - executeIndex );
-        CRCCodes.RemoveRange( CRCCodesSkipped + time + 1, CRCCodesSkipped + CRCCodes.Count - time - 1 );
+        int CRCIndex = time - CRCCodesSkipped;
+        CRCCodes.RemoveRange( CRCIndex + 1, CRCCodes.Count - CRCIndex - 1 );
         replayLength = 0;
     }
 
