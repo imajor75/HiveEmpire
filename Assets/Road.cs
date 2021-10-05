@@ -551,9 +551,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public void Split( Flag flag )
 	{
 		bool external = false;
-		int forget = 0;
-		assert.IsNull( flag.user );
-		int splitPoint;
+		int forget = 0, splitPoint;
 		// Two cases, in first the flag is already on the road, in the second the flag is next to the road.
 		if ( flag.node.road == this )
 			splitPoint = NodeIndex( flag.node );
