@@ -317,6 +317,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 			}
 			if ( boss.node != node || node.building || node.flag || node.road || !node.CheckType( Node.Type.land ) )
 			{
+				int id = 0;
+				if ( node.building )
+					id = node.building.id;
+				if ( node.flag )
+					id = node.flag.id;
+				if ( node.road )
+					id = node.road.id;
+				World.CRC( ( id << 16 ) + (int)node.type, OperationHandler.Event.CodeLocation.workerTaskPlant );
 				( boss.building as Workshop ).SetWorking( false );
 				return true;
 			}
