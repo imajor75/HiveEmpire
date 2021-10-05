@@ -110,6 +110,7 @@ public class OperationHandler : HiveObject
             frameEvents.Add( e );
     }
 
+	[Conditional( "DEBUG" )]
     public void SaveEvents( string file )
     {
         using ( BinaryWriter writer = new BinaryWriter( File.Open( file, FileMode.Create ) ) )
@@ -125,6 +126,7 @@ public class OperationHandler : HiveObject
         }
     }
 
+	[Conditional( "DEBUG" )]
     public void LoadEvents( string file )
     {
         if ( !System.IO.File.Exists( file ) )
