@@ -11,6 +11,8 @@ public class OperationHandler : HiveObject
 {
 	public List<Operation> undoQueue = new List<Operation>(), redoQueue = new List<Operation>(), repeatBuffer = new List<Operation>();
     public List<int> CRCCodes = new List<int>();
+    public int CRCCodesSkipped;
+    public bool purgeCRCTable;
     public int currentCRCCode;
     public Mode mode;
     public World.Challenge challenge;
@@ -224,7 +226,7 @@ public class OperationHandler : HiveObject
         Assert.global.AreEqual( mode, Mode.repeating );
         mode = Mode.recording;
         repeatBuffer.RemoveRange( executeIndex, repeatBuffer.Count - executeIndex );
-        CRCCodes.RemoveRange( time + 1, CRCCodes.Count - time - 1 );
+        CRCCodes.RemoveRange( CRCCodesSkipped + time + 1, CRCCodesSkipped + CRCCodes.Count - time - 1 );
         replayLength = 0;
     }
 
@@ -390,16 +392,16 @@ public class OperationHandler : HiveObject
 #if DEBUG
         if ( recordCRC && mode == Mode.recording )
         {
-            assert.AreEqual( time, CRCCodes.Count );
+            assert.AreEqual( time, CRCCodesSkipped + CRCCodes.Count );
             CRCCodes.Add( currentCRCCode );
             RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
         }
         if ( mode == Mode.repeating )
         {
-            assert.IsTrue( CRCCodes.Count > time );
+            assert.IsTrue( CRCCodesSkipped + CRCCodes.Count > time );
             if ( !recalculateCRC )
             {
-                if ( CRCCodes[time] != currentCRCCode )
+                if ( CRCCodes[time - CRCCodesSkipped] != currentCRCCode )
                 {
                     if ( !eventDifDumped )
                     {
@@ -445,11 +447,11 @@ public class OperationHandler : HiveObject
                     }
                     assert.Fail( $"CRC mismatch in frame {time}" );
                 }
-                RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate, CRCCodes[time] );
+                RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate, CRCCodes[time - CRCCodesSkipped] );
             }
             else
             {
-                CRCCodes[time] = currentCRCCode;
+                CRCCodes[time - CRCCodesSkipped] = currentCRCCode;
                 RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
             }
         }
@@ -490,6 +492,12 @@ public class OperationHandler : HiveObject
 			UndoRedo( undoQueue );
 		if ( redoHotkey.IsDown() )
 			UndoRedo( redoQueue );
+        if ( purgeCRCTable )
+        {
+            CRCCodesSkipped += CRCCodes.Count;
+            CRCCodes.Clear();
+            purgeCRCTable = false;
+        }
     }
 
     void ExecuteOperation( Operation operation )
