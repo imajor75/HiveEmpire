@@ -310,14 +310,6 @@ public class Interface : HiveObject
 
 	public void FixedUpdate()
 	{
-		if ( EventSystem.current.currentSelectedGameObject != null )
-		{ 
-			focusOnInputField = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
-			focusOnDropdown = EventSystem.current.currentSelectedGameObject.GetComponent<Toggle>() != null;
-		}
-		else
-			focusOnDropdown = focusOnInputField = false;
-
 #if DEBUG
 		if ( --fullValidate < 0 )
 		{
@@ -641,6 +633,13 @@ public class Interface : HiveObject
 
 	public void Update()
 	{
+		if ( EventSystem.current.currentSelectedGameObject != null )
+		{ 
+			focusOnInputField = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
+			focusOnDropdown = EventSystem.current.currentSelectedGameObject.GetComponent<Toggle>() != null;
+		}
+		else
+			focusOnDropdown = focusOnInputField = false;
 		// if ( GetKey( KeyCode.R ) )
 		// {
 		// 	bool localReset = false;
