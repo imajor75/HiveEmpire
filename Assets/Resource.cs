@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,7 +30,7 @@ public class Resource : HiveObject
 			return new Node.Block( type switch
 			{
 				Type.tree => Node.Block.Type.workersAndBuildings,
-				Type.rock => Node.Block.Type.all,
+				Type.rock => Node.Block.Type.workersAndBuildings,
 				Type.fish => Node.Block.Type.none,
 				Type.cornfield => Node.Block.Type.buildings,
 				Type.animalSpawner => Node.Block.Type.all,

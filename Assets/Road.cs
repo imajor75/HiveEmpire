@@ -163,7 +163,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			foreach ( var resource in node.resources )
 			{
-				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.cornfield )
+				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.cornfield || resource.type == Resource.Type.rock )
 				{
 					resource.Remove( false );
 					break;
