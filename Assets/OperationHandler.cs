@@ -97,7 +97,7 @@ public class OperationHandler : HiveObject
         }
     }
 
-    List<Event> events = new List<Event>(), frameEvents = new List<Event>();
+    List<Event> events = new List<Event>(), frameEvents = new List<Event>(), previousFrameEvents;
     bool eventDifDumped;
 
 	[Conditional( "DEBUG" )]
@@ -403,6 +403,11 @@ public class OperationHandler : HiveObject
                 {
                     if ( !eventDifDumped )
                     {
+                        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-replay.txt" ) )
+                        {
+                            foreach ( var e in previousFrameEvents )
+                                writer.Write( e.description + "\n" );
+                        }
                         using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-replay.txt" ) )
                         {
                             foreach ( var e in frameEvents )
@@ -422,9 +427,23 @@ public class OperationHandler : HiveObject
                                 break;
                             }
                         }
+                        for ( int i = 0; i < events.Count; i++ )
+                        {
+                            var ie = events[i];
+                            if ( ( ie.type == Event.Type.frameStart && ie.code == time - 1 ) || time == 0 )
+                            {
+                                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-orig.txt" ) )
+                                {
+                                    int j = i;
+                                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time ) )
+                                        writer.Write( events[j++].description + "\n" );
+                                }
+                                break;
+                            }
+                        }
                         eventDifDumped = true;
                     }
-                    assert.Fail("CRC mismatch" );
+                    assert.Fail( $"CRC mismatch in frame {time}" );
                 }
                 RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate, CRCCodes[time] );
             }
@@ -438,7 +457,8 @@ public class OperationHandler : HiveObject
 #endif
         world.fixedOrderCalls = true;
         world.OnEndOfLogicalFrame();
-        frameEvents.Clear();
+        previousFrameEvents = frameEvents;
+        frameEvents = new List<Event>();
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( repeatBuffer[executeIndex++] );
