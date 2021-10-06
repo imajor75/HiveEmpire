@@ -746,6 +746,20 @@ public class World : HiveCommon
 		water.transform.localPosition = Vector3.up * waterLevel;
 
 		{
+			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
+			{
+				if ( ho is Interface )
+					continue;
+				if ( !ho.registered )
+				{
+					if ( !world.newHiveObjects.Contains( ho ) && !world.hiveObjects.Contains( ho ) )
+						world.newHiveObjects.AddFirst( ho );
+					ho.registered = true;
+				}
+
+			}
+		}
+		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
 			{
