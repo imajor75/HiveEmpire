@@ -13,6 +13,7 @@ public static class Constants
     {
         public const float fastSpeedFactor = 8;
         public const int normalSpeedPerSecond = 50;
+        public const int defaultNetworkPort = 5000;
     }
 
     public static class Building

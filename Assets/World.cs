@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +6,11 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.Networking;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Linq;
+#pragma warning disable 0618
 
 public class World : HiveCommon
 {
@@ -28,6 +33,8 @@ public class World : HiveCommon
 	public bool fixedOrderCalls;
 	public Speed speed;
 	public OperationHandler operationHandler;
+	[JsonIgnore]
+	public int networkHostID;
 
 	static public bool massDestroy;
 	static System.Random rnd;
@@ -542,6 +549,22 @@ public class World : HiveCommon
 		return r;
 	}
 
+	void Update()
+	{
+		int hostID, connectionID, channelID, receivedSize;
+		byte [] buffer = new byte[100];
+		byte error;
+		NetworkEventType recData = NetworkTransport.Receive( out hostID, out connectionID, out channelID, buffer, 100, out receivedSize, out error );
+		switch( recData )
+		{
+			case NetworkEventType.Nothing:
+			break;
+			default:
+			Assert.global.Fail( "Network activity happened" );
+			break;
+		}
+	}
+
 	void FixedUpdate()
 	{
 		if ( settings.apply )
@@ -583,6 +606,15 @@ public class World : HiveCommon
 	public void OnEndOfLogicalFrame()
 	{
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
+	}
+
+	public void Join( string address, int port )
+	{
+		Clear();
+		Prepare();
+
+		byte error;
+		NetworkTransport.Connect( networkHostID, address, port, 0, out error );
 	}
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
@@ -675,6 +707,11 @@ public class World : HiveCommon
 		foreach ( var player in players )
 			player.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
+
+		var networkPort = GetAvailablePort();
+		networkHostID = NetworkTransport.AddHost( root.networkHostTopology, networkPort );
+		Assert.global.IsTrue( networkHostID >= 0 );
+		Log( $"Listening for connections at port {networkPort}" );
 	}
 
     public void Load( string fileName )
@@ -1265,6 +1302,40 @@ public class World : HiveCommon
 		}
 	}
 
+	public static int GetAvailablePort( int startingPort = Constants.World.defaultNetworkPort )
+	{
+		IPEndPoint[] endPoints;
+		List<int> portArray = new List<int>();
+
+		IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
+
+		//getting active connections
+		TcpConnectionInformation[] connections = properties.GetActiveTcpConnections();
+		portArray.AddRange(from n in connections
+							where n.LocalEndPoint.Port >= startingPort
+							select n.LocalEndPoint.Port);
+
+		//getting active tcp listners - WCF service listening in tcp
+		endPoints = properties.GetActiveTcpListeners();
+		portArray.AddRange(from n in endPoints
+							where n.Port >= startingPort
+							select n.Port);
+
+		//getting active udp listeners
+		endPoints = properties.GetActiveUdpListeners();
+		portArray.AddRange(from n in endPoints
+							where n.Port >= startingPort
+							select n.Port);
+
+		portArray.Sort();
+
+		for (int i = startingPort; i < UInt16.MaxValue; i++)
+			if (!portArray.Contains(i))
+				return i;
+
+		return 0;
+	}
+	
 	[System.Serializable]
 	public class Timer
 	{
