@@ -578,6 +578,8 @@ public class World : HiveCommon
 					NetworkTransport.GetConnectionInfo( networkHostID, connectionID, out clientAddress, out port, out network, out dstNode, out error );
 					Log( $"Incoming connection from {clientAddress}" );
 					networkServerConnectionIDs.Add( connectionID );
+					var size = SendGameStateToConnection( connectionID );
+					Log( $"Game state sent to {clientAddress} ({size} bytes)" );
 					break;
 				}
 			}
@@ -591,6 +593,28 @@ public class World : HiveCommon
 			Log( $"Network event occured: {recData}", true );
 			break;
 		}
+	}
+
+	public long SendGameStateToConnection( int connectionID )
+	{
+		var fileName = System.IO.Path.GetTempFileName();
+		Save( fileName, false, true );
+
+		var fi = new FileInfo( fileName );
+		byte[] size = BitConverter.GetBytes( fi.Length );
+		if ( BitConverter.IsLittleEndian )
+			Array.Reverse( size );
+		var reader = new BinaryReader( File.Open( fileName, FileMode.Open ) );
+		byte error;
+		NetworkTransport.Send( networkHostID, connectionID, root.networkReliableChannelID, size, size.Length, out error );
+		
+		var bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+		while ( bytes.Length > 0 )
+		{
+			NetworkTransport.Send( networkHostID, connectionID, root.networkReliableChannelID, bytes, bytes.Length, out error );
+			bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+		}
+		return fi.Length;
 	}
 
 	void FixedUpdate()
@@ -984,7 +1008,7 @@ public class World : HiveCommon
 		Interface.ValidateAll( true );
 	}
 
-	public void Save( string fileName, bool manualSave )
+	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
 		Log( $"Saving game {fileName}", true );
 		if ( fileName.Contains( nextSaveFileName ) )
@@ -992,8 +1016,13 @@ public class World : HiveCommon
 		this.fileName = fileName;
 		if ( root.playerInCharge || manualSave )
 		{
-			operationHandler.SaveEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
-			operationHandler.saveFileNames.Add( System.IO.Path.GetFileName( fileName ) );
+			if ( !compact )
+			{
+				operationHandler.SaveEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
+				operationHandler.saveFileNames.Add( System.IO.Path.GetFileName( fileName ) );
+			}
+			else
+				operationHandler.PurgeCRCTable();
 			Serializer.Write( fileName, this, false );
 		}
 	}

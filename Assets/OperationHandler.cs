@@ -501,6 +501,12 @@ public class OperationHandler : HiveObject
         }
     }
 
+    public void PurgeCRCTable()
+    {
+        CRCCodesSkipped += CRCCodes.Count;
+        CRCCodes.Clear();
+    }
+
     void ExecuteOperation( Operation operation )
     {
         HiveObject.Log( $"Executing {operation.name}" );
