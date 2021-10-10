@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +10,7 @@ using UnityEngine.Networking;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Linq;
+using UnityEngine.Networking.Types;
 #pragma warning disable 0618
 
 public class World : HiveCommon
@@ -35,6 +36,8 @@ public class World : HiveCommon
 	public OperationHandler operationHandler;
 	[JsonIgnore]
 	public int networkHostID;
+	public int networkClientConnectionID;
+	public List<int> networkServerConnectionIDs = new List<int>();
 
 	static public bool massDestroy;
 	static System.Random rnd;
@@ -559,8 +562,33 @@ public class World : HiveCommon
 		{
 			case NetworkEventType.Nothing:
 			break;
+			case NetworkEventType.ConnectEvent:
+			{
+				if ( networkClientConnectionID == connectionID )
+				{
+					Log( $"Connected to server" );
+					break;
+				}
+				else
+				{
+					int port;
+                    NetworkID network;
+					NodeID dstNode;
+					string clientAddress;
+					NetworkTransport.GetConnectionInfo( networkHostID, connectionID, out clientAddress, out port, out network, out dstNode, out error );
+					Log( $"Incoming connection from {clientAddress}" );
+					networkServerConnectionIDs.Add( connectionID );
+					break;
+				}
+			}
+			case NetworkEventType.DisconnectEvent:
+			{
+				Log( $"Client disconnected with ID {connectionID}" );
+				networkServerConnectionIDs.Remove( connectionID );
+				break;
+			}
 			default:
-			Assert.global.Fail( "Network activity happened" );
+			Log( $"Network event occured: {recData}", true );
 			break;
 		}
 	}
@@ -610,11 +638,12 @@ public class World : HiveCommon
 
 	public void Join( string address, int port )
 	{
+		Log( $"Joining to server {address} port {port}", true );
 		Clear();
 		Prepare();
 
-		byte error;
-		NetworkTransport.Connect( networkHostID, address, port, 0, out error );
+		byte error;	
+		networkClientConnectionID = NetworkTransport.Connect( networkHostID, address, port, 0, out error );
 	}
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
@@ -711,12 +740,12 @@ public class World : HiveCommon
 		var networkPort = GetAvailablePort();
 		networkHostID = NetworkTransport.AddHost( root.networkHostTopology, networkPort );
 		Assert.global.IsTrue( networkHostID >= 0 );
-		Log( $"Listening for connections at port {networkPort}" );
+		Log( $"Ready for connections at port {networkPort}", true );
 	}
 
     public void Load( string fileName )
 	{
-		HiveObject.Log( $"\n\nLoading game {fileName}\n\n" );
+		HiveObject.Log( $"Loading game {fileName}" );
    		Clear();
 		Prepare();
 		Interface.ValidateAll( true );
@@ -957,6 +986,7 @@ public class World : HiveCommon
 
 	public void Save( string fileName, bool manualSave )
 	{
+		Log( $"Saving game {fileName}", true );
 		if ( fileName.Contains( nextSaveFileName ) )
 			saveIndex++;
 		this.fileName = fileName;

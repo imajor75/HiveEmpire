@@ -406,7 +406,10 @@ public class Interface : HiveObject
 	new public void Start()
 	{
 		try { File.Move( Application.persistentDataPath + "/log.txt", Application.persistentDataPath + "/log-prev.txt" ); } catch ( Exception ) {}
-		logFile = new StreamWriter( Application.persistentDataPath + "/log.txt" );
+
+		string logFileName = Application.isEditor ? "log-editor.txt" : "log.txt";
+		try { File.Move( Application.persistentDataPath + "/" + logFileName, Application.persistentDataPath + "/log-prev.txt" ); } catch ( Exception ) {}
+		logFile = new StreamWriter( Application.persistentDataPath + "/" + logFileName );
 
 		Node.Initialize();
 		Assert.Initialize();
@@ -558,7 +561,6 @@ public class Interface : HiveObject
 
 	public void Load( string fileName )
 	{
-		Log( "Loading " + fileName, true );
 		world.Load( fileName );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
@@ -569,7 +571,6 @@ public class Interface : HiveObject
 		if ( fileName == "" )
 			fileName = Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json";
 		world.Save( fileName, manualSave );
-		Log( fileName + " is saved", true );
 	}
 
 	public void LoadReplay( string name )
@@ -6295,7 +6296,7 @@ if ( cart )
 
 			var joinRow = UIHelpers.currentRow;
 			Button( "Join" ).Pin( borderWidth, joinRow, 50, 25 ).AddClickHandler( Join );
-			networkJoinAddress = InputField( "localhost" ).Pin( borderWidth+50, joinRow, 120, 25 );
+			networkJoinAddress = InputField( "127.0.0.1" ).Pin( borderWidth+50, joinRow, 120, 25 );
 			networkJoinPort = InputField( Constants.World.defaultNetworkPort.ToString() ).Pin( borderWidth+170, joinRow, 80, 25 );
 
 			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
