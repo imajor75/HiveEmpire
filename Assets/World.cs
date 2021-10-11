@@ -38,6 +38,7 @@ public class World : HiveCommon
 	public int networkHostID;
 	public int networkClientConnectionID;
 	public List<int> networkServerConnectionIDs = new List<int>();
+	byte[] networkBuffer = new byte[Constants.World.networkBufferSize];
 
 	static public bool massDestroy;
 	static System.Random rnd;
@@ -83,9 +84,25 @@ public class World : HiveCommon
 
 	public static void CRC( int code, OperationHandler.Event.CodeLocation caller )
 	{
+		if ( oh == null )
+			return;
+
 		instance.operationHandler.RegisterEvent( OperationHandler.Event.Type.CRC, caller, code );
 		instance.operationHandler.currentCRCCode += code;
 	}
+
+	public enum NetworkState
+	{
+		receivingGameState,
+		client,
+		server
+	}
+
+	public NetworkState networkState;
+
+	public long networkGameStateSize, networkGameStateWritten;
+	public string networkGameStateFile;
+	public BinaryWriter networkGameState;
 
 	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
 
@@ -555,9 +572,8 @@ public class World : HiveCommon
 	void Update()
 	{
 		int hostID, connectionID, channelID, receivedSize;
-		byte [] buffer = new byte[100];
 		byte error;
-		NetworkEventType recData = NetworkTransport.Receive( out hostID, out connectionID, out channelID, buffer, 100, out receivedSize, out error );
+		NetworkEventType recData = NetworkTransport.Receive( out hostID, out connectionID, out channelID, networkBuffer, networkBuffer.Length, out receivedSize, out error );
 		switch( recData )
 		{
 			case NetworkEventType.Nothing:
@@ -578,8 +594,13 @@ public class World : HiveCommon
 					NetworkTransport.GetConnectionInfo( networkHostID, connectionID, out clientAddress, out port, out network, out dstNode, out error );
 					Log( $"Incoming connection from {clientAddress}" );
 					networkServerConnectionIDs.Add( connectionID );
-					var size = SendGameStateToConnection( connectionID );
-					Log( $"Game state sent to {clientAddress} ({size} bytes)" );
+					string fileName = System.IO.Path.GetTempFileName();
+					Save( fileName, false, true );
+					FileInfo fi = new FileInfo( fileName );
+					byte[] size = BitConverter.GetBytes( fi.Length );
+					NetworkTransport.Send( world.networkHostID, connectionID, root.networkReliableChannelID, size, size.Length, out error );
+					networkSendFileTasks.Add( new SendFileTask( fileName, connectionID ) );
+					Log( $"Sending game state to {clientAddress} ({fi.Length} bytes)" );
 					break;
 				}
 			}
@@ -589,33 +610,96 @@ public class World : HiveCommon
 				networkServerConnectionIDs.Remove( connectionID );
 				break;
 			}
+			case NetworkEventType.DataEvent:
+			{
+				if ( networkState == NetworkState.receivingGameState )
+				{
+					int start = 0;
+					if ( networkGameStateSize == -1 )
+					{
+						int longSize = BitConverter.GetBytes( networkGameStateSize ).Length;	// TODO there must be a better way to do this
+						byte[] fileSize = new byte[longSize];
+						for ( int i = 0; i < longSize; i++ )
+							fileSize[i] = networkBuffer[i];
+						networkGameStateSize = BitConverter.ToInt64( fileSize, 0 );
+						Log( $"Size of game state: {networkGameStateSize}" );
+						start += longSize;
+					}
+					int gameStateBytes = receivedSize - start;
+					if ( networkGameStateWritten + gameStateBytes > networkGameStateSize )
+						gameStateBytes = (int)( networkGameStateSize - networkGameStateWritten );
+					if ( gameStateBytes > 0 )
+					{
+						networkGameState.Write( networkBuffer, start, gameStateBytes );
+						networkGameStateWritten += gameStateBytes;
+						Assert.global.IsFalse( networkGameStateWritten > networkGameStateSize );
+						if ( networkGameStateWritten == networkGameStateSize )
+						{
+							networkGameState.Close();
+							Log( $"Game state received to {networkGameStateFile}" );
+							Load( networkGameStateFile );
+							networkState = NetworkState.client;
+						}
+					}
+				}
+
+				break;
+			}
 			default:
 			Log( $"Network event occured: {recData}", true );
 			break;
 		}
-	}
 
-	public long SendGameStateToConnection( int connectionID )
-	{
-		var fileName = System.IO.Path.GetTempFileName();
-		Save( fileName, false, true );
-
-		var fi = new FileInfo( fileName );
-		byte[] size = BitConverter.GetBytes( fi.Length );
-		if ( BitConverter.IsLittleEndian )
-			Array.Reverse( size );
-		var reader = new BinaryReader( File.Open( fileName, FileMode.Open ) );
-		byte error;
-		NetworkTransport.Send( networkHostID, connectionID, root.networkReliableChannelID, size, size.Length, out error );
-		
-		var bytes = reader.ReadBytes( Constants.World.networkBufferSize );
-		while ( bytes.Length > 0 )
+		List<SendFileTask> finishedTasks = new List<SendFileTask>();
+		foreach ( var task in networkSendFileTasks )
 		{
-			NetworkTransport.Send( networkHostID, connectionID, root.networkReliableChannelID, bytes, bytes.Length, out error );
-			bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+			if ( task.Progress() == SendFileTask.Result.done )
+			finishedTasks.Add( task );
 		}
-		return fi.Length;
+		foreach ( var task in finishedTasks )
+			networkSendFileTasks.Remove( task );
 	}
+
+	public class SendFileTask
+	{
+		public enum Result
+		{
+			done,
+			needModeTime
+		}
+
+		public SendFileTask( string fileName, int connection )
+		{
+			name = fileName;
+			sent = 0;
+			this.connection = connection;
+			reader = new BinaryReader( File.Open( fileName, FileMode.Open ) );
+		}
+
+		public Result Progress()
+		{
+			reader.BaseStream.Seek( sent, SeekOrigin.Begin );
+			var bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+			while ( bytes.Length > 0 )
+			{
+				byte error;
+				NetworkTransport.Send( world.networkHostID, connection, root.networkReliableChannelID, bytes, bytes.Length, out error );
+				if ( error != 0 )
+					return Result.needModeTime;
+				sent += bytes.Length;
+				bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+			}
+			Log( $"File {name} sent" );
+			return Result.done;
+		}
+
+		public int sent;
+		public BinaryReader reader;
+		int connection;
+		string name;
+	}
+
+	public List<SendFileTask> networkSendFileTasks = new List<SendFileTask>();
 
 	void FixedUpdate()
 	{
@@ -633,7 +717,7 @@ public class World : HiveCommon
 		time++;
 		rnd = new System.Random( frameSeed );
 		fixedOrderCalls = true;
-		oh.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
+		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
 		foreach ( var player in players )
 			player.FixedUpdate();
@@ -664,10 +748,14 @@ public class World : HiveCommon
 	{
 		Log( $"Joining to server {address} port {port}", true );
 		Clear();
-		Prepare();
 
 		byte error;	
 		networkClientConnectionID = NetworkTransport.Connect( networkHostID, address, port, 0, out error );
+		networkState = NetworkState.receivingGameState;
+		networkGameStateSize = -1;
+		networkGameStateWritten = 0;
+		networkGameStateFile = System.IO.Path.GetTempFileName();
+		networkGameState = new BinaryWriter( File.Create( networkGameStateFile ) );
 	}
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
@@ -748,6 +836,8 @@ public class World : HiveCommon
 		Interface.ValidateAll( true );
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
 		fixedOrderCalls = false;
+
+		networkState = NetworkState.server;
 	}
 
 	void Start()
@@ -1353,10 +1443,11 @@ public class World : HiveCommon
 		ground.Validate( true );
 		foreach ( var player in players )
 			player.Validate();
-		Assert.global.AreEqual( challenge, operationHandler.challenge );
+		if ( operationHandler )
+			Assert.global.AreEqual( challenge, operationHandler.challenge );
 		if ( chain )
 		{
-			eye.Validate( true );
+			eye?.Validate( true );
 			operationHandler?.Validate( true );
 		}
 	}

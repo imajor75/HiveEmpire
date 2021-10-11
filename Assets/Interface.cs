@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -286,7 +286,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		oh.SaveReplay();
+		oh?.SaveReplay();
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save( manualSave:false );
 
@@ -451,7 +451,9 @@ public class Interface : HiveObject
 		status = Tooltip.Create();
 		status.Open();
 
-		NetworkTransport.Init();
+		GlobalConfig g = new GlobalConfig();
+		g.MaxPacketSize = 50000;
+		NetworkTransport.Init( g );
 		ConnectionConfig config = new ConnectionConfig();
 		networkReliableChannelID = config.AddChannel( QosType.Reliable );
 		networkHostTopology = new HostTopology( config, 10 );
@@ -737,15 +739,18 @@ public class Interface : HiveObject
 		speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey;
 		speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey;
 		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
-		replayIcon.gameObject.SetActive( !playerInCharge );
-		var next = world.operationHandler.next;
-		if ( showReplayAction && !playerInCharge && next && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
+		if ( world.operationHandler )	// This can be null during join
 		{
-			if ( !eye.target || lastShownOperation != next )
+			replayIcon.gameObject.SetActive( !playerInCharge );
+			var next = world.operationHandler.next;
+			if ( showReplayAction && !playerInCharge && next && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
 			{
-				eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
-				status.SetText( this, world.operationHandler.next.description, pinX:0.5f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
-				lastShownOperation = next;
+				if ( !eye.target || lastShownOperation != next )
+				{
+					eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
+					status.SetText( this, world.operationHandler.next.description, pinX:0.5f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
+					lastShownOperation = next;
+				}
 			}
 		}
 	}
@@ -1386,7 +1391,8 @@ public class Interface : HiveObject
 		public void OnDestroy()
 		{
 			root.panels.Remove( this );
-			eye.rotateAround = false;
+			if ( eye )
+				eye.rotateAround = false;
 		}
 
 		public void SetSize( int x, int y )
@@ -5228,7 +5234,7 @@ if ( cart )
 
 			RenderOverlayInfo();
 
-			if ( !mouseOver )
+			if ( !mouseOver || eye == null )
 				return;
 			currentNode = FindNodeAt( Input.mousePosition );
 			if ( cursor && currentNode )

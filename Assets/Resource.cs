@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -365,9 +365,6 @@ public class Resource : HiveObject
 
 	public override void Validate( bool chain )
 	{
-		if ( type == Type.animalSpawner )
-			foreach ( var w in animals )
-				assert.IsNotNull( w );
 		if ( type == Type.pasturingAnimal )
 			assert.AreEqual( animals.Count, 1 );
 		if ( hunter )
