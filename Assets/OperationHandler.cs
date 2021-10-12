@@ -457,6 +457,9 @@ public class OperationHandler : HiveObject
             }
         }
         currentCRCCode = 0;
+#else
+        if ( recordCRC && mode == Mode.recording )
+            CRCCodesSkipped += 1;
 #endif
         world.fixedOrderCalls = true;
         world.OnEndOfLogicalFrame();

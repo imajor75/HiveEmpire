@@ -455,7 +455,7 @@ public class Interface : HiveObject
 		g.MaxPacketSize = 50000;
 		NetworkTransport.Init( g );
 		ConnectionConfig config = new ConnectionConfig();
-		networkReliableChannelID = config.AddChannel( QosType.Reliable );
+		networkReliableChannelID = config.AddChannel( QosType.ReliableSequenced );
 		networkHostTopology = new HostTopology( config, 10 );
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
