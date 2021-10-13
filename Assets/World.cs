@@ -35,10 +35,7 @@ public class World : HiveCommon
 	public Speed speed;
 	public OperationHandler operationHandler;
 	[JsonIgnore]
-	public int networkHostID;
-	public int networkClientConnectionID;
-	public List<int> networkServerConnectionIDs = new List<int>();
-	byte[] networkBuffer = new byte[Constants.World.networkBufferSize];
+	public new Network network;
 
 	static public bool massDestroy;
 	static System.Random rnd;
@@ -90,19 +87,6 @@ public class World : HiveCommon
 		instance.operationHandler.RegisterEvent( OperationHandler.Event.Type.CRC, caller, code );
 		instance.operationHandler.currentCRCCode += code;
 	}
-
-	public enum NetworkState
-	{
-		receivingGameState,
-		client,
-		server
-	}
-
-	public NetworkState networkState;
-
-	public long networkGameStateSize, networkGameStateWritten;
-	public string networkGameStateFile;
-	public BinaryWriter networkGameState;
 
 	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
 
@@ -569,166 +553,6 @@ public class World : HiveCommon
 		return r;
 	}
 
-	void Update()
-	{
-		int hostID, connectionID, channelID, receivedSize;
-		byte error;
-		NetworkEventType recData = NetworkTransport.Receive( out hostID, out connectionID, out channelID, networkBuffer, networkBuffer.Length, out receivedSize, out error );
-		switch( recData )
-		{
-			case NetworkEventType.Nothing:
-			break;
-			case NetworkEventType.ConnectEvent:
-			{
-				if ( networkClientConnectionID == connectionID )
-				{
-					Log( $"Connected to server" );
-					break;
-				}
-				else
-				{
-					int port;
-                    NetworkID network;
-					NodeID dstNode;
-					string clientAddress;
-					NetworkTransport.GetConnectionInfo( networkHostID, connectionID, out clientAddress, out port, out network, out dstNode, out error );
-					Log( $"Incoming connection from {clientAddress}" );
-					networkServerConnectionIDs.Add( connectionID );
-					string fileName = System.IO.Path.GetTempFileName();
-					Save( fileName, false, true );
-					FileInfo fi = new FileInfo( fileName );
-					byte[] size = BitConverter.GetBytes( fi.Length );
-					NetworkTransport.Send( world.networkHostID, connectionID, root.networkReliableChannelID, size, size.Length, out error );
-					networkTasks.Add( new NetworkTask( fileName, connectionID ) );
-					Log( $"Sending game state to {clientAddress} ({fi.Length} bytes)" );
-					break;
-				}
-			}
-			case NetworkEventType.DisconnectEvent:
-			{
-				Log( $"Client disconnected with ID {connectionID}" );
-				networkServerConnectionIDs.Remove( connectionID );
-				break;
-			}
-			case NetworkEventType.DataEvent:
-			{
-				if ( networkState == NetworkState.receivingGameState )
-				{
-					int start = 0;
-					if ( networkGameStateSize == -1 )
-					{
-						int longSize = BitConverter.GetBytes( networkGameStateSize ).Length;	// TODO there must be a better way to do this
-						byte[] fileSize = new byte[longSize];
-						for ( int i = 0; i < longSize; i++ )
-							fileSize[i] = networkBuffer[i];
-						networkGameStateSize = BitConverter.ToInt64( fileSize, 0 );
-						Log( $"Size of game state: {networkGameStateSize}" );
-						start += longSize;
-					}
-					int gameStateBytes = receivedSize - start;
-					if ( networkGameStateWritten + gameStateBytes > networkGameStateSize )
-						gameStateBytes = (int)( networkGameStateSize - networkGameStateWritten );
-					if ( gameStateBytes > 0 )
-					{
-						networkGameState.Write( networkBuffer, start, gameStateBytes );
-						networkGameStateWritten += gameStateBytes;
-						Assert.global.IsFalse( networkGameStateWritten > networkGameStateSize );
-						if ( networkGameStateWritten == networkGameStateSize )
-						{
-							networkGameState.Close();
-							Log( $"Game state received to {networkGameStateFile}" );
-							Load( networkGameStateFile );
-							networkState = NetworkState.client;
-						}
-					}
-				}
-
-				break;
-			}
-			default:
-			Log( $"Network event occured: {recData}", true );
-			break;
-		}
-
-		List<NetworkTask> finishedTasks = new List<NetworkTask>();
-		foreach ( var task in networkTasks )
-		{
-			if ( task.Progress() == NetworkTask.Result.done )
-			finishedTasks.Add( task );
-		}
-		foreach ( var task in finishedTasks )
-			networkTasks.Remove( task );
-	}
-
-	public class NetworkTask
-	{
-		public enum Result
-		{
-			done,
-			needModeTime,
-			unknown
-		}
-
-		public enum Type
-		{
-			sendFile,
-			sendPacket
-		}
-
-		public NetworkTask( string fileName, int connection )
-		{
-			type = Type.sendFile;
-			name = fileName;
-			sent = 0;
-			this.connection = connection;
-			reader = new BinaryReader( File.Open( fileName, FileMode.Open ) );
-		}
-
-		public NetworkTask( List<byte> packet, int connection )
-		{
-			type = Type.sendPacket;
-			this.packet = packet;
-			this.connection = connection;
-		}
-
-		public Result Progress()
-		{
-			byte error;
-			switch ( type )
-			{
-				case Type.sendFile:
-				reader.BaseStream.Seek( sent, SeekOrigin.Begin );
-				var bytes = reader.ReadBytes( Constants.World.networkBufferSize );
-				while ( bytes.Length > 0 )
-				{
-					NetworkTransport.Send( world.networkHostID, connection, root.networkReliableChannelID, bytes, bytes.Length, out error );
-					if ( error != 0 )
-						return Result.needModeTime;
-					sent += bytes.Length;
-					bytes = reader.ReadBytes( Constants.World.networkBufferSize );
-				}
-				Log( $"File {name} sent" );
-				return Result.done;
-
-				case Type.sendPacket:
-				NetworkTransport.Send( world.networkHostID, connection, root.networkReliableChannelID, packet.ToArray(), packet.Count, out error );
-				return error == 0 ? Result.done : Result.needModeTime;
-
-				default:
-				return Result.unknown;
-			}
-		}
-
-		public int sent;
-		public BinaryReader reader;
-		int connection;
-		string name;
-		public Type type;
-		public List<byte> packet;
-	}
-
-	public List<NetworkTask> networkTasks = new List<NetworkTask>();
-
 	void FixedUpdate()
 	{
 		if ( settings.apply )
@@ -770,6 +594,7 @@ public class World : HiveCommon
 	public void OnEndOfLogicalFrame()
 	{
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
+		network.OnGameFrameEnd();
 	}
 
 	public void Join( string address, int port )
@@ -777,14 +602,7 @@ public class World : HiveCommon
 		Log( $"Joining to server {address} port {port}", true );
 		Clear();
 		Prepare();
-
-		byte error;	
-		networkClientConnectionID = NetworkTransport.Connect( networkHostID, address, port, 0, out error );
-		networkState = NetworkState.receivingGameState;
-		networkGameStateSize = -1;
-		networkGameStateWritten = 0;
-		networkGameStateFile = System.IO.Path.GetTempFileName();
-		networkGameState = new BinaryWriter( File.Create( networkGameStateFile ) );
+		network.Join( address, port );
 	}
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
@@ -866,11 +684,12 @@ public class World : HiveCommon
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
 		fixedOrderCalls = false;
 
-		networkState = NetworkState.server;
+		network.state = Network.State.server;
 	}
 
 	void Start()
 	{
+		network = Network.Create();
 		if ( operationHandler == null )
 		{
 			operationHandler = OperationHandler.Create();
@@ -879,11 +698,6 @@ public class World : HiveCommon
 		foreach ( var player in players )
 			player.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
-
-		var networkPort = GetAvailablePort();
-		networkHostID = NetworkTransport.AddHost( root.networkHostTopology, networkPort );
-		Assert.global.IsTrue( networkHostID >= 0 );
-		Log( $"Ready for connections at port {networkPort}", true );
 	}
 
     public void Load( string fileName )
@@ -1481,40 +1295,6 @@ public class World : HiveCommon
 		}
 	}
 
-	public static int GetAvailablePort( int startingPort = Constants.World.defaultNetworkPort )
-	{
-		IPEndPoint[] endPoints;
-		List<int> portArray = new List<int>();
-
-		IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
-
-		//getting active connections
-		TcpConnectionInformation[] connections = properties.GetActiveTcpConnections();
-		portArray.AddRange(from n in connections
-							where n.LocalEndPoint.Port >= startingPort
-							select n.LocalEndPoint.Port);
-
-		//getting active tcp listners - WCF service listening in tcp
-		endPoints = properties.GetActiveTcpListeners();
-		portArray.AddRange(from n in endPoints
-							where n.Port >= startingPort
-							select n.Port);
-
-		//getting active udp listeners
-		endPoints = properties.GetActiveUdpListeners();
-		portArray.AddRange(from n in endPoints
-							where n.Port >= startingPort
-							select n.Port);
-
-		portArray.Sort();
-
-		for (int i = startingPort; i < UInt16.MaxValue; i++)
-			if (!portArray.Contains(i))
-				return i;
-
-		return 0;
-	}
-	
 	[System.Serializable]
 	public class Timer
 	{

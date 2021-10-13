@@ -6,14 +6,10 @@ using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Profiling;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.Networking;
-#pragma warning disable 0618
 
 public class Interface : HiveObject
 {
@@ -48,8 +44,6 @@ public class Interface : HiveObject
 	public MonoBehaviour replayIcon;
 	Operation lastShownOperation;
 	public int selectByID;
-	public int networkReliableChannelID;
-	public HostTopology networkHostTopology;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -428,6 +422,7 @@ public class Interface : HiveObject
 		CameraHighlight.Initialize();
 		Viewport.Initialize();
 		Water.Initialize();
+		Network.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
@@ -450,13 +445,6 @@ public class Interface : HiveObject
 		tooltip.Open();
 		status = Tooltip.Create();
 		status.Open();
-
-		GlobalConfig g = new GlobalConfig();
-		g.MaxPacketSize = 50000;
-		NetworkTransport.Init( g );
-		ConnectionConfig config = new ConnectionConfig();
-		networkReliableChannelID = config.AddChannel( QosType.ReliableSequenced );
-		networkHostTopology = new HostTopology( config, 10 );
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
 		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
@@ -918,7 +906,7 @@ public class Interface : HiveObject
 		if ( highlightType == HighlightType.area )
 			Assert.global.IsNotNull( highlightArea );
 		var roots = SceneManager.GetActiveScene().GetRootGameObjects();
-		Assert.global.AreEqual( roots.Count(), 3, "Interface, World and the Event System should be the three objects in the root" );
+		Assert.global.AreEqual( roots.Count(), 4, "Interface, World, Network and the Event System should be the four objects in the root" );
 #endif
 	}
 
@@ -6303,7 +6291,7 @@ if ( cart )
 			var joinRow = UIHelpers.currentRow;
 			Button( "Join" ).Pin( borderWidth, joinRow, 50, 25 ).AddClickHandler( Join );
 			networkJoinAddress = InputField( "127.0.0.1" ).Pin( borderWidth+50, joinRow, 120, 25 );
-			networkJoinPort = InputField( Constants.World.defaultNetworkPort.ToString() ).Pin( borderWidth+170, joinRow, 80, 25 );
+			networkJoinPort = InputField( Constants.Network.defaultPort.ToString() ).Pin( borderWidth+170, joinRow, 80, 25 );
 
 			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
 

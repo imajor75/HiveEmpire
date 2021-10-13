@@ -427,14 +427,6 @@ public class OperationHandler : HiveObject
         frameEvents = new List<Event>();
 #endif
 
-        if ( world.networkState == World.NetworkState.server )
-        {
-            List<byte> endOfFramePacket = new List<byte>();
-            endOfFramePacket.Add( currentCRCCode ).Add( time );
-            foreach ( var connection in world.networkServerConnectionIDs )
-                world.networkTasks.Add( new World.NetworkTask( endOfFramePacket, connection ) );
-        }
-
         currentCRCCode = 0;
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
@@ -454,6 +446,9 @@ public class OperationHandler : HiveObject
 
     void DumpEventDif()
     {
+        if ( eventDifDumped )
+            return;
+            
         using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-replay.txt" ) )
         {
             foreach ( var e in previousFrameEvents )
