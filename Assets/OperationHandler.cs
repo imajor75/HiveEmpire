@@ -405,47 +405,7 @@ public class OperationHandler : HiveObject
                 if ( CRCCodes[time - CRCCodesSkipped] != currentCRCCode )
                 {
                     if ( !eventDifDumped )
-                    {
-                        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-replay.txt" ) )
-                        {
-                            foreach ( var e in previousFrameEvents )
-                                writer.Write( e.description + "\n" );
-                        }
-                        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-replay.txt" ) )
-                        {
-                            foreach ( var e in frameEvents )
-                                writer.Write( e.description + "\n" );
-                        }
-                        for ( int i = 0; i < events.Count; i++ )
-                        {
-                            var ie = events[i];
-                            if ( ( ie.type == Event.Type.frameStart && ie.code == time ) || time == 0 )
-                            {
-                                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-orig.txt" ) )
-                                {
-                                    int j = i;
-                                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time + 1 ) )
-                                        writer.Write( events[j++].description + "\n" );
-                                }
-                                break;
-                            }
-                        }
-                        for ( int i = 0; i < events.Count; i++ )
-                        {
-                            var ie = events[i];
-                            if ( ( ie.type == Event.Type.frameStart && ie.code == time - 1 ) || time == 0 )
-                            {
-                                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-orig.txt" ) )
-                                {
-                                    int j = i;
-                                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time ) )
-                                        writer.Write( events[j++].description + "\n" );
-                                }
-                                break;
-                            }
-                        }
-                        eventDifDumped = true;
-                    }
+                        DumpEventDif();
                     assert.Fail( $"CRC mismatch in frame {time}" );
                 }
                 RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate, CRCCodes[time - CRCCodesSkipped] );
@@ -456,15 +416,26 @@ public class OperationHandler : HiveObject
                 RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
             }
         }
-        currentCRCCode = 0;
 #else
         if ( recordCRC && mode == Mode.recording )
             CRCCodesSkipped += 1;
 #endif
         world.fixedOrderCalls = true;
         world.OnEndOfLogicalFrame();
+#if DEBUG
         previousFrameEvents = frameEvents;
         frameEvents = new List<Event>();
+#endif
+
+        if ( world.networkState == World.NetworkState.server )
+        {
+            List<byte> endOfFramePacket = new List<byte>();
+            endOfFramePacket.Add( currentCRCCode ).Add( time );
+            foreach ( var connection in world.networkServerConnectionIDs )
+                world.networkTasks.Add( new World.NetworkTask( endOfFramePacket, connection ) );
+        }
+
+        currentCRCCode = 0;
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( repeatBuffer[executeIndex++] );
@@ -479,6 +450,49 @@ public class OperationHandler : HiveObject
         }
 
         assert.AreEqual( finishedFrameIndex, time );
+    }
+
+    void DumpEventDif()
+    {
+        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-replay.txt" ) )
+        {
+            foreach ( var e in previousFrameEvents )
+                writer.Write( e.description + "\n" );
+        }
+        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-replay.txt" ) )
+        {
+            foreach ( var e in frameEvents )
+                writer.Write( e.description + "\n" );
+        }
+        for ( int i = 0; i < events.Count; i++ )
+        {
+            var ie = events[i];
+            if ( ( ie.type == Event.Type.frameStart && ie.code == time ) || time == 0 )
+            {
+                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-orig.txt" ) )
+                {
+                    int j = i;
+                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time + 1 ) )
+                        writer.Write( events[j++].description + "\n" );
+                }
+                break;
+            }
+        }
+        for ( int i = 0; i < events.Count; i++ )
+        {
+            var ie = events[i];
+            if ( ( ie.type == Event.Type.frameStart && ie.code == time - 1 ) || time == 0 )
+            {
+                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-orig.txt" ) )
+                {
+                    int j = i;
+                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time ) )
+                        writer.Write( events[j++].description + "\n" );
+                }
+                break;
+            }
+        }
+        eventDifDumped = true;
     }
 
     void Update()

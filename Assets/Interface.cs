@@ -6812,6 +6812,14 @@ public static class UIHelpers
 			result += $":{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
 		return result;
 	}
+
+	public static List<byte> Add( this List<byte> packet, int value )
+	{
+		var valueBytes = BitConverter.GetBytes( value );
+		foreach ( var b in valueBytes )
+			packet.Add( b );
+		return packet;
+	}
 }
 
 

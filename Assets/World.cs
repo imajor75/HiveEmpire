@@ -599,7 +599,7 @@ public class World : HiveCommon
 					FileInfo fi = new FileInfo( fileName );
 					byte[] size = BitConverter.GetBytes( fi.Length );
 					NetworkTransport.Send( world.networkHostID, connectionID, root.networkReliableChannelID, size, size.Length, out error );
-					networkSendFileTasks.Add( new SendFileTask( fileName, connectionID ) );
+					networkTasks.Add( new NetworkTask( fileName, connectionID ) );
 					Log( $"Sending game state to {clientAddress} ({fi.Length} bytes)" );
 					break;
 				}
@@ -650,56 +650,84 @@ public class World : HiveCommon
 			break;
 		}
 
-		List<SendFileTask> finishedTasks = new List<SendFileTask>();
-		foreach ( var task in networkSendFileTasks )
+		List<NetworkTask> finishedTasks = new List<NetworkTask>();
+		foreach ( var task in networkTasks )
 		{
-			if ( task.Progress() == SendFileTask.Result.done )
+			if ( task.Progress() == NetworkTask.Result.done )
 			finishedTasks.Add( task );
 		}
 		foreach ( var task in finishedTasks )
-			networkSendFileTasks.Remove( task );
+			networkTasks.Remove( task );
 	}
 
-	public class SendFileTask
+	public class NetworkTask
 	{
 		public enum Result
 		{
 			done,
-			needModeTime
+			needModeTime,
+			unknown
 		}
 
-		public SendFileTask( string fileName, int connection )
+		public enum Type
 		{
+			sendFile,
+			sendPacket
+		}
+
+		public NetworkTask( string fileName, int connection )
+		{
+			type = Type.sendFile;
 			name = fileName;
 			sent = 0;
 			this.connection = connection;
 			reader = new BinaryReader( File.Open( fileName, FileMode.Open ) );
 		}
 
+		public NetworkTask( List<byte> packet, int connection )
+		{
+			type = Type.sendPacket;
+			this.packet = packet;
+			this.connection = connection;
+		}
+
 		public Result Progress()
 		{
-			reader.BaseStream.Seek( sent, SeekOrigin.Begin );
-			var bytes = reader.ReadBytes( Constants.World.networkBufferSize );
-			while ( bytes.Length > 0 )
+			byte error;
+			switch ( type )
 			{
-				byte error;
-				NetworkTransport.Send( world.networkHostID, connection, root.networkReliableChannelID, bytes, bytes.Length, out error );
-				if ( error != 0 )
-					return Result.needModeTime;
-				sent += bytes.Length;
-				bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+				case Type.sendFile:
+				reader.BaseStream.Seek( sent, SeekOrigin.Begin );
+				var bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+				while ( bytes.Length > 0 )
+				{
+					NetworkTransport.Send( world.networkHostID, connection, root.networkReliableChannelID, bytes, bytes.Length, out error );
+					if ( error != 0 )
+						return Result.needModeTime;
+					sent += bytes.Length;
+					bytes = reader.ReadBytes( Constants.World.networkBufferSize );
+				}
+				Log( $"File {name} sent" );
+				return Result.done;
+
+				case Type.sendPacket:
+				NetworkTransport.Send( world.networkHostID, connection, root.networkReliableChannelID, packet.ToArray(), packet.Count, out error );
+				return error == 0 ? Result.done : Result.needModeTime;
+
+				default:
+				return Result.unknown;
 			}
-			Log( $"File {name} sent" );
-			return Result.done;
 		}
 
 		public int sent;
 		public BinaryReader reader;
 		int connection;
 		string name;
+		public Type type;
+		public List<byte> packet;
 	}
 
-	public List<SendFileTask> networkSendFileTasks = new List<SendFileTask>();
+	public List<NetworkTask> networkTasks = new List<NetworkTask>();
 
 	void FixedUpdate()
 	{
@@ -748,6 +776,7 @@ public class World : HiveCommon
 	{
 		Log( $"Joining to server {address} port {port}", true );
 		Clear();
+		Prepare();
 
 		byte error;	
 		networkClientConnectionID = NetworkTransport.Connect( networkHostID, address, port, 0, out error );
