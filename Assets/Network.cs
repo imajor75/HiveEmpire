@@ -126,7 +126,21 @@ public class Network : HiveCommon
 
     void Update()
     {
-		int host, connection, channel, receivedSize;
+        while ( Receive() != NetworkEventType.Nothing );
+
+		List<Task> finishedTasks = new List<Task>();
+		foreach ( var task in tasks )
+		{
+			if ( task.Progress() == Task.Result.done )
+			finishedTasks.Add( task );
+		}
+		foreach ( var task in finishedTasks )
+			tasks.Remove( task );
+    }
+
+    NetworkEventType Receive()
+    {
+    	int host, connection, channel, receivedSize;
 		byte error;
 		NetworkEventType recData = NetworkTransport.Receive( out host, out connection, out channel, buffer, buffer.Length, out receivedSize, out error );
 		switch( recData )
@@ -204,15 +218,7 @@ public class Network : HiveCommon
 			Log( $"Network event occured: {recData}", true );
 			break;
 		}
-
-		List<Task> finishedTasks = new List<Task>();
-		foreach ( var task in tasks )
-		{
-			if ( task.Progress() == Task.Result.done )
-			finishedTasks.Add( task );
-		}
-		foreach ( var task in finishedTasks )
-			tasks.Remove( task );
+        return recData;
     }
 
     public void OnGameFrameEnd()
