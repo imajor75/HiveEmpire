@@ -6808,6 +6808,14 @@ public static class UIHelpers
 			packet.Add( b );
 		return packet;
 	}
+
+	public static List<byte> Extract( this List<byte> packet, ref int value )
+	{
+		var size = BitConverter.GetBytes( value ).Length;
+		value = BitConverter.ToInt32( packet.GetRange( 0, size ).ToArray(), 0 );
+		packet.RemoveRange( 0, size );
+		return packet;
+	}
 }
 
 

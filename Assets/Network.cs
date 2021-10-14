@@ -132,7 +132,9 @@ public class Network : HiveCommon
 		foreach ( var task in tasks )
 		{
 			if ( task.Progress() == Task.Result.done )
-			finishedTasks.Add( task );
+				finishedTasks.Add( task );
+			else
+				break;
 		}
 		foreach ( var task in finishedTasks )
 			tasks.Remove( task );
@@ -181,37 +183,49 @@ public class Network : HiveCommon
 			}
 			case NetworkEventType.DataEvent:
 			{
-				if ( state == State.receivingGameState )
+				switch ( state )
 				{
-					int start = 0;
-					if ( gameStateSize == -1 )
+					case State.receivingGameState:
 					{
-						int longSize = BitConverter.GetBytes( gameStateSize ).Length;	// TODO there must be a better way to do this
-						byte[] fileSize = new byte[longSize];
-						for ( int i = 0; i < longSize; i++ )
-							fileSize[i] = buffer[i];
-						gameStateSize = BitConverter.ToInt64( fileSize, 0 );
-						Log( $"Size of game state: {gameStateSize}" );
-						start += longSize;
-					}
-					int gameStateBytes = receivedSize - start;
-					if ( gameStateWritten + gameStateBytes > gameStateSize )
-						gameStateBytes = (int)( gameStateSize - gameStateWritten );
-					if ( gameStateBytes > 0 )
-					{
-						gameState.Write( buffer, start, gameStateBytes );
-						gameStateWritten += gameStateBytes;
-						Assert.global.IsFalse( gameStateWritten > gameStateSize );
-						if ( gameStateWritten == gameStateSize )
+						int start = 0;
+						if ( gameStateSize == -1 )
 						{
-							gameState.Close();
-							Log( $"Game state received to {gameStateFile}" );
-							world.Load( gameStateFile );
-							state = State.client;
+							int longSize = BitConverter.GetBytes( gameStateSize ).Length;	// TODO there must be a better way to do this
+							byte[] fileSize = new byte[longSize];
+							for ( int i = 0; i < longSize; i++ )
+								fileSize[i] = buffer[i];
+							gameStateSize = BitConverter.ToInt64( fileSize, 0 );
+							Log( $"Size of game state: {gameStateSize}" );
+							start += longSize;
 						}
+						int gameStateBytes = receivedSize - start;
+						if ( gameStateWritten + gameStateBytes > gameStateSize )
+							gameStateBytes = (int)( gameStateSize - gameStateWritten );
+						if ( gameStateBytes > 0 )
+						{
+							gameState.Write( buffer, start, gameStateBytes );
+							gameStateWritten += gameStateBytes;
+							Assert.global.IsFalse( gameStateWritten > gameStateSize );
+							if ( gameStateWritten == gameStateSize )
+							{
+								gameState.Close();
+								Log( $"Game state received to {gameStateFile}" );
+								world.Load( gameStateFile );
+								state = State.client;
+							}
+						}
+						break;
+					}
+					case State.client:
+					{
+						var frameOrder = new OperationHandler.FrameOrder();
+						buffer.ToList().Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
+						oh.orders.AddLast( frameOrder );
+						if ( oh.frameFinishPending && oh.FinishFrame() )
+							world.SetSpeed( World.Speed.normal );
+						break;
 					}
 				}
-
 				break;
 			}
 			default:
@@ -223,10 +237,10 @@ public class Network : HiveCommon
 
     public void OnGameFrameEnd()
     {
-        if ( state == State.server )
+        if ( state == State.server && serverConnections.Count != 0 )
         {
             List<byte> endOfFramePacket = new List<byte>();
-            endOfFramePacket.Add( oh.currentCRCCode ).Add( time );
+            endOfFramePacket.Add( time ).Add( oh.currentCRCCode );
             foreach ( var connection in serverConnections )
                 tasks.Add( new Task( endOfFramePacket, connection ) );
         }

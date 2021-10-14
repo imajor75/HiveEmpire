@@ -23,6 +23,7 @@ public class OperationHandler : HiveObject
     public List<string> saveFileNames = new List<string>();
     public bool recordCRC;
     public bool recalculateCRC;
+    public bool frameFinishPending;
     public bool insideFrame
     {
         get
@@ -30,6 +31,8 @@ public class OperationHandler : HiveObject
             return time < finishedFrameIndex;
         }
     }
+    [JsonIgnore]
+    public int dumpEventsInFrame;
 
 	static public Interface.Hotkey undoHotkey = new Interface.Hotkey( "Undo", KeyCode.Z, true );
 	static public Interface.Hotkey redoHotkey = new Interface.Hotkey( "Redo", KeyCode.Y, true );
@@ -100,7 +103,7 @@ public class OperationHandler : HiveObject
     }
 
     List<Event> events = new List<Event>(), frameEvents = new List<Event>(), previousFrameEvents;
-    bool eventDifDumped;
+    bool eventsDumped;
 
 	[Conditional( "DEBUG" )]
     public void RegisterEvent( Event.Type type, Event.CodeLocation caller, int code = 0 )
@@ -404,7 +407,7 @@ public class OperationHandler : HiveObject
             {
                 if ( CRCCodes[time - CRCCodesSkipped] != currentCRCCode )
                 {
-                    if ( !eventDifDumped )
+                    if ( !eventsDumped )
                         DumpEventDif();
                     assert.Fail( $"CRC mismatch in frame {time}" );
                 }
@@ -422,12 +425,43 @@ public class OperationHandler : HiveObject
 #endif
         world.fixedOrderCalls = true;
         world.OnEndOfLogicalFrame();
+        FinishFrame();
 #if DEBUG
         previousFrameEvents = frameEvents;
         frameEvents = new List<Event>();
 #endif
+    }
 
-        currentCRCCode = 0;
+    /// Returns true, if succeed
+    public bool FinishFrame()
+    {
+        if ( network.state == Network.State.client )
+        {
+            if ( orders.Count == 0 )
+            {
+                world.SetSpeed( World.Speed.pause );
+                frameFinishPending = true;
+                return false;
+            }
+            else
+            {
+                Assert.global.AreEqual( orders.First().time, time, "Network time mismatch" );
+                var order = orders.First();
+                orders.RemoveFirst();
+                if ( order.CRC != currentCRCCode )
+                {
+                    if ( !eventsDumped )
+                    {
+                        DumpEvents( events, "events-client.txt", time );
+                        eventsDumped = true;
+                    }
+                    Assert.global.Fail( $"Network CRC mismatch, server: {order.CRC}, client: {currentCRCCode} at {time}" );
+                }
+            }
+        }
+
+        if ( world.speed != World.Speed.pause )
+            currentCRCCode = 0;
 
         while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( repeatBuffer[executeIndex++] );
@@ -442,53 +476,47 @@ public class OperationHandler : HiveObject
         }
 
         assert.AreEqual( finishedFrameIndex, time );
+        frameFinishPending = false;
+        return true;
+    }
+
+    static void DumpEvents( List<Event> events, string file, int frame = -1 )
+    {
+        for ( int i = 0; i < events.Count; i++ )
+        {
+            var ie = events[i];
+            if ( ( ie.type == Event.Type.frameStart && ie.code == frame ) || frame == -1 )
+            {
+                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/" + file ) )
+                {
+                    int j = i;
+                    while ( j < events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != frame + 1 ) )
+                        writer.Write( events[j++].description + "\n" );
+                }
+                break;
+            }
+        }
     }
 
     void DumpEventDif()
     {
-        if ( eventDifDumped )
+        if ( eventsDumped )
             return;
-            
-        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-replay.txt" ) )
-        {
-            foreach ( var e in previousFrameEvents )
-                writer.Write( e.description + "\n" );
-        }
-        using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-replay.txt" ) )
-        {
-            foreach ( var e in frameEvents )
-                writer.Write( e.description + "\n" );
-        }
-        for ( int i = 0; i < events.Count; i++ )
-        {
-            var ie = events[i];
-            if ( ( ie.type == Event.Type.frameStart && ie.code == time ) || time == 0 )
-            {
-                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-orig.txt" ) )
-                {
-                    int j = i;
-                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time + 1 ) )
-                        writer.Write( events[j++].description + "\n" );
-                }
-                break;
-            }
-        }
-        for ( int i = 0; i < events.Count; i++ )
-        {
-            var ie = events[i];
-            if ( ( ie.type == Event.Type.frameStart && ie.code == time - 1 ) || time == 0 )
-            {
-                using ( StreamWriter writer = File.CreateText( Application.persistentDataPath + "/events-prev-orig.txt" ) )
-                {
-                    int j = i;
-                    while ( j <= events.Count() && ( events[j].type != Event.Type.frameStart || events[j].code != time ) )
-                        writer.Write( events[j++].description + "\n" );
-                }
-                break;
-            }
-        }
-        eventDifDumped = true;
+
+        DumpEvents( previousFrameEvents, "events-prev-replay.txt" );
+        DumpEvents( frameEvents, "events-replay.txt" );
+        DumpEvents( events, "events-orig.txt", time );
+        DumpEvents( events, "events-prev-orig.txt", time - 1 );
+        eventsDumped = true;
     }
+
+    public class FrameOrder
+    {
+        public int time;
+        public int CRC;
+    }
+
+    public LinkedList<FrameOrder> orders = new LinkedList<FrameOrder>();
 
     void Update()
     {
@@ -510,6 +538,12 @@ public class OperationHandler : HiveObject
             CRCCodesSkipped += CRCCodes.Count;
             CRCCodes.Clear();
             purgeCRCTable = false;
+        }
+
+        if ( dumpEventsInFrame != 0 )
+        {
+            DumpEvents( events, "events-debug.txt", dumpEventsInFrame );
+            dumpEventsInFrame = 0;
         }
     }
 

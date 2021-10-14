@@ -515,6 +515,7 @@ public class World : HiveCommon
 	public void Awake()
 	{
 		settings = ScriptableObject.CreateInstance<Settings>();
+		network = Network.Create();
 	}
 
 	public World Setup()
@@ -594,6 +595,7 @@ public class World : HiveCommon
 	public void OnEndOfLogicalFrame()
 	{
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
+		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		network.OnGameFrameEnd();
 	}
 
@@ -689,7 +691,6 @@ public class World : HiveCommon
 
 	void Start()
 	{
-		network = Network.Create();
 		if ( operationHandler == null )
 		{
 			operationHandler = OperationHandler.Create();
@@ -939,6 +940,7 @@ public class World : HiveCommon
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
 		Interface.ValidateAll( true );
+		network.state = Network.State.server;
 	}
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
