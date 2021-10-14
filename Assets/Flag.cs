@@ -134,10 +134,8 @@ public class Flag : HiveObject
 				area.Add( node + o );
 			flattening.Setup( area, false );
 		}
-#if DEBUG
 		if ( !blueprintOnly )
 			World.CRC( freeSlots, OperationHandler.Event.CodeLocation.flagFreeSlots );
-#endif
 		flattening?.CriticalUpdate();
 	}
 
