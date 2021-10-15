@@ -210,7 +210,7 @@ public class Network : HiveCommon
 							{
 								gameState.Close();
 								Log( $"Game state received to {gameStateFile}" );
-								world.Load( gameStateFile );
+								root.Load( gameStateFile );
 								state = State.client;
 							}
 						}
@@ -219,10 +219,22 @@ public class Network : HiveCommon
 					case State.client:
 					{
 						var frameOrder = new OperationHandler.FrameOrder();
-						buffer.ToList().Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
+						var bl = buffer.ToList();
+						bl.Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
 						oh.orders.AddLast( frameOrder );
 						if ( oh.frameFinishPending && oh.FinishFrame() )
 							world.SetSpeed( World.Speed.normal );
+
+						int operationCount = 0;
+						bl.Extract( ref operationCount );
+						for ( int i = 0; i < operationCount; i++ )
+						{
+							var o = new Operation();
+							o.Fill( bl );
+							oh.executeBuffer.Add( o );
+						}
+						Assert.global.AreEqual( buffer.Length - bl.Count, receivedSize );
+
 						break;
 					}
 				}
@@ -241,6 +253,15 @@ public class Network : HiveCommon
         {
             List<byte> endOfFramePacket = new List<byte>();
             endOfFramePacket.Add( time ).Add( oh.currentCRCCode );
+
+			int operationCount = 0;
+			while ( oh.executeBuffer.Count > oh.executeIndex + operationCount && oh.executeBuffer[oh.executeIndex + operationCount].scheduleAt == time )
+				operationCount++;
+			endOfFramePacket.Add( operationCount );
+
+			for ( int i = 0; i < operationCount; i++ )
+				oh.executeBuffer[oh.executeIndex+i].Pack( endOfFramePacket );
+			
             foreach ( var connection in serverConnections )
                 tasks.Add( new Task( endOfFramePacket, connection ) );
         }

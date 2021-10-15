@@ -6816,6 +6816,58 @@ public static class UIHelpers
 		packet.RemoveRange( 0, size );
 		return packet;
 	}
+
+	public static List<byte> Add( this List<byte> packet, bool value )
+	{
+		var valueBytes = BitConverter.GetBytes( value );
+		foreach ( var b in valueBytes )
+			packet.Add( b );
+		return packet;
+	}
+
+	public static List<byte> Extract( this List<byte> packet, ref bool value )
+	{
+		var size = BitConverter.GetBytes( value ).Length;
+		value = BitConverter.ToBoolean( packet.GetRange( 0, size ).ToArray(), 0 );
+		packet.RemoveRange( 0, size );
+		return packet;
+	}
+
+	public static List<byte> Add<enumType>( this List<byte> packet, enumType value )
+	{
+		return packet.Add( (int)(object)value );
+	}
+
+	public static List<byte> Extract<enumType>( this List<byte> packet, ref enumType value ) where enumType : System.Enum
+	{
+		int data = 0;
+		packet.Extract( ref data );
+			value = (enumType)(object)data;
+		return packet;
+	}
+
+	public static List<byte> Add( this List<byte> packet, List<int> array )
+	{
+		packet.Add( array.Count );
+		foreach ( var value in array )
+			packet.Add( value );
+		return packet;
+	}
+
+	public static List<byte> Extract( this List<byte> packet, ref List<int> array )
+	{
+		array.Clear();
+		int size = 0;
+		packet.Extract( ref size );
+		for ( int i = 0; i < size; i++ )
+		{
+			int value = 0;
+			packet.Extract( ref value );
+			array.Add( value );
+		}
+		return packet;
+	}
+
 }
 
 

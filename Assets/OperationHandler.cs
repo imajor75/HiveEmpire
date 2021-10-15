@@ -9,7 +9,7 @@ using UnityEngine;
 
 public class OperationHandler : HiveObject
 {
-	public List<Operation> undoQueue = new List<Operation>(), redoQueue = new List<Operation>(), repeatBuffer = new List<Operation>();
+	public List<Operation> undoQueue = new List<Operation>(), redoQueue = new List<Operation>(), executeBuffer = new List<Operation>();
     public List<int> CRCCodes = new List<int>();
     public int CRCCodesSkipped;
     public bool purgeCRCTable;
@@ -168,17 +168,19 @@ public class OperationHandler : HiveObject
 
 	[Obsolete( "Compatibility with old files", true )]
     string lastSave { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+    List<Operation> repeatBuffer { set { executeBuffer = value; } }
 
     public Operation next 
     { 
         get 
         { 
-            if ( executeIndex >= repeatBuffer.Count )
+            if ( executeIndex >= executeBuffer.Count )
                 return null;
             int skip = 0;
-            while ( executeIndex+skip+1 < repeatBuffer.Count && repeatBuffer[executeIndex+skip+1].group == repeatBuffer[executeIndex+skip].group )
+            while ( executeIndex+skip+1 < executeBuffer.Count && executeBuffer[executeIndex+skip+1].group == executeBuffer[executeIndex+skip].group )
                 skip++;
-            return repeatBuffer[executeIndex+skip]; 
+            return executeBuffer[executeIndex+skip]; 
         } 
     }
 
@@ -228,7 +230,7 @@ public class OperationHandler : HiveObject
     {
         Assert.global.AreEqual( mode, Mode.repeating );
         mode = Mode.recording;
-        repeatBuffer.RemoveRange( executeIndex, repeatBuffer.Count - executeIndex );
+        executeBuffer.RemoveRange( executeIndex, executeBuffer.Count - executeIndex );
         int CRCIndex = time - CRCCodesSkipped;
         CRCCodes.RemoveRange( CRCIndex + 1, CRCCodes.Count - CRCIndex - 1 );
         replayLength = 0;
@@ -248,7 +250,7 @@ public class OperationHandler : HiveObject
             operation.group = currentGroup;
         if ( !insideFrame && world.speed != World.Speed.pause )
             operation.scheduleAt++;
-        repeatBuffer.Add( operation );
+        executeBuffer.Add( operation );
 	}
 
 	public void UndoRedo( List<Operation> queue )
@@ -463,8 +465,8 @@ public class OperationHandler : HiveObject
         if ( world.speed != World.Speed.pause )
             currentCRCCode = 0;
 
-        while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
-            ExecuteOperation( repeatBuffer[executeIndex++] );
+        while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
+            ExecuteOperation( executeBuffer[executeIndex++] );
 
         world.fixedOrderCalls = false;
 
@@ -523,10 +525,10 @@ public class OperationHandler : HiveObject
         if ( this != oh )
             return;
 
-        while ( executeIndex < repeatBuffer.Count && repeatBuffer[executeIndex].scheduleAt == time )
+        while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
         {
             assert.AreEqual( world.speed, World.Speed.pause );
-            ExecuteOperation( repeatBuffer[executeIndex++] );
+            ExecuteOperation( executeBuffer[executeIndex++] );
         }
         
 		if ( undoHotkey.IsDown() )
@@ -593,7 +595,7 @@ public class Operation : ScriptableObject
     public int areaX, areaY;
     public Building.Type buildingType;
     public int direction;
-    public List<int> roadPathX, roadPathY;
+    public List<int> roadPathX = new List<int>(), roadPathY = new List<int>();
     public bool crossing;
     public int group = -1;
     public int areaIndex;
@@ -709,8 +711,6 @@ public class Operation : ScriptableObject
         }
         set
         {
-            roadPathX = new List<int>();
-            roadPathY = new List<int>();
             foreach ( var node in value )
             {
                 roadPathX.Add( node.x );
@@ -1132,5 +1132,21 @@ public class Operation : ScriptableObject
             }
         }
         return null;
+    }
+
+    public void Pack( List<byte> packet )
+    {
+        packet.Add( type ).Add( workerCount ).Add( locationX ).Add( locationY ).Add( areaX ).Add( areaY ).Add( buildingType );
+        packet.Add( direction ).Add( roadPathX ).Add( roadPathY ).Add( crossing ).Add( group ).Add( areaIndex ).Add( radius );
+        packet.Add( endLocationX ).Add( endLocationY ).Add( itemType ).Add( stockChannel );
+        packet.Add( itemCount ).Add( scheduleAt ).Add( source ).Add( bufferIndex ).Add( useBuffer );
+    }
+
+    public void Fill( List<byte> packet )
+    {
+        packet.Extract( ref type ).Extract( ref workerCount ).Extract( ref locationX ).Extract( ref locationY ).Extract( ref areaX ).Extract( ref areaY ).Extract( ref buildingType );
+        packet.Extract( ref direction ).Extract( ref roadPathX ).Extract( ref roadPathY ).Extract( ref crossing ).Extract( ref group ).Extract( ref areaIndex ).Extract( ref radius );
+        packet.Extract( ref endLocationX ).Extract( ref endLocationY ).Extract( ref itemType ).Extract( ref stockChannel );
+        packet.Extract( ref itemCount ).Extract( ref scheduleAt ).Extract( ref source ).Extract( ref bufferIndex ).Extract( ref useBuffer );
     }
 }
