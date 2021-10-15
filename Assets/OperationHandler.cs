@@ -245,9 +245,18 @@ public class OperationHandler : HiveObject
 	{
         if ( standalone )
             currentGroup++;
-        operation.scheduleAt = time;
         if ( operation.group < 0 )
             operation.group = currentGroup;
+        Assert.global.AreNotEqual( network.state, Network.State.receivingGameState );
+        if ( network.state == Network.State.client )
+        {
+            List<byte> packet = new List<byte>();
+            operation.Pack( packet );
+            network.tasks.Add( new Network.Task( packet, network.clientConnection ) );
+            return;
+        }
+    
+        operation.scheduleAt = time;
         if ( !insideFrame && world.speed != World.Speed.pause )
             operation.scheduleAt++;
         executeBuffer.Add( operation );

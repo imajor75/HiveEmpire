@@ -218,6 +218,7 @@ public class Network : HiveCommon
 					}
 					case State.client:
 					{
+						Assert.global.AreEqual( clientConnection, connection );
 						var frameOrder = new OperationHandler.FrameOrder();
 						var bl = buffer.ToList();
 						bl.Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
@@ -229,12 +230,20 @@ public class Network : HiveCommon
 						bl.Extract( ref operationCount );
 						for ( int i = 0; i < operationCount; i++ )
 						{
-							var o = new Operation();
+							var o = Operation.Create();
 							o.Fill( bl );
 							oh.executeBuffer.Add( o );
 						}
 						Assert.global.AreEqual( buffer.Length - bl.Count, receivedSize );
 
+						break;
+					}
+					case State.server:
+					{
+						Assert.global.IsTrue( serverConnections.Contains( connection ) );
+						var o = Operation.Create();
+						o.Fill( buffer.ToList() );
+						oh.ScheduleOperation( o );
 						break;
 					}
 				}
