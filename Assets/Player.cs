@@ -215,6 +215,8 @@ public class Player : ScriptableObject
 
 	public void FixedUpdate()
 	{
+        if ( HiveCommon.oh && HiveCommon.oh.frameFinishPending )
+            return;
 		if ( chartAdvanceTimer.done )
 		{
 			chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );

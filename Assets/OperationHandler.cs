@@ -401,6 +401,8 @@ public class OperationHandler : HiveObject
 
     void FixedUpdate()
     {
+        if ( frameFinishPending )
+            return;
         if ( this != oh )
             return;
 
@@ -450,13 +452,16 @@ public class OperationHandler : HiveObject
         {
             if ( orders.Count == 0 )
             {
+                Log( $"Client is stuck at time {time}, no order from server yet" );
                 world.SetSpeed( World.Speed.pause );
                 frameFinishPending = true;
                 return false;
             }
             else
             {
-                Assert.global.AreEqual( orders.First().time, time, "Network time mismatch" );
+                Assert.global.AreEqual( orders.First().time, time, $"Network time mismatch (server: {orders.First().time}, client: {time})" );
+                if ( orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
+                    world.SetSpeed( World.Speed.fast );
                 var order = orders.First();
                 orders.RemoveFirst();
                 if ( order.CRC != currentCRCCode )
@@ -470,9 +475,6 @@ public class OperationHandler : HiveObject
                 }
             }
         }
-
-        if ( world.speed != World.Speed.pause )
-            currentCRCCode = 0;
 
         while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( executeBuffer[executeIndex++] );

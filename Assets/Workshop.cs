@@ -655,6 +655,8 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public void FixedUpdate()
 	{
+        if ( oh && oh.frameFinishPending )
+            return;
 		productivity.FixedUpdate( this );
 
 		if ( !construction.done || blueprintOnly )

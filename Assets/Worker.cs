@@ -1247,6 +1247,8 @@ public class Worker : HiveObject
 
 	void FixedUpdate()
 	{
+        if ( oh && oh.frameFinishPending )
+            return;
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
 			SetActive( false );

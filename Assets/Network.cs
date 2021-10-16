@@ -100,6 +100,8 @@ public class Network : HiveCommon
 	public List<int> serverConnections = new List<int>();
 	byte[] buffer = new byte[Constants.Network.bufferSize];
 
+	public float lag;
+	
     public static Network Create()
     {
         return new GameObject( "Network" ).AddComponent<Network>();
@@ -223,9 +225,17 @@ public class Network : HiveCommon
 						var bl = buffer.ToList();
 						bl.Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
 						oh.orders.AddLast( frameOrder );
-						if ( oh.frameFinishPending && oh.FinishFrame() )
-							world.SetSpeed( World.Speed.normal );
-
+						lag = (float)oh.orders.Count / Constants.World.normalSpeedPerSecond;
+						if ( oh.frameFinishPending )
+						{
+							if ( oh.FinishFrame() )
+							{
+								world.SetSpeed( World.Speed.normal );
+								Log( $"Resuming execution at {time}" );
+							}
+							else
+								Log( $"Resume failed at {time}" );
+						}
 						int operationCount = 0;
 						bl.Extract( ref operationCount );
 						for ( int i = 0; i < operationCount; i++ )

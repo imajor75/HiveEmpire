@@ -123,6 +123,8 @@ public class ItemDispatcher : HiveObject
 
 	public void FixedUpdate()
 	{
+        if ( oh && oh.frameFinishPending )
+            return;
 		foreach ( var market in markets )
 			market.FixedUpdate();
 

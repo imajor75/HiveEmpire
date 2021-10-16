@@ -236,6 +236,8 @@ public class World : HiveCommon
 
 		void FixedUpdate()
 		{
+			if ( oh && oh.frameFinishPending )
+				return;
 			if ( world.challenge != this )
 				return;
 
@@ -556,6 +558,8 @@ public class World : HiveCommon
 
 	void FixedUpdate()
 	{
+        if ( oh && oh.frameFinishPending )
+            return;
 		if ( settings.apply )
 		{
 			settings.apply = false;
