@@ -488,6 +488,12 @@ public class Interface : HiveObject
 		LoadChallenges();
 
 		world = World.Create().Setup();
+		StartCoroutine( ValidateCoroutine() );
+		OpenMainPanel();
+	}
+	
+	public void OpenMainPanel()
+	{
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 		if ( directory.Exists )
 		{
@@ -499,7 +505,6 @@ public class Interface : HiveObject
 			Load( Application.streamingAssetsPath + "/demolevel.json" );
 
 		MainPanel.Create().Open( true );
-		StartCoroutine( ValidateCoroutine() );
 	}
 
 	string ReplayTooltipGenerator()

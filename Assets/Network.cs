@@ -179,8 +179,27 @@ public class Network : HiveCommon
 			}
 			case NetworkEventType.DisconnectEvent:
 			{
-				Log( $"Client disconnected with ID {connection}" );
-				serverConnections.Remove( connection );
+				switch ( state )
+				{
+					case State.server:
+					Log( $"Client disconnected with ID {connection}" );
+					serverConnections.Remove( connection );
+					break;
+
+					case State.receivingGameState:
+					root.OpenMainPanel();
+					break;
+				
+					case State.client:
+					Log( $"Server disconnected, switching to server mode and waiting for incoming connectios", true );
+					state = State.server;
+					if ( oh.frameFinishPending )
+					{
+						oh.FinishFrame();
+						world.SetSpeed( World.Speed.normal );
+					}
+					break;
+				}
 				break;
 			}
 			case NetworkEventType.DataEvent:
