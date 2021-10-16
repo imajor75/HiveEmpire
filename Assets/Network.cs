@@ -218,6 +218,7 @@ public class Network : HiveCommon
 							gameStateSize = BitConverter.ToInt64( fileSize, 0 );
 							Log( $"Size of game state: {gameStateSize}" );
 							start += longSize;
+							Interface.status.SetText( this, "Receiving game state from server", pinX:0.5f, pinY:0.5f );
 						}
 						int gameStateBytes = receivedSize - start;
 						if ( gameStateWritten + gameStateBytes > gameStateSize )
@@ -231,6 +232,7 @@ public class Network : HiveCommon
 							{
 								gameState.Close();
 								Log( $"Game state received to {gameStateFile}" );
+								Interface.status.SetText( this, "Loading game state", pinX:0.5f, pinY:0.5f );
 								root.Load( gameStateFile );
 								state = State.client;
 							}

@@ -491,7 +491,7 @@ public class Interface : HiveObject
 		StartCoroutine( ValidateCoroutine() );
 		OpenMainPanel();
 	}
-	
+
 	public void OpenMainPanel()
 	{
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
@@ -6313,6 +6313,7 @@ if ( cart )
 		public void Join()
 		{
 			world.Join( networkJoinAddress.text, int.Parse( networkJoinPort.text ) );
+			status.SetText( root, "Requesting game state from server", pinX:0.5f, pinY:0.5f );
 			Close();
 		}
 

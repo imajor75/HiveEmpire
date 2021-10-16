@@ -461,7 +461,10 @@ public class OperationHandler : HiveObject
             {
                 Assert.global.AreEqual( orders.First().time, time, $"Network time mismatch (server: {orders.First().time}, client: {time})" );
                 if ( orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
+                {
+					Interface.status.SetText( this, "Catching up server", pinX:0.5f, pinY:0.5f, time:100 );
                     world.SetSpeed( World.Speed.fast );
+                }
                 var order = orders.First();
                 orders.RemoveFirst();
                 if ( order.CRC != currentCRCCode )
