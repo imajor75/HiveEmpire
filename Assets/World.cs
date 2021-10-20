@@ -690,7 +690,7 @@ public class World : HiveCommon
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
 		fixedOrderCalls = false;
 
-		network.state = Network.State.server;
+		network.SetState( Network.State.server );
 	}
 
 	void Start()
@@ -944,7 +944,7 @@ public class World : HiveCommon
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
 		Interface.ValidateAll( true );
-		network.state = Network.State.server;
+		network.SetState( Network.State.server );
 	}
 
 	public void Save( string fileName, bool manualSave, bool compact = false )

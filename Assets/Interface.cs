@@ -10,6 +10,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Networking;
+#pragma warning disable 0618
 
 public class Interface : HiveObject
 {
@@ -6241,7 +6243,8 @@ if ( cart )
 		FileSystemWatcher watcher;
 		bool loadNamesRefreshNeeded = true;
 		Eye grabbedEye;
-		InputField networkJoinAddress, networkJoinPort;
+		Dropdown networkJoinDestinationDropdown;
+		InputField networkJoinDestinationInputField;
 
 		public static MainPanel Create()
 		{
@@ -6295,8 +6298,11 @@ if ( cart )
 
 			var joinRow = UIHelpers.currentRow;
 			Button( "Join" ).Pin( borderWidth, joinRow, 50, 25 ).AddClickHandler( Join );
-			networkJoinAddress = InputField( "127.0.0.1" ).Pin( borderWidth+50, joinRow, 120, 25 );
-			networkJoinPort = InputField( Constants.Network.defaultPort.ToString() ).Pin( borderWidth+170, joinRow, 80, 25 );
+			networkJoinDestinationDropdown = Dropdown().Pin( borderWidth, joinRow - 50, 250, 0 );
+			networkJoinDestinationDropdown.onValueChanged.AddListener( JoinDropFinished );
+			networkJoinDestinationDropdown.AddClickHandler( JoinDrop );
+			Button( "Browse LAN" ).Pin( -100 - borderWidth, joinRow, 100, 25, 1 ).AddClickHandler( JoinDrop );
+			networkJoinDestinationInputField = InputField().Pin( borderWidth, joinRow -25, 250, 25 );
 
 			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
 
@@ -6312,9 +6318,29 @@ if ( cart )
 
 		public void Join()
 		{
-			world.Join( networkJoinAddress.text, int.Parse( networkJoinPort.text ) );
+			var s = networkJoinDestinationInputField.text.Split( ':' );
+			world.Join( s[0], int.Parse( s[1] ) );
 			status.SetText( root, "Requesting game state from server", pinX:0.5f, pinY:0.5f );
 			Close();
+		}
+
+		void JoinDrop()
+		{
+			networkJoinDestinationDropdown.ClearOptions();
+			List<string> options = new List<string>();
+			var current = networkJoinDestinationInputField.text;
+			if ( current != "" && !network.localDestinations.Contains( current ) )
+				options.Add( current );
+			foreach ( var destination in network.localDestinations )
+				options.Add( destination );
+			networkJoinDestinationDropdown.AddOptions( options );
+			networkJoinDestinationDropdown.Show();
+		}
+
+		void JoinDropFinished( int value )
+		{
+			if ( value != -1 ) 
+				networkJoinDestinationInputField.text = networkJoinDestinationDropdown.options[value].text; 
 		}
 
 		public new void OnDestroy()
@@ -6329,6 +6355,8 @@ if ( cart )
 			base.Update();
 			if ( loadNamesRefreshNeeded )
 				UpdateLoadNames();
+			if ( networkJoinDestinationInputField.text == "" && network.localDestinations.Count > 0 )
+				networkJoinDestinationInputField.text = network.localDestinations[0];
 		}
 
 		void Replay( bool load )

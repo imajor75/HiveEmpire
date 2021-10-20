@@ -20,6 +20,7 @@ public static class Constants
         public const int bufferSize = 1024;
         public const int defaultPort = 5000;
         public const float lagTolerance = 0.5f;
+        public const int broadcastPort = 35147;
     }
 
     public static class Building
