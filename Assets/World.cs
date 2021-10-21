@@ -944,7 +944,8 @@ public class World : HiveCommon
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
 		Interface.ValidateAll( true );
-		network.SetState( Network.State.server );
+		bool demoMode = fileName.Contains( "demolevel" );
+		network.SetState( demoMode ? Network.State.idle : Network.State.server );
 	}
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
