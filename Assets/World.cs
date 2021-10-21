@@ -10,6 +10,7 @@ using UnityEngine.Networking;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Linq;
+using System.Globalization;
 using UnityEngine.Networking.Types;
 #pragma warning disable 0618
 
@@ -361,7 +362,7 @@ public class World : HiveCommon
 						}
 						while ( mainBuildingContent.Count < (int)Item.Type.total )
 							mainBuildingContent.Add( -1 );
-						mainBuildingContent[(int)itemType] = int.Parse( p[2] );
+						mainBuildingContent[(int)itemType] = int.Parse( p[2], CultureInfo.InvariantCulture );
 						break;
 					}
 					case "production":
@@ -376,7 +377,7 @@ public class World : HiveCommon
 						}
 						while ( productivityGoals.Count < (int)Item.Type.total )
 							productivityGoals.Add( -1 );
-						productivityGoals[(int)itemType] = float.Parse( p[2] );
+						productivityGoals[(int)itemType] = float.Parse( p[2], CultureInfo.InvariantCulture );
 						break;
 					}
 					case "buildingMax":
@@ -396,7 +397,7 @@ public class World : HiveCommon
 						}
 						while ( buildingMax.Count < (int)Building.Type.total )
 							buildingMax.Add( -1 );
-						buildingMax[(int)buildingType] = int.Parse( p[2] );
+						buildingMax[(int)buildingType] = int.Parse( p[2], CultureInfo.InvariantCulture );
 						break;
 					}
 					default:
