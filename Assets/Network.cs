@@ -21,6 +21,16 @@ public class Network : HiveCommon
 		server
 	}
 
+	public class Client
+	{
+		public Client( int connection )
+		{
+			this.connection = connection;
+		}
+		public int connection;
+		public List<Task> tasks = new List<Task>();
+	}
+
 	public class Task
 	{
 		public enum Result
@@ -88,7 +98,6 @@ public class Network : HiveCommon
 		public List<byte> packet;
 	}
 
-	public List<Task> tasks = new List<Task>();
 	public State state { get; private set; }
 
 	public void SetState( State state )
@@ -126,7 +135,7 @@ public class Network : HiveCommon
 	public int broadcastPort;
 	public int broadcastHost;
 	public int clientConnection;
-	public List<int> serverConnections = new List<int>();
+	public List<Client> serverConnections = new List<Client>();
 	byte[] buffer = new byte[Constants.Network.bufferSize];
 	public List<String> localDestinations = new List<string>();
 
@@ -172,16 +181,14 @@ public class Network : HiveCommon
     {
         while ( Receive() != NetworkEventType.Nothing );
 
-		List<Task> finishedTasks = new List<Task>();
-		foreach ( var task in tasks )
+		foreach ( var client in serverConnections )
 		{
-			if ( task.Progress() == Task.Result.done )
-				finishedTasks.Add( task );
-			else
-				break;
+			if ( client.tasks.Count != 0 )
+			{
+				if ( client.tasks.First().Progress() == Task.Result.done )
+					client.tasks.Remove( client.tasks.First() );
+			}
 		}
-		foreach ( var task in finishedTasks )
-			tasks.Remove( task );
     }
 
     NetworkEventType Receive()
@@ -227,14 +234,15 @@ public class Network : HiveCommon
 					string clientAddress;
 					NetworkTransport.GetConnectionInfo( host, connection, out clientAddress, out port, out network, out dstNode, out error );
 					Log( $"Incoming connection from {clientAddress}" );
-					serverConnections.Add( connection );
+					var client = new Network.Client( connection );
 					string fileName = System.IO.Path.GetTempFileName();
 					world.Save( fileName, false, true );
 					FileInfo fi = new FileInfo( fileName );
 					byte[] size = BitConverter.GetBytes( fi.Length );
 					NetworkTransport.Send( host, connection, reliableChannel, size, size.Length, out error );
-					tasks.Add( new Task( fileName, connection ) );
+					client.tasks.Add( new Task( fileName, connection ) );
 					Log( $"Sending game state to {clientAddress} ({fi.Length} bytes)" );
+					serverConnections.Add( client );
 					break;
 				}
 			}
@@ -244,7 +252,14 @@ public class Network : HiveCommon
 				{
 					case State.server:
 					Log( $"Client disconnected with ID {connection}" );
-					serverConnections.Remove( connection );
+					foreach ( var client in serverConnections )
+					{
+						if ( client.connection == connection )
+						{
+							serverConnections.Remove( client );
+							break;
+						}
+					}
 					break;
 
 					case State.receivingGameState:
@@ -332,7 +347,13 @@ public class Network : HiveCommon
 					}
 					case State.server:
 					{
-						Assert.global.IsTrue( serverConnections.Contains( connection ) );
+						bool clientRegistered = false;
+						foreach( var client in serverConnections )
+						{
+							if ( client.connection == connection )
+								clientRegistered = true;
+						}
+						Assert.global.IsTrue( clientRegistered );
 						var o = Operation.Create();
 						o.Fill( buffer.ToList() );
 						oh.ScheduleOperation( o );
@@ -363,9 +384,8 @@ public class Network : HiveCommon
 			for ( int i = 0; i < operationCount; i++ )
 				oh.executeBuffer[oh.executeIndex+i].Pack( endOfFramePacket );
 			
-            foreach ( var connection in serverConnections )
-
-                tasks.Add( new Task( endOfFramePacket, connection ) );
+            foreach ( var client in serverConnections )
+                client.tasks.Add( new Task( endOfFramePacket, client.connection ) );
         }
     }
 

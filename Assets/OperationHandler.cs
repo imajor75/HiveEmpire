@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Networking;
+#pragma warning disable 0618
 
 public class OperationHandler : HiveObject
 {
@@ -252,7 +254,8 @@ public class OperationHandler : HiveObject
         {
             List<byte> packet = new List<byte>();
             operation.Pack( packet );
-            network.tasks.Add( new Network.Task( packet, network.clientConnection ) );
+            byte error;
+            NetworkTransport.Send( network.host, network.clientConnection, Network.reliableChannel, packet.ToArray(), packet.Count, out error );
             return;
         }
     
