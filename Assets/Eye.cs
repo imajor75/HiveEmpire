@@ -65,13 +65,17 @@ public class Eye : HiveObject
 		return this;
 	}
 
+	public void Awake()
+	{
+		transform.SetParent( world.transform );
+	}
+
 	new public void Start()
 	{
 		camera = GetComponent<Camera>();
 		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
 		camera.farClipPlane = 50;
 		camera.nearClipPlane = 0.001f;
-		transform.SetParent( world.transform );
 		gameObject.AddComponent<CameraHighlight>();
 		var ppl = gameObject.AddComponent<PostProcessLayer>();
 		ppl.Init( root.postProcessResources );

@@ -662,7 +662,6 @@ public class World : HiveCommon
 #if DEBUG
 		operationHandler.recordCRC = true;
 #endif
-		eye = Eye.Create().Setup( this );
 		ground = Ground.Create();
 		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
@@ -714,6 +713,8 @@ public class World : HiveCommon
 		Interface.ValidateAll( true );
 		challenge = null;
 
+		if ( eye )
+			Destroy( eye );
 		World world = Serializer.Read<World>( fileName );
 		Assert.global.AreEqual( world, this );
 		this.fileName = fileName;
@@ -997,6 +998,7 @@ public class World : HiveCommon
 
 		itemsJustCreated = new GameObject( "Items just created" );		// Temporary parent for items until they enter the logistic network. If they are just root in the scene, World.Clear would not destroy them.
 		itemsJustCreated.transform.SetParent( transform );
+		eye = Eye.Create().Setup( this );
 	}
 
 	public void Clear()
