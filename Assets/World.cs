@@ -714,7 +714,7 @@ public class World : HiveCommon
 		challenge = null;
 
 		if ( eye )
-			Destroy( eye );
+			Destroy( eye.gameObject );
 		World world = Serializer.Read<World>( fileName );
 		Assert.global.AreEqual( world, this );
 		this.fileName = fileName;
