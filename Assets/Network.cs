@@ -183,10 +183,12 @@ public class Network : HiveCommon
 
 		foreach ( var client in serverConnections )
 		{
-			if ( client.tasks.Count != 0 )
+			while ( client.tasks.Count != 0 )
 			{
 				if ( client.tasks.First().Progress() == Task.Result.done )
 					client.tasks.Remove( client.tasks.First() );
+				else
+					break;
 			}
 		}
     }
