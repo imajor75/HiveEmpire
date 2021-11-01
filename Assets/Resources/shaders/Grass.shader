@@ -67,8 +67,8 @@ Shader "Custom/Grass"
 
             fixed4 frag( v2f i ) : SV_Target 
             {
-                fixed swing = _Offset * _Offset * 0.1;
-                fixed2 move = tex2D( _SideMove, i.uv * 0.01 + fixed2( _TimeFraction, 0 ) );
+                fixed swing = _Offset * _Offset * 0.05;
+                fixed2 move = tex2D( _SideMove, i.uv * 0.01 + fixed2( _TimeFraction, _TimeFraction * 0.31 ) ) - fixed2( 0.5, 0.5 );
                 fixed2 swinged = i.uv + swing * move;
                 float a = tex2D( _Mask, swinged ).r;
                 clip( a - 0.1 );
