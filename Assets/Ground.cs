@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -72,6 +72,14 @@ public class Ground : HiveObject
 			var grassShader = Resources.Load<Shader>( "shaders/Grass" );
 			Assert.global.IsNotNull( grassMaterials );
 
+			var grassTexture = new Texture2D( 8, 8 );
+			for ( int x = 0; x < 8; x++ )
+			{
+				for ( int y = 0; y < 8; y++ )
+					grassTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
+			}
+			grassTexture.Apply();
+
 			var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
 			var grassMaskNull = new Color( 0, 0, 0, 0 );
 			for ( int x = 0; x < Constants.Ground.grassMaskDimension; x++ )
@@ -89,6 +97,7 @@ public class Ground : HiveObject
 				Assert.global.AreEqual( i, grassMaterials.Count );
 				var levelMaterial = new Material( grassShader );
 				levelMaterial.SetFloat( "_Offset", ( (float)i ) / Constants.Ground.grassLevels );
+				levelMaterial.SetTexture( "_SideMove", grassTexture );
 				levelMaterial.SetTexture( "_Mask", maskTexture );
 				grassMaterials.Add( levelMaterial );
 			}
@@ -168,6 +177,10 @@ public class Ground : HiveObject
 
 	public void LateUpdate()
 	{
+		float timeFraction = ( 0.001f * time ) - (float)Math.Floor( 0.001f * time );
+		foreach ( var grassMaterial in grassMaterials )
+			grassMaterial.SetFloat( "_TimeFraction", timeFraction );
+
 		var camera = root.viewport.visibleAreaCenter;
 		foreach ( var block in blocks )
 			block.UpdateOffset( camera );
