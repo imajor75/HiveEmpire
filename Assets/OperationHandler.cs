@@ -24,6 +24,7 @@ public class OperationHandler : HiveObject
     public int currentGroup = 0;
     public List<string> saveFileNames = new List<string>();
     public bool recordCRC;
+    public bool recordEvents;
     public bool recalculateCRC;
     public bool frameFinishPending;
     public bool insideFrame
@@ -110,6 +111,8 @@ public class OperationHandler : HiveObject
 	[Conditional( "DEBUG" )]
     public void RegisterEvent( Event.Type type, Event.CodeLocation caller, int code = 0 )
     {
+        if ( !recordEvents )
+            return;
         var e = new Event{ type = type, code = code, current = currentCRCCode, origin = caller };
         if ( mode == Mode.recording )
             events.Add( e );
@@ -120,6 +123,8 @@ public class OperationHandler : HiveObject
 	[Conditional( "DEBUG" )]
     public void SaveEvents( string file )
     {
+        if ( !recordEvents )
+            return;
         using ( BinaryWriter writer = new BinaryWriter( File.Open( file, FileMode.Create ) ) )
         {
             writer.Write( events.Count );
