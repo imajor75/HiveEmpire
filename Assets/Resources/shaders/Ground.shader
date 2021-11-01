@@ -1,4 +1,4 @@
-﻿Shader "Custom/Gound"
+﻿Shader "Custom/Ground"
 {
     Properties
     {

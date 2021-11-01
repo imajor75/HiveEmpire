@@ -12,6 +12,8 @@ public class Ground : HiveObject
 	public float sharpRendering = Constants.Ground.defaultSharpRendering;
 	public List<Block> blocks = new List<Block>();
 	public Material material;
+	[JsonIgnore]
+	public List<Material> grassMaterials = new List<Material>();
 
 	[Obsolete( "Compatibility with old files", true )]
 	int width { set { if ( dimension == 0 ) dimension = value; assert.AreEqual( dimension, value ); } }
@@ -62,6 +64,36 @@ public class Ground : HiveObject
 
 		if ( blocks.Count == 0 )
 			CreateBlocks();		// Compatibility with old files
+
+		Assert.global.AreEqual( grassMaterials.Count, 0 );
+		{
+			var r = new System.Random( 0 );
+
+			var grassShader = Resources.Load<Shader>( "shaders/Grass" );
+			Assert.global.IsNotNull( grassMaterials );
+
+			var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
+			var grassMaskNull = new Color( 0, 0, 0, 0 );
+			for ( int x = 0; x < Constants.Ground.grassMaskDimension; x++ )
+			{
+				for ( int y = 0; y < Constants.Ground.grassMaskDimension; y++ )
+					maskTexture.SetPixel( x, y, grassMaskNull );
+			}
+			int grassCount = (int)( Constants.Ground.grassMaskDimension * Constants.Ground.grassMaskDimension * Constants.Ground.grassDensity );
+			for ( int i = 0; i < grassCount; i++ )
+				maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
+			maskTexture.Apply();
+
+			for ( int i = 0; i < Constants.Ground.grassLevels; i++ )
+			{
+				Assert.global.AreEqual( i, grassMaterials.Count );
+				var levelMaterial = new Material( grassShader );
+				levelMaterial.SetFloat( "_Offset", ( (float)i ) / Constants.Ground.grassLevels );
+				levelMaterial.SetTexture( "_Mask", maskTexture );
+				grassMaterials.Add( levelMaterial );
+			}
+		}
+		
 		base.Start();
 	}
 
@@ -150,6 +182,12 @@ public class Ground : HiveObject
 				foreach ( var block in blocks )
 					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, 0 );
 			}
+		}
+
+		foreach ( var grassMaterial in grassMaterials )
+		{
+			foreach ( var block in blocks )
+				Graphics.DrawMesh( block.mesh, block.transform.position, Quaternion.identity, grassMaterial, 0 );
 		}
 	}
 
@@ -603,7 +641,7 @@ public class Ground : HiveObject
 				int br, int cl,
 				int cr, int al )
 			{
-				// First three new vertices are created inside the gound triangle. The surface normal of these new vertices will be the same as the surface normal of the big triangle
+				// First three new vertices are created inside the ground triangle. The surface normal of these new vertices will be the same as the surface normal of the big triangle
 				float mainWeight = ( sharpRendering * 2 + 1 ) / 3;
 				float otherWeight = ( 1 - sharpRendering ) / 3;
 
