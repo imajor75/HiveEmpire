@@ -71,6 +71,7 @@ Shader "Custom/Grass"
                 fixed2 move = tex2D( _SideMove, i.uv * 0.01 + fixed2( _TimeFraction, _TimeFraction * 0.31 ) ) - fixed2( 0.5, 0.5 );
                 fixed2 swinged = i.uv + swing * move;
                 float a = tex2D( _Mask, swinged ).r;
+                a -= ( 1 - a ) * _Offset * 0.9;
                 clip( a - 0.1 );
                 fixed4 result = i.color;
                 result.a *= a;
