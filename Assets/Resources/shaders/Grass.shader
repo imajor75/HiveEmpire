@@ -53,7 +53,7 @@ Shader "Custom/Grass"
             a -= ( 1 - a ) * _Offset * 0.9;
             clip( a - 0.1 );
             o.Alpha = a;
-            o.Albedo = IN.weights.r * fixed3( 0.4, 0.6, 0.3 );
+            o.Albedo = IN.weights.r * fixed3( 0.1, 0.2, 0.05 );
         }
 
         ENDCG
