@@ -135,7 +135,7 @@ public static class Constants
     	public const int maxArea = 10;
     	public const float defaultSharpRendering = 0.5f;
         public const int grassLevels = 15;
-        public const int grassMaskDimension = 256;
+        public const int grassMaskDimension = 512;
         public const float grassDensity = 0.1f;
     }
 
