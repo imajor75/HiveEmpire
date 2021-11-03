@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -80,6 +80,7 @@ public class Ground : HiveObject
 				for ( int y = 0; y < 8; y++ )
 					sideMoveTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
 			}
+			sideMoveTexture.wrapMode = TextureWrapMode.Mirror;
 			sideMoveTexture.Apply();
 
 			var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
@@ -180,7 +181,7 @@ public class Ground : HiveObject
 
 	public void LateUpdate()
 	{
-		float timeFraction = ( 0.003f * time ) - (float)Math.Floor( 0.003f * time );
+		float timeFraction = 0.003f * time;
 		foreach ( var grassMaterial in grassMaterials )
 			grassMaterial.SetFloat( "_TimeFraction", timeFraction );
 

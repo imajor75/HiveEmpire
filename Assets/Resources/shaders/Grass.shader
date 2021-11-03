@@ -22,7 +22,7 @@ Shader "Custom/Grass"
         sampler2D _Color;
 
         half _Offset;
-        half _TimeFraction;
+        float _TimeFraction;
 
         struct Input
         {
@@ -48,8 +48,8 @@ Shader "Custom/Grass"
         void surf( Input IN, inout SurfaceOutputStandard o )
         {
             fixed2 uv = IN.worldPos.xz / 2;
-            fixed swing = _Offset * _Offset * 0.05;
-            fixed2 move = tex2D( _SideMove, uv * 0.01 + fixed2( _TimeFraction, _TimeFraction * 0.31 ) ) - fixed2( 0.5, 0.5 );
+            fixed swing = _Offset * _Offset * 0.08;
+            fixed2 move = tex2D( _SideMove, uv * 0.1 + fixed2( _TimeFraction, _TimeFraction * 0.31 ) ) - fixed2( 0.5, 0.5 );
             fixed2 swinged = uv + swing * move;
             float a = tex2D( _Mask, swinged ).r * IN.weights.r;
             a -= ( 1 - a ) * _Offset * 0.9;
