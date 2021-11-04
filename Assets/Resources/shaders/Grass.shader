@@ -10,6 +10,7 @@ Shader "Custom/Grass"
     }
     SubShader
     {
+        Tags { "Queue"="AlphaTest+1" }
         ZWrite Off
         Blend SrcAlpha OneMinusSrcAlpha
         CGPROGRAM
