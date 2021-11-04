@@ -39,7 +39,7 @@ Shader "Custom/Grass"
         v2f vert ( inout appdata_full v )
         {
             v2f o;
-            v.vertex.y += _Offset * 0.1;
+            v.vertex.y += _Offset * 0.15;
             o.position = UnityObjectToClipPos ( v.vertex );
             return o;
         }
@@ -54,7 +54,7 @@ Shader "Custom/Grass"
             a -= ( 1 - a ) * _Offset * 0.9;
             clip( a - 0.1 );
             o.Alpha = a;
-            o.Albedo = tex2D( _Color, uv ) * 0.6;
+            o.Albedo = tex2D( _Color, uv ) * ( 0.0 + 0.8 * _Offset );
         }
 
         ENDCG
