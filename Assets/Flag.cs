@@ -67,6 +67,7 @@ public class Flag : HiveObject
 			if ( block == Resource.BlockHandling.remove )
 				Resource.RemoveFromGround( node );
 			freeSlotsWatch.Attach( itemsStored );
+			ground.SetDirty( node );	// Remove grass
 			return this;
 		}
 		DestroyThis();
@@ -355,6 +356,7 @@ public class Flag : HiveObject
 			user.exclusiveFlag = null;
 		}
 		node.flag = null;
+		ground.SetDirty( node );	// To allow grass
 		DestroyThis();
 		return true;
 	}

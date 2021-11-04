@@ -671,6 +671,10 @@ public class Ground : HiveObject
 					if ( nodes[b].road.ends[0].node == nodes[a] || nodes[b].road.ends[1].node == nodes[a] )
 						roadCrossing = true;
 				}
+				if ( weight < 0.5f && nodes[b].flag )
+					roadCrossing = true;
+				if ( weight > 0.5f && nodes[a].flag )
+					roadCrossing = true;
  
 				uv.Add( roadCrossing ? noGrass : allowGrass );
 			}
@@ -689,17 +693,17 @@ public class Ground : HiveObject
 				var ai = positions.Count;
 				positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
 				colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
-				uv.Add( allowGrass );
+				uv.Add( nodes[a].flag ? noGrass : allowGrass );
 
 				var bi = positions.Count;
 				positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
 				colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
-				uv.Add( allowGrass );
+				uv.Add( nodes[b].flag ? noGrass : allowGrass );
 
 				var ci = positions.Count;
 				positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
 				colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
-				uv.Add( allowGrass );
+				uv.Add( nodes[c].flag ? noGrass : allowGrass );
 
 				// First create the inner triangle, which is the flat part of the whole ground rendering, the normals at the three corners are the same
 				AddTriangle( ai, bi, ci );
