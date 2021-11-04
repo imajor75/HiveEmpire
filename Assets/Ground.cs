@@ -99,7 +99,7 @@ public class Ground : HiveObject
 			{
 				Assert.global.AreEqual( i, grassMaterials.Count );
 				var levelMaterial = new Material( grassShader );
-				levelMaterial.SetFloat( "_Offset", ( (float)i ) / Constants.Ground.grassLevels );
+				levelMaterial.SetFloat( "_Offset", 1 - ( (float)i ) / Constants.Ground.grassLevels );
 				levelMaterial.SetTexture( "_SideMove", sideMoveTexture );
 				levelMaterial.SetTexture( "_Mask", maskTexture );
 				levelMaterial.SetTexture( "_Color", grassTexture );
