@@ -66,48 +66,60 @@ public class Ground : HiveObject
 			CreateBlocks();		// Compatibility with old files
 
 		Assert.global.AreEqual( grassMaterials.Count, 0 );
-		{
-			var r = new System.Random( 0 );
-
-			var grassShader = Resources.Load<Shader>( "shaders/Grass" );
-			Assert.global.IsNotNull( grassMaterials );
-
-			var grassTexture = Resources.Load<Texture>( "icons/grass" );
-
-			var sideMoveTexture = new Texture2D( 8, 8 );
-			for ( int x = 0; x < 8; x++ )
-			{
-				for ( int y = 0; y < 8; y++ )
-					sideMoveTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
-			}
-			sideMoveTexture.wrapMode = TextureWrapMode.Mirror;
-			sideMoveTexture.Apply();
-
-			var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
-			var grassMaskNull = new Color( 0, 0, 0, 0 );
-			for ( int x = 0; x < Constants.Ground.grassMaskDimension; x++ )
-			{
-				for ( int y = 0; y < Constants.Ground.grassMaskDimension; y++ )
-					maskTexture.SetPixel( x, y, grassMaskNull );
-			}
-			int grassCount = (int)( Constants.Ground.grassMaskDimension * Constants.Ground.grassMaskDimension * Constants.Ground.grassDensity );
-			for ( int i = 0; i < grassCount; i++ )
-				maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
-			maskTexture.Apply();
-
-			for ( int i = 0; i < Constants.Ground.grassLevels; i++ )
-			{
-				Assert.global.AreEqual( i, grassMaterials.Count );
-				var levelMaterial = new Material( grassShader );
-				levelMaterial.SetFloat( "_Offset", 1 - ( (float)i ) / Constants.Ground.grassLevels );
-				levelMaterial.SetTexture( "_SideMove", sideMoveTexture );
-				levelMaterial.SetTexture( "_Mask", maskTexture );
-				levelMaterial.SetTexture( "_Color", grassTexture );
-				grassMaterials.Add( levelMaterial );
-			}
-		}
+		SetGrassLayerCount( Constants.Ground.grassLevels );
 		
 		base.Start();
+	}
+
+	[JsonIgnore]
+	public int grassLayerCount;
+
+	void SetGrassLayerCount( int layers )
+	{
+		foreach ( var m in grassMaterials )
+			Destroy( m );
+		grassMaterials.Clear();
+
+		var r = new System.Random( 0 );
+
+		var grassShader = Resources.Load<Shader>( "shaders/Grass" );
+		Assert.global.IsNotNull( grassMaterials );
+
+		var grassTexture = Resources.Load<Texture>( "icons/grass" );
+
+		var sideMoveTexture = new Texture2D( 8, 8 );
+		for ( int x = 0; x < 8; x++ )
+		{
+			for ( int y = 0; y < 8; y++ )
+				sideMoveTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
+		}
+		sideMoveTexture.wrapMode = TextureWrapMode.Mirror;
+		sideMoveTexture.Apply();
+
+		var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
+		var grassMaskNull = new Color( 0, 0, 0, 0 );
+		for ( int x = 0; x < Constants.Ground.grassMaskDimension; x++ )
+		{
+			for ( int y = 0; y < Constants.Ground.grassMaskDimension; y++ )
+				maskTexture.SetPixel( x, y, grassMaskNull );
+		}
+		int grassCount = (int)( Constants.Ground.grassMaskDimension * Constants.Ground.grassMaskDimension * Constants.Ground.grassDensity );
+		for ( int i = 0; i < grassCount; i++ )
+			maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
+		maskTexture.Apply();
+
+		for ( int i = 0; i < layers; i++ )
+		{
+			Assert.global.AreEqual( i, grassMaterials.Count );
+			var levelMaterial = new Material( grassShader );
+			levelMaterial.SetFloat( "_Offset", 1 - ( (float)i ) / layers );
+			levelMaterial.SetTexture( "_SideMove", sideMoveTexture );
+			levelMaterial.SetTexture( "_Mask", maskTexture );
+			levelMaterial.SetTexture( "_Color", grassTexture );
+			levelMaterial.renderQueue = 2500;
+			grassMaterials.Add( levelMaterial );
+		}
+		grassLayerCount = layers;
 	}
 
 	static public void Initialize()
@@ -206,6 +218,9 @@ public class Ground : HiveObject
 			foreach ( var block in blocks )
 				Graphics.DrawMesh( block.mesh, block.transform.position, Quaternion.identity, grassMaterial, 0 );
 		}
+
+		if ( grassMaterials.Count != grassLayerCount )
+			SetGrassLayerCount( grassLayerCount );
 	}
 
 	static void CreateAreas()

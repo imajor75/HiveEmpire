@@ -10,7 +10,7 @@ Shader "Custom/Grass"
     }
     SubShader
     {
-        Tags { "Queue"="AlphaTest+1" }
+        Tags { "RenderType"="Transparent" "Queue"="AlphaTest" }
         ZWrite Off
         Blend SrcAlpha OneMinusSrcAlpha
         CGPROGRAM
