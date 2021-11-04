@@ -37,7 +37,7 @@ Shader "Custom/Grass"
             float4 position : POSITION;
         };
 
-        v2f vert ( inout appdata_full v )
+        v2f vert( inout appdata_full v )
         {
             v2f o;
             v.vertex.y += _Offset * 0.15;
@@ -55,7 +55,7 @@ Shader "Custom/Grass"
             a -= ( 1 - a ) * _Offset * 0.9;
             clip( a - 0.1 );
             o.Alpha = a;
-            o.Albedo = tex2D( _Color, uv ) * ( 0.0 + 0.8 * _Offset );
+            o.Albedo = tex2D( _Color, uv ) * ( 0.0 + 0.7 * _Offset );
         }
 
         ENDCG

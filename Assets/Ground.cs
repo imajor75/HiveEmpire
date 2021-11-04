@@ -641,6 +641,11 @@ public class Ground : HiveObject
 
 			assert.AreEqual( triangles.Count, 3 * 13 * dimension * dimension * 2 );
 
+			// Disable grass unter water
+			for ( int i = 0; i < positions.Count; i++ )
+				if ( positions[i].y < world.waterLevel )
+					uv[i] = noGrass;
+
 			mesh.vertices = positions.ToArray();
 			mesh.colors = colors.ToArray();
 			mesh.uv = uv.ToArray();
