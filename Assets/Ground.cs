@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -526,7 +526,10 @@ public class Ground : HiveObject
 
 			var positions = new List<Vector3>();
 			var colors = new List<Color>();
+			var uv = new List<Vector2>();
+			var nodes = new List<Node>();
 			int dimension = this.dimension + 2;
+			Vector2 noGrass = new Vector2( 0, 0 ), allowGrass = new Vector2( 1, 0 );
 
 			// Each ground triangle is rendered using 13 smaller triangles which all lie in the same plane (the plane of the original ground triangle between three nodes), to make it possible 
 			// to control the smoothness of the rendering. The surface normal at the vertices will change, that makes the 13 triangles look different than a single triangle in the same area.
@@ -541,6 +544,8 @@ public class Ground : HiveObject
 				{
 					var node = boss.GetNode( center.x + x, center.y + y );
 					positions.Add( node.GetPosition( center.x + x, center.y + y ) );
+					uv.Add( node.road == null && node.flag == null ? allowGrass : noGrass );
+					nodes.Add( node );
 					switch ( node.type )
 					{
 						case Node.Type.grass:
@@ -638,6 +643,7 @@ public class Ground : HiveObject
 
 			mesh.vertices = positions.ToArray();
 			mesh.colors = colors.ToArray();
+			mesh.uv = uv.ToArray();
 			mesh.triangles = triangles.ToArray();
 
 			mesh.RecalculateNormals();
@@ -649,6 +655,19 @@ public class Ground : HiveObject
 			{
 				positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
 				colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
+				bool roadCrossing = false;
+				if ( nodes[a].road )
+				{
+					if ( nodes[b].road == nodes[a].road || nodes[a].road.ends[0].node == nodes[b] || nodes[a].road.ends[1].node == nodes[b] )
+						roadCrossing = true;
+				}
+				else if ( nodes[b].road )
+				{
+					if ( nodes[b].road.ends[0].node == nodes[a] || nodes[b].road.ends[1].node == nodes[a] )
+						roadCrossing = true;
+				}
+ 
+				uv.Add( roadCrossing ? noGrass : allowGrass );
 			}
 
 			// This function is covering the area of a ground triangle by creating 13 smaller triangles
@@ -665,14 +684,17 @@ public class Ground : HiveObject
 				var ai = positions.Count;
 				positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
 				colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
+				uv.Add( allowGrass );
 
 				var bi = positions.Count;
 				positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
 				colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
+				uv.Add( allowGrass );
 
 				var ci = positions.Count;
 				positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
 				colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
+				uv.Add( allowGrass );
 
 				// First create the inner triangle, which is the flat part of the whole ground rendering, the normals at the three corners are the same
 				AddTriangle( ai, bi, ci );

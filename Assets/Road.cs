@@ -169,6 +169,7 @@ public class Road : HiveObject, Interface.IInputHandler
 					break;
 				}
 			}
+			ground.SetDirty( node );	// This is needed because grass should be removed from roads
 		}
 
 		while ( workerAtNodes.Count < nodes.Count )
@@ -691,6 +692,7 @@ public class Road : HiveObject, Interface.IInputHandler
 													// Again when interruping road construction
 													// Again
 			nodes[i].road = null;
+			ground.SetDirty( nodes[i] );	// Needed to generate grass where the road was
 		}
 	}
 
