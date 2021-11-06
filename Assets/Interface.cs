@@ -73,10 +73,8 @@ public class Interface : HiveObject
 	static public Hotkey mapZoomInHotkey = new Hotkey( "Map zoom in", KeyCode.KeypadPlus );
 	static public Hotkey mapZoomOutHotkey = new Hotkey( "Map zoom out", KeyCode.KeypadMinus );
 
-	public bool playerInCharge
-	{
-		get { return world.operationHandler.mode == OperationHandler.Mode.recording; }
-	}
+	public bool playerInCharge { get { return world.operationHandler.mode == OperationHandler.Mode.recording; } }
+	public Team mainTeam { get { return mainPlayer.team; } }
 
 	public class Hotkey
 	{
@@ -454,9 +452,9 @@ public class Interface : HiveObject
 
 		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
 		buildingListButton.SetTooltip( () => $"List all buildings (hotkey: {buildingListButton.GetHotkey().keyName})" );
-		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
+		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
-		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
 		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
 		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
@@ -464,7 +462,7 @@ public class Interface : HiveObject
 		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
 		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
 		worldProgressButton.SetTooltip( () => $"Show challenge progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
-		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainPlayer ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
+		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
 		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
 		mapButton.SetTooltip( () => $"Minimap (hotkey: {mapButton.GetHotkey().keyName})" );
@@ -668,7 +666,7 @@ public class Interface : HiveObject
 		}
 
 		if ( headquartersHotkey.IsDown() )
-			mainPlayer.mainBuilding.OnClicked( true );
+			mainTeam.mainBuilding.OnClicked( true );
 		if ( closeWindowHotkey.IsDown() )
 		{
 			if ( !viewport.ResetInputHandler() )
@@ -698,7 +696,7 @@ public class Interface : HiveObject
 		{
 			var flagList = Resources.FindObjectsOfTypeAll<Flag>();
 			var flag = flagList[new System.Random().Next( flagList.Length )];
-			if ( flag != mainPlayer.mainBuilding.flag )
+			if ( flag != mainTeam.mainBuilding.flag )
 			{
 				eye.FocusOn( flag );
 				oh.ScheduleRemoveFlag( flag );
@@ -722,7 +720,7 @@ public class Interface : HiveObject
 		{
 			var buildingList = Resources.FindObjectsOfTypeAll<Building>();
 			var building = buildingList[new System.Random().Next( buildingList.Length )];
-			if ( building != mainPlayer.mainBuilding )
+			if ( building != mainTeam.mainBuilding )
 			{
 				eye.FocusOn( building );
 				world.operationHandler.ScheduleRemoveBuilding( building );
@@ -2318,7 +2316,7 @@ public class Interface : HiveObject
 					{
 						if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource || resource.keepAway.inProgress )
 							continue;
-						if ( !resource.underGround || node == workshop.node || resource.node.owner == workshop.owner )
+						if ( !resource.underGround || node == workshop.node || resource.node.team == workshop.team )
 						{
 							if ( resource.infinite )
 								left++;
@@ -3078,7 +3076,7 @@ public class Interface : HiveObject
 					continue;
 				int c = 0;
 				foreach ( var workshop in workshops )
-					if ( workshop.type == type && workshop.owner == root.mainPlayer )
+					if ( workshop.type == type && workshop.team == root.mainPlayer )
 						c++;
 				var b = BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
 				string tooltip = "";
@@ -3198,7 +3196,7 @@ public class Interface : HiveObject
 				var workshops = FindObjectsOfType<Workshop>( true );
 				for ( int i = showID; i < workshops.Length; i++ )
 				{
-					if ( workshops[i].type == type && workshops[i].owner == root.mainPlayer )
+					if ( workshops[i].type == type && workshops[i].team == root.mainPlayer )
 					{
 						WorkshopPanel.Create().Open( workshops[i], WorkshopPanel.Content.everything, true );
 						showType = type;
@@ -3323,8 +3321,8 @@ public class Interface : HiveObject
 			{
 				case Construct.workshop:
 				{
-					ShowTestResult( Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), currentFlagDirection ) );
-					var workshop = Workshop.Create().Setup( node, root.mainPlayer, workshopType, currentFlagDirection, true, Resource.BlockHandling.ignore );
+					ShowTestResult( Workshop.IsNodeSuitable( node, root.mainTeam, Workshop.GetConfiguration( workshopType ), currentFlagDirection ) );
+					var workshop = Workshop.Create().Setup( node, root.mainTeam, workshopType, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					if ( workshop && workshop.gatherer )
 					{
 						currentBlueprintPanel = WorkshopPanel.Create();
@@ -3336,26 +3334,26 @@ public class Interface : HiveObject
 				};
 				case Construct.flag:
 				{
-					ShowTestResult( Flag.IsNodeSuitable( node, root.mainPlayer ) );
-					currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true );
+					ShowTestResult( Flag.IsNodeSuitable( node, root.mainTeam ) );
+					currentBlueprint = Flag.Create().Setup( node, root.mainTeam, true );
 					break;
 				};
 				case Construct.crossing:
 				{
-					ShowTestResult( Flag.IsNodeSuitable( node, root.mainPlayer ) );
-					currentBlueprint = Flag.Create().Setup( node, root.mainPlayer, true, true );
+					ShowTestResult( Flag.IsNodeSuitable( node, root.mainTeam ) );
+					currentBlueprint = Flag.Create().Setup( node, root.mainTeam, true, true );
 					break;
 				};
 				case Construct.stock:
 				{
-					ShowTestResult( Stock.IsNodeSuitable( node, root.mainPlayer, currentFlagDirection ) );
-					currentBlueprint = Stock.Create().Setup( node, root.mainPlayer, currentFlagDirection, true, Resource.BlockHandling.ignore );
+					ShowTestResult( Stock.IsNodeSuitable( node, root.mainTeam, currentFlagDirection ) );
+					currentBlueprint = Stock.Create().Setup( node, root.mainTeam, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					break;
 				};
 				case Construct.guardHouse:
 				{
-					ShowTestResult( GuardHouse.IsNodeSuitable( node, root.mainPlayer, currentFlagDirection ) );
-					currentBlueprint = GuardHouse.Create().Setup( node, root.mainPlayer, currentFlagDirection, true, Resource.BlockHandling.ignore );
+					ShowTestResult( GuardHouse.IsNodeSuitable( node, root.mainTeam, currentFlagDirection ) );
+					currentBlueprint = GuardHouse.Create().Setup( node, root.mainTeam, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					break;
 				};
 			};
@@ -3439,17 +3437,17 @@ public class Interface : HiveObject
 					{
 						case Construct.workshop:
 						{
-							suitable = Workshop.IsNodeSuitable( node, root.mainPlayer, Workshop.GetConfiguration( workshopType ), flagDirection, true );
+							suitable = Workshop.IsNodeSuitable( node, root.mainTeam, Workshop.GetConfiguration( workshopType ), flagDirection, true );
 							break;
 						}
 						case Construct.stock:
 						{
-							suitable = Stock.IsNodeSuitable( node, root.mainPlayer, flagDirection, true );
+							suitable = Stock.IsNodeSuitable( node, root.mainTeam, flagDirection, true );
 							break;
 						}
 						case Construct.guardHouse:
 						{
-							suitable = GuardHouse.IsNodeSuitable( node, root.mainPlayer, flagDirection, true );
+							suitable = GuardHouse.IsNodeSuitable( node, root.mainTeam, flagDirection, true );
 							break;
 						}
 						default:
@@ -3757,7 +3755,7 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( flag && flag != root.mainPlayer.mainBuilding.flag )
+			if ( flag && flag != root.mainTeam.mainBuilding.flag )
 				oh.ScheduleRemoveFlag( flag );
 			Close();
 		}
@@ -3911,7 +3909,7 @@ public class Interface : HiveObject
 				worker.road.OnClicked( true );
 
 			if ( worker.type == Worker.Type.constructor )
-				worker.owner.mainBuilding.OnClicked( true );
+				worker.team.mainBuilding.OnClicked( true );
 		}
 
 		public override CompareResult IsTheSame( Panel other )
@@ -4334,7 +4332,7 @@ if ( cart )
 				int currentValue = 0;
 				List<string> options = new List<string>();
 				stockOptions.Clear();
-				foreach ( var s in root.mainPlayer.stocks )
+				foreach ( var s in root.mainTeam.stocks )
 				{
 					if ( s == stock )
 						currentValue = options.Count;
@@ -4417,7 +4415,7 @@ if ( cart )
 			if ( stock == null )
 			{
 				currentList = new List<Stock.Route>();
-				foreach ( var stock in root.mainPlayer.stocks )
+				foreach ( var stock in root.mainTeam.stocks )
 				{
 					foreach ( var r in stock.itemData[(int)itemType].outputRoutes )
 						currentList.Add( r );
@@ -4772,7 +4770,7 @@ if ( cart )
 			buildings = new List<Building>();
 			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
 			{
-				if ( building.owner != root.mainPlayer || building.blueprintOnly || !building.title.Contains( filter ) )
+				if ( building.team != root.mainPlayer || building.blueprintOnly || !building.title.Contains( filter ) )
 					continue;
 				buildings.Add( building );
 			}
@@ -5260,12 +5258,12 @@ if ( cart )
 						{
 							if ( p.configuration != null )
 							{
-								if ( !Building.IsNodeSuitable( n, root.mainPlayer, p.configuration, NewBuildingPanel.currentFlagDirection ) )
+								if ( !Building.IsNodeSuitable( n, root.mainTeam, p.configuration, NewBuildingPanel.currentFlagDirection ) )
 									continue;
 							}
 							else
 							{
-								if ( !Flag.IsNodeSuitable( n, root.mainPlayer ) )
+								if ( !Flag.IsNodeSuitable( n, root.mainTeam ) )
 									continue;
 							}
 
@@ -5305,7 +5303,7 @@ if ( cart )
 			}
 			if ( nodeInfoToShow == OverlayInfoType.stockContent )
 			{
-				foreach ( var stock in root.mainPlayer.stocks )
+				foreach ( var stock in root.mainTeam.stocks )
 				{
 					float angle = Time.fixedTime;
 
@@ -5405,7 +5403,7 @@ if ( cart )
 	public class ItemList : Panel
 	{
 		ScrollRect scroll;
-		Player player;
+		Team team;
 		World.Speed speedToRestore;
 		static Comparison<Item> comparison = CompareByAge;
 		static bool reversed;
@@ -5415,12 +5413,12 @@ if ( cart )
 			return new GameObject().AddComponent<ItemList>();
 		}
 
-		public void Open( Player player )
+		public void Open( Team team )
 		{
 			if ( base.Open( null, 0, 0, 420, 320 ) )
 				return;
 			name = "Item list panel";
-			this.player = player;
+			this.team = team;
 			speedToRestore = world.speed;
 			world.SetSpeed( World.Speed.pause );
 
@@ -5455,7 +5453,7 @@ if ( cart )
 			scroll.Clear();
 
 			List<Item> sortedItems = new List<Item>();
-			foreach ( var item in player.items )
+			foreach ( var item in team.items )
 			{
 				if ( item )
 					sortedItems.Add( item );
@@ -5612,9 +5610,9 @@ if ( cart )
 		{
 			speedToRestore = world.speed;
 			world.SetSpeed( World.Speed.pause );
-			root.mainPlayer.itemDispatcher.queryBuilding = this.building = building;
-			root.mainPlayer.itemDispatcher.queryItemType = this.itemType = itemType;
-			root.mainPlayer.itemDispatcher.queryType = this.direction = direction;
+			root.mainTeam.itemDispatcher.queryBuilding = this.building = building;
+			root.mainTeam.itemDispatcher.queryItemType = this.itemType = itemType;
+			root.mainTeam.itemDispatcher.queryType = this.direction = direction;
 
 			if ( base.Open( null, 0, 0, 540, 320 ) )
 				return;
@@ -5637,20 +5635,20 @@ if ( cart )
 		new public void OnDestroy()
 		{
 			base.OnDestroy();
-			root.mainPlayer.itemDispatcher.queryBuilding = null;
-			root.mainPlayer.itemDispatcher.queryItemType = Item.Type.unknown;
+			root.mainTeam.itemDispatcher.queryItemType = Item.Type.unknown;
+			root.mainTeam.itemDispatcher.queryBuilding = null;
 			world.SetSpeed( speedToRestore );
 		}
 
 		new public void Update()
 		{
 			base.Update();
-			if ( root.mainPlayer.itemDispatcher.results != null && !filled )
+			if ( root.mainTeam.itemDispatcher.results != null && !filled )
 			{
 				filled = true;
 				Fill();
-				root.mainPlayer.itemDispatcher.queryBuilding = this.building = null;
-				root.mainPlayer.itemDispatcher.queryItemType = this.itemType = Item.Type.unknown;
+				root.mainTeam.itemDispatcher.queryBuilding = this.building = null;
+				root.mainTeam.itemDispatcher.queryItemType = this.itemType = Item.Type.unknown;
 			}
 		}
 
@@ -5660,7 +5658,7 @@ if ( cart )
 			foreach ( Transform child in scroll.content )
 				Destroy( child.gameObject );
 
-			foreach ( var result in root.mainPlayer.itemDispatcher.results )
+			foreach ( var result in root.mainTeam.itemDispatcher.results )
 			{
 				if ( result.building )
 				{
@@ -5703,14 +5701,14 @@ if ( cart )
 				Text( message ).Link( scroll.content ).Pin( 250, row, 200, 40 );
 				row -= iconSize + 5;
 			}
-			scroll.SetContentSize( -1, root.mainPlayer.itemDispatcher.results.Count * ( iconSize + 5 ) );
+			scroll.SetContentSize( -1, root.mainTeam.itemDispatcher.results.Count * ( iconSize + 5 ) );
 		}
 	}
 
 	public class ItemStats : Panel
 	{
 		ScrollRect scroll;
-		Player player;
+		Team team;
 		static Comparison<int> currentComparison;
 		static bool reverse = false;
 		readonly Text[] inStock = new Text[(int)Item.Type.total];
@@ -5728,13 +5726,13 @@ if ( cart )
 			return new GameObject().AddComponent<ItemStats>();
 		}
 
-		public void Open( Player player )
+		public void Open( Team team )
 		{
 			if ( base.Open( null, 0, 0, 320, 300 ) )
 				return;
 
 			name = "Item stats panel";
-			this.player = player;
+			this.team = team;
 			UIHelpers.currentColumn = 50;
 
 			Text( "In stock", 10 ).
@@ -5781,12 +5779,12 @@ if ( cart )
 
 		int CompareSurplus( int a, int b )
 		{
-			return player.surplus[a].CompareTo( player.surplus[b] );
+			return team.surplus[a].CompareTo( team.surplus[b] );
 		}
 
 		int ComparePerMinute( int a, int b )
 		{
-			return player.itemProductivityHistory[a].production.CompareTo( player.itemProductivityHistory[b].production );
+			return team.itemProductivityHistory[a].production.CompareTo( team.itemProductivityHistory[b].production );
 		}
 
 		void SetOrder( Comparison<int> comparison )
@@ -5810,7 +5808,7 @@ if ( cart )
 			}
 			Stock[] richestStock = new Stock[(int)Item.Type.total];
 			int[] maxStockCount = new int[(int)Item.Type.total];
-			foreach ( var stock in player.stocks )
+			foreach ( var stock in team.stocks )
 			{
 				for ( int i = 0; i < inStock.Length; i++ )
 				{
@@ -5823,7 +5821,7 @@ if ( cart )
 				}
 			}
 
-			foreach ( var item in player.items )
+			foreach ( var item in team.items )
 			{
 				if ( item == null )
 					continue;
@@ -5846,9 +5844,9 @@ if ( cart )
 				Stock stock = richestStock[order[i]];
 				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
 				onWay[i].text = onWayCount[order[i]].ToString();
-				surplus[i].text = player.surplus[order[i]].ToString();
+				surplus[i].text = team.surplus[order[i]].ToString();
 
-				var itemData = player.itemProductivityHistory[order[i]];
+				var itemData = team.itemProductivityHistory[order[i]];
 				production[i].text = itemData.current.ToString( "n2" );
 			};
 		}
@@ -5857,7 +5855,7 @@ if ( cart )
 	public class History : Panel
 	{
 		Item.Type selected;
-		Player player;
+		Team team;
 		float lastProductivity;
 		Image chart, itemFrame;
 		Text record;
@@ -5868,9 +5866,9 @@ if ( cart )
 			return new GameObject().AddComponent<History>();
 		}
 
-		public void Open( Player player )
+		public void Open( Team team )
 		{
-			this.player = player;
+			this.team = team;
 
 			if ( base.Open( null, 0, 0, 450, 300 ) )
 				return;
@@ -5903,7 +5901,7 @@ if ( cart )
 		{
 			// TODO Clean up this function, its a mess
 			base.Update();
-			var a = player.itemProductivityHistory[(int)selected];
+			var a = team.itemProductivityHistory[(int)selected];
 
 			if ( chart.Contains( Input.mousePosition ) )
 			{
@@ -5945,7 +5943,7 @@ if ( cart )
 				{
 					tickPerBuilding = c.productionTime / c.outputStackSize;
 					foreach ( var w in Resources.FindObjectsOfTypeAll<Workshop>() ) 
-					if ( w.owner == root.mainPlayer && w.type == c.type )
+					if ( w.team == root.mainPlayer && w.type == c.type )
 						workshopCount++;
 					break;
 				}
@@ -6135,7 +6133,7 @@ if ( cart )
 					t.text = "Bronze level reached";
 				}
 				originalSpeed = root.world.speed;
-				eye.FocusOn( root.mainPlayer.mainBuilding.flag.node, true );
+				eye.FocusOn( root.mainTeam.mainBuilding.flag.node, true );
 				root.world.SetSpeed( World.Speed.pause );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
@@ -6172,7 +6170,7 @@ if ( cart )
 
 		new public void Update()
 		{
-			var m = root.mainPlayer.itemProductivityHistory[(int)Item.Type.soldier];
+			var m = root.mainTeam.itemProductivityHistory[(int)Item.Type.soldier];
 			var challenge = world.challenge;
 			worldTime.text = $"World time: {UIHelpers.TimeToString( time )}";
 			conditions.text = challenge.conditionsText;
@@ -6309,7 +6307,7 @@ if ( cart )
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
 				grabbedEye = eye;
-				grabbedEye.FocusOn( root.mainPlayer.mainBuilding?.flag?.node, true, false, true, false );
+				grabbedEye.FocusOn( root.mainTeam.mainBuilding?.flag?.node, true, false, true, false );
 				escCloses = false;
 			}
 

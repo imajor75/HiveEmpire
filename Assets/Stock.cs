@@ -143,7 +143,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					i++;
 			}
 
-			foreach ( var stock in boss.owner.stocks )
+			foreach ( var stock in boss.team.stocks )
 			{
 				if ( stock == boss )
 					continue;
@@ -523,12 +523,12 @@ public class Stock : Building, Worker.Callback.IHandler
 		return new GameObject().AddComponent<Stock>();
 	}
 
-	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection, bool ignoreTreesAndRocks = true )
+	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Team owner, int flagDirection, bool ignoreTreesAndRocks = true )
 	{
 		return Building.IsNodeSuitable( placeToBuild, owner, stockConfiguration, flagDirection, ignoreTreesAndRocks );
 	}
 
-	public Stock Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
+	public Stock Setup( Node node, Team owner, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		height = 1.5f;
 		maxItems = Constants.Stock.defaultmaxItems;
@@ -543,12 +543,12 @@ public class Stock : Building, Worker.Callback.IHandler
 		return this;
 	}
 
-	public Stock SetupMain( Node node, Player owner, int flagDirection )
+	public Stock SetupMain( Node node, Team team, int flagDirection )
 	{
 		main = true;
 
-		node.owner = owner;
-		if ( !Setup( node, owner, flagDirection ) )
+		node.team = team;
+		if ( !Setup( node, team, flagDirection ) )
 			return null;
 
 		maxItems = Constants.Stock.defaultmaxItemsForMain;
@@ -563,7 +563,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		itemData[(int)Item.Type.stone].content = Constants.Stock.startStoneCount;
 		itemData[(int)Item.Type.soldier].content = Constants.Stock.startSoldierCount;
 		dispenser = worker = Worker.Create().SetupForBuilding( this );
-		owner.RegisterInfluence( this );
+		team.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );
 		return this;
 	}
@@ -572,7 +572,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	{
 		int typeIndex = (int)itemType;
 		List<Route> list = new List<Route>();
-		foreach ( var stock in owner.stocks )
+		foreach ( var stock in team.stocks )
 		{
 			if ( stock == this )
 				continue;
@@ -589,7 +589,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	{
 		if ( main )
 			return false;
-		owner.UnregisterStock( this );
+		team.UnregisterStock( this );
 		return base.Remove( takeYourTime );
 	}
 
@@ -693,7 +693,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					p = ItemDispatcher.Priority.high;
 				if ( current > itemData[itemType].inputMax )
 					p = ItemDispatcher.Priority.zero;
-				owner.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea ); // TODO Should not order more than what fits
+				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea ); // TODO Should not order more than what fits
 			}
 			if ( itemData.Count > itemType )
 			{
@@ -702,7 +702,7 @@ public class Stock : Building, Worker.Callback.IHandler
 					p = ItemDispatcher.Priority.zero;
 				if ( current > itemData[itemType].outputMax )
 					p = ItemDispatcher.Priority.high;
-				owner.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
+				team.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
 		World.CRC( CRC, OperationHandler.Event.CodeLocation.stockCriticalUpdate );
@@ -795,7 +795,7 @@ public class Stock : Building, Worker.Callback.IHandler
 		{
 			assert.AreEqual( this, itemData[j].boss );
 			assert.AreEqual( j, (int)itemData[j].itemType );
-			if ( itemData[j].cartOutput >= Constants.Stock.cartCapacity && owner.stocksHaveNeed[j] && itemData[j].cartInput == 0 )
+			if ( itemData[j].cartOutput >= Constants.Stock.cartCapacity && team.stocksHaveNeed[j] && itemData[j].cartInput == 0 )
 				assert.AreNotEqual( itemData[j].outputRoutes.Count, 0 );
 		}
 	}

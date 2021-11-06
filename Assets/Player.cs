@@ -5,6 +5,106 @@ using UnityEngine;
 
 public class Player : ScriptableObject
 {
+	public Team team;
+	public new string name;
+
+	[Obsolete( "Compatibility with old files", true )]
+	float totalEfficiency { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer efficiencyTimer { set { chartAdvanceTimer = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Team.Chart averageEfficiencyHistory { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Team.Chart> itemEfficiencyHistory { set { itemProductivityHistory = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Item.Type worseItemType { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	float averageEfficiency { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int soldiersProduced { set { safeTeam.soldierCount = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	int bowmansProduced { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int coinsProduced { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer productivityTimer { set { chartAdvanceTimer = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Stock mainBuilding { set { safeTeam.mainBuilding = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<float> itemHaulPriorities { set { safeTeam.itemHaulPriorities = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	ItemDispatcher itemDispatcher { set { safeTeam.itemDispatcher = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Versioned versionedRoadDelete { set { safeTeam.versionedRoadDelete = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Versioned versionedRoadNetworkChanged { set { safeTeam.versionedRoadNetworkChanged = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Versioned versionedBuildingDelete { set { safeTeam.versionedBuildingDelete = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Building> influencers { set { safeTeam.influencers = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer chartAdvanceTimer { set { safeTeam.chartAdvanceTimer = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer productivityUpdateTimer { set { safeTeam.productivityUpdateTimer = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Team.Chart> itemProductivityHistory { set { safeTeam.itemProductivityHistory = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Stock> stocks { set { safeTeam.stocks = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<bool> stocksHaveNeed { set { safeTeam.stocksHaveNeed = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<int> buildingCounts { set { safeTeam.buildingCounts = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Item> items { set { safeTeam.items = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	int firstPossibleEmptyItemSlot { set { safeTeam.firstPossibleEmptyItemSlot = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	int[] surplus { set { safeTeam.surplus = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Team.InputWeight> inputWeights { set { safeTeam.inputWeights = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Team.InputWeight plankForConstructionWeight { set { safeTeam.plankForConstructionWeight = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	Team.InputWeight stoneForConstructionWeight { set { safeTeam.stoneForConstructionWeight = value; } }
+
+	[Obsolete( "Compatibility with old files", true )]
+	Team safeTeam
+	{
+		get
+		{
+			if ( team == null )
+			{
+				team = Team.Create();
+				team.players.Add( this );
+			}
+			return team;
+		}
+	}
+
+	public static Player Create()
+	{
+		return ScriptableObject.CreateInstance<Player>();
+	}
+
+	public Player Setup( Team team )
+	{
+		this.team = team;
+		team.players.Add( this );
+		return this;
+	}
+
+	void Validate( bool chain )
+	{
+
+	}
+}
+
+public class Team : ScriptableObject
+{
+	public List<Player> players = new List<Player>();
+	public Color color;
+	public new string name;
+
 	public Stock mainBuilding;
 	public List<float> itemHaulPriorities = new List<float>();
 	public ItemDispatcher itemDispatcher;
@@ -22,28 +122,6 @@ public class Player : ScriptableObject
 	public int[] surplus = new int[(int)Item.Type.total];
 	public List<InputWeight> inputWeights;
 	public InputWeight plankForConstructionWeight, stoneForConstructionWeight;
-
-	[Obsolete( "Compatibility with old files", true )]
-	float totalEfficiency { set {} }
-	[Obsolete( "Compatibility with old files", true )]
-	World.Timer efficiencyTimer { set { chartAdvanceTimer = value; } }
-	[Obsolete( "Compatibility with old files", true )]
-	Chart averageEfficiencyHistory { set {} }
-	[Obsolete( "Compatibility with old files", true )]
-	List<Chart> itemEfficiencyHistory { set { itemProductivityHistory = value; } }
-	[Obsolete( "Compatibility with old files", true )]
-	Item.Type worseItemType { set {} }
-	[Obsolete( "Compatibility with old files", true )]
-	float averageEfficiency { set {} }
-	[Obsolete( "Compatibility with old files", true )]
-	int soldiersProduced { set { soldierCount = value; } }
-	[Obsolete( "Compatibility with old files", true )]
-	int bowmansProduced { set {} }
-	[Obsolete( "Compatibility with old files", true )]
-	int coinsProduced { set {} }
-	[Obsolete( "Compatibility with old files", true )]
-	World.Timer productivityTimer { set { chartAdvanceTimer = value; } }
-
 	public int soldierCount 
 	{ 
 		set { mainBuilding.itemData[(int)Item.Type.soldier].content = value; }
@@ -109,12 +187,12 @@ public class Player : ScriptableObject
 		}
 	}
 
-	public static Player Create()
+	public static Team Create()
 	{
-		return ScriptableObject.CreateInstance<Player>();
+		return ScriptableObject.CreateInstance<Team>();
 	}
 
-	public Player Setup()
+	public Team Setup()
 	{
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
@@ -143,7 +221,6 @@ public class Player : ScriptableObject
 
 		return this;
 	}
-
 	void CreateInputWeights()
 	{
 		inputWeights = new List<InputWeight>();
@@ -256,7 +333,7 @@ public class Player : ScriptableObject
 			foreach ( var n in area )
 			{
 				var localNode = node + n;
-				if ( !localNode.CheckType( Node.Type.land ) || localNode.owner != null || localNode.block )
+				if ( !localNode.CheckType( Node.Type.land ) || localNode.team != null || localNode.block )
 					invalidNode = true;
 			}
 			if ( invalidNode || node.Neighbour( flagDirection ).block )
@@ -291,7 +368,7 @@ public class Player : ScriptableObject
 		foreach ( var j in extendedArea )
 		{
 			best.Add( j ).SetHeight( best.height );
-			best.Add( j ).owner = this;
+			best.Add( j ).team = this;
 		}
 
 		Assert.global.IsNull( mainBuilding );
@@ -315,19 +392,19 @@ public class Player : ScriptableObject
 
 	public void RegisterStock( Stock stock )
 	{
-		stock.assert.AreEqual( stock.owner, this );
+		stock.assert.AreEqual( stock.team, this );
 		stocks.Add( stock );
 	}
 
 	public void UnregisterStock( Stock stock )
 	{
-		stock.assert.AreEqual( stock.owner, this );
+		stock.assert.AreEqual( stock.team, this );
 		stocks.Remove( stock );
 	}
 
 	public void RegisterItem( Item item )
 	{
-		item.assert.AreEqual( item.owner, this );
+		item.assert.AreEqual( item.team, this );
 		int slotIndex = firstPossibleEmptyItemSlot;
 		while ( slotIndex < items.Count && items[slotIndex] != null )
 			slotIndex++;
@@ -342,7 +419,7 @@ public class Player : ScriptableObject
 
 	public void UnregisterItem( Item item )
 	{
-		item.assert.AreEqual( item.owner, this );
+		item.assert.AreEqual( item.team, this );
 		item.assert.AreEqual( items[item.index], item );
 		items[item.index] = null;
 		if ( item.index < firstPossibleEmptyItemSlot )
@@ -368,7 +445,7 @@ public class Player : ScriptableObject
 		var list = Resources.FindObjectsOfTypeAll<Building>();
 		foreach ( var building in list )
 		{
-			if ( building.owner == this && !building.blueprintOnly )
+			if ( building.team == this && !building.blueprintOnly )
 				bc[(int)building.type]++;
 		}
 		for ( int i = 0; i < (int)Building.Type.total; i++ )

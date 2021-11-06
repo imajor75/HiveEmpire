@@ -77,7 +77,7 @@ public class PathFinder : ScriptableObject
 					return;
 			}
 
-			if ( mode == Mode.forRoads && ( node.owner != target.owner || node.road ) )
+			if ( mode == Mode.forRoads && ( node.team != target.team || node.road ) )
 				return;
 
 			if ( node.type == Node.Type.underWater )

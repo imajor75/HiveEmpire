@@ -22,7 +22,7 @@ public class BorderEdge : HiveObject
 		}
         this.node = node;
         this.direction = direction;
-		assert.AreNotEqual( node.owner, node.Neighbour( direction ).owner );
+		assert.AreNotEqual( node.team, node.Neighbour( direction ).team );
 		base.Setup();
 		return this;
     }

@@ -7,7 +7,7 @@ using UnityEngine;
 [SelectionBase]
 public class Flag : HiveObject
 {
-	public Player owner;
+	public Team team;
 	public Node node;
 	public Item[] items = new Item[Constants.Flag.maxItems];
 	public Worker user;
@@ -27,6 +27,8 @@ public class Flag : HiveObject
 	GameObject pole;
 
 	[Obsolete( "Compatibility with old files", true )]
+	public Player owner;
+	[Obsolete( "Compatibility with old files", true )]
 	Building building;
 
 	static public void Initialize()
@@ -42,13 +44,13 @@ public class Flag : HiveObject
 		return new GameObject().AddComponent<Flag>();
 	}
 
-	public Flag Setup( Node node, Player owner, bool blueprintOnly = false, bool crossing = false, Resource.BlockHandling block = Resource.BlockHandling.block )
+	public Flag Setup( Node node, Team team, bool blueprintOnly = false, bool crossing = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
-		if ( IsNodeSuitable( node, owner, ignoreBlockingResources:block != Resource.BlockHandling.block ) )
+		if ( IsNodeSuitable( node, team, ignoreBlockingResources:block != Resource.BlockHandling.block ) )
 		{
 			node.flag = this;
 			this.node = node;
-			this.owner = owner;
+			this.team = team;
 			this.blueprintOnly = blueprintOnly;
 			this.crossing = crossing;
 			base.Setup();
@@ -428,7 +430,7 @@ public class Flag : HiveObject
 		}
 		if ( crossing )
 			assert.IsNull( user );
-		assert.IsTrue( world.players.Contains( owner ) );
+		assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.workers ) );
@@ -462,7 +464,7 @@ public class Flag : HiveObject
 	public bool Move( int direction, bool checkOnly = false )
 	{
 		Node target = node.Neighbour( direction );
-		if ( !IsNodeSuitable( target, owner, this ) )
+		if ( !IsNodeSuitable( target, team, this ) )
 			return false;
 
 		List<Road> shorten = new List<Road>(), change = new List<Road>(), extend = new List<Road>();
@@ -539,7 +541,7 @@ public class Flag : HiveObject
 		base.DestroyThis( noAssert );
 	}
 
-	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Player owner, Flag ignore = null, bool ignoreBlockingResources = true )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Team team, Flag ignore = null, bool ignoreBlockingResources = true )
 	{
 		if ( placeToBuildOn.type == Node.Type.underWater )
 			return new SiteTestResult( SiteTestResult.Result.wrongGroundType, Node.Type.aboveWater );
@@ -566,7 +568,7 @@ public class Flag : HiveObject
 				return new SiteTestResult( SiteTestResult.Result.flagTooClose );
 		}
 
-		if ( placeToBuildOn.owner != owner )
+		if ( placeToBuildOn.team != team )
 			return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 
 		return new SiteTestResult( SiteTestResult.Result.fit );

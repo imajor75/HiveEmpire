@@ -344,13 +344,13 @@ public class Ground : HiveObject
 	{
 		foreach ( var n in nodes )
 		{
-			n.owner = null;
+			n.team = null;
 			n.influence = 0;
 		}
 
-		foreach ( var player in world.players )
+		foreach ( var team in world.teams )
 		{
-			foreach ( var building in player.influencers )
+			foreach ( var building in team.influencers )
 			{
 				List<Node> touched = new List<Node>
 				{
@@ -364,7 +364,7 @@ public class Ground : HiveObject
 					if ( touched[i].influence < influence )
 					{
 						touched[i].influence = influence;
-						touched[i].owner = building.owner;
+						touched[i].team = building.team;
 					}
 					for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 					{
@@ -383,7 +383,7 @@ public class Ground : HiveObject
 			for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 			{
 				Node neighbour = node.Neighbour( j );
-				if ( node.owner == neighbour.owner )
+				if ( node.team == neighbour.team )
 				{
 					if ( node.borders[j] )
 					{
@@ -393,16 +393,16 @@ public class Ground : HiveObject
 				}
 				else
 				{
-					if ( node.owner != null && node.borders[j] == null )
+					if ( node.team != null && node.borders[j] == null )
 						node.borders[j] = BorderEdge.Create().Setup( node, j );
 				}
 			}
 
-			if ( node.building && node.building.owner != node.owner )
+			if ( node.building && node.building.team != node.team )
 				node.building.Remove( false );
-			if ( node.flag && node.flag.owner != node.owner )
+			if ( node.flag && node.flag.team != node.team )
 				node.flag.Remove( false );
-			if ( node.road && node.road.owner != node.owner )
+			if ( node.road && node.road.team != node.team )
 				node.road.Remove( false );
 		}
 	}

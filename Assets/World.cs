@@ -21,6 +21,7 @@ public class World : HiveCommon
 	public int saveIndex;
 	public int currentSeed;
 	public List<Player> players = new List<Player>();
+	public List<Team> teams = new List<Team>();
 	public new Eye eye;
 	public bool gameInProgress;
 	public new int time;
@@ -242,12 +243,12 @@ public class World : HiveCommon
 			if ( world.challenge != this )
 				return;
 
-			var player = root.mainPlayer;
+			var team = root.mainTeam;
 			var currentLevel = Goal.gold;
 			conditionsText = "";
 			progress = 1;
 
-			if ( !player )
+			if ( !team )
 				return;		// Right after load this happens sometimes
 
 			void CheckCondition( float current, float limit, bool allowLevels, string text = null, bool reversed = false )
@@ -298,13 +299,13 @@ public class World : HiveCommon
 			if ( productivityGoals != null )
 			{
 				for ( int i = 0; i < productivityGoals.Count; i++ )
-					CheckCondition( player.itemProductivityHistory[i].current, productivityGoals[i], true, $"{(Item.Type)i} productivity {{0}}/{{1}}" );
+					CheckCondition( team.itemProductivityHistory[i].current, productivityGoals[i], true, $"{(Item.Type)i} productivity {{0}}/{{1}}" );
 			}
 
 			if ( mainBuildingContent != null )
 			{
 				for ( int i = 0; i < mainBuildingContent.Count; i++ )
-					CheckCondition( player.mainBuilding.itemData[i].content, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
+					CheckCondition( team.mainBuilding.itemData[i].content, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
 			}
 
 			if ( buildingMax != null )
@@ -312,7 +313,7 @@ public class World : HiveCommon
 				for ( int i = 0; i < buildingMax.Count; i++ )
 				{
 					string buildingName = i < (int)Building.Type.stock ? ((Workshop.Type)i).ToString() : ((Building.Type)i).ToString();
-					CheckCondition( player.buildingCounts[i], buildingMax[i], false, $"number of {buildingName}s {{0}}/{{1}}", true );
+					CheckCondition( team.buildingCounts[i], buildingMax[i], false, $"number of {buildingName}s {{0}}/{{1}}", true );
 				}
 			}
 
@@ -577,8 +578,8 @@ public class World : HiveCommon
 		fixedOrderCalls = true;
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
-		foreach ( var player in players )
-			player.FixedUpdate();
+		foreach ( var team in teams )
+			team.FixedUpdate();
 
 		if ( challenge.life.empty )
 			challenge.Begin();
@@ -666,16 +667,21 @@ public class World : HiveCommon
 		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
 		water = Water.Create().Setup( ground );
-		var mainPlayer = Player.Create().Setup();
-		if ( mainPlayer )
-			players.Add( mainPlayer );
+		var mainTeam = Team.Create().Setup();
+		if ( mainTeam )
+		{
+			teams.Add( mainTeam );
+			var mainPlayer = Player.Create().Setup( mainTeam );
+			if ( mainPlayer )
+				players.Add( mainPlayer );
+		}
 		ground.RecalculateOwnership();
 		gameInProgress = true;
 
 		water.transform.localPosition = Vector3.up * waterLevel;
 
-		foreach ( var player in players )
-			player.Start();
+		foreach ( var team in teams )
+			team.Start();
 
 		if ( keepCameraLocation )
 		{
@@ -700,13 +706,21 @@ public class World : HiveCommon
 			operationHandler = OperationHandler.Create();
 			operationHandler.transform.SetParent( transform );
 		}
-		foreach ( var player in players )
-			player.Start();
+		foreach ( var team in teams )
+			team.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
 	}
 
     public void Load( string fileName )
 	{
+		ValueType GetValue<ValueType>( object from, string field ) where ValueType : class
+		{
+			var fieldInfo = from.GetType().GetField( field );
+			if ( fieldInfo != null )
+				return fieldInfo.GetValue( from ) as ValueType;
+			else
+				return null;
+		}
 		HiveObject.Log( $"Loading game {fileName}" );
    		Clear();
 		Prepare();
@@ -753,23 +767,29 @@ public class World : HiveCommon
 
 		foreach ( var player in players )
 		{
-			while ( player.stocksHaveNeed.Count < (int)Item.Type.total )
-				player.stocksHaveNeed.Add( false );
-			if ( player.buildingCounts.Count < (int)Building.Type.total )
+			if ( !teams.Contains( player.team ) )
+				teams.Add( player.team );
+		}
+
+		foreach ( var team in teams )
+		{
+			while ( team.stocksHaveNeed.Count < (int)Item.Type.total )
+				team.stocksHaveNeed.Add( false );
+			if ( team.buildingCounts.Count < (int)Building.Type.total )
 			{
-				while ( player.buildingCounts.Count < (int)Building.Type.total )
-					player.buildingCounts.Add( 0 );
+				while ( team.buildingCounts.Count < (int)Building.Type.total )
+					team.buildingCounts.Add( 0 );
 				for ( int i = 0; i < (int)Building.Type.total; i++ )
-					player.buildingCounts[i] = 0;
+					team.buildingCounts[i] = 0;
 
 				var buildingList = Resources.FindObjectsOfTypeAll<Building>();
 				foreach ( var building in buildingList )
 				{
-					if ( building.owner == player )
-						player.buildingCounts[(int)building.type]++;
+					if ( building.team == team )
+						team.buildingCounts[(int)building.type]++;
 				}
 			}
-			player.Start();
+			team.Start();
 		}
 
 		water = Water.Create().Setup( ground );
@@ -800,6 +820,17 @@ public class World : HiveCommon
 				}
 				o.ends[0] = o.nodes[0].flag;
 				o.ends[1] = o.lastNode.flag;
+				if ( GetValue<Player>( o, "owner" ) )
+					o.team = GetValue<Player>( o, "owner" ).team;
+			}
+		}
+
+		{
+			var list = Resources.FindObjectsOfTypeAll<Item>();
+			foreach ( var o in list )
+			{
+				if ( GetValue<Player>( o, "owner" ) )
+					o.team = GetValue<Player>( o, "owner" ).team;
 			}
 		}
 
@@ -811,8 +842,8 @@ public class World : HiveCommon
 					o.currentColor = Color.cyan;
 				if ( o.type == Worker.Type.cart )
 					o.currentColor = Color.white;
-				if ( o.owner == null && players.Count > 0 )
-					o.owner = players[0];
+				if ( o.team == null && teams.Count > 0 )
+					o.team = teams[0];
 				//if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 				//	o.itemsInHands[0].SetRawTarget( o.building );
 			}
@@ -885,6 +916,8 @@ public class World : HiveCommon
 					}
 #pragma warning restore 0618
 				}
+				if ( GetValue<Player>( o, "owner" ) )
+					o.team = GetValue<Player>( o, "owner" ).team;
 			}
 		}
 		{
@@ -919,6 +952,8 @@ public class World : HiveCommon
 					f.flattening = new Building.Flattening();
 				if ( !f.freeSlotsWatch.isAttached )
 					f.freeSlotsWatch.Attach( f.itemsStored );
+				if ( GetValue<Player>( f, "owner" ) )
+					f.team = GetValue<Player>( f, "owner" ).team;
 			}
 		}
 
@@ -932,6 +967,8 @@ public class World : HiveCommon
 					market.Setup( d, (Item.Type)d.markets.Count );
 					d.markets.Add( market );
 				}
+				if ( GetValue<Player>( d, "owner" ) )
+					d.team = GetValue<Player>( d, "owner" ).team;
 			}
 		}
 
@@ -1005,6 +1042,7 @@ public class World : HiveCommon
 	{
 		gameInProgress = false;
 		players.Clear();
+		teams.Clear();
 		eye = null;
 		Destroy( operationHandler );
 		operationHandler = null;
@@ -1143,8 +1181,8 @@ public class World : HiveCommon
 	public void Reset()
 	{
 		ground.Reset();
-		foreach ( var player in players )
-			Assert.global.AreEqual( player.firstPossibleEmptyItemSlot, 0 );
+		foreach ( var team in teams )
+			Assert.global.AreEqual( team.firstPossibleEmptyItemSlot, 0 );
 
 		Validate( true );
 	}
@@ -1294,8 +1332,10 @@ public class World : HiveCommon
 		if ( !chain )
 			return;
 		ground.Validate( true );
-		foreach ( var player in players )
-			player.Validate();
+		foreach ( var team in teams )
+			team.Validate();
+		foreach ( var team in teams )
+			team.Validate();
 		if ( operationHandler )
 			Assert.global.AreEqual( challenge, operationHandler.challenge );
 		if ( chain )

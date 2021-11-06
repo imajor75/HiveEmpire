@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -45,10 +46,13 @@ public class ItemDispatcher : HiveObject
 	}
 
 	public List<Market> markets = new List<Market>();
-	public Player player;
+	public Team team;
 	public Building queryBuilding;
 	public Item.Type queryItemType;
 	public Potential.Type queryType;
+
+	[Obsolete( "Compatibility with old files", true )]
+	public Player player { set { team = value.team; } }
 
 	[System.Serializable]
 	public class LogisticResult
@@ -70,9 +74,9 @@ public class ItemDispatcher : HiveObject
 		return new GameObject().AddComponent<ItemDispatcher>();
 	}
 
-	public void Setup( Player player )
+	public void Setup( Team team )
 	{
-		this.player = player;
+		this.team = team;
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
 			markets.Add( ScriptableObject.CreateInstance<Market>() );
@@ -264,7 +268,7 @@ public class ItemDispatcher : HiveObject
 				if ( quantity >= 0 )  
 					surplus += quantity;
 			}
-			boss.player.surplus[(int)itemType] = surplus;			
+			boss.team.surplus[(int)itemType] = surplus;			
 
 			oldRequests = requests;
 			oldOffers = offers;
@@ -394,7 +398,7 @@ public class ItemDispatcher : HiveObject
 			{
 				first.building?.UpdateIsolated();
 				if ( first.item )
-					first.item.roadNetworkChangeListener.Attach( first.item.owner.versionedRoadNetworkChanged );
+					first.item.roadNetworkChangeListener.Attach( first.item.team.versionedRoadNetworkChanged );
 				second.building.UpdateIsolated();
 				return false;
 			}

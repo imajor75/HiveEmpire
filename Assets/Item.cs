@@ -22,7 +22,7 @@ public class Item : HiveObject
 	// The item is either at a flag (the flag member is not null) or in the hands of a worker (the worker member is not null and worker.itemInHands references this object)
 	// or special case: the item is a resource just created, and the worker (as a tinkerer) is about to pick it up
 	public bool justCreated;    // True if the item did not yet enter the world (for example if the item is a log and in the hand of the woodcutter after chopping a tree, on the way back to the building)
-	public Player owner;
+	public Team team;
 	public Flag flag;           // If this is a valid reference, the item is waiting at the flag for a worker to pick it up
 	public Flag nextFlag;       // If this is a valid reference, the item is on the way to nextFlag (Still could be waiting at a flag, but has an associated worker). It is also possible that this is null, but the item is in the hand of a worker. That happens when the item is on the last road of its path, and the worker will deliver it into a building, and not a flag.
 	public Worker worker;		// If this is a valid reference, the item has a worker who promised to come and pick it up. Other workers will not care about the item, when it already has an associated worker.
@@ -70,6 +70,9 @@ public class Item : HiveObject
 
 	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	public static MediaTable<GameObject, Type> looks;
+
+	[Obsolete( "Compatibility with old files", true )]
+	public Player owner;
 
 	public enum Type
 	{
@@ -149,11 +152,11 @@ public class Item : HiveObject
 	{
 		this.origin = origin;
 		life.Start();
-		owner = origin.owner;
+		team = origin.team;
 		justCreated = true;
 		transform.SetParent( World.itemsJustCreated.transform, false );
-		watchRoadDelete.Attach( owner.versionedRoadDelete );
-		watchBuildingDelete.Attach( owner.versionedBuildingDelete );
+		watchRoadDelete.Attach( team.versionedRoadDelete );
+		watchBuildingDelete.Attach( team.versionedBuildingDelete );
 		this.type = type;
 		if ( destination )
 		{
@@ -163,7 +166,7 @@ public class Item : HiveObject
 				return null;
 			}
 		}
-		owner.RegisterItem( this );
+		team.RegisterItem( this );
 		base.Setup();
 		return this;
 	}
@@ -270,7 +273,7 @@ public class Item : HiveObject
 		if ( offerPriority == ItemDispatcher.Priority.zero )
 			return;
 
-		owner.itemDispatcher.RegisterOffer( this, offerPriority, Ground.Area.empty );
+		team.itemDispatcher.RegisterOffer( this, offerPriority, Ground.Area.empty );
 	}
 
 	public void SetRawTarget( Building building, ItemDispatcher.Priority priority = ItemDispatcher.Priority.low )
@@ -366,7 +369,7 @@ public class Item : HiveObject
 
 		destination.ItemArrived( this );
 
-		owner.UnregisterItem( this );
+		team.UnregisterItem( this );
 		DestroyThis();
 	}
 
@@ -395,9 +398,9 @@ public class Item : HiveObject
 			worker.ResetTasks();	// TODO What if the worker has a second item in hand?
 		};
 		CancelTrip();
-		owner.UnregisterItem( this );
+		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )
-			owner.mainBuilding.itemData[(int)type].content++;
+			team.mainBuilding.itemData[(int)type].content++;
 		DestroyThis();
 		return true;
 	}
@@ -530,8 +533,8 @@ public class Item : HiveObject
 			assert.IsNotNull( worker );
 		}
 		assert.AreNotEqual( index, -1 );
-		assert.AreEqual( owner.items[index], this );
-		assert.IsTrue( world.players.Contains( owner ) );
+		assert.AreEqual( team.items[index], this );
+		assert.IsTrue( world.teams.Contains( team ) );
 		base.Validate( chain );
 	}
 }

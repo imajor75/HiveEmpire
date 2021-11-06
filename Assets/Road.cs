@@ -9,7 +9,7 @@ using System.Linq;
 [SelectionBase, RequireComponent( typeof( MeshRenderer ) )]
 public class Road : HiveObject, Interface.IInputHandler
 {
-	public Player owner;
+	public Team team;
 	public List<Worker> workers = new List<Worker>();
 	public int tempNodes = 0;
 	public List<Node> nodes = new List<Node>();
@@ -44,6 +44,8 @@ public class Road : HiveObject, Interface.IInputHandler
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
+	public Player owner;
+	[Obsolete( "Compatibility for old files", true )]
 	int timeSinceWorkerAdded { set {} }
 	[Obsolete( "Compatibility for old files", true )]
 	bool underConstruction { set {} }
@@ -62,7 +64,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public Road SetupAsBuildingExit( Building building, bool blueprintOnly )
 	{
-		owner = building.owner;
+		team = building.team;
 		this.blueprintOnly = blueprintOnly;
 		assert.AreEqual( nodes.Count, 0 );
 		decorationOnly = true;
@@ -71,9 +73,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		return this;
 	}
 
-	public static bool IsNodeSuitable( Road road, Node node, Player owner )
+	public static bool IsNodeSuitable( Road road, Node node, Team team )
 	{
-		if ( road.owner != owner )
+		if ( road.team != team )
 			return false;
 
 		road.assert.IsFalse( road.ready );
@@ -84,12 +86,12 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( !node.validFlag )
 				return false;
 
-			if ( node.flag.owner != road.owner )
+			if ( node.flag.team != road.team )
 				return false;
 			return true;
 		}
 
-		if ( node.owner != road.owner )
+		if ( node.team != road.team )
 			return false;
 
 		// Check if the current node is adjacent to the previous one
@@ -109,7 +111,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( flag == null )
 			return null;
 		nodes.Add( flag.node );
-		owner = flag.owner;
+		team = flag.team;
 		blueprintOnly = true;
 		base.Setup();
 		return this;
@@ -118,7 +120,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool AddNode( Node node, bool checkConditions = false )
 	{
 		assert.IsFalse( ready );
-		if ( checkConditions && !IsNodeSuitable( this, node, owner ) )
+		if ( checkConditions && !IsNodeSuitable( this, node, team ) )
 			return false;
 		nodes.Add( node );
 		if ( nodes.Count == 2 )
@@ -185,7 +187,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		CallNewWorker();
 		gameObject.GetComponent<MeshRenderer>().material = material;
 
-		owner.versionedRoadNetworkChanged.Trigger();
+		team.versionedRoadNetworkChanged.Trigger();
 		base.Materialize();
 		
 		return true;
@@ -584,13 +586,13 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		flag.Validate( false );
 
-		owner.versionedRoadNetworkChanged.Trigger();
+		team.versionedRoadNetworkChanged.Trigger();
 	}
 
 	public void Merge( Road another )
 	{
 		var newRoad = Road.Create();
-		newRoad.owner = owner;
+		newRoad.team = team;
 		newRoad.Setup();
 
   		if ( ends[1] == another.ends[0] || ends[1] == another.ends[1] )
@@ -698,8 +700,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public new void OnDestroy()
 	{
-		owner.versionedRoadDelete.Trigger();
-		owner.versionedRoadNetworkChanged.Trigger();
+		team.versionedRoadDelete.Trigger();
+		team.versionedRoadNetworkChanged.Trigger();
 		base.OnDestroy();
 	}
 
@@ -773,7 +775,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		assert.IsTrue( nodes.Count > 0 );
 
 		PathFinder p = ScriptableObject.CreateInstance<PathFinder>();
-		if ( p.FindPathBetween( lastNode, node, PathFinder.Mode.forRoads, node.flag || ( node.road && node.road != this && Flag.IsNodeSuitable( node, owner ) ) ) )
+		if ( p.FindPathBetween( lastNode, node, PathFinder.Mode.forRoads, node.flag || ( node.road && node.road != this && Flag.IsNodeSuitable( node, team ) ) ) )
 		{
 			var j = nodes.Count;
 			for ( int i = 1; i < p.path.Count; i++ )
@@ -803,7 +805,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			return true;
 		}
 
-		if ( Flag.IsNodeSuitable( node, owner ) )
+		if ( Flag.IsNodeSuitable( node, team ) )
 		{
 			root.viewport.SetCursorType( Interface.Viewport.CursorType.flag );
 			return true;
@@ -933,13 +935,13 @@ public class Road : HiveObject, Interface.IInputHandler
 	public Road SplitNodeList( List<Node> nodes, List<Node> secondNodes = null )
 	{
 		Road newRoad = Create(), secondRoad = null;
-		newRoad.owner = owner;
+		newRoad.team = team;
 		newRoad.nodes = nodes;
 		newRoad.Setup();
 		if ( secondNodes != null )
 		{
 			secondRoad = Create();
-			secondRoad.owner = owner;
+			secondRoad.team = team;
 			secondRoad.nodes = secondNodes;
 			secondRoad.Setup();
 		}
@@ -1098,7 +1100,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		if ( !ready )
 			assert.AreEqual( root.viewport.inputHandler, this );
-		assert.IsTrue( world.players.Contains( owner ) );
+		assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );
 	}

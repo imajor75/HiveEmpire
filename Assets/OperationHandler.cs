@@ -1005,11 +1005,11 @@ public class Operation : ScriptableObject
                 if ( !newBuilding )
                 {
                     if ( buildingType < (Building.Type)Workshop.Type.total )
-                        newBuilding = Workshop.Create().Setup( location, HiveCommon.root.mainPlayer, (Workshop.Type)buildingType, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = Workshop.Create().Setup( location, HiveCommon.root.mainTeam, (Workshop.Type)buildingType, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.stock )
-                        newBuilding = Stock.Create().Setup( location, HiveCommon.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = Stock.Create().Setup( location, HiveCommon.root.mainTeam, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.guardHouse )
-                        newBuilding = GuardHouse.Create().Setup( location, HiveCommon.root.mainPlayer, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = GuardHouse.Create().Setup( location, HiveCommon.root.mainTeam, direction, block:Resource.BlockHandling.remove );
                 }
                 else
                 {
@@ -1074,7 +1074,7 @@ public class Operation : ScriptableObject
             {
                 Flag newFlag = location.flag;
                 if ( !newFlag )
-                    newFlag = Flag.Create().Setup( location, HiveCommon.root.mainPlayer, false, crossing );
+                    newFlag = Flag.Create().Setup( location, HiveCommon.root.mainTeam, false, crossing );
                 else
                 {
                     newFlag.assert.IsTrue( newFlag.blueprintOnly );
@@ -1109,7 +1109,7 @@ public class Operation : ScriptableObject
                 if ( route == null )
                     return null;
                 route.priority += direction;
-                route.start.owner.UpdateStockRoutes( route.itemType );
+                route.start.team.UpdateStockRoutes( route.itemType );
                 return Create().SetupAsChangePriority( route, direction * -1 );
             }
             case Type.moveRoad:
@@ -1125,7 +1125,7 @@ public class Operation : ScriptableObject
                 var i = (building as Stock).itemData[(int)itemType];
                 var oldValue = i.ChannelValue( stockChannel );
                 i.ChannelValue( stockChannel ) = itemCount;
-				building.owner.UpdateStockRoutes( itemType );
+				building.team.UpdateStockRoutes( itemType );
                 return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
             }
             case Type.captureRoad:

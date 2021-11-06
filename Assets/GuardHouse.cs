@@ -23,7 +23,7 @@ public class GuardHouse : Building
 		guardHouseConfiguration.constructionTime = 5000;
 	}
 
-	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, int flagDirection, bool ignoreTreesAndRocks = true )
+	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Team owner, int flagDirection, bool ignoreTreesAndRocks = true )
 	{
 		return Building.IsNodeSuitable( placeToBuild, owner, guardHouseConfiguration, flagDirection, ignoreTreesAndRocks );
 	}
@@ -35,7 +35,7 @@ public class GuardHouse : Building
 
 	override public string title { get { return "Guard House"; } set {} }
 
-	public GuardHouse Setup( Node node, Player owner, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
+	public GuardHouse Setup( Node node, Team owner, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		height = 1.2f;
 		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly, block ) == null )
@@ -58,9 +58,9 @@ public class GuardHouse : Building
 	public override void CriticalUpdate()
 	{
 		base.CriticalUpdate();
-		if ( construction.done && soldiers.Count == 0 && !blueprintOnly && owner.soldierCount > 0 )
+		if ( construction.done && soldiers.Count == 0 && !blueprintOnly && team.soldierCount > 0 )
 		{
-			owner.soldierCount--;
+			team.soldierCount--;
 			Worker soldier = Worker.Create().SetupAsSoldier( this );
 			if ( soldier == null )
 				return;
@@ -70,7 +70,7 @@ public class GuardHouse : Building
 		if ( !ready && soldiers.Count > 0 && soldiers[0].IsIdle( true ) )
 		{
 			ready = true;
-			owner.RegisterInfluence( this );
+			team.RegisterInfluence( this );
 		}
 	}
 
@@ -87,7 +87,7 @@ public class GuardHouse : Building
 			return true;
 
 		removing = true;
-		owner.UnregisterInfuence( this );
+		team.UnregisterInfuence( this );
 		return base.Remove( takeYourTime );
 	}
 

@@ -173,7 +173,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		public int onTheWay;
 		public int important = Constants.Workshop.defaultImportantInBuffer;
 		public Ground.Area area = new Ground.Area();
-		public Player.InputWeight weight;
+		public Team.InputWeight weight;
 		public bool disabled;
 		public bool optional;
 	}
@@ -456,7 +456,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		return new GameObject().AddComponent<Workshop>();
 	}
 
-	public Workshop Setup( Node node, Player owner, Type type, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
+	public Workshop Setup( Node node, Team owner, Type type, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		this.type = type;
 		buffers.Clear();
@@ -512,7 +512,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			if ( j == buffers.Count )
 				newList.Add( new Buffer( input.itemType, input.bufferSize ) );
 			foreach ( var b in buffers )
-				b.weight = owner.FindInputWeight( type, b.itemType );
+				b.weight = team.FindInputWeight( type, b.itemType );
 		}
 		assert.AreEqual( newList.Count, productionConfiguration.inputs.Length );
 		buffers = newList;
@@ -631,7 +631,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		assert.IsTrue( output < productionConfiguration.outputMax );
 		output += productionConfiguration.outputStackSize;
 		itemsProduced += productionConfiguration.outputStackSize;
-		owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+		team.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
 		resting.Start( restTime );
 		ChangeStatus( Status.resting );
 		SetWorking( false );
@@ -686,12 +686,12 @@ public class Workshop : Building, Worker.Callback.IHandler
 				int missing = b.size-b.stored-b.onTheWay;
 				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
 				float weight = b.weight != null ? b.weight.weight : 0.5f;
-				owner.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
+				team.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 			}
 			if ( productionConfiguration.outputType != Item.Type.unknown && mode != Mode.always )
 			{
 				bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
-				owner.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
+				team.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
 			}
 
 			if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
@@ -888,7 +888,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 				SetWorking( false );
 				itemsProduced += productionConfiguration.outputStackSize;
 				if ( productionConfiguration.outputType != Item.Type.unknown )
-					owner.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+					team.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
 				resting.Start( restTime );
 				ChangeStatus( Status.resting );
 			}

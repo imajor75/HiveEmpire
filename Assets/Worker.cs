@@ -11,7 +11,7 @@ public class Worker : HiveObject
 	public Road road;
 	public bool exclusiveMode;
 	public Building building;
-	public Player owner;
+	public Team team;
 	public Node walkFrom;
 	public Node walkTo;
 	public Road walkBase;
@@ -59,6 +59,8 @@ public class Worker : HiveObject
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
 
+	[Obsolete( "Compatibility with old files", true )]
+	public Player owner;
 	[Obsolete( "Compatibility with old files", true )]
 	bool underControl { set {} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -1014,9 +1016,9 @@ public class Worker : HiveObject
 		World.CRC( road.id, OperationHandler.Event.CodeLocation.workerSetupAsHauler );
 		look = type = Type.hauler;
 		name = "Hauler";
-		owner = road.owner;
+		team = road.team;
 		currentColor = Color.grey;
-		Building main = road.owner.mainBuilding;
+		Building main = road.team.mainBuilding;
 		SetNode( main.node );
 		this.road = road;
 		exclusiveMode = false;
@@ -1056,8 +1058,8 @@ public class Worker : HiveObject
 		look = type = Type.constructor;
 		name = "Builder";
 		currentColor = Color.cyan;
-		owner = flag.owner;
-		Building main = owner.mainBuilding;
+		team = flag.team;
+		Building main = team.mainBuilding;
 		SetNode( main.node );
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( flag );
@@ -1077,7 +1079,7 @@ public class Worker : HiveObject
 			return SetupForBuildingSite( building );
 		}
 		
-		owner = building.owner;
+		team = building.team;
 		this.building = building;
 		SetNode( building.node );
 		base.Setup();
@@ -1086,9 +1088,9 @@ public class Worker : HiveObject
 
 	Worker SetupForBuildingSite( Building building )
 	{
-		owner = building.owner;
+		team = building.team;
 		this.building = building;
-		Building main = owner.mainBuilding;
+		Building main = team.mainBuilding;
 		if ( main && main != building )
 		{
 			SetNode( main.node );
@@ -1119,7 +1121,7 @@ public class Worker : HiveObject
 		building = stock;
 		SetNode( stock.node );
 		speed = Constants.Stock.cartSpeed;
-		owner = stock.owner;
+		team = stock.team;
 		currentColor = Color.white;
 		base.Setup();
 		return this;
@@ -1419,7 +1421,7 @@ public class Worker : HiveObject
 
 		if ( type == Type.cart )
 		{
-			assert.IsNotNull( owner );
+			assert.IsNotNull( team );
 			var stock = building as Stock;
 			if ( exclusiveFlag )
 			{
@@ -1482,17 +1484,17 @@ public class Worker : HiveObject
 	{
 		if ( this as Stock.Cart )
 			assert.IsNull( building as Stock );     // ?
-		if ( !owner.mainBuilding.returningUnits.Contains( this ) )
-			owner.mainBuilding.returningUnits.Add( this );
+		if ( !team.mainBuilding.returningUnits.Contains( this ) )
+			team.mainBuilding.returningUnits.Add( this );
 		if ( !recalled )
 		{
 			if ( node.validFlag )
-				ScheduleWalkToFlag( owner.mainBuilding.flag );
+				ScheduleWalkToFlag( team.mainBuilding.flag );
 			else
-				ScheduleWalkToNode( owner.mainBuilding.flag.node );
-			ScheduleWalkToNeighbour( owner.mainBuilding.node );
+				ScheduleWalkToNode( team.mainBuilding.flag.node );
+			ScheduleWalkToNeighbour( team.mainBuilding.node );
 		};
-		ScheduleCall( owner.mainBuilding );
+		ScheduleCall( team.mainBuilding );
 		ScheduleWait( Constants.World.normalSpeedPerSecond );	// Wait to prevent further calls to this function once the unit reached the headquarters
 		recalled = true;
 	}
@@ -1636,7 +1638,7 @@ public class Worker : HiveObject
 
 	public (float score, bool swapOnly) CheckItem( Item item )
 	{
-		float value = road.owner.itemHaulPriorities[(int)item.type];
+		float value = road.team.itemHaulPriorities[(int)item.type];
 
 		// TODO Better prioritization of items
 		if ( item.flag.node == node )
@@ -1691,7 +1693,7 @@ public class Worker : HiveObject
 		foreach ( var o in Ground.areas[Constants.Worker.flagSearchDistance] )
 		{
 			var n = node + o;
-			if ( n.validFlag && n.validFlag.owner == owner && n.DistanceFrom( node ) < closest )
+			if ( n.validFlag && n.validFlag.team == team && n.DistanceFrom( node ) < closest )
 			{
 				destination = n.flag;
 				closest = n.DistanceFrom( node );
@@ -2188,7 +2190,7 @@ public class Worker : HiveObject
 				if ( item && building.worker == this )
 					assert.AreEqual( item.destination, building );
 		}
-		assert.IsTrue( owner == null || world.players.Contains( owner ) );
+		assert.IsTrue( team == null || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );
 	}

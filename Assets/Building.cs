@@ -13,7 +13,7 @@ abstract public class Building : HiveObject
 	}
 	public string moniker;
 	public string nick { get { return moniker ?? title; } }
-	public Player owner;
+	public Team team;
 	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;
 	public int flagDirection;
@@ -34,6 +34,8 @@ abstract public class Building : HiveObject
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 
+	[Obsolete( "Compatibility with old files", true )]
+	public Player owner;
 	[Obsolete( "Compatibility with old files", true )]
 	Node.Type groundTypeNeeded;
 	[Obsolete( "Compatibility with old files", true )]
@@ -71,10 +73,10 @@ abstract public class Building : HiveObject
 
 	public void UpdateIsolated()
 	{
-		if ( Path.Between( flag.node, owner.mainBuilding.flag.node, PathFinder.Mode.onRoad, this ) == null )
+		if ( Path.Between( flag.node, team.mainBuilding.flag.node, PathFinder.Mode.onRoad, this ) == null )
 		{
 			isolated = true;
-			roadNetworkChangeListener.Attach( owner.versionedRoadNetworkChanged );
+			roadNetworkChangeListener.Attach( team.versionedRoadNetworkChanged );
 		}
 		else
 			isolated = false;
@@ -296,12 +298,12 @@ abstract public class Building : HiveObject
 			if ( boss.reachable )
 			{
 				int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
-				boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.plankForConstructionWeight.weight );
+				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.plankForConstructionWeight.weight );
 				int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
-				boss.owner.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.owner.stoneForConstructionWeight.weight );
+				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.stoneForConstructionWeight.weight );
 			}
 
-			if ( worker == null && Path.Between( boss.owner.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
+			if ( worker == null && Path.Between( boss.team.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
 				worker = Worker.Create();
 				worker.SetupForConstruction( boss );
@@ -442,7 +444,7 @@ abstract public class Building : HiveObject
 		Construction.Initialize();
 	}
 
-	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Player owner, Configuration configuration, int flagDirection, bool ignoreBlockingResources = true )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Team team, Configuration configuration, int flagDirection, bool ignoreBlockingResources = true )
 	{
 		var area = GetFoundation( configuration.huge, flagDirection );
 
@@ -461,14 +463,14 @@ abstract public class Building : HiveObject
 				if ( !ignoreBlockingResources || !resourceBlocking )
 					return new SiteTestResult( SiteTestResult.Result.blocked );
 			}
-			if ( basis.owner != owner )
+			if ( basis.team != team )
 				return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 			foreach ( var b in Ground.areas[1] )
 			{
 				var perim = basis.Add( b );
 				if ( configuration.flatteningNeeded )
 				{
-					if ( perim.owner != owner )
+					if ( perim.team != team )
 						return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 					if ( perim.fixedHeight )
 						return new SiteTestResult( SiteTestResult.Result.heightAlreadyFixed );
@@ -491,13 +493,13 @@ abstract public class Building : HiveObject
 		if ( flagLocation.validFlag )
 			return new SiteTestResult( SiteTestResult.Result.fit );
 
-		return Flag.IsNodeSuitable( flagLocation, owner, ignoreBlockingResources:ignoreBlockingResources );
+		return Flag.IsNodeSuitable( flagLocation, team, ignoreBlockingResources:ignoreBlockingResources );
 	}
 
-	public Building Setup(  Node node, Player owner, Configuration configuration, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
+	public Building Setup( Node node, Team team, Configuration configuration, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		this.configuration = configuration;
-		if ( !IsNodeSuitable( node, owner, configuration, flagDirection, block == Resource.BlockHandling.ignore || block == Resource.BlockHandling.remove ) )
+		if ( !IsNodeSuitable( node, team, configuration, flagDirection, block == Resource.BlockHandling.ignore || block == Resource.BlockHandling.remove ) )
 		{
 			DestroyThis();
 			return null;
@@ -506,7 +508,7 @@ abstract public class Building : HiveObject
 		var flagNode = node.Neighbour( flagDirection );
 		Flag flag = flagNode.validFlag;
 		if ( flag == null )
-			flag = Flag.Create().Setup( flagNode, owner, blueprintOnly, block:block );
+			flag = Flag.Create().Setup( flagNode, team, blueprintOnly, block:block );
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
@@ -516,7 +518,7 @@ abstract public class Building : HiveObject
 
 		this.flag = flag;
 		this.flagDirection = flagDirection;
-		this.owner = owner;
+		this.team = team;
 		this.blueprintOnly = blueprintOnly;
 
 		this.node = node;
@@ -531,14 +533,14 @@ abstract public class Building : HiveObject
 		}
 
 		if ( !blueprintOnly )
-			owner.buildingCounts[(int)type]++;
+			team.buildingCounts[(int)type]++;
 		base.Setup();
 		return this;
 	}
 
 	public override void Materialize()
 	{
-		owner.buildingCounts[(int)type]++;
+		team.buildingCounts[(int)type]++;
 		foreach ( var o in foundation )
 			Resource.RemoveFromGround( node + o );
 
@@ -690,7 +692,7 @@ abstract public class Building : HiveObject
 	{
 		construction.Remove( takeYourTime );
 		if ( !blueprintOnly )
-			owner.buildingCounts[(int)type]--;
+			team.buildingCounts[(int)type]--;
 
 		var list = itemsOnTheWay.GetRange( 0, itemsOnTheWay.Count );
 		foreach ( var item in list )
@@ -714,7 +716,7 @@ abstract public class Building : HiveObject
 		}
 		if ( flag.blueprintOnly )
 			flag.Remove();
-		owner?.versionedBuildingDelete.Trigger();
+		team?.versionedBuildingDelete.Trigger();
 		DestroyThis();
 		return true;
 	}
@@ -759,7 +761,7 @@ abstract public class Building : HiveObject
 		workerMate?.Validate( true );
 		exit?.Validate( true );
 		construction?.Validate( true );
-		assert.IsTrue( world.players.Contains( owner ) );
+		assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );
 	}

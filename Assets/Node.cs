@@ -14,7 +14,7 @@ public class Node : HiveObject
 	public int roadIndex;
 	public float height = 0;
 	public int index = -1;
-	public Player owner;
+	public Team team;
 	public int influence;
 	public BorderEdge[] borders = new BorderEdge[Constants.Node.neighbourCount];
 	public float staticHeight = -1;
@@ -34,6 +34,8 @@ public class Node : HiveObject
 		}
 	}
 
+	[Obsolete( "Compatibility with old files", true )]
+	public Player owner;
 	[Obsolete( "Compatibility with old files", true )]
 	Resource resource { set { if ( value ) resources.Add( value ); } }
 
