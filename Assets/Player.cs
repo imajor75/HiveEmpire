@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : ScriptableObject
+public class Player : HiveCommon
 {
 	public Team team;
 	public new string name;
@@ -83,11 +83,18 @@ public class Player : ScriptableObject
 
 	public static Player Create()
 	{
-		return ScriptableObject.CreateInstance<Player>();
+		return new GameObject( "Player" ).AddComponent<Player>();
 	}
 
-	public Player Setup( Team team )
+	void Start()
 	{
+		base.name = "Player " + name;
+		transform.SetParent( World.playersAndTeams.transform );
+	}
+
+	public Player Setup( string name, Team team )
+	{
+		this.name = name;
 		this.team = team;
 		team.players.Add( this );
 		return this;
@@ -99,7 +106,7 @@ public class Player : ScriptableObject
 	}
 }
 
-public class Team : ScriptableObject
+public class Team : HiveCommon
 {
 	public List<Player> players = new List<Player>();
 	public Color color;
@@ -189,11 +196,12 @@ public class Team : ScriptableObject
 
 	public static Team Create()
 	{
-		return ScriptableObject.CreateInstance<Team>();
+		return new GameObject( "Team" ).AddComponent<Team>();
 	}
 
-	public Team Setup()
+	public Team Setup( string name )
 	{
+		this.name = name;
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
 			if ( i == (int)Item.Type.plank || i == (int)Item.Type.stone )
@@ -221,6 +229,7 @@ public class Team : ScriptableObject
 
 		return this;
 	}
+
 	void CreateInputWeights()
 	{
 		inputWeights = new List<InputWeight>();
@@ -278,6 +287,7 @@ public class Team : ScriptableObject
 
 	public void Start()
 	{
+		transform.SetParent( World.playersAndTeams.transform );
 		while ( itemHaulPriorities.Count < (int)Item.Type.total )
 			itemHaulPriorities.Add( 1 );
 		while ( itemProductivityHistory.Count < (int)Item.Type.total )
@@ -288,6 +298,7 @@ public class Team : ScriptableObject
 
 		if ( surplus.Length != (int)Item.Type.total )
 			surplus = new int[(int)Item.Type.total];
+		base.name = "Team " + name;
 	}
 
 	public void FixedUpdate()
@@ -372,8 +383,9 @@ public class Team : ScriptableObject
 		}
 
 		Assert.global.IsNull( mainBuilding );
-		mainBuilding = Stock.Create();
-		mainBuilding.SetupMain( best, this, flagDirection );
+		mainBuilding = Stock.Create().SetupMain( best, this, flagDirection );
+		if ( mainBuilding == null )
+			return false;
 		HiveCommon.eye.FocusOn( mainBuilding.node, approach:false );	// TODO UI related stuff should not be here
 		return true;
 	}
@@ -381,13 +393,13 @@ public class Team : ScriptableObject
 	public void RegisterInfluence( Building building )
 	{
 		influencers.Add( building );
-		HiveCommon.ground.RecalculateOwnership();
+		HiveCommon.ground.dirtyOwnership = true;
 	}
 
 	public void UnregisterInfuence( Building building )
 	{
 		influencers.Remove( building );
-		HiveCommon.ground.RecalculateOwnership();
+		HiveCommon.ground.dirtyOwnership = true;
 	}
 
 	public void RegisterStock( Stock stock )

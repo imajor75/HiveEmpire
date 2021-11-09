@@ -182,6 +182,59 @@ public static class Constants
     	public const int productivityUpdateTime = 50;
 		public static float productionUpdateFactor = (float)Math.Pow( 0.9, 1.0/60 );
 		public const float defaultInputWeight = 0.5f;
+        public static string[] names = 
+        {
+            "Ahmose",
+            "Ammeris",
+            "Baufra",
+            "Benerib",
+            "Charmian",
+            "Dedumose",
+            "Duaenre",
+            "Gautseshen",
+            "Gilukhipa",
+            "Harwa",
+            "Horemheb",
+            "Inetkawes",
+            "Iuwelot",
+            "Kaemqed",
+            "Khenthap",
+            "Lysimachus",
+            "Maatkare",
+            "Merneptah",
+            "Nebiriau",
+            "Nitocris",
+            "Osorkon",
+            "Paanchi",
+            "Psusennes",
+            "Qalhata",
+            "Raneb",
+            "Renseneb",
+            "Sahure",
+            "Senebkay",
+            "Sihathor",
+            "Taharqa",
+            "Twosret",
+            "Userkaf",
+            "Weneg",
+            "Yaqub-Har",
+            "Zoser"
+        };
+        public static string[] teamNames =
+        {
+            "Atlas",
+            "Cecropia",
+            "Chimabachidae",
+            "Choreutidae",
+            "Castniidae",
+            "Aididae",
+            "Himantopteridae",
+            "Hesperiidae",
+            "Pyralidae",
+            "Apatelodidae",
+            "Sematuridae",
+            "Erebidae"
+        };
     }
 
     public static class Resource

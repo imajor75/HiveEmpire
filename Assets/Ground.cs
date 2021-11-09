@@ -35,6 +35,8 @@ public class Ground : HiveObject
 		return new GameObject().AddComponent<Ground>();
 	}
 
+	public bool dirtyOwnership;
+
 	public class Offset
 	{
 		public Offset( int x, int y, int d )
@@ -191,6 +193,13 @@ public class Ground : HiveObject
 			hiveObject.transform.SetParent( transform, false );
 	}
 
+	public override void CriticalUpdate()
+	{
+		if ( dirtyOwnership )
+			RecalculateOwnership();
+
+	}
+
 	public void LateUpdate()
 	{
 		float timeFraction = 0.003f * time;
@@ -213,6 +222,7 @@ public class Ground : HiveObject
 			}
 		}
 
+		// TODO Need sorting
 		foreach ( var grassMaterial in grassMaterials )
 		{
 			foreach ( var block in blocks )
@@ -405,6 +415,7 @@ public class Ground : HiveObject
 			if ( node.road && node.road.team != node.team )
 				node.road.Remove( false );
 		}
+		dirtyOwnership = false;
 	}
 
 	[System.Serializable]

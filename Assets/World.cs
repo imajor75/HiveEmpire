@@ -55,7 +55,7 @@ public class World : HiveCommon
 	static public Shader defaultCutoutTextureShader;
 	static public Water water;
 	static public GameObject nodes;
-	static public GameObject itemsJustCreated;
+	static public GameObject itemsJustCreated, playersAndTeams;
 
 	public float timeFactor 
 	{
@@ -298,6 +298,9 @@ public class World : HiveCommon
 
 			if ( productivityGoals != null )
 			{
+				if ( productivityGoals.Count != team.itemProductivityHistory.Count )
+				{}
+				Assert.global.AreEqual( productivityGoals.Count, team.itemProductivityHistory.Count );
 				for ( int i = 0; i < productivityGoals.Count; i++ )
 					CheckCondition( team.itemProductivityHistory[i].current, productivityGoals[i], true, $"{(Item.Type)i} productivity {{0}}/{{1}}" );
 			}
@@ -660,18 +663,15 @@ public class World : HiveCommon
 
 		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = challenge;
-#if DEBUG
-		operationHandler.recordCRC = true;
-#endif
 		ground = Ground.Create();
 		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
 		water = Water.Create().Setup( ground );
-		var mainTeam = Team.Create().Setup();
+		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random() );
 		if ( mainTeam )
 		{
 			teams.Add( mainTeam );
-			var mainPlayer = Player.Create().Setup( mainTeam );
+			var mainPlayer = Player.Create().Setup( Constants.Player.names.Random(), mainTeam );
 			if ( mainPlayer )
 				players.Add( mainPlayer );
 		}
@@ -679,9 +679,6 @@ public class World : HiveCommon
 		gameInProgress = true;
 
 		water.transform.localPosition = Vector3.up * waterLevel;
-
-		foreach ( var team in teams )
-			team.Start();
 
 		if ( keepCameraLocation )
 		{
@@ -706,8 +703,6 @@ public class World : HiveCommon
 			operationHandler = OperationHandler.Create();
 			operationHandler.transform.SetParent( transform );
 		}
-		foreach ( var team in teams )
-			team.Start();
 		water.transform.localPosition = Vector3.up * waterLevel;
 	}
 
@@ -769,6 +764,8 @@ public class World : HiveCommon
 		{
 			if ( !teams.Contains( player.team ) )
 				teams.Add( player.team );
+			if ( player.name == null )
+				player.name = Constants.Player.names.Random();
 		}
 
 		foreach ( var team in teams )
@@ -789,7 +786,8 @@ public class World : HiveCommon
 						team.buildingCounts[(int)building.type]++;
 				}
 			}
-			team.Start();
+			if ( team.name == null )
+				team.name = Constants.Player.teamNames.Random();
 		}
 
 		water = Water.Create().Setup( ground );
@@ -846,6 +844,13 @@ public class World : HiveCommon
 					o.team = teams[0];
 				//if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 				//	o.itemsInHands[0].SetRawTarget( o.building );
+			}
+		}
+		{
+			foreach ( var node in ground.nodes )
+			{
+				if ( GetValue<Player>( node, "owner" ) )
+					node.team = GetValue<Player>( node, "owner" ).team;
 			}
 		}
 		{
@@ -1035,6 +1040,8 @@ public class World : HiveCommon
 
 		itemsJustCreated = new GameObject( "Items just created" );		// Temporary parent for items until they enter the logistic network. If they are just root in the scene, World.Clear would not destroy them.
 		itemsJustCreated.transform.SetParent( transform );
+		playersAndTeams = new GameObject( "Players and teams" );
+		playersAndTeams.transform.SetParent( transform );
 		eye = Eye.Create().Setup( this );
 	}
 

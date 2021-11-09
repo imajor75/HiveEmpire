@@ -56,6 +56,7 @@ public class Interface : HiveObject
 	public Image buildButton, worldProgressButton;
 
 	static public Hotkey headquartersHotkey = new Hotkey( "Show headquarters", KeyCode.Home );
+	static public Hotkey changePlayerHotkey = new Hotkey( "Change player", KeyCode.D, true );
 	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
 	static public Hotkey cameraBackHotkey = new Hotkey( "Camera back", KeyCode.LeftArrow, false, true );
 
@@ -667,6 +668,8 @@ public class Interface : HiveObject
 
 		if ( headquartersHotkey.IsDown() )
 			mainTeam.mainBuilding.OnClicked( true );
+		if ( changePlayerHotkey.IsDown() )
+			PlayerSelectorPanel.Create( false );
 		if ( closeWindowHotkey.IsDown() )
 		{
 			if ( !viewport.ResetInputHandler() )
@@ -6233,6 +6236,101 @@ if ( cart )
 		}
 	}
 
+	public class PlayerSelectorPanel : Panel
+	{
+		public InputField newName;
+		public Text newNameTitle;
+		public Dropdown selector;
+		public Text selectorTitle;
+		public bool createNewPlayer;
+
+		public static PlayerSelectorPanel Create( bool createNewPlayer )
+		{
+			var p = new GameObject( "Player Selector Panel" ).AddComponent<PlayerSelectorPanel>();
+			p.Open( createNewPlayer );
+			return p;
+		}
+
+		void Open( bool createNewPlayer )
+		{
+			noResize = true;
+			noPin = true;
+			reopen = true;
+			base.Open( 300, 200 );
+			this.createNewPlayer = createNewPlayer;
+
+			UIHelpers.currentRow = -borderWidth;
+			if ( createNewPlayer )
+			{
+				newNameTitle = Text( "Name of new player" ).PinDownwards( borderWidth, -borderWidth, 200 );
+				newName = InputField( Constants.Player.names.Random() ).PinDownwards( borderWidth, 0, 200 );
+			}
+
+			selectorTitle = Text( createNewPlayer ? "Select team" : "Select player" ).PinDownwards( borderWidth, 0, 200 );
+			selector = Dropdown().PinDownwards( borderWidth, 0, 260 );
+			List<string> items = new List<string>();
+			int currentPlayer = 0;
+			if ( createNewPlayer )
+			{
+				foreach( var team in world.teams )
+					items.Add( team.name );
+			}
+			else
+			{
+				foreach ( var player in world.players )
+				{
+					if ( player == root.mainPlayer )
+						currentPlayer = items.Count;
+					items.Add( player.name );
+				}
+			}
+			items.Add( "New" );
+			selector.AddOptions( items );
+			selector.value = currentPlayer;
+			selector.onValueChanged.AddListener( Selected );
+
+			if ( createNewPlayer )
+			{
+				Button( "Create" ).PinDownwards( 100, 0, 80 ).AddClickHandler( CreatePlayer );
+			}
+		}
+
+		void Selected( int index )
+		{
+			if ( createNewPlayer )
+				return;
+
+			if ( index >= world.players.Count )
+				Create( true );
+			else
+				root.mainPlayer = world.players[index];
+
+			Close();
+		}
+
+		void CreatePlayer()
+		{
+			// TODO This is not working in multiplayer
+			Team team;
+			if ( selector.value < world.teams.Count )
+				team = world.teams[selector.value];
+			else
+			{
+				team = Team.Create().Setup( Constants.Player.teamNames.Random() );	// TODO No control over the name?
+				if ( team == null )
+				{
+					Interface.status.SetText( this, "No room for a new headquarters", pinX:0.5f, pinY:0.5f, time:100 );
+					return;
+				}
+				world.teams.Add( team );
+			}
+
+			root.mainPlayer = Player.Create().Setup( newName.text, team );
+			world.players.Add( root.mainPlayer );
+			Close();
+		}
+	}
+
 	public class MainPanel : Panel
 	{
 		InputField seed;
@@ -6900,6 +6998,10 @@ public static class UIHelpers
 		return packet;
 	}
 
+	public static Type Random<Type>( this Type[] array )
+	{
+		return array[new System.Random().Next( array.Length )];
+	}
 }
 
 
