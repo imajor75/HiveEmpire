@@ -46,7 +46,6 @@ public class ItemDispatcher : HiveObject
 	}
 
 	public List<Market> markets = new List<Market>();
-	public Team team;
 	public Building queryBuilding;
 	public Item.Type queryItemType;
 	public Potential.Type queryType;

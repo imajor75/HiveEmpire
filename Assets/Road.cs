@@ -9,7 +9,6 @@ using System.Linq;
 [SelectionBase, RequireComponent( typeof( MeshRenderer ) )]
 public class Road : HiveObject, Interface.IInputHandler
 {
-	public Team team;
 	public List<Worker> workers = new List<Worker>();
 	public int tempNodes = 0;
 	public List<Node> nodes = new List<Node>();

@@ -33,6 +33,7 @@ public abstract class HiveObject : HiveCommon
 	public bool noAssert;
 	public bool registered;
 	public bool destroyed;
+	public Team team;
 	
 	[JsonIgnore]
 	public Assert assert;

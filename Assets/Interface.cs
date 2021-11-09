@@ -3697,7 +3697,7 @@ public class Interface : HiveObject
 			return keepGoing;
         }
 
-        public bool OnObjectClicked(HiveObject target)
+        public bool OnObjectClicked( HiveObject target )
         {
 			return root.viewport.OnObjectClicked( target );
         }
@@ -5192,6 +5192,9 @@ if ( cart )
 				UnityEngine.Debug.Log( "Clicked on nothing?" );
 				return;
 			}
+			if ( hiveObject.team != root.mainTeam )
+				return;
+				
 			var node = hiveObject as Node;
 			if ( node )
 			{

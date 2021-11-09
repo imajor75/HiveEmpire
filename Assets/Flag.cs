@@ -7,7 +7,6 @@ using UnityEngine;
 [SelectionBase]
 public class Flag : HiveObject
 {
-	public Team team;
 	public Node node;
 	public Item[] items = new Item[Constants.Flag.maxItems];
 	public Worker user;

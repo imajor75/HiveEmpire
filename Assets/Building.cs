@@ -13,7 +13,6 @@ abstract public class Building : HiveObject
 	}
 	public string moniker;
 	public string nick { get { return moniker ?? title; } }
-	public Team team;
 	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
 	public Flag flag;
 	public int flagDirection;

@@ -11,7 +11,6 @@ public class Worker : HiveObject
 	public Road road;
 	public bool exclusiveMode;
 	public Building building;
-	public Team team;
 	public Node walkFrom;
 	public Node walkTo;
 	public Road walkBase;
