@@ -26,7 +26,8 @@ public class Serializer : JsonSerializer
 			JsonProperty property = base.CreateProperty( member, memberSerialization );
 
 			// If the type of the member is a unity type (for example a mesh) we ignore it
-			if ( member is FieldInfo t && t.FieldType.Namespace == "UnityEngine" )
+			// Exceptions: Color, Vector2, Vector3
+			if ( member is FieldInfo t && t.FieldType.Namespace == "UnityEngine" && t.FieldType != typeof( Color ) && t.FieldType != typeof( Vector2 ) && t.FieldType != typeof( Vector3 ) )
 				property.ShouldSerialize = instance => false;
 
 			// We ignore every property
@@ -34,7 +35,8 @@ public class Serializer : JsonSerializer
 				property.ShouldSerialize = instance => false;
 
 			// We ignore every member which is declared in a unity base class
-			if ( member.DeclaringType.Module != GetType().Module )
+			// Exceptions: Color, Vector2, Vector3
+			if ( member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
 				property.ShouldSerialize = instance => false;
 
 			return property;

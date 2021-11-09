@@ -135,6 +135,8 @@ public class Team : HiveCommon
 		get { return mainBuilding.itemData[(int)Item.Type.soldier].content; } 
 	}
 
+	public Material buoyMaterial;
+
 	[System.Serializable]
 	public class InputWeight
 	{
@@ -199,9 +201,10 @@ public class Team : HiveCommon
 		return new GameObject( "Team" ).AddComponent<Team>();
 	}
 
-	public Team Setup( string name )
+	public Team Setup( string name, Color color )
 	{
 		this.name = name;
+		this.color = color;
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
 			if ( i == (int)Item.Type.plank || i == (int)Item.Type.stone )
@@ -228,6 +231,16 @@ public class Team : HiveCommon
 		CreateInputWeights();
 
 		return this;
+	}
+
+	public Material GetBuoyMaterial()
+	{
+		if ( buoyMaterial == null )
+		{
+			buoyMaterial = new Material( World.defaultShader );
+			buoyMaterial.color = color;
+		}
+		return buoyMaterial;
 	}
 
 	void CreateInputWeights()

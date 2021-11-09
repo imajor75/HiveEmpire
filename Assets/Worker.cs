@@ -30,7 +30,7 @@ public class Worker : HiveObject
 	public int itemsDelivered;
 	public World.Timer bored = new World.Timer();
 	public BodyState bodyState = BodyState.unknown;
-	public SerializableColor currentColor;
+	public Color currentColor;
 	public List<Task> taskQueue = new List<Task>();
 
 	[JsonIgnore]

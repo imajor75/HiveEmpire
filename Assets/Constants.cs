@@ -235,6 +235,13 @@ public static class Constants
             "Sematuridae",
             "Erebidae"
         };
+        public static Color[] teamColors = 
+        {
+            new Color( 0.7f, 0.4f, 0.2f ),
+            new Color( 0.6f, 0.8f, 0.4f ),
+            new Color( 0, 0.5f, 0.8f ),
+            new Color( 0.6f, 0.5f, 0.4f )
+        };
     }
 
     public static class Resource

@@ -667,7 +667,7 @@ public class World : HiveCommon
 		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
 		water = Water.Create().Setup( ground );
-		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random() );
+		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
 		if ( mainTeam )
 		{
 			teams.Add( mainTeam );
@@ -1379,29 +1379,5 @@ public class World : HiveCommon
 		[SerializeField]
 		public bool empty { get { return reference == -1; } }
 		public bool inProgress { get { return !empty && !done; } }
-	}
-}
-
-[System.Serializable]
-public struct SerializableColor
-{
-	public float r, g, b, a;
-	public static implicit operator SerializableColor( Color unityColor )
-	{
-		SerializableColor s;
-		s.r = unityColor.r;
-		s.g = unityColor.g;
-		s.b = unityColor.b;
-		s.a = unityColor.a;
-		return s;
-	}
-	public static implicit operator Color( SerializableColor serializableColor )
-	{
-		Color s;
-		s.r = serializableColor.r;
-		s.g = serializableColor.g;
-		s.b = serializableColor.b;
-		s.a = serializableColor.a;
-		return s;
 	}
 }

@@ -29,6 +29,7 @@ public class BorderEdge : HiveObject
 
 	new public void Start()
 	{
+		gameObject.GetComponent<MeshRenderer>().material = node.team.GetBuoyMaterial();
 		transform.localScale = Vector3.one * 0.2f;
 		ground.Link( this );
 		UpdateBody();

@@ -163,6 +163,7 @@ public class Ground : HiveObject
 		n10y = GetNode( 1, 0 ).position.z;
 
 		CreateBlocks();
+		base.Setup();
 
 		return this;
     }
@@ -197,7 +198,6 @@ public class Ground : HiveObject
 	{
 		if ( dirtyOwnership )
 			RecalculateOwnership();
-
 	}
 
 	public void LateUpdate()
