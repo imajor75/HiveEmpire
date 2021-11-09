@@ -338,6 +338,7 @@ public class Team : HiveCommon
 	{
 		const int flagDirection = 1;
 		Node best = null;
+		int closestEnemy = 0;
 		float heightdDif = float.MaxValue;
 		var area = Building.GetFoundation( true, flagDirection );
 		List<Ground.Offset> extendedArea = new List<Ground.Offset>();
@@ -379,10 +380,19 @@ public class Team : HiveCommon
 				if ( height > max )
 					max = height;
 			}
-			if ( max - min < heightdDif )
+			int localClosestEnemy = int.MaxValue;
+			foreach ( var team in world.teams )
+			{
+				int distance = node.DistanceFrom( team.mainBuilding.node );
+				if ( distance < localClosestEnemy )
+					localClosestEnemy = distance;
+
+			}
+			if ( localClosestEnemy > closestEnemy )
 			{
 				best = node;
 				heightdDif = max - min;
+				closestEnemy = localClosestEnemy;
 			}
 		}
 
