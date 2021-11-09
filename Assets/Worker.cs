@@ -17,7 +17,7 @@ public class Worker : HiveObject
 	public int walkBlock;
 	public bool walkBackward;
 	public float walkProgress;
-	public float standingHeight = 0;
+	public Vector3 standingOffset;
 	public float speed = 1;
 	public Node node;
 	public Item[] itemsInHands = new Item[2];
@@ -70,6 +70,8 @@ public class Worker : HiveObject
 	public bool onRoad { set { exclusiveMode = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	GameObject haulingBox;
+	[Obsolete( "Compatibility with old files", true )]
+	public float standingHeight { set { standingOffset = new Vector3( 0, value, 0 ); } }
 
 	public enum LinkType
 	{
@@ -1073,10 +1075,7 @@ public class Worker : HiveObject
 		name = "Soldier";
 		currentColor = Color.red;
 		if ( building is GuardHouse guardHouse )
-		{
-			standingHeight = 0.367f;
 			return SetupForBuildingSite( building );
-		}
 		
 		team = building.team;
 		this.building = building;
@@ -1135,7 +1134,7 @@ public class Worker : HiveObject
 	new public void Start()
 	{
 		ground.Link( this, walkBase?.location );
-		transform.position = node.position + Vector3.up * standingHeight;
+		transform.position = node.position + standingOffset;
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
 		links[(int)LinkType.haulingBoxLight] = World.FindChildRecursive( body.transform, "haulingBoxLight" )?.gameObject;
@@ -1856,7 +1855,7 @@ public class Worker : HiveObject
 				animator?.SetBool( walkingID, false );
 				soundSource?.Stop();
 				ground.Link( this );
-				transform.localPosition = node.position + Vector3.up * standingHeight;
+				transform.localPosition = node.position + standingOffset;
 				if ( taskQueue.Count > 0 )
 				{
 					WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;
@@ -2058,7 +2057,7 @@ public class Worker : HiveObject
 
 	public void SetStandingHeight( float standingHeight )
 	{
-		this.standingHeight = standingHeight;
+		standingOffset.Set( 0, standingHeight, 0 );
 		transform.localPosition = node.position + Vector3.up * standingHeight;
 	}
 

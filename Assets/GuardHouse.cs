@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GuardHouse : Building
@@ -10,6 +12,7 @@ public class GuardHouse : Building
 	public List<Worker> soldiers = new List<Worker>();
 	public int influence = Constants.GuardHouse.defaultInfluence;
 	public bool ready;
+	public int optimalSoldierCount;
 	public static GameObject template;
 	static readonly Configuration guardHouseConfiguration = new Configuration();
 	bool removing;
@@ -38,6 +41,7 @@ public class GuardHouse : Building
 	public GuardHouse Setup( Node node, Team owner, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		height = 1.2f;
+		optimalSoldierCount = 1;
 		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
@@ -58,19 +62,27 @@ public class GuardHouse : Building
 	public override void CriticalUpdate()
 	{
 		base.CriticalUpdate();
-		if ( construction.done && soldiers.Count == 0 && !blueprintOnly && team.soldierCount > 0 )
-		{
-			team.soldierCount--;
-			Worker soldier = Worker.Create().SetupAsSoldier( this );
-			if ( soldier == null )
-				return;
-
-			soldiers.Add( soldier );
-		}
+		if ( blueprintOnly || !construction.done )
+			return;
 		if ( !ready && soldiers.Count > 0 && soldiers[0].IsIdle( true ) )
 		{
 			ready = true;
 			team.RegisterInfluence( this );
+		}
+		while ( soldiers.Count > optimalSoldierCount )
+		{
+			var soldierToRelease = soldiers.Last();
+			soldiers.Remove( soldierToRelease );
+			soldierToRelease.building = null;
+			if ( soldierToRelease.IsIdle() )
+				soldierToRelease.ScheduleWalkToNode( flag.node );
+		}
+		while ( soldiers.Count < optimalSoldierCount && team.soldierCount > 0 )
+		{
+			var newSoldier = Worker.Create().SetupAsSoldier( this );
+			var a = Math.PI * soldiers.Count * 2 / 3;
+			newSoldier.standingOffset.Set( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
+			soldiers.Add( newSoldier );
 		}
 	}
 

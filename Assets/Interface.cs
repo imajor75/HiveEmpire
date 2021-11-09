@@ -2637,6 +2637,7 @@ public class Interface : HiveObject
 	public class GuardHousePanel : BuildingPanel
 	{
 		public GuardHouse guardHouse;
+		public Dropdown soldierCount;
 
 		public static GuardHousePanel Create()
 		{
@@ -2647,18 +2648,29 @@ public class Interface : HiveObject
 		{
 			this.guardHouse = guardHouse;
 			noResize = true;
-			if ( base.Open( guardHouse, 50, 50 ) )
+			if ( base.Open( guardHouse, 300, 200 ) )
 				return;
 			name = "Guard House panel";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( 0, 0, iconSize, iconSize, 0.5f, 0.5f ).AddClickHandler( Remove );
+			Text( "Soldiers count" ).Pin( borderWidth, -borderWidth, 200 );
+			soldierCount = Dropdown().PinDownwards( borderWidth, 0, 260 );
+			soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
+			soldierCount.value = guardHouse.soldiers.Count - 1;
+			soldierCount.onValueChanged.AddListener( SoldierCountChanged );
 			if ( show )
 				eye.FocusOn( guardHouse, true );
 		}
+
 		void Remove()
 		{
 			if ( guardHouse )
 				oh.ScheduleRemoveBuilding( guardHouse );
 			Close();
+		}
+
+		void SoldierCountChanged( int value )
+		{
+			guardHouse.optimalSoldierCount = value + 1;
 		}
 	}
 
