@@ -429,7 +429,8 @@ public class Flag : HiveObject
 		}
 		if ( crossing )
 			assert.IsNull( user );
-		assert.IsTrue( world.teams.Contains( team ) );
+		if ( team )
+			assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.workers ) );

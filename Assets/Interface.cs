@@ -558,7 +558,8 @@ public class Interface : HiveObject
 	public void Load( string fileName )
 	{
 		world.Load( fileName );
-		if ( world.players.Count > 0 )
+		mainPlayer = world.controllingPlayer;
+		if ( mainPlayer == null && world.players.Count > 0 )
 			mainPlayer = world.players[0];
 	}
 
@@ -2638,6 +2639,7 @@ public class Interface : HiveObject
 	{
 		public GuardHouse guardHouse;
 		public Dropdown soldierCount;
+		public int attackerCount;
 
 		public static GuardHousePanel Create()
 		{
@@ -2648,15 +2650,28 @@ public class Interface : HiveObject
 		{
 			this.guardHouse = guardHouse;
 			noResize = true;
-			if ( base.Open( guardHouse, 300, 200 ) )
+			if ( base.Open( guardHouse, 200, 100 ) )
 				return;
 			name = "Guard House panel";
-			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( 0, 0, iconSize, iconSize, 0.5f, 0.5f ).AddClickHandler( Remove );
-			Text( "Soldiers count" ).Pin( borderWidth, -borderWidth, 200 );
-			soldierCount = Dropdown().PinDownwards( borderWidth, 0, 260 );
-			soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
-			soldierCount.value = guardHouse.soldiers.Count - 1;
-			soldierCount.onValueChanged.AddListener( SoldierCountChanged );
+			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
+			if ( guardHouse.team == root.mainTeam )
+			{
+				Text( "Soldiers count" ).Pin( borderWidth, -borderWidth, 200 );
+				soldierCount = Dropdown().PinDownwards( borderWidth, 0, 160 );
+				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
+				soldierCount.value = guardHouse.soldiers.Count - 1;
+				soldierCount.onValueChanged.AddListener( SoldierCountChanged );
+				if ( guardHouse.attackers.Count > 0 )
+					Text( "Under attack from team " + guardHouse.attackers.First().team.name ).PinDownwards( borderWidth, 0, 200 );
+			}
+			else
+			{
+				Text( $"Defenders: {guardHouse.soldiers.Count}" ).Pin( borderWidth, -borderWidth, 200 );
+				attackerCount = guardHouse.soldiers.Count*2+1;
+				Text( $"Attack with {attackerCount} soldiers" ).PinDownwards( borderWidth, 0, 200 );
+				if ( attackerCount <= root.mainTeam.soldierCount )
+					Button( "Attack" ).AddClickHandler( Attack ).PinDownwards( 50, 0, 100 );
+			}
 			if ( show )
 				eye.FocusOn( guardHouse, true );
 		}
@@ -2666,6 +2681,19 @@ public class Interface : HiveObject
 			if ( guardHouse )
 				oh.ScheduleRemoveBuilding( guardHouse );
 			Close();
+		}
+
+		void Attack()
+		{
+			if ( root.mainTeam.soldierCount < attackerCount || guardHouse.attackers.Count > 0 )
+				return;
+
+			for ( int i = 0; i < attackerCount; i++ )
+			{
+				var attacker = Worker.Create().SetupAsAttacker( root.mainTeam, guardHouse );
+				attacker.ScheduleWait( i * 100 );
+				guardHouse.attackers.Add( attacker );
+			}
 		}
 
 		void SoldierCountChanged( int value )
@@ -5204,7 +5232,8 @@ if ( cart )
 				UnityEngine.Debug.Log( "Clicked on nothing?" );
 				return;
 			}
-			if ( hiveObject.team != root.mainTeam )
+
+			if ( hiveObject.team != root.mainTeam && !hiveObject.wantFoeClicks )
 				return;
 				
 			var node = hiveObject as Node;

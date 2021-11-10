@@ -1084,6 +1084,20 @@ public class Worker : HiveObject
 		return this;
 	}
 
+	public Worker SetupAsAttacker( Team team, GuardHouse target )
+	{
+		World.CRC( target.id, OperationHandler.Event.CodeLocation.workerSetupAsAttacker );
+		look = type = Type.soldier;
+		name = "Soldier";
+		currentColor = Color.red;
+		
+		this.team = team;
+		this.building = target;
+		SetNode( team.mainBuilding.node );
+		base.Setup();
+		return this;
+	}
+
 	Worker SetupForBuildingSite( Building building )
 	{
 		team = building.team;
@@ -1452,7 +1466,14 @@ public class Worker : HiveObject
 		if ( type == Type.soldier )
 		{
 			if ( building && building is GuardHouse )
+			{
+				if ( !IsIdle( true ) )
+				{
+					ScheduleWalkToNode( building.flag.node );
+					ScheduleWalkToNeighbour( building.node );
+				}
 				return;
+			}
 
 			ReturnToHeadquarters();
 			return;
@@ -1918,10 +1939,9 @@ public class Worker : HiveObject
 	{
 		if ( taskQueue.Count != 0 || walkTo != null )
 			return false;
-		if ( !inBuilding || !( building is Workshop ) )
+		if ( !inBuilding )
 			return true;
-		Workshop workshop = building as Workshop;
-		if ( workshop && workshop.working && !workshop.gatherer && workshop.worker == this )
+		if ( building is Workshop workshop && workshop.working && !workshop.gatherer && workshop.worker == this )
 			return false;
 		return node == building.node;
 	}

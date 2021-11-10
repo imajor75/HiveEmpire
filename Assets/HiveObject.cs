@@ -34,6 +34,8 @@ public abstract class HiveObject : HiveCommon
 	public bool registered;
 	public bool destroyed;
 	public Team team;
+
+	public virtual bool wantFoeClicks { get { return false; } }
 	
 	[JsonIgnore]
 	public Assert assert;

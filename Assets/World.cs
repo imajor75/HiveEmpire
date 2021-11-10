@@ -21,6 +21,7 @@ public class World : HiveCommon
 	public int saveIndex;
 	public int currentSeed;
 	public List<Player> players = new List<Player>();
+	public Player controllingPlayer;
 	public List<Team> teams = new List<Team>();
 	public new Eye eye;
 	public bool gameInProgress;
@@ -298,8 +299,6 @@ public class World : HiveCommon
 
 			if ( productivityGoals != null )
 			{
-				if ( productivityGoals.Count != team.itemProductivityHistory.Count )
-				{}
 				Assert.global.AreEqual( productivityGoals.Count, team.itemProductivityHistory.Count );
 				for ( int i = 0; i < productivityGoals.Count; i++ )
 					CheckCondition( team.itemProductivityHistory[i].current, productivityGoals[i], true, $"{(Item.Type)i} productivity {{0}}/{{1}}" );
@@ -994,6 +993,7 @@ public class World : HiveCommon
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
+		controllingPlayer = root.mainPlayer;
 		Log( $"Saving game {fileName}", true );
 		if ( fileName.Contains( nextSaveFileName ) )
 			saveIndex++;

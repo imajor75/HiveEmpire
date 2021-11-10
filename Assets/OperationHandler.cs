@@ -84,6 +84,7 @@ public class OperationHandler : HiveObject
             workerSetupAsTinkerer,
             workerSetupAsBuilder,
             workerSetupAsSoldier,
+            workerSetupAsAttacker,
             workerTaskPlant,
             flagFreeSlots,
             itemDispatcherAttach,

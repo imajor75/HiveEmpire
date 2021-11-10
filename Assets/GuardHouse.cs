@@ -10,12 +10,15 @@ public class GuardHouse : Building
 	// Somehow they are offset, but they are linked to the correct block.
 	// TODO They are completely built even before the construction
 	public List<Worker> soldiers = new List<Worker>();
+	public List<Worker> attackers = new List<Worker>();
 	public int influence = Constants.GuardHouse.defaultInfluence;
 	public bool ready;
 	public int optimalSoldierCount;
 	public static GameObject template;
 	static readonly Configuration guardHouseConfiguration = new Configuration();
 	bool removing;
+
+	public override bool wantFoeClicks { get { return true; } }
 
 	public static new void Initialize()
 	{
@@ -64,25 +67,59 @@ public class GuardHouse : Building
 		base.CriticalUpdate();
 		if ( blueprintOnly || !construction.done )
 			return;
-		if ( !ready && soldiers.Count > 0 && soldiers[0].IsIdle( true ) )
+		if ( !ready && soldiers.Count > 0 && soldiers.First().IsIdle( true ) )
 		{
 			ready = true;
 			team.RegisterInfluence( this );
 		}
-		while ( soldiers.Count > optimalSoldierCount )
+		if ( !construction.done )
+			return;
+
+		if ( team )
 		{
-			var soldierToRelease = soldiers.Last();
-			soldiers.Remove( soldierToRelease );
-			soldierToRelease.building = null;
-			if ( soldierToRelease.IsIdle() )
-				soldierToRelease.ScheduleWalkToNode( flag.node );
+			while ( soldiers.Count > optimalSoldierCount )
+			{
+				var soldierToRelease = soldiers.Last();
+				soldiers.Remove( soldierToRelease );
+				soldierToRelease.building = null;
+				if ( soldierToRelease.IsIdle() )
+					soldierToRelease.ScheduleWalkToNode( flag.node );
+			}
+			while ( soldiers.Count < optimalSoldierCount && team.soldierCount > 0 )
+			{
+				var newSoldier = Worker.Create().SetupAsSoldier( this );
+				var a = Math.PI * soldiers.Count * 2 / 3;
+				newSoldier.standingOffset.Set( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
+				soldiers.Add( newSoldier );
+			}
 		}
-		while ( soldiers.Count < optimalSoldierCount && team.soldierCount > 0 )
+
+		if ( attackers.Count > 0 && attackers.First().IsIdle( true ) )
 		{
-			var newSoldier = Worker.Create().SetupAsSoldier( this );
-			var a = Math.PI * soldiers.Count * 2 / 3;
-			newSoldier.standingOffset.Set( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
-			soldiers.Add( newSoldier );
+			if ( soldiers.Count == 0 )
+			{
+				foreach ( var soldier in attackers )
+					soldiers.Add( soldier );
+				attackers.Clear();
+				SetTeam( soldiers.First().team );
+			}
+			if ( attackers.Count > 1 && attackers[1].IsIdle( true ) )
+			{
+				var a0 = attackers[0];
+				var a1 = attackers[1];
+
+				attackers.Remove( a0 );
+				attackers.Remove( a1 );
+
+				a0.Remove( false );
+				a1.Remove( false );
+
+				var defender = soldiers.First();
+				soldiers.Remove( defender );
+				defender.Remove( false );
+				if ( soldiers.Count == 0 )
+					SetTeam( null );
+			}
 		}
 	}
 
@@ -106,5 +143,21 @@ public class GuardHouse : Building
 	public override int Influence( Node node )
 	{
 		return influence - node.DistanceFrom( this.node );
+	}
+
+	public override void Validate( bool chain )
+	{
+		if ( blueprintOnly )
+			return;
+		foreach ( var soldier in soldiers )
+			assert.AreEqual( team, soldier.team );
+		if ( attackers.Count > 0 )
+		{
+			var enemy = attackers.First().team;
+			assert.AreNotEqual( enemy, team );
+			foreach ( var soldier in attackers )
+				assert.AreEqual( soldier.team, enemy );
+		}
+		base.Validate( chain );
 	}
 }

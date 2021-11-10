@@ -421,6 +421,9 @@ public class Team : HiveCommon
 
 	public void UnregisterInfuence( Building building )
 	{
+		if ( !influencers.Contains( building ) )
+			return;
+
 		influencers.Remove( building );
 		HiveCommon.ground.dirtyOwnership = true;
 	}

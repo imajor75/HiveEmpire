@@ -409,9 +409,9 @@ public class Ground : HiveObject
 				}
 			}
 
-			if ( node.building && node.building.team != node.team )
+			if ( node.building && node.building.team != node.team && node.building.team )
 				node.building.Remove( false );
-			if ( node.flag && node.flag.team != node.team )
+			if ( node.flag && node.flag.team != node.team && node.flag.team )
 				node.flag.Remove( false );
 			if ( node.road && node.road.team != node.team )
 				node.road.Remove( false );

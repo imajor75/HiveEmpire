@@ -737,11 +737,41 @@ abstract public class Building : HiveObject
 		workerMate?.Reset();
 	}
 
+	public void SetTeam( Team team )
+	{
+		if ( Influence( node ) != 0 && this.team )
+			this.team.UnregisterInfuence( this );
+		if ( this.team )
+			this.team.buildingCounts[(int)type]--;
+
+		var buildingsAround = flag.Buildings();
+		foreach ( var other in buildingsAround )
+		{
+			if ( other != this )
+				other.Remove( false );
+		}
+
+		foreach ( var road in flag.roadsStartingHere )
+		{
+			if ( road )
+				road.Remove( false );
+		}
+
+		this.team = team;
+		flag.team = team;
+
+		if ( team && Influence( node ) > 0 )
+			team.RegisterInfluence( this );
+		if ( team )
+			team.buildingCounts[(int)type]++;
+	}
+
 	public override Node location { get { return node; } }
 
 	public override void Validate( bool chain )
 	{
 		assert.IsTrue( flag.Buildings().Contains( this ) );
+		assert.AreEqual( team, flag.team );
 		assert.AreEqual( this, node.building );
 		assert.AreEqual( flag, node.Neighbour( flagDirection ).flag );
 		foreach ( var item in itemsOnTheWay )
@@ -760,7 +790,8 @@ abstract public class Building : HiveObject
 		workerMate?.Validate( true );
 		exit?.Validate( true );
 		construction?.Validate( true );
-		assert.IsTrue( world.teams.Contains( team ) );
+		if ( team )
+			assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );
 	}
