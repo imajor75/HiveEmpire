@@ -285,6 +285,8 @@ public class Node : HiveObject
 			v = a * 2 - v;
 
 		int d = Mathf.Abs( ( x - o.x ) + ( y - o.y ) );
+		if ( d >= ground.dimension )
+			d -= ground.dimension;
 		if ( d >= a )
 			d = a * 2 - d;
 
