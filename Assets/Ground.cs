@@ -99,6 +99,7 @@ public class Ground : HiveObject
 		sideMoveTexture.Apply();
 
 		var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
+		maskTexture.filterMode = FilterMode.Trilinear;
 		var grassMaskNull = new Color( 0, 0, 0, 0 );
 		for ( int x = 0; x < Constants.Ground.grassMaskDimension; x++ )
 		{
