@@ -285,6 +285,19 @@ public class Team : HiveCommon
 		return null;
 	}
 
+	public void Attack( GuardHouse target, int attackerCount )
+	{
+		if ( soldierCount < attackerCount || target.attackers.Count > 0 )
+			return;
+
+		for ( int i = 0; i < attackerCount; i++ )
+		{
+			var attacker = Worker.Create().SetupAsAttacker( this, target );
+			attacker.ScheduleWait( i * 100 );
+			target.attackers.Add( attacker );
+		}
+	}
+
 	public void UpdateStockRoutes( Item.Type itemType )
 	{
 		var i = (int)itemType;

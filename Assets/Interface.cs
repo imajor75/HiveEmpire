@@ -2685,15 +2685,7 @@ public class Interface : HiveObject
 
 		void Attack()
 		{
-			if ( root.mainTeam.soldierCount < attackerCount || guardHouse.attackers.Count > 0 )
-				return;
-
-			for ( int i = 0; i < attackerCount; i++ )
-			{
-				var attacker = Worker.Create().SetupAsAttacker( root.mainTeam, guardHouse );
-				attacker.ScheduleWait( i * 100 );
-				guardHouse.attackers.Add( attacker );
-			}
+			oh.ScheduleAttack( root.mainTeam, guardHouse, attackerCount );
 		}
 
 		void SoldierCountChanged( int value )

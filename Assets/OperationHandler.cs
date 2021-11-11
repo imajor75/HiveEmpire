@@ -413,6 +413,11 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone );
     }
 
+    public void ScheduleAttack( Team team, GuardHouse target, int attackedCount, bool standalone = true )
+    {
+        ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone );
+    }
+
     void FixedUpdate()
     {
         if ( frameFinishPending )
@@ -746,6 +751,17 @@ public class Operation : ScriptableObject
             }
         }
     }
+    public Team team
+    {
+        get
+        {
+            return HiveCommon.world.teams[bufferIndex];
+        }
+        set
+        {
+            bufferIndex = HiveCommon.world.teams.IndexOf( value );
+        }
+    }
     public string description
     {
         get
@@ -765,6 +781,7 @@ public class Operation : ScriptableObject
                 Type.removeFlag => "Remove a flag",
                 Type.removeRoad => "Remove a road",
                 Type.stockAdjustment => "Adjust stock item counts",
+                Type.attack => "Start an attack on the enemy",
                 Type.captureRoad => "Capture nearby roads",
                 Type.changeBufferUsage => "Change Buffer Usage",
                 Type.changeFlagType => "Convert a junction to crossing or vice versa",
@@ -820,6 +837,7 @@ public class Operation : ScriptableObject
         changeRoutePriority,
         moveRoad,
         stockAdjustment,
+        attack,
         captureRoad,
         changeBufferUsage,
         flattenFlag,
@@ -992,6 +1010,16 @@ public class Operation : ScriptableObject
         return this;
     }
 
+    public Operation SetupAsAttack( Team team, GuardHouse target, int attackerCount )
+    {
+        type = Type.attack;
+        building = target;
+        this.team = team;
+        workerCount = attackerCount;
+        name = "Attack";
+        return this;
+    }
+
     public Operation ExecuteAndInvert()
     {
         switch ( type )
@@ -1154,6 +1182,11 @@ public class Operation : ScriptableObject
                 i.ChannelValue( stockChannel ) = itemCount;
 				building.team.UpdateStockRoutes( itemType );
                 return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
+            }
+            case Type.attack:
+            {
+                team.Attack( building as GuardHouse, workerCount );
+                return null;
             }
             case Type.captureRoad:
             {
