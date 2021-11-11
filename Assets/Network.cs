@@ -301,12 +301,12 @@ public class Network : HiveCommon
 							Assert.global.AreEqual( receivedSize, BitConverter.GetBytes( gameStateSize ).Length );
 							gameStateSize = BitConverter.ToInt64( buffer, 0 );
 							Log( $"Size of game state: {gameStateSize}" );
-							Interface.status.SetText( this, "Receiving game state from server", pinX:0.5f, pinY:0.5f );
 							break;
 						}
 						gameState.Write( buffer, 0, receivedSize );
 						gameStateWritten += receivedSize;
 						Assert.global.IsFalse( gameStateWritten > gameStateSize );
+						Interface.status.SetText( this, $"Receiving game state from server {100*gameStateWritten/gameStateSize}%", pinX:0.5f, pinY:0.5f );
 						if ( gameStateWritten == gameStateSize )
 						{
 							gameState.Close();
