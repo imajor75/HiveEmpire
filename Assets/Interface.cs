@@ -5324,7 +5324,7 @@ if ( cart )
 						{
 						#if DEBUG
 						#else
-							if ( n.owner != root.mainPlayer )
+							if ( n.team != root.mainTeam )
 								continue;
 						#endif
 							if ( !resource.underGround )

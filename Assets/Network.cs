@@ -132,6 +132,7 @@ public class Network : HiveCommon
 
 	public int port;
 	public int host = -1;
+	public int id = 0, nextClientId = 1;
 	public int broadcastPort;
 	public int broadcastHost;
 	public int clientConnection;
@@ -240,6 +241,8 @@ public class Network : HiveCommon
 					string fileName = System.IO.Path.GetTempFileName();
 					world.Save( fileName, false, true );
 					FileInfo fi = new FileInfo( fileName );
+					byte[] id = BitConverter.GetBytes( nextClientId++ );
+					NetworkTransport.Send( host, connection, reliableChannel, id, id.Length, out error );
 					byte[] size = BitConverter.GetBytes( fi.Length );
 					NetworkTransport.Send( host, connection, reliableChannel, size, size.Length, out error );
 					client.tasks.Add( new Task( fileName, connection ) );
@@ -286,34 +289,31 @@ public class Network : HiveCommon
 				{
 					case State.receivingGameState:
 					{
-						int start = 0;
+						if ( id == -1 )
+						{
+							Assert.global.AreEqual( receivedSize, BitConverter.GetBytes( id ).Length );
+							id = BitConverter.ToInt32( buffer, 0 );
+							Log( $"Network ID: {id}" );
+							break;
+						}
 						if ( gameStateSize == -1 )
 						{
-							int longSize = BitConverter.GetBytes( gameStateSize ).Length;	// TODO there must be a better way to do this
-							byte[] fileSize = new byte[longSize];
-							for ( int i = 0; i < longSize; i++ )
-								fileSize[i] = buffer[i];
-							gameStateSize = BitConverter.ToInt64( fileSize, 0 );
+							Assert.global.AreEqual( receivedSize, BitConverter.GetBytes( gameStateSize ).Length );
+							gameStateSize = BitConverter.ToInt64( buffer, 0 );
 							Log( $"Size of game state: {gameStateSize}" );
-							start += longSize;
 							Interface.status.SetText( this, "Receiving game state from server", pinX:0.5f, pinY:0.5f );
+							break;
 						}
-						int gameStateBytes = receivedSize - start;
-						if ( gameStateWritten + gameStateBytes > gameStateSize )
-							gameStateBytes = (int)( gameStateSize - gameStateWritten );
-						if ( gameStateBytes > 0 )
+						gameState.Write( buffer, 0, receivedSize );
+						gameStateWritten += receivedSize;
+						Assert.global.IsFalse( gameStateWritten > gameStateSize );
+						if ( gameStateWritten == gameStateSize )
 						{
-							gameState.Write( buffer, start, gameStateBytes );
-							gameStateWritten += gameStateBytes;
-							Assert.global.IsFalse( gameStateWritten > gameStateSize );
-							if ( gameStateWritten == gameStateSize )
-							{
-								gameState.Close();
-								Log( $"Game state received to {gameStateFile}" );
-								Interface.status.SetText( this, "Loading game state", pinX:0.5f, pinY:0.5f );
-								root.Load( gameStateFile );
-								SetState( State.client );
-							}
+							gameState.Close();
+							Log( $"Game state received to {gameStateFile}" );
+							Interface.status.SetText( this, "Loading game state", pinX:0.5f, pinY:0.5f );
+							root.Load( gameStateFile );
+							SetState( State.client );
 						}
 						break;
 					}
@@ -396,6 +396,7 @@ public class Network : HiveCommon
 		byte error;	
 		clientConnection = NetworkTransport.Connect( host, address, port, 0, out error );
 		SetState( State.receivingGameState );
+		id = -1;
 		gameStateSize = -1;
 		gameStateWritten = 0;
 		gameStateFile = System.IO.Path.GetTempFileName();
