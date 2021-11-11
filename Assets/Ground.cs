@@ -688,12 +688,12 @@ public class Ground : HiveObject
 				positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
 				colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
 				bool roadCrossing = false;
-				if ( nodes[a].road )
+				if ( nodes[a].road && !nodes[a].road.blueprintOnly )
 				{
 					if ( nodes[b].road == nodes[a].road || nodes[a].road.ends[0].node == nodes[b] || nodes[a].road.ends[1].node == nodes[b] )
 						roadCrossing = true;
 				}
-				else if ( nodes[b].road )
+				else if ( nodes[b].road && !nodes[b].road.blueprintOnly )
 				{
 					if ( nodes[b].road.ends[0].node == nodes[a] || nodes[b].road.ends[1].node == nodes[a] )
 						roadCrossing = true;
