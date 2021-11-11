@@ -309,6 +309,11 @@ public class OperationHandler : HiveObject
 		ScheduleOperation( Operation.Create().SetupAsChangeWorkerCount( road, count ) );
 	}
 
+	public void ScheduleChangeDefenderCount( GuardHouse building, int count )
+	{
+		ScheduleOperation( Operation.Create().SetupAsChangeDefenderCount( building, count ) );
+	}
+
 	public void ScheduleRemoveBuilding( Building building, bool standalone = true )
 	{
         if ( building )
@@ -750,6 +755,7 @@ public class Operation : ScriptableObject
                 Type.changeArea => "Change area",
                 Type.changeRoutePriority => "Change route priority",
                 Type.changeWorkerCount => "Change worker count",
+                Type.changeDefenderCount => "Change defender count",
                 Type.createBuilding => "Constructing a new ",
                 Type.createFlag => "Creating a new flag",
                 Type.createRoad => "Create new road",
@@ -802,6 +808,7 @@ public class Operation : ScriptableObject
     public enum Type
     {
         changeWorkerCount,
+        changeDefenderCount,
         removeBuilding,
         createBuilding,
         removeRoad,
@@ -830,6 +837,15 @@ public class Operation : ScriptableObject
         this.road = road;
         workerCount = count;
         name = "Change Worker Count";
+        return this;
+    }
+
+    public Operation SetupAsChangeDefenderCount( GuardHouse building, int count )
+    {
+        type = Type.changeDefenderCount;
+        this.building = building;
+        workerCount = count;
+        name = "Change Defender Count";
         return this;
     }
 
@@ -985,6 +1001,16 @@ public class Operation : ScriptableObject
                 int oldCount = road.targetWorkerCount;
                 road.targetWorkerCount = workerCount;
                 return Create().SetupAsChangeWorkerCount( road, oldCount );
+            }
+            case Type.changeDefenderCount:
+            {
+                if ( building is GuardHouse guardHouse )
+                {
+                    int oldCount = guardHouse.optimalSoldierCount;
+                    guardHouse.optimalSoldierCount = workerCount;
+                    return Create().SetupAsChangeDefenderCount( guardHouse, oldCount );
+                }
+                break;
             }
             case Type.removeBuilding:
             {

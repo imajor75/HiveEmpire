@@ -2698,7 +2698,7 @@ public class Interface : HiveObject
 
 		void SoldierCountChanged( int value )
 		{
-			guardHouse.optimalSoldierCount = value + 1;
+			oh.ScheduleChangeDefenderCount( guardHouse, value + 1 );
 		}
 	}
 
