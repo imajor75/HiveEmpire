@@ -420,6 +420,11 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone );
     }
 
+    public void ScheduleCreatePlayer( string name, string team, bool standalone = true )
+    {
+        ScheduleOperation( Operation.Create().SetupAsCreatePlayer( name, team ), standalone );
+    }
+
     void FixedUpdate()
     {
         if ( frameFinishPending )
@@ -644,7 +649,9 @@ public class Operation
     public int scheduleAt;
     public Source source;
     public int bufferIndex;
+    public int networkId;
     public bool useBuffer;
+    public string playerName, teamName;
 
     public enum Source
     {
@@ -786,6 +793,7 @@ public class Operation
                 Type.removeRoad => "Remove a road",
                 Type.stockAdjustment => "Adjust stock item counts",
                 Type.attack => "Start an attack on the enemy",
+                Type.createPlayer => "Creating a new player",
                 Type.captureRoad => "Capture nearby roads",
                 Type.changeBufferUsage => "Change Buffer Usage",
                 Type.changeFlagType => "Convert a junction to crossing or vice versa",
@@ -838,6 +846,7 @@ public class Operation
         moveRoad,
         stockAdjustment,
         attack,
+        createPlayer,
         captureRoad,
         changeBufferUsage,
         flattenFlag,
@@ -1020,6 +1029,16 @@ public class Operation
         return this;
     }
 
+    public Operation SetupAsCreatePlayer( string name, string team )
+    {
+        type = Type.createPlayer;
+        playerName = name;
+        teamName = team;
+        networkId = HiveCommon.network.id;
+        name = "Create new player";
+        return this;
+    }
+
     public Operation ExecuteAndInvert()
     {
         switch ( type )
@@ -1186,6 +1205,30 @@ public class Operation
             case Type.attack:
             {
                 team.Attack( building as GuardHouse, workerCount );
+                return null;
+
+            }
+            case Type.createPlayer:
+            {
+                Team team = null;
+                foreach ( var existingTeam in HiveCommon.world.teams )
+                {
+                    if ( existingTeam.name == teamName )
+                        team = existingTeam;
+                }
+                if ( team == null )
+                {
+                    team = Team.Create().Setup( teamName, Constants.Player.teamColors[HiveCommon.world.teams.Count%Constants.Player.teamColors.Length] );
+                    if ( team == null )
+                    {
+                        Interface.status.SetText( HiveCommon.root, "No room for a new headquarters", pinX:0.5f, pinY:0.5f, time:100 );
+                        return null;
+                    }
+                    HiveCommon.world.teams.Add( team );
+                }
+                var newPlayer = Player.Create().Setup( playerName, team );
+                if ( networkId == HiveCommon.network.id )
+                    HiveCommon.root.mainPlayer = newPlayer;
                 return null;
             }
             case Type.captureRoad:

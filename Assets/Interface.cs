@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6346,23 +6346,10 @@ if ( cart )
 
 		void CreatePlayer()
 		{
-			// TODO This is not working in multiplayer
-			Team team;
+			string team = Constants.Player.teamNames.Random();	// TODO No control over the team name?
 			if ( selector.value < world.teams.Count )
-				team = world.teams[selector.value];
-			else
-			{
-				team = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors[world.teams.Count%Constants.Player.teamColors.Length] );	// TODO No control over the name?
-				if ( team == null )
-				{
-					Interface.status.SetText( this, "No room for a new headquarters", pinX:0.5f, pinY:0.5f, time:100 );
-					return;
-				}
-				world.teams.Add( team );
-			}
-
-			root.mainPlayer = Player.Create().Setup( newName.text, team );
-			world.players.Add( root.mainPlayer );
+				team = world.teams[selector.value].name;
+			oh.ScheduleCreatePlayer( newName.text, team );
 			Close();
 		}
 	}
