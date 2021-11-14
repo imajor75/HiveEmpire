@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -272,7 +273,7 @@ public class Network : HiveCommon
 					break;
 				
 					case State.client:
-					Log( $"Server disconnected, switching to server mode and waiting for incoming connectios", true );
+					Log( $"Server disconnected, switching to server mode and waiting for incoming connections", true );
 					SetState( State.server );
 					if ( oh.frameFinishPending )
 					{
@@ -311,7 +312,7 @@ public class Network : HiveCommon
 						{
 							gameState.Close();
 							Log( $"Game state received to {gameStateFile}" );
-							Interface.status.SetText( this, "Loading game state", pinX:0.5f, pinY:0.5f );
+							Interface.status.SetText( this, "Loading game state", pinX:0.5f, pinY:0.5f, time:100 );
 							root.Load( gameStateFile );
 							SetState( State.client );
 						}
@@ -320,31 +321,33 @@ public class Network : HiveCommon
 					case State.client:
 					{
 						Assert.global.AreEqual( clientConnection, connection );
-						var frameOrder = new OperationHandler.FrameOrder();
-						var bl = buffer.ToList();
-						bl.Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
-						oh.orders.AddLast( frameOrder );
-						lag = (float)oh.orders.Count / Constants.World.normalSpeedPerSecond;
-						if ( oh.frameFinishPending )
+						if ( oh.orders.Count == 0 || oh.orders.Last().operationsLeftFromServer == 0 )
 						{
-							if ( oh.FinishFrame() )
-							{
+							var frameOrder = new OperationHandler.FrameOrder();
+							var bl = new List<byte>();
+							for ( int i = 0; i < receivedSize; i++ )
+								bl.Add( buffer[i] );
+							bl.Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
+							bl.Extract( ref frameOrder.operationsLeftFromServer );
+							Assert.global.AreEqual( bl.Count, 0 );
+							oh.orders.AddLast( frameOrder );
+							lag = (float)oh.orders.Count / Constants.World.normalSpeedPerSecond;
+							if ( oh.frameFinishPending && oh.FinishFrame() )
 								world.SetSpeed( World.Speed.normal );
-								Log( $"Resuming execution at {time}" );
-							}
-							else
-								Log( $"Resume failed at {time}" );
 						}
-						int operationCount = 0;
-						bl.Extract( ref operationCount );
-						for ( int i = 0; i < operationCount; i++ )
+						else
 						{
-							var o = Operation.Create();
-							o.Fill( bl );
+							var binForm = new BinaryFormatter();
+							var memStream = new MemoryStream();
+							memStream.Write( buffer, 0, receivedSize );
+							memStream.Seek( 0, SeekOrigin.Begin );
+							var o = binForm.Deserialize( memStream ) as Operation;
+							Assert.global.AreEqual( memStream.Position, memStream.Length );
 							oh.executeBuffer.Add( o );
+							oh.orders.Last().operationsLeftFromServer--;
+							if ( oh.frameFinishPending && oh.FinishFrame() )
+								world.SetSpeed( World.Speed.normal );
 						}
-						Assert.global.AreEqual( buffer.Length - bl.Count, receivedSize );
-
 						break;
 					}
 					case State.server:
@@ -356,8 +359,14 @@ public class Network : HiveCommon
 								clientRegistered = true;
 						}
 						Assert.global.IsTrue( clientRegistered );
-						var o = Operation.Create();
-						o.Fill( buffer.ToList() );
+						Operation o;
+						using ( var memStream = new MemoryStream() )
+						{
+							memStream.Write( buffer, 0, receivedSize );
+							memStream.Seek( 0, SeekOrigin.Begin );
+							var binForm = new BinaryFormatter();
+							o = binForm.Deserialize( memStream ) as Operation;
+						}
 						oh.ScheduleOperation( o );
 						break;
 					}
@@ -383,11 +392,19 @@ public class Network : HiveCommon
 				operationCount++;
 			endOfFramePacket.Add( operationCount );
 
-			for ( int i = 0; i < operationCount; i++ )
-				oh.executeBuffer[oh.executeIndex+i].Pack( endOfFramePacket );
-			
             foreach ( var client in serverConnections )
                 client.tasks.Add( new Task( endOfFramePacket, client.connection ) );
+
+			BinaryFormatter bf = new BinaryFormatter();
+			for ( int i = 0; i < operationCount; i++ )
+			{
+				using (var ms = new MemoryStream())
+				{
+					bf.Serialize( ms, oh.executeBuffer[oh.executeIndex+i] );
+					foreach ( var client in serverConnections )
+						client.tasks.Add( new Task( ms.ToArray().ToList(), client.connection ) );
+				}
+			}			
         }
     }
 

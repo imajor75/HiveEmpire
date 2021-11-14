@@ -511,7 +511,7 @@ public class Interface : HiveObject
 	string ReplayTooltipGenerator()
 	{
 		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - oh.finishedFrameIndex )}";
-		if ( oh.next )
+		if ( oh.next != null )
 			text += $"\nNext action is {oh.next.description} in {UIHelpers.TimeToString( oh.next.scheduleAt - time )}";
 		return text;
 	}
@@ -740,7 +740,7 @@ public class Interface : HiveObject
 		{
 			replayIcon.gameObject.SetActive( !playerInCharge );
 			var next = world.operationHandler.next;
-			if ( showReplayAction && !playerInCharge && next && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
+			if ( showReplayAction && !playerInCharge && next != null && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
 			{
 				if ( !eye.target || lastShownOperation != next )
 				{

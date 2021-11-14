@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -258,10 +259,11 @@ public class OperationHandler : HiveObject
         Assert.global.AreNotEqual( network.state, Network.State.receivingGameState );
         if ( network.state == Network.State.client )
         {
-            List<byte> packet = new List<byte>();
-            operation.Pack( packet );
+            BinaryFormatter bf = new BinaryFormatter();
+            var ms = new MemoryStream();
+            bf.Serialize( ms, operation );
             byte error;
-            NetworkTransport.Send( network.host, network.clientConnection, Network.reliableChannel, packet.ToArray(), packet.Count, out error );
+            NetworkTransport.Send( network.host, network.clientConnection, Network.reliableChannel, ms.ToArray(), (int)ms.Length, out error );
             return;
         }
     
@@ -469,7 +471,7 @@ public class OperationHandler : HiveObject
     {
         if ( network.state == Network.State.client )
         {
-            if ( orders.Count == 0 )
+            if ( orders.Count == 0 || orders.First().operationsLeftFromServer > 0 )
             {
                 Log( $"Client is stuck at time {time}, no order from server yet" );
                 world.SetSpeed( World.Speed.pause );
@@ -549,6 +551,7 @@ public class OperationHandler : HiveObject
     {
         public int time;
         public int CRC;
+        public int operationsLeftFromServer;
     }
 
     public LinkedList<FrameOrder> orders = new LinkedList<FrameOrder>();
@@ -592,7 +595,7 @@ public class OperationHandler : HiveObject
     {
         HiveObject.Log( $"Executing {operation.name}" );
         var inverse = operation.ExecuteAndInvert();
-        if ( inverse )
+        if ( inverse != null )
         {
             inverse.group = int.MaxValue - operation.group;
             switch ( operation.source )
@@ -619,10 +622,11 @@ public class OperationHandler : HiveObject
         assert.IsFalse( destroyed );
     }
 }
-
-public class Operation : ScriptableObject
+[Serializable]
+public class Operation
 {
     public Type type;
+    public string name;
     public int workerCount;
     public int locationX, locationY;
     public int areaX, areaY;
@@ -808,12 +812,6 @@ public class Operation : ScriptableObject
             return location;
         }
     }
-    [JsonProperty]
-    public string title
-    {
-        get { return name; }
-        set { name = value; }
-    }
 
 	[Obsolete( "Compatibility for old files", true )]
     bool merge { set {} }
@@ -821,6 +819,8 @@ public class Operation : ScriptableObject
     Workshop.Type workshopType { set {} }
 	[Obsolete( "Compatibility for old files", true )]
     Ground.Area area { set {} }
+	[Obsolete( "Compatibility for old files", true )]
+    string title { set { name = value; } }
 
     public enum Type
     {
@@ -846,7 +846,7 @@ public class Operation : ScriptableObject
 
     public static Operation Create()
     {
-        return ScriptableObject.CreateInstance<Operation>();
+        return new Operation();
     }
 
     public Operation SetupAsChangeWorkerCount( Road road, int count )
@@ -1214,21 +1214,5 @@ public class Operation : ScriptableObject
             }
         }
         return null;
-    }
-
-    public void Pack( List<byte> packet )
-    {
-        packet.Add( type ).Add( workerCount ).Add( locationX ).Add( locationY ).Add( areaX ).Add( areaY ).Add( buildingType );
-        packet.Add( direction ).Add( roadPathX ).Add( roadPathY ).Add( crossing ).Add( group ).Add( areaIndex ).Add( radius );
-        packet.Add( endLocationX ).Add( endLocationY ).Add( itemType ).Add( stockChannel );
-        packet.Add( itemCount ).Add( scheduleAt ).Add( source ).Add( bufferIndex ).Add( useBuffer );
-    }
-
-    public void Fill( List<byte> packet )
-    {
-        packet.Extract( ref type ).Extract( ref workerCount ).Extract( ref locationX ).Extract( ref locationY ).Extract( ref areaX ).Extract( ref areaY ).Extract( ref buildingType );
-        packet.Extract( ref direction ).Extract( ref roadPathX ).Extract( ref roadPathY ).Extract( ref crossing ).Extract( ref group ).Extract( ref areaIndex ).Extract( ref radius );
-        packet.Extract( ref endLocationX ).Extract( ref endLocationY ).Extract( ref itemType ).Extract( ref stockChannel );
-        packet.Extract( ref itemCount ).Extract( ref scheduleAt ).Extract( ref source ).Extract( ref bufferIndex ).Extract( ref useBuffer );
     }
 }
