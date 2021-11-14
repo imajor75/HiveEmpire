@@ -137,7 +137,7 @@ public class Flag : HiveObject
 			flattening.Setup( area, false );
 		}
 		if ( !blueprintOnly )
-			World.CRC( freeSlots, OperationHandler.Event.CodeLocation.flagFreeSlots );
+			World.CRC( freeSlots + ( crossing ? Constants.Flag.maxItems : 0 ), OperationHandler.Event.CodeLocation.flagFreeSlots );
 		flattening?.CriticalUpdate();
 	}
 

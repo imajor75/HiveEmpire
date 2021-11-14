@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3410,7 +3410,7 @@ public class Interface : HiveObject
 				oh.ScheduleCreateBuilding( building.node, building.flagDirection, building.type, false );
 			}
 			if ( currentBlueprint is Flag flag )
-				oh.ScheduleCreateFlag( flag.node );
+				oh.ScheduleCreateFlag( flag.node, flag.crossing );
 			currentBlueprint = null;
 			currentBlueprintPanel?.Close();
 			currentBlueprintPanel = null;
