@@ -75,7 +75,7 @@ public class Interface : HiveObject
 	static public Hotkey mapZoomOutHotkey = new Hotkey( "Map zoom out", KeyCode.KeypadMinus );
 
 	public bool playerInCharge { get { return world.operationHandler.mode == OperationHandler.Mode.recording; } }
-	public Team mainTeam { get { return mainPlayer.team; } }
+	public Team mainTeam { get { return mainPlayer?.team; } }
 
 	public class Hotkey
 	{
@@ -667,7 +667,7 @@ public class Interface : HiveObject
 			lastAutoSave = Time.time;
 		}
 
-		if ( headquartersHotkey.IsDown() )
+		if ( headquartersHotkey.IsDown() && mainTeam )
 			mainTeam.mainBuilding.OnClicked( true );
 		if ( changePlayerHotkey.IsDown() )
 			PlayerSelectorPanel.Create( false );
@@ -700,7 +700,7 @@ public class Interface : HiveObject
 		{
 			var flagList = Resources.FindObjectsOfTypeAll<Flag>();
 			var flag = flagList[new System.Random().Next( flagList.Length )];
-			if ( flag != mainTeam.mainBuilding.flag )
+			if ( flag != mainTeam?.mainBuilding?.flag )
 			{
 				eye.FocusOn( flag );
 				oh.ScheduleRemoveFlag( flag );
@@ -724,7 +724,7 @@ public class Interface : HiveObject
 		{
 			var buildingList = Resources.FindObjectsOfTypeAll<Building>();
 			var building = buildingList[new System.Random().Next( buildingList.Length )];
-			if ( building != mainTeam.mainBuilding )
+			if ( building != mainTeam?.mainBuilding )
 			{
 				eye.FocusOn( building );
 				world.operationHandler.ScheduleRemoveBuilding( building );
@@ -1111,6 +1111,7 @@ public class Interface : HiveObject
 			borderWidth = 10;
 			noCloseButton = true;
 			noResize = true;
+			allowInSpectateMode = true;
 			noPin = true;
 			base.pinned = true;
 			reopen = true;
@@ -1280,6 +1281,7 @@ public class Interface : HiveObject
 		public bool noResize;
 		public bool noPin;
 		public bool reopen;
+		public bool allowInSpectateMode;
 		public Image pin;
 		public bool pinned;
 		bool dragResizes;
@@ -1297,6 +1299,12 @@ public class Interface : HiveObject
 		// Return true if the caller should give
 		public bool Open( HiveObject target, int x, int y, int xs, int ys )
 		{
+			if ( root.mainTeam == null && !allowInSpectateMode )
+			{
+				Close();
+				return false;
+			}
+
 			if ( !(transform is RectTransform) )
 				gameObject.AddComponent<RectTransform>();
 
@@ -2669,7 +2677,7 @@ public class Interface : HiveObject
 				Text( $"Defenders: {guardHouse.soldiers.Count}" ).Pin( borderWidth, -borderWidth, 200 );
 				attackerCount = guardHouse.soldiers.Count*2+1;
 				Text( $"Attack with {attackerCount} soldiers" ).PinDownwards( borderWidth, 0, 200 );
-				if ( attackerCount <= root.mainTeam.soldierCount )
+				if ( root.mainTeam && attackerCount <= root.mainTeam.soldierCount )
 					Button( "Attack" ).AddClickHandler( Attack ).PinDownwards( 50, 0, 100 );
 			}
 			if ( show )
@@ -3790,7 +3798,7 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( flag && flag != root.mainTeam.mainBuilding.flag )
+			if ( flag && flag != root.mainTeam?.mainBuilding?.flag )
 				oh.ScheduleRemoveFlag( flag );
 			Close();
 		}
@@ -4595,6 +4603,7 @@ if ( cart )
 
 		public void Open()
 		{
+			allowInSpectateMode = true;
 			base.Open( null, 0, 0, 500, 350 );
 			Fill();
 		}
@@ -5340,7 +5349,7 @@ if ( cart )
 					Graphics.DrawMesh( plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.8f ), material, 0 );
 				}
 			}
-			if ( nodeInfoToShow == OverlayInfoType.stockContent )
+			if ( nodeInfoToShow == OverlayInfoType.stockContent && root.mainTeam )
 			{
 				foreach ( var stock in root.mainTeam.stocks )
 				{
@@ -5579,6 +5588,7 @@ if ( cart )
 
 		public void Open()
 		{
+			allowInSpectateMode = true;
 			if ( base.Open( null, 0, 0, 400, 320 ) )
 				return;
 			name = "Resource list panel";
@@ -6066,6 +6076,7 @@ if ( cart )
 
 		void Open()
 		{
+			allowInSpectateMode = true;
 			base.Open( 500, 300 );
 			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize * 3, -borderWidth, -borderWidth - iconSize );
 			Text( "Manual seed:" ).Pin( -330, borderWidth + iconSize, 150, iconSize, 1, 0 );
@@ -6152,6 +6163,7 @@ if ( cart )
 			UIHelpers.currentRow = -30;
 			if ( worldStopped )
 			{
+				Assert.global.IsNotNull( root.mainTeam );
 				var t = Text();
 				t.PinDownwards( -100, 0, 200, 30, 0.5f ).AddOutline();
 				t.alignment = TextAnchor.MiddleCenter;
@@ -6292,6 +6304,7 @@ if ( cart )
 			noResize = true;
 			noPin = true;
 			reopen = true;
+			allowInSpectateMode = true;
 			base.Open( 300, 200 );
 			this.createNewPlayer = createNewPlayer;
 
@@ -6326,9 +6339,7 @@ if ( cart )
 			selector.onValueChanged.AddListener( Selected );
 
 			if ( createNewPlayer )
-			{
 				Button( "Create" ).PinDownwards( 100, 0, 80 ).AddClickHandler( CreatePlayer );
-			}
 		}
 
 		void Selected( int index )
@@ -6375,6 +6386,7 @@ if ( cart )
 			noCloseButton = true;
 			noResize = true;
 			noPin = true;
+			allowInSpectateMode = true;
 			bool demoMode = world.fileName.Contains( "demolevel" );
 			Open( null, 0, 0, 300, 250 );
 			this.PinCenter( 0, 0, 300, 250, 0.5f, 0.3f );

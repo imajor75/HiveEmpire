@@ -245,6 +245,8 @@ public class World : HiveCommon
 				return;
 
 			var team = root.mainTeam;
+			if ( team == null )
+				return;
 			var currentLevel = Goal.gold;
 			conditionsText = "";
 			progress = 1;

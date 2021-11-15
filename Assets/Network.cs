@@ -314,6 +314,8 @@ public class Network : HiveCommon
 							Log( $"Game state received to {gameStateFile}" );
 							Interface.status.SetText( this, "Loading game state", pinX:0.5f, pinY:0.5f, time:100 );
 							root.Load( gameStateFile );
+							root.mainPlayer = null;
+                            Interface.PlayerSelectorPanel.Create( true );
 							SetState( State.client );
 						}
 						break;

@@ -19,6 +19,7 @@ public class Map : Interface.Panel
 		this.fullScreen = fullScreen;
 		noCloseButton = fullScreen;
 		borderWidth = fullScreen ? 0 : 20;
+		allowInSpectateMode = true;
 		base.Open( null, 0, 0, 316, 316 );
 
 		content = MapImage.Create();
