@@ -188,6 +188,12 @@ public class Resource : HiveObject
 		this.node = node;
 		life.Start();
 		bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
+
+		if ( type == Type.cornfield )
+		{
+			node.avoidGrass = true;
+			ground.SetDirty( node );
+		}
 		base.Setup();
 		return this;
 	}
@@ -325,6 +331,8 @@ public class Resource : HiveObject
 			animals[0].Remove( false );
 		}
 		assert.IsTrue( node.resources.Contains( this ) );
+		node.avoidGrass = false;
+		ground.SetDirty( node );
 		node.resources.Remove( this );
 		DestroyThis();
 		return true;

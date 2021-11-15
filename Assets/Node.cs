@@ -22,6 +22,7 @@ public class Node : HiveObject
 	public float decorationPosition;
 	public int decorationDirection = -1;
 	public int decorationType;
+	public bool avoidGrass;
 
 	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
 	public bool hasDecoration { get { return decorationDirection != -1; } }

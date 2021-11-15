@@ -608,8 +608,8 @@ public class Ground : HiveObject
 				for ( int x = 0; x < dimension; x++ )
 				{
 					int a = y * ( dimension + 1 ) + x;
-					AddVertex( a, a + 1, ( 1 + sharpRendering ) / 2 );
-					AddVertex( a, a + 1, ( 1 - sharpRendering ) / 2 );
+					AddVertex( a, a + 1, ( 1 + sharpRendering ) / 2, nodes[a] );
+					AddVertex( a, a + 1, ( 1 - sharpRendering ) / 2, nodes[a+1] );
 				}
 			}
 
@@ -619,8 +619,8 @@ public class Ground : HiveObject
 				for ( int x = 0; x <= dimension; x++ )
 				{
 					int a = y * ( dimension + 1 ) + x;
-					AddVertex( a, a + dimension + 1, ( 1 + sharpRendering ) / 2 );
-					AddVertex( a, a + dimension + 1, ( 1 - sharpRendering ) / 2 );
+					AddVertex( a, a + dimension + 1, ( 1 + sharpRendering ) / 2, nodes[a] );
+					AddVertex( a, a + dimension + 1, ( 1 - sharpRendering ) / 2, nodes[a + dimension + 1] );
 				}
 			}
 
@@ -630,8 +630,8 @@ public class Ground : HiveObject
 				for ( int x = 0; x < dimension; x++ )
 				{
 					int a = y * ( dimension + 1 ) + x;
-					AddVertex( a + dimension + 1, a + 1, ( 1 + sharpRendering ) / 2 );
-					AddVertex( a + dimension + 1, a + 1, ( 1 - sharpRendering ) / 2 );
+					AddVertex( a + dimension + 1, a + 1, ( 1 + sharpRendering ) / 2, nodes[a + dimension + 1] );
+					AddVertex( a + dimension + 1, a + 1, ( 1 - sharpRendering ) / 2, nodes[a + 1] );
 				}
 			}
 
@@ -668,9 +668,9 @@ public class Ground : HiveObject
 
 			assert.AreEqual( triangles.Count, 3 * 13 * dimension * dimension * 2 );
 
-			// Disable grass unter water
+			// Disable grass unter water and at cornfields
 			for ( int i = 0; i < positions.Count; i++ )
-				if ( positions[i].y < world.waterLevel )
+				if ( positions[i].y < world.waterLevel || nodes[i].avoidGrass )
 					uv[i] = noGrass;
 
 			mesh.vertices = positions.ToArray();
@@ -683,7 +683,7 @@ public class Ground : HiveObject
 			collider.sharedMesh = mesh;
 
 			// This function adds two new vertices at an edge between two nodes. The weight is depending on the sharpRendering property.
-			void AddVertex( int a, int b, float weight )
+			void AddVertex( int a, int b, float weight, Node node )
 			{
 				positions.Add( positions[a] * weight + positions[b] * ( 1 - weight ) );
 				colors.Add( colors[a] * weight + colors[b] * ( 1 - weight ) );
@@ -698,12 +698,11 @@ public class Ground : HiveObject
 					if ( nodes[b].road.ends[0].node == nodes[a] || nodes[b].road.ends[1].node == nodes[a] )
 						roadCrossing = true;
 				}
-				if ( weight < 0.5f && nodes[b].flag )
-					roadCrossing = true;
-				if ( weight > 0.5f && nodes[a].flag )
+				if ( node.flag )
 					roadCrossing = true;
  
 				uv.Add( roadCrossing ? noGrass : allowGrass );
+				nodes.Add( node );
 			}
 
 			// This function is covering the area of a ground triangle by creating 13 smaller triangles
@@ -721,16 +720,19 @@ public class Ground : HiveObject
 				positions.Add( positions[a] * mainWeight + ( positions[b] + positions[c] ) * otherWeight );
 				colors.Add( colors[a] * mainWeight + ( colors[b] + colors[c] ) * otherWeight );
 				uv.Add( nodes[a].flag ? noGrass : allowGrass );
+				nodes.Add( nodes[a] );
 
 				var bi = positions.Count;
 				positions.Add( positions[b] * mainWeight + ( positions[a] + positions[c] ) * otherWeight );
 				colors.Add( colors[b] * mainWeight + ( colors[a] + colors[c] ) * otherWeight );
 				uv.Add( nodes[b].flag ? noGrass : allowGrass );
+				nodes.Add( nodes[b] );
 
 				var ci = positions.Count;
 				positions.Add( positions[c] * mainWeight + ( positions[a] + positions[b] ) * otherWeight );
 				colors.Add( colors[c] * mainWeight + ( colors[a] + colors[b] ) * otherWeight );
 				uv.Add( nodes[c].flag ? noGrass : allowGrass );
+				nodes.Add( nodes[c] );
 
 				// First create the inner triangle, which is the flat part of the whole ground rendering, the normals at the three corners are the same
 				AddTriangle( ai, bi, ci );
