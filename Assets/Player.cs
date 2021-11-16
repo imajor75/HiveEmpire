@@ -136,6 +136,7 @@ public class Team : HiveCommon
 	}
 
 	public Material buoyMaterial;
+	public Material standard01AMaterial;
 
 	[System.Serializable]
 	public class InputWeight
@@ -241,6 +242,17 @@ public class Team : HiveCommon
 			buoyMaterial.color = color;
 		}
 		return buoyMaterial;
+	}
+
+	public Material Get01AMaterial()
+	{
+		if ( standard01AMaterial == null )
+		{
+			standard01AMaterial = Instantiate( Resources.Load<Material>( "PolygonFantasyKingdom_Mat_01_A_teamHighlight" ) );
+			standard01AMaterial.color = color;
+			standard01AMaterial.name = $"Team {name} material";
+		}
+		return standard01AMaterial;
 	}
 
 	void CreateInputWeights()

@@ -1112,6 +1112,14 @@ public class World : HiveCommon
 				materials[i] = material;
 			renderer.materials = materials;
 		}
+		var skinnedRenderer = gameObject.GetComponent<SkinnedMeshRenderer>();
+		if ( skinnedRenderer )
+		{
+			Material[] materials = new Material[skinnedRenderer.materials.Length];
+			for ( int i = 0; i < materials.Length; i++ )
+				materials[i] = material;
+			skinnedRenderer.materials = materials;
+		}
 		foreach ( Transform child in gameObject.transform )
 			SetMaterialRecursive( child.gameObject, material );
 	}

@@ -1151,6 +1151,10 @@ public class Worker : HiveObject
 		transform.position = node.position + standingOffset;
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
+
+		if ( look == Type.soldier )
+			World.SetMaterialRecursive( body, team.Get01AMaterial() );
+
 		links[(int)LinkType.haulingBoxLight] = World.FindChildRecursive( body.transform, "haulingBoxLight" )?.gameObject;
 		links[(int)LinkType.haulingBoxHeavy] = World.FindChildRecursive( body.transform, "haulingBoxHeavy" )?.gameObject;
 		links[(int)LinkType.haulingBoxSecondary] = World.FindChildRecursive( body.transform, "haulingBoxSecondary" )?.gameObject;
