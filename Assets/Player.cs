@@ -299,13 +299,23 @@ public class Team : HiveCommon
 
 	public void Attack( GuardHouse target, int attackerCount )
 	{
-		if ( soldierCount < attackerCount || target.attackers.Count > 0 )
+		if ( soldierCount < attackerCount || target.attackerTeam )
 			return;
+
+		List<Node> gather = new List<Node>();
+		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+		{
+			Node n = target.flag.node.Neighbour( i );
+			if ( !n.block.IsBlocking( Node.Block.Type.workers ) )
+				gather.Add( n );
+		}
 
 		for ( int i = 0; i < attackerCount; i++ )
 		{
 			var attacker = Worker.Create().SetupAsAttacker( this, target );
-			attacker.ScheduleWait( i * 100 );
+			attacker.ScheduleWait( i * 500 );
+			attacker.ScheduleWalkToNeighbour( mainBuilding.flag.node );
+			attacker.ScheduleWalkToNode( gather[i%gather.Count] );
 			target.attackers.Add( attacker );
 		}
 	}

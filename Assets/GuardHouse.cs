@@ -11,6 +11,7 @@ public class GuardHouse : Building
 	// TODO They are completely built even before the construction
 	public List<Worker> soldiers = new List<Worker>();
 	public List<Worker> attackers = new List<Worker>();
+	public Worker aggressor, assassin;
 	public int influence = Constants.GuardHouse.defaultInfluence;
 	public bool ready;
 	public int optimalSoldierCount;
@@ -19,6 +20,15 @@ public class GuardHouse : Building
 	bool removing;
 
 	public override bool wantFoeClicks { get { return true; } }
+	public Team attackerTeam
+	{
+		get
+		{
+			if ( attackers.Count > 0 )
+				return attackers.First().team;
+			return aggressor?.team;
+		}
+	}
 
 	public static new void Initialize()
 	{
@@ -89,38 +99,68 @@ public class GuardHouse : Building
 			{
 				var newSoldier = Worker.Create().SetupAsSoldier( this );
 				var a = Math.PI * soldiers.Count * 2 / 3;
+				team.soldierCount--;
 				newSoldier.standingOffset.Set( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
 				soldiers.Add( newSoldier );
 			}
 		}
 
-		if ( attackers.Count > 0 && attackers.First().IsIdle( true ) )
+		foreach ( var attacker in attackers )
 		{
-			if ( soldiers.Count == 0 )
+			if ( attacker.IsIdle() && attacker.node.DistanceFrom( flag.node ) <= 1 )
 			{
-				foreach ( var soldier in attackers )
-					soldiers.Add( soldier );
-				attackers.Clear();
-				SetTeam( soldiers.First().team );
-			}
-			if ( attackers.Count > 1 && attackers[1].IsIdle( true ) )
-			{
-				var a0 = attackers[0];
-				var a1 = attackers[1];
-
-				attackers.Remove( a0 );
-				attackers.Remove( a1 );
-
-				a0.Remove( false );
-				a1.Remove( false );
-
-				var defender = soldiers.First();
-				soldiers.Remove( defender );
-				defender.Remove( false );
-				if ( soldiers.Count == 0 )
-					SetTeam( null );
+				ProcessAttacker( attacker );
+				break;
 			}
 		}
+
+	}
+
+	void ProcessAttacker( Worker attacker )
+	{
+		if ( soldiers.Count == 0 || ( !soldiers.First().IsIdle( true ) && aggressor == null ) )
+		{
+			foreach ( var soldier in soldiers )
+				soldier.building = null;
+			soldiers.Clear();
+			foreach ( var soldier in attackers )
+				soldiers.Add( soldier );
+			attackers.Clear();
+			assassin = aggressor = null;
+			SetTeam( soldiers.First().team );
+			return;
+		}
+		if ( aggressor )
+		{
+			assert.AreEqual( attacker.team, aggressor.team );
+			if ( assassin )
+				return;
+			attacker.ScheduleWalkToNeighbour( flag.node );
+			attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.stabInTheBackAct );
+			assassin = attacker;
+			attackers.Remove( assassin );
+			return;
+		}
+
+		var defender = soldiers[0];
+		defender.ScheduleWalkToNeighbour( flag.node );
+		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.fightingAct );
+		attacker.ScheduleWalkToNeighbour( flag.node );
+		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Worker.fightingAct );
+
+		aggressor = attacker;
+		attackers.Remove( aggressor );
+	}
+
+	public void DefenderStabbed( Worker assassin )
+	{
+		assert.IsNotNull( aggressor );
+		var defender = soldiers.First();
+		soldiers.Remove( defender );
+
+		defender.Remove( false );
+		aggressor.Remove( false );
+		assassin.Remove( false );
 	}
 
 	public override void OnClicked( bool show = false )

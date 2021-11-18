@@ -38,6 +38,7 @@ public class Worker : HiveObject
 	public static Act[] resourceCollectAct = new Act[(int)Resource.Type.total];
 	public static Act shovelingAct;
 	public static Act constructingAct;
+	public static Act fightingAct, stabInTheBackAct;
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> walkSounds;
 	static public MediaTable<AudioClip, AnimationSound> animationSounds;
@@ -110,7 +111,13 @@ public class Worker : HiveObject
 		public int animation;
 		public GameObject toolTemplate;
 		public LinkType toolSlot;
-		public Node.Type turnTo = Node.Type.anything;
+		public Direction turnTo;
+		public enum Direction
+		{
+			any,
+			water,
+			reverse
+		}
 	}
 
 	public enum AnimationSound
@@ -204,7 +211,7 @@ public class Worker : HiveObject
 			if ( started )
 				return;
 
-			if ( act.turnTo != Node.Type.anything )
+			if ( act.turnTo == Act.Direction.water )
 			{
 				foreach ( var c in Ground.areas[1] )
 				{
@@ -213,6 +220,8 @@ public class Worker : HiveObject
 						boss.TurnTo( n );
 				}
 			}
+			if ( act.turnTo == Act.Direction.reverse && boss.walkFrom )
+				boss.TurnTo( boss.walkFrom );
 
 			if ( boss.animator )
 				wasWalking = boss.animator.GetBool( walkingID );
@@ -237,6 +246,7 @@ public class Worker : HiveObject
 			if ( tool )
 				Destroy( tool );
 			started = false;
+			boss.OnActFinished( act );
 		}
 
 		public override bool InterruptWalk()
@@ -572,16 +582,22 @@ public class Worker : HiveObject
 	public class WalkToNeighbour : Task
 	{
 		public Node target;
-		public void Setup( Worker boss, Node target )
+		public Act interruption;
+		public void Setup( Worker boss, Node target, Act interruption )
 		{
 			base.Setup( boss );
+			this.interruption = interruption;
 			this.target = target;
 		}
 
 		public override bool ExecuteFrame()
 		{
 			if ( boss.node.DirectionTo( target ) >= 0 ) // This is not true, when previous walk tasks are failed
+			{
 				boss.Walk( target );
+				if ( interruption != null )
+					boss.ScheduleDoAct( interruption, true );
+			}
 			return true;
 		}
 	}
@@ -968,7 +984,7 @@ public class Worker : HiveObject
 			toolSlot = LinkType.rightHand,
 			timeToInterrupt = 1.0f,
 			duration = 500,
-			turnTo = Node.Type.underWater
+			turnTo = Act.Direction.water
 		};
 		resourceCollectAct[(int)Resource.Type.cornfield] = new Act
 		{
@@ -997,6 +1013,24 @@ public class Worker : HiveObject
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/hammer" ),
 			toolSlot = LinkType.rightHand,
 			duration = -1
+		};
+		fightingAct = new Act	// TODO
+		{
+			animation = buildingID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/hammer" ),
+			toolSlot = LinkType.rightHand,
+			turnTo = Act.Direction.reverse,
+			timeToInterrupt = 0.2f,
+			duration = int.MaxValue
+		};
+		stabInTheBackAct = new Act
+		{
+			animation = skinningID,	// TODO
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
+			toolSlot = LinkType.rightHand,
+			turnTo = Act.Direction.reverse,
+			timeToInterrupt = 0.5f,
+			duration = 100
 		};
 
 		animationSounds.fileNamePrefix = "effects/";
@@ -1471,7 +1505,7 @@ public class Worker : HiveObject
 		{
 			if ( building && building is GuardHouse )
 			{
-				if ( !IsIdle( true ) )
+				if ( !IsIdle( true ) && building.team == team )
 				{
 					ScheduleWalkToNode( building.flag.node );
 					ScheduleWalkToNeighbour( building.node );
@@ -1699,10 +1733,10 @@ public class Worker : HiveObject
 		ScheduleTask( instance );
 	}
 
-	public void ScheduleWalkToNeighbour( Node target, bool first = false )
+	public void ScheduleWalkToNeighbour( Node target, bool first = false, Act interruption = null )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNeighbour>();
-		instance.Setup( this, target );
+		instance.Setup( this, target, interruption );
 		ScheduleTask( instance, first );
 	}
 
@@ -2135,6 +2169,16 @@ public class Worker : HiveObject
 		exclusiveMode = true;
 		this.road = road;
 		return true;
+	}
+
+	void OnActFinished( Act act )
+	{
+		if ( act == stabInTheBackAct )
+		{
+			assert.AreEqual( type, Type.soldier );
+			if ( building is GuardHouse guardHouse )
+				guardHouse.DefenderStabbed( this );
+		}
 	}
 
 	public override void Validate( bool chain )

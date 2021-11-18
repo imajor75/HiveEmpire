@@ -2669,15 +2669,15 @@ public class Interface : HiveObject
 				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
 				soldierCount.value = guardHouse.soldiers.Count - 1;
 				soldierCount.onValueChanged.AddListener( SoldierCountChanged );
-				if ( guardHouse.attackers.Count > 0 )
-					Text( "Under attack from team " + guardHouse.attackers.First().team.name ).PinDownwards( borderWidth, 0, 200 );
+				if ( guardHouse.attackerTeam )
+					Text( "Under attack from team " + guardHouse.attackerTeam.name ).PinDownwards( borderWidth, 0, 200 );
 			}
 			else
 			{
 				Text( $"Defenders: {guardHouse.soldiers.Count}" ).Pin( borderWidth, -borderWidth, 200 );
 				attackerCount = guardHouse.soldiers.Count*2+1;
 				Text( $"Attack with {attackerCount} soldiers" ).PinDownwards( borderWidth, 0, 200 );
-				if ( root.mainTeam && attackerCount <= root.mainTeam.soldierCount )
+				if ( root.mainTeam && attackerCount <= root.mainTeam.soldierCount && guardHouse.attackerTeam == null)
 					Button( "Attack" ).AddClickHandler( Attack ).PinDownwards( 50, 0, 100 );
 			}
 			if ( show )
