@@ -6330,7 +6330,7 @@ if ( cart )
 				{
 					if ( player == root.mainPlayer )
 						currentPlayer = items.Count;
-					items.Add( player.name );
+					items.Add( $"{player.name} (team {player.team.name})" );
 				}
 			}
 			items.Add( "New" );
