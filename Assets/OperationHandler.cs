@@ -1227,6 +1227,7 @@ public class Operation
                     HiveCommon.world.teams.Add( team );
                 }
                 var newPlayer = Player.Create().Setup( playerName, team );
+                HiveCommon.world.players.Add( newPlayer );
                 if ( networkId == HiveCommon.network.id )
                     HiveCommon.root.mainPlayer = newPlayer;
                 return null;
