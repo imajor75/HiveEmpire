@@ -142,6 +142,7 @@ public static class Constants
     public static class GuardHouse
     {
     	public const int defaultInfluence = 8;
+        public const int deathFadeTime = 100;
     }
 
     public static class HeightMap

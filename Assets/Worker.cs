@@ -54,7 +54,7 @@ public class Worker : HiveObject
 	SpriteRenderer itemOnMap;
 	static public Sprite arrowSprite;
 	Material shirtMaterial;
-	protected GameObject body;
+	public GameObject body;
 	[JsonIgnore]
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];

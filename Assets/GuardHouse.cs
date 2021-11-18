@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEngine;
 
 public class GuardHouse : Building
@@ -18,6 +19,11 @@ public class GuardHouse : Building
 	public static GameObject template;
 	static readonly Configuration guardHouseConfiguration = new Configuration();
 	bool removing;
+
+	public List<GameObject> trash = new List<GameObject>();
+	public List<Material> trashMaterials = new List<Material>();
+	[JsonIgnore]
+	public World.Timer trashTimer = new World.Timer();
 
 	public override bool wantFoeClicks { get { return true; } }
 	public Team attackerTeam
@@ -114,6 +120,19 @@ public class GuardHouse : Building
 			}
 		}
 
+		if ( trashTimer.inProgress )
+		{
+			var alpha = -(float)trashTimer.age / Constants.GuardHouse.deathFadeTime;
+			if ( alpha < 0 )
+				alpha = 0;
+			foreach ( var m in trashMaterials )
+				m.SetFloat( "_Alpha", alpha );
+		}
+		if ( trashTimer.done )
+		{
+			foreach ( var g in trash )
+				Destroy( g );
+		}
 	}
 
 	void ProcessAttacker( Worker attacker )
@@ -158,9 +177,21 @@ public class GuardHouse : Building
 		var defender = soldiers.First();
 		soldiers.Remove( defender );
 
-		defender.Remove( false );
-		aggressor.Remove( false );
-		assassin.Remove( false );
+		void Trash( Worker soldier )
+		{
+			var m = Instantiate( soldier.team.Get01AMaterial() );
+			soldier.body.transform.SetParent( transform );
+			trash.Add( soldier.body );
+			trashMaterials.Add( m );
+			World.SetMaterialRecursive( soldier.body, m );
+			soldier.animator.speed = 0;
+			soldier.Remove( false );
+		}
+
+		Trash( defender );
+		Trash( aggressor );
+		Trash( assassin );
+		trashTimer.Start( Constants.GuardHouse.deathFadeTime );
 	}
 
 	public override void OnClicked( bool show = false )
