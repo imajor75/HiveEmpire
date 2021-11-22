@@ -2648,6 +2648,7 @@ public class Interface : HiveObject
 		public GuardHouse guardHouse;
 		public Attackable attackable;
 		public Dropdown soldierCount;
+		public Text attackers;
 		public int attackerCount;
 
 		public static GuardHousePanel Create()
@@ -2660,19 +2661,19 @@ public class Interface : HiveObject
 			this.attackable = attackable;
 			this.guardHouse = attackable as GuardHouse;
 			noResize = true;
-			if ( base.Open( attackable, 200, 100 ) )
+			if ( base.Open( attackable, 220, 120 ) )
 				return;
 			name = "Guard House panel";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 			if ( attackable.team == root.mainTeam )
 			{
-				Text( "Soldiers count" ).Pin( borderWidth, -borderWidth, 200 );
+				Text( "Defender count" ).Pin( borderWidth, -borderWidth, 200 );
 				soldierCount = Dropdown().PinDownwards( borderWidth, 0, 160 );
 				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
 				soldierCount.value = guardHouse.soldiers.Count - 1;
 				soldierCount.onValueChanged.AddListener( SoldierCountChanged );
 				if ( guardHouse.attackerTeam )
-					Text( "Under attack from team " + guardHouse.attackerTeam.name ).PinDownwards( borderWidth, 0, 200 );
+					attackers = Text( $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackers.Count} soldiers" ).PinDownwards( borderWidth, 0, 200, 2 * iconSize );
 			}
 			else
 			{
@@ -2684,6 +2685,18 @@ public class Interface : HiveObject
 			}
 			if ( show )
 				eye.FocusOn( guardHouse, true );
+		}
+
+		new void Update()
+		{
+			if ( attackers )
+			{
+				if ( attackable.attackerTeam )
+					attackers.text = $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackers.Count} soldiers";
+				else
+					attackers.text = "Not under attack";
+			}
+			base.Update();
 		}
 
 		void Remove()
