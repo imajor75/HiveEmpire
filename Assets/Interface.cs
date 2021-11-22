@@ -2648,7 +2648,8 @@ public class Interface : HiveObject
 		public GuardHouse guardHouse;
 		public Attackable attackable;
 		public Dropdown soldierCount;
-		public Text attackers;
+		public Text defenders, attackers;
+		public Image sendAttacker;
 		public int attackerCount;
 
 		public static GuardHousePanel Create()
@@ -2677,11 +2678,9 @@ public class Interface : HiveObject
 			}
 			else
 			{
-				Text( $"Defenders: {attackable.defenderCount}" ).Pin( borderWidth, -borderWidth, 200 );
-				attackerCount = attackable.defenderCount*2+1;
-				Text( $"Attack with {attackerCount} soldiers" ).PinDownwards( borderWidth, 0, 200 );
-				if ( root.mainTeam && attackerCount <= root.mainTeam.soldierCount && attackable.attackerTeam == null )
-					Button( "Attack" ).AddClickHandler( Attack ).PinDownwards( 50, 0, 100 );
+				defenders = Text().Pin( borderWidth, -borderWidth, 200 );
+				attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
+				sendAttacker = Button( "Send attacker" ).AddClickHandler( SendAttacker ).PinDownwards( 20, 0, 180 );
 			}
 			if ( show )
 				eye.FocusOn( guardHouse, true );
@@ -2689,6 +2688,8 @@ public class Interface : HiveObject
 
 		new void Update()
 		{
+			if ( defenders )
+				 defenders.text = $"Defenders: {attackable.defenderCount}"; 
 			if ( attackers )
 			{
 				if ( attackable.attackerTeam )
@@ -2706,9 +2707,9 @@ public class Interface : HiveObject
 			Close();
 		}
 
-		void Attack()
+		void SendAttacker()
 		{
-			oh.ScheduleAttack( root.mainTeam, attackable, attackerCount );
+			oh.ScheduleAttack( root.mainTeam, attackable, 1 );
 		}
 
 		void SoldierCountChanged( int value )

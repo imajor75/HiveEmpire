@@ -135,6 +135,7 @@ public class Team : HiveCommon
 		set { mainBuilding.itemData[(int)Item.Type.soldier].content = value; }
 		get { return mainBuilding.itemData[(int)Item.Type.soldier].content; } 
 	}
+	public int lastTimeAttack;
 
 	public Material buoyMaterial;
 	public Material standard01AMaterial;
@@ -300,7 +301,7 @@ public class Team : HiveCommon
 
 	public void Attack( Attackable target, int attackerCount )
 	{
-		if ( soldierCount < attackerCount || target.attackerTeam )
+		if ( soldierCount < attackerCount || ( target.attackerTeam && target.attackerTeam != this ) )
 			return;
 
 		List<Node> gather = new List<Node>();
@@ -314,11 +315,14 @@ public class Team : HiveCommon
 		for ( int i = 0; i < attackerCount; i++ )
 		{
 			var attacker = Worker.Create().SetupAsAttacker( this, target );
-			attacker.ScheduleWait( i * 500 );
+			int attackTime = Math.Max( world.time, lastTimeAttack+Constants.Player.attackPeriod );
+			lastTimeAttack = attackTime;
+			attacker.ScheduleWait( world.time - attackTime );
 			attacker.ScheduleWalkToNeighbour( mainBuilding.flag.node );
-			attacker.ScheduleWalkToNode( gather[i%gather.Count] );
+			attacker.ScheduleWalkToNode( gather[(i+target.lastSpot)%gather.Count] );
 			target.attackers.Add( attacker );
 		}
+		target.lastSpot += attackerCount;
 	}
 
 	public void UpdateStockRoutes( Item.Type itemType )

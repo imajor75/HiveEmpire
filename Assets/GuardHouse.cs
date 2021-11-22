@@ -9,6 +9,7 @@ public abstract class Attackable : Building
 {
 	public List<Worker> attackers = new List<Worker>();
 	public Worker aggressor, assassin, defender;
+	public int lastSpot;
 
 	public List<GameObject> trash = new List<GameObject>();
 	public List<Material> trashMaterials = new List<Material>();
