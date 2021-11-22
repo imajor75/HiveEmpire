@@ -415,7 +415,7 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone );
     }
 
-    public void ScheduleAttack( Team team, GuardHouse target, int attackedCount, bool standalone = true )
+    public void ScheduleAttack( Team team, Attackable target, int attackedCount, bool standalone = true )
     {
         ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone );
     }
@@ -1019,7 +1019,7 @@ public class Operation
         return this;
     }
 
-    public Operation SetupAsAttack( Team team, GuardHouse target, int attackerCount )
+    public Operation SetupAsAttack( Team team, Attackable target, int attackerCount )
     {
         type = Type.attack;
         building = target;
@@ -1204,7 +1204,7 @@ public class Operation
             }
             case Type.attack:
             {
-                team.Attack( building as GuardHouse, workerCount );
+                team.Attack( building as Attackable, workerCount );
                 return null;
 
             }

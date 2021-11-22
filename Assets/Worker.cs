@@ -1118,7 +1118,7 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public Worker SetupAsAttacker( Team team, GuardHouse target )
+	public Worker SetupAsAttacker( Team team, Attackable target )
 	{
 		World.CRC( target.id, OperationHandler.Event.CodeLocation.workerSetupAsAttacker );
 		look = type = Type.soldier;
@@ -1503,7 +1503,7 @@ public class Worker : HiveObject
 
 		if ( type == Type.soldier )
 		{
-			if ( building && building is GuardHouse )
+			if ( building && building is Attackable )
 			{
 				if ( !IsIdle( true ) && building.team == team )
 				{
@@ -1539,6 +1539,11 @@ public class Worker : HiveObject
 
 	void ReturnToHeadquarters()
 	{
+		if ( team == null )
+		{
+			Destroy( gameObject );
+			return;
+		}
 		if ( this as Stock.Cart )
 			assert.IsNull( building as Stock );     // ?
 		if ( !team.mainBuilding.returningUnits.Contains( this ) )
@@ -2176,8 +2181,8 @@ public class Worker : HiveObject
 		if ( act == stabInTheBackAct )
 		{
 			assert.AreEqual( type, Type.soldier );
-			if ( building is GuardHouse guardHouse )
-				guardHouse.DefenderStabbed( this );
+			if ( building is Attackable attackable )
+				attackable.DefenderStabbed( this );
 		}
 	}
 

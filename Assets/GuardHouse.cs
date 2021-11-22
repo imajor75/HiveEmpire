@@ -5,27 +5,16 @@ using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 
-public class GuardHouse : Building
+public abstract class Attackable : Building
 {
-	// TODO Guardhouses are sometimes not visible, only after reload
-	// Somehow they are offset, but they are linked to the correct block.
-	// TODO They are completely built even before the construction
-	public List<Worker> soldiers = new List<Worker>();
 	public List<Worker> attackers = new List<Worker>();
-	public Worker aggressor, assassin;
-	public int influence = Constants.GuardHouse.defaultInfluence;
-	public bool ready;
-	public int optimalSoldierCount;
-	public static GameObject template;
-	static readonly Configuration guardHouseConfiguration = new Configuration();
-	bool removing;
+	public Worker aggressor, assassin, defender;
 
 	public List<GameObject> trash = new List<GameObject>();
 	public List<Material> trashMaterials = new List<Material>();
 	[JsonIgnore]
 	public World.Timer trashTimer = new World.Timer();
 
-	public override bool wantFoeClicks { get { return true; } }
 	public Team attackerTeam
 	{
 		get
@@ -35,6 +24,135 @@ public class GuardHouse : Building
 			return aggressor?.team;
 		}
 	}
+	
+	public abstract int defenderCount { get; }
+	public abstract Worker GetDefender();
+	public abstract void Occupy( List<Worker> attackers );
+
+	public override void CriticalUpdate()
+	{
+		base.CriticalUpdate();
+		if ( blueprintOnly || !construction.done )
+			return;
+
+		foreach ( var attacker in attackers )
+		{
+			if ( attacker.IsIdle() && attacker.node.DistanceFrom( flag.node ) <= 1 )
+			{
+				ProcessAttacker( attacker );
+				break;
+			}
+		}
+
+		if ( trashTimer.inProgress )
+		{
+			var alpha = -(float)trashTimer.age / Constants.GuardHouse.deathFadeTime;
+			if ( alpha < 0 )
+				alpha = 0;
+			foreach ( var m in trashMaterials )
+				m.SetFloat( "_Alpha", alpha );
+		}
+		if ( trashTimer.done )
+		{
+			foreach ( var g in trash )
+				Destroy( g );
+		}
+	}
+
+	void ProcessAttacker( Worker attacker )
+	{
+		if ( defenderCount == 0 && aggressor == null )
+		{
+			Occupy( attackers );
+			return;
+		}
+		if ( aggressor )
+		{
+			assert.AreEqual( attacker.team, aggressor.team );
+			if ( assassin )
+				return;
+			attacker.ScheduleWalkToNeighbour( flag.node );
+			attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.stabInTheBackAct );
+			assassin = attacker;
+			attackers.Remove( assassin );
+			return;
+		}
+
+		defender = GetDefender();
+		defender.ScheduleWalkToNeighbour( flag.node );
+		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.fightingAct );
+		attacker.ScheduleWalkToNeighbour( flag.node );
+		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Worker.fightingAct );
+
+		aggressor = attacker;
+		attackers.Remove( aggressor );
+	}
+
+	public void DefenderStabbed( Worker assassin )
+	{
+		assert.IsNotNull( aggressor );
+
+		void Trash( Worker soldier )
+		{
+			var m = Instantiate( soldier.team.Get01AMaterial() );
+			soldier.body.transform.SetParent( transform );
+			trash.Add( soldier.body );
+			trashMaterials.Add( m );
+			World.SetMaterialRecursive( soldier.body, m );
+			soldier.animator.speed = 0;
+			soldier.Remove( false );
+		}
+
+		Trash( defender );
+		Trash( aggressor );
+		Trash( assassin );
+		trashTimer.Start( Constants.GuardHouse.deathFadeTime );
+	}
+}
+public class GuardHouse : Attackable
+{
+	// TODO Guardhouses are sometimes not visible, only after reload
+	// Somehow they are offset, but they are linked to the correct block.
+	// TODO They are completely built even before the construction
+	public List<Worker> soldiers = new List<Worker>();
+	public int influence = Constants.GuardHouse.defaultInfluence;
+	public bool ready;
+	public int optimalSoldierCount;
+	public static GameObject template;
+	static readonly Configuration guardHouseConfiguration = new Configuration();
+	bool removing;
+	public override int defenderCount
+	{
+		get
+		{
+			int defenderCount = 0;
+			foreach ( var defender in soldiers )
+				if ( defender.IsIdle( true ) )
+					defenderCount++;
+			return defenderCount;
+		}
+	}
+
+	public override Worker GetDefender()
+	{
+		var defender = soldiers[0];
+		soldiers.Remove( defender );
+		return defender;
+	}
+
+	public override void Occupy( List<Worker> attackers )
+	{
+		foreach ( var soldier in soldiers )
+			soldier.building = null;
+		soldiers.Clear();
+		foreach ( var soldier in attackers )
+			soldiers.Add( soldier );
+		attackers.Clear();
+		assassin = aggressor = null;
+		SetTeam( soldiers.First().team );
+	}
+
+	public override bool wantFoeClicks { get { return true; } }
 
 	public static new void Initialize()
 	{
@@ -110,89 +228,8 @@ public class GuardHouse : Building
 				soldiers.Add( newSoldier );
 			}
 		}
-
-		foreach ( var attacker in attackers )
-		{
-			if ( attacker.IsIdle() && attacker.node.DistanceFrom( flag.node ) <= 1 )
-			{
-				ProcessAttacker( attacker );
-				break;
-			}
-		}
-
-		if ( trashTimer.inProgress )
-		{
-			var alpha = -(float)trashTimer.age / Constants.GuardHouse.deathFadeTime;
-			if ( alpha < 0 )
-				alpha = 0;
-			foreach ( var m in trashMaterials )
-				m.SetFloat( "_Alpha", alpha );
-		}
-		if ( trashTimer.done )
-		{
-			foreach ( var g in trash )
-				Destroy( g );
-		}
 	}
 
-	void ProcessAttacker( Worker attacker )
-	{
-		if ( soldiers.Count == 0 || ( !soldiers.First().IsIdle( true ) && aggressor == null ) )
-		{
-			foreach ( var soldier in soldiers )
-				soldier.building = null;
-			soldiers.Clear();
-			foreach ( var soldier in attackers )
-				soldiers.Add( soldier );
-			attackers.Clear();
-			assassin = aggressor = null;
-			SetTeam( soldiers.First().team );
-			return;
-		}
-		if ( aggressor )
-		{
-			assert.AreEqual( attacker.team, aggressor.team );
-			if ( assassin )
-				return;
-			attacker.ScheduleWalkToNeighbour( flag.node );
-			attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.stabInTheBackAct );
-			assassin = attacker;
-			attackers.Remove( assassin );
-			return;
-		}
-
-		var defender = soldiers[0];
-		defender.ScheduleWalkToNeighbour( flag.node );
-		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.fightingAct );
-		attacker.ScheduleWalkToNeighbour( flag.node );
-		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Worker.fightingAct );
-
-		aggressor = attacker;
-		attackers.Remove( aggressor );
-	}
-
-	public void DefenderStabbed( Worker assassin )
-	{
-		assert.IsNotNull( aggressor );
-		var defender = soldiers.First();
-		soldiers.Remove( defender );
-
-		void Trash( Worker soldier )
-		{
-			var m = Instantiate( soldier.team.Get01AMaterial() );
-			soldier.body.transform.SetParent( transform );
-			trash.Add( soldier.body );
-			trashMaterials.Add( m );
-			World.SetMaterialRecursive( soldier.body, m );
-			soldier.animator.speed = 0;
-			soldier.Remove( false );
-		}
-
-		Trash( defender );
-		Trash( aggressor );
-		Trash( assassin );
-		trashTimer.Start( Constants.GuardHouse.deathFadeTime );
-	}
 
 	public override void OnClicked( bool show = false )
 	{

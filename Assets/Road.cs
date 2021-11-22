@@ -1099,7 +1099,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		if ( !ready )
 			assert.AreEqual( root.viewport.inputHandler, this );
-		assert.IsTrue( world.teams.Contains( team ) );
+		assert.IsTrue( team == null || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );
 	}

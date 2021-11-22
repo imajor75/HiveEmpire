@@ -100,9 +100,10 @@ public class Player : HiveCommon
 		return this;
 	}
 
-	void Validate( bool chain )
+	public void Remove( bool takeYourTime )
 	{
-
+		world.players.Remove( this );
+		Destroy( gameObject );
 	}
 }
 
@@ -297,7 +298,7 @@ public class Team : HiveCommon
 		return null;
 	}
 
-	public void Attack( GuardHouse target, int attackerCount )
+	public void Attack( Attackable target, int attackerCount )
 	{
 		if ( soldierCount < attackerCount || target.attackerTeam )
 			return;
@@ -446,6 +447,15 @@ public class Team : HiveCommon
 			return false;
 		HiveCommon.eye.FocusOn( mainBuilding.node, approach:false );	// TODO UI related stuff should not be here
 		return true;
+	}
+
+	public void Remove( bool takeYourTime )
+	{
+		world.teams.Remove( this );
+		foreach ( var player in players )
+			player.Remove( takeYourTime );
+		world.ground.dirtyOwnership = true;
+		Destroy( gameObject );
 	}
 
 	public void RegisterInfluence( Building building )

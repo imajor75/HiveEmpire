@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Stock : Building, Worker.Callback.IHandler
+public class Stock : Attackable, Worker.Callback.IHandler
 {
 	public bool main = false;
 	public List<ItemTypeData> itemData = new List<ItemTypeData>();
@@ -17,6 +17,7 @@ public class Stock : Building, Worker.Callback.IHandler
 	public World.Timer offersSuspended = new World.Timer();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
+	override public bool wantFoeClicks { get { return main; } }
 
 	static readonly Configuration stockConfiguration = new Configuration
 	{
@@ -29,6 +30,19 @@ public class Stock : Building, Worker.Callback.IHandler
 	static readonly Configuration mainConfiguration = new Configuration	{ huge = true };
 
 	public static GameObject template, mainTemplate;
+
+	public override int defenderCount { get { return main ? team.soldierCount : 0; } }
+	public override Worker GetDefender()
+	{
+		assert.IsTrue( team.soldierCount > 0 );
+		team.soldierCount--;
+		return Worker.Create().SetupAsSoldier( this );
+	}
+
+	public override void Occupy( List<Worker> attackers )
+	{
+		Remove( false );
+	}
 
 	public override List<Ground.Area> areas
 	{
@@ -587,9 +601,9 @@ public class Stock : Building, Worker.Callback.IHandler
 
 	public override bool Remove( bool takeYourTime )
 	{
-		if ( main )
-			return false;
 		team.UnregisterStock( this );
+		if ( main )
+			team.Remove( false );
 		return base.Remove( takeYourTime );
 	}
 
@@ -720,7 +734,15 @@ public class Stock : Building, Worker.Callback.IHandler
 	{
 		base.OnClicked( show );
 		if ( construction.done )
-			Interface.StockPanel.Create().Open( this, show );
+		{
+			if ( team == root.mainTeam )
+				Interface.StockPanel.Create().Open( this, show );
+			else
+			{
+				assert.IsTrue( main );
+				Interface.GuardHousePanel.Create().Open( this, show );
+			}
+		}
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )

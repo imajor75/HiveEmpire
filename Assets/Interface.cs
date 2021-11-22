@@ -2646,6 +2646,7 @@ public class Interface : HiveObject
 	public class GuardHousePanel : BuildingPanel
 	{
 		public GuardHouse guardHouse;
+		public Attackable attackable;
 		public Dropdown soldierCount;
 		public int attackerCount;
 
@@ -2654,15 +2655,16 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<GuardHousePanel>();
 		}
 
-		public void Open( GuardHouse guardHouse, bool show = false )
+		public void Open( Attackable attackable, bool show = false )
 		{
-			this.guardHouse = guardHouse;
+			this.attackable = attackable;
+			this.guardHouse = attackable as GuardHouse;
 			noResize = true;
-			if ( base.Open( guardHouse, 200, 100 ) )
+			if ( base.Open( attackable, 200, 100 ) )
 				return;
 			name = "Guard House panel";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
-			if ( guardHouse.team == root.mainTeam )
+			if ( attackable.team == root.mainTeam )
 			{
 				Text( "Soldiers count" ).Pin( borderWidth, -borderWidth, 200 );
 				soldierCount = Dropdown().PinDownwards( borderWidth, 0, 160 );
@@ -2674,10 +2676,10 @@ public class Interface : HiveObject
 			}
 			else
 			{
-				Text( $"Defenders: {guardHouse.soldiers.Count}" ).Pin( borderWidth, -borderWidth, 200 );
-				attackerCount = guardHouse.soldiers.Count*2+1;
+				Text( $"Defenders: {attackable.defenderCount}" ).Pin( borderWidth, -borderWidth, 200 );
+				attackerCount = attackable.defenderCount*2+1;
 				Text( $"Attack with {attackerCount} soldiers" ).PinDownwards( borderWidth, 0, 200 );
-				if ( root.mainTeam && attackerCount <= root.mainTeam.soldierCount && guardHouse.attackerTeam == null)
+				if ( root.mainTeam && attackerCount <= root.mainTeam.soldierCount && attackable.attackerTeam == null )
 					Button( "Attack" ).AddClickHandler( Attack ).PinDownwards( 50, 0, 100 );
 			}
 			if ( show )
@@ -2693,7 +2695,7 @@ public class Interface : HiveObject
 
 		void Attack()
 		{
-			oh.ScheduleAttack( root.mainTeam, guardHouse, attackerCount );
+			oh.ScheduleAttack( root.mainTeam, attackable, attackerCount );
 		}
 
 		void SoldierCountChanged( int value )
