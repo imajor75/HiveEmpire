@@ -11,10 +11,9 @@ public abstract class Attackable : Building
 	public Worker aggressor, assassin, defender;
 	public int lastSpot;
 
-	public List<GameObject> trash = new List<GameObject>();
-	public List<Material> trashMaterials = new List<Material>();
-	[JsonIgnore]
-	public World.Timer trashTimer = new World.Timer();
+	List<GameObject> trash = new List<GameObject>();
+	List<Material> trashMaterials = new List<Material>();
+	World.Timer trashTimer = new World.Timer();
 
 	public Team attackerTeam
 	{

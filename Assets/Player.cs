@@ -317,7 +317,7 @@ public class Team : HiveCommon
 			var attacker = Worker.Create().SetupAsAttacker( this, target );
 			int attackTime = Math.Max( world.time, lastTimeAttack+Constants.Player.attackPeriod );
 			lastTimeAttack = attackTime;
-			attacker.ScheduleWait( world.time - attackTime );
+			attacker.ScheduleWait( attackTime - world.time );
 			attacker.ScheduleWalkToNeighbour( mainBuilding.flag.node );
 			attacker.ScheduleWalkToNode( gather[(i+target.lastSpot)%gather.Count] );
 			target.attackers.Add( attacker );

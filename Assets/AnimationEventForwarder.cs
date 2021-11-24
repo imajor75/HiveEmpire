@@ -8,7 +8,8 @@ public class AnimationEventForwarder : MonoBehaviour
 
     public void Start()
     {
-        target = transform.parent.GetComponent<Worker>();
+        if ( transform.parent )
+            target = transform.parent.GetComponent<Worker>();
     }
 
     void MakeSound( int soundID )

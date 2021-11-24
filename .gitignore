@@ -65,3 +65,7 @@ UnityPlayer_s.debug
 UnityPlayer.so
 
 linuxbuild/
+
+*.blob
+
+UserSettings/

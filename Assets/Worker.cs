@@ -38,13 +38,14 @@ public class Worker : HiveObject
 	public static Act[] resourceCollectAct = new Act[(int)Resource.Type.total];
 	public static Act shovelingAct;
 	public static Act constructingAct;
-	public static Act fightingAct, stabInTheBackAct;
+	public static Act fightingAct, stabInTheBackAct, defendingAct;
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> walkSounds;
 	static public MediaTable<AudioClip, AnimationSound> animationSounds;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
 	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
+	static public int attackID, defendID, stabID;
 
 	public Animator animator;
 	public AudioSource soundSource;
@@ -954,6 +955,9 @@ public class Worker : HiveObject
 		shovelingID = Animator.StringToHash( "shoveling" );
 		harvestingID = Animator.StringToHash( "harvesting" );
 		sowingID = Animator.StringToHash( "sowing" );
+		attackID = Animator.StringToHash( "hit ");
+		defendID = Animator.StringToHash( "suffer" );
+		stabID = Animator.StringToHash( "stab" );
 
 		object[] walk = {
 			"effects/cart", Type.cart };
@@ -1016,7 +1020,7 @@ public class Worker : HiveObject
 		};
 		fightingAct = new Act	// TODO
 		{
-			animation = buildingID,
+			animation = attackID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/hammer" ),
 			toolSlot = LinkType.rightHand,
 			turnTo = Act.Direction.reverse,
@@ -1025,7 +1029,16 @@ public class Worker : HiveObject
 		};
 		stabInTheBackAct = new Act
 		{
-			animation = skinningID,	// TODO
+			animation = stabID,
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
+			toolSlot = LinkType.rightHand,
+			turnTo = Act.Direction.reverse,
+			timeToInterrupt = 0.5f,
+			duration = 100
+		};
+		defendingAct = new Act
+		{
+			animation = defendID,	// TODO
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
 			toolSlot = LinkType.rightHand,
 			turnTo = Act.Direction.reverse,
