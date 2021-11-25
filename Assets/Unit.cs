@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Profiling;
 
 [SelectionBase]
-public class Worker : HiveObject
+public class Unit : HiveObject
 {
 	public Type type;
 	public Road road;
@@ -134,9 +134,9 @@ public class Worker : HiveObject
 	{
 		protected const bool finished = true;
 		protected const bool needModeCalls = false;
-		public Worker boss;
+		public Unit boss;
 
-		public Task Setup( Worker boss )
+		public Task Setup( Unit boss )
 		{
 			this.boss = boss;
 			return this;
@@ -175,11 +175,11 @@ public class Worker : HiveObject
 	{
 		public interface IHandler
 		{
-			void Callback( Worker worker );
+			void Callback( Unit unit );
 		}
 		public IHandler handler;
 
-		public void Setup( Worker boss, IHandler handler )
+		public void Setup( Unit boss, IHandler handler )
 		{
 			base.Setup( boss );
 			this.handler = handler;
@@ -201,7 +201,7 @@ public class Worker : HiveObject
 		GameObject tool;
 		public bool wasWalking;
 
-		public void Setup( Worker boss, Act act )
+		public void Setup( Unit boss, Act act )
 		{
 			base.Setup( boss );
 			this.act = act;
@@ -303,7 +303,7 @@ public class Worker : HiveObject
 		public Path path;
 		public bool exclusive;
 
-		public void Setup( Worker boss, Flag target, bool exclusive = false )
+		public void Setup( Unit boss, Flag target, bool exclusive = false )
 		{
 			base.Setup( boss );
 			this.target = target;
@@ -348,9 +348,9 @@ public class Worker : HiveObject
 			{
 				if ( !boss.EnterExclusivity( nextRoad, boss.node ) )
 				{
-					// Boss is trying to move to the next road. This is always possible when the flag is not a crossing, since no workers 
+					// Boss is trying to move to the next road. This is always possible when the flag is not a crossing, since no units 
 					// can use the same entry as the cart. But when the flag is a crossing, it is possible that the cart cannot jump to the 
-					// road in an exclusive way, because a worker is in the way. In that case the cart simply waits while already left the exclusivity
+					// road in an exclusive way, because a unit is in the way. In that case the cart simply waits while already left the exclusivity
 					// of the previous road.
 					if ( wasExclusive )
 					{
@@ -382,7 +382,7 @@ public class Worker : HiveObject
 		public World.Timer interruptionTimer = new World.Timer();
 		public Act lastStepInterruption;
 
-		public void Setup( Worker boss, Node target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null )
+		public void Setup( Unit boss, Node target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null )
 		{
 			base.Setup( boss );
 			this.target = target;
@@ -397,10 +397,10 @@ public class Worker : HiveObject
 
 			if ( path == null )
 			{
-				path = Path.Between( boss.node, target, PathFinder.Mode.forWorkers, boss, ignoreFinalObstacle, ignoreObject );
+				path = Path.Between( boss.node, target, PathFinder.Mode.forUnits, boss, ignoreFinalObstacle, ignoreObject );
 				if ( path == null )
 				{
-					Debug.Log( "Worker failed to go to " + target.x + ", " + target.y );
+					Debug.Log( "Unit failed to go to " + target.x + ", " + target.y );
 					return true;
 				}
 			}
@@ -421,7 +421,7 @@ public class Worker : HiveObject
 		public bool exclusive;
 		public World.Timer stuck = new World.Timer();
 
-		public void Setup( Worker boss, Road road, int point, bool exclusive )
+		public void Setup( Unit boss, Road road, int point, bool exclusive )
 		{
 			boss.assert.IsTrue( point >= 0 && point < road.nodes.Count, "Invalid road point (" + point + ", " + road.nodes.Count + ")" ); // TODO Triggered (point=-1)
 			base.Setup( boss );
@@ -435,7 +435,7 @@ public class Worker : HiveObject
 			if ( road == null )
 				return ResetBossTasks();
 
-			if ( stuck.done && boss.type == Type.hauler && road.ActiveWorkerCount > 1 )
+			if ( stuck.done && boss.type == Type.hauler && road.ActiveHaulerCount > 1 )
 			{
 				boss.Remove( true );
 				return true;
@@ -452,11 +452,11 @@ public class Worker : HiveObject
 			return false;
 		}
 
-		public bool NextStep( bool ignoreOtherWorkers = false )
+		public bool NextStep( bool ignoreOtherUnits = false )
 		{
 			boss.assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
 			if ( exclusive )
-				boss.assert.AreEqual( road.workerAtNodes[currentPoint], boss );
+				boss.assert.AreEqual( road.haulerAtNodes[currentPoint], boss );
 			boss.assert.IsNull( boss.walkTo );
 
 			if ( currentPoint == targetPoint )
@@ -469,9 +469,9 @@ public class Worker : HiveObject
 				nextPoint = currentPoint - 1;
 			wishedPoint = nextPoint;
 
-			if ( exclusive && !ignoreOtherWorkers )
+			if ( exclusive && !ignoreOtherUnits )
 			{
-				Worker other = road.workerAtNodes[nextPoint];
+				Unit other = road.haulerAtNodes[nextPoint];
 				Flag flag = road.nodes[nextPoint].validFlag;
 				if ( flag && !flag.crossing )
 				{
@@ -481,22 +481,22 @@ public class Worker : HiveObject
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
-					if ( other.exclusiveMode && other.type == Type.hauler && other.road != road && other.road.ActiveWorkerCount > 1 && other.IsIdle() )
+					if ( other.exclusiveMode && other.type == Type.hauler && other.road != road && other.road.ActiveHaulerCount > 1 && other.IsIdle() )
 						other.Remove( true );
 					else
 					{
 						if ( stuck.empty )
-							stuck.Start( Constants.Worker.stuckTimeout );
+							stuck.Start( Constants.Unit.stuckTimeout );
 						return false;
 					}
 				}
 			}
 
 			wishedPoint = -1;
-			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.workerAtNodes.Count ); // TODO Triggered, happens when a road starts and ends at the same flag
-			// Triggered again, when a road is under construction, and a construction worker walks on the area while the end point is aligned, the road is not yet finalized																								
-			if ( road.workerAtNodes[currentPoint] == boss ) // it is possible that the other worker already took the place, so it must be checked
-				road.workerAtNodes[currentPoint] = null;
+			boss.assert.IsTrue( currentPoint >= 0 && currentPoint < road.haulerAtNodes.Count ); // TODO Triggered, happens when a road starts and ends at the same flag
+			// Triggered again, when a road is under construction, and a builder walks on the area while the end point is aligned, the road is not yet finalized																								
+			if ( road.haulerAtNodes[currentPoint] == boss ) // it is possible that the other unit already took the place, so it must be checked
+				road.haulerAtNodes[currentPoint] = null;
 
 			boss.assert.AreEqual( boss.node, road.nodes[currentPoint] );
 			boss.walkBase = road;
@@ -514,11 +514,11 @@ public class Worker : HiveObject
 			currentPoint = nextPoint;
 			if ( exclusive )
 			{
-				road.workerAtNodes[currentPoint] = boss;
+				road.haulerAtNodes[currentPoint] = boss;
 				if ( boss.walkTo.validFlag && !boss.walkTo.validFlag.crossing )
 				{
-					if ( !ignoreOtherWorkers )
-						boss.assert.IsNull( boss.walkTo.flag.user, "Worker still in way at flag." );
+					if ( !ignoreOtherUnits )
+						boss.assert.IsNull( boss.walkTo.flag.user, "Unit still in way at flag." );
 					boss.walkTo.flag.user = boss;
 					boss.walkTo.flag.recentlyLeftCrossing = false;
 					boss.exclusiveFlag = boss.walkTo.flag;
@@ -546,9 +546,9 @@ public class Worker : HiveObject
 			if ( exclusive )
 			{
 				int t = 0;
-				for ( int i = 0; i < road.workerAtNodes.Count; i++ )
+				for ( int i = 0; i < road.haulerAtNodes.Count; i++ )
 				{
-					if ( road.workerAtNodes[i] == boss )
+					if ( road.haulerAtNodes[i] == boss )
 					{
 						t++;
 						boss.assert.AreEqual( i, cp );	// Triggered for a cart
@@ -560,7 +560,7 @@ public class Worker : HiveObject
 														// 13 23
 														// 13 24
 														// 12 25
-														// 12 26	<- worker was here somewhere?
+														// 12 26	<- unit was here somewhere?
 														// 13 26
 														// 13 27
 														// Task queue is walktoroadpoint and deliveritem
@@ -584,7 +584,7 @@ public class Worker : HiveObject
 	{
 		public Node target;
 		public Act interruption;
-		public void Setup( Worker boss, Node target, Act interruption )
+		public void Setup( Unit boss, Node target, Act interruption )
 		{
 			base.Setup( boss );
 			this.interruption = interruption;
@@ -618,7 +618,7 @@ public class Worker : HiveObject
 		[Obsolete( "Compatibility with old files", true )]
 		Path[] paths { set { path = value[0]; } }
 
-		public void Setup( Worker boss, Item item )
+		public void Setup( Unit boss, Item item )
 		{
 			base.Setup( boss );
 			items[0] = item;
@@ -632,10 +632,10 @@ public class Worker : HiveObject
 				if ( items[i] == null )
 					continue;
 
-				boss.assert.AreEqual( boss, items[i].worker );
-				items[i].worker = null;
-				// It is possible in rare cases, that the worker was reset AFTER relinking the item to its hand, but before this task would actually take the item in hands. This leads to a crash when the worker arrives back at the HQ, as the 
-				// worker object gets destroyed, the item gets destroyed too, because it is linked to the hauling box of the worker, but still sitting at the flag. In this case the item should be linked back to the previous parent (the frame at the flag)
+				boss.assert.AreEqual( boss, items[i].hauler );
+				items[i].hauler = null;
+				// It is possible in rare cases, that the unit was reset AFTER relinking the item to its hand, but before this task would actually take the item in hands. This leads to a crash when the unit arrives back at the HQ, as the 
+				// object gets destroyed, the item gets destroyed too, because it is linked to the hauling box of the unit, but still sitting at the flag. In this case the item should be linked back to the previous parent (the frame at the flag)
 				bool backParented = false;
 				if ( reparented[i] && items[i].flag )
 				{
@@ -681,9 +681,9 @@ public class Worker : HiveObject
 			{
 				if ( secondary == null || secondary == items[0] || secondary.flag != boss.node.flag )
 					continue;
-				if ( secondary.worker && secondary.worker.road != boss.road )
+				if ( secondary.hauler && secondary.hauler.road != boss.road )
 					continue;
-				if ( secondary.buddy )	// Is it possible, that there is a buddy but no worker?
+				if ( secondary.buddy )	// Is it possible, that there is a buddy but no hauler?
 					continue;
 				if ( secondary.type != items[0].type )
 					continue;
@@ -704,10 +704,10 @@ public class Worker : HiveObject
 				if ( !checkOnly )
 				{
 					// At this point the item secondary seems like a good one to carry
-					secondary.worker?.ResetTasks();
+					secondary.hauler?.ResetTasks();
 					if ( secondary.path.stepsLeft != 1 )
 						target.ReserveItem( secondary );
-					secondary.worker = boss;
+					secondary.hauler = boss;
 					items[1] = secondary;
 					deliverTask.items[1] = secondary;
 					var box = boss.links[(int)LinkType.haulingBoxSecondary]?.transform;
@@ -726,9 +726,9 @@ public class Worker : HiveObject
 			if ( items[0].path != path )
 				return ResetBossTasks();
 
-			boss.assert.AreEqual( items[0].worker, boss );
+			boss.assert.AreEqual( items[0].hauler, boss );
 			if ( items[0].buddy )
-				boss.assert.AreEqual( items[0].buddy.worker, boss );
+				boss.assert.AreEqual( items[0].buddy.hauler, boss );
 			if ( boss.type == Type.hauler )
 				boss.assert.IsNull( boss.itemsInHands[0] );
 			if ( timer.empty )
@@ -762,8 +762,8 @@ public class Worker : HiveObject
 				items[i].flag?.ReleaseItem( items[i] );
 				items[i].justCreated = false;
 				boss.itemsInHands[i] = items[i];
-				boss.assert.IsTrue( items[i].worker == boss || items[i].worker == null );
-				if ( items[i].worker.type == Type.hauler )
+				boss.assert.IsTrue( items[i].hauler == boss || items[i].hauler == null );
+				if ( items[i].hauler.type == Type.hauler )
 				{
 					if ( items[i].path.isFinished )
 						boss.assert.AreEqual( items[i].destination.flag.node, boss.node );
@@ -785,7 +785,7 @@ public class Worker : HiveObject
 		[Obsolete( "Compatibility with old files", true )]
 		Item item { set { items[0] = value; } }
 
-		public void Setup( Worker boss, Item item )
+		public void Setup( Unit boss, Item item )
 		{
 			base.Setup( boss );
 			this.items[0] = item;
@@ -797,12 +797,12 @@ public class Worker : HiveObject
 				if ( item == null || item.nextFlag == null )
 					continue;
 
-				if ( item.buddy?.worker )
+				if ( item.buddy?.hauler )
 				{
 					// If two items are swapping, the second one has no assigned PickupItem task, the DeliverItem task will handle
 					// the pickup related tasks. So the cancel of this DeliverItem task needs to cancel the same things the PickupTask.Cancel would do.
-					boss.assert.AreEqual( item.buddy.worker, boss );
-					item.buddy.worker = null;
+					boss.assert.AreEqual( item.buddy.hauler, boss );
+					item.buddy.hauler = null;
 				}
 				item.nextFlag.CancelItem( item );
 			}
@@ -838,7 +838,7 @@ public class Worker : HiveObject
 			boss.itemsDelivered++;
 			if ( items[1] )
 				boss.itemsDelivered++;
-			boss.bored.Start( Constants.Worker.boredTimeBeforeRemove );
+			boss.bored.Start( Constants.Unit.boredTimeBeforeRemove );
 			boss.links[(int)LinkType.haulingBoxLight]?.SetActive( items[0].buddy != null );
 			boss.links[(int)LinkType.haulingBoxHeavy]?.SetActive( false );
 			for ( int i = 0; i < items.Length; i++ )
@@ -866,7 +866,7 @@ public class Worker : HiveObject
 						}
 					}
 					else
-						return ResetBossTasks(); // This happens when the previous walk tasks failed, and the worker couldn't reach the target or if the item lost its destination during the last segment of the path
+						return ResetBossTasks(); // This happens when the previous walk tasks failed, and the hauler couldn't reach the target or if the item lost its destination during the last segment of the path
 				}
 			}
 
@@ -879,7 +879,7 @@ public class Worker : HiveObject
 	{
 		public Road road;
 
-		public void Setup( Worker boss, Road road )
+		public void Setup( Unit boss, Road road )
 		{
 			base.Setup( boss );
 			this.road = road;
@@ -903,7 +903,7 @@ public class Worker : HiveObject
 		public int time;
 		public World.Timer timer = new World.Timer();
 
-		public void Setup( Worker boss, int time )
+		public void Setup( Unit boss, int time )
 		{
 			base.Setup( boss );
 			this.time = time;
@@ -1054,14 +1054,14 @@ public class Worker : HiveObject
 		animationSounds.Fill( animationSoundData );
 	}
 
-	static public Worker Create()
+	static public Unit Create()
 	{
-		return new GameObject().AddComponent<Worker>();
+		return new GameObject().AddComponent<Unit>();
 	}
 
-	public Worker SetupForRoad( Road road )
+	public Unit SetupForRoad( Road road )
 	{
-		World.CRC( road.id, OperationHandler.Event.CodeLocation.workerSetupAsHauler );
+		World.CRC( road.id, OperationHandler.Event.CodeLocation.unitSetupAsHauler );
 		look = type = Type.hauler;
 		name = "Hauler";
 		team = road.team;
@@ -1078,9 +1078,9 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public Worker SetupForBuilding( Building building, bool mate = false )
+	public Unit SetupForBuilding( Building building, bool mate = false )
 	{
-		World.CRC( building.id, OperationHandler.Event.CodeLocation.workerSetupAsTinkerer );
+		World.CRC( building.id, OperationHandler.Event.CodeLocation.unitSetupAsTinkerer );
 		look = type = Type.tinkerer;
 		if ( mate )
 			look = Type.tinkererMate;
@@ -1089,18 +1089,18 @@ public class Worker : HiveObject
 		return SetupForBuildingSite( building );
 	}
 
-	public Worker SetupForConstruction( Building building )
+	public Unit SetupForConstruction( Building building )
 	{
-		World.CRC( building.id, OperationHandler.Event.CodeLocation.workerSetupAsBuilder );
+		World.CRC( building.id, OperationHandler.Event.CodeLocation.unitSetupAsBuilder );
 		look = type = Type.constructor;
 		name = "Builder";
 		currentColor = Color.cyan;
 		return SetupForBuildingSite( building );
 	}
 
-	public Worker SetupForFlattening( Flag flag )
+	public Unit SetupForFlattening( Flag flag )
 	{
-		World.CRC( flag.id, OperationHandler.Event.CodeLocation.workerSetupAsBuilder );
+		World.CRC( flag.id, OperationHandler.Event.CodeLocation.unitSetupAsBuilder );
 		assert.IsNotNull( flag );
 
 		look = type = Type.constructor;
@@ -1115,9 +1115,9 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public Worker SetupAsSoldier( Building building )
+	public Unit SetupAsSoldier( Building building )
 	{
-		World.CRC( building.id, OperationHandler.Event.CodeLocation.workerSetupAsSoldier );
+		World.CRC( building.id, OperationHandler.Event.CodeLocation.unitSetupAsSoldier );
 		look = type = Type.soldier;
 		name = "Soldier";
 		currentColor = Color.red;
@@ -1131,9 +1131,9 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public Worker SetupAsAttacker( Team team, Attackable target )
+	public Unit SetupAsAttacker( Team team, Attackable target )
 	{
-		World.CRC( target.id, OperationHandler.Event.CodeLocation.workerSetupAsAttacker );
+		World.CRC( target.id, OperationHandler.Event.CodeLocation.unitSetupAsAttacker );
 		look = type = Type.soldier;
 		name = "Soldier";
 		currentColor = Color.red;
@@ -1145,7 +1145,7 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	Worker SetupForBuildingSite( Building building )
+	Unit SetupForBuildingSite( Building building )
 	{
 		team = building.team;
 		this.building = building;
@@ -1163,9 +1163,9 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public Worker SetupAsAnimal( Resource origin, Node node )
+	public Unit SetupAsAnimal( Resource origin, Node node )
 	{
-		World.CRC( node.id, OperationHandler.Event.CodeLocation.workerSetupAsAnimal );
+		World.CRC( node.id, OperationHandler.Event.CodeLocation.unitSetupAsAnimal );
 		look = type = Type.wildAnimal;
 		SetNode( node );
 		this.origin = origin;
@@ -1173,9 +1173,9 @@ public class Worker : HiveObject
 		return this;
 	}
 
-	public Worker SetupAsCart( Stock stock )
+	public Unit SetupAsCart( Stock stock )
 	{
-		World.CRC( stock.id, OperationHandler.Event.CodeLocation.workerSetupAsCart );
+		World.CRC( stock.id, OperationHandler.Event.CodeLocation.unitSetupAsCart );
 		look = type = Type.cart;
 		building = stock;
 		SetNode( stock.node );
@@ -1243,7 +1243,7 @@ public class Worker : HiveObject
 			Type.hauler => "Hauler",
 			Type.constructor => "Builder",
 			Type.tinkerer => "Tinkerer",
-			_ => "Worker",
+			_ => "Unit",
 		};
 		soundSource = World.CreateSoundSource( this );
 		
@@ -1294,11 +1294,11 @@ public class Worker : HiveObject
 		base.Start();
 	}
 
-	// Distance the worker is taking in a single frame (0.02 sec)
+	// Distance the unit is taking in a single frame (0.02 sec)
 	public static float SpeedBetween( Node a, Node b )
 	{
 		float heightDifference = Math.Abs( a.height - b.height );
-		float time = 2f + heightDifference * 4f;    // Number of seconds it takes for the worker to reach the other node
+		float time = 2f + heightDifference * 4f;    // Number of seconds it takes for the unit to reach the other node
 		return 1 / time / Constants.World.normalSpeedPerSecond;
 	}
 
@@ -1330,14 +1330,14 @@ public class Worker : HiveObject
 	// Update is called once per frame
 	public override void CriticalUpdate()
 	{
-		// If worker is between two nodes, simply advancing it
+		// If unit is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
 			if ( taskQueue.Count > 0 && taskQueue[0].InterruptWalk() )
 				return;
 			walkProgress += currentSpeed;
 
-			World.CRC( ( id << 16 ) + node.x + node.y + (int)( walkProgress * 10000 ), OperationHandler.Event.CodeLocation.workerWalk );
+			World.CRC( ( id << 16 ) + node.x + node.y + (int)( walkProgress * 10000 ), OperationHandler.Event.CodeLocation.unitWalk );
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;
@@ -1416,7 +1416,7 @@ public class Worker : HiveObject
 		LeaveExclusivity();
 		if ( road != null )
 		{
-			road.workers.Remove( this );
+			road.haulers.Remove( this );
 			road = null;
 		}
 		if ( !returnToMainBuilding )
@@ -1471,7 +1471,7 @@ public class Worker : HiveObject
 			for ( int i = 0; i < d.Count; i++ )
 			{
 				Node t = node.Add( d[(i+r)%d.Count] );
-				if ( t.block.IsBlocking( Node.Block.Type.workers ) )
+				if ( t.block.IsBlocking( Node.Block.Type.units ) )
 					continue;
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
@@ -1494,8 +1494,8 @@ public class Worker : HiveObject
 			if ( road )
 			{
 				int index = IndexOnRoad();
-				assert.AreEqual( road.workerAtNodes[index], this );
-				road.workerAtNodes[index] = null;
+				assert.AreEqual( road.haulerAtNodes[index], this );
+				road.haulerAtNodes[index] = null;
 				road = null;
 			}
 
@@ -1534,14 +1534,14 @@ public class Worker : HiveObject
 		{
 			assert.IsTrue( type == Type.tinkerer || type == Type.constructor ); // This happens if the path to the building gets disabled for any reason
 			ScheduleWait( 300 );
-			if ( node.validFlag )   // TODO Do something if the worker can't get home
+			if ( node.validFlag )   // TODO Do something if the unit can't get home
 				ScheduleWalkToFlag( building.flag );
 			else
 				ScheduleWalkToNode( building.flag.node );
 			ScheduleWalkToNeighbour( building.node );
 			if ( itemsInHands[0] )
 				ScheduleDeliverItem( itemsInHands[0], itemsInHands[1] );
-			if ( type == Type.tinkerer && building.worker == this )
+			if ( type == Type.tinkerer && building.tinkerer == this )
 				ScheduleCall( building as Workshop );
 			return;
 		}
@@ -1576,7 +1576,7 @@ public class Worker : HiveObject
 
 	void FindHaulerTask()
 	{
-		if ( ( bored.done && road.ActiveWorkerCount > 1 ) || ( road.ActiveWorkerCount > road.targetWorkerCount && road.targetWorkerCount != 0 ) )
+		if ( ( bored.done && road.ActiveHaulerCount > 1 ) || ( road.ActiveHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
 		{
 			Remove( true );
 			return;
@@ -1643,10 +1643,10 @@ public class Worker : HiveObject
 			int restIndex = ( road.nodes.Count - 1 ) / 2;
 			if ( node == road.nodes[0] )
 				restIndex = road.nodes.Count / 2;
-			if ( road.workerAtNodes[restIndex] )
+			if ( road.haulerAtNodes[restIndex] )
 			{
 				for ( restIndex = 1; restIndex < road.nodes.Count - 2; restIndex++ )
-					if ( road.workerAtNodes[restIndex] == null )
+					if ( road.haulerAtNodes[restIndex] == null )
 						break;
 			}
 			ScheduleWalkToRoadPoint( road, restIndex );
@@ -1657,7 +1657,7 @@ public class Worker : HiveObject
 	/// <summary>
 	/// 
 	/// </summary>
-	/// <returns>True if an item has been found and assigned to the worker</returns>
+	/// <returns>True if an item has been found and assigned to the hauler</returns>
 	bool FindItemToCarry()
 	{
 		Item bestItem = null;
@@ -1671,7 +1671,7 @@ public class Worker : HiveObject
 			{
 				if ( item == null || item.flag == null )    // It can be nextFlag as well
 					continue;
-				World.CRC( item.id, OperationHandler.Event.CodeLocation.workerCarryItem );
+				World.CRC( item.id, OperationHandler.Event.CodeLocation.unitCarryItem );
 				var ( score, swapOnly ) = CheckItem( item );
 				if ( swapOnly )
 				{
@@ -1719,7 +1719,7 @@ public class Worker : HiveObject
 		if ( item.flag.node == node )
 			value *= 2;
 
-		if ( item.worker || item.destination == null )
+		if ( item.hauler || item.destination == null )
 			return (0f, false);
 
 		if ( item.buddy )
@@ -1765,7 +1765,7 @@ public class Worker : HiveObject
 
 		Flag destination = null;
 		int closest = int.MaxValue;
-		foreach ( var o in Ground.areas[Constants.Worker.flagSearchDistance] )
+		foreach ( var o in Ground.areas[Constants.Unit.flagSearchDistance] )
 		{
 			var n = node + o;
 			if ( n.validFlag && n.validFlag.team == team && n.DistanceFrom( node ) < closest )
@@ -1781,7 +1781,7 @@ public class Worker : HiveObject
 	}
 
 	/// <summary>
-	/// Adds a task to the worker to reach a specific node.
+	/// Adds a task to the unit to reach a specific node.
 	/// </summary>
 	/// <param name="target"></param>
 	/// <param name="ignoreFinalObstacle"></param>
@@ -1881,10 +1881,10 @@ public class Worker : HiveObject
 			SchedulePickupItem( item );
 		}
 
-		if ( !item.path.isFinished )	// When the path is finished, the item is already at the target flag, the worker only needs to carry it inside a building
+		if ( !item.path.isFinished )	// When the path is finished, the item is already at the target flag, the hauler only needs to carry it inside a building
 			ScheduleWalkToRoadPoint( road, otherPoint );
 
-		if ( item.path.stepsLeft <= 1 )	// When the number of steps left is one or zero, the worker also has to carry the item into a building
+		if ( item.path.stepsLeft <= 1 )	// When the number of steps left is one or zero, the hauler also has to carry the item into a building
 		{
 			assert.IsNull( replace );
 			var destination = item.destination;
@@ -1901,7 +1901,7 @@ public class Worker : HiveObject
 			if ( replace && item.buddy == null )
 				CarryItem( replace, item );
 		}
-		item.worker = this;
+		item.hauler = this;
 	}
 
 	public void ResetTasks()
@@ -1997,7 +1997,7 @@ public class Worker : HiveObject
 			return false;
 		if ( !inBuilding )
 			return true;
-		if ( building is Workshop workshop && workshop.working && !workshop.gatherer && workshop.worker == this )
+		if ( building is Workshop workshop && workshop.working && !workshop.gatherer && workshop.tinkerer == this )
 			return false;
 		return node == building.node;
 	}
@@ -2008,9 +2008,9 @@ public class Worker : HiveObject
 			return false;
 		if ( IsIdle() )
 		{
-			// Give an order to the worker to change position with us. This
+			// Give an order to the unit to change position with us. This
 			// will not immediately move him away, but during the next calls the
-			// worker will eventually come.
+			// unit will eventually come.
 			ScheduleWalkToRoadPoint( road, point );
 			return false;
 		}
@@ -2028,7 +2028,7 @@ public class Worker : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
-		Interface.WorkerPanel.Create().Open( this, show );
+		Interface.UnitPanel.Create().Open( this, show );
 	}
 
 	public T FindTaskInQueue<T>() where T : class
@@ -2098,14 +2098,14 @@ public class Worker : HiveObject
 			if ( box )
 				assert.AreEqual( box.transform.childCount, 1 );
 		}
-		// TODO Triggered, called from Worker:FindTask() line 1342
-		// Triggered again called from worker.FindTask, worker still has the plank in hand, after entering the headquarters. 
+		// TODO Triggered, called from Unit:FindTask() line 1342
+		// Triggered again called from Unit.FindTask, hauler still has the plank in hand, after entering the headquarters. 
 		// Item is still registered in Player.items, and still has a valid destination (sawmill) where it is still registered in 
 		// Building.itemsOnTheWay. Item still has a flag, which is the one in front of the headquarters. 
-		// The item is still registered there in Flag.items. nextFlag is null, worker is null. Origin is headquarters.
+		// The item is still registered there in Flag.items. nextFlag is null, hauler is null. Origin is headquarters.
 		// Hopefully fixed.
-		// Triggered again, called from Worker.FindTask. Both items in itemsInHands is null. haulingBox is inactive, and has a child, a beer.
-		// This beer has no worker and nextFlag, but the flag reference is valid (19:10). Has a destination (barrack 19:7) has a path
+		// Triggered again, called from Unit.FindTask. Both items in itemsInHands is null. haulingBox is inactive, and has a child, a beer.
+		// This beer has no hauler and nextFlag, but the flag reference is valid (19:10). Has a destination (barrack 19:7) has a path
 		// with two roads (between 20:9 and 19:11 then between 20:9 19:8)
 		// Triggered again
 
@@ -2142,13 +2142,13 @@ public class Worker : HiveObject
 		if ( !exclusiveMode || road == null )
 			return null;
 
-		int index = road.workerAtNodes.IndexOf( this );
+		int index = road.haulerAtNodes.IndexOf( this );
 		if ( index < 0 )
 		{
 			assert.IsTrue( false );
 			return null;
 		}
-		road.workerAtNodes[index] = null;
+		road.haulerAtNodes[index] = null;
 
 		if ( exclusiveFlag )
 		{
@@ -2172,10 +2172,10 @@ public class Worker : HiveObject
 			int index = road.nodes.IndexOf( node );	// This could be Road.NodeIndex, which is faster, but that depends on RegisterOnRoad, which is not always called at this moment
 			if ( index < 0 )
 				return false;
-			if ( road.workerAtNodes[index] )
+			if ( road.haulerAtNodes[index] )
 				return false;
 
-			road.workerAtNodes[index] = this;
+			road.haulerAtNodes[index] = this;
 		}
 
 		if ( node.flag && !node.flag.crossing )
@@ -2214,12 +2214,12 @@ public class Worker : HiveObject
 		{
 			if ( type != Type.cart )
 				assert.IsValid( road );			// TODO Triggered when stress deleting all the roads flags and buildings on a map for a cart (?) going back home
-												// TODO Triggered again when pressing the magnet icon on a flag. Worker is a cart which was rolling on the road which was merged to the flag by the magnet
+												// TODO Triggered again when pressing the magnet icon on a flag. Unit is a cart which was rolling on the road which was merged to the flag by the magnet
 												// The cart is just walking to the end of the road (an unaffected flag) the segment between walkTo and walkFrom is not affected by the magnet
 												// It is in an exclusive mode, exclusiveFlag is correct, but the road field is referring to the old deleted road. The new road correctly has the card in the
-												// workerAtNodes array
+												// haulerAtNodes array
 			if ( type == Type.hauler )
-				assert.IsTrue( road.workers.Contains( this ) );
+				assert.IsTrue( road.haulers.Contains( this ) );
 			if ( road )
 			{
 				int point = road.NodeIndex( node );
@@ -2228,7 +2228,7 @@ public class Worker : HiveObject
 					if ( itemsInHands[0] )
 						assert.IsTrue( node.building || itemsInHands[0].tripCancelled );	// It is possible, that the item destination was destroyed during the last step
 					else
-						assert.IsTrue( node.building || walkTo == null );		// It is possible, that the building was just destroyed, but the worker did not yet start moving back to the road (?)
+						assert.IsTrue( node.building || walkTo == null );		// It is possible, that the building was just destroyed, but the unit did not yet start moving back to the road (?)
 					if ( node.building )
 					{
 						point = road.NodeIndex( node.building.flag.node );
@@ -2236,7 +2236,7 @@ public class Worker : HiveObject
 					}
 				}
 				if ( point >= 0 )
-					assert.AreEqual( road.workerAtNodes[point], this );
+					assert.AreEqual( road.haulerAtNodes[point], this );
 			}
 		}
 		foreach ( var item in itemsInHands )
@@ -2244,7 +2244,7 @@ public class Worker : HiveObject
 			if ( item == null )
 				continue;
 
-			assert.AreEqual( item.worker, this, "Unknown worker " + item.worker );
+			assert.AreEqual( item.hauler, this, "Unknown hauler " + item.hauler );
 			assert.IsTrue( item.destination != null || item.tripCancelled || type == Type.tinkerer );	// destination is also null if a workshop is set to work "always"
 			if ( chain )
 				item.Validate( true );
@@ -2271,7 +2271,7 @@ public class Worker : HiveObject
 			if ( IsIdle( true ) )
 				assert.IsNull( itemsInHands[0] );
 			foreach ( var item in itemsInHands )
-				if ( item && building.worker == this )
+				if ( item && building.tinkerer == this )
 					assert.AreEqual( item.destination, building );
 		}
 		assert.IsTrue( team == null || world.teams.Contains( team ) );

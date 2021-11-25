@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Stock : Attackable, Worker.Callback.IHandler
+public class Stock : Attackable, Unit.Callback.IHandler
 {
 	public bool main = false;
 	public List<ItemTypeData> itemData = new List<ItemTypeData>();
-	public List<Worker> returningUnits = new List<Worker>();	// This list is maintained for returning units to store them during save, because they usually have no building
+	public List<Unit> returningUnits = new List<Unit>();	// This list is maintained for returning units to store them during save, because they usually have no building
 	public Cart cart;
 	public Ground.Area inputArea = new Ground.Area();
 	public Ground.Area outputArea = new Ground.Area();
@@ -32,14 +32,14 @@ public class Stock : Attackable, Worker.Callback.IHandler
 	public static GameObject template, mainTemplate;
 
 	public override int defenderCount { get { return main ? team.soldierCount : 0; } }
-	public override Worker GetDefender()
+	public override Unit GetDefender()
 	{
 		assert.IsTrue( team.soldierCount > 0 );
 		team.soldierCount--;
-		return Worker.Create().SetupAsSoldier( this );
+		return Unit.Create().SetupAsSoldier( this );
 	}
 
-	public override void Occupy( List<Worker> attackers )
+	public override void Occupy( List<Unit> attackers )
 	{
 		Remove( false );
 	}
@@ -327,7 +327,7 @@ public class Stock : Attackable, Worker.Callback.IHandler
 		}
 	}
 
-	public class Cart : Worker
+	public class Cart : Unit
 	{
 		public int itemQuantity;
 		public Item.Type itemType;
@@ -452,14 +452,14 @@ public class Stock : Attackable, Worker.Callback.IHandler
 		public override void Validate( bool chain )
 		{
 			base.Validate( chain );
-			assert.IsTrue( type == Worker.Type.cart || type == Worker.Type.unemployed );
+			assert.IsTrue( type == Unit.Type.cart || type == Unit.Type.unemployed );
 			if ( building )		// Can be null, if the user removed the stock
 				assert.IsTrue( building is Stock );
 			if ( road && exclusiveMode )
 			{
 				int index = IndexOnRoad();
 				assert.IsTrue( index >= 0 );
-				assert.AreEqual( road.workerAtNodes[index], this );
+				assert.AreEqual( road.haulerAtNodes[index], this );
 			}
 			if ( currentRoute != null && currentRoute.start )
 			{
@@ -470,11 +470,11 @@ public class Stock : Attackable, Worker.Callback.IHandler
 		}
 	}
 
-	public class DeliverStackTask : Worker.Task
+	public class DeliverStackTask : Unit.Task
 	{
 		public Stock stock;
 
-		public void Setup( Worker boss, Stock stock )
+		public void Setup( Unit boss, Stock stock )
 		{
 			base.Setup( boss );
 			this.stock = stock;
@@ -576,7 +576,7 @@ public class Stock : Attackable, Worker.Callback.IHandler
 		itemData[(int)Item.Type.plank].content = Constants.Stock.startPlankCount;
 		itemData[(int)Item.Type.stone].content = Constants.Stock.startStoneCount;
 		itemData[(int)Item.Type.soldier].content = Constants.Stock.startSoldierCount;
-		dispenser = worker = Worker.Create().SetupForBuilding( this );
+		dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
 		team.RegisterInfluence( this );
 		flag.ConvertToCrossing( false );
 		return this;
@@ -625,17 +625,17 @@ public class Stock : Attackable, Worker.Callback.IHandler
 		return main ? mainTemplate : template;
 	}
 
-	public void Callback( Worker worker )
+	public void Callback( Unit unit )
 	{
-		if ( worker.type == Worker.Type.soldier )
+		if ( unit.type == Unit.Type.soldier )
 		{
 			itemData[(int)Item.Type.soldier].content++;
 			soundSource.Play();
 		}
-		assert.IsTrue( returningUnits.Contains( worker ) );
-		returningUnits.Remove( worker );
+		assert.IsTrue( returningUnits.Contains( unit ) );
+		returningUnits.Remove( unit );
 
-		foreach ( var item in worker.itemsInHands )
+		foreach ( var item in unit.itemsInHands )
 		{
 			if ( item == null )
 				continue;
@@ -646,9 +646,9 @@ public class Stock : Attackable, Worker.Callback.IHandler
 			item.Arrived();
 			item.transform.SetParent( ground.transform );
 		}
-		worker.itemsInHands[0] = worker.itemsInHands[1] = null;
+		unit.itemsInHands[0] = unit.itemsInHands[1] = null;
 
-		worker.DestroyThis();
+		unit.DestroyThis();
 }
 
 	public override void CriticalUpdate()
@@ -660,12 +660,12 @@ public class Stock : Attackable, Worker.Callback.IHandler
 		if ( !reachable )
 			return;
 
-		if ( worker == null && construction.done && !blueprintOnly )
-			dispenser = worker = Worker.Create().SetupForBuilding( this );
-		if ( workerMate == null )
+		if ( tinkerer == null && construction.done && !blueprintOnly )
+			dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
+		if ( tinkererMate == null )
 		{
-			workerMate = Worker.Create().SetupForBuilding( this, true );
-			workerMate.ScheduleWait( 100, true );
+			tinkererMate = Unit.Create().SetupForBuilding( this, true );
+			tinkererMate.ScheduleWait( 100, true );
 		}
 		if ( cart == null )
 			cart = Cart.Create().SetupAsCart( this ) as Cart;
@@ -752,7 +752,7 @@ public class Stock : Attackable, Worker.Callback.IHandler
 		if ( item != null )
 		{
 			itemData[(int)itemType].content--;
-			dispenser = worker.IsIdle() ? worker : workerMate;
+			dispenser = tinkerer.IsIdle() ? tinkerer : tinkererMate;
 			offersSuspended.Start( Constants.World.normalSpeedPerSecond );	// Cosmetic reasons only
 		}
 

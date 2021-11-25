@@ -122,7 +122,7 @@ public class Serializer : JsonSerializer
 				case "$type":
 				{
 					type = Type.GetType( value );
-					Assert.global.IsNotNull( type );
+					Assert.global.IsNotNull( type, $"Type {value} not found" );
 					break;
 				}
 				case "$ref":

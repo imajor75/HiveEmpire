@@ -256,7 +256,7 @@ public static class Constants
 
     public static class Road
     {
-    	public const int timeBetweenWorkersAdded = Constants.World.normalSpeedPerSecond * 60;
+    	public const int timeBetweenHaulersAdded = Constants.World.normalSpeedPerSecond * 60;
     	public const float bodyHeight = 1.0f/20;
     	public const int blocksInSection = 8;
     }
@@ -284,7 +284,7 @@ public static class Constants
         public const int startSoldierCount = 10;
     }
 
-    public static class Worker
+    public static class Unit
     {
        	public const int stuckTimeout = Constants.World.normalSpeedPerSecond * 60;
     	public const int boredTimeBeforeRemove = Constants.World.normalSpeedPerSecond * 120;

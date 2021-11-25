@@ -9,7 +9,7 @@ public class Flag : HiveObject
 {
 	public Node node;
 	public Item[] items = new Item[Constants.Flag.maxItems];
-	public Worker user;
+	public Unit user;
 	public bool crossing;
 	public bool recentlyLeftCrossing;	// Only for validaion, debug purposes
 	public Road[] roadsStartingHere = new Road[Constants.Node.neighbourCount];
@@ -125,7 +125,7 @@ public class Flag : HiveObject
 
 	public override void CriticalUpdate()
 	{
-		if ( requestFlattening && !flattening.worker && !blueprintOnly )
+		if ( requestFlattening && !flattening.builder && !blueprintOnly )
 		{
 			requestFlattening = false;
 			if ( flattening == null )	// This should never be null, only after loading old files.
@@ -421,8 +421,8 @@ public class Flag : HiveObject
 				roadsStartingHere[j].Validate( true );
 		if ( user )
 		{
-			assert.IsTrue( user.type == Worker.Type.hauler || user.type == Worker.Type.cart );
-			if ( user.type == Worker.Type.hauler )
+			assert.IsTrue( user.type == Unit.Type.hauler || user.type == Unit.Type.cart );
+			if ( user.type == Unit.Type.hauler )
 				assert.IsNotNull( user.road );
 			assert.IsTrue( user.exclusiveMode );
 			assert.AreEqual( user.exclusiveFlag, this );
@@ -433,7 +433,7 @@ public class Flag : HiveObject
 			assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
-			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.workers ) );
+			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.units ) );
 		base.Validate( chain );
 	}
 

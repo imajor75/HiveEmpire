@@ -7,8 +7,8 @@ using UnityEngine;
 
 public abstract class Attackable : Building
 {
-	public List<Worker> attackers = new List<Worker>();
-	public Worker aggressor, assassin, defender;
+	public List<Unit> attackers = new List<Unit>();
+	public Unit aggressor, assassin, defender;
 	public int lastSpot;
 
 	List<GameObject> trash = new List<GameObject>();
@@ -26,8 +26,8 @@ public abstract class Attackable : Building
 	}
 	
 	public abstract int defenderCount { get; }
-	public abstract Worker GetDefender();
-	public abstract void Occupy( List<Worker> attackers );
+	public abstract Unit GetDefender();
+	public abstract void Occupy( List<Unit> attackers );
 
 	public override void CriticalUpdate()
 	{
@@ -59,7 +59,7 @@ public abstract class Attackable : Building
 		}
 	}
 
-	void ProcessAttacker( Worker attacker )
+	void ProcessAttacker( Unit attacker )
 	{
 		if ( defenderCount == 0 && aggressor == null )
 		{
@@ -72,7 +72,7 @@ public abstract class Attackable : Building
 			if ( assassin )
 				return;
 			attacker.ScheduleWalkToNeighbour( flag.node );
-			attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.stabInTheBackAct );
+			attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.stabInTheBackAct );
 			assassin = attacker;
 			attackers.Remove( assassin );
 			return;
@@ -80,19 +80,19 @@ public abstract class Attackable : Building
 
 		defender = GetDefender();
 		defender.ScheduleWalkToNeighbour( flag.node );
-		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Worker.fightingAct );
+		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.fightingAct );
 		attacker.ScheduleWalkToNeighbour( flag.node );
-		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Worker.fightingAct );
+		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Unit.fightingAct );
 
 		aggressor = attacker;
 		attackers.Remove( aggressor );
 	}
 
-	public void DefenderStabbed( Worker assassin )
+	public void DefenderStabbed( Unit assassin )
 	{
 		assert.IsNotNull( aggressor );
 
-		void Trash( Worker soldier )
+		void Trash( Unit soldier )
 		{
 			var m = Instantiate( soldier.team.Get01AMaterial() );
 			soldier.body.transform.SetParent( transform );
@@ -114,7 +114,7 @@ public class GuardHouse : Attackable
 	// TODO Guardhouses are sometimes not visible, only after reload
 	// Somehow they are offset, but they are linked to the correct block.
 	// TODO They are completely built even before the construction
-	public List<Worker> soldiers = new List<Worker>();
+	public List<Unit> soldiers = new List<Unit>();
 	public int influence = Constants.GuardHouse.defaultInfluence;
 	public bool ready;
 	public int optimalSoldierCount;
@@ -133,14 +133,14 @@ public class GuardHouse : Attackable
 		}
 	}
 
-	public override Worker GetDefender()
+	public override Unit GetDefender()
 	{
 		var defender = soldiers[0];
 		soldiers.Remove( defender );
 		return defender;
 	}
 
-	public override void Occupy( List<Worker> attackers )
+	public override void Occupy( List<Unit> attackers )
 	{
 		foreach ( var soldier in soldiers )
 			soldier.building = null;
@@ -221,7 +221,7 @@ public class GuardHouse : Attackable
 			}
 			while ( soldiers.Count < optimalSoldierCount && team.soldierCount > 0 )
 			{
-				var newSoldier = Worker.Create().SetupAsSoldier( this );
+				var newSoldier = Unit.Create().SetupAsSoldier( this );
 				var a = Math.PI * soldiers.Count * 2 / 3;
 				team.soldierCount--;
 				newSoldier.standingOffset.Set( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );

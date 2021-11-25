@@ -77,16 +77,16 @@ public class OperationHandler : HiveObject
             nodeSetup,
             nodeAddResourcePatch,
             stockCriticalUpdate,
-            workerWalk,
-            workerCarryItem,
-            workerSetupAsAnimal,
-            workerSetupAsCart,
-            workerSetupAsHauler,
-            workerSetupAsTinkerer,
-            workerSetupAsBuilder,
-            workerSetupAsSoldier,
-            workerSetupAsAttacker,
-            workerTaskPlant,
+            unitWalk,
+            unitCarryItem,
+            unitSetupAsAnimal,
+            unitSetupAsCart,
+            unitSetupAsHauler,
+            unitSetupAsTinkerer,
+            unitSetupAsBuilder,
+            unitSetupAsSoldier,
+            unitSetupAsAttacker,
+            unitTaskPlant,
             flagFreeSlots,
             itemDispatcherAttach,
             workshopDisabledBuffers,
@@ -306,9 +306,9 @@ public class OperationHandler : HiveObject
         return t;
     }
 
-	public void ScheduleChangeRoadWorkerCount( Road road, int count )
+	public void ScheduleChangeRoadHaulerCount( Road road, int count )
 	{
-		ScheduleOperation( Operation.Create().SetupAsChangeWorkerCount( road, count ) );
+		ScheduleOperation( Operation.Create().SetupAsChangeHaulerCount( road, count ) );
 	}
 
 	public void ScheduleChangeDefenderCount( GuardHouse building, int count )
@@ -632,7 +632,7 @@ public class Operation
 {
     public Type type;
     public string name;
-    public int workerCount;
+    public int unitCount;
     public int locationX, locationY;
     public int areaX, areaY;
     public Building.Type buildingType;
@@ -781,7 +781,7 @@ public class Operation
             {
                 Type.changeArea => "Change area",
                 Type.changeRoutePriority => "Change route priority",
-                Type.changeWorkerCount => "Change worker count",
+                Type.changeHaulerCount => "Change hauler count",
                 Type.changeDefenderCount => "Change defender count",
                 Type.createBuilding => "Constructing a new ",
                 Type.createFlag => "Creating a new flag",
@@ -832,7 +832,7 @@ public class Operation
 
     public enum Type
     {
-        changeWorkerCount,
+        changeHaulerCount,
         changeDefenderCount,
         removeBuilding,
         createBuilding,
@@ -858,12 +858,12 @@ public class Operation
         return new Operation();
     }
 
-    public Operation SetupAsChangeWorkerCount( Road road, int count )
+    public Operation SetupAsChangeHaulerCount( Road road, int count )
     {
-        type = Type.changeWorkerCount;
+        type = Type.changeHaulerCount;
         this.road = road;
-        workerCount = count;
-        name = "Change Worker Count";
+        unitCount = count;
+        name = "Change Hauler Count";
         return this;
     }
 
@@ -871,7 +871,7 @@ public class Operation
     {
         type = Type.changeDefenderCount;
         this.building = building;
-        workerCount = count;
+        unitCount = count;
         name = "Change Defender Count";
         return this;
     }
@@ -1024,7 +1024,7 @@ public class Operation
         type = Type.attack;
         building = target;
         this.team = team;
-        workerCount = attackerCount;
+        unitCount = attackerCount;
         name = "Attack";
         return this;
     }
@@ -1043,18 +1043,18 @@ public class Operation
     {
         switch ( type )
         {
-            case Type.changeWorkerCount:
+            case Type.changeHaulerCount:
             {
-                int oldCount = road.targetWorkerCount;
-                road.targetWorkerCount = workerCount;
-                return Create().SetupAsChangeWorkerCount( road, oldCount );
+                int oldCount = road.targetHaulerCount;
+                road.targetHaulerCount = unitCount;
+                return Create().SetupAsChangeHaulerCount( road, oldCount );
             }
             case Type.changeDefenderCount:
             {
                 if ( building is GuardHouse guardHouse )
                 {
                     int oldCount = guardHouse.optimalSoldierCount;
-                    guardHouse.optimalSoldierCount = workerCount;
+                    guardHouse.optimalSoldierCount = unitCount;
                     return Create().SetupAsChangeDefenderCount( guardHouse, oldCount );
                 }
                 break;
@@ -1204,7 +1204,7 @@ public class Operation
             }
             case Type.attack:
             {
-                team.Attack( building as Attackable, workerCount );
+                team.Attack( building as Attackable, unitCount );
                 return null;
 
             }

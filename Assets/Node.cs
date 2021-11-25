@@ -90,13 +90,13 @@ public class Node : HiveObject
 		public enum Type
 		{
 			none = 0,
-			workers = 1,
+			units = 1,
 			buildings = 2,
 			roads = 4,
-			workersAndBuildings = workers+buildings,
-			workersAndRoads = workers+roads,
+			unitsAndBuildings = units+buildings,
+			unitssAndRoads = units+roads,
 			buildingsAndRoads = buildings+roads,
-			all = workers+buildings+roads
+			all = units+buildings+roads
 		}
 	}
 

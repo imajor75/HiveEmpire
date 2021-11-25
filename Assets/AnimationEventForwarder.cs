@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class AnimationEventForwarder : MonoBehaviour
 {
-    Worker target;
+    Unit target;
 
     public void Start()
     {
         if ( transform.parent )
-            target = transform.parent.GetComponent<Worker>();
+            target = transform.parent.GetComponent<Unit>();
     }
 
     void MakeSound( int soundID )

@@ -9,15 +9,15 @@ using System.Linq;
 [SelectionBase, RequireComponent( typeof( MeshRenderer ) )]
 public class Road : HiveObject, Interface.IInputHandler
 {
-	public List<Worker> workers = new List<Worker>();
+	public List<Unit> haulers = new List<Unit>();
 	public int tempNodes = 0;
 	public List<Node> nodes = new List<Node>();
-	public List<Worker> workerAtNodes = new List<Worker>();
+	public List<Unit> haulerAtNodes = new List<Unit>();
 	public Flag[] ends = new Flag[2];
-	public World.Timer workerAdded = new World.Timer();
+	public World.Timer haulerAdded = new World.Timer();
 	public bool decorationOnly;
 	public float cachedCost = 0;
-	public int targetWorkerCount;   // Zero means automatic
+	public int targetHaulerCount;   // Zero means automatic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
 	public Node referenceLocation;
@@ -45,7 +45,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	[Obsolete( "Compatibility for old files", true )]
 	public Player owner;
 	[Obsolete( "Compatibility for old files", true )]
-	int timeSinceWorkerAdded { set {} }
+	int timeSinceHaulerAdded { set {} }
 	[Obsolete( "Compatibility for old files", true )]
 	bool underConstruction { set {} }
 	[Obsolete( "Compatibility for old files", true )]
@@ -173,8 +173,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			ground.SetDirty( node );	// This is needed because grass should be removed from roads
 		}
 
-		while ( workerAtNodes.Count < nodes.Count )
-			workerAtNodes.Add( null );
+		while ( haulerAtNodes.Count < nodes.Count )
+			haulerAtNodes.Add( null );
 		transform.localPosition = centerNode.position;
 		ground.Link( this );
 		referenceLocation = centerNode;
@@ -183,7 +183,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		CreateCurves();
 		RebuildMesh();
 		RegisterOnGround();
-		CallNewWorker();
+		CallNewHauler();
 		gameObject.GetComponent<MeshRenderer>().material = material;
 
 		team.versionedRoadNetworkChanged.Trigger();
@@ -252,11 +252,11 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		if ( decorationOnly )
 			return;
-		if ( workers.Count >= nodes.Count - 2 )
+		if ( haulers.Count >= nodes.Count - 2 )
 			return;
 
-		if ( ( jam > 3 && targetWorkerCount == 0 && workerAdded.done ) || workers.Count < targetWorkerCount || workers.Count == 0 )
-			CallNewWorker();
+		if ( ( jam > 3 && targetHaulerCount == 0 && haulerAdded.done ) || haulers.Count < targetHaulerCount || haulers.Count == 0 )
+			CallNewHauler();
 	}
 
 	public void RebuildMesh( bool force = false )
@@ -472,13 +472,13 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public void CallNewWorker()
+	public void CallNewHauler()
 	{
-		var worker = Worker.Create().SetupForRoad( this );
-		if ( worker != null )
+		var hauler = Unit.Create().SetupForRoad( this );
+		if ( hauler != null )
 		{
-			workers.Add( worker );
-			workerAdded.Start( Constants.Road.timeBetweenWorkersAdded );
+			haulers.Add( hauler );
+			haulerAdded.Start( Constants.Road.timeBetweenHaulersAdded );
 		}
 	}
 
@@ -618,11 +618,11 @@ public class Road : HiveObject, Interface.IInputHandler
 				newRoad.nodes.Add( another.nodes[i] );
 		}
 
-		while ( newRoad.workerAtNodes.Count < newRoad.nodes.Count )
-			newRoad.workerAtNodes.Add( null );
+		while ( newRoad.haulerAtNodes.Count < newRoad.nodes.Count )
+			newRoad.haulerAtNodes.Add( null );
 
-		ReassignWorkersTo( newRoad );
-		another.ReassignWorkersTo( newRoad );
+		ReassignHaulersTo( newRoad );
+		another.ReassignHaulersTo( newRoad );
 
 		Remove( false );
 		another.Remove( false );
@@ -706,18 +706,18 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override bool Remove( bool takeYourTime )
 	{
-		var localWorkers = workers.GetRange( 0, workers.Count );
-		foreach ( var worker in localWorkers )
-			if ( !worker.Remove() )
+		var localHaulers = haulers.GetRange( 0, haulers.Count );
+		foreach ( var hauler in localHaulers )
+			if ( !hauler.Remove() )
 				return false;
 		if ( !decorationOnly )
 			UnregisterOnGround();
-		List<Worker> exclusiveWorkers = new List<Worker>();
-		foreach ( var worker in workerAtNodes )
-			if ( worker )
-				exclusiveWorkers.Add( worker );
-		foreach ( var worker in exclusiveWorkers )
-			worker.LeaveExclusivity();
+		List<Unit> exclusiveHaulers = new List<Unit>();
+		foreach ( var hauler in haulerAtNodes )
+			if ( hauler )
+				exclusiveHaulers.Add( hauler );
+		foreach ( var hauler in exclusiveHaulers )
+			hauler.LeaveExclusivity();
 
 		DestroyThis();
 		return true;
@@ -738,7 +738,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( cachedCost == 0 )
 			{
 				for ( int i = 0; i < nodes.Count - 1; i++ )
-					cachedCost += 0.01f / Worker.SpeedBetween( nodes[i], nodes[i + 1] );
+					cachedCost += 0.01f / Unit.SpeedBetween( nodes[i], nodes[i + 1] );
 			}
 
 			float jamMultiplier = 1 + jam / 2f;
@@ -746,15 +746,15 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public int ActiveWorkerCount
+	public int ActiveHaulerCount
 	{
 		get
 		{
-			int activeWorkers = 0;
-			foreach ( var worker in workers )
-				if ( worker.exclusiveMode )
-					activeWorkers++;
-			return activeWorkers;
+			int activeHaulers = 0;
+			foreach ( var hauler in haulers )
+				if ( hauler.exclusiveMode )
+					activeHaulers++;
+			return activeHaulers;
 		}
 	}
 
@@ -873,62 +873,62 @@ public class Road : HiveObject, Interface.IInputHandler
 		Interface.RoadPanel.Create().Open( this, centerNode );
 	}
 
-	public void ReassignWorkersTo( Road another, Road second = null )
+	public void ReassignHaulersTo( Road another, Road second = null )
 	{
-		while ( another.workerAtNodes.Count < another.nodes.Count )
-			another.workerAtNodes.Add( null );
+		while ( another.haulerAtNodes.Count < another.nodes.Count )
+			another.haulerAtNodes.Add( null );
 		if ( second )
 		{
-			while ( second.workerAtNodes.Count < second.nodes.Count )
-				second.workerAtNodes.Add( null );
+			while ( second.haulerAtNodes.Count < second.nodes.Count )
+				second.haulerAtNodes.Add( null );
 		}
 
-		List<Worker> workersToMove = new List<Worker>();
-		foreach ( var worker in workerAtNodes )
-			if ( worker )
-				workersToMove.Add( worker );
-		foreach ( var worker in workers )
-			if ( !workersToMove.Contains( worker ) )
-				workersToMove.Add( worker );
+		List<Unit> haulersToMove = new List<Unit>();
+		foreach ( var hauler in haulerAtNodes )
+			if ( hauler )
+				haulersToMove.Add( hauler );
+		foreach ( var hauler in haulers )
+			if ( !haulersToMove.Contains( hauler ) )
+				haulersToMove.Add( hauler );
 
-		foreach ( var worker in workersToMove )
+		foreach ( var hauler in haulersToMove )
 		{
-			var node = worker.LeaveExclusivity();
-			if ( worker.EnterExclusivity( another, node ) )
+			var node = hauler.LeaveExclusivity();
+			if ( hauler.EnterExclusivity( another, node ) )
 			{
-				worker.road = another;
-				if ( worker.type == Worker.Type.hauler )	// Can be a cart
-					another.workers.Add( worker );
+				hauler.road = another;
+				if ( hauler.type == Unit.Type.hauler )	// Can be a cart
+					another.haulers.Add( hauler );
 			}
 			else
 			{
-				if ( second && worker.EnterExclusivity( second, node ) )
+				if ( second && hauler.EnterExclusivity( second, node ) )
 				{
-					second.workers.Add( worker );
-					if ( worker.type == Worker.Type.hauler )	// Can be a cart
-						worker.road = second;
+					second.haulers.Add( hauler );
+					if ( hauler.type == Unit.Type.hauler )	// Can be a cart
+						hauler.road = second;
 				}
 				else
 				{
-					if ( worker.type == Worker.Type.hauler)
+					if ( hauler.type == Unit.Type.hauler)
 					{
-						worker.type = Worker.Type.unemployed;
-						worker.road = null;
+						hauler.type = Unit.Type.unemployed;
+						hauler.road = null;
 					}
 					else
-						worker.assert.AreEqual( worker.type, Worker.Type.cart );
+						hauler.assert.AreEqual( hauler.type, Unit.Type.cart );
 				}
 			}
-			worker.ResetTasks();
+			hauler.ResetTasks();
 		}
-		workers.Clear();
+		haulers.Clear();
 	}
 
 	public override void Reset()
 	{
-		while ( workers.Count > 1 )
-			workers[1].Remove( false );
-		workers[0].Reset();
+		while ( haulers.Count > 1 )
+			haulers[1].Remove( false );
+		haulers[0].Reset();
 	}
 
 	public Road SplitNodeList( List<Node> nodes, List<Node> secondNodes = null )
@@ -945,7 +945,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			secondRoad.Setup();
 		}
 	
-		ReassignWorkersTo( newRoad, secondRoad );
+		ReassignHaulersTo( newRoad, secondRoad );
 		Remove( false );
 		newRoad.RegisterOnGround();
 		secondRoad?.RegisterOnGround();
@@ -1048,30 +1048,30 @@ public class Road : HiveObject, Interface.IInputHandler
 		// TODO Triggered after restarting and loading back the game. 
 		// The road was not registered at any of the flags, and wasn't blueprint. 
 		// It was registered at the two inner nodes. This is a recently built road.
-		// The Validate was called from World.Load. The road has no workers on it.
+		// The Validate was called from World.Load. The road has no haulers on it.
 		assert.AreEqual( this, last.flag.roadsStartingHere[last.DirectionTo( nodes[length - 2] )] );
 		for ( int i = 1; i < length - 1; i++ )
 			assert.AreEqual( this, nodes[i].road ); // TODO This assert fired once
 		for ( int i = 0; i < length - 1; i++ )
 			assert.IsTrue( nodes[i].DirectionTo( nodes[i + 1] ) >= 0 );
-		foreach ( var worker in workers )
+		foreach ( var hauler in haulers )
 		{
-			assert.IsValid( worker );
-			assert.AreEqual( worker.type, Worker.Type.hauler );
-			if ( !worker.exclusiveMode )
+			assert.IsValid( hauler );
+			assert.AreEqual( hauler.type, Unit.Type.hauler );
+			if ( !hauler.exclusiveMode )
 				continue;
 			int i = 0;
-			foreach ( var w in workerAtNodes )
-				if ( w == worker )
+			foreach ( var w in haulerAtNodes )
+				if ( w == hauler )
 					i++;
 			assert.AreEqual( i, 1 );
 			if ( chain )
-				worker.Validate( true );
+				hauler.Validate( true );
 		}
-		if ( workerAtNodes[0] != null && !ends[0].crossing && !ends[0].recentlyLeftCrossing )
-			assert.AreEqual( ends[0].user, workerAtNodes[0] );
-		if ( workerAtNodes[nodes.Count - 1] != null && !ends[1].crossing && !ends[1].recentlyLeftCrossing )
-			assert.AreEqual( ends[1].user, workerAtNodes[nodes.Count - 1] );
+		if ( haulerAtNodes[0] != null && !ends[0].crossing && !ends[0].recentlyLeftCrossing )
+			assert.AreEqual( ends[0].user, haulerAtNodes[0] );
+		if ( haulerAtNodes[nodes.Count - 1] != null && !ends[1].crossing && !ends[1].recentlyLeftCrossing )
+			assert.AreEqual( ends[1].user, haulerAtNodes[nodes.Count - 1] );
 		int realJam = 0;
 		for ( int e = 0; e < 2; e++ )
 		{

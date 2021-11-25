@@ -15,8 +15,8 @@ public class Resource : HiveObject
 	public World.Timer gathered = new World.Timer();
 	public World.Timer keepAway = new World.Timer();
 	public World.Timer spawn = new World.Timer();
-	public Worker hunter;
-	public List<Worker> animals = new List<Worker>();
+	public Unit hunter;
+	public List<Unit> animals = new List<Unit>();
 	public World.Timer silence = new World.Timer();
 
 	GameObject body;
@@ -29,8 +29,8 @@ public class Resource : HiveObject
 		{
 			return new Node.Block( type switch
 			{
-				Type.tree => Node.Block.Type.workersAndBuildings,
-				Type.rock => Node.Block.Type.workersAndBuildings,
+				Type.tree => Node.Block.Type.unitsAndBuildings,
+				Type.rock => Node.Block.Type.unitsAndBuildings,
 				Type.fish => Node.Block.Type.none,
 				Type.cornfield => Node.Block.Type.buildings,
 				Type.animalSpawner => Node.Block.Type.all,
@@ -198,7 +198,7 @@ public class Resource : HiveObject
 		return this;
 	}
 
-	public Resource SetupAsPrey( Worker animal )
+	public Resource SetupAsPrey( Unit animal )
 	{
 		if ( Setup( animal.node, Type.pasturingAnimal ) == null )
 			return null;
@@ -271,11 +271,11 @@ public class Resource : HiveObject
 			foreach ( var o in Ground.areas[1] )
 			{
 				Node n = node.Add( o );
-				if ( n.block.IsBlocking( Node.Block.Type.workers ) )
+				if ( n.block.IsBlocking( Node.Block.Type.units ) )
 					continue;
 				if ( animals.Count >= 3 )
 					continue;
-				var animal = Worker.Create().SetupAsAnimal( this, n );
+				var animal = Unit.Create().SetupAsAnimal( this, n );
 				if ( animal != null )
 				{
 					animals.Add( animal );
@@ -294,7 +294,7 @@ public class Resource : HiveObject
 				silence.Start( 1500 );
 				assert.AreNotEqual( type, Type.tree );
 			}
-			else
+			else if ( soundSource )
 			{
 				if ( !silence.empty )
 					soundSource.Play();

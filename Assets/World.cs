@@ -834,16 +834,16 @@ public class World : HiveCommon
 		}
 
 		{
-			var list = Resources.FindObjectsOfTypeAll<Worker>();
+			var list = Resources.FindObjectsOfTypeAll<Unit>();
 			foreach ( var o in list )
 			{
-				if ( o.type == Worker.Type.tinkerer )
+				if ( o.type == Unit.Type.tinkerer )
 					o.currentColor = Color.cyan;
-				if ( o.type == Worker.Type.cart )
+				if ( o.type == Unit.Type.cart )
 					o.currentColor = Color.white;
 				if ( o.team == null && teams.Count > 0 )
 					o.team = teams[0];
-				//if ( o.taskQueue.Count > 0 && o.type == Worker.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
+				//if ( o.taskQueue.Count > 0 && o.type == Unit.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 				//	o.itemsInHands[0].SetRawTarget( o.building );
 			}
 		}
@@ -861,13 +861,13 @@ public class World : HiveCommon
 				if ( o.configuration == null )
 					o.configuration = new Building.Configuration();
 				if ( o.dispenser == null )
-					o.dispenser = o.workerMate ?? o.worker;
+					o.dispenser = o.tinkererMate ?? o.tinkerer;
 				if ( o.construction.done )
-					o.construction.worker = null;
+					o.construction.builder = null;
 				o.flagDirection = o.node.DirectionTo( o.flag.node );
 				if ( o is Workshop s )
 				{
-					if ( s.worker && s.worker.node == s.node && s.worker.taskQueue.Count == 0 && s.worker.walkTo && s.gatherer )
+					if ( s.tinkerer && s.tinkerer.node == s.node && s.tinkerer.taskQueue.Count == 0 && s.tinkerer.walkTo && s.gatherer )
 						s.working = false;
 					if ( s.outputPriority == ItemDispatcher.Priority.stock )
 						s.outputPriority = ItemDispatcher.Priority.low;

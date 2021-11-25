@@ -13,7 +13,7 @@ abstract public class Building : HiveObject
 	}
 	public string moniker;
 	public string nick { get { return moniker ?? title; } }
-	public Worker worker, workerMate, dispenser;	// dispenser is either the worker or the mate, it can also change
+	public Unit tinkerer, tinkererMate, dispenser;	// dispenser is either the tinkerer or the mate, it can also change
 	public Flag flag;
 	public int flagDirection;
 	public Node node;
@@ -129,7 +129,7 @@ abstract public class Building : HiveObject
 	}
 
 	[System.Serializable]
-	public class Flattening : Worker.Callback.IHandler
+	public class Flattening : Unit.Callback.IHandler
 	{
 		public int corner;
 		public bool permanent;
@@ -137,7 +137,7 @@ abstract public class Building : HiveObject
 		public HiveObject ignoreDuringWalking;
 		public World.Timer suspend = new World.Timer();
 		public float level;
-		public Worker worker;
+		public Unit builder;
 		public List<Node> area;
 
 		[Obsolete( "Compatibility with old files", true )]
@@ -182,21 +182,21 @@ abstract public class Building : HiveObject
 
 			if ( flattened )
 			{
-				worker?.Remove( true );
-				worker = null;
+				builder?.Remove( true );
+				builder = null;
 				return false;
 			}
 
-			if ( worker == null )
-			{	// TODO Check the path before creating the worker
-				worker = Worker.Create();
-				worker.SetupForFlattening( area[0].flag );
+			if ( builder == null )
+			{	// TODO Check the path before creating the builder
+				builder = Unit.Create();
+				builder.SetupForFlattening( area[0].flag );
 			}
-			if ( worker == null || !worker.IsIdle( false ) )
+			if ( builder == null || !builder.IsIdle( false ) )
 				return true;
 			if ( corner < area.Count )
 			{
-				if ( worker && worker.IsIdle() )
+				if ( builder && builder.IsIdle() )
 				{
 					Node node = area[corner++];
 					if ( node.fixedHeight && node.staticHeight != level )
@@ -206,9 +206,9 @@ abstract public class Building : HiveObject
 					float dif = node.height - level;
 					if ( Math.Abs( dif ) > 0.001f )
 					{
-						worker.ScheduleWalkToNode( node, true, false, null, ignoreDuringWalking );
-						worker.ScheduleDoAct( Worker.shovelingAct );
-						worker.ScheduleCall( this );
+						builder.ScheduleWalkToNode( node, true, false, null, ignoreDuringWalking );
+						builder.ScheduleDoAct( Unit.shovelingAct );
+						builder.ScheduleCall( this );
 					}
 				}
 				return true;
@@ -218,10 +218,10 @@ abstract public class Building : HiveObject
 			return false;
 		}
 
-		public void Callback( Worker worker )
+		public void Callback( Unit unit )
 		{
-			if ( permanent || worker.node.fixedHeight == false )
-				worker.node.SetHeight( level );
+			if ( permanent || unit.node.fixedHeight == false )
+				unit.node.SetHeight( level );
 		}
 	}
 
@@ -239,7 +239,7 @@ abstract public class Building : HiveObject
 		public int stoneMissing { get { return boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived; } }
 		public static Shader shader;
 		public static int sliceLevelID;
-		public Worker.DoAct hammering;
+		public Unit.DoAct hammering;
 
 		[Obsolete( "Compatibility with old files", true )]
 		int timeSinceCreated;
@@ -285,7 +285,7 @@ abstract public class Building : HiveObject
 		public bool Remove( bool takeYourTime )
 		{
 			hammering?.Stop();
-			worker?.Remove( takeYourTime );
+			builder?.Remove( takeYourTime );
 			return true;
 		}
 
@@ -302,14 +302,14 @@ abstract public class Building : HiveObject
 				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.stoneForConstructionWeight.weight );
 			}
 
-			if ( worker == null && Path.Between( boss.team.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
+			if ( builder == null && Path.Between( boss.team.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
 			{
-				worker = Worker.Create();
-				worker.SetupForConstruction( boss );
+				builder = Unit.Create();
+				builder.SetupForConstruction( boss );
 				return;
 			}
 
-			if ( worker == null )
+			if ( builder == null )
 			{
 				suspend.Start( 200 );
 				return;
@@ -318,22 +318,22 @@ abstract public class Building : HiveObject
 			if ( boss.configuration.flatteningNeeded && !flattened && base.CriticalUpdate() )
 				return;
 
-		if ( !worker.IsIdle() )
+		if ( !builder.IsIdle() )
 				return;
 
 			if ( progress == 0 )
 			{
 				var o = new Ground.Offset( 0, -1, 1 );
 				Node node = boss.node.Add( o );
-				if ( worker.node != node )
+				if ( builder.node != node )
 				{
-					worker.ScheduleWalkToNode( node, true, false, null, boss );
+					builder.ScheduleWalkToNode( node, true, false, null, boss );
 					return;
 				}
 
-				worker.TurnTo( boss.node );
-				hammering = ScriptableObject.CreateInstance<Worker.DoAct>();
-				hammering.Setup( worker, Worker.constructingAct );
+				builder.TurnTo( boss.node );
+				hammering = ScriptableObject.CreateInstance<Unit.DoAct>();
+				hammering.Setup( builder, Unit.constructingAct );
 				hammering.Start();
 			}
 			progress += 1f / boss.configuration.constructionTime;
@@ -350,9 +350,9 @@ abstract public class Building : HiveObject
 				return;
 
 			done = true;
-			worker.ScheduleWalkToNeighbour( boss.flag.node );
-			worker.type = Worker.Type.unemployed;
-			worker = null;
+			builder.ScheduleWalkToNeighbour( boss.flag.node );
+			builder.type = Unit.Type.unemployed;
+			builder = null;
 			hammering = null;
 		}
 		public bool ItemOnTheWay( Item item, bool cancel = false )
@@ -421,7 +421,7 @@ abstract public class Building : HiveObject
 		public void Validate( bool chain )
 		{
 			if ( chain )
-				worker?.Validate( true );
+				builder?.Validate( true );
 			if ( !done )
 				boss.assert.AreEqual( plankOnTheWay + stoneOnTheWay, boss.itemsOnTheWay.Count );
 		}
@@ -623,7 +623,7 @@ abstract public class Building : HiveObject
 			dispenser.ScheduleWalkToNeighbour( flag.node );
 			dispenser.ScheduleDeliverItem( item );
 			dispenser.ScheduleWalkToNeighbour( node );
-			item.worker = dispenser;
+			item.hauler = dispenser;
 		}
 		return item;
 	}
@@ -698,9 +698,9 @@ abstract public class Building : HiveObject
 			item.CancelTrip();
 		if ( exit && !exit.Remove( takeYourTime ) )		// TODO null reference exception happened here when trying to build a woodcutter in a forest. Again when trying to build a bow maker
 			return false;
-		if ( worker != null && !worker.Remove() )
+		if ( tinkerer != null && !tinkerer.Remove() )
 			return false;
-		if ( workerMate != null && !workerMate.Remove() )
+		if ( tinkererMate != null && !tinkererMate.Remove() )
 			return false;
 
 		if ( construction.area != null )	// Should never be null, but old saves are having this.
@@ -733,8 +733,8 @@ abstract public class Building : HiveObject
 
 	public override void Reset()
 	{
-		worker?.Reset();
-		workerMate?.Reset();
+		tinkerer?.Reset();
+		tinkererMate?.Reset();
 	}
 
 	public void SetTeam( Team team )
@@ -776,18 +776,18 @@ abstract public class Building : HiveObject
 		assert.AreEqual( flag, node.Neighbour( flagDirection ).flag );
 		foreach ( var item in itemsOnTheWay )
 		{
-			assert.IsNotNull( item );	// TODO Triggered for a sawmill (6 items are in the itemsOnTheWay array, one of them is missing. The missing item has a flag and a nextFlag, and a valid path, it also has a worker.
-			// Originated at a stock. The worker has another log in hands. The path of the item has 7 roads, progress is 4
+			assert.IsNotNull( item );	// TODO Triggered for a sawmill (6 items are in the itemsOnTheWay array, one of them is missing. The missing item has a flag and a nextFlag, and a valid path, it also has a hauler.
+			// Originated at a stock. The hauler has another log in hands. The path of the item has 7 roads, progress is 4
 			// Triggered again for a barrack, itemsOnTheWay has 6 entries, three beer, two bow and one missing. Missing item is a bow, destination is the barrack
-			// has a flag, but no nextFlag and worker. Item is still far away.
+			// has a flag, but no nextFlag and hauler. Item is still far away.
 
 			assert.AreEqual( item.destination, this );
 		}
 		if ( !chain )
 			return;
 
-		worker?.Validate( true );
-		workerMate?.Validate( true );
+		tinkerer?.Validate( true );
+		tinkererMate?.Validate( true );
 		exit?.Validate( true );
 		construction?.Validate( true );
 		if ( team )

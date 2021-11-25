@@ -413,7 +413,7 @@ public class Interface : HiveObject
 		Item.Initialize();
 		Building.Initialize();
 		Road.Initialize();
-		Worker.Initialize();
+		Unit.Initialize();
 		Flag.Initialize();
 		Resource.Initialize();
 		Interface.Initialize();
@@ -503,7 +503,13 @@ public class Interface : HiveObject
 				Load( myFiles.First().FullName );
 		}
 		if ( !world.gameInProgress )
-			Load( Application.streamingAssetsPath + "/demolevel.json" );
+		{
+			var demoFile = Application.streamingAssetsPath + "/demolevel.json";
+			if ( File.Exists( demoFile ) )
+				Load( demoFile );
+			else
+				NewGame( challenges.First() );
+		}
 
 		MainPanel.Create().Open( true );
 	}
@@ -715,10 +721,10 @@ public class Interface : HiveObject
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad2 ) )
 		{
-			var workerList = Resources.FindObjectsOfTypeAll<Worker>();
-			var worker = workerList[new System.Random().Next( workerList.Length )];
-			eye.FocusOn( worker );
-			worker.ResetTasks();
+			var unitList = Resources.FindObjectsOfTypeAll<Unit>();
+			var unit = unitList[new System.Random().Next( unitList.Length )];
+			eye.FocusOn( unit );
+			unit.ResetTasks();
 		}
 		if ( Input.GetKeyDown( KeyCode.Keypad3 ) )
 		{
@@ -1992,7 +1998,7 @@ public class Interface : HiveObject
 					picture.sprite = Item.sprites[(int)itemType];
 
 				inTransit = new GameObject( "Logistic indicator" ).AddComponent<Image>().Link( this );
-				inTransit.sprite = Worker.arrowSprite;
+				inTransit.sprite = Unit.arrowSprite;
 				inTransit.rectTransform.anchorMin = new Vector2( 0.5f, 0.0f );
 				inTransit.rectTransform.anchorMax = new Vector2( 1.0f, 0.5f );
 				inTransit.rectTransform.offsetMin = inTransit.rectTransform.offsetMax = Vector2.zero;
@@ -2230,7 +2236,7 @@ public class Interface : HiveObject
 			if ( ( contentToShow & Content.controlIcons ) != 0 )
 			{
 				Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 190, row ).AddClickHandler( Remove ).SetTooltip( "Remove the building" );
-				Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, row ).AddClickHandler( ShowWorker ).SetTooltip( "Show the tinkerer of the building" );
+				Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, row ).AddClickHandler( ShowTinkerer ).SetTooltip( "Show the tinkerer of the building" );
 				changeModeImage = Image( GetModeIcon() ).Pin( 150, row ).AddClickHandler( ChangeMode ).SetTooltip( "Current running mode of the building\nLMB to cycle throught possible modes", null, 
 				"Clock (default) - Work when needed\n" +
 				"Alarm - Work even if not needed\n" +
@@ -2263,9 +2269,9 @@ public class Interface : HiveObject
 			workshop.moniker = title.text;
 		}
 
-		void ShowWorker()
+		void ShowTinkerer()
 		{
-			WorkerPanel.Create().Open( workshop.worker, true );
+			UnitPanel.Create().Open( workshop.tinkerer, true );
 		}
 
 		Sprite GetModeIcon()
@@ -2915,7 +2921,7 @@ public class Interface : HiveObject
 			if ( stock.cart.taskQueue.Count == 0 )
 				return;
 
-			WorkerPanel.Create().Open( stock.cart, true );
+			UnitPanel.Create().Open( stock.cart, true );
 		}
 
 		void ShowRoutesFor( Item.Type itemType )
@@ -3541,9 +3547,9 @@ public class Interface : HiveObject
 		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>(), centerItems = new List<ItemImage>();
 		public List<Text> leftNumbers = new List<Text>(), rightNumbers = new List<Text>(), centerDirections = new List<Text>();
 		public Node node;
-		public Dropdown targetWorkerCount;
+		public Dropdown targetHaulerCount;
 		public Text jam;
-		public Text workers;
+		public Text units;
 		public Image ring;
 
 		const int itemsDisplayed = 3;
@@ -3565,13 +3571,13 @@ public class Interface : HiveObject
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 150, -10 ).AddClickHandler( Remove ).SetTooltip( "Remove the road" );
 			Image( iconTable.GetMediaData( Icon.junction ) ).Pin( 130, -10, 20, 20 ).AddClickHandler( Split ).SetTooltip( "Split the road by inserting a junction at the selected location" );
 			jam = Text( "Jam" ).Pin( 12, -4, 120 );
-			workers = Text( "Worker count" ).Pin( 12, -28, 120 );
+			units = Text( "Hauler count" ).Pin( 12, -28, 120 );
 			name = "Road panel";
-			targetWorkerCount = Dropdown().Pin( 20, -44, 150, 25 ).SetTooltip( "Number of haluers working on the road", null, 
-			"By default new haluers will automatically assigned to the road when needed (and retire when not needed any longer), but you can also specify the desired number of workers on the road." );
-			targetWorkerCount.AddOptions( new List<string> { "Auto", "1", "2", "3", "4" } );
-			targetWorkerCount.value = road.targetWorkerCount;
-			targetWorkerCount.onValueChanged.AddListener( TargetWorkerCountChanged );
+			targetHaulerCount = Dropdown().Pin( 20, -44, 150, 25 ).SetTooltip( "Number of haluers working on the road", null, 
+			"By default new haluers will automatically assigned to the road when needed (and retire when not needed any longer), but you can also specify the desired number of haulers on the road." );
+			targetHaulerCount.AddOptions( new List<string> { "Auto", "1", "2", "3", "4" } );
+			targetHaulerCount.value = road.targetHaulerCount;
+			targetHaulerCount.onValueChanged.AddListener( TargetUnitCountChanged );
 
 			for ( int i = 0; i < itemsDisplayed; i++ )
 			{
@@ -3604,9 +3610,9 @@ public class Interface : HiveObject
 		void Hauler()
 		{
 			if ( GetKey( KeyCode.LeftShift ) )
-				road.CallNewWorker();
+				road.CallNewHauler();
 			else
-				WorkerPanel.Create().Open( road.workers[0], true ); // TODO Make it possibe to view additional workers
+				UnitPanel.Create().Open( road.haulers[0], true ); // TODO Make it possibe to view additional haulers
 		}
 
 		void Split()
@@ -3615,10 +3621,10 @@ public class Interface : HiveObject
 			ValidateAll();
 		}
 
-		void TargetWorkerCountChanged( int newValue )
+		void TargetUnitCountChanged( int newValue )
 		{
-			if ( road && road.targetWorkerCount != newValue )
-				oh.ScheduleChangeRoadWorkerCount( road, newValue );
+			if ( road && road.targetHaulerCount != newValue )
+				oh.ScheduleChangeRoadHaulerCount( road, newValue );
 		}
 
 		new public void OnDestroy()
@@ -3637,7 +3643,7 @@ public class Interface : HiveObject
 
 			base.Update();
 			jam.text = "Items waiting: " + road.jam;
-			workers.text = "Worker count: " + road.workers.Count;
+			units.text = "Hauler count: " + road.haulers.Count;
 
 			bool reversed = false;
 			var camera = eye.camera;
@@ -3649,10 +3655,10 @@ public class Interface : HiveObject
 			for ( int j = 0; j < itemsDisplayed; j++ )
 			{
 				int i = itemsDisplayed - 1 - j;
-				Worker worker;
-				if ( j < road.workers.Count && (worker = road.workers[j]) && worker.taskQueue.Count > 0 )
+				Unit hauler;
+				if ( j < road.haulers.Count && (hauler = road.haulers[j]) && hauler.taskQueue.Count > 0 )
 				{
-					Item item = worker.itemsInHands[0];	// TODO show the second item somehow	
+					Item item = hauler.itemsInHands[0];	// TODO show the second item somehow	
 					centerItems[i].SetItem( item );
 					if ( item )
 					{
@@ -3707,7 +3713,7 @@ public class Interface : HiveObject
 				}
 			}
 			if ( road )
-				targetWorkerCount.value = road.targetWorkerCount;
+				targetHaulerCount.value = road.targetHaulerCount;
 
 			var c = root.viewport.camera;
 			var p = c.WorldToScreenPoint( node.positionInViewport );
@@ -3870,7 +3876,7 @@ public class Interface : HiveObject
 			}
 
 			if ( flag.flattening != null )	// This should never be null unless after loaded old files.
-				shovelingIcon.color = flag.flattening.worker ? Color.grey : Color.white;
+				shovelingIcon.color = flag.flattening.builder ? Color.grey : Color.white;
 			convertIcon.color = flag.crossing ? Color.red : Color.white;
 
 			if ( flag.Buildings().Count > 0 )
@@ -3910,30 +3916,30 @@ public class Interface : HiveObject
         }
     }
 
-	public class WorkerPanel : Panel, Eye.IDirector
+	public class UnitPanel : Panel, Eye.IDirector
 	{
-		public Worker worker;
+		public Unit unit;
 		public Text itemCount;
 		public Stock cartDestination;
 		public PathVisualization cartPath;
 		public Text status;
 		public ItemImage statusImage0, statusImage1;
-		public Worker.Task lastFirstTask;
+		public Unit.Task lastFirstTask;
 		public HiveObject targetObject;
 
-		public static WorkerPanel Create()
+		public static UnitPanel Create()
 		{
-			return new GameObject().AddComponent<WorkerPanel>();
+			return new GameObject().AddComponent<UnitPanel>();
 		}
 
-		public void Open( Worker worker, bool show )
+		public void Open( Unit unit, bool show )
 		{
 			borderWidth = 10;
 			noResize = true;
-			if ( base.Open( worker.node, 0, 0, 200, 95 ) )
+			if ( base.Open( unit.node, 0, 0, 200, 95 ) )
 				return;
-			name = "Worker panel";
-			this.worker = worker;
+			name = "Unit panel";
+			this.unit = unit;
 			status = Text().Pin( 20, -20, 200, 50 ).AddClickHandler( ShowTarget );
 			statusImage0 = ItemIcon().Pin( 80, -20 );
 			statusImage0.gameObject.SetActive( false );
@@ -3946,7 +3952,7 @@ public class Interface : HiveObject
 			if ( show )
 				eye.GrabFocus( this );
 #if DEBUG
-			Selection.activeGameObject = worker.gameObject;
+			Selection.activeGameObject = unit.gameObject;
 #endif
 		}
 
@@ -3958,26 +3964,26 @@ public class Interface : HiveObject
 
 		void ShowHome()
 		{
-			if ( worker.type == Worker.Type.tinkerer )
-				worker.building.OnClicked( true );
+			if ( unit.type == Unit.Type.tinkerer )
+				unit.building.OnClicked( true );
 
-			if ( worker.type == Worker.Type.cart )
-				worker.building.OnClicked( true );
+			if ( unit.type == Unit.Type.cart )
+				unit.building.OnClicked( true );
 
-			if ( worker.type == Worker.Type.hauler )
-				worker.road.OnClicked( true );
+			if ( unit.type == Unit.Type.hauler )
+				unit.road.OnClicked( true );
 
-			if ( worker.type == Worker.Type.constructor )
-				worker.team.mainBuilding.OnClicked( true );
+			if ( unit.type == Unit.Type.constructor )
+				unit.team.mainBuilding.OnClicked( true );
 		}
 
 		public override CompareResult IsTheSame( Panel other )
 		{
-			var p = other as WorkerPanel;
+			var p = other as UnitPanel;
 			if ( p == null )
 				return CompareResult.different;
 
-			if ( p.worker == this.worker )
+			if ( p.unit == this.unit )
 				return CompareResult.same;
 
 			return CompareResult.sameButDifferentTarget;
@@ -3990,22 +3996,22 @@ public class Interface : HiveObject
 
 		public void SetCameraTarget( Eye eye )
 		{
-			eye.FocusOn( worker );
+			eye.FocusOn( unit );
 		}
 
 		public override void Update()
 		{
-			if ( worker == null )
+			if ( unit == null )
 			{
 				Close();
 				return;
 			}
 			base.Update();
-			var cart = worker as Stock.Cart;
+			var cart = unit as Stock.Cart;
 
-			Worker.Task firstTask = null;
-			if ( worker.taskQueue.Count > 0 )
-				firstTask = worker.taskQueue.First();
+			Unit.Task firstTask = null;
+			if ( unit.taskQueue.Count > 0 )
+				firstTask = unit.taskQueue.First();
 			if ( lastFirstTask != firstTask )
 			{
 				lastFirstTask = firstTask;
@@ -4014,11 +4020,11 @@ public class Interface : HiveObject
 				statusImage1.SetItem( null );
 				statusImage0.gameObject.SetActive( false );
 				statusImage1.gameObject.SetActive( false );
-				switch( worker.type )
+				switch( unit.type )
 				{
-					case Worker.Type.hauler:
+					case Unit.Type.hauler:
 					{
-						var pickup = worker.FindTaskInQueue<Worker.PickupItem>();
+						var pickup = unit.FindTaskInQueue<Unit.PickupItem>();
 						if ( pickup != null )
 						{
 							status.text = "Picking up";
@@ -4027,7 +4033,7 @@ public class Interface : HiveObject
 							targetObject = pickup.items[0].flag;
 							break;
 						}
-						var deliver = worker.FindTaskInQueue<Worker.DeliverItem>();
+						var deliver = unit.FindTaskInQueue<Unit.DeliverItem>();
 						if ( deliver )
 						{
 							status.text = "Delivering";
@@ -4042,7 +4048,7 @@ public class Interface : HiveObject
 							targetObject = (HiveObject)deliver.items[0].nextFlag ?? deliver.items[0].destination;
 							break;
 						}
-						var startWorking = worker.FindTaskInQueue<Worker.StartWorkingOnRoad>();
+						var startWorking = unit.FindTaskInQueue<Unit.StartWorkingOnRoad>();
 						if ( startWorking )
 						{
 							status.text = "Going to a road to start working\nas a hauler";
@@ -4051,16 +4057,16 @@ public class Interface : HiveObject
 						status.text = "Waiting for something to do";
 						break;
 					}
-					case Worker.Type.tinkerer:
+					case Unit.Type.tinkerer:
 					{
-						var res = worker.FindTaskInQueue<Workshop.GetResource>();
+						var res = unit.FindTaskInQueue<Workshop.GetResource>();
 						if ( res )
 						{
 							status.text = "Getting " + res.resource.type.ToString();
 							targetObject = res.resource;
 							break;
 						}
-						var plant = worker.FindTaskInQueue<Workshop.Plant>();
+						var plant = unit.FindTaskInQueue<Workshop.Plant>();
 						if ( plant )
 						{
 							status.text = "Planting " + plant.resourceType.ToString();
@@ -4068,10 +4074,10 @@ public class Interface : HiveObject
 							break;
 
 						}
-						var deliver = worker.FindTaskInQueue<Worker.DeliverItem>();
+						var deliver = unit.FindTaskInQueue<Unit.DeliverItem>();
 						if ( deliver )
 						{
-							if ( worker == worker.building.worker )
+							if ( unit == unit.building.tinkerer )
 								status.text = "Bringing             home";
 							else
 								status.text = "Releasing";
@@ -4079,7 +4085,7 @@ public class Interface : HiveObject
 							statusImage0.gameObject.SetActive( true );
 							break;
 						}
-						var step = worker.FindTaskInQueue<Worker.WalkToNeighbour>();
+						var step = unit.FindTaskInQueue<Unit.WalkToNeighbour>();
 						if ( step )
 						{
 							status.text = "Going home";
@@ -4089,42 +4095,42 @@ public class Interface : HiveObject
 						status.text = "Waiting for something to do";
 						break;
 					}
-					case Worker.Type.constructor:
+					case Unit.Type.constructor:
 					{
-						var flattening = worker.FindTaskInQueue<Worker.Callback>();
+						var flattening = unit.FindTaskInQueue<Unit.Callback>();
 						if ( flattening )
 						{
 							status.text = "Flattening land";
 							break;
 						}
-						if ( worker.taskQueue.Count == 0 )
+						if ( unit.taskQueue.Count == 0 )
 							status.text = "Constructing";
 						else
 							status.text = "Going to construction site";
 						break;
 					}
-					case Worker.Type.soldier:
+					case Unit.Type.soldier:
 					{
 						status.text = "Hitting everything";
 						break;
 					}
-					case Worker.Type.cart:
+					case Unit.Type.cart:
 					{
-						var massDeliver = worker.FindTaskInQueue<Stock.DeliverStackTask>();
+						var massDeliver = unit.FindTaskInQueue<Stock.DeliverStackTask>();
 						if ( massDeliver )
 						{
 							status.text = $"Transporting {Constants.Stock.cartCapacity}";
-							statusImage1.SetType( (worker as Stock.Cart).itemType );
+							statusImage1.SetType( (unit as Stock.Cart).itemType );
 							statusImage1.gameObject.SetActive( true );
 							targetObject = massDeliver.stock;
 							break;
 						}
 						status.text = "Returning home";
-						if ( worker.taskQueue.Count == 0 )
+						if ( unit.taskQueue.Count == 0 )
 							Close();
 						break;
 					}
-					case Worker.Type.unemployed:
+					case Unit.Type.unemployed:
 					{
 						status.text = "Going back to the headquarters";
 						break;
@@ -4137,16 +4143,16 @@ if ( cart )
 				if ( cart.destination != cartDestination )
 				{
 					cartDestination = cart.destination;
-					var path = cart.FindTaskInQueue<Worker.WalkToFlag>()?.path;
+					var path = cart.FindTaskInQueue<Unit.WalkToFlag>()?.path;
 					Destroy( cartPath );
 					cartPath = PathVisualization.Create().Setup( path, root.viewport.visibleAreaCenter );
 				}
 			}
 
-			itemCount.text = "Items delivered: " + worker.itemsDelivered;
+			itemCount.text = "Items delivered: " + unit.itemsDelivered;
 
 			if ( followTarget )
-				MoveTo( worker.transform.position + Vector3.up * Constants.Node.size );
+				MoveTo( unit.transform.position + Vector3.up * Constants.Node.size );
 		}
 
 		public new void OnDestroy()
@@ -4332,8 +4338,8 @@ if ( cart )
 				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
 			else
 			{
-				item.assert.IsNotNull( item.worker );
-				mapIcon.transform.position = item.worker.transform.position + Vector3.up * 4;
+				item.assert.IsNotNull( item.hauler );
+				mapIcon.transform.position = item.hauler.transform.position + Vector3.up * 4;
 			}
 		}
 
@@ -4348,7 +4354,7 @@ if ( cart )
 			if ( item.flag )
 				eye.FocusOn( item.flag.node );
 			else
-				eye.FocusOn( item.worker );
+				eye.FocusOn( item.hauler );
 		}
 
 		public new void OnDestroy()
@@ -4530,7 +4536,7 @@ if ( cart )
 		void ShowCart( Stock.Route route )
 		{
 			if ( route.start.cart.currentRoute == route )
-				WorkerPanel.Create().Open( route.start.cart, true );
+				UnitPanel.Create().Open( route.start.cart, true );
 		}
 
 		new void Update()
@@ -5442,11 +5448,7 @@ if ( cart )
 			}
 			if ( node.road && node.road.ready )
 			{
-				// var worker = node.road.workerAtNodes[node.road.NodeIndex( node )];
-				// if ( worker && worker.type == Worker.Type.cart )
-				// 	worker.OnClicked();
-				// else
-					node.road.OnClicked( node );
+				node.road.OnClicked( node );
 				return true;
 			}
 			node.OnClicked();

@@ -32,7 +32,7 @@ public class PathFinder : ScriptableObject
 	{
 		forRoads,
 		onRoad,
-		forWorkers,
+		forUnits,
 		total
 	}
 
@@ -71,7 +71,7 @@ public class PathFinder : ScriptableObject
 		{
 			if ( mode == Mode.forRoads && node.block.IsBlocking( Node.Block.Type.roads ) )
 				return;
-			if ( mode == Mode.forWorkers && node.block.IsBlocking( Node.Block.Type.workers ) )
+			if ( mode == Mode.forUnits && node.block.IsBlocking( Node.Block.Type.units ) )
 			{
 				if ( ignoreObject == null || ignoreObject != node.building ) 
 					return;
@@ -161,7 +161,7 @@ public class PathFinder : ScriptableObject
 			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 			{
 				Node t = r.node.Neighbour( i );
-				VisitNode( t, r.costG + 0.01f/Worker.SpeedBetween( r.node, t ), r ); // TODO cost should depend on steepness of the road
+				VisitNode( t, r.costG + 0.01f/Unit.SpeedBetween( r.node, t ), r ); // TODO cost should depend on steepness of the road
 			}
 		}
     }

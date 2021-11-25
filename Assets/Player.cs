@@ -308,13 +308,13 @@ public class Team : HiveCommon
 		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 		{
 			Node n = target.flag.node.Neighbour( i );
-			if ( !n.block.IsBlocking( Node.Block.Type.workers ) )
+			if ( !n.block.IsBlocking( Node.Block.Type.units ) )
 				gather.Add( n );
 		}
 
 		for ( int i = 0; i < attackerCount; i++ )
 		{
-			var attacker = Worker.Create().SetupAsAttacker( this, target );
+			var attacker = Unit.Create().SetupAsAttacker( this, target );
 			int attackTime = Math.Max( world.time, lastTimeAttack+Constants.Player.attackPeriod );
 			lastTimeAttack = attackTime;
 			attacker.ScheduleWait( attackTime - world.time );

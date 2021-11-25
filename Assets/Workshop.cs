@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;
 
-public class Workshop : Building, Worker.Callback.IHandler
+public class Workshop : Building, Unit.Callback.IHandler
 {
 	public int output;
 	public Ground.Area outputArea = new Ground.Area();
@@ -207,7 +207,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		unknown = -1
 	}
 
-	public class GetResource : Worker.Task
+	public class GetResource : Unit.Task
 	{
 		public Resource resource;
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
@@ -226,7 +226,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 
 
-		public void Setup( Worker boss, Resource resource )
+		public void Setup( Unit boss, Resource resource )
 		{
 			base.Setup( boss );
 			this.resource = resource;
@@ -292,14 +292,14 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 	}
 
-	public class Plant : Worker.Task
+	public class Plant : Unit.Task
 	{
 		public Node node;
 		public World.Timer wait = new World.Timer();
 		public bool done;
 		public Resource.Type resourceType;
 
-		public void Setup( Worker boss, Node node, Resource.Type resourceType )
+		public void Setup( Unit boss, Node node, Resource.Type resourceType )
 		{
 			base.Setup( boss );
 			this.node = node;
@@ -312,7 +312,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 			if ( done )
 			{
-				boss.animator?.SetBool( Worker.sowingID, false );
+				boss.animator?.SetBool( Unit.sowingID, false );
 				return true;
 			}
 			if ( boss.node != node || node.building || node.flag || node.road || !node.CheckType( Node.Type.land ) )
@@ -324,18 +324,18 @@ public class Workshop : Building, Worker.Callback.IHandler
 					id = node.flag.id;
 				if ( node.road )
 					id = node.road.id;
-				World.CRC( ( id << 16 ) + (int)node.type, OperationHandler.Event.CodeLocation.workerTaskPlant );
+				World.CRC( ( id << 16 ) + (int)node.type, OperationHandler.Event.CodeLocation.unitTaskPlant );
 				( boss.building as Workshop ).SetWorking( false );
 				return true;
 			}
 
-			if ( node.block.IsBlocking( Node.Block.Type.workers ) )
+			if ( node.block.IsBlocking( Node.Block.Type.units ) )
 				return true;
 
 			Resource.Create().Setup( node, resourceType );
 			done = true;
 			wait.Start( 300 );
-			boss.animator?.SetBool( Worker.sowingID, true );
+			boss.animator?.SetBool( Unit.sowingID, true );
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
 			boss.ScheduleCall( boss.building as Workshop );
@@ -343,7 +343,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		}
 	}
 
-	public class Pasturing : Worker.Task
+	public class Pasturing : Unit.Task
 	{
 		public Resource resource;
 		[Obsolete( "Compatibility with old files", true )]
@@ -667,10 +667,10 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( type == Type.barrack && output > 0 )
 		{
 			output--;
-			Worker.Create().SetupAsSoldier( this ).ScheduleWalkToNeighbour( flag.node, true );
+			Unit.Create().SetupAsSoldier( this ).ScheduleWalkToNeighbour( flag.node, true );
 		}
 
-		if ( gatherer && worker.IsIdle() && worker.node == node )
+		if ( gatherer && tinkerer.IsIdle() && tinkerer.node == node )
 			SetWorking( false );
 
 		while ( statuses.Count > 0 && time - statuses.First().startTime > Constants.Workshop.maxSavedStatusTime )
@@ -720,19 +720,19 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( !construction.done || blueprintOnly )
 			return;
 
-		if ( worker == null )
-			dispenser = worker = Worker.Create().SetupForBuilding( this );
-		if ( workerMate == null )
+		if ( tinkerer == null )
+			dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
+		if ( tinkererMate == null )
 		{
-			dispenser = workerMate = Worker.Create().SetupForBuilding( this, true );
-			workerMate.ScheduleWait( 100, true );
+			dispenser = tinkererMate = Unit.Create().SetupForBuilding( this, true );
+			tinkererMate.ScheduleWait( 100, true );
 		}
 
 		switch ( type )
 		{
 			case Type.farm:
 			{
-				if ( worker.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
+				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
 					if ( output < productionConfiguration.outputMax )
 					{
@@ -761,13 +761,13 @@ public class Workshop : Building, Worker.Callback.IHandler
 						PlantAt( place, Resource.Type.cornfield );
 						return;
 					}
-					worker.ScheduleWait( 300 );
+					tinkerer.ScheduleWait( 300 );
 				}
 				break;
 			}
 			case Type.forester:
 			{
-				if ( worker.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
+				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
 					ChangeStatus( Status.waitingForResource );
 					var o = Ground.areas[productionConfiguration.gatheringRange];
@@ -782,7 +782,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
 							{
-								if ( place.Add( j ).block.IsBlocking( Node.Block.Type.workers ) )
+								if ( place.Add( j ).block.IsBlocking( Node.Block.Type.units ) )
 									blockedAdjacentNodes++;
 							}
 							if ( blockedAdjacentNodes >= 2 )
@@ -791,7 +791,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 						PlantAt( place, Resource.Type.tree );
 						return;
 					}
-					worker.ScheduleWait( 300 );
+					tinkerer.ScheduleWait( 300 );
 				}
 				break;
 			}
@@ -865,7 +865,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void ProcessInput()
 	{
-		if ( !working && worker.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
+		if ( !working && tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 		{
 			if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
 			{
@@ -897,7 +897,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	void CollectResource( Resource.Type resourceType, int range )
 	{
-		if ( !worker || !worker.IsIdle( true ) || mode == Mode.sleeping )
+		if ( !tinkerer || !tinkerer.IsIdle( true ) || mode == Mode.sleeping )
 			return;
 		if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
 		{
@@ -908,7 +908,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 			return;
 
 		resourcePlace = null;
-		assert.IsTrue( worker.IsIdle() );
+		assert.IsTrue( tinkerer.IsIdle() );
 		assert.IsTrue( range < Ground.areas.Length );
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
@@ -944,7 +944,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( !gatherer )
 			return progress;
 
-		var getResourceTask = worker.FindTaskInQueue<GetResource>();
+		var getResourceTask = tinkerer.FindTaskInQueue<GetResource>();
 		if ( getResourceTask == null )
 			return 0;
 
@@ -956,39 +956,39 @@ public class Workshop : Building, Worker.Callback.IHandler
 		if ( !UseInput() || flag.freeSlots == 0 )
 			return;
 
-		assert.IsTrue( worker.IsIdle() );
-		worker.SetActive( true );
+		assert.IsTrue( tinkerer.IsIdle() );
+		tinkerer.SetActive( true );
 		if ( resource.underGround )
-			worker.SetStandingHeight( -10 );	// Moving the miner go underground, to avoid it being picked by mouse clicks
+			tinkerer.SetStandingHeight( -10 );	// Moving the miner go underground, to avoid it being picked by mouse clicks
 		if ( !resource.underGround )
 		{
-			worker.ScheduleWalkToNeighbour( flag.node );
-			worker.ScheduleWalkToNode( resource.node, true, false, Worker.resourceCollectAct[(int)resource.type] );
+			tinkerer.ScheduleWalkToNeighbour( flag.node );
+			tinkerer.ScheduleWalkToNode( resource.node, true, false, Unit.resourceCollectAct[(int)resource.type] );
 		}
 		resourcePlace = resource.node;
 		var task = ScriptableObject.CreateInstance<GetResource>();
-		task.Setup( worker, resource );
-		worker.ScheduleTask( task );
-		resource.hunter = worker;
+		task.Setup( tinkerer, resource );
+		tinkerer.ScheduleTask( task );
+		resource.hunter = tinkerer;
 		SetWorking( true );
 	}
 
-	static void FinishJob( Worker worker, Item.Type itemType )
+	static void FinishJob( Unit unit, Item.Type itemType )
 	{
 		Item item = null;
 		if ( itemType != Item.Type.unknown )
-			item = Item.Create().Setup( itemType, worker.building );
+			item = Item.Create().Setup( itemType, unit.building );
 		if ( item != null )
 		{
-			item.SetRawTarget( worker.building );
-			item.worker = worker;
-			worker.SchedulePickupItem( item );
+			item.SetRawTarget( unit.building );
+			item.hauler = unit;
+			unit.SchedulePickupItem( item );
 		}
-		worker.ScheduleWalkToNode( worker.building.flag.node );
-		worker.ScheduleWalkToNeighbour( worker.building.node );
+		unit.ScheduleWalkToNode( unit.building.flag.node );
+		unit.ScheduleWalkToNeighbour( unit.building.node );
 		if ( item != null )
-			worker.ScheduleDeliverItem( item );
-		worker.ScheduleCall( worker.building as Workshop );
+			unit.ScheduleDeliverItem( item );
+		unit.ScheduleCall( unit.building as Workshop );
 	}
 
 	public void PlayWorkingSound()
@@ -1022,23 +1022,23 @@ public class Workshop : Building, Worker.Callback.IHandler
 			ChangeStatus( Status.working );
 	}
 
-	public void Callback( Worker worker )
+	public void Callback( Unit tinkerer )
 	{
-		// Worker returned back from gathering resource
-		worker.SetStandingHeight( 0 );	// Bring miners back to the surface
-		assert.AreEqual( worker, this.worker );	// TODO Triggered shortly after removing a flag and roads. Triggered in a farm, not close to where the flag and roads were removed
+		// Tinkerer returned back from gathering resource
+		tinkerer.SetStandingHeight( 0 );	// Bring miners back to the surface
+		assert.AreEqual( tinkerer, this.tinkerer );	// TODO Triggered shortly after removing a flag and roads. Triggered in a farm, not close to where the flag and roads were removed
 		SetWorking( false );
 	}
 
 	void PlantAt( Node place, Resource.Type resourceType )
 	{
-		assert.IsTrue( worker.IsIdle() );
-		worker.SetActive( true );
-		worker.ScheduleWalkToNeighbour( flag.node );
-		worker.ScheduleWalkToNode( place, true );
+		assert.IsTrue( tinkerer.IsIdle() );
+		tinkerer.SetActive( true );
+		tinkerer.ScheduleWalkToNeighbour( flag.node );
+		tinkerer.ScheduleWalkToNode( place, true );
 		var task = ScriptableObject.CreateInstance<Plant>();
-		task.Setup( worker, place, resourceType );
-		worker.ScheduleTask( task );
+		task.Setup( tinkerer, place, resourceType );
+		tinkerer.ScheduleTask( task );
 		SetWorking( true );
 	}
 
@@ -1127,7 +1127,7 @@ public class Workshop : Building, Worker.Callback.IHandler
 
 	public override void Validate( bool chain )
 	{
-		assert.IsFalse( working && worker.node == node && worker.taskQueue.Count == 0 && worker.walkTo && gatherer );
+		assert.IsFalse( working && tinkerer.node == node && tinkerer.taskQueue.Count == 0 && tinkerer.walkTo && gatherer );
 		base.Validate( chain );
 		int itemsOnTheWayCount = 0;
 		foreach ( Buffer b in buffers )
@@ -1142,9 +1142,9 @@ public class Workshop : Building, Worker.Callback.IHandler
 			assert.IsTrue( missing >= 0 && missing < 2 );
 			if ( missing == 1 )
 			{
-				// If an incoming item is missing, then that can only happen if the worker is just gathering it
+				// If an incoming item is missing, then that can only happen if the tinkerer is just gathering it
 				assert.IsTrue( gatherer );
-				assert.IsFalse( worker.IsIdle() );
+				assert.IsFalse( tinkerer.IsIdle() );
 			}
 		}
 		if ( currentStatus != Status.unknown && !World.massDestroy )
