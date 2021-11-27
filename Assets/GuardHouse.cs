@@ -71,8 +71,8 @@ public abstract class Attackable : Building
 			assert.AreEqual( attacker.team, aggressor.team );
 			if ( assassin )
 				return;
-			attacker.ScheduleWalkToNeighbour( flag.node );
-			attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.stabInTheBackAct );
+			attacker.ScheduleWalkToNode( flag.node.Neighbour( 0 ) );
+			attacker.ScheduleWalkToNeighbour( flag.node, false, Unit.stabInTheBackAct );
 			assassin = attacker;
 			attackers.Remove( assassin );
 			return;
@@ -80,7 +80,7 @@ public abstract class Attackable : Building
 
 		defender = GetDefender();
 		defender.ScheduleWalkToNeighbour( flag.node );
-		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.fightingAct );
+		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.defendingAct );
 		attacker.ScheduleWalkToNeighbour( flag.node );
 		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Unit.fightingAct );
 

@@ -107,9 +107,14 @@ public class Unit : HiveObject
 
 	public class Act
 	{
+		public interface IDirector
+		{
+			void UpdateAnimator( Animator animator, int frame );
+		}
 		public float timeToInterrupt = -1;
 		public int duration;
 		public int animation;
+		public bool animationTrigger;
 		public GameObject toolTemplate;
 		public LinkType toolSlot;
 		public Direction turnTo;
@@ -119,6 +124,7 @@ public class Unit : HiveObject
 			water,
 			reverse
 		}
+		public IDirector director;
 	}
 
 	public enum AnimationSound
@@ -194,8 +200,9 @@ public class Unit : HiveObject
 
 	public class DoAct : Task
 	{
+		[JsonIgnore]	// TODO (restore the act after deserialize based on name maybe?)
 		public Act act;
-		public World.Timer timer = new World.Timer();
+		public World.Timer timer = new World.Timer(), timeSinceStarted = new World.Timer();
 		public bool started = false;
 		public BodyState preState;
 		GameObject tool;
@@ -227,12 +234,19 @@ public class Unit : HiveObject
 			if ( boss.animator )
 				wasWalking = boss.animator.GetBool( walkingID );
 			boss.animator?.SetBool( walkingID, false );
-			boss.animator?.SetBool( act.animation, true );
+			if ( act.director == null )
+			{
+				if ( act.animationTrigger )
+					boss.animator?.SetTrigger( act.animation );
+				else
+					boss.animator?.SetBool( act.animation, true );
+			}
 			preState = boss.bodyState;
 			boss.bodyState = BodyState.custom;
 			if ( act.toolTemplate )
 				tool = Instantiate( act.toolTemplate, boss.links[(int)act.toolSlot]?.transform );
 			timer.Start( act.duration );
+			timeSinceStarted.Start();
 			started = true;
 		}
 
@@ -241,7 +255,8 @@ public class Unit : HiveObject
 			if ( !started )
 				return;
 			timer.Reset();
-			boss.animator?.SetBool( act.animation, false );
+			if ( act.director == null )
+				boss.animator?.SetBool( act.animation, false );
 			boss.animator?.SetBool( walkingID, wasWalking );
 			boss.bodyState = preState;
 			if ( tool )
@@ -255,7 +270,11 @@ public class Unit : HiveObject
 			if ( act == null )
 				return false;
 			if ( timer.inProgress )
+			{
+				if ( act.director != null )
+					act.director.UpdateAnimator( boss.animator, timeSinceStarted.age );
 				return true;
+			}
 
 			if ( timer.done )
 			{
@@ -267,6 +286,8 @@ public class Unit : HiveObject
 			if ( !started && boss.walkProgress >= act.timeToInterrupt && act.timeToInterrupt >= 0 )
 			{
 				Start();
+				if ( act.director != null )
+					act.director.UpdateAnimator( boss.animator, timeSinceStarted.age );
 				return true;
 			}
 
@@ -930,7 +951,26 @@ public class Unit : HiveObject
 		tinkererMate
 	}
 
-	public static void Initialize()
+    public class FightDirector : Act.IDirector
+    {
+		public bool attacker;
+		public FightDirector( bool attacker )
+		{
+			this.attacker = attacker;
+		}
+        public void UpdateAnimator( Animator animator, int frame )
+        {
+			if ( !attacker )
+				frame += Constants.GuardHouse.fightLoopLength / 2;
+			int fragment = frame % Constants.GuardHouse.fightLoopLength;
+			if ( fragment == Constants.GuardHouse.hitTime )
+				animator.SetTrigger( attackID );
+			if ( fragment == Constants.GuardHouse.sufferTime )
+				animator.SetTrigger( defendID );
+        }
+    }
+
+    public static void Initialize()
 	{
 		object[] lookData = {
 		"prefabs/characters/peasant", Type.tinkerer,
@@ -955,9 +995,9 @@ public class Unit : HiveObject
 		shovelingID = Animator.StringToHash( "shoveling" );
 		harvestingID = Animator.StringToHash( "harvesting" );
 		sowingID = Animator.StringToHash( "sowing" );
-		attackID = Animator.StringToHash( "hit ");
-		defendID = Animator.StringToHash( "suffer" );
-		stabID = Animator.StringToHash( "stab" );
+		attackID = Animator.StringToHash( "hitting" );
+		defendID = Animator.StringToHash( "suffering" );
+		stabID = Animator.StringToHash( "stabbing" );
 
 		object[] walk = {
 			"effects/cart", Type.cart };
@@ -1018,10 +1058,19 @@ public class Unit : HiveObject
 			toolSlot = LinkType.rightHand,
 			duration = -1
 		};
-		fightingAct = new Act	// TODO
+		fightingAct = new Act
 		{
-			animation = attackID,
-			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/hammer" ),
+			director = new FightDirector( true ),
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/sword" ),
+			toolSlot = LinkType.rightHand,
+			turnTo = Act.Direction.reverse,
+			timeToInterrupt = 0.2f,
+			duration = int.MaxValue
+		};
+		defendingAct = new Act
+		{
+			director = new FightDirector( false ),
+			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/sword" ),
 			toolSlot = LinkType.rightHand,
 			turnTo = Act.Direction.reverse,
 			timeToInterrupt = 0.2f,
@@ -1030,18 +1079,9 @@ public class Unit : HiveObject
 		stabInTheBackAct = new Act
 		{
 			animation = stabID,
+			animationTrigger = true,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
 			toolSlot = LinkType.rightHand,
-			turnTo = Act.Direction.reverse,
-			timeToInterrupt = 0.5f,
-			duration = 100
-		};
-		defendingAct = new Act
-		{
-			animation = defendID,	// TODO
-			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
-			toolSlot = LinkType.rightHand,
-			turnTo = Act.Direction.reverse,
 			timeToInterrupt = 0.5f,
 			duration = 100
 		};

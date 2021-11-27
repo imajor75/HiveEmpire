@@ -143,6 +143,9 @@ public static class Constants
     {
     	public const int defaultInfluence = 8;
         public const int deathFadeTime = 100;
+        public const int fightLoopLength = 200;
+        public const int hitTime = 0;
+        public const int sufferTime = 120;
     }
 
     public static class HeightMap

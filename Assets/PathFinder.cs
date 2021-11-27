@@ -151,7 +151,7 @@ public class PathFinder : ScriptableObject
 					VisitNode( road.lastNode, r.costG + road.cost, r, road, false );
 				else
 				{
-					Assert.global.AreEqual( index, road.nodes.Count - 1 );
+					road.assert.AreEqual( index, road.nodes.Count - 1 );	// TODO Triggered, index==-1
 					VisitNode( road.nodes[0], r.costG + road.cost, r, road, true );
 				}
 			}
