@@ -230,7 +230,6 @@ public class GuardHouse : Attackable
 		}
 	}
 
-
 	public override void OnClicked( bool show = false )
 	{
 		base.OnClicked( show );

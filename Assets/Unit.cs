@@ -43,7 +43,7 @@ public class Unit : HiveObject
 	static public MediaTable<AudioClip, Type> walkSounds;
 	static public MediaTable<AudioClip, AnimationSound> animationSounds;
 	static public List<GameObject> templates = new List<GameObject>();
-	static public int walkingID, pickupHeavyID, pickupLightID, putdownID;
+	static public int walkingID, pickupHeavyID, pickupLightID, putdownID, deathID;
 	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
 	static public int attackID, defendID, stabID;
 
@@ -109,7 +109,7 @@ public class Unit : HiveObject
 	{
 		public interface IDirector
 		{
-			void UpdateAnimator( Animator animator, int frame );
+			void UpdateAnimator( Unit unit, int frame );
 		}
 		public float timeToInterrupt = -1;
 		public int duration;
@@ -272,7 +272,7 @@ public class Unit : HiveObject
 			if ( timer.inProgress )
 			{
 				if ( act.director != null )
-					act.director.UpdateAnimator( boss.animator, timeSinceStarted.age );
+					act.director.UpdateAnimator( boss, timeSinceStarted.age );
 				return true;
 			}
 
@@ -287,7 +287,7 @@ public class Unit : HiveObject
 			{
 				Start();
 				if ( act.director != null )
-					act.director.UpdateAnimator( boss.animator, timeSinceStarted.age );
+					act.director.UpdateAnimator( boss, timeSinceStarted.age );
 				return true;
 			}
 
@@ -958,15 +958,32 @@ public class Unit : HiveObject
 		{
 			this.attacker = attacker;
 		}
-        public void UpdateAnimator( Animator animator, int frame )
+        public void UpdateAnimator( Unit unit, int frame )
         {
 			if ( !attacker )
 				frame += Constants.GuardHouse.fightLoopLength / 2;
 			int fragment = frame % Constants.GuardHouse.fightLoopLength;
 			if ( fragment == Constants.GuardHouse.hitTime )
-				animator.SetTrigger( attackID );
+				unit.animator.SetTrigger( attackID );
 			if ( fragment == Constants.GuardHouse.sufferTime )
-				animator.SetTrigger( defendID );
+				unit.animator.SetTrigger( defendID );
+        }
+    }
+
+    public class StabDirector : Act.IDirector
+	{
+		public bool kill;
+
+        public void UpdateAnimator( Unit unit, int frame )
+        {
+			if ( !kill && frame > 25 )
+			{
+				var guardHouse = unit.building as Attackable;
+				guardHouse?.defender?.animator?.SetTrigger( Unit.deathID );
+				kill = true;
+			}
+			if ( frame == 0 )
+				unit.animator.SetTrigger( Unit.stabID );
         }
     }
 
@@ -998,6 +1015,7 @@ public class Unit : HiveObject
 		attackID = Animator.StringToHash( "hitting" );
 		defendID = Animator.StringToHash( "suffering" );
 		stabID = Animator.StringToHash( "stabbing" );
+		deathID = Animator.StringToHash( "death" );
 
 		object[] walk = {
 			"effects/cart", Type.cart };
@@ -1078,12 +1096,12 @@ public class Unit : HiveObject
 		};
 		stabInTheBackAct = new Act
 		{
-			animation = stabID,
+			director = new StabDirector(),
 			animationTrigger = true,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
 			toolSlot = LinkType.rightHand,
 			timeToInterrupt = 0.5f,
-			duration = 100
+			duration = 150
 		};
 
 		animationSounds.fileNamePrefix = "effects/";
