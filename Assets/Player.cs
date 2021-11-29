@@ -321,6 +321,7 @@ public class Team : HiveCommon
 			attacker.ScheduleWalkToNeighbour( mainBuilding.flag.node );
 			attacker.ScheduleWalkToNode( gather[(i+target.lastSpot)%gather.Count] );
 			target.attackers.Add( attacker );
+			soldierCount--;
 		}
 		target.lastSpot += attackerCount;
 	}
