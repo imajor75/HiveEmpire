@@ -133,7 +133,10 @@ public class Unit : HiveObject
 		harvest,
 		pickaxeOnRock,
 		construction,
-		stab
+		stab,
+		hit,
+		stabInTheBack,
+		death
 	}
 
 	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
