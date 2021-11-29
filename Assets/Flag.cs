@@ -32,9 +32,9 @@ public class Flag : HiveObject
 
 	static public void Initialize()
 	{
-		template = (GameObject)Resources.Load( "prefabs/others/pathPointers" );
+		template = Resources.Load<GameObject>( "prefabs/others/pathPointers" );
 		Assert.global.IsNotNull( template );
-		baseTemplate = (GameObject)Resources.Load( "prefabs/others/flagBase" );
+		baseTemplate = Resources.Load<GameObject>( "prefabs/others/flagBase" );
 		Assert.global.IsNotNull( baseTemplate );
 	}
 
@@ -151,13 +151,16 @@ public class Flag : HiveObject
 		var tileMesh = tiles.GetComponent<MeshFilter>().mesh;
 		var gt = ground.transform;
 		var vertices = tileMesh.vertices;
+		var colors = new Color[vertices.Length];
 		for ( int i = 0; i < vertices.Length; i++ )
 		{
 			var groundPosition = gt.InverseTransformPoint( tiles.transform.TransformPoint( vertices[i] ) );
 			groundPosition.y = ground.GetHeightAt( groundPosition.x, groundPosition.z ) + Constants.Flag.tilesHeight;
 			vertices[i] = tiles.transform.InverseTransformPoint( gt.TransformPoint( groundPosition ) );
+			colors[i] = Color.black;
 		}
 		tileMesh.vertices = vertices;
+		tileMesh.colors = colors;
 	}
 
 	public void CaptureRoads()
