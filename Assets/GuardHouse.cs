@@ -146,7 +146,10 @@ public class GuardHouse : Attackable
 			soldier.building = null;
 		soldiers.Clear();
 		foreach ( var soldier in attackers )
+		{
+			soldier.standingOffsetInsideBuilding = GetNextSoldierSpot();
 			soldiers.Add( soldier );
+		}
 		attackers.Clear();
 		assassin = aggressor = null;
 		SetTeam( soldiers.First().team );
@@ -222,12 +225,18 @@ public class GuardHouse : Attackable
 			while ( soldiers.Count < optimalSoldierCount && team.soldierCount > 0 )
 			{
 				var newSoldier = Unit.Create().SetupAsSoldier( this );
-				var a = Math.PI * soldiers.Count * 2 / 3;
 				team.soldierCount--;
-				newSoldier.standingOffset.Set( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
+				newSoldier.standingOffsetInsideBuilding = GetNextSoldierSpot();
 				soldiers.Add( newSoldier );
 			}
 		}
+	}
+
+	public int lastDefenderSpot;
+	Vector3 GetNextSoldierSpot()
+	{
+		var a = Math.PI * lastDefenderSpot++ * 2 / 3.2f;
+		return new Vector3( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
 	}
 
 	public override void OnClicked( bool show = false )

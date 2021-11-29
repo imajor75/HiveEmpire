@@ -17,7 +17,7 @@ public class Unit : HiveObject
 	public int walkBlock;
 	public bool walkBackward;
 	public float walkProgress;
-	public Vector3 standingOffset;
+	public Vector3 standingOffsetInsideBuilding;
 	public float speed = 1;
 	public Node node;
 	public Item[] itemsInHands = new Item[2];
@@ -73,7 +73,9 @@ public class Unit : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	GameObject haulingBox;
 	[Obsolete( "Compatibility with old files", true )]
-	public float standingHeight { set { standingOffset = new Vector3( 0, value, 0 ); } }
+	public float standingHeight { set { standingOffsetInsideBuilding = new Vector3( 0, value, 0 ); } }
+	[Obsolete( "Compatibility with old files", true )]
+	public Vector3 standingOffset { set { standingOffsetInsideBuilding = value; } }
 
 	public enum LinkType
 	{
@@ -1256,7 +1258,7 @@ public class Unit : HiveObject
 	new public void Start()
 	{
 		ground.Link( this, walkBase?.location );
-		transform.position = node.position + standingOffset;
+		transform.position = node.position + ( node == building?.node ? standingOffsetInsideBuilding : Vector3.zero );
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
 
@@ -1993,7 +1995,7 @@ public class Unit : HiveObject
 				animator?.SetBool( walkingID, false );
 				soundSource?.Stop();
 				ground.Link( this );
-				transform.localPosition = node.position + standingOffset;
+				transform.localPosition = node.position + ( node == building?.node ? standingOffsetInsideBuilding : Vector3.zero );
 				if ( taskQueue.Count > 0 )
 				{
 					WalkToRoadPoint task = taskQueue[0] as WalkToRoadPoint;
@@ -2194,7 +2196,7 @@ public class Unit : HiveObject
 
 	public void SetStandingHeight( float standingHeight )
 	{
-		standingOffset.Set( 0, standingHeight, 0 );
+		standingOffsetInsideBuilding.Set( 0, standingHeight, 0 );
 		transform.localPosition = node.position + Vector3.up * standingHeight;
 	}
 
