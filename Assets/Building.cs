@@ -284,7 +284,7 @@ abstract public class Building : HiveObject
 
 		public bool Remove( bool takeYourTime )
 		{
-			hammering?.Stop();
+			hammering?.StopAct();
 			builder?.Remove( takeYourTime );
 			return true;
 		}
@@ -334,17 +334,17 @@ abstract public class Building : HiveObject
 				builder.TurnTo( boss.node );
 				hammering = ScriptableObject.CreateInstance<Unit.DoAct>();
 				hammering.Setup( builder, Unit.constructingAct );
-				hammering.Start();
+				hammering.StartAct();
 			}
 			progress += 1f / boss.configuration.constructionTime;
 			float maxProgress = ((float)plankArrived+stoneArrived)/(boss.configuration.plankNeeded+boss.configuration.stoneNeeded);
 			if ( progress >= maxProgress )
 			{
 				progress = maxProgress;
-				hammering.Stop();
+				hammering.StopAct();
 			}
 			else
-				hammering.Start();
+				hammering.StartAct();
 
 			if ( progress < 1 )
 				return;

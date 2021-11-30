@@ -109,6 +109,11 @@ public class Unit : HiveObject
 
 	public class Act
 	{
+		public Act( string name )
+		{
+			this.name = name;
+	
+		}
 		public interface IDirector
 		{
 			void UpdateAnimator( Unit unit, int frame );
@@ -127,6 +132,7 @@ public class Unit : HiveObject
 			reverse
 		}
 		public IDirector director;
+		public string name;
 	}
 
 	public enum AnimationSound
@@ -152,7 +158,8 @@ public class Unit : HiveObject
 			this.boss = boss;
 			return this;
 		}
-		public virtual void Prepare() { }
+		public virtual void Start() {}
+		public virtual void Prepare() {}
 		public virtual bool InterruptWalk() { return false; }
 		public virtual bool ExecuteFrame() { return false; }
 		public virtual void Cancel() { }
@@ -212,6 +219,33 @@ public class Unit : HiveObject
 		public BodyState preState;
 		GameObject tool;
 		public bool wasWalking;
+		[JsonProperty]
+		public string actName
+		{
+			get
+			{
+				return act.name;
+			}
+			set
+			{
+				foreach ( var act in Unit.actLibrary )
+				{
+					if ( act.name == value )
+					{
+						this.act = act;
+						return;
+					}
+				}
+				boss.assert.Fail( $"Act {value} not found" );
+			}
+		}
+
+		public override void Start()
+		{
+			if ( started )
+				Catch( act );
+			base.Start();
+		}
 
 		public void Setup( Unit boss, Act act )
 		{
@@ -219,11 +253,8 @@ public class Unit : HiveObject
 			this.act = act;
 		}
 
-		public void Start()
+		void Catch( Act act )
 		{
-			if ( started )
-				return;
-
 			if ( act.turnTo == Act.Direction.water )
 			{
 				foreach ( var c in Ground.areas[1] )
@@ -236,9 +267,6 @@ public class Unit : HiveObject
 			if ( act.turnTo == Act.Direction.reverse && boss.walkFrom )
 				boss.TurnTo( boss.walkFrom );
 
-			if ( boss.animator )
-				wasWalking = boss.animator.GetBool( walkingID );
-			boss.animator?.SetBool( walkingID, false );
 			if ( act.director == null )
 			{
 				if ( act.animationTrigger )
@@ -246,16 +274,28 @@ public class Unit : HiveObject
 				else
 					boss.animator?.SetBool( act.animation, true );
 			}
-			preState = boss.bodyState;
-			boss.bodyState = BodyState.custom;
+
 			if ( act.toolTemplate )
 				tool = Instantiate( act.toolTemplate, boss.links[(int)act.toolSlot]?.transform );
+		}
+
+		public void StartAct()
+		{
+			if ( started )
+				return;
+
+			Catch( act );
+			if ( boss.animator )
+				wasWalking = boss.animator.GetBool( walkingID );
+			boss.animator?.SetBool( walkingID, false );
+			preState = boss.bodyState;
+			boss.bodyState = BodyState.custom;
 			timer.Start( act.duration );
 			timeSinceStarted.Start();
 			started = true;
 		}
 
-		public void Stop()
+		public void StopAct()
 		{
 			if ( !started )
 				return;
@@ -283,14 +323,14 @@ public class Unit : HiveObject
 
 			if ( timer.done )
 			{
-				Stop();
+				StopAct();
 				act = null;
 				return false;
 			}
 
 			if ( !started && boss.walkProgress >= act.timeToInterrupt && act.timeToInterrupt >= 0 )
 			{
-				Start();
+				StartAct();
 				if ( act.director != null )
 					act.director.UpdateAnimator( boss, timeSinceStarted.age );
 				return true;
@@ -308,18 +348,18 @@ public class Unit : HiveObject
 
 			if ( timer.done )
 			{
-				Stop();
+				StopAct();
 				return true;
 			}
 
-			Start();
+			StartAct();
 			return false;
 		}
 
 		public override void Cancel()
 		{
 			if ( started )
-				Stop();
+				StopAct();
 			base.Cancel();
 		}
 	}
@@ -1028,7 +1068,7 @@ public class Unit : HiveObject
 
 		arrowSprite = Resources.Load<Sprite>( "icons/arrow" );
 
-		resourceCollectAct[(int)Resource.Type.tree] = new Act
+		resourceCollectAct[(int)Resource.Type.tree] = new Act( "cutTree" )
 		{
 			animation = choppingID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/axe" ),
@@ -1036,7 +1076,7 @@ public class Unit : HiveObject
 			timeToInterrupt = 0.7f,
 			duration = 500
 		};
-		resourceCollectAct[(int)Resource.Type.rock] = new Act
+		resourceCollectAct[(int)Resource.Type.rock] = new Act( "cutRock" )
 		{
 			animation = miningID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/pickaxe" ),
@@ -1044,7 +1084,7 @@ public class Unit : HiveObject
 			timeToInterrupt = 0.7f,
 			duration = 500
 		};
-		resourceCollectAct[(int)Resource.Type.fish] = new Act
+		resourceCollectAct[(int)Resource.Type.fish] = new Act( "catchFish" )
 		{
 			animation = fishingID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/stick" ),
@@ -1053,13 +1093,13 @@ public class Unit : HiveObject
 			duration = 500,
 			turnTo = Act.Direction.water
 		};
-		resourceCollectAct[(int)Resource.Type.cornfield] = new Act
+		resourceCollectAct[(int)Resource.Type.cornfield] = new Act( "harvestCorn" )
 		{
 			animation = harvestingID,
 			timeToInterrupt = 1.0f,
 			duration = 500
 		};
-		resourceCollectAct[(int)Resource.Type.pasturingAnimal] = new Act
+		resourceCollectAct[(int)Resource.Type.pasturingAnimal] = new Act( "pasture" )
 		{
 			animation = skinningID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/dagger" ),
@@ -1067,21 +1107,21 @@ public class Unit : HiveObject
 			timeToInterrupt = 0.8f,
 			duration = 300
 		};
-		shovelingAct = new Act
+		shovelingAct = new Act( "shovel" )
 		{
 			animation = shovelingID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/shovel" ),
 			toolSlot = LinkType.leftHand,
 			duration = Constants.Building.flatteningTime
 		};
-		constructingAct = new Act
+		constructingAct = new Act( "construct" )
 		{
 			animation = buildingID,
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/hammer" ),
 			toolSlot = LinkType.rightHand,
 			duration = -1
 		};
-		fightingAct = new Act
+		fightingAct = new Act( "fight" )
 		{
 			director = new FightDirector( true ),
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/sword" ),
@@ -1090,7 +1130,7 @@ public class Unit : HiveObject
 			timeToInterrupt = 0.2f,
 			duration = int.MaxValue
 		};
-		defendingAct = new Act
+		defendingAct = new Act( "defend" )
 		{
 			director = new FightDirector( false ),
 			toolTemplate = Resources.Load<GameObject>( "prefabs/tools/sword" ),
@@ -1099,7 +1139,7 @@ public class Unit : HiveObject
 			timeToInterrupt = 0.2f,
 			duration = int.MaxValue
 		};
-		stabInTheBackAct = new Act
+		stabInTheBackAct = new Act( "assassin" )
 		{
 			director = new StabDirector(),
 			animationTrigger = true,
@@ -1109,6 +1149,16 @@ public class Unit : HiveObject
 			duration = 150
 		};
 
+		actLibrary = new List<Act>();
+		foreach ( var act in resourceCollectAct )
+			if ( act != null )
+				actLibrary.Add( act );
+		actLibrary.Add( shovelingAct );
+		actLibrary.Add( constructingAct );
+		actLibrary.Add( fightingAct );
+		actLibrary.Add( defendingAct );
+		actLibrary.Add( stabInTheBackAct );
+
 		animationSounds.fileNamePrefix = "effects/";
 		object[] animationSoundData = 
 		{
@@ -1116,6 +1166,8 @@ public class Unit : HiveObject
 		};
 		animationSounds.Fill( animationSoundData );
 	}
+
+	public static List<Act> actLibrary;
 
 	static public Unit Create()
 	{
@@ -1258,7 +1310,12 @@ public class Unit : HiveObject
 	new public void Start()
 	{
 		ground.Link( this, walkBase?.location );
-		transform.position = node.position + ( node == building?.node ? standingOffsetInsideBuilding : Vector3.zero );
+		Vector3 pos = node.position;
+		if ( node == building )
+			pos += standingOffsetInsideBuilding;
+		if ( walkTo )
+			pos = Vector3.Lerp( walkFrom.position, walkTo.position, walkProgress );
+		transform.position = pos;
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
 
@@ -1353,6 +1410,9 @@ public class Unit : HiveObject
 		}
 		else if ( itemsInHands[0] )
 			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxLight].transform, false );
+
+		foreach ( var task in taskQueue )
+			task.Start();
 
 		base.Start();
 	}

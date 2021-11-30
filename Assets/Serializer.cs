@@ -30,7 +30,7 @@ public class Serializer : JsonSerializer
 			if ( member is FieldInfo t && t.FieldType.Namespace == "UnityEngine" && t.FieldType != typeof( Color ) && t.FieldType != typeof( Vector2 ) && t.FieldType != typeof( Vector3 ) )
 				property.ShouldSerialize = instance => false;
 
-			// We ignore every property
+			// We ignore every property unless it is marked as jsonproperty
 			if ( member is PropertyInfo && member.GetCustomAttribute<JsonPropertyAttribute>() == null )
 				property.ShouldSerialize = instance => false;
 
