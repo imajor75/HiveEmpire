@@ -696,7 +696,6 @@ public class Unit : HiveObject
 						return;
 					}
 				}
-				boss.assert.Fail( $"Act {value} not found" );
 			}
 		}
 		public void Setup( Unit boss, Node target, Act interruption )
@@ -1066,15 +1065,12 @@ public class Unit : HiveObject
 
     public class StabDirector : Act.IDirector
 	{
-		public bool kill;
-
         public void UpdateAnimator( Unit unit, int frame )
         {
-			if ( !kill && frame > 25 )
+			if ( frame == 25 )
 			{
 				var guardHouse = unit.building as Attackable;
 				guardHouse?.defender?.animator?.SetTrigger( Unit.deathID );
-				kill = true;
 			}
 			if ( frame == 0 )
 				unit.animator.SetTrigger( Unit.stabID );
