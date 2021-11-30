@@ -80,8 +80,10 @@ public abstract class Attackable : Building
 
 		defender = GetDefender();
 		defender.ScheduleWalkToNeighbour( flag.node );
+		defender.ScheduleWait( attacker );
 		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.defendingAct );
 		attacker.ScheduleWalkToNeighbour( flag.node );
+		attacker.ScheduleWait( defender );
 		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Unit.fightingAct );
 
 		aggressor = attacker;

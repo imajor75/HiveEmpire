@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.Profiling;
 
 [SelectionBase]
@@ -207,6 +208,33 @@ public class Unit : HiveObject
 		{
 			handler.Callback( boss );
 			return true;
+		}
+	}
+
+	public class Sync : Task
+	{
+		public Unit other;
+		public void Setup( Unit boss, Unit other )
+		{
+			this.other = other;
+			base.Setup( boss );
+		}
+
+		public override bool ExecuteFrame()
+		{
+			if ( !other )
+				return finished;
+
+			if ( other.taskQueue.Count == 0 )
+				return finished;
+
+			if ( other.taskQueue.First() is Sync otherSync && otherSync.other == boss && other.walkTo == null )
+			{
+				otherSync.other = null;
+				return finished;
+			}
+
+			return needModeCalls;
 		}
 	}
 
@@ -649,7 +677,28 @@ public class Unit : HiveObject
 	public class WalkToNeighbour : Task
 	{
 		public Node target;
+		[JsonIgnore]
 		public Act interruption;
+		[JsonProperty]
+		public string interruptionName
+		{
+			get
+			{
+				return interruption?.name;
+			}
+			set
+			{
+				foreach ( var act in Unit.actLibrary )
+				{
+					if ( act.name == value )
+					{
+						this.interruption = act;
+						return;
+					}
+				}
+				boss.assert.Fail( $"Act {value} not found" );
+			}
+		}
 		public void Setup( Unit boss, Node target, Act interruption )
 		{
 			base.Setup( boss );
@@ -1965,6 +2014,13 @@ public class Unit : HiveObject
 	{
 		var instance = ScriptableObject.CreateInstance<Wait>();
 		instance.Setup( this, time );
+		ScheduleTask( instance, first );
+	}
+
+	public void ScheduleWait( Unit other, bool first = false )
+	{
+		var instance = ScriptableObject.CreateInstance<Sync>();
+		instance.Setup( this, other );
 		ScheduleTask( instance, first );
 	}
 
