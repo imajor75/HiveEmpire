@@ -146,6 +146,7 @@ public static class Constants
         public const int fightLoopLength = 200;
         public const int hitTime = 0;
         public const int sufferTime = 120;
+        public const int fightDuration = 300;
     }
 
     public static class HeightMap

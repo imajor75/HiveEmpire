@@ -24,6 +24,27 @@ public abstract class Attackable : Building
 			return aggressor?.team;
 		}
 	}
+
+	public bool readyForAttacker
+	{
+		get
+		{
+			if ( !aggressor )
+				return true;
+
+			assert.IsTrue( aggressor.taskQueue.Count > 0 );
+
+			if ( assassin )
+				return false;
+
+			var fightAct = aggressor.taskQueue.First() as Unit.DoAct;
+
+			if ( fightAct == null || fightAct.timeSinceStarted.age < Constants.GuardHouse.fightDuration )
+				return false;
+
+			return true;
+		}
+	}
 	
 	public abstract int defenderCount { get; }
 	public abstract Unit GetDefender();
@@ -35,12 +56,15 @@ public abstract class Attackable : Building
 		if ( blueprintOnly || !construction.done )
 			return;
 
-		foreach ( var attacker in attackers )
+		if ( readyForAttacker )
 		{
-			if ( attacker.IsIdle() && attacker.node.DistanceFrom( flag.node ) <= 1 )
+			foreach ( var attacker in attackers )
 			{
-				ProcessAttacker( attacker );
-				break;
+				if ( attacker.IsIdle() && attacker.node.DistanceFrom( flag.node ) <= 1 )
+				{
+					ProcessAttacker( attacker );
+					break;
+				}
 			}
 		}
 
