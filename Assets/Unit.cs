@@ -472,17 +472,19 @@ public class Unit : HiveObject
 		public Path path;
 		public bool ignoreFinalObstacle;
 		public HiveObject ignoreObject;
+		public Node avoid;
 
 		public World.Timer interruptionTimer = new World.Timer();
 		public Act lastStepInterruption;
 
-		public void Setup( Unit boss, Node target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null )
+		public void Setup( Unit boss, Node target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null, Node avoid = null )
 		{
 			base.Setup( boss );
 			this.target = target;
 			this.ignoreFinalObstacle = ignoreFinalObstacle;
 			this.lastStepInterruption = lastStepInterruption;
 			this.ignoreObject = ignoreObject;
+			this.avoid = avoid;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -491,7 +493,7 @@ public class Unit : HiveObject
 
 			if ( path == null )
 			{
-				path = Path.Between( boss.node, target, PathFinder.Mode.forUnits, boss, ignoreFinalObstacle, ignoreObject );
+				path = Path.Between( boss.node, target, PathFinder.Mode.forUnits, boss, ignoreFinalObstacle, ignoreObject, avoid );
 				if ( path == null )
 				{
 					Debug.Log( "Unit failed to go to " + target.x + ", " + target.y );
@@ -1957,10 +1959,10 @@ public class Unit : HiveObject
 	/// <param name="interruption"></param>
 	/// <param name="findPathNow"></param>
 	/// <returns>True, if a valid path is found.</returns>
-	public void ScheduleWalkToNode( Node target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, HiveObject ignoreObject = null )
+	public void ScheduleWalkToNode( Node target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, HiveObject ignoreObject = null, Node avoid = null )
 	{
 		var instance = ScriptableObject.CreateInstance<WalkToNode>();
-		instance.Setup( this, target, ignoreFinalObstacle, interruption, ignoreObject );
+		instance.Setup( this, target, ignoreFinalObstacle, interruption, ignoreObject, avoid );
 		ScheduleTask( instance, first );
 	}
 

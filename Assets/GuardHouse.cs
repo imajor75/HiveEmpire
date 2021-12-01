@@ -87,7 +87,7 @@ public abstract class Attackable : Building
 			if ( assassin )
 				return;
 			attacker.ResetTasks();
-			attacker.ScheduleWalkToNode( flag.node.Neighbour( 0 ) );
+			attacker.ScheduleWalkToNode( flag.node.Neighbour( 0 ), avoid:flag.node );
 			attacker.ScheduleWalkToNeighbour( flag.node, false, Unit.stabInTheBackAct );
 			assassin = attacker;
 			attackers.Remove( assassin );

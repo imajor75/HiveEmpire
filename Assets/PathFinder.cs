@@ -5,7 +5,7 @@ using UnityEngine;
 public class PathFinder : ScriptableObject
 {
 	// TODO Detect when circumstances change, and invalidate the path
-	public Node target;
+	public Node target, avoidNode;
 	public List<Reached> visited = new List<Reached>();
 	public List<Node> path = new List<Node>();
 	public List<Road> roadPath = new List<Road>();
@@ -69,6 +69,8 @@ public class PathFinder : ScriptableObject
     {
 		if ( !ignoreFinalObstacle || node != target )
 		{
+			if ( node == avoidNode )
+				return;
 			if ( mode == Mode.forRoads && node.block.IsBlocking( Node.Block.Type.roads ) )
 				return;
 			if ( mode == Mode.forUnits && node.block.IsBlocking( Node.Block.Type.units ) )
@@ -232,10 +234,11 @@ public class Path : PathFinder
 	public int progress;
 	public HiveObject owner;
 
-	public static Path Between( Node start, Node end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
+	public static Path Between( Node start, Node end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null, Node avoid = null )
 	{
 		var p = CreateInstance<Path>();
 		p.owner = owner;
+		p.avoidNode = avoid;
 		if ( p.FindPathBetween( start, end, mode, ignoreFinalObstacle, ignoreObject ) )
 		{
 			if ( mode != Mode.onRoad )
