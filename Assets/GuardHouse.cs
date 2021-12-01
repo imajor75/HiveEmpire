@@ -56,17 +56,8 @@ public abstract class Attackable : Building
 		if ( blueprintOnly || !construction.done )
 			return;
 
-		if ( readyForAttacker )
-		{
-			foreach ( var attacker in attackers )
-			{
-				if ( attacker.IsIdle() && attacker.node.DistanceFrom( flag.node ) <= 1 )
-				{
-					ProcessAttacker( attacker );
-					break;
-				}
-			}
-		}
+		if ( readyForAttacker && attackers.Count > 0 )
+			ProcessAttacker( attackers.First() );
 
 		if ( trashTimer.inProgress )
 		{
@@ -95,6 +86,7 @@ public abstract class Attackable : Building
 			assert.AreEqual( attacker.team, aggressor.team );
 			if ( assassin )
 				return;
+			attacker.ResetTasks();
 			attacker.ScheduleWalkToNode( flag.node.Neighbour( 0 ) );
 			attacker.ScheduleWalkToNeighbour( flag.node, false, Unit.stabInTheBackAct );
 			assassin = attacker;
@@ -106,7 +98,8 @@ public abstract class Attackable : Building
 		defender.ScheduleWalkToNeighbour( flag.node );
 		defender.ScheduleWait( attacker );
 		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.defendingAct );
-		attacker.ScheduleWalkToNeighbour( flag.node );
+		attacker.ResetTasks();
+		attacker.ScheduleWalkToNode( flag.node );
 		attacker.ScheduleWait( defender );
 		attacker.ScheduleWalkToNeighbour( flag.node.Neighbour( 3 ), false, Unit.fightingAct );
 
