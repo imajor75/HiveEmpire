@@ -110,10 +110,13 @@ public class Unit : HiveObject
 
 	public class Act
 	{
+		public Act()
+		{
+			invalid = true;
+		}
 		public Act( string name )
 		{
 			this.name = name;
-	
 		}
 		public interface IDirector
 		{
@@ -134,6 +137,7 @@ public class Unit : HiveObject
 		}
 		public IDirector director;
 		public string name;
+		public bool invalid;
 	}
 
 	public enum AnimationSound
@@ -240,7 +244,7 @@ public class Unit : HiveObject
 
 	public class DoAct : Task
 	{
-		[JsonIgnore]	// TODO (restore the act after deserialize based on name maybe?)
+		[JsonIgnore]
 		public Act act;
 		public World.Timer timer = new World.Timer(), timeSinceStarted = new World.Timer();
 		public bool started = false;
@@ -475,7 +479,27 @@ public class Unit : HiveObject
 		public Node avoid;
 
 		public World.Timer interruptionTimer = new World.Timer();
+		[JsonIgnore]
 		public Act lastStepInterruption;
+		[JsonProperty]
+		public string interruptionName
+		{
+			get
+			{
+				return lastStepInterruption?.name;
+			}
+			set
+			{
+				foreach ( var act in Unit.actLibrary )
+				{
+					if ( act.name == value )
+					{
+						lastStepInterruption = act;
+						return;
+					}
+				}
+			}
+		}
 
 		public void Setup( Unit boss, Node target, bool ignoreFinalObstacle = false, Act lastStepInterruption = null, HiveObject ignoreObject = null, Node avoid = null )
 		{
