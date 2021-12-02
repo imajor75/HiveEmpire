@@ -131,6 +131,10 @@ public abstract class HiveObject : HiveCommon
 	{
 	}
 
+	public virtual void UnitCallback( Unit unit, float floatData, bool boolData ) 
+	{
+	}
+
 	public static HiveObject GetByID( int id )
 	{
 		var list = Resources.FindObjectsOfTypeAll<HiveObject>();

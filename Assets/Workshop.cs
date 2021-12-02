@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;
 
-public class Workshop : Building, Unit.Callback.IHandler
+public class Workshop : Building
 {
 	public int output;
 	public Ground.Area outputArea = new Ground.Area();
@@ -1022,7 +1022,7 @@ public class Workshop : Building, Unit.Callback.IHandler
 			ChangeStatus( Status.working );
 	}
 
-	public void Callback( Unit tinkerer )
+	public override void UnitCallback( Unit tinkerer, float floatData, bool boolData )
 	{
 		// Tinkerer returned back from gathering resource
 		tinkerer.SetStandingHeight( 0 );	// Bring miners back to the surface

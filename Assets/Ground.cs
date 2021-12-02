@@ -489,6 +489,12 @@ public class Ground : HiveObject
             node.Validate( true );
     }
 
+	public override void UnitCallback( Unit unit, float floatData, bool boolData )
+	{
+		if ( boolData || unit.node.fixedHeight == false )
+			unit.node.SetHeight( floatData );
+	}
+
 	[RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ), typeof( MeshCollider ) )]
 	public class Block : HiveObject
 	{

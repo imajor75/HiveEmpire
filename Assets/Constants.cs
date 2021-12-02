@@ -147,6 +147,7 @@ public static class Constants
         public const int hitTime = 0;
         public const int sufferTime = 120;
         public const int fightDuration = 300;
+        public const int constructionTime = Constants.World.normalSpeedPerSecond * 60;
     }
 
     public static class HeightMap

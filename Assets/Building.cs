@@ -129,7 +129,7 @@ abstract public class Building : HiveObject
 	}
 
 	[System.Serializable]
-	public class Flattening : Unit.Callback.IHandler
+	public class Flattening
 	{
 		public int corner;
 		public bool permanent;
@@ -208,7 +208,7 @@ abstract public class Building : HiveObject
 					{
 						builder.ScheduleWalkToNode( node, true, false, null, ignoreDuringWalking );
 						builder.ScheduleDoAct( Unit.shovelingAct );
-						builder.ScheduleCall( this );
+						builder.ScheduleCall( ground, level, permanent );
 					}
 				}
 				return true;
@@ -216,12 +216,6 @@ abstract public class Building : HiveObject
 
 			flattened = true;
 			return false;
-		}
-
-		public void Callback( Unit unit )
-		{
-			if ( permanent || unit.node.fixedHeight == false )
-				unit.node.SetHeight( level );
 		}
 	}
 

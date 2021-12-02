@@ -192,22 +192,22 @@ public class Unit : HiveObject
 
 	public class Callback : Task
 	{
-		public interface IHandler
-		{
-			void Callback( Unit unit );
-		}
-		public IHandler handler;
+		public HiveObject handler;
+		public float floatData;
+		public bool boolData;
 
-		public void Setup( Unit boss, IHandler handler )
+		public void Setup( Unit boss, HiveObject handler, float floatData = 0, bool boolData = false )
 		{
 			base.Setup( boss );
 			this.handler = handler;
+			this.floatData = floatData;
+			this.boolData = boolData;
 		}
 
 		public override bool ExecuteFrame()
 		{
-			handler.Callback( boss );
-			return true;
+			handler.UnitCallback( boss, floatData, boolData );
+			return finished;
 		}
 	}
 
@@ -1913,11 +1913,11 @@ public class Unit : HiveObject
 		return (value, false);
 	}
 
-	public void ScheduleCall( Callback.IHandler handler )
+	public void ScheduleCall( HiveObject handler, float floatData = 0, bool boolData = false )
 	{
 		assert.IsNotNull( handler );
 		var instance = ScriptableObject.CreateInstance<Callback>();
-		instance.Setup( this, handler );
+		instance.Setup( this, handler, floatData, boolData );
 		ScheduleTask( instance );
 	}
 

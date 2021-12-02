@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Stock : Attackable, Unit.Callback.IHandler
+public class Stock : Attackable
 {
 	public bool main = false;
 	public List<ItemTypeData> itemData = new List<ItemTypeData>();
@@ -37,11 +37,6 @@ public class Stock : Attackable, Unit.Callback.IHandler
 		assert.IsTrue( team.soldierCount > 0 );
 		team.soldierCount--;
 		return Unit.Create().SetupAsSoldier( this );
-	}
-
-	public override void Occupy( List<Unit> attackers )
-	{
-		Remove( false );
 	}
 
 	public override List<Ground.Area> areas
@@ -625,10 +620,16 @@ public class Stock : Attackable, Unit.Callback.IHandler
 		return main ? mainTemplate : template;
 	}
 
-	public void Callback( Unit unit )
+	public override void UnitCallback( Unit unit, float floatData, bool boolData )
 	{
 		if ( unit.type == Unit.Type.soldier )
 		{
+			if ( unit.team != team )
+			{
+				Remove( false );
+				return;
+			}
+
 			itemData[(int)Item.Type.soldier].content++;
 			soundSource.Play();
 		}

@@ -10,6 +10,7 @@ public abstract class Attackable : Building
 	public List<Unit> attackers = new List<Unit>();
 	public Unit aggressor, assassin, defender;
 	public int lastSpot;
+	public bool takeoverInProgress;
 
 	List<GameObject> trash = new List<GameObject>();
 	List<Material> trashMaterials = new List<Material>();
@@ -48,7 +49,6 @@ public abstract class Attackable : Building
 	
 	public abstract int defenderCount { get; }
 	public abstract Unit GetDefender();
-	public abstract void Occupy( List<Unit> attackers );
 
 	public override void CriticalUpdate()
 	{
@@ -56,7 +56,7 @@ public abstract class Attackable : Building
 		if ( blueprintOnly || !construction.done )
 			return;
 
-		if ( readyForAttacker && attackers.Count > 0 )
+		if ( readyForAttacker && attackers.Count > 0 && !takeoverInProgress )
 			ProcessAttacker( attackers.First() );
 
 		if ( trashTimer.inProgress )
@@ -78,7 +78,10 @@ public abstract class Attackable : Building
 	{
 		if ( defenderCount == 0 && aggressor == null )
 		{
-			Occupy( attackers );
+			attacker.ResetTasks();
+			attacker.ScheduleWalkToNode( flag.node );
+			attacker.ScheduleCall( this );
+			takeoverInProgress = true;
 			return;
 		}
 		if ( aggressor )
@@ -125,9 +128,11 @@ public abstract class Attackable : Building
 		Trash( defender );
 		Trash( aggressor );
 		Trash( assassin );
+		defender = assassin = aggressor = null;
 		trashTimer.Start( Constants.GuardHouse.deathFadeTime );
 	}
 }
+
 public class GuardHouse : Attackable
 {
 	// TODO Guardhouses are sometimes not visible, only after reload
@@ -159,8 +164,9 @@ public class GuardHouse : Attackable
 		return defender;
 	}
 
-	public override void Occupy( List<Unit> attackers )
+    public override void UnitCallback( Unit unit, float floatData, bool boolData )
 	{
+		assert.IsTrue( attackers.Contains( unit ) );
 		foreach ( var soldier in soldiers )
 			soldier.building = null;
 		soldiers.Clear();
@@ -170,8 +176,8 @@ public class GuardHouse : Attackable
 			soldiers.Add( soldier );
 		}
 		attackers.Clear();
-		assassin = aggressor = null;
 		SetTeam( soldiers.First().team );
+		takeoverInProgress = false;
 	}
 
 	public override bool wantFoeClicks { get { return true; } }
@@ -182,7 +188,7 @@ public class GuardHouse : Attackable
 		guardHouseConfiguration.plankNeeded = 2;
 		guardHouseConfiguration.stoneNeeded = 2;
 		guardHouseConfiguration.flatteningNeeded = false;
-		guardHouseConfiguration.constructionTime = 5000;
+		guardHouseConfiguration.constructionTime = Constants.GuardHouse.constructionTime;
 	}
 
 	public static SiteTestResult IsNodeSuitable( Node placeToBuild, Team owner, int flagDirection, bool ignoreTreesAndRocks = true )
