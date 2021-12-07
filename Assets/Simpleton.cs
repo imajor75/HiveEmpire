@@ -116,10 +116,11 @@ public class Simpleton : Player
             if ( currentYield < 0 )
             {
                 var workshops = Resources.FindObjectsOfTypeAll<Workshop>(); // TODO Keep an array of the current buildings instead of always collecting then using the Resources class
+                var outputType = Workshop.GetConfiguration( workshopType ).outputType;
                 currentYield = 0;
                 foreach ( var workshop in workshops )
                 {
-                    if ( workshop.type == workshopType && workshop.team == boss.team )
+                    if ( workshop.productionConfiguration.outputType == outputType && workshop.team == boss.team )
                         currentYield += workshop.maxOutput;
                 }
 
