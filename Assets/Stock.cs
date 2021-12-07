@@ -569,7 +569,9 @@ public class Stock : Attackable
 		}
 		construction.done = true;
 		itemData[(int)Item.Type.plank].content = Constants.Stock.startPlankCount;
+		itemData[(int)Item.Type.plank].inputMax = 50;
 		itemData[(int)Item.Type.stone].content = Constants.Stock.startStoneCount;
+		itemData[(int)Item.Type.stone].inputMax = 50;
 		itemData[(int)Item.Type.soldier].content = Constants.Stock.startSoldierCount;
 		dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
 		team.RegisterInfluence( this );
