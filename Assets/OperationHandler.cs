@@ -333,9 +333,9 @@ public class OperationHandler : HiveObject
 		    ScheduleOperation( Operation.Create().SetupAsRemoveRoad( road ), standalone );
 	}
 
-	public void ScheduleCreateRoad( Road road, bool standalone = true )
+	public void ScheduleCreateRoad( List<Node> path, bool standalone = true )
 	{
-		ScheduleOperation( Operation.Create().SetupAsCreateRoad( road.nodes ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCreateRoad( path ), standalone );
 	}
 
 	public void ScheduleRemoveFlag( Flag flag )

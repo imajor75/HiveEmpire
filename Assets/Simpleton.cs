@@ -90,6 +90,13 @@ public class Simpleton : Player
 
             }
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
+
+            var flagList = Resources.FindObjectsOfTypeAll<Flag>();
+            foreach ( var flag in flagList )
+            {
+                if ( flag.team == boss.team )
+                    boss.tasks.Add( new FlagTask( boss, flag ) );
+            }
             return finished;
         }
     }
@@ -179,6 +186,71 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType );
+        }
+    }
+
+    public class FlagTask : Task
+    {
+        public Flag flag;
+        public FlagTask( Simpleton boss, Flag flag ) : base( boss )
+        {
+            this.flag = flag;
+        }
+        public override bool Analyze()
+        {
+            var mainFlag = boss.team.mainBuilding.flag;
+            bool mainFlagProcessed = false;
+            foreach ( var offset in Ground.areas[6] )
+            {
+                var nearbyNode = flag.node + offset;
+                if ( nearbyNode.flag && nearbyNode.flag.team == boss.team && nearbyNode.flag.id < flag.id )
+                {
+                    boss.tasks.Add( new ConnectionTask( boss, flag, nearbyNode.flag ) );
+                    if ( nearbyNode.flag == mainFlag )
+                        mainFlagProcessed = true;
+                }
+            }
+            if ( !mainFlagProcessed && flag != mainFlag )
+                boss.tasks.Add( new ConnectionTask( boss, flag, mainFlag ) );
+            return finished;
+        }
+    }
+
+    public class ConnectionTask : Task
+    {
+        public Flag flagA, flagB;
+        public PathFinder path = ScriptableObject.CreateInstance<PathFinder>();
+
+        public ConnectionTask( Simpleton boss, Flag flagA, Flag flagB ) : base( boss )
+        {
+            this.flagA = flagA;
+            this.flagB = flagB;
+        }
+
+        public override bool Analyze()
+        {
+            if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.onRoad ) )
+                problemWeight = 1;
+            else
+            {
+                int length = 0;
+                foreach ( var road in path.roadPath )
+                    length += road.nodes.Count - 1;
+                problemWeight = 1 - (float)flagA.node.DistanceFrom( flagB.node ) / length;
+            }
+            if ( problemWeight < 0.5 )
+                return finished;
+
+            if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.forRoads, true ) )
+                return finished;
+
+            solutionEfficiency = (float)flagA.node.DistanceFrom( flagB.node ) / (path.path.Count - 1);
+            return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            HiveCommon.oh.ScheduleCreateRoad( path.path );
         }
     }
 }

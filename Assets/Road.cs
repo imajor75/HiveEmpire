@@ -853,7 +853,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 		if ( node.validFlag || flagCreated )
 		{
-			oh.ScheduleCreateRoad( this, false );
+			oh.ScheduleCreateRoad( nodes, false );
 			root.viewport.showGridAtMouse = false;
 			root.viewport.pickGroundOnly = false;
 			return false;
