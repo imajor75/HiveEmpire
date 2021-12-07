@@ -113,6 +113,14 @@ public class Simpleton : Player
                 if ( flag.team == boss.team )
                     boss.tasks.Add( new FlagTask( boss, flag ) );
             }
+
+            var roadList = Resources.FindObjectsOfTypeAll<Road>();
+            foreach ( var road in roadList )
+            {
+                if ( road.nodes.Count >= Constants.Simpleton.roadMaxLength && road.team == boss.team )
+                    boss.tasks.Add( new SplitRoadTask( boss, road ) );
+            }
+
             return finished;
         }
     }
@@ -299,6 +307,38 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             HiveCommon.oh.ScheduleCreateRoad( path.path );
+        }
+    }
+
+    public class SplitRoadTask : Task
+    {
+        public Road road;
+        public int best;
+
+        public SplitRoadTask( Simpleton boss, Road road ) : base( boss )
+        {
+            this.road = road;
+        }
+
+        public override bool Analyze()
+        {
+            problemWeight = Math.Min( 1, (float)(road.nodes.Count - Constants.Simpleton.roadMaxLength ) / 2 * Constants.Simpleton.roadMaxLength );
+            var center = road.nodes.Count / 2;
+            best = 0;
+            for ( int i = 2; i < road.nodes.Count - 2; i++ )
+            {
+                var node = road.nodes[i];
+                if ( Flag.IsNodeSuitable( node, boss.team ) )
+                    if ( Math.Abs( i - center ) < Math.Abs( best - center ) )
+                        best = i;
+            }
+            solutionEfficiency = best > 0 ? 1 : 0;
+            return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            HiveCommon.oh.ScheduleCreateFlag( road.nodes[best] );
         }
     }
 }

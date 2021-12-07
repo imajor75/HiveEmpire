@@ -313,5 +313,10 @@ public static class Constants
         public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
     }
+
+    public static class Simpleton
+    {
+        public const int roadMaxLength = 7;
+    }
 }
 
