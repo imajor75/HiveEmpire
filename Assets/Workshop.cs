@@ -52,6 +52,16 @@ public class Workshop : Building
 		}
 	}
 
+	public float maxOutput
+	{
+		get
+		{
+			var productionSec = productionConfiguration.productionTime * Time.fixedDeltaTime;
+			var restSec = restTime * Time.fixedDeltaTime;
+			return productionConfiguration.outputStackSize*60f/(productionSec+restSec);			
+		}
+	}
+
 	[Obsolete( "Compatibility with old files", true )]
 	List<PastStatus> previousPastStatuses { set {} }
 	[Obsolete( "Compatibility with old files", true )]

@@ -362,6 +362,15 @@ public class Node : HiveObject
 		}
 	}
 
+	public bool HasResource( Resource.Type resourceType )
+	{
+		foreach ( var resource in resources )
+			if ( resource.type == resourceType )
+				return true;
+				
+		return false;
+	}
+
 	public void SetHeight( float height )
 	{
 		// TODO Dont rebuild the whole mesh
