@@ -137,6 +137,12 @@ public class Simpleton : Player
                 return problemWeight > 0 ? needMoreTime : finished;
             }
 
+            var configuration = Workshop.GetConfiguration( workshopType );
+            if ( configuration.plankNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
+                return finished;
+            if ( configuration.stoneNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
+                return finished;
+
             ScanRow( nodeRow++ );
 
             if ( nodeRow == HiveCommon.ground.dimension - 1 )
