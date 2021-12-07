@@ -65,14 +65,8 @@ public class Simpleton : Player
 
         public abstract bool Analyze();
         public virtual void ApplySolution() {}
-        public float problemWeight, solutionEfficiency;
-        public float importance
-        {
-            get
-            {
-                return solutionEfficiency * problemWeight;
-            }
-        }
+        public float problemWeight, solutionEfficiency, priority = 1;
+        public float importance { get { return solutionEfficiency * problemWeight * priority; } }
         public Simpleton boss;
     }
 
@@ -133,6 +127,9 @@ public class Simpleton : Player
                     problemWeight = 0;
                 else
                     problemWeight = 1 - ( (float)currentYield / target );
+
+                if ( currentYield == 0 && ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill || workshopType == Workshop.Type.stonemason || workshopType == Workshop.Type.stoneMine ) )
+                    priority = 100; // TODO ?
 
                 nodeRow = -1;
                 return problemWeight > 0 ? needMoreTime : finished;
