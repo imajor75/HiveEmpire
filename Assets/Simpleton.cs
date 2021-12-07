@@ -90,6 +90,7 @@ public class Simpleton : Player
 
             }
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
 
             var flagList = Resources.FindObjectsOfTypeAll<Flag>();
             foreach ( var flag in flagList )
@@ -109,7 +110,7 @@ public class Simpleton : Player
         public int nodeRow;
         public Node bestLocation;
         public int bestFlagDirection;
-        public int bestScore;
+        public int bestScore = int.MinValue;
 
         public YieldTask( Simpleton boss, Workshop.Type workshopType, float target ) : base( boss ) 
         {
@@ -173,6 +174,7 @@ public class Simpleton : Player
                     bool isThisGood = workshopType switch
                     {
                         Workshop.Type.woodcutter => nearby.HasResource( Resource.Type.tree ),
+                        Workshop.Type.stonemason => nearby.HasResource( Resource.Type.rock ),
                         _ => true
                     };
                     if ( isThisGood && Workshop.IsNodeGoodForRelax( nearby ) )
@@ -181,10 +183,15 @@ public class Simpleton : Player
 
                 if ( resources > bestScore )
                 {
-                    bestScore = resources - node.DistanceFrom( boss.team.mainBuilding.node );
+                    bestScore = resources;
                     bestLocation = node;
                     bestFlagDirection = workingFlagDirection;
-                    solutionEfficiency = (float)resources / Ground.areas[6].Count;
+                    float expectedResourceCoverage = workshopType switch
+                    {
+                        Workshop.Type.stonemason => 0.05f,
+                        _ => 0.5f
+                    };
+                    solutionEfficiency = (float)resources / ( Ground.areas[6].Count * expectedResourceCoverage );
                 }
             }
         }
