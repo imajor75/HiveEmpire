@@ -84,7 +84,28 @@ public class Simpleton : Player
 
             }
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 1 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.ironMine, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.mill, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.saltMine, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.smelter, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stoneMine, 1 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.weaponMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
 
             var flagList = Resources.FindObjectsOfTypeAll<Flag>();
             foreach ( var flag in flagList )
@@ -166,13 +187,22 @@ public class Simpleton : Player
                 if ( workingFlagDirection < 0 )
                     continue;
                 int resources = 0;
-                foreach ( var offset in Ground.areas[6] )
+                foreach ( var offset in Ground.areas[configuration.gatheringRange] )
                 {
                     var nearby = node + offset;
                     bool isThisGood = workshopType switch
                     {
                         Workshop.Type.woodcutter => nearby.HasResource( Resource.Type.tree ),
                         Workshop.Type.stonemason => nearby.HasResource( Resource.Type.rock ),
+                        Workshop.Type.coalMine => nearby.HasResource( Resource.Type.coal ),
+                        Workshop.Type.ironMine => nearby.HasResource( Resource.Type.iron ),
+                        Workshop.Type.stoneMine => nearby.HasResource( Resource.Type.stone ),
+                        Workshop.Type.saltMine => nearby.HasResource( Resource.Type.salt ),
+                        Workshop.Type.goldMine => nearby.HasResource( Resource.Type.gold ),
+                        Workshop.Type.farm => nearby.type == Node.Type.grass,
+                        Workshop.Type.forester => nearby.type == Node.Type.forest,
+                        Workshop.Type.fishingHut => nearby.HasResource( Resource.Type.fish ),
+                        Workshop.Type.hunter => nearby.HasResource( Resource.Type.animalSpawner ),
                         _ => true
                     };
                     if ( isThisGood && Workshop.IsNodeGoodForRelax( nearby ) )
@@ -187,9 +217,16 @@ public class Simpleton : Player
                     float expectedResourceCoverage = workshopType switch
                     {
                         Workshop.Type.stonemason => 0.05f,
-                        _ => 0.5f
+                        Workshop.Type.ironMine => 0.5f,
+                        Workshop.Type.goldMine => 0.5f,
+                        Workshop.Type.coalMine => 0.5f,
+                        Workshop.Type.stoneMine => 0.5f,
+                        Workshop.Type.saltMine => 0.5f,
+                        Workshop.Type.hunter => 0.01f,
+                        Workshop.Type.fishingHut => 0.1f,
+                        _ => 1f
                     };
-                    solutionEfficiency = (float)resources / ( Ground.areas[6].Count * expectedResourceCoverage );
+                    solutionEfficiency = (float)resources / ( Ground.areas[configuration.gatheringRange].Count * expectedResourceCoverage );
                 }
             }
         }

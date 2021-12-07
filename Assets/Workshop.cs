@@ -746,7 +746,7 @@ public class Workshop : Building
 				{
 					if ( output < productionConfiguration.outputMax )
 					{
-						foreach ( var o in Ground.areas[3] )
+						foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
 						{
 							Node place = node.Add( o );
 							if ( place.building || place.flag || place.road || place.fixedHeight )
@@ -763,7 +763,7 @@ public class Workshop : Building
 					}
 					else
 						ChangeStatus( Status.waitingForOutputSlot );
-					foreach ( var o in Ground.areas[3] )
+					foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
 					{
 						Node place = node.Add( o );
 						if ( place.block || !place.CheckType( Node.Type.grass ) )
