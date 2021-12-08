@@ -1562,6 +1562,8 @@ public class Interface : HiveObject
 				if ( text == null )
 					text = gameObject.GetComponent<Text>();
 				text.text = building.moniker ?? building.title;
+				if ( !building.construction.done )
+					text.color = Color.grey;
 
 				if ( ring == null )
 				{
