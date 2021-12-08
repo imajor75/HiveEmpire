@@ -9,6 +9,7 @@ public class Simpleton : Player
     [JsonIgnore]
     public List<Task> tasks;
     public int currentProblem;
+    public float confidence = 0.5f;
 
     public static new Simpleton Create()
     {
@@ -47,7 +48,7 @@ public class Simpleton : Player
                 if ( best == null || task.importance > best.importance )
                     best = task;
             }
-            if ( best != null )
+            if ( best != null && best.importance > confidence )
                 best.ApplySolution();
             tasks = null;
         }
