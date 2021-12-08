@@ -317,6 +317,7 @@ public static class Constants
     public static class Simpleton
     {
         public const int roadMaxLength = 7;
+        public const int flagConnectionRange = 6;
     }
 }
 

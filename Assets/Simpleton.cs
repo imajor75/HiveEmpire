@@ -257,6 +257,7 @@ public class Simpleton : Player
 
     public class FlagTask : Task
     {
+        public PathFinder path = ScriptableObject.CreateInstance<PathFinder>();
         public Flag flag;
         public FlagTask( Simpleton boss, Flag flag ) : base( boss )
         {
@@ -264,21 +265,34 @@ public class Simpleton : Player
         }
         public override bool Analyze()
         {
-            var mainFlag = boss.team.mainBuilding.flag;
-            bool mainFlagProcessed = false;
-            foreach ( var offset in Ground.areas[6] )
+            if ( !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
+            {
+                problemWeight = 1;
+                foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
+                {
+                    var node = flag.node + offset;
+                    if ( node.team != boss.team || node.flag == null )
+                        continue;
+                    if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true ) )
+                        continue;
+
+                    solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.5f );
+                    break;
+                }
+                return finished;
+            }
+            foreach ( var offset in Ground.areas[Constants.Simpleton.flagConnectionRange] )
             {
                 var nearbyNode = flag.node + offset;
                 if ( nearbyNode.flag && nearbyNode.flag.team == boss.team && nearbyNode.flag.id < flag.id )
-                {
                     boss.tasks.Add( new ConnectionTask( boss, flag, nearbyNode.flag ) );
-                    if ( nearbyNode.flag == mainFlag )
-                        mainFlagProcessed = true;
-                }
             }
-            if ( !mainFlagProcessed && flag != mainFlag )
-                boss.tasks.Add( new ConnectionTask( boss, flag, mainFlag ) );
             return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            HiveCommon.oh.ScheduleCreateRoad( path.path );
         }
     }
 
