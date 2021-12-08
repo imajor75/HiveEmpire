@@ -25,6 +25,18 @@ public class Flag : HiveObject
 	GameObject tiles;
 	GameObject pole;
 
+	public int roadsStartingHereCount
+	{
+		get
+		{
+			int roads = 0;
+			foreach ( var road in roadsStartingHere )
+				if ( road )
+					roads++;
+			return roads;
+		}
+	}
+
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;
 	[Obsolete( "Compatibility with old files", true )]

@@ -2327,34 +2327,15 @@ public class Interface : HiveObject
 			}
 			if ( resourcesLeft )
 			{
-				int left = 0;
-				void CheckNode( Node node )
-				{
-					foreach ( var resource in node.resources )
-					{
-						if ( resource == null || resource.type != workshop.productionConfiguration.gatheredResource || resource.keepAway.inProgress )
-							continue;
-						if ( !resource.underGround || node == workshop.node || resource.node.team == workshop.team )
-						{
-							if ( resource.infinite )
-								left++;
-							else
-								left += resource.charges;
-						}
-					}
-				}
-				CheckNode( workshop.node );
-				foreach ( var o in Ground.areas[workshop.productionConfiguration.gatheringRange] )
-					CheckNode( workshop.node + o );
 				string text = workshop.type switch
 				{
-					Workshop.Type.woodcutter => $"Trees left: {left}",
-					Workshop.Type.farm => $"Fields left: {left}",
+					Workshop.Type.woodcutter => $"Trees left: {workshop.ResourcesLeft()}",
+					Workshop.Type.farm => $"Fields left: {workshop.ResourcesLeft()}",
 					Workshop.Type.forester => "",
-					Workshop.Type.stonemason => $"Rock charges left: {left}",
-					Workshop.Type.fishingHut => $"Fish left: {left}",
-					Workshop.Type.hunter => $"Wild animals left: {left}",
-					_ => $"Ore left: {left}"
+					Workshop.Type.stonemason => $"Rock charges left: {workshop.ResourcesLeft()}",
+					Workshop.Type.fishingHut => $"Fish left: {workshop.ResourcesLeft()}",
+					Workshop.Type.hunter => $"Wild animals left: {workshop.ResourcesLeft()}",
+					_ => $"Ore left: {workshop.ResourcesLeft()}"
 				};
 				resourcesLeft.text = text;
 			}

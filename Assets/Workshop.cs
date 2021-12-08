@@ -1118,6 +1118,30 @@ public class Workshop : Building
 		}
 	}
 
+	public int ResourcesLeft()
+	{
+		int left = 0;
+		void CheckNode( Node node )
+		{
+			foreach ( var resource in node.resources )
+			{
+				if ( resource == null || resource.type != productionConfiguration.gatheredResource || resource.keepAway.inProgress )
+					continue;
+				if ( !resource.underGround || this.node == node || resource.node.team == team )
+				{
+					if ( resource.infinite )
+						left++;
+					else
+						left += resource.charges;
+				}
+			}
+		}
+		CheckNode( this.node );
+		foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
+			CheckNode( this.node + o );
+		return left;
+	}
+
 	public string GetStatusText( Status status )
 	{
 		return status switch

@@ -85,10 +85,11 @@ public class Simpleton : Player
                 {
                     if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
                         soldierYield += workshop.maxOutput;
+                    if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
+                        boss.tasks.Add( new RemoveRunOutTask( boss, workshop ) );
                 }
                 if ( building.isolated )
                     isolatedBuildings = true;
-
             }
 
             if ( !isolatedBuildings )
@@ -268,7 +269,7 @@ public class Simpleton : Player
         }
         public override bool Analyze()
         {
-            if ( !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
+            if ( flag.roadsStartingHereCount == 0 )
             {
                 problemWeight = 1;
                 foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
@@ -394,7 +395,7 @@ public class Simpleton : Player
                 else
                     freeSpots++;
             }
-            problemWeight = (float)usedSpots / (freeSpots+usedSpots);
+            problemWeight = Math.Min( 2 * (float)usedSpots / (freeSpots+usedSpots), 1 );
             
             foreach ( var node in HiveCommon.ground.nodes )
             {
@@ -440,6 +441,30 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             HiveCommon.oh.ScheduleCreateBuilding( best, flagDirection, Building.Type.guardHouse );
+        }
+    }
+
+    public class RemoveRunOutTask : Task
+    {
+        public Workshop workshop;
+        public RemoveRunOutTask( Simpleton boss, Workshop workshop ) : base( boss )
+        {
+            this.workshop = workshop;
+        }
+
+        public override bool Analyze()
+        {
+            if ( workshop.ResourcesLeft() == 0 )
+                problemWeight = solutionEfficiency = 1;
+            return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            if ( workshop.flag.roadsStartingHereCount == 1 )
+                HiveCommon.oh.ScheduleRemoveFlag( workshop.flag );
+            else
+                HiveObject.oh.ScheduleRemoveBuilding( workshop );
         }
     }
 }
