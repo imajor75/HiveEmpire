@@ -143,7 +143,7 @@ public class GuardHouse : Attackable
 	public bool ready;
 	public int optimalSoldierCount;
 	public static GameObject template;
-	static readonly Configuration guardHouseConfiguration = new Configuration();
+	public static readonly Configuration guardHouseConfiguration = new Configuration();
 	bool removing;
 	public override int defenderCount
 	{

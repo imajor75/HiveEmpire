@@ -351,4 +351,76 @@ public class Simpleton : Player
             HiveCommon.oh.ScheduleCreateFlag( road.nodes[best] );
         }
     }
+
+    public class ExtendBorderTask : Task
+    {
+        public Node best;
+        public int flagDirection;
+
+        public ExtendBorderTask( Simpleton boss ) : base( boss ) {}
+        public override bool Analyze()
+        {
+            if ( boss.team.mainBuilding.itemData[(int)Item.Type.plank].content < GuardHouse.guardHouseConfiguration.plankNeeded )
+                return finished;
+            if ( boss.team.mainBuilding.itemData[(int)Item.Type.stone].content < GuardHouse.guardHouseConfiguration.stoneNeeded )
+                return finished;
+
+            int freeSpots = 0, usedSpots = 0;
+            foreach ( var node in HiveCommon.ground.nodes )
+            {
+                if ( node.team != boss.team )
+                    continue;
+                if ( node.building || node.flag || node.road )
+                    usedSpots++;
+                else
+                    freeSpots++;
+            }
+            problemWeight = (float)usedSpots / (freeSpots+usedSpots);
+            
+            foreach ( var node in HiveCommon.ground.nodes )
+            {
+                if ( node.team != boss.team )
+                    continue;
+                bool isNodeAtBorder = false;
+                foreach ( var offset in Ground.areas[1] )
+                {
+                    if ( node.Add( offset ).team != boss.team )
+                    {
+                        isNodeAtBorder = true;
+                        break;
+                    }
+                }
+                if ( !isNodeAtBorder )
+                    continue;
+
+                bool hasGuardHouseAround = false;
+                foreach ( var offset in Ground.areas[6] )
+                {
+                    if ( node.Add( offset ).building is GuardHouse )
+                    {
+                        hasGuardHouseAround = true;
+                        break;
+                    }
+                }
+                if ( hasGuardHouseAround )
+                    continue;
+
+                for ( flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
+                {
+                    if ( GuardHouse.IsNodeSuitable( node, boss.team, flagDirection ) )
+                    {
+                        best = node;
+                        solutionEfficiency = 1;
+                        return finished;
+                    }
+                }
+            }
+            return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            HiveCommon.oh.ScheduleCreateBuilding( best, flagDirection, Building.Type.guardHouse );
+        }
+    }
 }
