@@ -3122,7 +3122,7 @@ public class Interface : HiveObject
 					continue;
 				int c = 0;
 				foreach ( var workshop in workshops )
-					if ( workshop.type == type && workshop.team == root.mainPlayer )
+					if ( workshop.type == type && workshop.team == root.mainTeam )
 						c++;
 				var b = BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
 				string tooltip = "";
@@ -3242,7 +3242,7 @@ public class Interface : HiveObject
 				var workshops = FindObjectsOfType<Workshop>( true );
 				for ( int i = showID; i < workshops.Length; i++ )
 				{
-					if ( workshops[i].type == type && workshops[i].team == root.mainPlayer )
+					if ( workshops[i].type == type && workshops[i].team == root.mainTeam )
 					{
 						WorkshopPanel.Create().Open( workshops[i], WorkshopPanel.Content.everything, true );
 						showType = type;
@@ -4817,7 +4817,7 @@ if ( cart )
 			buildings = new List<Building>();
 			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
 			{
-				if ( building.team != root.mainPlayer || building.blueprintOnly || !building.title.Contains( filter ) )
+				if ( building.team != root.mainTeam || building.blueprintOnly || !building.title.Contains( filter ) )
 					continue;
 				buildings.Add( building );
 			}
@@ -5991,7 +5991,7 @@ if ( cart )
 				{
 					tickPerBuilding = c.productionTime / c.outputStackSize;
 					foreach ( var w in Resources.FindObjectsOfTypeAll<Workshop>() ) 
-					if ( w.team == root.mainPlayer && w.type == c.type )
+					if ( w.team == root.mainTeam && w.type == c.type )
 						workshopCount++;
 					break;
 				}
