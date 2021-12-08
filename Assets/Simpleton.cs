@@ -311,6 +311,8 @@ public class Simpleton : Player
                 return finished;
 
             solutionEfficiency = (float)flagA.node.DistanceFrom( flagB.node ) / (path.path.Count - 1);
+            if ( path.path.Count > 5 )
+                solutionEfficiency /= (path.path.Count - 5);
             return finished;
         }
 
