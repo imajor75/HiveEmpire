@@ -76,36 +76,46 @@ public class Simpleton : Player
         public override bool Analyze()
         {
             float soldierYield = 0;
-            var workshops = Resources.FindObjectsOfTypeAll<Workshop>(); // TODO Keep an array of the current buildings instead of always collecting then using the Resources class
-            foreach ( var workshop in workshops )
+            var buildings = Resources.FindObjectsOfTypeAll<Building>(); // TODO Keep an array of the current buildings instead of always collecting then using the Resources class
+            bool isolatedBuildings = false;
+            foreach ( var building in buildings )
             {
-                if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
-                    soldierYield += workshop.maxOutput;
+                if ( building is Workshop workshop )
+                {
+                    if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
+                        soldierYield += workshop.maxOutput;
+                }
+                if ( building.isolated )
+                    isolatedBuildings = true;
 
             }
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 1 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.ironMine, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.mill, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.saltMine, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.smelter, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stoneMine, 1 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.weaponMaker, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
+
+            if ( !isolatedBuildings )
+            {
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 1 ) ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, soldierYield * 2 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.ironMine, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.mill, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.saltMine, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.smelter, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.stoneMine, 1 ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.weaponMaker, soldierYield ) );
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
+            }
 
             var flagList = Resources.FindObjectsOfTypeAll<Flag>();
             foreach ( var flag in flagList )
