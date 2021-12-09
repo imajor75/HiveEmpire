@@ -117,9 +117,8 @@ public class Simpleton : Player
                 boss.tasks.Add( new YieldTask( boss, Workshop.Type.stoneMine, 1 ) );
                 boss.tasks.Add( new YieldTask( boss, Workshop.Type.weaponMaker, soldierYield ) );
                 boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
+                boss.tasks.Add( new ExtendBorderTask( boss ) );
             }
-
-            boss.tasks.Add( new ExtendBorderTask( boss ) );
 
             var flagList = Resources.FindObjectsOfTypeAll<Flag>();
             foreach ( var flag in flagList )
