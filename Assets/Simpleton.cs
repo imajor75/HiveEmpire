@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using Newtonsoft.Json;
+using System.Linq;
 
 public class Simpleton : Player
 {
@@ -254,6 +255,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
+            HiveCommon.Log( $"[{boss.name}]: Building a {workshopType} at {bestLocation.name}" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType );
         }
     }
@@ -279,7 +281,7 @@ public class Simpleton : Player
                     if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true ) )
                         continue;
 
-                    solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.5f );
+                    solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.25f );
                     break;
                 }
                 return finished;
@@ -295,6 +297,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
+            HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
             HiveCommon.oh.ScheduleCreateRoad( path.path );
         }
     }
@@ -335,6 +338,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
+            HiveCommon.Log( $"[{boss.name}]: Creating new road between {path.path.First().name} and {path.path.Last().name}" );
             HiveCommon.oh.ScheduleCreateRoad( path.path );
         }
     }
@@ -367,6 +371,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
+            HiveCommon.Log( $"[{boss.name}]: Spliting road at {road.nodes[best].name}" );
             HiveCommon.oh.ScheduleCreateFlag( road.nodes[best] );
         }
     }
@@ -441,6 +446,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
+            HiveCommon.Log( $"[{boss.name}]: Building guard house at {best.name}" );
             HiveCommon.oh.ScheduleCreateBuilding( best, flagDirection, Building.Type.guardHouse );
         }
     }
@@ -462,6 +468,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
+            HiveCommon.Log( $"[{boss.name}]: Removing {workshop.name}" );
             if ( workshop.flag.roadsStartingHereCount == 1 )
                 HiveCommon.oh.ScheduleRemoveFlag( workshop.flag );
             else
