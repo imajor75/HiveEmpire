@@ -164,6 +164,8 @@ public class Simpleton : Player
         {
             this.workshopType = workshopType;
             this.target = target;
+            if ( workshopType == Workshop.Type.barrack )
+                priority = 0.5f;
         }
         public override bool Analyze()
         {
