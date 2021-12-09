@@ -183,7 +183,7 @@ public class Simpleton : Player
                 if ( currentYield >= target )
                     problemWeight = 0;
                 else
-                    problemWeight = 1 - ( (float)currentYield / target );
+                    problemWeight = 1 - 0.5f * ( (float)currentYield / target );
 
                 if ( currentYield == 0 && ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill || workshopType == Workshop.Type.stonemason || workshopType == Workshop.Type.stoneMine ) )
                     priority = 100; // TODO ?
