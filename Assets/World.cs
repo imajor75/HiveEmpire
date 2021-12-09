@@ -316,6 +316,8 @@ public class World : HiveCommon
 			{
 				for ( int i = 0; i < buildingMax.Count; i++ )
 				{
+					if ( buildingMax[i] == int.MaxValue )
+						continue;
 					string buildingName = i < (int)Building.Type.stock ? ((Workshop.Type)i).ToString() : ((Building.Type)i).ToString();
 					CheckCondition( team.buildingCounts[i], buildingMax[i], false, $"number of {buildingName}s {{0}}/{{1}}", true );
 				}
@@ -401,7 +403,7 @@ public class World : HiveCommon
 							buildingType = (Building.Type)workshopType;
 						}
 						while ( buildingMax.Count < (int)Building.Type.total )
-							buildingMax.Add( -1 );
+							buildingMax.Add( int.MaxValue );
 						buildingMax[(int)buildingType] = int.Parse( p[2], CultureInfo.InvariantCulture );
 						break;
 					}
@@ -749,7 +751,7 @@ public class World : HiveCommon
 				if ( i == (int)Building.Type.guardHouse )
 					challenge.buildingMax.Add( 4 );
 				else
-					challenge.buildingMax.Add( -1 );
+					challenge.buildingMax.Add( int.MaxValue );
 			}
 			challenge.Begin();
 		}
