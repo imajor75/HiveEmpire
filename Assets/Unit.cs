@@ -256,7 +256,7 @@ public class Unit : HiveObject
 		{
 			get
 			{
-				return act.name;
+				return act?.name;
 			}
 			set
 			{
