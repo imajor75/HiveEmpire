@@ -4,6 +4,7 @@
     "flatteningNeeded": false,
     "gatheredResource": "tree",
 	  "productionTime": 0,
+    "approximatedProductionTime": 2500,
     "outputType": "log"
   },
   {
@@ -19,12 +20,14 @@
     "type": "forester",
   	"gatheredResource": "soil",
 	  "productionTime": 0,
+    "approximatedProductionTime": 2500,
     "flatteningNeeded": false
   },
   {
     "type": "stonemason",
     "gatheredResource": "rock",
   	"productionTime": 0,
+    "approximatedProductionTime": 2500,
     "outputType": "stone"
   },
   {
@@ -32,6 +35,7 @@
   	"flatteningNeeded": true,
     "gatheredResource": "fish",
 	  "productionTime": 0,
+    "approximatedProductionTime": 2500,
     "outputType": "fish"
   },
   {
@@ -41,6 +45,7 @@
     "gatheredResource": "cornfield",
     "gatheringRange": 3,
     "productionTime": 0,
+    "approximatedProductionTime": 5000,
     "stoneNeeded": 2,
     "outputType": "grain",
     "groundTypeNeeded": "grass"
@@ -78,6 +83,7 @@
     "plankNeeded": 1,
     "flatteningNeeded": true,
 	  "productionTime": 0,
+    "approximatedProductionTime": 2500,
     "gatheredResource": "pasturingAnimal",
     "outputType": "hide"
   },

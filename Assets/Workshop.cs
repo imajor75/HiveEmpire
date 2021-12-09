@@ -57,6 +57,8 @@ public class Workshop : Building
 		get
 		{
 			var productionSec = productionConfiguration.productionTime * Time.fixedDeltaTime;
+			if ( productionSec == 0 )
+				productionSec = productionConfiguration.approximatedProductionTime * Time.fixedDeltaTime;
 			var restSec = restTime * Time.fixedDeltaTime;
 			return productionConfiguration.outputStackSize*60f/(productionSec+restSec);			
 		}
@@ -97,6 +99,7 @@ public class Workshop : Building
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
 		public int productionTime = Constants.Workshop.defaultProductionTime;
+		public int approximatedProductionTime = Constants.Workshop.defaultProductionTime;
 		public int relaxSpotCountNeeded = Constants.Workshop.defaultRelaxSpotNeeded;
 		public int maxRestTime = Constants.Workshop.defaultMaxRestTime;
 		public int outputMax = Constants.Workshop.defaultOutputMax;
@@ -264,7 +267,7 @@ public class Workshop : Building
 			if ( timer.empty )
 				timer.Start( (boss.building as Workshop).productionConfiguration.productionTime );
 
-			if ( !timer.done )    // TODO Working on the resource
+			if ( !timer.done )
 				return needModeCalls;
 
 			if ( resource )
