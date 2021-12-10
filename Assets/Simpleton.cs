@@ -298,7 +298,10 @@ public class Simpleton : Player
                     if ( node.team != boss.team || node.flag == null )
                         continue;
                     if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true ) )
+                    {
+                        solutionEfficiency = 0.5f;
                         continue;
+                    }
 
                     solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.25f );
                     break;
@@ -316,8 +319,16 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
-            HiveCommon.oh.ScheduleCreateRoad( path.path );
+            if ( path.ready )
+            {
+                HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
+                HiveCommon.oh.ScheduleCreateRoad( path.path );
+            }
+            else
+            {
+                HiveCommon.Log( $"[{boss.name}]: Removing separated flag at {flag.node.x}:{flag.node.y}" );
+                HiveCommon.oh.ScheduleRemoveFlag( flag );
+            }
         }
     }
 
