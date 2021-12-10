@@ -773,7 +773,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		assert.IsTrue( nodes.Count > 0 );
 
-		PathFinder p = ScriptableObject.CreateInstance<PathFinder>();
+		PathFinder p = PathFinder.Create();
 		if ( p.FindPathBetween( lastNode, node, PathFinder.Mode.forRoads, node.flag || ( node.road && node.road != this && Flag.IsNodeSuitable( node, team ) ) ) )
 		{
 			var j = nodes.Count;

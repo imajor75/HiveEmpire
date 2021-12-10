@@ -1,8 +1,10 @@
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PathFinder : ScriptableObject
+[Serializable]
+public class PathFinder
 {
 	// TODO Detect when circumstances change, and invalidate the path
 	public Node target, avoidNode;
@@ -34,6 +36,11 @@ public class PathFinder : ScriptableObject
 		onRoad,
 		forUnits,
 		total
+	}
+
+	public static PathFinder Create()
+	{
+		return new PathFinder();
 	}
 
     public bool FindPathBetween( Node start, Node end, Mode mode, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
@@ -229,14 +236,20 @@ public class PathFinder : ScriptableObject
 	}
 }
 
+[Serializable]
 public class Path : PathFinder
 {
 	public int progress;
 	public HiveObject owner;
 
+	public new static Path Create()
+	{
+		return new Path();
+	}
+
 	public static Path Between( Node start, Node end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null, Node avoid = null )
 	{
-		var p = CreateInstance<Path>();
+		var p = Path.Create();
 		p.owner = owner;
 		p.avoidNode = avoid;
 		if ( p.FindPathBetween( start, end, mode, ignoreFinalObstacle, ignoreObject ) )

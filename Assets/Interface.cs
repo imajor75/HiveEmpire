@@ -2076,7 +2076,7 @@ public class Interface : HiveObject
 			{
 				if ( itemType == Item.Type.unknown || picture.color.a < 0.5f )
 					SetInTransit( false );
-				if ( item?.path && inTransit )
+				if ( item?.path != null && inTransit )
 				{
 					if ( item.path.stepsLeft > 7 )
 						inTransit.color = new Color( 1, 0, 0.15f );
@@ -5520,7 +5520,7 @@ if ( cart )
 				if ( item.destination )
 					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
 				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
-				if ( item.path )
+				if ( item.path != null )
 					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 300, row, 30 );				
 				row -= iconSize + 5;
 			}
@@ -5538,9 +5538,9 @@ if ( cart )
 		static public int CompareByPathLength( Item itemA, Item itemB )
 		{
 			int lA = 0, lB = 0;
-			if ( itemA.path )
+			if ( itemA.path != null )
 				lA = itemA.path.roadPath.Count;
-			if ( itemB.path )
+			if ( itemB.path != null )
 				lB = itemB.path.roadPath.Count;
 
 			if ( lA == lB )

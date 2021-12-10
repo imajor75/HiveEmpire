@@ -280,7 +280,7 @@ public class Simpleton : Player
 
     public class FlagTask : Task
     {
-        public PathFinder path = ScriptableObject.CreateInstance<PathFinder>();
+        public PathFinder path = PathFinder.Create();
         public Flag flag;
         public FlagTask( Simpleton boss, Flag flag ) : base( boss )
         {
@@ -288,8 +288,9 @@ public class Simpleton : Player
         }
         public override bool Analyze()
         {
-            if ( flag.roadsStartingHereCount == 0 )
+            if ( flag.roadsStartingHereCount == 0 || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
+                // TODO Avoid other separated flags
                 problemWeight = 1;
                 foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
                 {
@@ -323,7 +324,7 @@ public class Simpleton : Player
     public class ConnectionTask : Task
     {
         public Flag flagA, flagB;
-        public PathFinder path = ScriptableObject.CreateInstance<PathFinder>();
+        public PathFinder path = PathFinder.Create();
 
         public ConnectionTask( Simpleton boss, Flag flagA, Flag flagB ) : base( boss )
         {

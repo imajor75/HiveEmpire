@@ -201,7 +201,7 @@ public class Item : HiveObject
 			return;
 		}
 
-		if ( watchRoadDelete.Check() && path )
+		if ( watchRoadDelete.Check() && path != null )
 		{
 			for ( int i = 0; i < path.roadPath.Count; i++ )
 			{
@@ -218,12 +218,12 @@ public class Item : HiveObject
 			}
 		}
 
-		if ( path && !path.isFinished && path.road == null )
+		if ( path != null && !path.isFinished && path.road == null )
 			CancelTrip();
 
 		if ( watchBuildingDelete.Check() )
 		{
-			if ( destination == null && path )
+			if ( destination == null && path != null )
 				CancelTrip();
 		}
 
@@ -335,7 +335,7 @@ public class Item : HiveObject
 		assert.AreEqual( flag, nextFlag );
 
 		// path.progess == 0 if the item was rerouting while in the hands of the hauler
-		if ( destination && path && path.progress != 0 )	// TODO path was null here
+		if ( destination && path != null && path.progress != 0 )	// TODO path was null here
 		{
 			if ( path.isFinished )
 			{
