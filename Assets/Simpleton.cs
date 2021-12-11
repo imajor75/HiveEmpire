@@ -12,6 +12,7 @@ public class Simpleton : Player
     public int currentProblem;
     public World.Timer inability = new World.Timer();
     public float confidence = Constants.Simpleton.defaultConfidence;
+    public List<Node> isolatedNodes = new List<Node>();
 
     public static new Simpleton Create()
     {
@@ -50,7 +51,7 @@ public class Simpleton : Player
                 if ( best == null || task.importance > best.importance )
                     best = task;
             }
-            if ( best != null && best.importance > confidence )
+            if ( best != null && best.importance >= confidence )
             {
                 best.ApplySolution();
                 inability.Start( Constants.Simpleton.inabilityTolerance );
@@ -64,6 +65,12 @@ public class Simpleton : Player
 
             tasks = null;
         }
+    }
+
+    [Serializable]
+    public class Data
+    {
+        public bool isolated;
     }
 
     public abstract class Task
@@ -90,7 +97,6 @@ public class Simpleton : Player
         {
             float soldierYield = 0;
             var buildings = Resources.FindObjectsOfTypeAll<Building>(); // TODO Keep an array of the current buildings instead of always collecting then using the Resources class
-            bool isolatedBuildings = false;
             foreach ( var building in buildings )
             {
                 if ( building is Workshop workshop )
@@ -100,37 +106,32 @@ public class Simpleton : Player
                     if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
                         boss.tasks.Add( new RemoveRunOutTask( boss, workshop ) );
                 }
-                if ( building.isolated )
-                    isolatedBuildings = true;
             }
 
-            if ( !isolatedBuildings )
-            {
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 1 ) ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, soldierYield * 2 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.ironMine, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.mill, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.saltMine, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.smelter, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.stoneMine, 1 ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.weaponMaker, soldierYield ) );
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
-                boss.tasks.Add( new ExtendBorderTask( boss ) );
-            }
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 1 ) ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.ironMine, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.mill, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.saltMine, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.smelter, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stoneMine, 1 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.weaponMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
+            boss.tasks.Add( new ExtendBorderTask( boss ) );
 
             var flagList = Resources.FindObjectsOfTypeAll<Flag>();
             foreach ( var flag in flagList )
@@ -217,6 +218,8 @@ public class Simpleton : Player
             for ( int x = 0; x < HiveCommon.ground.dimension; x++ )
             {
                 var node = HiveCommon.ground.GetNode( x, nodeRow );
+                if ( boss.isolatedNodes.Contains( node ) )
+                    continue;
                 int workingFlagDirection = -1;
                 for ( int flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
                 {
@@ -290,24 +293,31 @@ public class Simpleton : Player
         {
             if ( flag.roadsStartingHereCount == 0 || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
+                flag.simpletonDataSafe.isolated = true;
                 // TODO Avoid other separated flags
                 problemWeight = 1;
                 foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
                 {
                     var node = flag.node + offset;
-                    if ( node.team != boss.team || node.flag == null )
+                    if ( node.team != boss.team || node.flag == null || node.flag.simpletonDataSafe.isolated )
                         continue;
                     if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true ) )
                     {
+                        foreach ( var building in flag.Buildings() )
+                            boss.isolatedNodes.Add( building.node );
+
                         solutionEfficiency = 0.5f;
                         continue;
                     }
 
+                    boss.isolatedNodes.Clear();
                     solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.25f );
-                    break;
+                    break; 
                 }
                 return finished;
             }
+            else
+                flag.simpletonDataSafe.isolated = false;
             foreach ( var offset in Ground.areas[Constants.Simpleton.flagConnectionRange] )
             {
                 var nearbyNode = flag.node + offset;
@@ -435,6 +445,9 @@ public class Simpleton : Player
             
             foreach ( var node in HiveCommon.ground.nodes )
             {
+                if ( boss.isolatedNodes.Contains( node ) )
+                    continue;
+
                 if ( node.team != boss.team )
                     continue;
                 bool isNodeAtBorder = false;

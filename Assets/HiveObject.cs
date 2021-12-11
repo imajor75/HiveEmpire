@@ -34,7 +34,18 @@ public abstract class HiveObject : HiveCommon
 	public bool registered;
 	public bool destroyed;
 	public Team team;
+	public Simpleton.Data simpletonData;
 
+	public Simpleton.Data simpletonDataSafe
+	{
+		get
+		{
+			if ( simpletonData == null )
+				simpletonData = new Simpleton.Data();
+
+			return simpletonData;
+		}
+	}
 	public virtual bool wantFoeClicks { get { return false; } }
 	
 	[JsonIgnore]
