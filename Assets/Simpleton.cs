@@ -170,9 +170,9 @@ public class Simpleton : Player
         }
         public override bool Analyze()
         {
-            int currentWorkshopCount = 0;
             if ( currentYield < 0 )
             {
+                int currentWorkshopCount = 0;
                 var workshops = Resources.FindObjectsOfTypeAll<Workshop>(); // TODO Keep an array of the current buildings instead of always collecting them using the Resources class
                 var outputType = Workshop.GetConfiguration( workshopType ).outputType;
                 currentYield = 0;
@@ -191,6 +191,8 @@ public class Simpleton : Player
 
                 if ( currentYield == 0 && ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill || workshopType == Workshop.Type.stonemason || workshopType == Workshop.Type.stoneMine ) )
                     priority = 100; // TODO ?
+                if ( currentWorkshopCount >= HiveCommon.world.challenge.buildingMax[(int)workshopType] )
+                    return finished;
 
                 nodeRow = -1;
                 return problemWeight > 0 ? needMoreTime : finished;
@@ -200,8 +202,6 @@ public class Simpleton : Player
             if ( configuration.plankNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
                 return finished;
             if ( configuration.stoneNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
-                return finished;
-            if ( currentWorkshopCount >= HiveCommon.world.challenge.buildingMax[(int)workshopType] )
                 return finished;
 
             ScanRow( nodeRow++ );
