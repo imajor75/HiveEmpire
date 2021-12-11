@@ -166,6 +166,9 @@ abstract public class Building : HiveObject
 				}
 				level += o.height / area.Count;
 			}
+			float minLevel = world.settings.waterLevel * world.settings.maxHeight + 0.1f;
+			if ( level < minLevel )
+				level = minLevel;
 			if ( permanent )
 				foreach ( var node in area )
 					node.staticHeight = level;

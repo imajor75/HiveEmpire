@@ -373,7 +373,6 @@ public class Node : HiveObject
 
 	public void SetHeight( float height )
 	{
-		// TODO Dont rebuild the whole mesh
 		this.height = height;
 
 		AlignType();
