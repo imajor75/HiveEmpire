@@ -96,16 +96,12 @@ public class Simpleton : Player
         public override bool Analyze()
         {
             float soldierYield = 0;
-            var buildings = Resources.FindObjectsOfTypeAll<Building>(); // TODO Keep an array of the current buildings instead of always collecting then using the Resources class
-            foreach ( var building in buildings )
+            foreach ( var workshop in boss.team.workshops )
             {
-                if ( building is Workshop workshop )
-                {
-                    if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
-                        soldierYield += workshop.maxOutput;
-                    if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
-                        boss.tasks.Add( new RemoveRunOutTask( boss, workshop ) );
-                }
+                if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
+                    soldierYield += workshop.maxOutput;
+                if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
+                    boss.tasks.Add( new RemoveRunOutTask( boss, workshop ) );
             }
 
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
@@ -133,15 +129,13 @@ public class Simpleton : Player
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
             boss.tasks.Add( new ExtendBorderTask( boss ) );
 
-            var flagList = Resources.FindObjectsOfTypeAll<Flag>();
-            foreach ( var flag in flagList )
+            foreach ( var flag in boss.team.flags )
             {
                 if ( flag.team == boss.team )
                     boss.tasks.Add( new FlagTask( boss, flag ) );
             }
 
-            var roadList = Resources.FindObjectsOfTypeAll<Road>();
-            foreach ( var road in roadList )
+            foreach ( var road in boss.team.roads )
             {
                 if ( road.nodes.Count >= Constants.Simpleton.roadMaxLength && road.team == boss.team )
                     boss.tasks.Add( new SplitRoadTask( boss, road ) );
@@ -176,10 +170,9 @@ public class Simpleton : Player
             if ( currentYield < 0 )
             {
                 int currentWorkshopCount = 0;
-                var workshops = Resources.FindObjectsOfTypeAll<Workshop>(); // TODO Keep an array of the current buildings instead of always collecting them using the Resources class
                 var outputType = Workshop.GetConfiguration( workshopType ).outputType;
                 currentYield = 0;
-                foreach ( var workshop in workshops )
+                foreach ( var workshop in boss.team.workshops )
                 {
                     if ( workshop.productionConfiguration.outputType == outputType && workshop.team == boss.team )
                         currentYield += workshop.maxOutput;

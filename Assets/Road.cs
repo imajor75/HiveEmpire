@@ -105,14 +105,21 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
+	public Road Setup( Team team )
+	{
+		this.team = team;
+		team.roads.Add( this );
+		base.Setup();
+		return this;
+	}
+
 	public Road Setup( Flag flag )
 	{
 		if ( flag == null )
 			return null;
+		Setup( flag.team );
 		nodes.Add( flag.node );
-		team = flag.team;
 		blueprintOnly = true;
-		base.Setup();
 		return this;
 	}
 
@@ -718,6 +725,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				exclusiveHaulers.Add( hauler );
 		foreach ( var hauler in exclusiveHaulers )
 			hauler.LeaveExclusivity();
+		team.roads.Remove( this );
 
 		DestroyThis();
 		return true;
@@ -933,16 +941,13 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public Road SplitNodeList( List<Node> nodes, List<Node> secondNodes = null )
 	{
-		Road newRoad = Create(), secondRoad = null;
-		newRoad.team = team;
+		Road newRoad = Create().Setup( team ), secondRoad = null;
 		newRoad.nodes = nodes;
-		newRoad.Setup();
+		newRoad.team.roads.Add( newRoad );	// TODO Not good at all. All of this should happen in Road.Setup.
 		if ( secondNodes != null )
 		{
-			secondRoad = Create();
-			secondRoad.team = team;
+			secondRoad = Create().Setup( team );
 			secondRoad.nodes = secondNodes;
-			secondRoad.Setup();
 		}
 	
 		ReassignHaulersTo( newRoad, secondRoad );
@@ -1101,6 +1106,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( root.viewport.inputHandler, this );
 		assert.IsTrue( team == null || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
+		assert.IsTrue( team.roads.Contains( this ) );
 		base.Validate( chain );
 	}
 

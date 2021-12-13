@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -479,7 +479,15 @@ public class Workshop : Building
 		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
+		team.workshops.Add( this );
+
 		return this;
+	}
+
+	public override bool Remove( bool takeYourTime )
+	{
+		team.workshops.Remove( this );
+		return base.Remove( takeYourTime );
 	}
 
 	static public Configuration GetConfiguration( Type type )
@@ -1185,5 +1193,6 @@ public class Workshop : Building
 		}
 		if ( currentStatus != Status.unknown && !World.massDestroy )
 			assert.IsTrue( statusDuration.done );
+		assert.IsTrue( team.workshops.Contains( this ) );
 	}
 }

@@ -123,6 +123,10 @@ public class Team : HiveCommon
 	public World.Timer chartAdvanceTimer = new World.Timer(), productivityUpdateTimer = new World.Timer();
 	public List<Chart> itemProductivityHistory = new List<Chart>();
 	public List<Stock> stocks = new List<Stock>();
+	public List<Flag> flags = new List<Flag>();
+	public List<Road> roads = new List<Road>();
+	public List<Workshop> workshops = new List<Workshop>();
+
 	public List<bool> stocksHaveNeed = new List<bool>();
 	public List<int> buildingCounts = new List<int>();
 	public List<Item> items = new List<Item>();
@@ -538,6 +542,12 @@ public class Team : HiveCommon
 		}
 		for ( int i = 0; i < (int)Building.Type.total; i++ )
 			Assert.global.AreEqual( bc[i], buildingCounts[i] );
+		foreach ( var flag in flags )
+			flag.assert.IsFalse( flag.destroyed );
+		foreach ( var road in roads )
+			road.assert.IsFalse( road.destroyed );
+		foreach ( var workshop in workshops )
+			workshop.assert.IsFalse( workshop.destroyed );
 	}
 }
 

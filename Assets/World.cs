@@ -823,6 +823,8 @@ public class World : HiveCommon
 				o.ends[1] = o.lastNode.flag;
 				if ( GetValue<Player>( o, "owner" ) )
 					o.team = GetValue<Player>( o, "owner" ).team;
+				if ( !o.team.roads.Contains( o ) )
+					o.team.roads.Add( o );
 			}
 		}
 
@@ -883,6 +885,8 @@ public class World : HiveCommon
 					foreach ( var b in s.buffers )
 						if ( b.stored > b.size )
 							b.stored = b.size;
+					if ( !s.team.workshops.Contains( s ) )
+						s.team.workshops.Add( s );
 				}
 
 				var t = o as Stock;
@@ -962,6 +966,8 @@ public class World : HiveCommon
 					f.freeSlotsWatch.Attach( f.itemsStored );
 				if ( GetValue<Player>( f, "owner" ) )
 					f.team = GetValue<Player>( f, "owner" ).team;
+				if ( !f.team.flags.Contains( f ) )
+					f.team.flags.Add( f );
 			}
 		}
 

@@ -65,6 +65,7 @@ public class Flag : HiveObject
 			this.blueprintOnly = blueprintOnly;
 			this.crossing = crossing;
 			base.Setup();
+			team.flags.Add( this );
 			if ( node.road && !blueprintOnly )
 			{
 				if ( node.road.ready )
@@ -373,6 +374,7 @@ public class Flag : HiveObject
 		}
 		node.flag = null;
 		ground.SetDirty( node );	// To allow grass
+		team.flags.Remove( this );
 		DestroyThis();
 		return true;
 	}
@@ -449,6 +451,7 @@ public class Flag : HiveObject
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.units ) );
+		assert.IsTrue( team.flags.Contains( this ) );
 		base.Validate( chain );
 	}
 
