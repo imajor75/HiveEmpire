@@ -312,6 +312,7 @@ public static class Constants
         public const int defaultGatheringRange = 6;
         public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
+        public const int relaxAreaSize = 3;
     }
 
     public static class Simpleton

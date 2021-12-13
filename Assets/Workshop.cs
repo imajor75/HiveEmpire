@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1083,13 +1083,12 @@ public class Workshop : Building
 		progress = 0;
 	}
 
-	public const int relaxAreaSize = 3;
 	public int relaxSpotCount 
 	{
 		get
 		{
 			int relaxSpotCount = 0;
-			foreach ( var o in Ground.areas[relaxAreaSize] )
+			foreach ( var o in Ground.areas[Constants.Workshop.relaxAreaSize] )
 			{
 				if ( IsNodeGoodForRelax( this.node + o ) )
 					relaxSpotCount++;

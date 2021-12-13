@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -5347,7 +5347,7 @@ if ( cart )
 			}
 			if ( nodeInfoToShow == OverlayInfoType.nodeRelaxSites )
 			{
-				foreach ( var o in Ground.areas[Workshop.relaxAreaSize] )
+				foreach ( var o in Ground.areas[Constants.Workshop.relaxAreaSize] )
 				{
 					var n = relaxCenter.node + o;
 					var material = Workshop.IsNodeGoodForRelax( n ) ? greenCheckOnGround : redCrossOnGround;
