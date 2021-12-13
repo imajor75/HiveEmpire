@@ -277,6 +277,8 @@ public class Simpleton : Player
 
                 var availability = CalculateAvailaibily( node );
                 float score = ( availability.resource + availability.relax + availability.source ) / 3;
+                if ( availability.resource == 0 )
+                    score = 0;
                 if ( score > bestScore )
                 {
                     bestScore = score;
