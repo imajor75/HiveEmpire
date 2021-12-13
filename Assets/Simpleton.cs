@@ -196,9 +196,12 @@ public class Simpleton : Player
             }
 
             configuration = Workshop.GetConfiguration( workshopType );
-            if ( configuration.plankNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
+            int reservedPlank = 4, reservedStone = 0;
+            if ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill )
+                reservedPlank = 0;
+            if ( configuration.plankNeeded + reservedPlank > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
                 return finished;
-            if ( configuration.stoneNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
+            if ( configuration.stoneNeeded + reservedStone > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
                 return finished;
 
             if ( workshopType == Workshop.Type.woodcutter )
@@ -508,7 +511,7 @@ public class Simpleton : Player
         {
             if ( boss.team.mainBuilding.itemData[(int)Item.Type.plank].content < GuardHouse.guardHouseConfiguration.plankNeeded )
                 return finished;
-            if ( boss.team.mainBuilding.itemData[(int)Item.Type.stone].content < GuardHouse.guardHouseConfiguration.stoneNeeded )
+            if ( boss.team.mainBuilding.itemData[(int)Item.Type.stone].content < GuardHouse.guardHouseConfiguration.stoneNeeded + 2 )
                 return finished;
 
             problemWeight = Constants.Simpleton.extensionImportance;
