@@ -108,8 +108,8 @@ public class Simpleton : Player
                 }
             }
 
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 1 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 1 ) ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
@@ -119,7 +119,7 @@ public class Simpleton : Player
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, Math.Max( soldierYield, 1 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );

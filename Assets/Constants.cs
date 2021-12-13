@@ -195,7 +195,6 @@ public static class Constants
             "Ammeris",
             "Baufra",
             "Benerib",
-            "Charmian",
             "Dedumose",
             "Duaenre",
             "Gautseshen",
