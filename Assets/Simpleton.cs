@@ -53,6 +53,7 @@ public class Simpleton : Player
             }
             if ( best != null && best.importance >= confidence )
             {
+                Log( $"[{name}]: Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
                 best.ApplySolution();
                 inability.Start( Constants.Simpleton.inabilityTolerance );
                 confidence = Constants.Simpleton.defaultConfidence;
