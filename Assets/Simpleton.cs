@@ -159,7 +159,10 @@ public class Simpleton : Player
         public int nodeRow;
         public Node bestLocation;
         public int bestFlagDirection;
-        public int bestScore = int.MinValue;
+        public float bestScore = float.MinValue;
+        public float bestResourceAvailability, bestRelaxAvailability, bestSourceAvailability;
+        public List<Workshop.Type> dependencies = new List<Workshop.Type>();
+        public Workshop.Configuration configuration;
 
         public YieldTask( Simpleton boss, Workshop.Type workshopType, float target ) : base( boss ) 
         {
@@ -198,11 +201,60 @@ public class Simpleton : Player
                 return problemWeight > 0 ? needMoreTime : finished;
             }
 
-            var configuration = Workshop.GetConfiguration( workshopType );
+            configuration = Workshop.GetConfiguration( workshopType );
             if ( configuration.plankNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
                 return finished;
             if ( configuration.stoneNeeded > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
                 return finished;
+
+            if ( workshopType == Workshop.Type.woodcutter )
+                dependencies.Add( Workshop.Type.forester );
+            if ( workshopType == Workshop.Type.sawmill )
+                dependencies.Add( Workshop.Type.woodcutter );
+            if ( workshopType == Workshop.Type.mill )
+                dependencies.Add( Workshop.Type.farm );
+            if ( workshopType == Workshop.Type.bowMaker )
+            {
+                dependencies.Add( Workshop.Type.sawmill );
+                dependencies.Add( Workshop.Type.hunter );
+            }
+            if ( workshopType == Workshop.Type.bakery )
+            {
+                dependencies.Add( Workshop.Type.mill );
+                dependencies.Add( Workshop.Type.saltMine );
+            }
+            if ( workshopType == Workshop.Type.smelter )
+            {
+                dependencies.Add( Workshop.Type.ironMine );
+                dependencies.Add( Workshop.Type.coalMine );
+            }
+            if ( workshopType == Workshop.Type.weaponMaker )
+            {
+                dependencies.Add( Workshop.Type.smelter );
+                dependencies.Add( Workshop.Type.coalMine );
+            }
+            if ( workshopType == Workshop.Type.brewery )
+            {
+                dependencies.Add( Workshop.Type.well );
+                dependencies.Add( Workshop.Type.farm );
+            }
+            if ( workshopType == Workshop.Type.butcher )
+            {
+                dependencies.Add( Workshop.Type.brewery );
+                dependencies.Add( Workshop.Type.farm );
+            }
+            if ( workshopType == Workshop.Type.barrack )
+            {
+                dependencies.Add( Workshop.Type.bowMaker );
+                dependencies.Add( Workshop.Type.brewery );
+                dependencies.Add( Workshop.Type.goldBarMaker );
+                dependencies.Add( Workshop.Type.weaponMaker );
+            }
+            if ( workshopType == Workshop.Type.goldBarMaker )
+            {
+                dependencies.Add( Workshop.Type.goldMine );
+                dependencies.Add( Workshop.Type.woodcutter );
+            }
 
             ScanRow( nodeRow++ );
 
@@ -214,7 +266,6 @@ public class Simpleton : Player
 
         void ScanRow( int row )
         {
-            var configuration = Workshop.GetConfiguration( workshopType );
             for ( int x = 0; x < HiveCommon.ground.dimension; x++ )
             {
                 var node = HiveCommon.ground.GetNode( x, nodeRow );
@@ -229,54 +280,90 @@ public class Simpleton : Player
 
                 if ( workingFlagDirection < 0 )
                     continue;
-                int resources = 0;
-                foreach ( var offset in Ground.areas[configuration.gatheringRange] )
-                {
-                    var nearby = node + offset;
-                    bool isThisGood = workshopType switch
-                    {
-                        Workshop.Type.woodcutter => nearby.HasResource( Resource.Type.tree ),
-                        Workshop.Type.stonemason => nearby.HasResource( Resource.Type.rock ),
-                        Workshop.Type.coalMine => nearby.HasResource( Resource.Type.coal ),
-                        Workshop.Type.ironMine => nearby.HasResource( Resource.Type.iron ),
-                        Workshop.Type.stoneMine => nearby.HasResource( Resource.Type.stone ),
-                        Workshop.Type.saltMine => nearby.HasResource( Resource.Type.salt ),
-                        Workshop.Type.goldMine => nearby.HasResource( Resource.Type.gold ),
-                        Workshop.Type.farm => nearby.type == Node.Type.grass,
-                        Workshop.Type.forester => nearby.type == Node.Type.forest,
-                        Workshop.Type.fishingHut => nearby.HasResource( Resource.Type.fish ),
-                        Workshop.Type.hunter => nearby.HasResource( Resource.Type.animalSpawner ),
-                        _ => true
-                    };
-                    if ( isThisGood && Workshop.IsNodeGoodForRelax( nearby ) )
-                        resources++;
-                }
 
-                if ( resources > bestScore )
+                var availability = CalculateAvailaibily( node );
+                float score = ( availability.resource + availability.relax + availability.source ) / 3;
+                if ( score > bestScore )
                 {
-                    bestScore = resources;
+                    bestScore = score;
+                    bestSourceAvailability = availability.source;
+                    bestRelaxAvailability = availability.relax;
+                    bestResourceAvailability = availability.resource;
                     bestLocation = node;
                     bestFlagDirection = workingFlagDirection;
-                    float expectedResourceCoverage = workshopType switch
-                    {
-                        Workshop.Type.stonemason => 0.05f,
-                        Workshop.Type.ironMine => 0.5f,
-                        Workshop.Type.goldMine => 0.5f,
-                        Workshop.Type.coalMine => 0.5f,
-                        Workshop.Type.stoneMine => 0.5f,
-                        Workshop.Type.saltMine => 0.5f,
-                        Workshop.Type.hunter => 0.01f,
-                        Workshop.Type.fishingHut => 0.1f,
-                        _ => 1f
-                    };
-                    solutionEfficiency = (float)resources / ( Ground.areas[configuration.gatheringRange].Count * expectedResourceCoverage );
+                    solutionEfficiency = score;
                 }
             }
         }
 
+        (float resource, float relax, float source) CalculateAvailaibily( Node node )
+        {
+            int resources = 0;
+            foreach ( var offset in Ground.areas[configuration.gatheringRange] )
+            {
+                var nearby = node + offset;
+                bool isThisGood = workshopType switch
+                {
+                    Workshop.Type.woodcutter => nearby.HasResource( Resource.Type.tree ),
+                    Workshop.Type.stonemason => nearby.HasResource( Resource.Type.rock ),
+                    Workshop.Type.coalMine => nearby.HasResource( Resource.Type.coal ),
+                    Workshop.Type.ironMine => nearby.HasResource( Resource.Type.iron ),
+                    Workshop.Type.stoneMine => nearby.HasResource( Resource.Type.stone ),
+                    Workshop.Type.saltMine => nearby.HasResource( Resource.Type.salt ),
+                    Workshop.Type.goldMine => nearby.HasResource( Resource.Type.gold ),
+                    Workshop.Type.farm => nearby.type == Node.Type.grass,
+                    Workshop.Type.forester => nearby.type == Node.Type.forest,
+                    Workshop.Type.fishingHut => nearby.HasResource( Resource.Type.fish ),
+                    Workshop.Type.hunter => nearby.HasResource( Resource.Type.animalSpawner ),
+                    _ => true
+                };
+                if ( isThisGood )
+                    resources++;
+            }
+            float expectedResourceCoverage = workshopType switch
+            {
+                Workshop.Type.stonemason => 0.05f,
+                Workshop.Type.ironMine => 0.5f,
+                Workshop.Type.goldMine => 0.5f,
+                Workshop.Type.coalMine => 0.5f,
+                Workshop.Type.stoneMine => 0.5f,
+                Workshop.Type.saltMine => 0.5f,
+                Workshop.Type.hunter => 0.01f,
+                Workshop.Type.fishingHut => 0.1f,
+                _ => 1f
+            };
+            var resourceAvailability = (float)resources / ( Ground.areas[configuration.gatheringRange].Count * expectedResourceCoverage );
+
+            int relaxSpotCount = 0;
+            foreach ( var relaxOffset in Ground.areas[Constants.Workshop.relaxAreaSize] )
+            {
+                if ( Workshop.IsNodeGoodForRelax( node + relaxOffset ) )
+                    relaxSpotCount++;
+
+            }
+            float relaxAvailability = (float)relaxSpotCount / configuration.relaxSpotCountNeeded;
+            if ( relaxAvailability > 1 )
+                relaxAvailability = 1;
+
+            float sourceAvailability = 0.5f;
+            if ( dependencies.Count > 0 )
+            {
+                int sourceScore = 0;
+                foreach ( var sourceOffset in Ground.areas[Constants.Simpleton.sourceSearchRange] )
+                {
+                    var source = node + sourceOffset;
+                    if ( source.building && source.building.node == source && source.building.team == boss.team && dependencies.Contains( (Workshop.Type)source.building.type ) )
+                        sourceScore += Constants.Simpleton.sourceSearchRange - source.DistanceFrom( node );
+                }
+                sourceAvailability = (float)sourceScore / ( dependencies.Count * Constants.Simpleton.sourceSearchRange );
+            }
+
+            return ( resourceAvailability, relaxAvailability, sourceAvailability );
+        }
+
         public override void ApplySolution()
         {
-            HiveCommon.Log( $"[{boss.name}]: Building a {workshopType} at {bestLocation.name}" );
+            HiveCommon.Log( $"[{boss.name}]: Building a {workshopType} at {bestLocation.name} ({bestResourceAvailability}, {bestRelaxAvailability}, {bestSourceAvailability})" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType );
         }
     }
@@ -291,10 +378,9 @@ public class Simpleton : Player
         }
         public override bool Analyze()
         {
-            if ( flag.roadsStartingHereCount == 0 || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
+            if ( ( flag.roadsStartingHereCount == 0 && flag != boss.team.mainBuilding.flag ) || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
                 flag.simpletonDataSafe.isolated = true;
-                // TODO Avoid other separated flags
                 problemWeight = 1;
                 foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
                 {
