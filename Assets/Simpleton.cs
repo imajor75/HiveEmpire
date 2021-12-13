@@ -117,7 +117,7 @@ public class Simpleton : Player
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, Math.Max( soldierYield, 1 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, soldierYield * 2 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, Math.Max( soldierYield * 2, 2 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
