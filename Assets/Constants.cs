@@ -322,6 +322,7 @@ public static class Constants
         public const float minimumConfidence = 0.2f;
         public const int inabilityTolerance = Constants.World.normalSpeedPerSecond * 60;
         public const float confidenceLevel = 0.1f;
+        public const float extensionImportance = 0.8f;
     }
 }
 

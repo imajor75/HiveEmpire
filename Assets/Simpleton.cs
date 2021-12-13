@@ -429,19 +429,7 @@ public class Simpleton : Player
             if ( boss.team.mainBuilding.itemData[(int)Item.Type.stone].content < GuardHouse.guardHouseConfiguration.stoneNeeded )
                 return finished;
 
-            int freeSpots = 0, usedSpots = 0;
-            foreach ( var node in HiveCommon.ground.nodes )
-            {
-                if ( node.building is GuardHouse && !node.building.construction.done )
-                    return finished;
-                if ( node.team != boss.team )
-                    continue;
-                if ( node.building || node.flag || node.road )
-                    usedSpots++;
-                else
-                    freeSpots++;
-            }
-            problemWeight = Math.Min( 2 * (float)usedSpots / (freeSpots+usedSpots), 1 );
+            problemWeight = Constants.Simpleton.extensionImportance;
             
             foreach ( var node in HiveCommon.ground.nodes )
             {
