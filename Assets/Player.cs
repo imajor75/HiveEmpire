@@ -126,6 +126,7 @@ public class Team : HiveCommon
 	public List<Flag> flags = new List<Flag>();
 	public List<Road> roads = new List<Road>();
 	public List<Workshop> workshops = new List<Workshop>();
+	public List<GuardHouse> guardHouses = new List<GuardHouse>();
 
 	public List<bool> stocksHaveNeed = new List<bool>();
 	public List<int> buildingCounts = new List<int>();

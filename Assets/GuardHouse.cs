@@ -176,7 +176,9 @@ public class GuardHouse : Attackable
 			soldiers.Add( soldier );
 		}
 		attackers.Clear();
+		team.guardHouses.Remove( this );
 		SetTeam( soldiers.First().team );
+		team.guardHouses.Add( this );
 		takeoverInProgress = false;
 	}
 
@@ -209,6 +211,8 @@ public class GuardHouse : Attackable
 		optimalSoldierCount = 1;
 		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly, block ) == null )
 			return null;
+
+		owner.guardHouses.Add( this );
 
 		return this;
 	}
@@ -278,6 +282,7 @@ public class GuardHouse : Attackable
 
 		removing = true;
 		team.UnregisterInfuence( this );
+		team.guardHouses.Remove( this );
 		return base.Remove( takeYourTime );
 	}
 
@@ -299,6 +304,7 @@ public class GuardHouse : Attackable
 			foreach ( var soldier in attackers )
 				assert.AreEqual( soldier.team, enemy );
 		}
+		assert.IsTrue( team.guardHouses.Contains( this ) );
 		base.Validate( chain );
 	}
 }

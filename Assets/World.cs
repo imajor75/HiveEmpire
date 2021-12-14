@@ -674,7 +674,7 @@ public class World : HiveCommon
 		if ( mainTeam )
 		{
 			teams.Add( mainTeam );
-			var mainPlayer = Player.Create().Setup( Constants.Player.names.Random(), mainTeam );
+			var mainPlayer = Simpleton.Create().Setup( Constants.Player.names.Random(), mainTeam );
 			if ( mainPlayer )
 				players.Add( mainPlayer );
 		}
@@ -834,6 +834,15 @@ public class World : HiveCommon
 			{
 				if ( GetValue<Player>( o, "owner" ) )
 					o.team = GetValue<Player>( o, "owner" ).team;
+			}
+		}
+
+		{
+			var list = Resources.FindObjectsOfTypeAll<GuardHouse>();
+			foreach ( var o in list )
+			{
+				if ( !o.team.guardHouses.Contains( o ) )
+					o.team.guardHouses.Add( o );
 			}
 		}
 

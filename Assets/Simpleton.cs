@@ -13,6 +13,7 @@ public class Simpleton : Player
     public World.Timer inability = new World.Timer();
     public float confidence = Constants.Simpleton.defaultConfidence;
     public List<Node> isolatedNodes = new List<Node>();
+    public int reservedPlank, reservedStone;
 
     public static new Simpleton Create()
     {
@@ -105,6 +106,20 @@ public class Simpleton : Player
                     boss.tasks.Add( new RemoveRunOutTask( boss, workshop ) );
             }
 
+            boss.reservedPlank = boss.reservedStone = 0;
+            void CheckBuilding( Building building )
+            {
+                boss.reservedPlank += building.construction.plankMissing;
+                boss.reservedStone += building.construction.stoneMissing;
+            }
+
+            foreach ( var stock in boss.team.stocks )
+                CheckBuilding( stock );
+            foreach ( var workshop in boss.team.workshops )
+                CheckBuilding( workshop );
+            foreach ( var guardHouse in boss.team.guardHouses )
+                CheckBuilding( guardHouse );
+
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
@@ -196,7 +211,7 @@ public class Simpleton : Player
             }
 
             configuration = Workshop.GetConfiguration( workshopType );
-            int reservedPlank = 4, reservedStone = 0;
+            int reservedPlank = boss.reservedPlank + 4, reservedStone = boss.reservedStone;
             if ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill )
                 reservedPlank = 0;
             if ( configuration.plankNeeded + reservedPlank > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
