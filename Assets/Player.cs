@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -535,12 +535,17 @@ public class Team : HiveCommon
 			Assert.global.IsNotNull( stock );
 		Assert.global.AreEqual( itemHaulPriorities.Count, (int)Item.Type.total );
 		int[] bc = new int[(int)Building.Type.total];
-		var list = Resources.FindObjectsOfTypeAll<Building>();
-		foreach ( var building in list )
+		void ProcessList<Type>( List<Type> list ) where Type : Building
 		{
-			if ( building.team == this && !building.blueprintOnly )
-				bc[(int)building.type]++;
+			foreach ( var building in list )
+			{
+				if ( !building.blueprintOnly )
+					bc[(int)building.type]++;
+			}
 		}
+		ProcessList( stocks );
+		ProcessList( guardHouses );
+		ProcessList( workshops );
 		for ( int i = 0; i < (int)Building.Type.total; i++ )
 			Assert.global.AreEqual( bc[i], buildingCounts[i] );
 		foreach ( var flag in flags )
@@ -549,6 +554,8 @@ public class Team : HiveCommon
 			road.assert.IsFalse( road.destroyed );
 		foreach ( var workshop in workshops )
 			workshop.assert.IsFalse( workshop.destroyed );
+		foreach ( var guardHouse in guardHouses )
+			guardHouse.assert.IsFalse( guardHouse.destroyed );
 	}
 }
 
