@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -943,7 +943,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		Road newRoad = Create().Setup( team ), secondRoad = null;
 		newRoad.nodes = nodes;
-		newRoad.team.roads.Add( newRoad );	// TODO Not good at all. All of this should happen in Road.Setup.
 		if ( secondNodes != null )
 		{
 			secondRoad = Create().Setup( team );
@@ -1106,7 +1105,11 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( root.viewport.inputHandler, this );
 		assert.IsTrue( team == null || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
-		assert.IsTrue( team.roads.Contains( this ) );
+		int j = 0;
+		foreach ( var r in team.roads )
+			if ( r == this )
+				j++;
+		assert.AreEqual( j, 1 );
 		base.Validate( chain );
 	}
 
