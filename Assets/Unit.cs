@@ -260,6 +260,8 @@ public class Unit : HiveObject
 			}
 			set
 			{
+				if ( value == null )
+					return;
 				foreach ( var act in Unit.actLibrary )
 				{
 					if ( act.name == value )
