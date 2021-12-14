@@ -353,7 +353,7 @@ public class Simpleton : Player
                 Workshop.Type.saltMine => 0.5f,
                 Workshop.Type.hunter => 0.01f,
                 Workshop.Type.fishingHut => 0.1f,
-                _ => 1f
+                _ => 2f
             };
             var resourceAvailability = (float)resources / ( Ground.areas[configuration.gatheringRange].Count * expectedResourceCoverage );
 
