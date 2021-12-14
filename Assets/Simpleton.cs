@@ -537,6 +537,8 @@ public class Simpleton : Player
                 return finished;
             if ( boss.team.mainBuilding.itemData[(int)Item.Type.stone].content < GuardHouse.guardHouseConfiguration.stoneNeeded + 2 )
                 return finished;
+            if ( boss.team.guardHouses.Count * 2 > boss.team.workshops.Count )
+                return finished;
 
             problemWeight = Constants.Simpleton.extensionImportance;
             
