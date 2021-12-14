@@ -201,8 +201,17 @@ public class Simpleton : Player
                 else
                     problemWeight = 1 - 0.5f * ( (float)currentYield / target );
 
-                if ( currentYield == 0 && ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill || workshopType == Workshop.Type.stonemason || workshopType == Workshop.Type.stoneMine ) )
-                    priority = 100; // TODO ?
+                if ( currentYield == 0 )
+                {
+                    priority = workshopType switch
+                    {
+                        Workshop.Type.woodcutter => 4,
+                        Workshop.Type.stonemason => 2,
+                        Workshop.Type.stoneMine => 3,
+                        Workshop.Type.sawmill => 3,
+                        _ => 1
+                    };
+                };
                 if ( currentWorkshopCount >= HiveCommon.world.challenge.buildingMax[(int)workshopType] )
                     return finished;
 
