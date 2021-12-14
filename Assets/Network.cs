@@ -344,6 +344,7 @@ public class Network : HiveCommon
 							memStream.Write( buffer, 0, receivedSize );
 							memStream.Seek( 0, SeekOrigin.Begin );
 							var o = binForm.Deserialize( memStream ) as Operation;
+							o.source = Operation.Source.networkServer;
 							Assert.global.AreEqual( memStream.Position, memStream.Length );
 							oh.executeBuffer.Add( o );
 							oh.orders.Last().operationsLeftFromServer--;
@@ -369,6 +370,7 @@ public class Network : HiveCommon
 							var binForm = new BinaryFormatter();
 							o = binForm.Deserialize( memStream ) as Operation;
 						}
+						o.source = Operation.Source.networkClient;
 						oh.ScheduleOperation( o );
 						break;
 					}

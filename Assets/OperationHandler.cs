@@ -250,8 +250,9 @@ public class OperationHandler : HiveObject
         currentGroup++;
     }
 
-    public void ScheduleOperation( Operation operation, bool standalone = true )
+    public void ScheduleOperation( Operation operation, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
+        operation.source = source;
         if ( standalone )
             currentGroup++;
         if ( operation.group < 0 )
@@ -306,46 +307,47 @@ public class OperationHandler : HiveObject
         return t;
     }
 
-	public void ScheduleChangeRoadHaulerCount( Road road, int count )
+	public void ScheduleChangeRoadHaulerCount( Road road, int count, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsChangeHaulerCount( road, count ) );
+		ScheduleOperation( Operation.Create().SetupAsChangeHaulerCount( road, count ), standalone, source );
 	}
 
-	public void ScheduleChangeDefenderCount( GuardHouse building, int count )
+	public void ScheduleChangeDefenderCount( GuardHouse building, int count, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsChangeDefenderCount( building, count ) );
+		ScheduleOperation( Operation.Create().SetupAsChangeDefenderCount( building, count ), standalone, source );
 	}
 
-	public void ScheduleRemoveBuilding( Building building, bool standalone = true )
+	public void ScheduleRemoveBuilding( Building building, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
         if ( building )
-		    ScheduleOperation( Operation.Create().SetupAsRemoveBuilding( building ), standalone );
+		    ScheduleOperation( Operation.Create().SetupAsRemoveBuilding( building ), standalone, source );
 	}
 
-	public void ScheduleCreateBuilding( Node location, int direction, Building.Type buildingType, bool standalone = true )
+	public void ScheduleCreateBuilding( Node location, int direction, Building.Type buildingType, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType ), standalone, source );
 	}
 
-	public void ScheduleRemoveRoad( Road road, bool standalone = true )
+	public void ScheduleRemoveRoad( Road road, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
         if ( road )
-		    ScheduleOperation( Operation.Create().SetupAsRemoveRoad( road ), standalone );
+		    ScheduleOperation( Operation.Create().SetupAsRemoveRoad( road ), standalone, source );
 	}
 
-	public void ScheduleCreateRoad( List<Node> path, bool standalone = true )
+	public void ScheduleCreateRoad( List<Node> path, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsCreateRoad( path ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCreateRoad( path ), standalone, source );
 	}
 
-	public void ScheduleRemoveFlag( Flag flag )
+	public void ScheduleRemoveFlag( Flag flag, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
         if ( flag == null )
             return;
 
-        StartGroup();
+        if ( standalone )
+            StartGroup();
         foreach ( var building in flag.Buildings() )
-            ScheduleRemoveBuilding( building, false );
+            ScheduleRemoveBuilding( building, false, source );
         List<Road> realRoads = new List<Road>();
         foreach ( var road in flag.roadsStartingHere )
             if ( road )
@@ -353,76 +355,71 @@ public class OperationHandler : HiveObject
         if ( realRoads.Count != 2 )
         {
             foreach ( var road in realRoads )
-                ScheduleRemoveRoad( road, false );
+                ScheduleRemoveRoad( road, false, source );
         }
         
-		ScheduleOperation( Operation.Create().SetupAsRemoveFlag( flag ), false );
+		ScheduleOperation( Operation.Create().SetupAsRemoveFlag( flag ), false, source );
 	}
 
-	public void ScheduleCreateFlag( Node location, bool crossing = false, bool standalone = true )
+	public void ScheduleCreateFlag( Node location, bool crossing = false, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsCreateFlag( location, crossing ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCreateFlag( location, crossing ), standalone, source );
 	}
 
-	public void ScheduleRemoveFlag( Flag flag, bool standalone = true )
+	public void ScheduleFlattenFlag( Flag flag, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsRemoveFlag( flag ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsFlattenFlag( flag ), standalone, source );
 	}
 
-	public void ScheduleFlattenFlag( Flag flag, bool standalone = true )
+	public void ScheduleChangeFlagType( Flag flag, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsFlattenFlag( flag ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsChangeFlagType( flag ), standalone, source );
 	}
 
-	public void ScheduleChangeFlagType( Flag flag, bool standalone = true )
+	public void ScheduleCaptureRoad( Flag flag, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsChangeFlagType( flag ), standalone );
+		ScheduleOperation( Operation.Create().SetupAsCaptureRoad( flag ), standalone, source );
 	}
 
-	public void ScheduleCaptureRoad( Flag flag, bool standalone = true )
-	{
-		ScheduleOperation( Operation.Create().SetupAsCaptureRoad( flag ), standalone );
-	}
-
-	public void ScheduleChangeArea( Building building, Ground.Area area, Node center, int radius )
+	public void ScheduleChangeArea( Building building, Ground.Area area, Node center, int radius, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
         if ( area != null )
-		    ScheduleOperation( Operation.Create().SetupAsChangeArea( building, area, center, radius ) );
+		    ScheduleOperation( Operation.Create().SetupAsChangeArea( building, area, center, radius ), standalone, source );
 	}
 
-	public void ScheduleChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, bool enabled )
+	public void ScheduleChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, bool enabled, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-	    ScheduleOperation( Operation.Create().SetupAsChangeBufferUsage( workshop, buffer, enabled ) );
+	    ScheduleOperation( Operation.Create().SetupAsChangeBufferUsage( workshop, buffer, enabled ), standalone, source );
 	}
 
-    public void ScheduleMoveFlag( Flag flag, int direction )
+    public void ScheduleMoveFlag( Flag flag, int direction, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
-        ScheduleOperation( Operation.Create().SetupAsMoveFlag( flag, direction ) );
+        ScheduleOperation( Operation.Create().SetupAsMoveFlag( flag, direction ), standalone, source );
     }
 
-    public void ScheduleChangePriority( Stock.Route route, int direction )
+    public void ScheduleChangePriority( Stock.Route route, int direction, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
-        ScheduleOperation( Operation.Create().SetupAsChangePriority( route, direction ) );
+        ScheduleOperation( Operation.Create().SetupAsChangePriority( route, direction ), standalone, source );
     }
 
-    public void ScheduleMoveRoad( Road road, int index, int direction )
+    public void ScheduleMoveRoad( Road road, int index, int direction, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
-        ScheduleOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ) );
+        ScheduleOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ), standalone, source );
     }
 
-    public void ScheduleStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value, bool standalone = true )
+    public void ScheduleStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
-        ScheduleOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone );
+        ScheduleOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone, source );
     }
 
-    public void ScheduleAttack( Team team, Attackable target, int attackedCount, bool standalone = true )
+    public void ScheduleAttack( Team team, Attackable target, int attackedCount, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
-        ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone );
+        ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone, source );
     }
 
-    public void ScheduleCreatePlayer( string name, string team, bool standalone = true )
+    public void ScheduleCreatePlayer( string name, string team, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
-        ScheduleOperation( Operation.Create().SetupAsCreatePlayer( name, team ), standalone );
+        ScheduleOperation( Operation.Create().SetupAsCreatePlayer( name, team ), standalone, source );
     }
 
     void FixedUpdate()
@@ -439,7 +436,7 @@ public class OperationHandler : HiveObject
             CRCCodes.Add( currentCRCCode );
             RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
         }
-        if ( mode == Mode.repeating )
+        if ( mode == Mode.repeating && recordCRC )      // TODO Probably wrong condition here
         {
             assert.IsTrue( CRCCodesSkipped + CRCCodes.Count > time );
             if ( !recalculateCRC )
@@ -599,13 +596,16 @@ public class OperationHandler : HiveObject
     void ExecuteOperation( Operation operation )
     {
         HiveObject.Log( $"Executing {operation.name}" );
+        if ( root.showComputerAction && operation.source == Operation.Source.computer )
+            root.ShowOperation( operation );
+
         var inverse = operation.ExecuteAndInvert();
         if ( inverse != null )
         {
             inverse.group = int.MaxValue - operation.group;
             switch ( operation.source )
             {
-                case Operation.Source.manual:
+                default:
                     inverse.source = Operation.Source.undo;
                     undoQueue.Add( inverse );
                     redoQueue.Clear();
@@ -620,6 +620,7 @@ public class OperationHandler : HiveObject
                     break;
             }
         }
+        operation.source = Operation.Source.archive;
     }
 
     public override void Validate( bool chain )
@@ -656,6 +657,10 @@ public class Operation
     public enum Source
     {
         manual,
+        archive,
+        networkClient,
+        networkServer,
+        computer,
         undo,
         redo
     }
@@ -784,12 +789,12 @@ public class Operation
                 Type.changeHaulerCount => "Change hauler count",
                 Type.changeDefenderCount => "Change defender count",
                 Type.createBuilding => "Constructing a new ",
-                Type.createFlag => "Creating a new flag",
+                Type.createFlag => "Creating a new junction",
                 Type.createRoad => "Create new road",
-                Type.moveFlag => "Moving a flag",
+                Type.moveFlag => "Moving a junction",
                 Type.moveRoad => "Moving a road block",
                 Type.removeBuilding => "Remove a building",
-                Type.removeFlag => "Remove a flag",
+                Type.removeFlag => "Remove a junction",
                 Type.removeRoad => "Remove a road",
                 Type.stockAdjustment => "Adjust stock item counts",
                 Type.attack => "Start an attack on the enemy",

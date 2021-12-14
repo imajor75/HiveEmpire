@@ -674,7 +674,7 @@ public class World : HiveCommon
 		if ( mainTeam )
 		{
 			teams.Add( mainTeam );
-			var mainPlayer = Simpleton.Create().Setup( Constants.Player.names.Random(), mainTeam );
+			var mainPlayer = Player.Create().Setup( Constants.Player.names.Random(), mainTeam );
 			if ( mainPlayer )
 				players.Add( mainPlayer );
 		}

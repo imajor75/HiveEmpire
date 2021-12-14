@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -30,6 +30,7 @@ public class Interface : HiveObject
 	public new static Interface root;
 	public bool heightStrips;
 	public bool showReplayAction = true;
+	public bool showComputerAction = true;
 	public Player mainPlayer;
 	public static Tooltip tooltip, status;
 	public float lastAutoSave = -1;
@@ -266,6 +267,16 @@ public class Interface : HiveObject
 	{ 
 		if ( Event.current.type == EventType.KeyUp && ignoreKey == Event.current.keyCode )
 			ignoreKey = KeyCode.None;
+	}
+
+	public void ShowOperation( Operation operation )
+	{
+		if ( eye.target && lastShownOperation == operation )
+			return;
+
+		eye.FocusOn( operation.place, true, false, false, true );
+		status.SetText( this, operation.description, pinX:0.5f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
+		lastShownOperation = operation;
 	}
 
 	public void Clear()
@@ -747,14 +758,7 @@ public class Interface : HiveObject
 			replayIcon.gameObject.SetActive( !playerInCharge );
 			var next = world.operationHandler.next;
 			if ( showReplayAction && !playerInCharge && next != null && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
-			{
-				if ( !eye.target || lastShownOperation != next )
-				{
-					eye.FocusOn( world.operationHandler.next.place, true, false, false, true );
-					status.SetText( this, world.operationHandler.next.description, pinX:0.5f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
-					lastShownOperation = next;
-				}
-			}
+				ShowOperation( next );
 		}
 	}
 
