@@ -824,7 +824,10 @@ public class World : HiveCommon
 				if ( GetValue<Player>( o, "owner" ) )
 					o.team = GetValue<Player>( o, "owner" ).team;
 				if ( !o.team.roads.Contains( o ) )
+				{
 					o.team.roads.Add( o );
+					Assert.global.Fail();
+				}
 			}
 		}
 
@@ -842,7 +845,10 @@ public class World : HiveCommon
 			foreach ( var o in list )
 			{
 				if ( !o.team.guardHouses.Contains( o ) )
+				{
 					o.team.guardHouses.Add( o );
+					Assert.global.Fail();
+				}
 			}
 		}
 
@@ -895,7 +901,10 @@ public class World : HiveCommon
 						if ( b.stored > b.size )
 							b.stored = b.size;
 					if ( !s.team.workshops.Contains( s ) )
+					{
 						s.team.workshops.Add( s );
+						Assert.global.Fail();
+					}
 				}
 
 				var t = o as Stock;
