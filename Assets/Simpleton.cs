@@ -102,8 +102,7 @@ public class Simpleton : Player
             {
                 if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
                     soldierYield += workshop.maxOutput;
-                if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
-                    boss.tasks.Add( new RemoveRunOutTask( boss, workshop ) );
+                boss.tasks.Add( new MaintenanceTask( boss, workshop ) );
             }
 
             boss.reservedPlank = boss.reservedStone = 0;
@@ -593,28 +592,64 @@ public class Simpleton : Player
         }
     }
 
-    public class RemoveRunOutTask : Task
+    public class MaintenanceTask : Task
     {
         public Workshop workshop;
-        public RemoveRunOutTask( Simpleton boss, Workshop workshop ) : base( boss )
+        public enum Action
+        {
+            remove,
+            disableFish
+        }
+        public Action action;
+        public MaintenanceTask( Simpleton boss, Workshop workshop ) : base( boss )
         {
             this.workshop = workshop;
         }
 
         public override bool Analyze()
         {
-            if ( workshop.ResourcesLeft() == 0 )
-                problemWeight = solutionEfficiency = 1;
+            if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
+            {
+                if ( workshop.ResourcesLeft() == 0 )
+                {
+                    action = Action.remove;
+                    problemWeight = solutionEfficiency = 1;
+                }
+            }
+            if ( workshop.type == Workshop.Type.ironMine || workshop.type == Workshop.Type.coalMine )
+            {
+                foreach ( var input in workshop.buffers )
+                {
+                    if ( input.itemType == Item.Type.fish && !input.disabled )
+                    {
+                        action = Action.disableFish;
+                        problemWeight = solutionEfficiency = 1;
+                    }
+                }
+            }
             return finished;
         }
 
         public override void ApplySolution()
         {
-            HiveCommon.Log( $"[{boss.name}]: Removing {workshop.name}" );
-            if ( workshop.flag.roadsStartingHereCount == 1 )
-                HiveCommon.oh.ScheduleRemoveFlag( workshop.flag, true, Operation.Source.computer );
-            else
-                HiveObject.oh.ScheduleRemoveBuilding( workshop, true, Operation.Source.computer );
+            switch ( action )
+            {
+                case Action.remove:
+                HiveCommon.Log( $"[{boss.name}]: Removing {workshop.name}" );
+                if ( workshop.flag.roadsStartingHereCount == 1 )
+                    HiveCommon.oh.ScheduleRemoveFlag( workshop.flag, true, Operation.Source.computer );
+                else
+                    HiveObject.oh.ScheduleRemoveBuilding( workshop, true, Operation.Source.computer );
+                break;
+
+                case Action.disableFish:
+                foreach ( var input in workshop.buffers )
+                {
+                    if ( input.itemType == Item.Type.fish )
+                        HiveCommon.oh.ScheduleChangeBufferUsage( workshop, input, false, true, Operation.Source.computer );
+                }
+                break;
+            }
         }
     }
 }

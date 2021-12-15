@@ -1245,7 +1245,7 @@ public class Operation
             case Type.changeBufferUsage:
             {
                 var workshop = building as Workshop;
-                workshop.buffers[bufferIndex].disabled = useBuffer;
+                workshop.buffers[bufferIndex].disabled = !useBuffer;
                 return Create().SetupAsChangeBufferUsage( workshop, workshop.buffers[bufferIndex], !useBuffer );
             }
             case Type.flattenFlag:
