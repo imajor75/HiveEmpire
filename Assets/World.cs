@@ -823,7 +823,7 @@ public class World : HiveCommon
 				o.ends[1] = o.lastNode.flag;
 				if ( GetValue<Player>( o, "owner" ) )
 					o.team = GetValue<Player>( o, "owner" ).team;
-				if ( !o.team.roads.Contains( o ) )
+				if ( !o.team.roads.Contains( o ) && !o.destroyed )
 				{
 					o.team.roads.Add( o );
 					Assert.global.Fail();
@@ -844,7 +844,7 @@ public class World : HiveCommon
 			var list = Resources.FindObjectsOfTypeAll<GuardHouse>();
 			foreach ( var o in list )
 			{
-				if ( !o.team.guardHouses.Contains( o ) )
+				if ( !o.team.guardHouses.Contains( o ) && !o.destroyed )
 				{
 					o.team.guardHouses.Add( o );
 					Assert.global.Fail();
@@ -900,7 +900,7 @@ public class World : HiveCommon
 					foreach ( var b in s.buffers )
 						if ( b.stored > b.size )
 							b.stored = b.size;
-					if ( !s.team.workshops.Contains( s ) )
+					if ( !s.team.workshops.Contains( s ) && !s.destroyed )
 					{
 						s.team.workshops.Add( s );
 						Assert.global.Fail();
