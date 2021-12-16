@@ -408,7 +408,8 @@ public class Simpleton : Player
         }
         public override bool Analyze()
         {
-            if ( ( flag.roadsStartingHereCount == 0 && flag != boss.team.mainBuilding.flag ) || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
+            int roadCount = flag.roadsStartingHereCount;
+            if ( ( roadCount == 0 && flag != boss.team.mainBuilding.flag ) || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
                 flag.simpletonDataSafe.isolated = true;
                 problemWeight = 1;
@@ -421,8 +422,6 @@ public class Simpleton : Player
                     {
                         foreach ( var building in flag.Buildings() )
                             boss.isolatedNodes.Add( building.node );
-
-                        solutionEfficiency = 0.5f;
                         continue;
                     }
 
@@ -442,6 +441,23 @@ public class Simpleton : Player
                 solutionEfficiency = 1;
                 return finished;
             }
+
+            List<Flag> connectedFlags = new List<Flag>();
+            for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+            {
+                var road = flag.roadsStartingHere[i];
+                if ( road == null )
+                    continue;
+                var otherEnd = road.OtherEnd( flag );
+                if ( connectedFlags.Contains( otherEnd ) && flag.Buildings().Count == 0 )
+                {
+                    problemWeight = solutionEfficiency = 0.5f;
+                    action = Action.remove;
+                    return finished;
+                }
+                connectedFlags.Add( otherEnd );
+            }
+
             foreach ( var offset in Ground.areas[Constants.Simpleton.flagConnectionRange] )
             {
                 var nearbyNode = flag.node + offset;
@@ -457,6 +473,8 @@ public class Simpleton : Player
             {
                 case Action.connect:
                 {
+                    if ( path == null || path.path == null || path.path.Count < 2 ) // TODO path.Count was 0
+                        return;
                     HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
                     HiveCommon.oh.ScheduleCreateRoad( path.path, true, Operation.Source.computer );
                     break;
