@@ -23,6 +23,7 @@ public class OperationHandler : HiveObject
     public int finishedFrameIndex = -1;
     public int replayLength = -1;
     public int currentGroup = 0;
+    public string currentGroupName;
     public List<string> saveFileNames = new List<string>();
     public bool recordCRC;
     public bool recordEvents;
@@ -245,9 +246,10 @@ public class OperationHandler : HiveObject
         replayLength = 0;
     }
 
-    public void StartGroup()
+    public void StartGroup( string name = null )
     {
         currentGroup++;
+        currentGroupName = name;
     }
 
     public void ScheduleOperation( Operation operation, bool standalone = true, Operation.Source source = Operation.Source.manual )
@@ -256,7 +258,10 @@ public class OperationHandler : HiveObject
         if ( standalone )
             currentGroup++;
         if ( operation.group < 0 )
+        {
             operation.group = currentGroup;
+            operation.groupName = currentGroupName;
+        }
         Assert.global.AreNotEqual( network.state, Network.State.receivingGameState );
         if ( network.state == Network.State.client )
         {
@@ -345,7 +350,7 @@ public class OperationHandler : HiveObject
             return;
 
         if ( standalone )
-            StartGroup();
+            StartGroup( "Removing a junction" );
         foreach ( var building in flag.Buildings() )
             ScheduleRemoveBuilding( building, false, source );
         List<Road> realRoads = new List<Road>();
@@ -641,6 +646,7 @@ public class Operation
     public List<int> roadPathX = new List<int>(), roadPathY = new List<int>();
     public bool crossing;
     public int group = -1;
+    public string groupName;
     public int areaIndex;
     public int radius;
     public int endLocationX, endLocationY;
@@ -782,6 +788,9 @@ public class Operation
     {
         get
         {
+            if ( groupName != null )
+                return groupName;
+
             string text = type switch
             {
                 Type.changeArea => "Change area",

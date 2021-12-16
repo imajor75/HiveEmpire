@@ -827,7 +827,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( node != lastNode )
 			return true;
 
-		oh.StartGroup();
+		oh.StartGroup( "Finishing road" );
 
 		bool flagCreated = false;
 		if ( node.road && node.road != this || Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )

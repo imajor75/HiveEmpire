@@ -699,10 +699,11 @@ public class Simpleton : Player
                 case Action.cleanup:
                 HiveCommon.Log( $"[{boss.name}]: Cleaning up around {workshop.name}" );
                 workshop.simpletonDataSafe.lastCleanup.Start();
+                HiveCommon.oh.StartGroup( $"Cleaning up roads and junctions in the area" );
                 foreach ( var road in cleanupRoads )
-                    HiveCommon.oh.ScheduleRemoveRoad( road, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveRoad( road, false, Operation.Source.computer );
                 foreach ( var flag in cleanupFlags )
-                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveFlag( flag, false, Operation.Source.computer );
                 break;
             }
         }

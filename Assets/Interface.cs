@@ -3006,7 +3006,7 @@ public class Interface : HiveObject
 		{
 			var t = stock.itemData[(int)selectedItemType];
 			var l = (int)( Constants.Stock.cartCapacity * 1.5 );
-			oh.StartGroup();
+			oh.StartGroup( "Start a new cart route" );
 			if ( input )
 			{
 				if ( t.cartInput < 5 )
