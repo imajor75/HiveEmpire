@@ -392,6 +392,13 @@ public class Simpleton : Player
 
     public class FlagTask : Task
     {
+        public enum Action
+        {
+            connect,
+            remove,
+            capture
+        }
+        public Action action;
         public PathFinder path = PathFinder.Create();
         public Flag flag;
         public FlagTask( Simpleton boss, Flag flag ) : base( boss )
@@ -420,12 +427,20 @@ public class Simpleton : Player
 
                     boss.isolatedNodes.Clear();
                     solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.25f );
+                    action = path.ready ? Action.connect : Action.remove;
                     break; 
                 }
                 return finished;
             }
             else
                 flag.simpletonDataSafe.isolated = false;
+            if ( flag.CaptureRoads( true ) )
+            {
+                action = Action.capture;
+                problemWeight = Constants.Simpleton.flagCaptureImportance;
+                solutionEfficiency = 1;
+                return finished;
+            }
             foreach ( var offset in Ground.areas[Constants.Simpleton.flagConnectionRange] )
             {
                 var nearbyNode = flag.node + offset;
@@ -437,15 +452,26 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            if ( path.ready )
+            switch ( action )
             {
-                HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
-                HiveCommon.oh.ScheduleCreateRoad( path.path, true, Operation.Source.computer );
-            }
-            else
-            {
-                HiveCommon.Log( $"[{boss.name}]: Removing separated flag at {flag.node.x}:{flag.node.y}" );
-                HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
+                case Action.connect:
+                {
+                    HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
+                    HiveCommon.oh.ScheduleCreateRoad( path.path, true, Operation.Source.computer );
+                    break;
+                }
+                case Action.remove:
+                {
+                    HiveCommon.Log( $"[{boss.name}]: Removing separated flag at {flag.node.x}:{flag.node.y}" );
+                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
+                    break;
+                }
+                case Action.capture:
+                {
+                    HiveCommon.Log( $"[{boss.name}]: Capturing roads around {flag}" );
+                    HiveCommon.oh.ScheduleCaptureRoad( flag, true, Operation.Source.computer );
+                    break;
+                }
             }
         }
     }
@@ -463,14 +489,14 @@ public class Simpleton : Player
 
         public override bool Analyze()
         {
+            int onRoadLength = 0;
             if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.onRoad ) )
                 problemWeight = 1;
             else
             {
-                int length = 0;
                 foreach ( var road in path.roadPath )
-                    length += road.nodes.Count - 1;
-                problemWeight = 1 - (float)flagA.node.DistanceFrom( flagB.node ) / length;
+                    onRoadLength += road.nodes.Count - 1;
+                problemWeight = 1 - (float)flagA.node.DistanceFrom( flagB.node ) / onRoadLength;
             }
             if ( problemWeight < 0.5 )
                 return finished;
@@ -478,9 +504,7 @@ public class Simpleton : Player
             if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.forRoads, true ) )
                 return finished;
 
-            solutionEfficiency = (float)flagA.node.DistanceFrom( flagB.node ) / (path.path.Count - 1);
-            if ( path.path.Count > 5 )
-                solutionEfficiency /= (path.path.Count - 5);
+            solutionEfficiency = 1 - (float)(path.path.Count - 1) / onRoadLength;
             return finished;
         }
 

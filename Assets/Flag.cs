@@ -176,19 +176,21 @@ public class Flag : HiveObject
 		tileMesh.colors = colors;
 	}
 
-	public void CaptureRoads()
+	public bool CaptureRoads( bool checkOnly = false )
 	{
 		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 		{
 			Node A = node.Neighbour( i ), B = node.Neighbour( ( i + 1 ) % Constants.Node.neighbourCount );
-			if ( A.road && A.road == B.road )
+			if ( A.road && A.road == B.road && A.road.team == team )
 			{
 				if ( A.road.ends[0] == this || A.road.ends[1] == this )
 					continue;
-				A.road.Split( this );
-				return;
+				if ( !checkOnly )
+					A.road.Split( this );
+				return true;
 			}
 		}
+		return false;
 	}
 
 	public bool ConvertToCrossing( bool checkConditions = true )

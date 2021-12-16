@@ -324,6 +324,7 @@ public static class Constants
         public const float confidenceLevel = 0.1f;
         public const int sourceSearchRange = 6;
         public const float extensionImportance = 0.8f;
+        public const float flagCaptureImportance = 0.3f;
     }
 }
 
