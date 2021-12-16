@@ -73,6 +73,7 @@ public class Simpleton : Player
     public class Data
     {
         public bool isolated;
+        public World.Timer lastCleanup = new World.Timer();
     }
 
     public abstract class Task
@@ -622,9 +623,12 @@ public class Simpleton : Player
         public enum Action
         {
             remove,
-            disableFish
+            disableFish,
+            cleanup
         }
         public Action action;
+        public List<Road> cleanupRoads = new List<Road>();
+        public List<Flag> cleanupFlags = new List<Flag>();
         public MaintenanceTask( Simpleton boss, Workshop workshop ) : base( boss )
         {
             this.workshop = workshop;
@@ -651,6 +655,23 @@ public class Simpleton : Player
                     }
                 }
             }
+            var relaxState = (float)workshop.relaxSpotCount / workshop.productionConfiguration.relaxSpotCountNeeded;
+            if ( relaxState < Constants.Simpleton.relaxTolerance && ( workshop.simpletonDataSafe.lastCleanup.empty || workshop.simpletonDataSafe.lastCleanup.age > Constants.Simpleton.cleanupPeriod ) )
+            {
+                problemWeight = 1 - relaxState;
+                foreach ( var offset in Ground.areas[Constants.Workshop.relaxAreaSize] )
+                {
+                    Node offsetedNode = workshop.node + offset;
+                    if ( offsetedNode.team != workshop.team )
+                        continue;
+                    if ( offsetedNode.flag && offsetedNode.flag.Buildings().Count == 0 )
+                        cleanupFlags.Add( offsetedNode.flag );
+                    if ( offsetedNode.road && !cleanupRoads.Contains( offsetedNode.road ) )
+                        cleanupRoads.Add( offsetedNode.road );
+                }
+                solutionEfficiency = 0.1f * ( cleanupRoads.Count + cleanupFlags.Count );
+                action = Action.cleanup;
+            }
             return finished;
         }
 
@@ -667,11 +688,21 @@ public class Simpleton : Player
                 break;
 
                 case Action.disableFish:
+                HiveCommon.Log( $"[{boss.name}]: Disabling fish input for {workshop.name}" );
                 foreach ( var input in workshop.buffers )
                 {
                     if ( input.itemType == Item.Type.fish )
                         HiveCommon.oh.ScheduleChangeBufferUsage( workshop, input, false, true, Operation.Source.computer );
                 }
+                break;
+
+                case Action.cleanup:
+                HiveCommon.Log( $"[{boss.name}]: Cleaning up around {workshop.name}" );
+                workshop.simpletonDataSafe.lastCleanup.Start();
+                foreach ( var road in cleanupRoads )
+                    HiveCommon.oh.ScheduleRemoveRoad( road, true, Operation.Source.computer );
+                foreach ( var flag in cleanupFlags )
+                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
                 break;
             }
         }
