@@ -256,7 +256,10 @@ public class OperationHandler : HiveObject
 	{
         operation.source = source;
         if ( standalone )
+        {
             currentGroup++;
+            currentGroupName = null;
+        }
         if ( operation.group < 0 )
         {
             operation.group = currentGroup;
