@@ -984,8 +984,11 @@ public class World : HiveCommon
 					f.freeSlotsWatch.Attach( f.itemsStored );
 				if ( GetValue<Player>( f, "owner" ) )
 					f.team = GetValue<Player>( f, "owner" ).team;
-				if ( !f.team.flags.Contains( f ) )
+				if ( !f.team.flags.Contains( f ) && !f.destroyed )
+				{
 					f.team.flags.Add( f );
+					Assert.global.Fail();
+				}
 			}
 		}
 
