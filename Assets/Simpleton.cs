@@ -62,6 +62,7 @@ public class Simpleton : Player
             if ( inability.done && confidence > Constants.Simpleton.minimumConfidence )
             {
                 confidence -= Constants.Simpleton.confidenceLevel;
+                Log( $"[{name}]: No good solution (best: {best.importance}), reducing confidence to {confidence}" );
                 inability.Start( Constants.Simpleton.inabilityTolerance );
             }
 
@@ -642,9 +643,12 @@ public class Simpleton : Player
         {
             remove,
             disableFish,
-            cleanup
+            cleanup,
+            linkInputToStock
         }
         public Action action;
+        public Workshop.Buffer buffer;
+        public Stock stock;
         public List<Road> cleanupRoads = new List<Road>();
         public List<Flag> cleanupFlags = new List<Flag>();
         public MaintenanceTask( Simpleton boss, Workshop workshop ) : base( boss )
@@ -673,6 +677,7 @@ public class Simpleton : Player
                     }
                 }
             }
+
             var relaxState = (float)workshop.relaxSpotCount / workshop.productionConfiguration.relaxSpotCountNeeded;
             if ( relaxState < Constants.Simpleton.relaxTolerance && ( workshop.simpletonDataSafe.lastCleanup.empty || workshop.simpletonDataSafe.lastCleanup.age > Constants.Simpleton.cleanupPeriod ) )
             {
@@ -689,8 +694,41 @@ public class Simpleton : Player
                 }
                 solutionEfficiency = 0.1f * ( cleanupRoads.Count + cleanupFlags.Count );
                 action = Action.cleanup;
+                return finished;
+            }
+
+            foreach ( var buffer in workshop.buffers )
+            {
+                if ( buffer.onTheWay < buffer.size || buffer.area.center )
+                    continue;
+
+                Stock stock = GetStock( workshop );
+                if ( stock == null || stock.node.DistanceFrom( workshop.node ) > Constants.Simpleton.stockCoverage )
+                    continue;
+
+                this.buffer = buffer;
+                this.stock = stock;
+                problemWeight = solutionEfficiency = 0.5f;
+                action = Action.linkInputToStock;
+                return finished;
             }
             return finished;
+        }
+
+        Stock GetStock( Workshop workshop )
+        {
+            Stock best = null;
+            int bestDistance = int.MaxValue;
+            foreach ( var stock in boss.team.stocks )
+            {
+                int distance = stock.node.DistanceFrom( workshop.node );
+                if ( distance < bestDistance )
+                {
+                    bestDistance = distance;
+                    best = stock;
+                }
+            }
+            return best;
         }
 
         public override void ApplySolution()
@@ -722,6 +760,13 @@ public class Simpleton : Player
                     HiveCommon.oh.ScheduleRemoveRoad( road, false, Operation.Source.computer );
                 foreach ( var flag in cleanupFlags )
                     HiveCommon.oh.ScheduleRemoveFlag( flag, false, Operation.Source.computer );
+                break;
+
+                case Action.linkInputToStock:
+                HiveCommon.Log( $"[{boss.name}]: Linking {buffer.itemType} input at {workshop} to {stock}" );
+                HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to stock" );
+                HiveCommon.oh.ScheduleChangeArea( workshop, buffer.area, stock.node, 2, false, Operation.Source.computer );
+                HiveCommon.oh.ScheduleStockAdjustment( stock, buffer.itemType, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, Operation.Source.computer );
                 break;
             }
         }
