@@ -205,7 +205,9 @@ public class World : HiveCommon
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
 		public int timeLimit;
+		public int playerCount;
 		public int worldSize = 32;
+		public int simpletonCount;
 		public List<string> conditions;
 		public string conditionsText;
 		public bool allowTimeLeftLevels;
@@ -326,6 +328,9 @@ public class World : HiveCommon
 			if ( timeLimit > 0 )
 				CheckCondition( life.age, timeLimit, allowTimeLeftLevels, null, true );
 
+			if ( playerCount != 0 )
+				CheckCondition( world.players.Count, playerCount, false, $"number of players {{0}}/{{1}}", true );
+
 			void CheckGoal( Goal goal, Timer timer )
 			{
 				if ( reachedLevel >= goal )
@@ -352,6 +357,9 @@ public class World : HiveCommon
 
 		public void ParseConditions()
 		{
+			if ( conditions == null )
+				return;
+
 			foreach ( var condition in conditions )
 			{
 				var p = condition.Split( ' ' );
@@ -677,6 +685,14 @@ public class World : HiveCommon
 			var mainPlayer = Simpleton.Create().Setup( Constants.Player.names.Random(), mainTeam );
 			if ( mainPlayer )
 				players.Add( mainPlayer );
+		}
+		for ( int i = 0; i < challenge.simpletonCount; i++ )
+		{
+			var team = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors[(i+1)%Constants.Player.teamColors.Length] );
+			teams.Add( team );
+			var player = Simpleton.Create().Setup( Constants.Player.names.Random(), team );	// TODO Avoid using the same name again
+			player.active = true;
+			players.Add( player );
 		}
 		ground.RecalculateOwnership();
 		gameInProgress = true;

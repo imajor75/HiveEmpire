@@ -30,7 +30,6 @@ public class Interface : HiveObject
 	public new static Interface root;
 	public bool heightStrips;
 	public bool showReplayAction = true;
-	public bool showComputerAction = true;
 	public Player mainPlayer;
 	public static Tooltip tooltip, status;
 	public float lastAutoSave = -1;
@@ -569,6 +568,7 @@ public class Interface : HiveObject
 			mainPlayer = world.players[0];
 		else
 			mainPlayer = null;
+		eye.FocusOn( mainTeam.mainBuilding, approach:false );
 		WelcomePanel.Create();
 	}
 
@@ -3423,11 +3423,11 @@ public class Interface : HiveObject
 			{
 				oh.StartGroup();
 				if ( building.flag.blueprintOnly )
-					oh.ScheduleCreateFlag( building.flag.node, false, false );
-				oh.ScheduleCreateBuilding( building.node, building.flagDirection, building.type, false );
+					oh.ScheduleCreateFlag( building.flag.node, root.mainTeam, false, false );
+				oh.ScheduleCreateBuilding( building.node, building.flagDirection, building.type, root.mainTeam, false );
 			}
 			if ( currentBlueprint is Flag flag )
-				oh.ScheduleCreateFlag( flag.node, flag.crossing );
+				oh.ScheduleCreateFlag( flag.node, root.mainTeam, flag.crossing );
 			currentBlueprint = null;
 			currentBlueprintPanel?.Close();
 			currentBlueprintPanel = null;
@@ -3604,7 +3604,7 @@ public class Interface : HiveObject
 
 		void Split()
 		{
-			oh.ScheduleCreateFlag( node );
+			oh.ScheduleCreateFlag( node, root.mainTeam );
 			ValidateAll();
 		}
 
@@ -6296,6 +6296,7 @@ if ( cart )
 		public Dropdown selector;
 		public Text selectorTitle;
 		public bool createNewPlayer;
+		public Dropdown control;
 
 		public static PlayerSelectorPanel Create( bool createNewPlayer )
 		{
@@ -6345,6 +6346,29 @@ if ( cart )
 
 			if ( createNewPlayer )
 				Button( "Create" ).PinDownwards( 100, 0, 80 ).AddClickHandler( CreatePlayer );
+			
+			var line = UIHelpers.currentRow;
+			Text( "Control:" ).Pin( borderWidth, line, 100 );
+			control = Dropdown().Pin( borderWidth+100, line, 150 );
+			control.AddOptions( new List<String>{ "manual", "automatic", "demo" } );
+			control.onValueChanged.AddListener( OnControlChanged );
+		}
+
+		void OnControlChanged( int index )
+		{
+			if ( createNewPlayer )
+				return;
+
+			if ( root.mainPlayer is Simpleton simpleton )
+			{
+				if ( index == 0 )
+					simpleton.active = false;
+				else
+				{
+					simpleton.active = true;
+					simpleton.showActions = index == 2;
+				}
+			}
 		}
 
 		void Selected( int index )
@@ -6367,6 +6391,21 @@ if ( cart )
 				team = world.teams[selector.value].name;
 			oh.ScheduleCreatePlayer( newName.text, team );
 			Close();
+		}
+
+		new void Update()
+		{
+			base.Update();
+			if ( root.mainPlayer is Simpleton simpleton && simpleton.active )
+			{
+				if ( simpleton.showActions )
+					control.value = 2;
+				else
+					control.value = 1;
+
+			}
+			else
+				control.value = 0;
 		}
 	}
 

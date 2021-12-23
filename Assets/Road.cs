@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -832,7 +832,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		bool flagCreated = false;
 		if ( node.road && node.road != this || Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
 		{
-			oh.ScheduleCreateFlag( node, false, false );
+			oh.ScheduleCreateFlag( node, root.mainTeam, false, false );
 			flagCreated = true;
 		}
 
@@ -861,7 +861,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RebuildMesh();
 		if ( node.validFlag || flagCreated )
 		{
-			oh.ScheduleCreateRoad( nodes, false );
+			oh.ScheduleCreateRoad( nodes, root.mainTeam, false );
 			root.viewport.showGridAtMouse = false;
 			root.viewport.pickGroundOnly = false;
 			return false;

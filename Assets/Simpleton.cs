@@ -14,8 +14,10 @@ public class Simpleton : Player
     public float confidence = Constants.Simpleton.defaultConfidence;
     public List<Node> isolatedNodes = new List<Node>();
     public int reservedPlank, reservedStone;
+    public bool active;
+	public bool showActions;
 
-    public static new Simpleton Create()
+    public static Simpleton Create()
     {
         return new GameObject( "Simpleton" ).AddComponent<Simpleton>();
     }
@@ -30,13 +32,15 @@ public class Simpleton : Player
 
     void FixedUpdate()
     {
-        if ( tasks == null )
+        if ( tasks == null && active )
         {
             tasks = new List<Task>();
             tasks.Add( new GlobalTask( this ) );
             currentProblem = 0;
             return;
         }
+        if ( tasks == null )
+            return;
         if ( currentProblem < tasks.Count )
         {
             tasks[currentProblem].boss = this;
@@ -213,7 +217,7 @@ public class Simpleton : Player
                         _ => 1
                     };
                 };
-                if ( currentWorkshopCount >= HiveCommon.world.challenge.buildingMax[(int)workshopType] )
+                if ( HiveCommon.world.challenge.buildingMax != null && currentWorkshopCount >= HiveCommon.world.challenge.buildingMax[(int)workshopType] )
                     return finished;
 
                 nodeRow = -1;
@@ -388,7 +392,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             HiveCommon.Log( $"[{boss.name}]: Building a {workshopType} at {bestLocation.name} ({bestResourceAvailability}, {bestRelaxAvailability}, {bestSourceAvailability})" );
-            HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
         }
     }
 
@@ -477,7 +481,7 @@ public class Simpleton : Player
                     if ( path == null || path.path == null || path.path.Count < 2 ) // TODO path.Count was 0
                         return;
                     HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
-                    HiveCommon.oh.ScheduleCreateRoad( path.path, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, Operation.Source.computer );
                     break;
                 }
                 case Action.remove:
@@ -531,7 +535,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             HiveCommon.Log( $"[{boss.name}]: Creating new road between {path.path.First().name} and {path.path.Last().name}" );
-            HiveCommon.oh.ScheduleCreateRoad( path.path, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, Operation.Source.computer );
         }
     }
 
@@ -564,7 +568,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             HiveCommon.Log( $"[{boss.name}]: Spliting road at {road.nodes[best].name}" );
-            HiveCommon.oh.ScheduleCreateFlag( road.nodes[best], false, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateFlag( road.nodes[best], boss.team, false, true, Operation.Source.computer );
         }
     }
 
@@ -632,7 +636,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             HiveCommon.Log( $"[{boss.name}]: Building guard house at {best.name}" );
-            HiveCommon.oh.ScheduleCreateBuilding( best, flagDirection, Building.Type.guardHouse, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateBuilding( best, flagDirection, Building.Type.guardHouse, boss.team, true, Operation.Source.computer );
         }
     }
 

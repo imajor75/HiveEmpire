@@ -1,9 +1,9 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : HiveCommon
+public abstract class Player : HiveCommon
 {
 	public Team team;
 	public new string name;
@@ -79,11 +79,6 @@ public class Player : HiveCommon
 			}
 			return team;
 		}
-	}
-
-	public static Player Create()
-	{
-		return new GameObject( "Player" ).AddComponent<Player>();
 	}
 
 	void Start()
@@ -453,10 +448,7 @@ public class Team : HiveCommon
 
 		Assert.global.IsNull( mainBuilding );
 		mainBuilding = Stock.Create().SetupMain( best, this, flagDirection );
-		if ( mainBuilding == null )
-			return false;
-		HiveCommon.eye.FocusOn( mainBuilding.node, approach:false );	// TODO UI related stuff should not be here
-		return true;
+		return mainBuilding;
 	}
 
 	public void Remove( bool takeYourTime )

@@ -331,9 +331,9 @@ public class OperationHandler : HiveObject
 		    ScheduleOperation( Operation.Create().SetupAsRemoveBuilding( building ), standalone, source );
 	}
 
-	public void ScheduleCreateBuilding( Node location, int direction, Building.Type buildingType, bool standalone = true, Operation.Source source = Operation.Source.manual )
+	public void ScheduleCreateBuilding( Node location, int direction, Building.Type buildingType, Team team, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType ), standalone, source );
+		ScheduleOperation( Operation.Create().SetupAsCreateBuilding( location, direction, buildingType, team ), standalone, source );
 	}
 
 	public void ScheduleRemoveRoad( Road road, bool standalone = true, Operation.Source source = Operation.Source.manual )
@@ -342,9 +342,9 @@ public class OperationHandler : HiveObject
 		    ScheduleOperation( Operation.Create().SetupAsRemoveRoad( road ), standalone, source );
 	}
 
-	public void ScheduleCreateRoad( List<Node> path, bool standalone = true, Operation.Source source = Operation.Source.manual )
+	public void ScheduleCreateRoad( List<Node> path, Team team, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsCreateRoad( path ), standalone, source );
+		ScheduleOperation( Operation.Create().SetupAsCreateRoad( path, team ), standalone, source );
 	}
 
 	public void ScheduleRemoveFlag( Flag flag, bool standalone = true, Operation.Source source = Operation.Source.manual )
@@ -369,9 +369,9 @@ public class OperationHandler : HiveObject
 		ScheduleOperation( Operation.Create().SetupAsRemoveFlag( flag ), false, source );
 	}
 
-	public void ScheduleCreateFlag( Node location, bool crossing = false, bool standalone = true, Operation.Source source = Operation.Source.manual )
+	public void ScheduleCreateFlag( Node location, Team team, bool crossing = false, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-		ScheduleOperation( Operation.Create().SetupAsCreateFlag( location, crossing ), standalone, source );
+		ScheduleOperation( Operation.Create().SetupAsCreateFlag( location, team, crossing ), standalone, source );
 	}
 
 	public void ScheduleFlattenFlag( Flag flag, bool standalone = true, Operation.Source source = Operation.Source.manual )
@@ -604,7 +604,7 @@ public class OperationHandler : HiveObject
     void ExecuteOperation( Operation operation )
     {
         HiveObject.Log( $"Executing {operation.name}" );
-        if ( root.showComputerAction && operation.source == Operation.Source.computer )
+        if ( root.mainPlayer is Simpleton simpleton && simpleton.showActions && operation.source == Operation.Source.computer )
             root.ShowOperation( operation );
 
         var inverse = operation.ExecuteAndInvert();
@@ -901,12 +901,13 @@ public class Operation
         return this;
     }
 
-    public Operation SetupAsCreateBuilding( Node location, int direction, Building.Type buildingType )
+    public Operation SetupAsCreateBuilding( Node location, int direction, Building.Type buildingType, Team team )
     {
         type = Type.createBuilding;
         this.location = location;
         this.direction = direction;
         this.buildingType = buildingType;
+        this.team = team;
         name = "Create Building";
         return this;
     }
@@ -919,10 +920,11 @@ public class Operation
         return this;
     }
 
-    public Operation SetupAsCreateRoad( List<Node> path )
+    public Operation SetupAsCreateRoad( List<Node> path, Team team )
     {
         type = Type.createRoad;
         this.roadPath = path;
+        this.team = team;
         name = "Create Road";
         return this;
     }
@@ -959,10 +961,11 @@ public class Operation
         return this;
     }
 
-    public Operation SetupAsCreateFlag( Node location, bool crossing )
+    public Operation SetupAsCreateFlag( Node location, Team team, bool crossing )
     {
         type = Type.createFlag;
         this.location = location;
+        this.team = team;
         this.crossing = crossing;
         name = "Create Flag";
         return this;
@@ -1081,11 +1084,11 @@ public class Operation
                 Building building = this.building;
                 var inverse = Operation.Create();
                 if ( building is Workshop workshop )
-                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, (Building.Type)workshop.type );
+                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, (Building.Type)workshop.type, building.team );
                 if ( building is Stock )
-                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, Building.Type.stock );
+                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, Building.Type.stock, building.team );
                 if ( building is GuardHouse )
-                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, Building.Type.guardHouse );
+                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, Building.Type.guardHouse, building.team );
 
                 building.Remove( true );
                 return inverse;
@@ -1096,11 +1099,11 @@ public class Operation
                 if ( !newBuilding )
                 {
                     if ( buildingType < (Building.Type)Workshop.Type.total )
-                        newBuilding = Workshop.Create().Setup( location, HiveCommon.root.mainTeam, (Workshop.Type)buildingType, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = Workshop.Create().Setup( location, team, (Workshop.Type)buildingType, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.stock )
-                        newBuilding = Stock.Create().Setup( location, HiveCommon.root.mainTeam, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = Stock.Create().Setup( location, team, direction, block:Resource.BlockHandling.remove );
                     if ( buildingType == Building.Type.guardHouse )
-                        newBuilding = GuardHouse.Create().Setup( location, HiveCommon.root.mainTeam, direction, block:Resource.BlockHandling.remove );
+                        newBuilding = GuardHouse.Create().Setup( location, team, direction, block:Resource.BlockHandling.remove );
                 }
                 else
                 {
@@ -1118,7 +1121,7 @@ public class Operation
                 var road = this.road;
                 if ( road == null || !road.Remove( true ) )
                     return null;
-                return Create().SetupAsCreateRoad( road.nodes );    // TODO Seems to be dangerous to use the road after it was removed
+                return Create().SetupAsCreateRoad( road.nodes, road.team );    // TODO Seems to be dangerous to use the road after it was removed
             }
             case Type.createRoad:
             {
@@ -1126,6 +1129,7 @@ public class Operation
                 if ( !newRoad )
                 {
                     newRoad = Road.Create().Setup( roadPath[0].flag );
+                    Assert.global.AreEqual( team, roadPath[0].flag.team );
                     if ( newRoad )
                     {
                         bool allGood = true;
@@ -1159,13 +1163,13 @@ public class Operation
                 if ( flag == null || !flag.Remove( true ) )
                     return null;
 
-                return Create().SetupAsCreateFlag( flag.node, flag.crossing );
+                return Create().SetupAsCreateFlag( flag.node, flag.team, flag.crossing );
             }
             case Type.createFlag:
             {
                 Flag newFlag = location.flag;
                 if ( !newFlag )
-                    newFlag = Flag.Create().Setup( location, HiveCommon.root.mainTeam, false, crossing );
+                    newFlag = Flag.Create().Setup( location, team, false, crossing );
                 else
                 {
                     newFlag.assert.IsTrue( newFlag.blueprintOnly );
@@ -1243,7 +1247,7 @@ public class Operation
                     }
                     HiveCommon.world.teams.Add( team );
                 }
-                var newPlayer = Player.Create().Setup( playerName, team );
+                var newPlayer = Simpleton.Create().Setup( playerName, team );
                 HiveCommon.world.players.Add( newPlayer );
                 if ( networkId == HiveCommon.network.id )
                     HiveCommon.root.mainPlayer = newPlayer;
