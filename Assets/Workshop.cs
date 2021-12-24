@@ -791,12 +791,9 @@ public class Workshop : Building
 				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
 					ChangeStatus( Status.waitingForResource );
-					var o = Ground.areas[productionConfiguration.gatheringRange];
-					for ( int i = 0; i < o.Count; i++ )
+					foreach ( var offset in Ground.areas[productionConfiguration.gatheringRange] )
 					{
-						int randomOffset = World.NextRnd( OperationHandler.Event.CodeLocation.workshopForester, o.Count );
-						int x = (i + randomOffset) % o.Count;
-						Node place = node.Add( o[x] );
+						Node place = node.Add( offset );
 						{
 							if ( place.block || !place.CheckType( Node.Type.forest ) || place.fixedHeight )
 								continue;
@@ -934,14 +931,10 @@ public class Workshop : Building
 		if ( range > Ground.areas.Length )
 			range = Ground.areas.Length - 1;
 		Node target;
-		int t = Ground.areas[range].Count;
-		int r = World.NextRnd( OperationHandler.Event.CodeLocation.workshopCollectResource, t );
-		for ( int j = -1; j < t; j++ )
+		foreach ( var offset in Ground.areas[range] )
 		{
-			if ( j < 0 )
-				target = node;
-			else
-				target = node.Add( Ground.areas[range][(j+r)%t] );
+			// TODO Node exactly below the building is not enumerated here
+			target = node.Add( offset );
 			foreach ( var resource in target.resources )
 			{
 				if ( resource.hunter != null )
