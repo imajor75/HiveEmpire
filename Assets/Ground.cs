@@ -56,6 +56,10 @@ public class Ground : HiveObject
 		{
 			return new Offset( a.x + b.x, a.y + b.y, -1 );
 		}
+		public static implicit operator bool( Offset offset )
+		{
+			return offset.x != 0 || offset.y != 0;
+		}
 	}
 
 	new public void Start()
@@ -243,14 +247,12 @@ public class Ground : HiveObject
 		{
 			for ( int y = -Constants.Ground.maxArea; y < Constants.Ground.maxArea; y++ )
 			{
-				if ( x == 0 && y == 0 )
-					continue;
 				int h = Mathf.Abs( x );
 				int v = Mathf.Abs( y );
 				int d = Mathf.Abs( x + y );
 
 				int distance = Mathf.Max( h, Mathf.Max( v, d ) );
-				for ( int j = 1; j < Constants.Ground.maxArea; j++ )
+				for ( int j = 0; j < Constants.Ground.maxArea; j++ )
 				{
 					if ( distance > j )
 						continue;
@@ -261,7 +263,7 @@ public class Ground : HiveObject
 				}
 			}
 		}
-		int nodeCount = 0;
+		int nodeCount = 1;
 		for ( int i = 0; i < areas.Length; i++ )
 		{
 			Assert.global.AreEqual( areas[i].Count, nodeCount );

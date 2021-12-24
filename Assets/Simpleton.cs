@@ -607,7 +607,7 @@ public class Simpleton : Player
                 bool isNodeAtBorder = false;
                 foreach ( var offset in Ground.areas[1] )
                 {
-                    if ( node.Add( offset ).team != boss.team )
+                    if ( offset && node.Add( offset ).team != boss.team )
                     {
                         isNodeAtBorder = true;
                         break;

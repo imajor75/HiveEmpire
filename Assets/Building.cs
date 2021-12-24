@@ -270,6 +270,8 @@ abstract public class Building : HiveObject
 				Node basis = boss.node.Add( o );
 				foreach ( var b in Ground.areas[1] )
 				{
+					if ( !b )
+						continue;
 					Node node = basis.Add( b );
 					if ( !flatteningArea.Contains( node ) )
 						flatteningArea.Add( node );
@@ -463,6 +465,8 @@ abstract public class Building : HiveObject
 				return new SiteTestResult( SiteTestResult.Result.outsideBorder );
 			foreach ( var b in Ground.areas[1] )
 			{
+				if ( !b )
+					continue;
 				var perim = basis.Add( b );
 				if ( configuration.flatteningNeeded )
 				{
@@ -476,8 +480,12 @@ abstract public class Building : HiveObject
 				
 			}
 			foreach ( var p in Ground.areas[1] )
+			{
+				if ( !p )
+					continue;
 				if ( basis.Add( p ).building )
 					return new SiteTestResult( SiteTestResult.Result.buildingTooClose );
+			}
 			if ( !basis.CheckType( configuration.groundTypeNeeded ) )
 				return new SiteTestResult( SiteTestResult.Result.wrongGroundType, configuration.groundTypeNeeded );
 		}

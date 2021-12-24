@@ -1664,7 +1664,7 @@ public class Unit : HiveObject
 		{
 			int r = World.NextRnd( OperationHandler.Event.CodeLocation.animalDirection, 6 );
 			var d = Ground.areas[1];
-			for ( int i = 0; i < d.Count; i++ )
+			for ( int i = 1; i < d.Count; i++ )
 			{
 				Node t = node.Add( d[(i+r)%d.Count] );
 				if ( t.block.IsBlocking( Node.Block.Type.units ) )
@@ -1805,7 +1805,7 @@ public class Unit : HiveObject
 					foreach ( var o in Ground.areas[1] )
 					{
 						var nn = node.Add( o );
-						if ( nn.flag == road.ends[0] || nn.flag == road.ends[1] )
+						if ( o && nn.flag == road.ends[0] || nn.flag == road.ends[1] )
 						{
 							ScheduleWalkToNeighbour( nn ); // It is possible, that the building is not there anymore
 							onRoad = true;
@@ -2254,6 +2254,8 @@ public class Unit : HiveObject
 			return i;
 		foreach ( var o in Ground.areas[1] )
 		{
+			if ( !o )
+				continue;
 			var nn = node.Add( o );
 			if ( nn == road.nodes[0] )
 				return 0;

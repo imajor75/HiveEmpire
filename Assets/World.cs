@@ -1285,7 +1285,7 @@ public class World : HiveCommon
 			{
 				foreach ( var o in Ground.areas[1] )
 				{
-					if ( node.Add( o ).type == Node.Type.underWater )
+					if ( o && node.Add( o ).type == Node.Type.underWater )
 					{
 						node.AddResource( Resource.Type.fish );
 						break;

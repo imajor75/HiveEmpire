@@ -146,7 +146,8 @@ public class Flag : HiveObject
 			var area = new List<Node>();
 			area.Add( node );
 			foreach ( var o in Ground.areas[1] )
-				area.Add( node + o );
+				if ( o )
+					area.Add( node + o );
 			flattening.Setup( area, false );
 		}
 		if ( !blueprintOnly )
@@ -474,6 +475,8 @@ public class Flag : HiveObject
 		List<Building> list = new List<Building>();
 		foreach ( var o in Ground.areas[1] )
 		{
+			if ( !o )
+				continue;
 			var b = node.Add( o ).building;
 			if ( b && b.flag == this )
 				list.Add( b );
@@ -583,6 +586,8 @@ public class Flag : HiveObject
 
 		foreach ( var o in Ground.areas[1] )
 		{
+			if ( !o )
+				continue;
 			var otherFlag = placeToBuildOn.Add( o ).flag;
 			if ( otherFlag && otherFlag != ignore )
 				return new SiteTestResult( SiteTestResult.Result.flagTooClose );

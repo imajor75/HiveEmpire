@@ -800,7 +800,7 @@ public class Workshop : Building
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
 							{
-								if ( place.Add( j ).block.IsBlocking( Node.Block.Type.units ) )
+								if ( j && place.Add( j ).block.IsBlocking( Node.Block.Type.units ) )
 									blockedAdjacentNodes++;
 							}
 							if ( blockedAdjacentNodes >= 2 )

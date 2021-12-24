@@ -388,7 +388,7 @@ public class Team : HiveCommon
 			foreach ( var o in Ground.areas[1] )
 			{
 				var n = p + o;
-				if ( !extendedArea.Contains( n ) )
+				if ( o && !extendedArea.Contains( n ) )
 					extendedArea.Add( n );
 			}
 		}

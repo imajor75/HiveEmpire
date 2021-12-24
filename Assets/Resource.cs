@@ -270,6 +270,8 @@ public class Resource : HiveObject
 		{
 			foreach ( var o in Ground.areas[1] )
 			{
+				if ( !o )
+					continue;
 				Node n = node.Add( o );
 				if ( n.block.IsBlocking( Node.Block.Type.units ) )
 					continue;

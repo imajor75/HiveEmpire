@@ -565,7 +565,11 @@ public class Stock : Attackable
 		if ( configuration.flatteningNeeded )
 		{
 			foreach ( var o in Ground.areas[1] )
+			{
+				if ( !o )
+					continue;
 				node.Add( o ).SetHeight( node.height );
+			}
 		}
 		construction.done = true;
 		itemData[(int)Item.Type.plank].content = Constants.Stock.startPlankCount;

@@ -5384,10 +5384,10 @@ if ( cart )
 				Node flagNode = node.Neighbour( NewBuildingPanel.currentFlagDirection );
 				bool hasFlagAround = false, hasFlagAroundFlag = false;
 				foreach ( var o in Ground.areas[1] )
-					if ( node.Add( o ).flag != null )
+					if ( o && node.Add( o ).flag != null )
 						hasFlagAround = true;
 				foreach ( var o in Ground.areas[1] )
-					if ( flagNode.Add( o ).flag != null )
+					if ( o && flagNode.Add( o ).flag != null )
 						hasFlagAroundFlag = true;
 				if ( !node.block && !hasFlagAround )
 					t = CursorType.flag;
