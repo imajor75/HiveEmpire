@@ -166,7 +166,7 @@ public class Simpleton : Player
 
             foreach ( var road in boss.team.roads )
             {
-                if ( road.nodes.Count >= Constants.Simpleton.roadMaxLength && road.team == boss.team )
+                if ( road.nodes.Count >= Constants.Simpleton.roadMaxLength && road.team == boss.team && road.ready )
                     boss.tasks.Add( new SplitRoadTask( boss, road ) );
             }
 
