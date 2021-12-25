@@ -382,17 +382,25 @@ public class Simpleton : Player
                 relaxAvailability = 1;
 
             float sourceAvailability = 0.5f;
+            int buildingCount = 0;
             if ( dependencies.Count > 0 )
             {
                 int sourceScore = 0;
                 foreach ( var sourceOffset in Ground.areas[Constants.Simpleton.sourceSearchRange] )
                 {
-                    var source = node + sourceOffset;
-                    if ( source.building && source.building.node == source && source.building.team == boss.team && dependencies.Contains( (Workshop.Type)source.building.type ) )
-                        sourceScore += Constants.Simpleton.sourceSearchRange - source.DistanceFrom( node );
+                    var buildingNode = node.Add( sourceOffset );
+                    var building = buildingNode.building;
+                    if ( building == null || building.node != buildingNode || building.team != boss.team )
+                        continue;
+                    buildingCount++;
+                    if ( dependencies.Contains( (Workshop.Type)building.type ) )
+                        sourceScore += Constants.Simpleton.sourceSearchRange - buildingNode.DistanceFrom( node );
                 }
                 sourceAvailability = (float)sourceScore / ( dependencies.Count * Constants.Simpleton.sourceSearchRange );
             }
+
+            if ( buildingCount > 0 )
+                relaxAvailability /= buildingCount;
 
             return ( resourceAvailability, relaxAvailability, sourceAvailability );
         }
