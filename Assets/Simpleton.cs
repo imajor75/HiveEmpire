@@ -160,7 +160,7 @@ public class Simpleton : Player
 
             foreach ( var flag in boss.team.flags )
             {
-                if ( flag.team == boss.team )
+                if ( flag.team == boss.team && !flag.blueprintOnly )
                     boss.tasks.Add( new FlagTask( boss, flag ) );
             }
 
@@ -482,7 +482,7 @@ public class Simpleton : Player
             foreach ( var offset in Ground.areas[Constants.Simpleton.flagConnectionRange] )
             {
                 var nearbyNode = flag.node + offset;
-                if ( nearbyNode.flag && nearbyNode.flag.team == boss.team && nearbyNode.flag.id < flag.id )
+                if ( nearbyNode.flag && nearbyNode.flag.team == boss.team && nearbyNode.flag.id < flag.id && !nearbyNode.flag.blueprintOnly )
                     boss.tasks.Add( new ConnectionTask( boss, flag, nearbyNode.flag ) );
             }
             return finished;
@@ -698,23 +698,26 @@ public class Simpleton : Player
                 }
             }
 
-            var relaxState = (float)workshop.relaxSpotCount / workshop.productionConfiguration.relaxSpotCountNeeded;
-            if ( relaxState < Constants.Simpleton.relaxTolerance && ( workshop.simpletonDataSafe.lastCleanup.empty || workshop.simpletonDataSafe.lastCleanup.age > Constants.Simpleton.cleanupPeriod ) )
+            if ( Constants.Simpleton.cleanupPeriod != 0 )
             {
-                problemWeight = 1 - relaxState;
-                foreach ( var offset in Ground.areas[Constants.Workshop.relaxAreaSize] )
+                var relaxState = (float)workshop.relaxSpotCount / workshop.productionConfiguration.relaxSpotCountNeeded;
+                if ( relaxState < Constants.Simpleton.relaxTolerance && ( workshop.simpletonDataSafe.lastCleanup.empty || workshop.simpletonDataSafe.lastCleanup.age > Constants.Simpleton.cleanupPeriod ) )
                 {
-                    Node offsetedNode = workshop.node + offset;
-                    if ( offsetedNode.team != workshop.team )
-                        continue;
-                    if ( offsetedNode.flag && offsetedNode.flag.Buildings().Count == 0 )
-                        cleanupFlags.Add( offsetedNode.flag );
-                    if ( offsetedNode.road && !cleanupRoads.Contains( offsetedNode.road ) )
-                        cleanupRoads.Add( offsetedNode.road );
+                    problemWeight = 1 - relaxState;
+                    foreach ( var offset in Ground.areas[Constants.Workshop.relaxAreaSize] )
+                    {
+                        Node offsetedNode = workshop.node + offset;
+                        if ( offsetedNode.team != workshop.team )
+                            continue;
+                        if ( offsetedNode.flag && offsetedNode.flag.Buildings().Count == 0 )
+                            cleanupFlags.Add( offsetedNode.flag );
+                        if ( offsetedNode.road && !cleanupRoads.Contains( offsetedNode.road ) )
+                            cleanupRoads.Add( offsetedNode.road );
+                    }
+                    solutionEfficiency = 0.1f * ( cleanupRoads.Count + cleanupFlags.Count );
+                    action = Action.cleanup;
+                    return finished;
                 }
-                solutionEfficiency = 0.1f * ( cleanupRoads.Count + cleanupFlags.Count );
-                action = Action.cleanup;
-                return finished;
             }
 
             foreach ( var buffer in workshop.buffers )
