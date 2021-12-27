@@ -746,7 +746,10 @@ public class Simpleton : Player
 
                 Stock stock = GetStock( workshop );
                 if ( stock == null || stock.node.DistanceFrom( workshop.node ) > Constants.Simpleton.stockCoverage )
+                {
+                    Log( $"[{boss.name}]: No source or stock found around {workshop} for {buffer.itemType}" );
                     continue;
+                }
 
                 ConsiderDeal( stock, buffer );
                 return finished;
