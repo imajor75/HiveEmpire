@@ -326,7 +326,7 @@ public static class Constants
         public const float extensionImportance = 0.8f;
         public const float flagCaptureImportance = 0.3f;
         public const float relaxTolerance = 0.8f;
-        public const int cleanupPeriod = 60 * 60 * Constants.World.normalSpeedPerSecond;
+        public static int cleanupPeriod = 0;//60 * 60 * Constants.World.normalSpeedPerSecond;
         public const int stockCoverage = 10;
         public const int workshopCoverage = 8;
         public const int stockSave = Constants.Stock.cartCapacity;
