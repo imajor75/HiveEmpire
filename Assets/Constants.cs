@@ -317,7 +317,7 @@ public static class Constants
     public static class Simpleton
     {
         public const int roadMaxLength = 7;
-        public const int flagConnectionRange = 6;
+        public const int flagConnectionRange = 7;
         public const float defaultConfidence = 0.5f;
         public const float minimumConfidence = 0.2f;
         public const int inabilityTolerance = Constants.World.normalSpeedPerSecond * 60;
@@ -327,9 +327,11 @@ public static class Constants
         public const float flagCaptureImportance = 0.3f;
         public const float relaxTolerance = 0.8f;
         public static int cleanupPeriod = 0;//60 * 60 * Constants.World.normalSpeedPerSecond;
-        public const int stockCoverage = 10;
+        public const int stockCoverage = 8;
         public const int workshopCoverage = 8;
         public const int stockSave = Constants.Stock.cartCapacity;
+        public const int cartMin = 5;
+        public const int itemTypesPerStock = 6;
     }
 }
 

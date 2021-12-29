@@ -80,6 +80,16 @@ public class Simpleton : Player
         public bool isolated;
         public World.Timer lastCleanup = new World.Timer();
         public List<Deal> deals = new List<Deal>();
+        public List<Item.Type> managedItemTypes = new List<Item.Type>();
+
+        public bool RegisterManagedItemType( Item.Type itemType )
+        {
+            if ( managedItemTypes.Contains( itemType ) )
+                return false;
+
+            managedItemTypes.Add( itemType );
+            return true;
+        }
     }
 
     [Serializable]
@@ -664,7 +674,8 @@ public class Simpleton : Player
             remove,
             disableFish,
             cleanup,
-            linkInputToPartner
+            linkInputToPartner,
+            linkOutputToStock
         }
         public Action action;
         public Workshop.Buffer buffer;
@@ -722,7 +733,7 @@ public class Simpleton : Player
 
             foreach ( var buffer in workshop.buffers )
             {
-                if ( buffer.onTheWay < buffer.size || buffer.area.center || DealCount( workshop, buffer.itemType ) > 0 )
+                if ( buffer.onTheWay < buffer.size || DealCount( workshop, buffer.itemType ) > 0 )
                     continue;
 
                 void ConsiderDeal( Building partner, Workshop.Buffer buffer )
@@ -747,32 +758,47 @@ public class Simpleton : Player
                     }
                 }
 
-                Stock stock = GetStock( workshop );
+                Stock stock = GetStock( workshop, buffer.itemType );
                 if ( stock == null || stock.node.DistanceFrom( workshop.node ) > Constants.Simpleton.stockCoverage )
-                {
-                    Log( $"[{boss.name}]: No source or stock found around {workshop} for {buffer.itemType}" );
                     continue;
-                }
 
                 ConsiderDeal( stock, buffer );
                 return finished;
             }
+
+            if ( workshop.output > 1 && DealCount( workshop, workshop.productionConfiguration.outputType ) == 0 )
+            {
+                Stock stock = GetStock( workshop, workshop.productionConfiguration.outputType );
+                if ( stock )
+                {
+                    action = Action.linkOutputToStock;
+                    partner = stock;
+                    problemWeight = solutionEfficiency = 0.5f;
+                }
+            }
             return finished;
         }
 
-        Stock GetStock( Workshop workshop )
+        Stock GetStock( Workshop workshop, Item.Type itemType )
         {
             Stock best = null;
-            int bestDistance = int.MaxValue;
+            float bestScore = 0;
             foreach ( var stock in boss.team.stocks )
             {
-                int distance = stock.node.DistanceFrom( workshop.node );
-                if ( distance < bestDistance )
+                float score = 1f / stock.node.DistanceFrom( workshop.node );
+                if ( stock.simpletonDataSafe.managedItemTypes.Contains( itemType ) )
+                    score *= 5;
+                else
+                    if ( stock.simpletonDataSafe.managedItemTypes.Count >= Constants.Simpleton.itemTypesPerStock )
+                        score = 0;
+                if ( score > bestScore )
                 {
-                    bestDistance = distance;
+                    bestScore = score;
                     best = stock;
                 }
             }
+            if ( best == null )
+                boss.tasks.Add( new BuildStockTask( boss, workshop.node ) );
             return best;
         }
 
@@ -826,12 +852,60 @@ public class Simpleton : Player
                 {
                     HiveCommon.oh.ScheduleChangeArea( workshop, buffer.area, partner.node, 2, false, Operation.Source.computer );
                     HiveCommon.oh.ScheduleStockAdjustment( stock, buffer.itemType, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleStockAdjustment( stock, buffer.itemType, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, Operation.Source.computer );
+                    stock.simpletonDataSafe.RegisterManagedItemType( buffer.itemType );
                 }
                 if ( partner is Workshop partnerWorkshop )
                     partnerWorkshop.simpletonDataSafe.deals.Add( new Deal { itemType = buffer.itemType, partner = workshop } );
+                break;
 
-                        break;
+                case Action.linkOutputToStock:
+                var outputType = workshop.productionConfiguration.outputType;
+                workshop.simpletonDataSafe.deals.Add( new Deal { itemType = outputType, partner = partner } );
+                HiveCommon.Log( $"[{boss.name}]: Linking output at {workshop} to {partner}" );
+                HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to partner" );
+                HiveCommon.oh.ScheduleChangeArea( workshop, workshop.outputArea, partner.node, 2, false, Operation.Source.computer );
+                HiveCommon.oh.ScheduleStockAdjustment( partner as Stock, outputType, Stock.Channel.inputMax, Constants.Stock.cartCapacity+10, false, Operation.Source.computer );
+                HiveCommon.oh.ScheduleStockAdjustment( partner as Stock, outputType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, Operation.Source.computer );
+                partner.simpletonDataSafe.RegisterManagedItemType( outputType );
+
+                break;
             }
+        }
+    }
+
+    public class BuildStockTask : Task
+    {
+        public Node center;
+        public Node site;
+        public int flagDirection;
+
+        public BuildStockTask( Simpleton boss, Node center ) : base( boss )
+        {
+            this.center = center;
+            problemWeight = 0.5f;
+        }
+
+        public override bool Analyze()
+        {
+            foreach ( var offset in Ground.areas[Constants.Simpleton.stockCoverage] )
+            {
+                site = center + offset;
+                for ( flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
+                {
+                    if ( !Stock.IsNodeSuitable( site, boss.team, flagDirection ) )
+                        continue;
+                    solutionEfficiency = 1 - ( (float)offset.d / Constants.Simpleton.stockCoverage );
+                    return finished;
+                }
+            }
+            return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            HiveCommon.Log( $"[{boss.name}]: Building stock at {site.name}" );
+            HiveCommon.oh.ScheduleCreateBuilding( site, flagDirection, Building.Type.stock, boss.team, true, Operation.Source.computer );
         }
     }
 }

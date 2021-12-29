@@ -1772,6 +1772,7 @@ public class Unit : HiveObject
 
 	void FindHaulerTask()
 	{
+		// TODO This is a slow procedure, it should not do anything in most of the frames
 		if ( ( bored.done && road.ActiveHaulerCount > 1 ) || ( road.ActiveHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
 		{
 			Remove( true );
@@ -2298,7 +2299,7 @@ public class Unit : HiveObject
 		{
 			var box = links[(int)LinkType.haulingBoxLight];
 			if ( box )
-				assert.AreEqual( box.transform.childCount, 0 );		 // Triggered after undoing building remove
+				assert.AreEqual( box.transform.childCount, 0 );		 // Triggered after undoing building remove, then again when auto player was playing
 			box = links[(int)LinkType.haulingBoxHeavy];
 			if ( box )
 				assert.AreEqual( box.transform.childCount, 1 );
