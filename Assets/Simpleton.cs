@@ -316,16 +316,22 @@ public class Simpleton : Player
                 if ( boss.isolatedNodes.Contains( node ) )
                     continue;
                 int workingFlagDirection = -1;
+                Node site = null;
                 for ( int flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
                 {
-                    if ( Workshop.IsNodeSuitable( node, boss.team, configuration, flagDirection ) )
+                    int o = ( flagDirection + ( Constants.Node.neighbourCount / 2 ) ) % Constants.Node.neighbourCount;
+                    site = node.Neighbour( o );
+                    if ( Workshop.IsNodeSuitable( site, boss.team, configuration, flagDirection ) )
+                    {
                         workingFlagDirection = flagDirection;
+                        break;
+                    }
                 }
 
                 if ( workingFlagDirection < 0 )
                     continue;
 
-                var availability = CalculateAvailaibily( node );
+                var availability = CalculateAvailaibily( site );
                 float score = ( availability.resource + availability.relax + availability.source ) / 3;
                 if ( availability.resource == 0 )
                     score = 0;
@@ -335,7 +341,7 @@ public class Simpleton : Player
                     bestSourceAvailability = availability.source;
                     bestRelaxAvailability = availability.relax;
                     bestResourceAvailability = availability.resource;
-                    bestLocation = node;
+                    bestLocation = site;
                     bestFlagDirection = workingFlagDirection;
                     solutionEfficiency = score;
                 }
