@@ -765,7 +765,7 @@ public class Simpleton : Player
                 }
 
                 Stock stock = GetStock( workshop, buffer.itemType );
-                if ( stock == null || stock.node.DistanceFrom( workshop.node ) > Constants.Simpleton.stockCoverage )
+                if ( stock == null )
                     continue;
 
                 ConsiderDeal( stock, buffer );
@@ -792,11 +792,13 @@ public class Simpleton : Player
             foreach ( var stock in boss.team.stocks )
             {
                 float score = 1f / stock.node.DistanceFrom( workshop.node );
+                if ( stock.node.DistanceFrom( workshop.node ) > Constants.Simpleton.stockCoverage )
+                    continue;
                 if ( stock.simpletonDataSafe.managedItemTypes.Contains( itemType ) )
                     score *= 5;
                 else
                     if ( stock.simpletonDataSafe.managedItemTypes.Count >= Constants.Simpleton.itemTypesPerStock )
-                        score = 0;
+                        continue;
                 if ( score > bestScore )
                 {
                     bestScore = score;
