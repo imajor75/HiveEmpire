@@ -41,7 +41,7 @@ public abstract class HiveObject : HiveCommon
 		get
 		{
 			if ( simpletonData == null )
-				simpletonData = new Simpleton.Data();
+				simpletonData = new Simpleton.Data( this );
 
 			return simpletonData;
 		}

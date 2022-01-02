@@ -39,6 +39,13 @@ public class Node : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	Resource resource { set { if ( value ) resources.Add( value ); } }
 
+	public static Ground.Offset operator -( Node a, Node b )
+	{
+		var dif = new Ground.Offset( a.x - b.x, a.y - b.y, a.DistanceFrom( b ) );
+		return dif.Normalize();
+	}
+
+
 	public Flag validFlag
 	{
 		get

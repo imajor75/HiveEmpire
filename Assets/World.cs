@@ -823,7 +823,8 @@ public class World : HiveCommon
 						world.newHiveObjects.AddFirst( ho );
 					ho.registered = true;
 				}
-
+				if ( ho.simpletonData != null )
+					ho.simpletonData.hiveObject = ho;
 			}
 		}
 		{
