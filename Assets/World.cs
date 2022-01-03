@@ -823,7 +823,12 @@ public class World : HiveCommon
 						world.newHiveObjects.AddFirst( ho );
 					ho.registered = true;
 				}
-
+				if ( ho.simpletonData != null )
+				{
+					ho.simpletonData.hiveObject = ho;
+					if ( ho.simpletonData.possiblePartner is Stock )
+						ho.simpletonData.possiblePartner = null;
+				}
 			}
 		}
 		{
@@ -1428,6 +1433,15 @@ public class World : HiveCommon
 			{
 				if ( empty )
 					return 0;
+				return instance.time - reference;
+			}
+		}
+		public int ageinf
+		{
+			get
+			{
+				if ( empty )
+					return int.MaxValue;
 				return instance.time - reference;
 			}
 		}

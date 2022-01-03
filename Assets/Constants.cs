@@ -332,6 +332,7 @@ public static class Constants
         public const int stockSave = Constants.Stock.cartCapacity;
         public const int cartMin = 5;
         public const int itemTypesPerStock = 6;
+        public const int dealCheckPeriod = Constants.World.normalSpeedPerSecond * 60 * 10;
     }
 }
 

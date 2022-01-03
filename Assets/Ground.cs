@@ -60,6 +60,18 @@ public class Ground : HiveObject
 		{
 			return offset.x != 0 || offset.y != 0;
 		}
+		public Offset Normalize()
+		{
+			while ( x > HiveCommon.ground.dimension / 2 )
+				x -= HiveCommon.ground.dimension;
+			while ( x < -HiveCommon.ground.dimension / 2 )
+				x += HiveCommon.ground.dimension;
+			while ( y > HiveCommon.ground.dimension / 2 )
+				y -= HiveCommon.ground.dimension;
+			while ( y < -HiveCommon.ground.dimension / 2 )
+				y += HiveCommon.ground.dimension;
+			return this;
+		}
 	}
 
 	new public void Start()

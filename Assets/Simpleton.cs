@@ -81,6 +81,22 @@ public class Simpleton : Player
         public World.Timer lastCleanup = new World.Timer();
         public List<Deal> deals = new List<Deal>();
         public List<Item.Type> managedItemTypes = new List<Item.Type>();
+        public World.Timer lastDealCheck = new World.Timer();
+        public HiveObject hiveObject;
+        public Building possiblePartner;
+        public Item.Type possiblePartnerItemType;
+
+       	[Obsolete( "Compatibility with old files", true )]
+        Building possibleDealer { set {} }
+       	[Obsolete( "Compatibility with old files", true )]
+        Workshop.Buffer possibleDealerBuffer { set {} }
+
+        public Data() {}
+
+        public Data( HiveObject hiveObject )
+        {
+            this.hiveObject = hiveObject;
+        }
 
         public bool RegisterManagedItemType( Item.Type itemType )
         {
@@ -88,6 +104,47 @@ public class Simpleton : Player
                 return false;
 
             managedItemTypes.Add( itemType );
+            return true;
+        }
+
+        public bool RegisterPartner( Building partner, Item.Type itemType )
+        {
+            if ( partner == null )
+                return false;
+            foreach ( var deal in deals )
+            {
+                if ( deal.partner == partner && deal.itemType == itemType )
+                    return false;
+            }
+            deals.Add( new Deal { partner = partner, itemType = itemType } );
+            if ( hiveObject is Workshop workshop )
+            {
+                var area = workshop.outputArea;
+                foreach ( var buffer in workshop.buffers )
+                    if ( buffer.itemType == itemType )
+                        area = buffer.area;
+                var offset = new Ground.Offset( 0, 0, 0 );
+                int dealCount = 0;
+                foreach ( var deal in deals )
+                {
+                    if ( deal.itemType != itemType )
+                        continue;
+                    
+                    offset += deal.partner.node - workshop.node;
+                    dealCount++;
+                }
+                offset.x /= dealCount;
+                offset.y /= dealCount;
+                var center = workshop.node + offset;
+                int radius = 0;
+                foreach ( var deal in deals )
+                {
+                    if ( deal.itemType == itemType )
+                        radius = Math.Max( radius, center.DistanceFrom( deal.partner.node ) );
+                }
+                HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, Operation.Source.computer );
+            }
+            partner.simpletonDataSafe.RegisterPartner( hiveObject as Building, itemType );
             return true;
         }
     }
@@ -680,12 +737,11 @@ public class Simpleton : Player
             remove,
             disableFish,
             cleanup,
-            linkInputToPartner,
-            linkOutputToStock
+            linkToPartner
         }
         public Action action;
-        public Workshop.Buffer buffer;
         public Building partner;
+        public Item.Type itemTypeToLink;
         public List<Road> cleanupRoads = new List<Road>();
         public List<Flag> cleanupFlags = new List<Flag>();
         public MaintenanceTask( Simpleton boss, Workshop workshop ) : base( boss )
@@ -737,52 +793,71 @@ public class Simpleton : Player
                 }
             }
 
-            foreach ( var buffer in workshop.buffers )
+            var data = workshop.simpletonDataSafe;
+            if ( data.possiblePartner == null && workshop.simpletonDataSafe.lastDealCheck.ageinf > Constants.Simpleton.dealCheckPeriod )
             {
-                if ( buffer.onTheWay < buffer.size || DealCount( workshop, buffer.itemType ) > 0 )
-                    continue;
-
-                void ConsiderDeal( Building partner, Workshop.Buffer buffer )
+                workshop.simpletonDataSafe.lastDealCheck.Start();
+                
+                foreach ( var buffer in workshop.buffers )
                 {
-                    action = Action.linkInputToPartner;
-                    problemWeight = solutionEfficiency = 0.5f;
-                    this.buffer = buffer;
-                    this.partner = partner;
+                    foreach ( var offset in Ground.areas[Constants.Simpleton.workshopCoverage] )
+                    {
+                        var building = workshop.node.Add( offset ).building;
+                        if ( building == null || building.team != boss.team )
+                            continue;
+                        if ( building is Workshop partner )
+                        {
+                            if ( partner.productionConfiguration.outputType != buffer.itemType )
+                                continue;
+
+                            if ( ConsiderPartner( building, buffer.itemType ) )
+                                break;
+                        }
+                    }
+
+                    if ( data.possiblePartner )
+                        break;
+
+                    Stock stock = GetStock( workshop, buffer.itemType );
+                    if ( stock == null )
+                        continue;
+
+                    if ( ConsiderPartner( stock, buffer.itemType ) )
+                        break;
                 }
 
-                foreach ( var offset in Ground.areas[Constants.Simpleton.workshopCoverage] )
+                if ( data.possiblePartner == null && workshop.output > 1 && DealCount( workshop, workshop.productionConfiguration.outputType ) == 0 )
                 {
-                    var building = workshop.node.Add( offset ).building;
-                    if ( building == null || building.team != boss.team )
-                        continue;
-                    if ( building is Workshop partner )
+                    Stock stock = GetStock( workshop, workshop.productionConfiguration.outputType );
+                    if ( stock )
                     {
-                        if ( partner.productionConfiguration.outputType != buffer.itemType || DealCount( partner, buffer.itemType ) > 0 )
-                            continue;
-                        ConsiderDeal( partner, buffer );
-                        return finished;
+                        data.possiblePartner = stock;
+                        data.possiblePartnerItemType = workshop.productionConfiguration.outputType;
                     }
                 }
-
-                Stock stock = GetStock( workshop, buffer.itemType );
-                if ( stock == null )
-                    continue;
-
-                ConsiderDeal( stock, buffer );
-                return finished;
             }
 
-            if ( workshop.output > 1 && DealCount( workshop, workshop.productionConfiguration.outputType ) == 0 )
+            if ( data.possiblePartner )
             {
-                Stock stock = GetStock( workshop, workshop.productionConfiguration.outputType );
-                if ( stock )
-                {
-                    action = Action.linkOutputToStock;
-                    partner = stock;
-                    problemWeight = solutionEfficiency = 0.5f;
-                }
+                action = Action.linkToPartner;
+                problemWeight = solutionEfficiency = 0.5f;
+                this.itemTypeToLink = data.possiblePartnerItemType;
+                this.partner = data.possiblePartner;
             }
             return finished;
+        }
+
+        bool ConsiderPartner( Building partner, Item.Type itemType )
+        {
+            foreach ( var deal in workshop.simpletonDataSafe.deals )
+            {
+                if ( deal.partner == partner && itemType == deal.itemType )
+                    return false;
+            }
+
+            workshop.simpletonDataSafe.possiblePartner = partner;
+            workshop.simpletonDataSafe.possiblePartnerItemType = itemType;
+            return true;
         }
 
         Stock GetStock( Workshop workshop, Item.Type itemType )
@@ -852,31 +927,19 @@ public class Simpleton : Player
                     HiveCommon.oh.ScheduleRemoveFlag( flag, false, Operation.Source.computer );
                 break;
 
-                case Action.linkInputToPartner:
-                workshop.simpletonDataSafe.deals.Add( new Deal { itemType = buffer.itemType, partner = partner } );
-                HiveCommon.Log( $"[{boss.name}]: Linking {buffer.itemType} input at {workshop} to {partner}" );
+                case Action.linkToPartner:
+                HiveCommon.Log( $"[{boss.name}]: Linking {itemTypeToLink} at {workshop} to {partner}" );
                 HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to partner" );
+                workshop.simpletonDataSafe.RegisterPartner( partner, itemTypeToLink );
+                workshop.simpletonDataSafe.possiblePartner = null;
                 if ( partner is Stock stock )
                 {
-                    HiveCommon.oh.ScheduleChangeArea( workshop, buffer.area, partner.node, 2, false, Operation.Source.computer );
-                    HiveCommon.oh.ScheduleStockAdjustment( stock, buffer.itemType, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, Operation.Source.computer );
-                    HiveCommon.oh.ScheduleStockAdjustment( stock, buffer.itemType, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, Operation.Source.computer );
-                    stock.simpletonDataSafe.RegisterManagedItemType( buffer.itemType );
+                    HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, Operation.Source.computer );
+                    stock.simpletonDataSafe.RegisterManagedItemType( itemTypeToLink );
                 }
-                if ( partner is Workshop partnerWorkshop )
-                    partnerWorkshop.simpletonDataSafe.deals.Add( new Deal { itemType = buffer.itemType, partner = workshop } );
-                break;
-
-                case Action.linkOutputToStock:
-                var outputType = workshop.productionConfiguration.outputType;
-                workshop.simpletonDataSafe.deals.Add( new Deal { itemType = outputType, partner = partner } );
-                HiveCommon.Log( $"[{boss.name}]: Linking output at {workshop} to {partner}" );
-                HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to partner" );
-                HiveCommon.oh.ScheduleChangeArea( workshop, workshop.outputArea, partner.node, 2, false, Operation.Source.computer );
-                HiveCommon.oh.ScheduleStockAdjustment( partner as Stock, outputType, Stock.Channel.inputMax, Constants.Stock.cartCapacity+10, false, Operation.Source.computer );
-                HiveCommon.oh.ScheduleStockAdjustment( partner as Stock, outputType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, Operation.Source.computer );
-                partner.simpletonDataSafe.RegisterManagedItemType( outputType );
-
+                if ( partner is Workshop )
+                    partner.simpletonDataSafe.RegisterPartner( workshop, itemTypeToLink );
                 break;
             }
         }
