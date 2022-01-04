@@ -318,7 +318,7 @@ public static class Constants
     {
         public const int roadMaxLength = 7;
         public const int flagConnectionRange = 7;
-        public const float defaultConfidence = 0.5f;
+        public const float defaultConfidence = 0.1f;
         public const float minimumConfidence = 0.2f;
         public const int inabilityTolerance = Constants.World.normalSpeedPerSecond * 60;
         public const float confidenceLevel = 0.1f;

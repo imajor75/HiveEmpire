@@ -85,6 +85,7 @@ public class Simpleton : Player
         public HiveObject hiveObject;
         public Building possiblePartner;
         public Item.Type possiblePartnerItemType;
+        public bool hasOutputStock;
 
        	[Obsolete( "Compatibility with old files", true )]
         Building possibleDealer { set {} }
@@ -826,7 +827,7 @@ public class Simpleton : Player
                         break;
                 }
 
-                if ( data.possiblePartner == null && workshop.output > 1 && DealCount( workshop, workshop.productionConfiguration.outputType ) == 0 )
+                if ( !data.hasOutputStock && workshop.output > 1 )
                 {
                     Stock stock = GetStock( workshop, workshop.productionConfiguration.outputType );
                     if ( stock )
@@ -934,9 +935,18 @@ public class Simpleton : Player
                 workshop.simpletonDataSafe.possiblePartner = null;
                 if ( partner is Stock stock )
                 {
-                    HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, Operation.Source.computer );
-                    HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, Operation.Source.computer );
                     stock.simpletonDataSafe.RegisterManagedItemType( itemTypeToLink );
+                    if ( workshop.productionConfiguration.outputType == itemTypeToLink )
+                    {
+                        workshop.simpletonDataSafe.hasOutputStock = true;
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, Operation.Source.computer );
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, Operation.Source.computer );
+                    }
+                    else
+                    {
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, Operation.Source.computer );
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, Operation.Source.computer );
+                    }
                 }
                 if ( partner is Workshop )
                     partner.simpletonDataSafe.RegisterPartner( workshop, itemTypeToLink );
