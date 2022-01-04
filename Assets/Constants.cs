@@ -333,6 +333,7 @@ public static class Constants
         public const int cartMin = 5;
         public const int itemTypesPerStock = 6;
         public const int dealCheckPeriod = Constants.World.normalSpeedPerSecond * 60 * 10;
+        public const float guardHouseWorkshopRatio = 1.5f;
     }
 }
 

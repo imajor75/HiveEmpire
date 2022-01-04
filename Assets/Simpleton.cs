@@ -14,6 +14,7 @@ public class Simpleton : Player
     public float confidence = Constants.Simpleton.defaultConfidence;
     public List<Node> isolatedNodes = new List<Node>();
     public int reservedPlank, reservedStone;
+    public bool hasSawmill, hasWoodcutter;
     public bool active;
 	public bool showActions;
 
@@ -194,10 +195,18 @@ public class Simpleton : Player
                 boss.reservedStone += building.construction.stoneMissing;
             }
 
+            boss.hasWoodcutter = boss.hasSawmill = false;
+
             foreach ( var stock in boss.team.stocks )
                 CheckBuilding( stock );
             foreach ( var workshop in boss.team.workshops )
+            {
+                if ( workshop.type == Workshop.Type.woodcutter && workshop.construction.done )
+                    boss.hasWoodcutter = true;
+                if ( workshop.type == Workshop.Type.sawmill && workshop.construction.done )
+                    boss.hasSawmill = true;
                 CheckBuilding( workshop );
+            }
             foreach ( var guardHouse in boss.team.guardHouses )
                 CheckBuilding( guardHouse );
 
@@ -670,11 +679,14 @@ public class Simpleton : Player
         public ExtendBorderTask( Simpleton boss ) : base( boss ) {}
         public override bool Analyze()
         {
-            if ( boss.team.mainBuilding.itemData[(int)Item.Type.plank].content < GuardHouse.guardHouseConfiguration.plankNeeded )
-                return finished;
+            if ( !boss.hasSawmill || !boss.hasWoodcutter )
+            {
+                if ( boss.team.mainBuilding.itemData[(int)Item.Type.plank].content < GuardHouse.guardHouseConfiguration.plankNeeded )
+                    return finished;
+            }
             if ( boss.team.mainBuilding.itemData[(int)Item.Type.stone].content < GuardHouse.guardHouseConfiguration.stoneNeeded + 2 )
                 return finished;
-            if ( boss.team.guardHouses.Count * 2 > boss.team.workshops.Count )
+            if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count )
                 return finished;
 
             problemWeight = Constants.Simpleton.extensionImportance;
