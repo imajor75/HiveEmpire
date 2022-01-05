@@ -306,6 +306,8 @@ public class Simpleton : Player
                     return finished;
 
                 nodeRow = -1;
+                if ( problemWeight > 0 )
+                    GatherDependencies();
                 return problemWeight > 0 ? needMoreTime : finished;
             }
 
@@ -313,11 +315,24 @@ public class Simpleton : Player
             int reservedPlank = boss.reservedPlank + 4, reservedStone = boss.reservedStone;
             if ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill )
                 reservedPlank = 0;
-            if ( configuration.plankNeeded + reservedPlank > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
-                return finished;
+            if ( !boss.hasSawmill || !boss.hasWoodcutter )
+            {
+                if ( configuration.plankNeeded + reservedPlank > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
+                    return finished;
+            }
             if ( configuration.stoneNeeded + reservedStone > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
                 return finished;
 
+            ScanRow( nodeRow++ );
+
+            if ( nodeRow == HiveCommon.ground.dimension - 1 )
+                return finished;
+
+            return needMoreTime;
+        }
+
+        void GatherDependencies()
+        {
             if ( workshopType == Workshop.Type.woodcutter )
                 dependencies.Add( Workshop.Type.forester );
             if ( workshopType == Workshop.Type.sawmill )
@@ -366,13 +381,6 @@ public class Simpleton : Player
                 dependencies.Add( Workshop.Type.goldMine );
                 dependencies.Add( Workshop.Type.woodcutter );
             }
-
-            ScanRow( nodeRow++ );
-
-            if ( nodeRow == HiveCommon.ground.dimension - 1 )
-                return finished;
-
-            return needMoreTime;
         }
 
         void ScanRow( int row )
