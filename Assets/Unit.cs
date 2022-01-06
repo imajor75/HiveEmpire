@@ -32,6 +32,7 @@ public class Unit : HiveObject
 	public BodyState bodyState = BodyState.unknown;
 	public Color currentColor;
 	public List<Task> taskQueue = new List<Task>();
+	public Watch haulerRoadBegin = new Watch(), haulerRoadEnd = new Watch();
 
 	[JsonIgnore]
 	public bool debugReset;
@@ -1262,6 +1263,8 @@ public class Unit : HiveObject
 		ScheduleWalkToFlag( road.ends[0] ); // TODO Pick the end closest to the main building
 		ScheduleWalkToRoadNode( road, road.centerNode, false );
 		ScheduleStartWorkingOnRoad( road );
+		haulerRoadBegin.Attach( road.ends[0].itemsStored, false );
+		haulerRoadEnd.Attach( road.ends[1].itemsStored, false );
 		base.Setup();
 		return this;
 	}
@@ -1772,12 +1775,29 @@ public class Unit : HiveObject
 
 	void FindHaulerTask()
 	{
-		// TODO This is a slow procedure, it should not do anything in most of the frames
 		if ( ( bored.done && road.ActiveHaulerCount > 1 ) || ( road.ActiveHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
 		{
 			Remove( true );
 			return;
 		}
+
+		if ( node == road.nodes[0] || node == road.lastNode )
+		{
+			int restIndex = ( road.nodes.Count - 1 ) / 2;
+			if ( node == road.nodes[0] )
+				restIndex = road.nodes.Count / 2;
+			if ( road.haulerAtNodes[restIndex] )
+			{
+				for ( restIndex = 1; restIndex < road.nodes.Count - 2; restIndex++ )
+					if ( road.haulerAtNodes[restIndex] == null )
+						break;
+			}
+			ScheduleWalkToRoadPoint( road, restIndex );
+			return;
+		}
+		
+		if ( !haulerRoadBegin.status && !haulerRoadEnd.status )
+			return;
 
 		if ( !exclusiveMode )
 		{
@@ -1834,21 +1854,6 @@ public class Unit : HiveObject
 			return;
 		}
 		Color = Color.green;
-
-		if ( node == road.nodes[0] || node == road.lastNode )
-		{
-			int restIndex = ( road.nodes.Count - 1 ) / 2;
-			if ( node == road.nodes[0] )
-				restIndex = road.nodes.Count / 2;
-			if ( road.haulerAtNodes[restIndex] )
-			{
-				for ( restIndex = 1; restIndex < road.nodes.Count - 2; restIndex++ )
-					if ( road.haulerAtNodes[restIndex] == null )
-						break;
-			}
-			ScheduleWalkToRoadPoint( road, restIndex );
-			return;
-		}
 	}
 
 	/// <summary>

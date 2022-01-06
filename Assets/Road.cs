@@ -461,7 +461,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( !ready || decorationOnly )
 				return 0;
 
-			if ( watchStartFlag.Check() || watchEndFlag.Check() || cachedJam == -1 )
+			if ( watchStartFlag.status || watchEndFlag.status || cachedJam == -1 )
 			{
 				cachedJam = 0;
 				for ( int e = 0; e < 2; e++ )

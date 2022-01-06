@@ -388,7 +388,7 @@ public class Flag : HiveObject
 	{
 		get
 		{
-			if ( freeSlotsWatch.Check() || freeSlotsCached == -1 )
+			if ( freeSlotsWatch.status || freeSlotsCached == -1 )
 			{
 				freeSlotsCached = 0;
 				for ( int i = 0; i < Constants.Flag.maxItems; i++ )

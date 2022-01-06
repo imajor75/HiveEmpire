@@ -148,6 +148,7 @@ public class Eye : HiveObject
 			height = h;
 		UpdateTransformation();
 		camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
+		camera.clearFlags = CameraClearFlags.Skybox;
 
 		if ( director == null )
 		{

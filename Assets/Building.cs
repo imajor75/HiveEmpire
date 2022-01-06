@@ -87,7 +87,7 @@ abstract public class Building : HiveObject
 	{
 		get
 		{
-			if ( isolated && roadNetworkChangeListener.Check() )
+			if ( isolated && roadNetworkChangeListener.status )
 				UpdateIsolated();
 			return !isolated;
 		}

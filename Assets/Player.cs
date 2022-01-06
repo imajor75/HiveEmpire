@@ -568,10 +568,10 @@ public class Watch
 	public Versioned source;
 	public int localVersion;
 
-	public void Attach( Versioned source )
+	public void Attach( Versioned source, bool update = true )
 	{
 		this.source = source;
-		if ( source != null )
+		if ( update && source != null )
 			localVersion = source.version;
 	}
 	public void Disconnect()
@@ -579,14 +579,17 @@ public class Watch
 		source = null;
 	}
 	public bool isAttached { get { return source != null; } }
-	public bool Check()
+	public bool status
 	{
-		if ( isAttached && localVersion != source.version )
+		get
 		{
-			localVersion = source.version;
-			return true;
+			if ( isAttached && localVersion != source.version )
+			{
+				localVersion = source.version;
+				return true;
+			}
+			return false;
 		}
-		return false;
 	}
 }
 

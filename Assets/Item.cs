@@ -201,7 +201,7 @@ public class Item : HiveObject
 			return;
 		}
 
-		if ( watchRoadDelete.Check() && path != null )
+		if ( watchRoadDelete.status && path != null )
 		{
 			for ( int i = 0; i < path.roadPath.Count; i++ )
 			{
@@ -221,7 +221,7 @@ public class Item : HiveObject
 		if ( path != null && !path.isFinished && path.road == null )
 			CancelTrip();
 
-		if ( watchBuildingDelete.Check() )
+		if ( watchBuildingDelete.status )
 		{
 			if ( destination == null && path != null )
 				CancelTrip();
@@ -230,7 +230,7 @@ public class Item : HiveObject
 		// If the item appears to be separated from the HQ, should not be offeted yet
 		if ( roadNetworkChangeListener.isAttached )
 		{
-			if ( !roadNetworkChangeListener.Check() )
+			if ( !roadNetworkChangeListener.status )
 				return;
 			roadNetworkChangeListener.Disconnect();
 		}
