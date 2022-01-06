@@ -73,9 +73,11 @@ public class Eye : HiveObject
 	new public void Start()
 	{
 		camera = GetComponent<Camera>();
-		camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexMapOnly );
+		camera.cullingMask = 0;
 		camera.farClipPlane = 50;
 		camera.nearClipPlane = 0.001f;
+		camera.backgroundColor = Color.black;
+		camera.clearFlags = CameraClearFlags.SolidColor;
 		gameObject.AddComponent<CameraHighlight>();
 		var ppl = gameObject.AddComponent<PostProcessLayer>();
 		ppl.Init( root.postProcessResources );
@@ -144,10 +146,9 @@ public class Eye : HiveObject
 			height += ( h - height ) * Constants.Eye.heightFollowSpeed * Time.unscaledDeltaTime;
 		else
 			height = h;
-		var position = new Vector3( x, height, y );
-		Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
-		transform.position = position - viewer;
-		transform.LookAt( position );
+		UpdateTransformation();
+		camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
+
 		if ( director == null )
 		{
 			director = null;
@@ -269,6 +270,14 @@ public class Eye : HiveObject
 		return true;
 	}
 
+	public void UpdateTransformation()
+	{
+		var position = new Vector3( x, height, y );
+		Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
+		transform.position = position - viewer;
+		transform.LookAt( position );
+	}
+
 	public void ReleaseFocus( IDirector director, bool restore = false )
 	{
 		if ( this.director != director )
@@ -307,6 +316,7 @@ public class Eye : HiveObject
 		root.viewport.markEyePosition = mark;
 		autoStorePositionTimer = 0;
 		currentPositionStored = false;
+		UpdateTransformation();
 	}
 
 	void OnPositionChanged()

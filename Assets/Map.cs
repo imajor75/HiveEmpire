@@ -102,6 +102,9 @@ public class Map : Interface.Panel
 				root.viewport.SetCamera( camera );
 			else
 				root.viewport.SetCamera( null );
+				
+			float rotation = eye.direction / (float)Math.PI * 180f;
+			SetTarget( new Vector2( eye.x, eye.y ), zoom, rotation );
 		}
 
 		public void SetTarget( Vector2 position, float zoom, float rotation )
