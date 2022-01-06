@@ -5684,6 +5684,7 @@ if ( cart )
 			Text( "Result", 10 ).Pin( 270, -40, 100 );
 
 			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
+			building.team.itemDispatcher.fullTracking = true;
 		}
 
 		new public void OnDestroy()
@@ -5691,6 +5692,7 @@ if ( cart )
 			base.OnDestroy();
 			root.mainTeam.itemDispatcher.queryItemType = Item.Type.unknown;
 			root.mainTeam.itemDispatcher.queryBuilding = null;
+			building.team.itemDispatcher.fullTracking = false;
 			world.SetSpeed( speedToRestore );
 		}
 

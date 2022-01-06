@@ -49,6 +49,7 @@ public class ItemDispatcher : HiveObject
 	public Building queryBuilding;
 	public Item.Type queryItemType;
 	public Potential.Type queryType;
+	public bool fullTracking;
 
 	[Obsolete( "Compatibility with old files", true )]
 	public Player player { set { team = value.team; } }
@@ -102,6 +103,8 @@ public class ItemDispatcher : HiveObject
 			quantity = 0;
 		if ( priority == Priority.zero )
 			return;
+		if ( quantity == 0 && !fullTracking )
+			return;
 
 		markets[(int)itemType].RegisterRequest( building, quantity, priority, area, weight );
 	}
@@ -110,6 +113,8 @@ public class ItemDispatcher : HiveObject
 	{
 		Assert.global.IsNotNull( area );
 		if ( priority == Priority.zero )
+			return;
+		if ( quantity == 0 && !fullTracking )
 			return;
 
 		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, weight, flagJammed, noDispenser );
