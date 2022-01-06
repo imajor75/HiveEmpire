@@ -21,7 +21,7 @@ public class Workshop : Building
 	public Mode mode = Mode.whenNeeded;
 	public int itemsProduced;
 	public World.Timer resting = new World.Timer();
-	public Productivity productivity = new Productivity( 0.5f );
+	public Productivity productivity = new Productivity( 0 );
 	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
 	public Status currentStatus = Status.unknown;
 	public World.Timer statusDuration = new World.Timer();
