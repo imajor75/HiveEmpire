@@ -322,8 +322,19 @@ abstract public class Building : HiveObject
 
 			if ( progress == 0 )
 			{
-				var o = new Ground.Offset( 0, -1, 1 );
-				Node node = boss.node.Add( o );
+				Node node = boss.node.Neighbour( 0 );
+				foreach ( var offset in Ground.areas[1] )
+				{
+					if ( !offset )
+						continue;
+					var candidate = boss.node.Add( offset );
+					if ( candidate.type != Node.Type.underWater )
+					{
+						node = candidate;
+						break;
+					}
+				}
+
 				if ( builder.node != node )
 				{
 					builder.ScheduleWalkToNode( node, true, false, null, boss );
