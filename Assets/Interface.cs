@@ -2528,7 +2528,7 @@ public class Interface : HiveObject
 					ProcessPastStatus( s );
 				if ( totalTicks == 0 )
 				{
-					Text( "Not enough data yet" ).Stretch().alignment = TextAnchor.MiddleCenter;
+					Text( "Not enough data yet" ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth ).alignment = TextAnchor.MiddleCenter;
 					return;
 				}
 
@@ -2581,7 +2581,7 @@ public class Interface : HiveObject
 			{
 				if ( circle == null )
 					return;
-					
+
 				var t = new Texture2D( (int)circle.rectTransform.rect.width, (int)circle.rectTransform.rect.height );
 
 				for ( int x = 0; x < t.width; x++ )
