@@ -2579,6 +2579,9 @@ public class Interface : HiveObject
 
 			void FillCircle()
 			{
+				if ( circle == null )
+					return;
+					
 				var t = new Texture2D( (int)circle.rectTransform.rect.width, (int)circle.rectTransform.rect.height );
 
 				for ( int x = 0; x < t.width; x++ )
