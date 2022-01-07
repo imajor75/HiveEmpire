@@ -293,6 +293,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		var mapVertices = new Vector3[nodes.Count * 2];
 
+		var referencePosition = referenceLocation.position;
 		for (int i = 0; i < nodes.Count; i++)
 		{
 			Color vertexColor = Color.black;
@@ -321,8 +322,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 				if ( b == 0 )
 				{
-					mapVertices[i * 2 + 0] = transform.InverseTransformPoint( pos - side * 0.2f + Vector3.up );
-					mapVertices[i * 2 + 1] = transform.InverseTransformPoint( pos + side * 0.2f + Vector3.up );
+					mapVertices[i * 2 + 0] = pos - side * 0.2f + Vector3.up - referencePosition;
+					mapVertices[i * 2 + 1] = pos + side * 0.2f + Vector3.up - referencePosition;
 				}
 
 				uvs[v] = new Vector2(0.0f, tv );
@@ -337,11 +338,10 @@ public class Road : HiveObject, Interface.IInputHandler
 			}
 		}
 
-		var position = referenceLocation.position;
 		for ( int i = 0; i < vertices.Length; i++ )
 		{
 			vertices[i].y = ground.GetHeightAt( vertices[i].x, vertices[i].z ) + 0.02f;	// Add 0.02f to avoid z fight.
-			vertices[i] -= position;
+			vertices[i] -= referencePosition;
 		}
 
 		assert.AreEqual( v, vertexRows * 3 );
