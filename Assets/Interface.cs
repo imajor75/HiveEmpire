@@ -5662,11 +5662,14 @@ if ( cart )
 
 		public void Open( Building building, Item.Type itemType, ItemDispatcher.Potential.Type direction )
 		{
-			speedToRestore = world.speed;
-			world.SetSpeed( World.Speed.pause );
+			Assert.global.AreEqual( building.team, root.mainTeam );
 			root.mainTeam.itemDispatcher.queryBuilding = this.building = building;
 			root.mainTeam.itemDispatcher.queryItemType = this.itemType = itemType;
 			root.mainTeam.itemDispatcher.queryType = this.direction = direction;
+			root.mainTeam.itemDispatcher.fullTracking = true;
+			speedToRestore = world.speed;
+			if ( world.speed == World.Speed.pause )
+				world.SetSpeed( World.Speed.normal );
 
 			if ( base.Open( null, 0, 0, 540, 320 ) )
 				return;
@@ -5684,7 +5687,6 @@ if ( cart )
 			Text( "Result", 10 ).Pin( 270, -40, 100 );
 
 			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
-			building.team.itemDispatcher.fullTracking = true;
 		}
 
 		new public void OnDestroy()
@@ -5692,7 +5694,7 @@ if ( cart )
 			base.OnDestroy();
 			root.mainTeam.itemDispatcher.queryItemType = Item.Type.unknown;
 			root.mainTeam.itemDispatcher.queryBuilding = null;
-			building.team.itemDispatcher.fullTracking = false;
+			root.mainTeam.itemDispatcher.fullTracking = false;
 			world.SetSpeed( speedToRestore );
 		}
 
@@ -5703,8 +5705,10 @@ if ( cart )
 			{
 				filled = true;
 				Fill();
+				root.mainTeam.itemDispatcher.fullTracking = false;
 				root.mainTeam.itemDispatcher.queryBuilding = this.building = null;
 				root.mainTeam.itemDispatcher.queryItemType = this.itemType = Item.Type.unknown;
+				world.SetSpeed( World.Speed.pause );
 			}
 		}
 
