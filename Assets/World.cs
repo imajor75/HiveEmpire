@@ -1,17 +1,11 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
-using UnityEngine.Networking;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Linq;
 using System.Globalization;
-using UnityEngine.Networking.Types;
 #pragma warning disable 0618
 
 public class World : HiveCommon
@@ -24,6 +18,7 @@ public class World : HiveCommon
 	public Player controllingPlayer;
 	public List<Team> teams = new List<Team>();
 	public new Eye eye;
+	public new Light light;
 	public bool gameInProgress;
 	public new int time;
 	public int nextID = 1;
@@ -1073,7 +1068,7 @@ public class World : HiveCommon
 	public void Prepare()
 	{
 		var lightObject = new GameObject { layer = World.layerIndexPPVolume };
-		var light = lightObject.AddComponent<Light>();
+		light = lightObject.AddComponent<Light>();
 		light.type = UnityEngine.LightType.Directional;
 		lightObject.name = "Sun";
 		light.transform.Rotate( new Vector3( 60, 0, 0 ) );
@@ -1081,8 +1076,8 @@ public class World : HiveCommon
 		light.color = new Color( 1, 1, 1 );
 		light.transform.SetParent( transform );
 		var ppv = lightObject.AddComponent<PostProcessVolume>();
-		ppv.profile = Resources.Load<PostProcessProfile>( "Post-processing Profile" );
 		ppv.isGlobal = true;
+		ppv.profile = Instantiate( Resources.Load<PostProcessProfile>( "Post-processing Profile" ) );
 		Assert.global.IsNotNull( ppv.profile );
 
 		{

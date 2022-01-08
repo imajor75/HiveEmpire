@@ -20,6 +20,7 @@ public class Eye : HiveObject
 	public bool rotateAround;
 	public new Camera camera;
 	public float moveSensitivity;
+	DepthOfField depthOfField;
 
 	public Node target;
 	public float targetApproachSpeed;
@@ -56,7 +57,9 @@ public class Eye : HiveObject
 
 	public static Eye Create()
 	{
-		return new GameObject( "Eye" ).AddComponent<Eye>();
+		var o = Instantiate( Resources.Load<GameObject>( "eye" ) );
+		o.name = "Eye";
+		return o.GetComponent<Eye>();
 	}
 
 	public Eye Setup( World world )
@@ -73,18 +76,9 @@ public class Eye : HiveObject
 	new public void Start()
 	{
 		camera = GetComponent<Camera>();
-		camera.cullingMask = 0;
-		camera.farClipPlane = 50;
-		camera.nearClipPlane = 0.001f;
-		camera.backgroundColor = Color.black;
-		camera.clearFlags = CameraClearFlags.SolidColor;
-		gameObject.AddComponent<CameraHighlight>();
-		var ppl = gameObject.AddComponent<PostProcessLayer>();
-		ppl.Init( root.postProcessResources );
-		ppl.volumeLayer = 1 << World.layerIndexPPVolume;
-
-		// Disable temporarily, as unity is crashing at the moment with it.
-		ppl.enabled = false;
+		var ppv = world.light.GetComponent<PostProcessVolume>();
+		if ( ppv && ppv.profile )
+			depthOfField = ppv.profile.settings[0] as DepthOfField;
 		base.Start();
 	}
 
@@ -162,6 +156,9 @@ public class Eye : HiveObject
 			director.SetCameraTarget( this );
 			this.director = director;
 		}
+
+		if ( depthOfField )
+			depthOfField.focusDistance.value = altitude;
 
 		Vector3 movement = Vector3.zero;
 		if ( Interface.cameraLeftHotkey.IsHold() )
