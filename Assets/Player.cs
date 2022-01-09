@@ -92,6 +92,7 @@ public abstract class Player : HiveObject
 		this.name = name;
 		this.team = team;
 		team.players.Add( this );
+		base.Setup();
 		return this;
 	}
 
@@ -235,6 +236,7 @@ public class Team : HiveObject
 		chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );
 		productivityUpdateTimer.Start( Constants.Player.productivityUpdateTime );
 		CreateInputWeights();
+		base.Setup();
 
 		return this;
 	}
