@@ -618,7 +618,7 @@ abstract public class Building : HiveObject
 		UpdateLook();
 	}
 
-	public override void CriticalUpdate()
+	public override void GameLogicUpdate()
 	{
 		itemDispatchedThisFrame = false;
 		construction.CriticalUpdate();

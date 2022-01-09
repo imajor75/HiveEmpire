@@ -101,7 +101,7 @@ public abstract class HiveObject : HiveCommon
 
 	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, sucs as when woodcutters decide which tree to cut. 
 	// So when this function is called by World.FixedUpdate it is always called in the same order.
-	public virtual void CriticalUpdate()
+	public virtual void GameLogicUpdate()
 	{
 	}
 

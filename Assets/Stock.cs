@@ -391,7 +391,7 @@ public class Stock : Attackable
 			UpdateLook();
 		}
 
-		public override void CriticalUpdate()
+		public override void GameLogicUpdate()
 		{
 			if ( itemQuantity > 0 && destination == null )
 			{
@@ -401,7 +401,7 @@ public class Stock : Attackable
 				ResetTasks();
 				DeliverItems( boss );
 			}
-			base.CriticalUpdate();
+			base.GameLogicUpdate();
 		}
 
 		override public void FindTask()
@@ -658,9 +658,9 @@ public class Stock : Attackable
 		unit.DestroyThis();
 }
 
-	public override void CriticalUpdate()
+	public override void GameLogicUpdate()
 	{
-		base.CriticalUpdate();
+		base.GameLogicUpdate();
 		if ( !construction.done || blueprintOnly )
 			return;
 

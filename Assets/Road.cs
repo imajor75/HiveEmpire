@@ -246,7 +246,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		base.Start();
 	}
 
-	public override void CriticalUpdate()
+	public override void GameLogicUpdate()
 	{
 		if ( !ready )
 			return;

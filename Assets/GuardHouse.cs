@@ -50,9 +50,9 @@ public abstract class Attackable : Building
 	public abstract int defenderCount { get; }
 	public abstract Unit GetDefender();
 
-	public override void CriticalUpdate()
+	public override void GameLogicUpdate()
 	{
-		base.CriticalUpdate();
+		base.GameLogicUpdate();
 		if ( blueprintOnly || !construction.done )
 			return;
 
@@ -228,9 +228,9 @@ public class GuardHouse : Attackable
 		return template;
 	}
 
-	public override void CriticalUpdate()
+	public override void GameLogicUpdate()
 	{
-		base.CriticalUpdate();
+		base.GameLogicUpdate();
 		if ( blueprintOnly || !construction.done )
 			return;
 		if ( !ready && soldiers.Count > 0 && soldiers.First().IsIdle( true ) )

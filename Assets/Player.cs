@@ -3,9 +3,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Player : HiveCommon
+public abstract class Player : HiveObject
 {
-	public Team team;
 	public new string name;
 
 	[Obsolete( "Compatibility with old files", true )]
@@ -81,10 +80,11 @@ public abstract class Player : HiveCommon
 		}
 	}
 
-	void Start()
+	new void Start()
 	{
 		base.name = "Player " + name;
 		transform.SetParent( World.playersAndTeams.transform );
+		base.Start();
 	}
 
 	public Player Setup( string name, Team team )
@@ -95,14 +95,14 @@ public abstract class Player : HiveCommon
 		return this;
 	}
 
-	public void Remove( bool takeYourTime )
+	public new void Remove( bool takeYourTime )
 	{
 		world.players.Remove( this );
 		Destroy( gameObject );
 	}
 }
 
-public class Team : HiveCommon
+public class Team : HiveObject
 {
 	public List<Player> players = new List<Player>();
 	public Color color;
@@ -135,7 +135,10 @@ public class Team : HiveCommon
 		set { mainBuilding.itemData[(int)Item.Type.soldier].content = value; }
 		get { return mainBuilding.itemData[(int)Item.Type.soldier].content; } 
 	}
-	public int lastTimeAttack;
+
+    public override Node location => throw new NotImplementedException();
+
+    public int lastTimeAttack;
 
 	public Material buoyMaterial;
 	public Material standard01AMaterial;
@@ -339,7 +342,7 @@ public class Team : HiveCommon
 		stocksHaveNeed[i] = hasInput;
 	}
 
-	public void Start()
+	public new void Start()
 	{
 		transform.SetParent( World.playersAndTeams.transform );
 		while ( itemHaulPriorities.Count < (int)Item.Type.total )
@@ -353,12 +356,11 @@ public class Team : HiveCommon
 		if ( surplus.Length != (int)Item.Type.total )
 			surplus = new int[(int)Item.Type.total];
 		base.name = "Team " + name;
+		base.Start();
 	}
 
-	public void FixedUpdate()
+	public override void GameLogicUpdate()
 	{
-        if ( HiveCommon.oh && HiveCommon.oh.frameFinishPending )
-            return;
 		if ( chartAdvanceTimer.done )
 		{
 			chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );
@@ -451,13 +453,14 @@ public class Team : HiveCommon
 		return mainBuilding;
 	}
 
-	public void Remove( bool takeYourTime )
+	public override bool Remove( bool takeYourTime )
 	{
 		world.teams.Remove( this );
 		foreach ( var player in players )
 			player.Remove( takeYourTime );
 		world.ground.dirtyOwnership = true;
 		Destroy( gameObject );
+		return true;
 	}
 
 	public void RegisterInfluence( Building building )

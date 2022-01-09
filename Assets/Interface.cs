@@ -526,7 +526,7 @@ public class Interface : HiveObject
 
 	string ReplayTooltipGenerator()
 	{
-		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - oh.finishedFrameIndex )}";
+		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - oh.finishedGameStep )}";
 		if ( oh.next != null )
 			text += $"\nNext action is {oh.next.description} in {UIHelpers.TimeToString( oh.next.scheduleAt - time )}";
 		return text;
@@ -925,7 +925,11 @@ public class Interface : HiveObject
 		if ( highlightType == HighlightType.area )
 			Assert.global.IsNotNull( highlightArea );
 		var roots = SceneManager.GetActiveScene().GetRootGameObjects();
-		Assert.global.AreEqual( roots.Count(), 4, "Interface, World, Network and the Event System should be the four objects in the root" );
+		int activeObjectsAtRootLevel = 0;
+		foreach ( var go in roots )
+			if ( go.active )
+				activeObjectsAtRootLevel++;
+		Assert.global.AreEqual( activeObjectsAtRootLevel, 4, "Interface, World, Network and the Event System should be the four active objects at root level" );
 #endif
 	}
 
@@ -5235,7 +5239,7 @@ if ( cart )
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			world.fixedOrderCalls = true;
+			world.gameAdvancingInProgress = true;
 			rightButton = eventData.button == PointerEventData.InputButton.Right;
 			if ( inputHandler == null )
 				inputHandler = this;
@@ -5258,7 +5262,7 @@ if ( cart )
 			else
 				if ( !inputHandler.OnObjectClicked( hiveObject ) )
 					inputHandler = this;
-			world.fixedOrderCalls = false;
+			world.gameAdvancingInProgress = false;
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )
@@ -6790,14 +6794,14 @@ public static class UIHelpers
 
         public void OnPointerClick( PointerEventData eventData )
         {
-			HiveCommon.world.fixedOrderCalls = true;
+			HiveCommon.world.gameAdvancingInProgress = true;
 			if ( eventData.button == PointerEventData.InputButton.Left && leftClickHandler != null )
 				leftClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Right && rightClickHandler != null )
 				rightClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
 				middleClickHandler();
-			HiveCommon.world.fixedOrderCalls = false;
+			HiveCommon.world.gameAdvancingInProgress = false;
         }
 
 		public void Toggle()

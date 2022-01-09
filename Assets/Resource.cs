@@ -264,7 +264,7 @@ public class Resource : HiveObject
 		}
 	}
 
-	public override void CriticalUpdate()
+	public override void GameLogicUpdate()
 	{
 		if ( type == Type.animalSpawner && ( spawn.done || spawn.empty ) )
 		{

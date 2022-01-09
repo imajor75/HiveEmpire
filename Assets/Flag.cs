@@ -136,7 +136,7 @@ public class Flag : HiveObject
 		base.Start();
 	}
 
-	public override void CriticalUpdate()
+	public override void GameLogicUpdate()
 	{
 		if ( requestFlattening && !flattening.builder && !blueprintOnly )
 		{

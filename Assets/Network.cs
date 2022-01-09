@@ -275,11 +275,6 @@ public class Network : HiveCommon
 					case State.client:
 					Log( $"Server disconnected, switching to server mode and waiting for incoming connections", true );
 					SetState( State.server );
-					if ( oh.frameFinishPending )
-					{
-						oh.FinishFrame();
-						world.SetSpeed( World.Speed.normal );
-					}
 					break;
 				}
 				break;
@@ -325,7 +320,7 @@ public class Network : HiveCommon
 						Assert.global.AreEqual( clientConnection, connection );
 						if ( oh.orders.Count == 0 || oh.orders.Last().operationsLeftFromServer == 0 )
 						{
-							var frameOrder = new OperationHandler.FrameOrder();
+							var frameOrder = new OperationHandler.GameStepOrder();
 							var bl = new List<byte>();
 							for ( int i = 0; i < receivedSize; i++ )
 								bl.Add( buffer[i] );
@@ -334,8 +329,6 @@ public class Network : HiveCommon
 							Assert.global.AreEqual( bl.Count, 0 );
 							oh.orders.AddLast( frameOrder );
 							lag = (float)oh.orders.Count / Constants.World.normalSpeedPerSecond;
-							if ( oh.frameFinishPending && oh.FinishFrame() )
-								world.SetSpeed( World.Speed.normal );
 						}
 						else
 						{
@@ -348,8 +341,6 @@ public class Network : HiveCommon
 							Assert.global.AreEqual( memStream.Position, memStream.Length );
 							oh.executeBuffer.Add( o );
 							oh.orders.Last().operationsLeftFromServer--;
-							if ( oh.frameFinishPending && oh.FinishFrame() )
-								world.SetSpeed( World.Speed.normal );
 						}
 						break;
 					}
@@ -384,7 +375,7 @@ public class Network : HiveCommon
         return recData;
     }
 
-    public void OnGameFrameEnd()
+    public void OnGameStepEnd()
     {
         if ( state == State.server && serverConnections.Count != 0 )
         {

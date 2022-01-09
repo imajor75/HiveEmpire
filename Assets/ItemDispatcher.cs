@@ -129,12 +129,10 @@ public class ItemDispatcher : HiveObject
 		markets[(int)item.type].RegisterOffer( item, priority, area );
 	}
 
-	public void FixedUpdate()
+	public override void GameLogicUpdate()
 	{
-        if ( oh && oh.frameFinishPending )
-            return;
 		foreach ( var market in markets )
-			market.FixedUpdate();
+			market.GameLogicUpdate();
 
 		results = resultsInThisFrame;
 		if ( queryBuilding )
@@ -224,7 +222,7 @@ public class ItemDispatcher : HiveObject
 			return 1;
 		}
 
-		public void FixedUpdate()
+		public void GameLogicUpdate()
 		{
 			offers.Sort( ComparePotentials );
 			requests.Sort( ComparePotentials );

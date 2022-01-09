@@ -29,7 +29,7 @@ public class World : HiveCommon
 	public string fileName;
 	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>(), newHiveObjects = new LinkedList<HiveObject>();
 	[JsonIgnore]
-	public bool fixedOrderCalls;
+	public bool gameAdvancingInProgress;
 	public Speed speed;
 	public OperationHandler operationHandler;
 	[JsonIgnore]
@@ -186,7 +186,7 @@ public class World : HiveCommon
 		}
 	}
 
-	public class Challenge : HiveCommon
+	public class Challenge : HiveObject
 	{
 		public string title, description;
 		public Goal reachedLevel = Goal.none;
@@ -214,15 +214,18 @@ public class World : HiveCommon
 		[Obsolete( "Compatibility with old files", true )]
 		bool randomSeed { set {} }
 
-		public static Challenge Create()
+        public override Node location => throw new NotImplementedException();
+
+        public static Challenge Create()
 		{
 			return new GameObject( "Challenge" ).AddComponent<Challenge>();
 		}
 
-		void Start()
+		new void Start()
 		{
 			if ( transform.parent == null )
 				transform.SetParent( HiveCommon.world.transform );
+			base.Start();
 		}
 
 		public void Begin()
@@ -234,10 +237,8 @@ public class World : HiveCommon
 			reachedLevel = Goal.none;
 		}
 
-		void FixedUpdate()
+		void CriticalUpdate()
 		{
-			if ( oh && oh.frameFinishPending )
-				return;
 			if ( world.challenge != this )
 				return;
 
@@ -549,7 +550,7 @@ public class World : HiveCommon
 
 	static public int NextRnd( OperationHandler.Event.CodeLocation caller, int limit = 0 )
 	{
-		Assert.global.IsTrue( instance.fixedOrderCalls );
+		Assert.global.IsTrue( instance.gameAdvancingInProgress );
 		int r = 0;
 		if ( limit != 0 )
 			r = rnd.Next( limit );
@@ -561,7 +562,7 @@ public class World : HiveCommon
 
 	static public float NextFloatRnd( OperationHandler.Event.CodeLocation caller )
 	{
-		Assert.global.IsTrue( instance.fixedOrderCalls );
+		Assert.global.IsTrue( instance.gameAdvancingInProgress );
 		var r = (float)rnd.NextDouble();
 		oh.RegisterEvent( OperationHandler.Event.Type.rndRequestFloat, caller );
 		return r;
@@ -569,8 +570,6 @@ public class World : HiveCommon
 
 	void FixedUpdate()
 	{
-        if ( oh && oh.frameFinishPending )
-            return;
 		if ( settings.apply )
 		{
 			settings.apply = false;
@@ -581,14 +580,18 @@ public class World : HiveCommon
 			root.mainPlayer = instance.players[0];
 		}
 		massDestroy = false;
+		Advance();
+	}
 
-		time++;
+	public bool Advance()
+	{
+		if ( !oh.readyForNextGameLogicStep )
+			return false;
+
+		gameAdvancingInProgress = true;
 		rnd = new System.Random( frameSeed );
-		fixedOrderCalls = true;
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
-		foreach ( var team in teams )
-			team.FixedUpdate();
 
 		if ( challenge.life.empty )
 			challenge.Begin();
@@ -602,16 +605,16 @@ public class World : HiveCommon
 		foreach ( var hiveObject in hiveObjects )
 		{
 			if ( hiveObject && !hiveObject.destroyed )
-				hiveObject.CriticalUpdate();
+				hiveObject.GameLogicUpdate();
 		}
-		fixedOrderCalls = false;
-	}
 
-	public void OnEndOfLogicalFrame()
-	{
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
-		network.OnGameFrameEnd();
+		network.OnGameStepEnd();
+		oh.OnGameStepEnd();
+		time++;
+		gameAdvancingInProgress = false;
+		return true;
 	}
 
 	public void Join( string address, int port )
@@ -626,7 +629,7 @@ public class World : HiveCommon
 	{
 		if ( resetSettings )
 			settings = ScriptableObject.CreateInstance<Settings>();
-		fixedOrderCalls = true;
+		gameAdvancingInProgress = true;
 		nextID = 1;
 		time = -1;
 		string pattern = challenge.title + " #{0}";
@@ -705,7 +708,7 @@ public class World : HiveCommon
 		}
 		Interface.ValidateAll( true );
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
-		fixedOrderCalls = false;
+		gameAdvancingInProgress = false;
 
 		network.SetState( Network.State.server );
 	}
@@ -733,7 +736,6 @@ public class World : HiveCommon
 		HiveObject.Log( $"Loading game {fileName}" );
    		Clear();
 		Prepare();
-		Interface.ValidateAll( true );
 		challenge = null;
 
 		if ( eye )
@@ -771,7 +773,7 @@ public class World : HiveCommon
 		{
 			operationHandler = OperationHandler.Create();
 			operationHandler.challenge = challenge;
-			operationHandler.finishedFrameIndex = time;
+			operationHandler.finishedGameStep = time;
 		}
 
 		foreach ( var player in players )
@@ -823,6 +825,11 @@ public class World : HiveCommon
 					ho.simpletonData.hiveObject = ho;
 					if ( ho.simpletonData.possiblePartner is Stock )
 						ho.simpletonData.possiblePartner = null;
+				}
+				if ( ho.id == 0 )
+				{
+					Log( $"Fixing id for {ho} with {nextID}" );
+					ho.id = nextID++;
 				}
 			}
 		}

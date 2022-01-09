@@ -20,7 +20,7 @@ public class OperationHandler : HiveObject
     public Mode mode;
     public World.Challenge challenge;
     public int executeIndex = 0;
-    public int finishedFrameIndex = -1;
+    public int finishedGameStep = -1;
     public int replayLength = -1;
     public int currentGroup = 0;
     public string currentGroupName;
@@ -28,12 +28,11 @@ public class OperationHandler : HiveObject
     public bool recordCRC;
     public bool recordEvents;
     public bool recalculateCRC;
-    public bool frameFinishPending;
     public bool insideFrame
     {
         get
         {
-            return time < finishedFrameIndex;
+            return time < finishedGameStep;
         }
     }
     [JsonIgnore]
@@ -180,6 +179,24 @@ public class OperationHandler : HiveObject
     string lastSave { set {} }
 	[Obsolete( "Compatibility with old files", true )]
     List<Operation> repeatBuffer { set { executeBuffer = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+    int finishedFrameIndex { set { finishedGameStep = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+    bool frameFinishPending { set {} }
+
+    public bool readyForNextGameLogicStep
+    {
+        get
+        {
+            if ( network.state == Network.State.client && ( orders.Count == 0 || orders.First().operationsLeftFromServer > 0 ) )
+            {
+                Log( $"Client is stuck at time {time}, no order from server yet" );
+                return false;
+            }
+
+            return true;
+        }
+    }
 
     public Operation next 
     { 
@@ -232,7 +249,7 @@ public class OperationHandler : HiveObject
 
         world.roadTutorialShowed = world.createRoadTutorialShowed = true;
         mode = Mode.repeating;
-        finishedFrameIndex = time;
+        finishedGameStep = time;
         this.recalculateCRC = recalculateCRC;
     }
 
@@ -301,8 +318,8 @@ public class OperationHandler : HiveObject
             fileIndex++;
 		undoQueue.Clear();		// TODO Is this necessary?
 		redoQueue.Clear();
-		if ( finishedFrameIndex > replayLength )
-			replayLength = finishedFrameIndex;
+		if ( finishedGameStep > replayLength )
+			replayLength = finishedGameStep;
 		Serializer.Write( name, this, true );
         SaveEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
         return name;
@@ -430,12 +447,9 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsCreatePlayer( name, team ), standalone, source );
     }
 
-    void FixedUpdate()
+    public void OnGameStepEnd()
     {
-        if ( frameFinishPending )
-            return;
-        if ( this != oh )
-            return;
+        assert.AreEqual( this, oh );
 
 #if DEBUG
         if ( recordCRC && mode == Mode.recording )
@@ -463,68 +477,45 @@ public class OperationHandler : HiveObject
                 RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
             }
         }
+        previousFrameEvents = frameEvents;
+        frameEvents = new List<Event>();
 #else
         if ( recordCRC && mode == Mode.recording )
             CRCCodesSkipped += 1;
 #endif
-        world.fixedOrderCalls = true;
-        world.OnEndOfLogicalFrame();
-        FinishFrame();
-#if DEBUG
-        previousFrameEvents = frameEvents;
-        frameEvents = new List<Event>();
-#endif
-    }
 
-    /// Returns true, if succeed
-    public bool FinishFrame()
-    {
         if ( network.state == Network.State.client )
         {
-            if ( orders.Count == 0 || orders.First().operationsLeftFromServer > 0 )
+            Assert.global.AreEqual( orders.First().time, time, $"Network time mismatch (server: {orders.First().time}, client: {time})" );
+            if ( oh.orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
             {
-                Log( $"Client is stuck at time {time}, no order from server yet" );
-                world.SetSpeed( World.Speed.pause );
-                frameFinishPending = true;
-                return false;
+                Interface.status.SetText( this, "Catching up server", pinX:0.5f, pinY:0.5f, time:100 );
+                world.SetSpeed( World.Speed.fast );
             }
-            else
+            var order = oh.orders.First();
+            oh.orders.RemoveFirst();
+            if ( order.CRC != currentCRCCode )
             {
-                Assert.global.AreEqual( orders.First().time, time, $"Network time mismatch (server: {orders.First().time}, client: {time})" );
-                if ( orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
+                if ( !eventsDumped )
                 {
-					Interface.status.SetText( this, "Catching up server", pinX:0.5f, pinY:0.5f, time:100 );
-                    world.SetSpeed( World.Speed.fast );
+                    DumpEvents( events, "events-client.txt", time );
+                    eventsDumped = true;
                 }
-                var order = orders.First();
-                orders.RemoveFirst();
-                if ( order.CRC != currentCRCCode )
-                {
-                    if ( !eventsDumped )
-                    {
-                        DumpEvents( events, "events-client.txt", time );
-                        eventsDumped = true;
-                    }
-                    Assert.global.Fail( $"Network CRC mismatch, server: {order.CRC}, client: {currentCRCCode} at {time}" );
-                }
+                Assert.global.Fail( $"Network CRC mismatch, server: {order.CRC}, client: {currentCRCCode} at {time}" );
             }
         }
 
         while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( executeBuffer[executeIndex++] );
 
-        world.fixedOrderCalls = false;
-
-        finishedFrameIndex++;
-        if ( finishedFrameIndex == replayLength )
+        finishedGameStep++;
+        if ( finishedGameStep == replayLength )
         {
             Assert.global.AreEqual( mode, Mode.repeating );
             mode = Mode.recording;
         }
 
-        assert.AreEqual( finishedFrameIndex, time );
-        frameFinishPending = false;
-        return true;
+        assert.AreEqual( finishedGameStep, time + 1 );
     }
 
     static void DumpEvents( List<Event> events, string file, int frame = -1 )
@@ -557,21 +548,21 @@ public class OperationHandler : HiveObject
         eventsDumped = true;
     }
 
-    public class FrameOrder
+    public class GameStepOrder
     {
         public int time;
         public int CRC;
         public int operationsLeftFromServer;
     }
 
-    public LinkedList<FrameOrder> orders = new LinkedList<FrameOrder>();
+    public LinkedList<GameStepOrder> orders = new LinkedList<GameStepOrder>();
 
     void Update()
     {
         if ( this != oh )
             return;
 
-        while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
+        while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time - 1 )
         {
             assert.AreEqual( world.speed, World.Speed.pause );
             ExecuteOperation( executeBuffer[executeIndex++] );

@@ -1509,10 +1509,9 @@ public class Unit : HiveObject
 		SetNode( walkTo = target );
 	}
 
-	void FixedUpdate()
+	// Update is called once per frame
+	public override void GameLogicUpdate()
 	{
-        if ( oh && oh.frameFinishPending )
-            return;
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
 			SetActive( false );
@@ -1524,11 +1523,7 @@ public class Unit : HiveObject
 			debugReset = false;
 			return;
 		}
-	}
 
-	// Update is called once per frame
-	public override void CriticalUpdate()
-	{
 		// If unit is between two nodes, simply advancing it
 		if ( walkTo != null )
 		{
@@ -1795,7 +1790,7 @@ public class Unit : HiveObject
 			ScheduleWalkToRoadPoint( road, restIndex );
 			return;
 		}
-		
+
 		if ( !haulerRoadBegin.status && !haulerRoadEnd.status )
 			return;
 
