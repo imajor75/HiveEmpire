@@ -589,6 +589,8 @@ public class World : HiveCommon
 			return false;
 
 		gameAdvancingInProgress = true;
+		network.OnGameStep();
+		oh.OnGameStep();
 		rnd = new System.Random( frameSeed );
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
@@ -610,8 +612,6 @@ public class World : HiveCommon
 
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
-		network.OnGameStepEnd();
-		oh.OnGameStepEnd();
 		time++;
 		gameAdvancingInProgress = false;
 		return true;

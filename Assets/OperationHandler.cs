@@ -447,7 +447,7 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsCreatePlayer( name, team ), standalone, source );
     }
 
-    public void OnGameStepEnd()
+    public void OnGameStep()
     {
         assert.AreEqual( this, oh );
 
