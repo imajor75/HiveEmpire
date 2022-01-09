@@ -35,7 +35,6 @@ public class Eye : HiveObject
 		set {} 
 	}
 
-
 	[Obsolete( "Compatibility with old files", true )]
 	float forwardForGroundBlocks { set {} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -59,7 +58,9 @@ public class Eye : HiveObject
 	{
 		var o = Instantiate( Resources.Load<GameObject>( "eye" ) );
 		o.name = "Eye";
-		return o.GetComponent<Eye>();
+		Eye eye = o.GetComponent<Eye>();
+		eye.destroyed = false;
+		return eye;
 	}
 
 	public Eye Setup( World world )

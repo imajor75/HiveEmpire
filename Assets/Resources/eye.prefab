@@ -100,9 +100,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blueprintOnly: 0
   inactive: 0
-  id: 0
-  noAssert: 0
-  registered: 0
+  id: 2600
+  noAssert: 1
+  registered: 1
   destroyed: 0
   team: {fileID: 0}
   simpletonData:
@@ -113,7 +113,7 @@ MonoBehaviour:
     managedItemTypes: 
     lastDealCheck:
       reference: -1
-    hiveObject: {fileID: 0}
+    hiveObject: {fileID: 8971744052418539133}
     possiblePartner: {fileID: 0}
     possiblePartnerItemType: 0
     hasOutputStock: 0
