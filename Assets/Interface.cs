@@ -526,7 +526,7 @@ public class Interface : HiveObject
 
 	string ReplayTooltipGenerator()
 	{
-		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - oh.finishedGameStep )}";
+		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - time )}";
 		if ( oh.next != null )
 			text += $"\nNext action is {oh.next.description} in {UIHelpers.TimeToString( oh.next.scheduleAt - time )}";
 		return text;

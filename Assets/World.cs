@@ -589,8 +589,8 @@ public class World : HiveCommon
 			return false;
 
 		gameAdvancingInProgress = true;
-		network.OnGameStep();
-		oh.OnGameStep();
+		network.OnBeginGameStep();
+		oh.OnBeginGameStep();
 		rnd = new System.Random( frameSeed );
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
@@ -612,6 +612,7 @@ public class World : HiveCommon
 
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
+		oh.OnEndGameStep();
 		time++;
 		gameAdvancingInProgress = false;
 		return true;
@@ -631,7 +632,7 @@ public class World : HiveCommon
 			settings = ScriptableObject.CreateInstance<Settings>();
 		gameAdvancingInProgress = true;
 		nextID = 1;
-		time = -1;
+		time = 0;
 		string pattern = challenge.title + " #{0}";
 		name = String.Format( pattern, Interface.FirstUnusedIndex( Application.persistentDataPath + "/Saves", pattern + " (0).json" ) );
 		saveIndex = 0;
@@ -672,6 +673,9 @@ public class World : HiveCommon
 
 		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = challenge;
+#if DEBUG
+		operationHandler.recordCRC = true;
+#endif
 		ground = Ground.Create();
 		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
@@ -773,7 +777,6 @@ public class World : HiveCommon
 		{
 			operationHandler = OperationHandler.Create();
 			operationHandler.challenge = challenge;
-			operationHandler.finishedGameStep = time;
 		}
 
 		foreach ( var player in players )

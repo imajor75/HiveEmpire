@@ -375,7 +375,7 @@ public class Network : HiveCommon
         return recData;
     }
 
-    public void OnGameStep()
+    public void OnBeginGameStep()
     {
         if ( state == State.server && serverConnections.Count != 0 )
         {
