@@ -688,6 +688,14 @@ public class Workshop : Building
 			Unit.Create().SetupAsSoldier( this ).ScheduleWalkToNeighbour( flag.node, true );
 		}
 
+		if ( tinkerer == null )
+			dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
+		if ( tinkererMate == null )
+		{
+			dispenser = tinkererMate = Unit.Create().SetupForBuilding( this, true );
+			tinkererMate.ScheduleWait( 100, true );
+		}
+
 		if ( gatherer && tinkerer.IsIdle() && tinkerer.node == node )
 			SetWorking( false );
 
@@ -716,13 +724,13 @@ public class Workshop : Building
 				SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
 		}
 
-		if ( mapIndicator == null )
-			return;
-			
-		mapIndicator.SetActive( true );
-		mapIndicator.transform.localScale = new Vector3( Constants.Node.size * productivity.current / 10, 1, Constants.Node.size * 0.02f );
-		mapIndicator.transform.rotation = Quaternion.Euler( 0, (float)( eye.direction / Math.PI * 180 ), 0 );
-		mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
+		if ( mapIndicator )
+		{
+			mapIndicator.SetActive( true );
+			mapIndicator.transform.localScale = new Vector3( Constants.Node.size * productivity.current / 10, 1, Constants.Node.size * 0.02f );
+			mapIndicator.transform.rotation = Quaternion.Euler( 0, (float)( eye.direction / Math.PI * 180 ), 0 );
+			mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
+		}
 
 		if ( !blueprintOnly )
 		{
@@ -731,17 +739,6 @@ public class Workshop : Building
 				if ( buffer.disabled )
 					disabledBufferCRC++;
 			World.CRC( disabledBufferCRC, OperationHandler.Event.CodeLocation.workshopDisabledBuffers );
-		}
-
-		if ( !construction.done || blueprintOnly )
-			return;
-
-		if ( tinkerer == null )
-			dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
-		if ( tinkererMate == null )
-		{
-			dispenser = tinkererMate = Unit.Create().SetupForBuilding( this, true );
-			tinkererMate.ScheduleWait( 100, true );
 		}
 
 		switch ( type )
