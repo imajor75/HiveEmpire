@@ -464,7 +464,7 @@ public class OperationHandler : HiveObject
         while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( executeBuffer[executeIndex++] );
 
-        if ( time == replayLength )
+        if ( time == replayLength - 1 )
         {
             Assert.global.AreEqual( mode, Mode.repeating );
             mode = Mode.recording;
