@@ -36,6 +36,10 @@ public class BorderEdge : HiveObject
 		base.Start();
 	}
 
+	public override void Register()
+	{
+	}
+
 	public void UpdateBody()
 	{
 		Vector3 position = Vector3.Lerp( node.position, node.Neighbour( direction ).GetPositionRelativeTo( node ), 0.4f );

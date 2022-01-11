@@ -56,12 +56,17 @@ public abstract class HiveObject : HiveCommon
 		assert = new Assert( this );
 	}
 
+	public virtual void Register()
+	{
+		world.newHiveObjects.AddFirst( this );
+		registered = true;
+	}
+
 	public void Setup()
 	{
 		assert.IsFalse( world.hiveObjects.Contains( this ) );
 		assert.IsFalse( world.newHiveObjects.Contains( this ) );
-		world.newHiveObjects.AddFirst( this );
-		registered = true;
+		Register();
 		if ( !blueprintOnly )
 			id = world.nextID++;
 	}

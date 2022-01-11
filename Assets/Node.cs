@@ -188,6 +188,10 @@ public class Node : HiveObject
 		base.Start();
 	}
 
+	public override void Register()
+	{
+	}
+
 	public void OnDrawGizmos()
 	{
 #if DEBUG

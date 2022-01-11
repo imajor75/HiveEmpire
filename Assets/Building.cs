@@ -178,7 +178,7 @@ abstract public class Building : HiveObject
 		/// 
 		/// </summary>
 		/// <returns>True if the function call was useful</returns>
-		public bool CriticalUpdate()
+		public bool GameLogicUpdate()
 		{
 			if ( area == null )
 				return false;
@@ -288,7 +288,7 @@ abstract public class Building : HiveObject
 			return true;
 		}
 
-		new public void CriticalUpdate()
+		new public void GameLogicUpdate()
 		{
 			if ( done || suspend.inProgress || boss.blueprintOnly )
 				return;
@@ -314,7 +314,7 @@ abstract public class Building : HiveObject
 				return;
 			};
 
-			if ( boss.configuration.flatteningNeeded && !flattened && base.CriticalUpdate() )
+			if ( boss.configuration.flatteningNeeded && !flattened && base.GameLogicUpdate() )
 				return;
 
 		if ( !builder.IsIdle() )
@@ -621,7 +621,7 @@ abstract public class Building : HiveObject
 	public override void GameLogicUpdate()
 	{
 		itemDispatchedThisFrame = false;
-		construction.CriticalUpdate();
+		construction.GameLogicUpdate();
 	}
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
