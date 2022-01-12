@@ -822,7 +822,7 @@ public class World : HiveCommon
 			{
 				if ( ho is Interface )
 					continue;
-				if ( !ho.registered && !world.newHiveObjects.Contains( ho ) && !world.hiveObjects.Contains( ho ) )
+				if ( !ho.registered && !world.newHiveObjects.Contains( ho ) && !world.hiveObjects.Contains( ho ) && !ho.destroyed )
 					ho.Register();
 				if ( ho.simpletonData != null )
 				{
