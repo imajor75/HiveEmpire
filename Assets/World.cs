@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -219,6 +219,11 @@ public class World : HiveCommon
         public static Challenge Create()
 		{
 			return new GameObject( "Challenge" ).AddComponent<Challenge>();
+		}
+
+		void Awake()
+		{
+			id = -1;
 		}
 
 		new void Start()
