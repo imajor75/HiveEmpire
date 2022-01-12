@@ -830,7 +830,7 @@ public class World : HiveCommon
 					if ( ho.simpletonData.possiblePartner is Stock )
 						ho.simpletonData.possiblePartner = null;
 				}
-				if ( ho.id == 0 )
+				if ( ho.id == 0 && !ho.destroyed )
 				{
 					Log( $"Fixing id for {ho} with {nextID}" );
 					ho.id = nextID++;
