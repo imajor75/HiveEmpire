@@ -552,7 +552,7 @@ public class Stock : Attackable
 		return this;
 	}
 
-	public Stock SetupMain( Node node, Team team, int flagDirection )
+	public Stock SetupAsMain( Node node, Team team, int flagDirection )
 	{
 		main = true;
 
@@ -656,7 +656,7 @@ public class Stock : Attackable
 		unit.itemsInHands[0] = unit.itemsInHands[1] = null;
 
 		unit.DestroyThis();
-}
+	}
 
 	public override void GameLogicUpdate()
 	{

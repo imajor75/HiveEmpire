@@ -451,7 +451,7 @@ public class Team : HiveObject
 		}
 
 		Assert.global.IsNull( mainBuilding );
-		mainBuilding = Stock.Create().SetupMain( best, this, flagDirection );
+		mainBuilding = Stock.Create().SetupAsMain( best, this, flagDirection );
 		return mainBuilding;
 	}
 
