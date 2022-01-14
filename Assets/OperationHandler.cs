@@ -250,7 +250,7 @@ public class OperationHandler : HiveObject
         mode = Mode.recording;
         executeBuffer.RemoveRange( executeIndex, executeBuffer.Count - executeIndex );
         int CRCIndex = time - CRCCodesSkipped;
-        CRCCodes.RemoveRange( CRCIndex + 1, CRCCodes.Count - CRCIndex - 1 );
+        CRCCodes.RemoveRange( CRCIndex, CRCCodes.Count - CRCIndex );
         replayLength = 0;
     }
 
