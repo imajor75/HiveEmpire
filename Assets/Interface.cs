@@ -410,8 +410,6 @@ public class Interface : HiveObject
 
 	new public void Start()
 	{
-		try { File.Move( Application.persistentDataPath + "/log.txt", Application.persistentDataPath + "/log-prev.txt" ); } catch ( Exception ) {}
-
 		string logFileName = Application.isEditor ? "log-editor.txt" : "log.txt";
 		try { File.Move( Application.persistentDataPath + "/" + logFileName, Application.persistentDataPath + "/log-prev.txt" ); } catch ( Exception ) {}
 		logFile = new StreamWriter( Application.persistentDataPath + "/" + logFileName );
