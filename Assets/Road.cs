@@ -115,11 +115,11 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public Road Setup( Flag flag )
 	{
+		blueprintOnly = true;
 		if ( flag == null )
 			return null;
 		Setup( flag.team );
 		nodes.Add( flag.node );
-		blueprintOnly = true;
 		return this;
 	}
 
