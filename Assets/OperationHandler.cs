@@ -311,6 +311,8 @@ public class OperationHandler : HiveObject
 		redoQueue.Clear();
 		if ( time > replayLength )
 			replayLength = time;
+        if ( recordCRC )
+            assert.AreEqual( replayLength, CRCCodesSkipped + CRCCodes.Count );
 		Serializer.Write( name, this, true );
         SaveEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
         return name;
@@ -463,12 +465,6 @@ public class OperationHandler : HiveObject
 
         while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( executeBuffer[executeIndex++] );
-
-        if ( time == replayLength - 1 )
-        {
-            Assert.global.AreEqual( mode, Mode.repeating );
-            mode = Mode.recording;
-        }
     }
 
     public void OnEndGameStep()
@@ -507,6 +503,12 @@ public class OperationHandler : HiveObject
         if ( recordCRC && mode == Mode.recording )
             CRCCodesSkipped += 1;
 #endif
+
+        if ( time == replayLength - 1 )
+        {
+            Assert.global.AreEqual( mode, Mode.repeating );
+            mode = Mode.recording;
+        }
     }
 
     static void DumpEvents( List<Event> events, string file, int frame = -1 )
