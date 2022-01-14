@@ -1260,7 +1260,11 @@ public class Unit : HiveObject
 		this.road = road;
 		exclusiveMode = false;
 		ScheduleWalkToNeighbour( main.flag.node );
-		ScheduleWalkToFlag( road.ends[0] ); // TODO Pick the end closest to the main building
+		var path = Path.Between( main.flag.node, road.ends[0].node, PathFinder.Mode.onRoad, this );
+		var target = road.ends[0];
+		if ( path != null && path.roadPath.Count > 0 && path.roadPath.Last() == road )
+			target = road.ends[1];
+		ScheduleWalkToFlag( target ); // TODO Pick the end closest to the main building
 		ScheduleWalkToRoadNode( road, road.centerNode, false );
 		ScheduleStartWorkingOnRoad( road );
 		haulerRoadBegin.Attach( road.ends[0].itemsStored, false );
