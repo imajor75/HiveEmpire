@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -590,6 +590,9 @@ public class World : HiveCommon
 
 	public bool Advance()
 	{
+		if ( !oh )
+			return false;
+			
 		if ( !oh.readyForNextGameLogicStep )
 		{
 			if ( world.speed == Speed.fast )
