@@ -591,7 +591,11 @@ public class World : HiveCommon
 	public bool Advance()
 	{
 		if ( !oh.readyForNextGameLogicStep )
+		{
+			if ( world.speed == Speed.fast )
+				world.SetSpeed( Speed.normal );
 			return false;
+		}
 
 		gameAdvancingInProgress = true;
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
