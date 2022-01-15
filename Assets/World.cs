@@ -34,6 +34,8 @@ public class World : HiveCommon
 	public OperationHandler operationHandler;
 	[JsonIgnore]
 	public new Network network;
+	[JsonIgnore]
+	public int advanceCharges;
 
 	static public bool massDestroy;
 	static System.Random rnd;
@@ -590,9 +592,9 @@ public class World : HiveCommon
 
 	public bool Advance()
 	{
-		if ( !oh )
+		if ( !oh || advanceCharges == 0 )
 			return false;
-			
+
 		if ( !oh.readyForNextGameLogicStep )
 		{
 			if ( world.speed == Speed.fast )
@@ -627,7 +629,13 @@ public class World : HiveCommon
 		oh.OnEndGameStep();
 		time++;
 		gameAdvancingInProgress = false;
+		advanceCharges--;
 		return true;
+	}
+
+	void Update()
+	{
+		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
 	}
 
 	public void Join( string address, int port )
