@@ -190,7 +190,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		CreateCurves();
 		RebuildMesh();
 		RegisterOnGround();
-		CallNewHauler();
 		gameObject.GetComponent<MeshRenderer>().material = material;
 
 		team.versionedRoadNetworkChanged.Trigger();
