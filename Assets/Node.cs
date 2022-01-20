@@ -32,6 +32,8 @@ public class Node : HiveObject
 		{
 			return this == ground.GetNode( x, y );
 		}
+		[Obsolete( "Compatibility with old files", true )]
+		set {}
 	}
 
 	[Obsolete( "Compatibility with old files", true )]

@@ -906,11 +906,14 @@ public class Interface : HiveObject
 
 	IEnumerator ValidateCoroutine()
 	{
+#if DEBUG
 		while ( true )
 		{
 			yield return new WaitForEndOfFrame();
-			Validate( true );
+			if ( !EditorApplication.isPaused )
+				Validate( true );
 		}
+#endif
 	}
 
 	public override void Validate( bool chain )

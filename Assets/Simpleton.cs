@@ -195,6 +195,20 @@ public class Simpleton : Player
             {
                 boss.reservedPlank += building.construction.plankMissing;
                 boss.reservedStone += building.construction.stoneMissing;
+                foreach ( var deal in building.simpletonDataSafe.deals )
+                {
+                    bool valid = false;
+                    if ( deal.partner is Workshop || deal.partner is Stock )
+                        valid = true;
+                    if ( deal == null )
+                        valid = false;
+                    if ( !valid )
+                    {
+                        building.simpletonDataSafe.deals.Remove( deal );
+                        Assert.global.Fail( $"Removed invalid deal from {building}" );
+                        return;
+                    }
+                }
             }
 
             boss.hasWoodcutter = boss.hasSawmill = false;

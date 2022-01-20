@@ -168,7 +168,7 @@ public class Serializer : JsonSerializer
 				}
 				catch ( SystemException exception )
 				{
-					Assert.global.Fail( $"Error creating object of type {type.FullName} for {owner}" );
+					Assert.global.Fail( $"Error creating object of type {type.FullName} for {owner}, error: {exception}" );
 					throw exception;
 				}
 			}
