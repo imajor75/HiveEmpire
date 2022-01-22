@@ -21,7 +21,8 @@ public class Eye : HiveObject
 	public new Camera camera;
 	public float moveSensitivity;
 	DepthOfField depthOfField;
-
+	[JsonIgnore]
+	PostProcessLayer ppl;
 	public Node target;
 	public float targetApproachSpeed;
 
@@ -76,10 +77,12 @@ public class Eye : HiveObject
 
 	new public void Start()
 	{
+		gameObject.AddComponent<CameraHighlight>();
 		camera = GetComponent<Camera>();
 		var ppv = world.light.GetComponent<PostProcessVolume>();
 		if ( ppv && ppv.profile )
 			depthOfField = ppv.profile.settings[0] as DepthOfField;
+		ppl = GetComponent<PostProcessLayer>();
 		base.Start();
 	}
 
@@ -124,6 +127,8 @@ public class Eye : HiveObject
 
     private void Update()
 	{
+		ppl.enabled = root.highlightType == Interface.HighlightType.none;
+
 		while ( oldPositions.Count > Constants.Eye.maxNumberOfSavedPositions )
 			oldPositions.RemoveAt( 0 );
 
