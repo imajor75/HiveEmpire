@@ -1595,10 +1595,7 @@ public class Interface : HiveObject
 				var c = root.viewport.camera;
 				// A null reference crash happened here in map mode, so safety check
 				if ( c == null || building == null || building.node == null )
-				{
-					Assert.global.IsTrue( false );	// TODO Triggered while the building list was open, and selecting a building type as a filter. And again.
 					return;
-				}
 				var p = c.WorldToScreenPoint( building.node.positionInViewport );
 
 				ring.gameObject.SetActive( track );
