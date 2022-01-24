@@ -2364,7 +2364,7 @@ public class Interface : HiveObject
 				var productionSec = workshop.productionConfiguration.productionTime * Time.fixedDeltaTime;
 				var restSec = workshop.restTime * Time.fixedDeltaTime;
 				progressBar.SetTooltip( 
-					$"Maximum output: {workshop.maxOutput.ToString( "n2" )}/min\n" +
+					$"Maximum output: {workshop.CalculateMaxOutput().ToString( "n2" )}/min\n" +
 					$"Time needed to produce a new item: {productionSec.ToString( "F2" )}s\n" +
 					$"Resting needed between item productions: {restSec.ToString( "F2" )}s\n" +
 					$"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null,

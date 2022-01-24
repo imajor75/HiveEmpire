@@ -313,6 +313,7 @@ public static class Constants
         public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
         public const int relaxAreaSize = 3;
+        public const int gathererMaxOutputRecalculationPeriod = Constants.World.normalSpeedPerSecond * 60 * 30;
     }
 
     public static class Simpleton

@@ -805,6 +805,8 @@ public class World : HiveCommon
 				teams.Add( player.team );
 			if ( player.name == null )
 				player.name = Constants.Player.names.Random();
+			if ( player is Simpleton simpleton && simpleton.isolatedNodes.Count > 100 )
+				simpleton.isolatedNodes.Clear();
 		}
 
 		foreach ( var team in teams )

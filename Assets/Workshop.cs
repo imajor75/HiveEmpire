@@ -64,6 +64,44 @@ public class Workshop : Building
 		}
 	}
 
+	public float lastCalculatedMaxOutput;
+	public World.Timer maxOutputCalculationTimer = new World.Timer();
+	public int itemsProducedAtLastCheck = int.MaxValue;
+
+	public float CalculateMaxOutput()
+	{
+		if ( maxOutputCalculationTimer.done || maxOutputCalculationTimer.empty )
+		{
+			maxOutputCalculationTimer.Start( Constants.Workshop.gathererMaxOutputRecalculationPeriod );
+			int itemsProducedSinceLastCheck = itemsProduced - itemsProducedAtLastCheck;
+			itemsProducedAtLastCheck = itemsProduced;
+			if ( itemsProducedSinceLastCheck < 0 )
+				return maxOutput;
+				
+			int wastedTime = 0, usedTime = 0;
+			bool hasEnoughtData = false;
+			for ( var statusNode = statuses.Last; statusNode != null; statusNode = statusNode.Previous )
+			{
+				var status = statusNode.Value;
+				if ( status.startTime < time - Constants.Workshop.gathererMaxOutputRecalculationPeriod )
+				{
+					hasEnoughtData = true;
+					break;
+				}
+				if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 )
+					wastedTime += status.length;
+				else
+					usedTime += status.length;
+			}
+			if ( hasEnoughtData )
+				lastCalculatedMaxOutput = (float)itemsProducedSinceLastCheck / Constants.Workshop.gathererMaxOutputRecalculationPeriod * (usedTime + wastedTime) / usedTime * Constants.World.normalSpeedPerSecond * 60;
+		}
+		if ( !gatherer || lastCalculatedMaxOutput == 0 )
+			return maxOutput;
+
+		return lastCalculatedMaxOutput;
+	}
+
 	[Obsolete( "Compatibility with old files", true )]
 	List<PastStatus> previousPastStatuses { set {} }
 	[Obsolete( "Compatibility with old files", true )]

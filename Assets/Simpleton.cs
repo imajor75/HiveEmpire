@@ -297,7 +297,7 @@ public class Simpleton : Player
                 foreach ( var workshop in boss.team.workshops )
                 {
                     if ( workshop.productionConfiguration.outputType == outputType && workshop.team == boss.team )
-                        currentYield += workshop.maxOutput;
+                        currentYield += workshop.CalculateMaxOutput();
                     if ( workshop.type == workshopType )
                         currentWorkshopCount++;
                 }
