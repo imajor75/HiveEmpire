@@ -525,6 +525,7 @@ public class Simpleton : Player
         {
             connect,
             remove,
+            removeIsolated,
             capture
         }
         public Action action;
@@ -547,17 +548,13 @@ public class Simpleton : Player
                     if ( node.team != boss.team || node.flag == null || node.flag.simpletonDataSafe.isolated )
                         continue;
                     if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true ) )
-                    {
-                        foreach ( var building in flag.Buildings() )
-                            boss.isolatedNodes.Add( building.node );
                         continue;
-                    }
 
-                    boss.isolatedNodes.Clear();
                     solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.25f );
-                    action = path.ready ? Action.connect : Action.remove;
+                    action = path.ready ? Action.connect : Action.removeIsolated;
                     break; 
                 }
+
                 return finished;
             }
             else
@@ -605,11 +602,20 @@ public class Simpleton : Player
                         return;
                     HiveCommon.Log( $"[{boss.name}]: Connecting {flag.name} to the road network at {path.path.Last().name}" );
                     HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, Operation.Source.computer );
+                    boss.isolatedNodes.Clear();
+                    break;
+                }
+                case Action.removeIsolated:
+                {
+                    foreach ( var building in flag.Buildings() )
+                        boss.isolatedNodes.Add( building.node );
+                    HiveCommon.Log( $"[{boss.name}]: Removing separated flag at {flag.node.x}:{flag.node.y}" );
+                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
                     break;
                 }
                 case Action.remove:
                 {
-                    HiveCommon.Log( $"[{boss.name}]: Removing separated flag at {flag.node.x}:{flag.node.y}" );
+                    HiveCommon.Log( $"[{boss.name}]: Removing crowded flag at {flag.node.x}:{flag.node.y}" );
                     HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
                     break;
                 }
