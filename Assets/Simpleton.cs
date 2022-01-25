@@ -542,6 +542,12 @@ public class Simpleton : Player
             {
                 flag.simpletonDataSafe.isolated = true;
                 problemWeight = 1;
+                if ( flag.CaptureRoads( true ) )
+                {
+                    solutionEfficiency = 1;
+                    action = Action.capture;
+                    return finished;
+                }
                 foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
                 {
                     var node = flag.node + offset;
