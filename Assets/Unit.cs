@@ -1849,6 +1849,7 @@ public class Unit : HiveObject
 
 		if ( FindItemToCarry() )
 		{
+			road.lastUsed.Start();
 			Color = Color.white;
 			return;
 		}

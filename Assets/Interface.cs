@@ -3543,6 +3543,7 @@ public class Interface : HiveObject
 		public Text jam;
 		public Text units;
 		public Image ring;
+		public Text lastUsedText;
 
 		const int itemsDisplayed = 3;
 
@@ -3556,7 +3557,7 @@ public class Interface : HiveObject
 			borderWidth = 10;
 			noResize = true;
 			offset = new Vector2( 100, 0 );
-			base.Open( road, 0, 0, 210, 165 );
+			base.Open( road, 0, 0, 210, 185 );
 			this.road = road;
 			this.node = node;
 			Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, -10 ).AddClickHandler( Hauler ).SetTooltip( "Show the hauler working on this road" );
@@ -3584,6 +3585,7 @@ public class Interface : HiveObject
 #if DEBUG
 			Selection.activeGameObject = road.gameObject;
 #endif
+			lastUsedText = Text( "Not yet used" ).Pin( borderWidth, -155, 180 );
 			ring = Image( Icon.ring ).Link( root );
 			ring.transform.SetAsFirstSibling();
 			ring.color = new Color( 0, 1, 1 );
@@ -3705,7 +3707,11 @@ public class Interface : HiveObject
 				}
 			}
 			if ( road )
+			{
 				targetHaulerCount.value = road.targetHaulerCount;
+				if ( !road.lastUsed.empty )
+					lastUsedText.text = $"Last used {UIHelpers.TimeToString( road.lastUsed.age )} ago";
+			}
 
 			var c = root.viewport.camera;
 			var p = c.WorldToScreenPoint( node.positionInViewport );

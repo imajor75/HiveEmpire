@@ -15,6 +15,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public List<Unit> haulerAtNodes = new List<Unit>();
 	public Flag[] ends = new Flag[2];
 	public World.Timer haulerAdded = new World.Timer();
+	public World.Timer lastUsed = new World.Timer();
 	public bool decorationOnly;
 	public float cachedCost = 0;
 	public int targetHaulerCount;   // Zero means automatic
