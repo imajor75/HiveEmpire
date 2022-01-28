@@ -461,6 +461,8 @@ public class Interface : HiveObject
 
 		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
 		buildingListButton.SetTooltip( () => $"List all buildings (hotkey: {buildingListButton.GetHotkey().keyName})" );
+		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
+		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
 		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
 		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
@@ -5462,6 +5464,94 @@ if ( cart )
 			target.OnClicked();
 			return true;
 		}
+	}
+
+	public class RoadList : Panel
+	{
+		ScrollRect scroll;
+		Team team;
+		static Comparison<Road> comparison = CompareByLength;
+		static bool reversed;
+
+		public static RoadList Create( Team team )
+		{
+			var list = new GameObject( "Road list panel" ).AddComponent<RoadList>();
+			list.Open( team );
+			return list;
+		}
+
+		void Open( Team team )
+		{
+			this.team = team;
+			if ( base.Open( 500, 500 ) )
+				return;
+
+			Text( "Length" ).Pin( borderWidth, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByLength ) );
+			Text( "Worker count" ).PinSideways( 0, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByWorkers ) );
+			Text( "Last used" ).PinSideways( 0, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByLastUsed ) );
+			Text( "Jam" ).PinSideways( 0, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByJam ) );
+			Image( Icon.reset ).Pin( -borderWidth-20, -borderWidth, iconSize, iconSize, 1 ).AddClickHandler( Fill );
+
+			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth-20 );
+			Fill();
+		}
+
+		void ChangeComparison( Comparison<Road> newComparison )
+		{
+			if ( comparison == newComparison )
+				reversed = !reversed;
+			else
+				reversed = true;
+			comparison = newComparison;
+			Fill();
+		}
+
+		void Fill()
+		{
+			scroll.Clear();
+
+			List<Road> sortedRoads = new List<Road>();
+			foreach ( var road in team.roads )
+			{
+				if ( road )
+					sortedRoads.Add( road );
+			}
+			sortedRoads.Sort( comparison );
+			if ( reversed )
+				sortedRoads.Reverse();
+
+			int row = 0;
+			foreach ( var road in sortedRoads )	
+			{
+				Text( (road.nodes.Count - 1).ToString() ).Link( scroll.content ).Pin( 0, row, 100 );
+				Text( (road.haulers.Count).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 );
+				Text( road.lastUsed.age > 0 ? UIHelpers.TimeToString( road.lastUsed.age ) : "Never" ).Link( scroll.content ).PinSideways( 0, row, 100 );
+				Text( (road.jam).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 );
+				row -= iconSize;
+			}
+			scroll.SetContentSize( -1, sortedRoads.Count * iconSize );
+		}
+
+		static int CompareByLength( Road a, Road b )
+		{
+			return a.nodes.Count.CompareTo( b.nodes.Count );
+		}
+
+		static int CompareByWorkers( Road a, Road b )
+		{
+			return a.haulers.Count.CompareTo( b.haulers.Count );
+		}
+
+		static int CompareByLastUsed( Road a, Road b )
+		{
+			return a.lastUsed.ageinf.CompareTo( b.lastUsed.ageinf );
+		}
+
+		static int CompareByJam( Road a, Road b )
+		{
+			return a.jam.CompareTo( b.jam );
+		}
+
 	}
 
 	public class ItemList : Panel
