@@ -1554,18 +1554,15 @@ public class Interface : HiveObject
 				return null;
 
 			var text = Text( null, fontSize );
-			text.AddClickHandler( delegate { SelectBuilding( building ); } );
 			var d = text.gameObject.AddComponent<BuildingIconData>();
 			d.building = building;
-			d.SetTooltip( null as string, null, null, show => d.track = show );
+			d.Open( building );
 			return text;
 		}
 
-		public class BuildingIconData : MonoBehaviour
+		public class BuildingIconData : HiveObjectHandler
 		{
 			public Building building;
-			public bool track;
-			public Image ring, arrow;
 			public Text text;
 
 			void Update()
@@ -1575,67 +1572,7 @@ public class Interface : HiveObject
 				text.text = building.moniker ?? building.title;
 				if ( !building.construction.done )
 					text.color = Color.grey;
-
-				if ( ring == null )
-				{
-					ring = new GameObject( "Ring for building icon" ).AddComponent<Image>();
-					ring.Link( root );
-					ring.transform.SetAsFirstSibling();
-					ring.sprite = iconTable.GetMediaData( Icon.ring );
-					ring.color = new Color( 0, 1, 1 );
-				}
-
-				if ( arrow == null )
-				{
-					arrow = new GameObject( "Arrow for building icon" ).AddComponent<Image>();
-					arrow.Link( root );
-					arrow.sprite = iconTable.GetMediaData( Icon.rightArrow );
-					arrow.color = new Color( 1, 0.75f, 0.15f );
-					arrow.transform.localScale = new Vector3( 0.5f, 0.5f, 1 );
-				}
-
-				var c = root.viewport.camera;
-				// A null reference crash happened here in map mode, so safety check
-				if ( c == null || building == null || building.node == null )
-					return;
-				var p = c.WorldToScreenPoint( building.node.positionInViewport );
-
-				ring.gameObject.SetActive( track );
-				if ( track )
-				{
-					ring.transform.position = p;
-					float scale;
-					if ( c.orthographic )
-					{
-						var f = c.WorldToScreenPoint( building.flag.node.positionInViewport );
-						scale = ( p - f ).magnitude / 70;
-					}
-					else
-						scale = 20 / p.z;
-					ring.transform.localScale = Vector3.one * scale * uiScale;
-				}
-	
-				arrow.gameObject.SetActive( track );
-				if ( track )
-				{
-					var offset = ( p - transform.position ).normalized;
-					arrow.transform.position = transform.position + offset * 120;
-					arrow.transform.rotation = Quaternion.Euler( 0, 0, 90 - (float)( 180 * Math.Atan2( offset.x, offset.y ) / Math.PI ) );
-					var w = ( ( p - transform.position ).magnitude - Screen.height / 2 ) / Screen.height;
-					if ( w < 0 ) 
-						w = 0;
-					if ( w > 1 )
-						w = 1;
-					arrow.color = Color.Lerp( Color.green, Color.red, w );
-				}
-			}
-
-			void OnDestroy()
-			{
-				if ( ring )
-					Destroy( ring.gameObject );
-				if ( arrow )
-					Destroy( arrow.gameObject );
+				base.Update();
 			}
 		}
 
@@ -2095,6 +2032,81 @@ public class Interface : HiveObject
 
 				}
 			}
+		}
+	}
+
+	public class HiveObjectHandler : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+	{
+		public HiveObject hiveObject;
+		public Image ring, arrow;
+
+		public void Open( HiveObject hiveObject )
+		{
+			this.hiveObject = hiveObject;
+		}
+
+		public void OnPointerEnter( PointerEventData eventData )
+		{
+			Assert.global.IsNull( ring );				
+
+			ring = new GameObject( $"Ring for {hiveObject}" ).AddComponent<Image>();
+			ring.Link( root );
+			ring.transform.SetAsFirstSibling();
+			ring.sprite = iconTable.GetMediaData( Icon.ring );
+			ring.color = new Color( 0, 1, 1 );
+
+			arrow = new GameObject( $"Arrow for {hiveObject}" ).AddComponent<Image>();
+			arrow.Link( root );
+			arrow.sprite = iconTable.GetMediaData( Icon.rightArrow );
+			arrow.color = new Color( 1, 0.75f, 0.15f );
+			arrow.transform.localScale = new Vector3( 0.5f, 0.5f, 1 );
+		}
+
+		public void OnPointerExit( PointerEventData eventData )
+		{
+			Assert.global.IsNotNull( ring );
+			Destroy( ring.gameObject );
+			ring = null;
+			Destroy( arrow.gameObject );
+			arrow = null;
+		}
+
+		public void OnPointerClick( PointerEventData eventData )
+		{
+			hiveObject.OnClicked();
+		}
+
+		public void Update()
+		{
+			if ( ring == null )
+				return;
+
+			var c = root.viewport.camera;
+			// A null reference crash happened here in map mode, so safety check
+			if ( c == null || hiveObject == null || hiveObject.location == null )
+				return;
+			var p = c.WorldToScreenPoint( hiveObject.location.positionInViewport );
+
+			ring.transform.position = p;
+			float scale;
+			if ( c.orthographic )
+			{
+				var f = c.WorldToScreenPoint( hiveObject.location.Neighbour( 0 ).positionInViewport );
+				scale = ( p - f ).magnitude / 70;
+			}
+			else
+				scale = 20 / p.z;
+			ring.transform.localScale = Vector3.one * scale * uiScale;
+
+			var offset = ( p - transform.position ).normalized;
+			arrow.transform.position = transform.position + offset * 120;
+			arrow.transform.rotation = Quaternion.Euler( 0, 0, 90 - (float)( 180 * Math.Atan2( offset.x, offset.y ) / Math.PI ) );
+			var w = ( ( p - transform.position ).magnitude - Screen.height / 2 ) / Screen.height;
+			if ( w < 0 ) 
+				w = 0;
+			if ( w > 1 )
+				w = 1;
+			arrow.color = Color.Lerp( Color.green, Color.red, w );
 		}
 	}
 
@@ -5523,10 +5535,10 @@ if ( cart )
 			int row = 0;
 			foreach ( var road in sortedRoads )	
 			{
-				Text( (road.nodes.Count - 1).ToString() ).Link( scroll.content ).Pin( 0, row, 100 );
-				Text( (road.haulers.Count).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 );
-				Text( road.lastUsed.age > 0 ? UIHelpers.TimeToString( road.lastUsed.age ) : "Never" ).Link( scroll.content ).PinSideways( 0, row, 100 );
-				Text( (road.jam).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 );
+				Text( (road.nodes.Count - 1).ToString() ).Link( scroll.content ).Pin( 0, row, 100 ).AddHiveObjectHandler( road );
+				Text( (road.haulers.Count).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
+				Text( road.lastUsed.age > 0 ? UIHelpers.TimeToString( road.lastUsed.age ) : "Never" ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
+				Text( (road.jam).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
 				row -= iconSize;
 			}
 			scroll.SetContentSize( -1, sortedRoads.Count * iconSize );
@@ -6928,6 +6940,13 @@ public static class UIHelpers
 		left,
 		right,
 		middle
+	}
+
+	public static UIElement AddHiveObjectHandler<UIElement>( this UIElement g, HiveObject hiveObject ) where UIElement : Component
+	{
+		var hoh = g.gameObject.AddComponent<Interface.HiveObjectHandler>();
+		hoh.Open( hiveObject );
+		return g;
 	}
 
 	public static UIElement AddClickHandler<UIElement>( this UIElement g, Action callBack, ClickType type = ClickType.left ) where UIElement : Component
