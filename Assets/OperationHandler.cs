@@ -1091,7 +1091,9 @@ public class Operation
                 }
                 else
                 {
-                    newBuilding.assert.IsTrue( newBuilding.blueprintOnly );
+                    if ( !newBuilding.blueprintOnly || newBuilding.type != buildingType )
+                        return null;
+                        
                     newBuilding.Materialize();
                 }
 
