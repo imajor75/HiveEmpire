@@ -13,6 +13,7 @@ public class Simpleton : Player
     public World.Timer inability = new World.Timer();
     public float confidence = Constants.Simpleton.defaultConfidence;
     public List<Node> isolatedNodes = new List<Node>();
+    public List<Item.Type> lackingProductions = new List<Item.Type>();
     public int reservedPlank, reservedStone;
     public bool hasSawmill, hasWoodcutter;
     public bool active;
@@ -236,7 +237,10 @@ public class Simpleton : Player
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
+            if ( boss.lackingProductions.Count == 0 )
+                boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
+            else
+                boss.lackingProductions.Clear();
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
@@ -329,7 +333,10 @@ public class Simpleton : Player
 
                 nodeRow = -1;
                 if ( problemWeight > 0 )
+                {
                     GatherDependencies();
+                    boss.lackingProductions.Add( outputType );
+                }
                 return problemWeight > 0 ? needMoreTime : finished;
             }
 
@@ -576,6 +583,7 @@ public class Simpleton : Player
             }
             else
                 flag.simpletonDataSafe.isolated = false;
+
             if ( flag.CaptureRoads( true ) )
             {
                 action = Action.capture;
