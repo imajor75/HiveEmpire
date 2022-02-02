@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -1565,7 +1565,7 @@ public class Interface : HiveObject
 			public Building building;
 			public Text text;
 
-			void Update()
+			new void Update()
 			{
 				if ( text == null )
 					text = gameObject.GetComponent<Text>();
