@@ -94,6 +94,7 @@ public class Simpleton : Player
         public Building possiblePartner;
         public Item.Type possiblePartnerItemType;
         public bool hasOutputStock;
+        public List<Flag> failedConnections = new List<Flag>();
 
        	[Obsolete( "Compatibility with old files", true )]
         Building possibleDealer { set {} }
@@ -534,11 +535,13 @@ public class Simpleton : Player
             connect,
             remove,
             removeIsolated,
+            removeRoad,
             capture
         }
         public Action action;
         public PathFinder path = PathFinder.Create();
         public Flag flag;
+        public Road road;
         public FlagTask( Simpleton boss, Flag flag ) : base( boss )
         {
             this.flag = flag;
@@ -597,11 +600,35 @@ public class Simpleton : Player
                 connectedFlags.Add( otherEnd );
             }
 
+            foreach ( var road in flag.roadsStartingHere )
+            {
+                if ( road == null )
+                    continue;
+
+                problemWeight = ( (float)road.lastUsed.age - Constants.Simpleton.roadLastUsedMin ) / ( Constants.Simpleton.roadLastUsedMax - Constants.Simpleton.roadLastUsedMin );
+                if ( problemWeight < 0 )
+                    problemWeight = 0;
+                if ( problemWeight > 1 )
+                    problemWeight = 1;
+                if ( problemWeight != 0 )
+                {
+                    action = Action.removeRoad;
+                    solutionEfficiency = 1;
+                    this.road = road;
+                    return finished;
+                }
+            }
+
             foreach ( var offset in Ground.areas[Constants.Simpleton.flagConnectionRange] )
             {
                 var nearbyNode = flag.node + offset;
-                if ( nearbyNode.flag && nearbyNode.flag.team == boss.team && nearbyNode.flag.id < flag.id && !nearbyNode.flag.blueprintOnly )
-                    boss.tasks.Add( new ConnectionTask( boss, flag, nearbyNode.flag ) );
+                if ( 
+                    nearbyNode.flag && 
+                    nearbyNode.flag.team == boss.team && 
+                    nearbyNode.flag.id < flag.id && 
+                    !nearbyNode.flag.blueprintOnly && 
+                    !flag.simpletonDataSafe.failedConnections.Contains( nearbyNode.flag ) )
+                        boss.tasks.Add( new ConnectionTask( boss, flag, nearbyNode.flag ) );
             }
             return finished;
         }
@@ -637,6 +664,14 @@ public class Simpleton : Player
                 {
                     boss.Log( $"Capturing roads around {flag}" );
                     HiveCommon.oh.ScheduleCaptureRoad( flag, true, Operation.Source.computer );
+                    break;
+                }
+                case Action.removeRoad:
+                {
+                    boss.Log( $"Removing not used road {road}" );
+                    HiveCommon.oh.ScheduleRemoveRoad( road, true, Operation.Source.computer );
+                    road.ends[0].simpletonDataSafe.failedConnections.Add( road.ends[1] );
+                    road.ends[1].simpletonDataSafe.failedConnections.Add( road.ends[0] );
                     break;
                 }
             }

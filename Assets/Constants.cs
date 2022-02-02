@@ -336,6 +336,8 @@ public static class Constants
         public const int itemTypesPerStock = 6;
         public const int dealCheckPeriod = Constants.World.normalSpeedPerSecond * 60 * 10;
         public const float guardHouseWorkshopRatio = 1.5f;
+        public const int roadLastUsedMin = Constants.World.normalSpeedPerSecond * 60 * 20;
+        public const int roadLastUsedMax = Constants.World.normalSpeedPerSecond * 60 * 120;
     }
 }
 
