@@ -593,19 +593,26 @@ public class Simpleton : Player
             }
 
             List<Flag> connectedFlags = new List<Flag>();
-            for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+            foreach ( var road in flag.roadsStartingHere )
             {
-                var road = flag.roadsStartingHere[i];
                 if ( road == null )
-                    continue;
-                var otherEnd = road.OtherEnd( flag );
-                if ( connectedFlags.Contains( otherEnd ) && flag.Buildings().Count == 0 )
                 {
+                    connectedFlags.Add( null );
+                    continue;
+                }
+                var otherFlag = road.OtherEnd( flag );
+                int i = connectedFlags.IndexOf( otherFlag );
+                if ( i >= 0 )
+                {
+                    action = Action.removeRoad;
                     problemWeight = solutionEfficiency = 0.5f;
-                    action = Action.remove;
+                    if ( road.nodes.Count > flag.roadsStartingHere[i].nodes.Count )
+                        this.road = road;
+                    else
+                        this.road = flag.roadsStartingHere[i];
                     return finished;
                 }
-                connectedFlags.Add( otherEnd );
+                connectedFlags.Add( otherFlag );
             }
 
             foreach ( var road in flag.roadsStartingHere )
@@ -658,7 +665,7 @@ public class Simpleton : Player
                 {
                     foreach ( var building in flag.Buildings() )
                         boss.isolatedNodes.Add( building.node );
-                    boss.Log( $"Removing separated flag at {flag.node.x}:{flag.node.y}" );
+                    boss.Log( $"Removing isolated flag at {flag.node.x}:{flag.node.y}" );
                     HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
                     break;
                 }
