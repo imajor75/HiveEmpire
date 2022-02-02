@@ -111,6 +111,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		this.team = team;
 		team.roads.Add( this );
 		base.Setup();
+		lastUsed.Start();
 		return this;
 	}
 
