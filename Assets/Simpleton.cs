@@ -207,7 +207,7 @@ public class Simpleton : Player
                     bool valid = false;
                     if ( deal.partner is Workshop || deal.partner is Stock )
                         valid = true;
-                    if ( deal == null )
+                    if ( deal.partner == null )
                         valid = false;
                     if ( !valid )
                     {
@@ -555,6 +555,16 @@ public class Simpleton : Player
         }
         public override bool Analyze()
         {
+            foreach ( var fail in flag.simpletonDataSafe.failedConnections )
+            {
+                if ( fail == null )
+                {
+                    flag.simpletonDataSafe.failedConnections.Remove( fail );
+                    break;
+                }
+            }
+
+
             int roadCount = flag.roadsStartingHereCount;
             if ( ( roadCount == 0 && flag != boss.team.mainBuilding.flag ) || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
