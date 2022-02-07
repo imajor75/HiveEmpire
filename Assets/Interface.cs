@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2073,7 +2073,7 @@ public class Interface : HiveObject
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			hiveObject.OnClicked();
+			hiveObject.OnClicked( true );
 		}
 
 		public void Update()

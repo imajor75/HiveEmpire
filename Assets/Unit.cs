@@ -579,7 +579,7 @@ public class Unit : HiveObject
 		{
 			boss.assert.IsTrue( targetPoint >= 0 && targetPoint < road.nodes.Count );
 			if ( exclusive )
-				boss.assert.AreEqual( road.haulerAtNodes[currentPoint], boss );
+				boss.assert.AreEqual( road.haulerAtNodes[currentPoint], boss );	// TODO Triggered multiple times randomly for a hauler, exclusiveMode=false
 			boss.assert.IsNull( boss.walkTo );
 
 			if ( currentPoint == targetPoint )
