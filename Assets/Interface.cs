@@ -654,7 +654,7 @@ public class Interface : HiveObject
 		ChallengePanel.Create().Open( goal );
 	}
 
-	public void Update()
+	new public void Update()
 	{
 		if ( EventSystem.current.currentSelectedGameObject != null )
 		{ 
@@ -754,6 +754,8 @@ public class Interface : HiveObject
 			if ( showReplayAction && !playerInCharge && next != null && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
 				ShowOperation( next );
 		}
+
+		base.Update();
 	}
 
 	void OnValidate()

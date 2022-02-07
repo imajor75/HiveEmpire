@@ -550,8 +550,10 @@ public class OperationHandler : HiveObject
 
     public LinkedList<GameStepOrder> orders = new LinkedList<GameStepOrder>();
 
-    void Update()
+    new void Update()
     {
+        base.Update();
+
         if ( this != oh )
             return;
 

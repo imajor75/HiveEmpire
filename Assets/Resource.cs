@@ -241,7 +241,7 @@ public class Resource : HiveObject
 		base.Start();
 	}
 
-	public void Update()
+	new public void Update()
 	{
 		if ( type == Type.cornfield )
 		{
@@ -262,6 +262,7 @@ public class Resource : HiveObject
 			size = Math.Min( size, 1 );
 			transform.localScale = Vector3.one * size;
 		}
+		base.Update();
 	}
 
 	public override void GameLogicUpdate()

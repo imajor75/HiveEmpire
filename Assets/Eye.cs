@@ -125,7 +125,7 @@ public class Eye : HiveObject
 		}
 	}
 
-    private void Update()
+    new private void Update()
 	{
 		ppl.enabled = root.highlightType == Interface.HighlightType.none;
 
@@ -246,6 +246,7 @@ public class Eye : HiveObject
 
 		var f = Constants.Eye.altitudeSmoothness * Time.unscaledDeltaTime;
 		altitude = altitude * ( 1 - f ) + targetAltitude * f;
+		base.Update();
 	}
 
 	public void GrabFocus( IDirector director )

@@ -35,6 +35,8 @@ public abstract class HiveObject : HiveCommon
 	public bool destroyed;
 	public Team team;
 	public Simpleton.Data simpletonData;
+	[JsonIgnore]
+	public bool selectThis;
 
 	public Simpleton.Data simpletonDataSafe
 	{
@@ -102,6 +104,15 @@ public abstract class HiveObject : HiveCommon
 		world.hiveObjects.Remove( this );
 		destroyed = true;
 		registered = false;
+	}
+
+	public void Update()
+	{
+		if ( selectThis )
+		{
+			selectThis = false;
+			OnClicked( true );
+		}
 	}
 
 	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, sucs as when woodcutters decide which tree to cut. 

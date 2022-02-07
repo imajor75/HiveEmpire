@@ -547,13 +547,14 @@ public class Ground : HiveObject
 			base.Start();
 		}
 
-		void Update()
+		new void Update()
 		{
 			if ( layoutVersion != meshVersion || mesh.vertexCount == 0 )
 			{
 				UpdateMesh();
 				meshVersion = layoutVersion;
 			}
+			base.Update();
 		}
 
 		public override Node location

@@ -613,9 +613,10 @@ abstract public class Building : HiveObject
 		throw new System.NotImplementedException();
 	}
 
-	public void Update()
+	new public void Update()
 	{
 		UpdateLook();
+		base.Update();
 	}
 
 	public override void GameLogicUpdate()

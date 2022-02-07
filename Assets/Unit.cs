@@ -1559,10 +1559,11 @@ public class Unit : HiveObject
 			FindTask();
 	}
 
-	void Update()
+	new void Update()
 	{
 		UpdateBody();
 		UpdateOnMap();
+		base.Update();
 	}
 
 	void UpdateOnMap()
