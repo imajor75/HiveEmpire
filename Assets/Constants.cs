@@ -5,12 +5,12 @@ public static class Constants
 {
     public static class Interface
     {
-    	public const float autoSaveInterval = 5 * 60;
         public const int showNextActionDuringReplay = Constants.World.normalSpeedPerSecond * 2;
     }
 
     public static class World
     {
+    	public const float autoSaveInterval = Constants.World.normalSpeedPerSecond * 60 * 5;
         public const float fastSpeedFactor = 8;
         public const int normalSpeedPerSecond = 50;
         public const int allowedAdvancePerFrame = 5;

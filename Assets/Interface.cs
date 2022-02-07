@@ -32,7 +32,6 @@ public class Interface : HiveObject
 	public bool showReplayAction = true;
 	public Player mainPlayer;
 	public static Tooltip tooltip, status;
-	public float lastAutoSave = -1;
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
 	public HighlightType highlightType;
@@ -678,11 +677,6 @@ public class Interface : HiveObject
 		// 	if ( !localReset )
 		// 		world.Reset();
 		// }
-		if ( Time.time - lastAutoSave > Constants.Interface.autoSaveInterval )
-		{
-			Save( manualSave:false );
-			lastAutoSave = Time.time;
-		}
 
 		if ( headquartersHotkey.IsDown() && mainTeam )
 			mainTeam.mainBuilding.OnClicked( true );

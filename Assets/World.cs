@@ -31,6 +31,7 @@ public class World : HiveCommon
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Speed speed;
+	public float lastAutoSave = -1;
 	public OperationHandler operationHandler;
 	[JsonIgnore]
 	public new Network network;
@@ -627,6 +628,11 @@ public class World : HiveCommon
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		oh.OnEndGameStep();
+		if ( time - lastAutoSave > Constants.World.autoSaveInterval )
+		{
+			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
+			lastAutoSave = time;
+		}
 		time++;
 		gameAdvancingInProgress = false;
 		advanceCharges--;
