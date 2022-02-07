@@ -1020,24 +1020,25 @@ public class Unit : HiveObject
 
 	public class StartWorkingOnRoad : Task
 	{
-		public Road road;
+		[Obsolete( "Compatibility with old files", true )]
+		Road road { set {} }
 
-		public void Setup( Unit boss, Road road )
+		public new void Setup( Unit boss )
 		{
 			base.Setup( boss );
-			this.road = road;
 		}
 
 		public override bool ExecuteFrame()
 		{
-			if ( road == null )
+			boss.assert.IsFalse( boss.exclusiveMode );
+			if ( boss.road == null )
 			{
 				boss.Remove( true );
 				return finished;    // Task failed
 			}
-			if ( road.NodeIndex( boss.node ) == -1 )
+			if ( boss.road.NodeIndex( boss.node ) == -1 )
 				return finished;
-			return boss.EnterExclusivity( road, boss.node );
+			return boss.EnterExclusivity( boss.road, boss.node );
 		}
 	}
 
@@ -1780,6 +1781,13 @@ public class Unit : HiveObject
 			return;
 		}
 
+		if ( !exclusiveMode )
+		{
+			ScheduleWalkToNode( road.centerNode, false );
+			ScheduleStartWorkingOnRoad( road );
+			return;
+		}
+
 		if ( node == road.nodes[0] || node == road.lastNode )
 		{
 			int restIndex = ( road.nodes.Count - 1 ) / 2;
@@ -1798,12 +1806,6 @@ public class Unit : HiveObject
 		if ( !haulerRoadBegin.status && !haulerRoadEnd.status )
 			return;
 
-		if ( !exclusiveMode )
-		{
-			ScheduleWalkToNode( road.centerNode, false );
-			ScheduleStartWorkingOnRoad( road );
-			return;
-		}
 		if ( itemsInHands[0] == null )
 		{
 			itemsInHands[0] = itemsInHands[1];
@@ -2036,7 +2038,7 @@ public class Unit : HiveObject
 	public void ScheduleStartWorkingOnRoad( Road road, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<StartWorkingOnRoad>();
-		instance.Setup( this, road );
+		instance.Setup( this );
 		ScheduleTask( instance, first );
 	}
 
