@@ -628,12 +628,12 @@ public class World : HiveCommon
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		oh.OnEndGameStep();
+		time++;
 		if ( time - lastAutoSave > Constants.World.autoSaveInterval )
 		{
 			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 			lastAutoSave = time;
 		}
-		time++;
 		gameAdvancingInProgress = false;
 		advanceCharges--;
 		return true;
