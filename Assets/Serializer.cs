@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,7 +10,7 @@ using UnityEngine;
 
 public class Serializer : JsonSerializer
 {
-	public List<object> objects;
+	public List<object> objects = new List<object>();
 	object instance;
 	Type type;
 	readonly Serializer boss;
@@ -17,41 +18,33 @@ public class Serializer : JsonSerializer
 	JsonReader reader;
 	static MethodInfo scriptableObjectCreator;
 	public string objectOwner;
+	static List<Reference> referenceChain = new List<Reference>();
+	static int maxDepth;
+	static bool logged;
+	public string fileName;
+	public bool allowUnityTypes = false;
 
-	public class SkipUnityContractResolver : DefaultContractResolver
+	struct Reference
 	{
-		public static readonly SkipUnityContractResolver Instance = new SkipUnityContractResolver();
-		protected override JsonProperty CreateProperty( MemberInfo member, MemberSerialization memberSerialization )
-		{
-			JsonProperty property = base.CreateProperty( member, memberSerialization );
-
-			// If the type of the member is a unity type (for example a mesh) we ignore it
-			// Exceptions: Color, Vector2, Vector3
-			if ( member is FieldInfo t && t.FieldType.Namespace == "UnityEngine" && t.FieldType != typeof( Color ) && t.FieldType != typeof( Vector2 ) && t.FieldType != typeof( Vector3 ) )
-				property.ShouldSerialize = instance => false;
-
-			// We ignore every property unless it is marked as jsonproperty
-			if ( member is PropertyInfo && member.GetCustomAttribute<JsonPropertyAttribute>() == null )
-				property.ShouldSerialize = instance => false;
-
-			// We ignore every member which is declared in a unity base class
-			// Exceptions: Color, Vector2, Vector3
-			if ( member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
-				property.ShouldSerialize = instance => false;
-
-			return property;
-		}
+		public object instance;
+		public string name;
 	}
 
-	public Serializer( JsonReader reader, Serializer boss = null )
+	public Serializer( JsonReader reader, string fileName, Serializer boss = null )
 	{
 		this.reader = reader;
+		this.fileName = fileName;
 		if ( boss == null )
 		{
 			boss = this;
 			objects = new List<object>();
 		}
 		this.boss = boss;
+	}
+
+	public Serializer( string file )
+	{
+		fileName = file;
 	}
 
 	static object CreateSceneObject( Type type )
@@ -110,25 +103,30 @@ public class Serializer : JsonSerializer
 		if ( name[0] == '$' )
 		{
 			reader.Read();
-			string value = (string)reader.Value;
 			switch ( name )
 			{
 				case "$id":
 				{
-					index = int.Parse( value );
-					Assert.global.IsTrue( index > 0 );
+					if ( reader.Value is long id )
+						index = (int)id;
+					if ( reader.Value is string str )
+						index = int.Parse( str );
+					Assert.global.IsTrue( index > 0, $"Invalid ID {index} in file {fileName}" );
 					break;
 				}
 				case "$type":
 				{
-					type = Type.GetType( value );
-					Assert.global.IsNotNull( type, $"Type {value} not found" );
+					type = Type.GetType( reader.Value as string );
+					Assert.global.IsNotNull( type, $"Type {reader.Value} not found in {fileName}" );
 					break;
 				}
 				case "$ref":
 				{
-					index = int.Parse( value );
-					Assert.global.IsTrue( index > 0 );
+					if ( reader.Value is long id )
+						index = (int)id;
+					if ( reader.Value is string str )
+						index = int.Parse( str );
+					Assert.global.IsTrue( index > 0, $"Invalid ID referenced in file {fileName}" );
 					instance = boss.objects[index];
 					break;
 				}
@@ -157,20 +155,31 @@ public class Serializer : JsonSerializer
 			case JsonToken.Boolean:
 			{
 				if ( type.IsEnum )
-					return Enum.ToObject( type, reader.Value );
+				{
+					if ( reader.TokenType == JsonToken.String )
+						return Enum.Parse( type, reader.Value as string );
+					else
+						return Enum.ToObject( type, reader.Value );
+				}
 				return Convert.ChangeType( reader.Value, type );
 			}
 			case JsonToken.StartObject:
 			{
-				try
+				referenceChain.Add( new Reference { instance = Object(), name = owner } );
+				if ( referenceChain.Count > maxDepth )
 				{
-					return new Serializer( reader, boss ).Deserialize( type );
+					maxDepth = referenceChain.Count;
+					if ( maxDepth > 530 && !logged )
+					{
+						foreach ( var r in referenceChain )
+						HiveObject.Log( $"{r.instance} : {r.name}" );
+						logged = true;
+					}
 				}
-				catch ( SystemException exception )
-				{
-					Assert.global.Fail( $"Error creating object of type {type.FullName} for {owner}, error: {exception}" );
-					throw exception;
-				}
+				var child = new Serializer( reader, fileName, boss ).Deserialize( type );
+				Assert.global.AreEqual( Object(), referenceChain.Last().instance );
+				referenceChain.RemoveAt( referenceChain.Count-1 );
+				return child;
 			}
 			case JsonToken.StartArray:
 			{
@@ -217,6 +226,92 @@ public class Serializer : JsonSerializer
 		return null;
 	}
 
+	void WriteObjectAsValue( JsonWriter writer, object value, Type slotType )
+	{
+		if ( value == null )
+		{
+			writer.WriteValue( (bool?) null );
+			return;
+		}
+		var type = value.GetType();
+		if ( type == typeof( string ) )
+		{
+			writer.WriteValue( value );
+			return;
+		}
+		if ( value is IEnumerable array )
+		{
+			writer.WriteStartArray();
+			var arraySlotType = type.GetElementType();
+			if ( type.GenericTypeArguments.Length > 0 )
+				arraySlotType = type.GenericTypeArguments.First();
+			foreach ( var element in array )
+				WriteObjectAsValue( writer, element, arraySlotType );
+			writer.WriteEndArray();
+			return;
+		}
+		if ( type.IsClass || (type.IsValueType && !type.IsPrimitive && !type.IsEnum) )
+			Serialize( writer, value, slotType );
+		else
+			if ( type.IsEnum )
+				writer.WriteValue( value.ToString() );
+			else
+				writer.WriteValue( value );
+	}
+
+	new void Serialize( JsonWriter writer, object source, Type slotType )
+	{
+		writer.WriteStartObject();
+		var type = source.GetType();
+		if ( type.IsClass )
+		{
+			int index = objects.IndexOf( source );
+			if ( index >= 0 )
+			{
+				writer.WritePropertyName( "$ref" );
+				writer.WriteValue( index + 1 );
+				writer.WriteEndObject();
+				return;
+			}
+			writer.WritePropertyName( "$id" );
+			objects.Add( source );
+			writer.WriteValue( objects.Count );
+		}
+		if ( type != slotType )
+		{
+			writer.WritePropertyName( "$type" );
+			writer.WriteValue( type.AssemblyQualifiedName );
+		}
+		foreach ( var member in type.GetFields() )
+		{
+			if ( member.IsLiteral || member.IsInitOnly || member.IsStatic || !member.IsPublic )
+				continue;
+
+			bool needed = false;
+			if ( member.MemberType == MemberTypes.Field )
+				needed = true;
+			if ( member.MemberType == MemberTypes.Property && member.GetCustomAttribute<JsonPropertyAttribute>() != null )
+				needed = true;
+			if ( !needed )
+				continue;
+
+			if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
+				continue;
+
+			if ( !allowUnityTypes )
+			{
+				if ( member.FieldType.Namespace == "UnityEngine" && member.FieldType != typeof( Color ) && member.FieldType != typeof( Vector2 ) && member.FieldType != typeof( Vector3 ) )
+					continue;
+				if ( member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
+					continue;
+			}
+				
+			writer.WritePropertyName( member.Name );
+			WriteObjectAsValue( writer, member.GetValue( source ), member.FieldType );
+		}
+		writer.WriteEndObject();
+	}
+
 	object Deserialize( Type type )
 	{
 		this.type = type;
@@ -233,33 +328,29 @@ public class Serializer : JsonSerializer
 
 	static public T Read<T>( string fileName ) where T : class
 	{
+		referenceChain.Clear();
+		maxDepth = 0;
 		if ( !File.Exists( fileName ) )
 			return null;
 		using ( var sw = new StreamReader( fileName ) )
 		using ( var reader = new JsonTextReader( sw ) )
 		{
 			reader.Read();
-			var serializer = new Serializer( reader );
-			return (T)serializer.Deserialize( typeof( T ) );
+			var serializer = new Serializer( reader, fileName );
+			var result = (T)serializer.Deserialize( typeof( T ) );
+			HiveObject.Log( $"{result} read, max depth {maxDepth}" );
+			return result;
 		}
 	}
 
 	static public void Write( string fileName, object source, bool intended = true, bool allowUnityTypes = false )
 	{
-		JsonSerializerSettings jsonSettings = new JsonSerializerSettings
-		{
-			TypeNameHandling = TypeNameHandling.Auto,
-			PreserveReferencesHandling = PreserveReferencesHandling.Objects
-		};
-		if ( !allowUnityTypes )
-			jsonSettings.ContractResolver = Serializer.SkipUnityContractResolver.Instance;
-		
-		var serializer = JsonSerializer.Create( jsonSettings );
-
 		using var sw = new StreamWriter( fileName );
 		using JsonTextWriter writer = new JsonTextWriter( sw );
 		if ( intended )
 			writer.Formatting = Formatting.Indented;
-		serializer.Serialize( writer, source );
+		var serializer = new Serializer( fileName );
+		serializer.allowUnityTypes = allowUnityTypes;
+		serializer.Serialize( writer, source, source.GetType() );
 	}
 }
