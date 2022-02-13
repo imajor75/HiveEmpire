@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -282,32 +282,30 @@ public class Serializer : JsonSerializer
 			writer.WritePropertyName( "$type" );
 			writer.WriteValue( type.AssemblyQualifiedName );
 		}
-		foreach ( var member in type.GetFields() )
+		foreach ( var member in type.GetMembers() )
 		{
-			if ( member.IsLiteral || member.IsInitOnly || member.IsStatic || !member.IsPublic )
-				continue;
-
-			bool needed = false;
-			if ( member.MemberType == MemberTypes.Field )
-				needed = true;
-			if ( member.MemberType == MemberTypes.Property && member.GetCustomAttribute<JsonPropertyAttribute>() != null )
-				needed = true;
-			if ( !needed )
-				continue;
-
 			if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
 				continue;
 
-			if ( !allowUnityTypes )
+			if ( !allowUnityTypes && member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
+				continue;
+
+			if ( member is FieldInfo fi )
 			{
-				if ( member.FieldType.Namespace == "UnityEngine" && member.FieldType != typeof( Color ) && member.FieldType != typeof( Vector2 ) && member.FieldType != typeof( Vector3 ) )
+				if ( fi.IsLiteral || fi.IsInitOnly || fi.IsStatic || !fi.IsPublic )
 					continue;
-				if ( member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
+				if ( !allowUnityTypes && fi.FieldType.Namespace == "UnityEngine" && fi.FieldType != typeof( Color ) && fi.FieldType != typeof( Vector2 ) && fi.FieldType != typeof( Vector3 ) )
 					continue;
+				writer.WritePropertyName( member.Name );
+				WriteObjectAsValue( writer, fi.GetValue( source ), fi.FieldType );
 			}
-				
-			writer.WritePropertyName( member.Name );
-			WriteObjectAsValue( writer, member.GetValue( source ), member.FieldType );
+			else if ( member is PropertyInfo pi )
+			{
+				if ( pi.GetCustomAttribute<JsonPropertyAttribute>() == null )
+					continue;
+				writer.WritePropertyName( member.Name );
+				WriteObjectAsValue( writer, pi.GetValue( source ), pi.PropertyType );
+			}
 		}
 		writer.WriteEndObject();
 	}
