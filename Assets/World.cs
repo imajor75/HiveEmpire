@@ -699,9 +699,9 @@ public class World : HiveCommon
 
 		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = challenge;
-#if DEBUG
-		operationHandler.recordCRC = true;
-#endif
+// #if DEBUG
+// 		operationHandler.recordCRC = true;
+// #endif
 		ground = Ground.Create();
 		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();

@@ -8,21 +8,19 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-public class Serializer : JsonSerializer
+public class Serializer
 {
 	public List<object> objects = new List<object>();
-	object instance;
-	Type type;
-	readonly Serializer boss;
-	int index;
+	public int processedObjectCount = 0;
 	JsonReader reader;
+	JsonWriter writer;
 	static MethodInfo scriptableObjectCreator;
 	public string objectOwner;
-	static List<Reference> referenceChain = new List<Reference>();
-	static int maxDepth;
 	static bool logged;
 	public string fileName;
 	public bool allowUnityTypes = false;
+	public int currentObjectIndex = -1;
+	public Type currentObjectType;
 
 	struct Reference
 	{
@@ -30,21 +28,14 @@ public class Serializer : JsonSerializer
 		public string name;
 	}
 
-	public Serializer( JsonReader reader, string fileName, Serializer boss = null )
+	public Serializer( JsonReader reader, string fileName )
 	{
 		this.reader = reader;
 		this.fileName = fileName;
-		if ( boss == null )
-		{
-			boss = this;
-			objects = new List<object>();
-		}
-		this.boss = boss;
 	}
 
-	public Serializer( string file )
+	public Serializer()
 	{
-		fileName = file;
 	}
 
 	static object CreateSceneObject( Type type )
@@ -82,104 +73,115 @@ public class Serializer : JsonSerializer
 		return Activator.CreateInstance( type );
 	}
 
-	object Object()
-	{
-		if ( instance == null )
-			instance = CreateObject( type );
-
-		if ( index > 0 )
-		{
-			while ( boss.objects.Count <= index )
-				boss.objects.Add( instance );
-			boss.objects[index] = instance;
-		}
-		return instance;
-	}
-
-	void ProcessField()
+	void ProcessField( ref object owner )
 	{
 		Assert.global.AreEqual( reader.TokenType, JsonToken.PropertyName );
 		string name = (string)reader.Value;
 		if ( name[0] == '$' )
 		{
+			if ( name != "$id" )
+				Assert.global.IsNull( owner, $"Object {owner} already got an instance before ref attributes in file {fileName}" );
 			reader.Read();
+			int index = 0;
 			switch ( name )
 			{
 				case "$id":
 				{
 					if ( reader.Value is long id )
-						index = (int)id;
+						currentObjectIndex = (int)id;
 					if ( reader.Value is string str )
-						index = int.Parse( str );
-					Assert.global.IsTrue( index > 0, $"Invalid ID {index} in file {fileName}" );
+						currentObjectIndex = int.Parse( str );
+					Assert.global.IsTrue( currentObjectIndex > 0, $"Invalid ID {currentObjectIndex} in file {fileName}" );
 					break;
-				}
-				case "$type":
-				{
-					type = Type.GetType( reader.Value as string );
-					Assert.global.IsNotNull( type, $"Type {reader.Value} not found in {fileName}" );
-					break;
-				}
+				}				
 				case "$ref":
 				{
 					if ( reader.Value is long id )
 						index = (int)id;
 					if ( reader.Value is string str )
 						index = int.Parse( str );
-					Assert.global.IsTrue( index > 0, $"Invalid ID referenced in file {fileName}" );
-					instance = boss.objects[index];
+					Assert.global.IsTrue( index > 0 && index < objects.Count, $"Invalid ID {index} (max: {objects.Count}) referenced in file {fileName}" );
+					owner = objects[index];
+					break;
+				}
+				case "$create":
+				{
+					var newType = Type.GetType( reader.Value as string );
+					Assert.global.IsNotNull( newType, $"Type {reader.Value} not found in {fileName}" );
+					objects.Add( owner = CreateObject( newType ) );
+					break;
+				}
+				case "$type":
+				{
+					currentObjectType = Type.GetType( reader.Value as string );
+					break;
+				}
+				default:
+				{
+					Assert.global.Fail( $"Unknown command {name} in file {fileName}" );
 					break;
 				}
 			}
+			reader.Read();
 			return;
 		}
+
+		if ( owner == null )
+		{
+			owner = CreateObject( currentObjectType );
+			if ( currentObjectIndex != -1 )
+			{
+				while ( objects.Count < currentObjectIndex + 1 )
+					objects.Add( owner );
+				objects[currentObjectIndex] = owner;
+				processedObjectCount = currentObjectIndex+1;
+				currentObjectIndex = -1;
+				currentObjectType = null;
+			}
+		}
+		var type = owner.GetType();
 		FieldInfo i = type.GetField( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );	// What if there are multiple ones with the same name
 		PropertyInfo p = type.GetProperty( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );
 		Assert.global.IsTrue( i != null || p != null, $"No field with the name {name} found in {type.FullName}" );
 		reader.Read();
 
-		var target = Object();
 		if ( p != null && ( i == null || p.DeclaringType.IsSubclassOf( i.DeclaringType ) ) )
-			p.SetValue( target, ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
+			p.SetValue( owner, ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
 		else
-			i.SetValue( target, ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
+			i.SetValue( owner, ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
 	}
 
 	object ProcessFieldValue( Type type, string owner )
 	{
 		switch ( reader.TokenType )
 		{
+			case JsonToken.Null:
+			{
+				reader.Read();
+				return null;
+			}
 			case JsonToken.Integer:
 			case JsonToken.Float:
 			case JsonToken.String:
 			case JsonToken.Boolean:
 			{
+				object result;
 				if ( type.IsEnum )
 				{
 					if ( reader.TokenType == JsonToken.String )
-						return Enum.Parse( type, reader.Value as string );
+						result = Enum.Parse( type, reader.Value as string );
 					else
-						return Enum.ToObject( type, reader.Value );
+						result = Enum.ToObject( type, reader.Value );
 				}
-				return Convert.ChangeType( reader.Value, type );
+				else
+					result = Convert.ChangeType( reader.Value, type );
+				reader.Read();
+				return result;
 			}
 			case JsonToken.StartObject:
 			{
-				referenceChain.Add( new Reference { instance = Object(), name = owner } );
-				if ( referenceChain.Count > maxDepth )
-				{
-					maxDepth = referenceChain.Count;
-					if ( maxDepth > 530 && !logged )
-					{
-						foreach ( var r in referenceChain )
-						HiveObject.Log( $"{r.instance} : {r.name}" );
-						logged = true;
-					}
-				}
-				var child = new Serializer( reader, fileName, boss ).Deserialize( type );
-				Assert.global.AreEqual( Object(), referenceChain.Last().instance );
-				referenceChain.RemoveAt( referenceChain.Count-1 );
-				return child;
+				currentObjectType = type;
+				return FillObject( null );
 			}
 			case JsonToken.StartArray:
 			{
@@ -206,8 +208,8 @@ public class Serializer : JsonSerializer
 						else
 							list.Add( value );
 					}
-					reader.Read();
 				}
+				reader.Read();
 				if ( type.IsArray )
 				{
 					Array array = Array.CreateInstance( elementType, list.Count );
@@ -223,10 +225,11 @@ public class Serializer : JsonSerializer
 				return list;
 			}
 		}
+		Assert.global.Fail( $"Unknown token type {reader.TokenType} in file {fileName}" );
 		return null;
 	}
 
-	void WriteObjectAsValue( JsonWriter writer, object value, Type slotType )
+	void WriteObjectAsValue( JsonWriter writer, object value )
 	{
 		if ( value == null )
 		{
@@ -242,16 +245,31 @@ public class Serializer : JsonSerializer
 		if ( value is IEnumerable array )
 		{
 			writer.WriteStartArray();
-			var arraySlotType = type.GetElementType();
-			if ( type.GenericTypeArguments.Length > 0 )
-				arraySlotType = type.GenericTypeArguments.First();
 			foreach ( var element in array )
-				WriteObjectAsValue( writer, element, arraySlotType );
+				WriteObjectAsValue( writer, element );
 			writer.WriteEndArray();
 			return;
 		}
-		if ( type.IsClass || (type.IsValueType && !type.IsPrimitive && !type.IsEnum) )
-			Serialize( writer, value, slotType );
+		if ( type.IsClass )
+		{
+			writer.WriteStartObject();
+			int index = objects.IndexOf( value );
+			if ( index >= 0 )
+			{
+				writer.WritePropertyName( "$ref" );
+				writer.WriteValue( index );
+			}
+			else
+			{
+				writer.WritePropertyName( "$create" );
+				writer.WriteValue( value.GetType().FullName );
+				objects.Add( value );
+			}
+			writer.WriteEndObject();
+			return;
+		}
+		if ( type.IsValueType && !type.IsPrimitive && !type.IsEnum )
+			ProcessObject( value );
 		else
 			if ( type.IsEnum )
 				writer.WriteValue( value.ToString() );
@@ -259,29 +277,10 @@ public class Serializer : JsonSerializer
 				writer.WriteValue( value );
 	}
 
-	new void Serialize( JsonWriter writer, object source, Type slotType )
+	void ProcessObject( object source )
 	{
 		writer.WriteStartObject();
 		var type = source.GetType();
-		if ( type.IsClass )
-		{
-			int index = objects.IndexOf( source );
-			if ( index >= 0 )
-			{
-				writer.WritePropertyName( "$ref" );
-				writer.WriteValue( index + 1 );
-				writer.WriteEndObject();
-				return;
-			}
-			writer.WritePropertyName( "$id" );
-			objects.Add( source );
-			writer.WriteValue( objects.Count );
-		}
-		if ( type != slotType )
-		{
-			writer.WritePropertyName( "$type" );
-			writer.WriteValue( type.AssemblyQualifiedName );
-		}
 		foreach ( var member in type.GetMembers() )
 		{
 			if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
@@ -297,58 +296,72 @@ public class Serializer : JsonSerializer
 				if ( !allowUnityTypes && fi.FieldType.Namespace == "UnityEngine" && fi.FieldType != typeof( Color ) && fi.FieldType != typeof( Vector2 ) && fi.FieldType != typeof( Vector3 ) )
 					continue;
 				writer.WritePropertyName( member.Name );
-				WriteObjectAsValue( writer, fi.GetValue( source ), fi.FieldType );
+				WriteObjectAsValue( writer, fi.GetValue( source ) );
 			}
 			else if ( member is PropertyInfo pi )
 			{
 				if ( pi.GetCustomAttribute<JsonPropertyAttribute>() == null )
 					continue;
 				writer.WritePropertyName( member.Name );
-				WriteObjectAsValue( writer, pi.GetValue( source ), pi.PropertyType );
+				WriteObjectAsValue( writer, pi.GetValue( source ) );
 			}
 		}
 		writer.WriteEndObject();
 	}
 
-	object Deserialize( Type type )
+	object FillObject( object emptyObject )
 	{
-		this.type = type;
-		Assert.global.AreEqual( reader.TokenType, JsonToken.StartObject );
+		Assert.global.AreEqual( reader.TokenType, JsonToken.StartObject, $"Unexpected token {reader.TokenType} at the beginning of an object in {fileName}" );
 		reader.Read();
 		while ( reader.TokenType == JsonToken.PropertyName )
-		{
-			ProcessField();
-			reader.Read();
-		}
-		Assert.global.AreEqual( reader.TokenType, JsonToken.EndObject );
-		return Object();
+			ProcessField( ref emptyObject );
+		Assert.global.AreEqual( reader.TokenType, JsonToken.EndObject, $"Unexpected token {reader.TokenType} at the end of object in {fileName}" );
+		reader.Read();
+		return emptyObject;
 	}
 
-	static public T Read<T>( string fileName ) where T : class
+	object ReadFile( string fileName, Type rootType )
 	{
-		referenceChain.Clear();
-		maxDepth = 0;
+		this.fileName = fileName;
 		if ( !File.Exists( fileName ) )
 			return null;
-		using ( var sw = new StreamReader( fileName ) )
-		using ( var reader = new JsonTextReader( sw ) )
-		{
+		var sw = new StreamReader( fileName );
+		reader = new JsonTextReader( sw );
+		reader.Read();
+		objects.Add( CreateObject( rootType ) );
+		if ( reader.TokenType == JsonToken.StartArray )
 			reader.Read();
-			var serializer = new Serializer( reader, fileName );
-			var result = (T)serializer.Deserialize( typeof( T ) );
-			HiveObject.Log( $"{result} read, max depth {maxDepth}" );
-			return result;
-		}
+		while ( objects.Count > processedObjectCount )
+			FillObject( objects[processedObjectCount++] );
+		Assert.global.IsTrue( reader.TokenType == JsonToken.None || reader.TokenType == JsonToken.EndArray, $"Unexpected token {reader.TokenType} at the end of file {fileName}" );
+		return objects.First();
+	}
+
+	static public rootType Read<rootType>( string fileName ) where rootType : class
+	{
+		var serializer = new Serializer();
+		return (rootType)serializer.ReadFile( fileName, typeof( rootType ) );
+	}
+
+	public void WriteFile( string fileName, object source, bool intended, bool allowUnityTypes )
+	{
+		this.fileName = fileName;
+		var sw = new StreamWriter( fileName );
+		writer = new JsonTextWriter( sw );
+		if ( intended )
+			writer.Formatting = Formatting.Indented;
+		objects.Add( source );
+		writer.WriteStartArray();
+		while ( objects.Count != processedObjectCount )
+			ProcessObject( objects[processedObjectCount++] );
+		writer.WriteEndArray();
+		writer.Close();
+		sw.Close();
 	}
 
 	static public void Write( string fileName, object source, bool intended = true, bool allowUnityTypes = false )
 	{
-		using var sw = new StreamWriter( fileName );
-		using JsonTextWriter writer = new JsonTextWriter( sw );
-		if ( intended )
-			writer.Formatting = Formatting.Indented;
-		var serializer = new Serializer( fileName );
-		serializer.allowUnityTypes = allowUnityTypes;
-		serializer.Serialize( writer, source, source.GetType() );
+		var serializer = new Serializer();
+		serializer.WriteFile( fileName, source, intended, allowUnityTypes );
 	}
 }
