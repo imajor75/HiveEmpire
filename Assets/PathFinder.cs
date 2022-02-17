@@ -59,11 +59,9 @@ public class PathFinder
 		}
 		ready = false;
 
-		if ( mode == PathFinder.Mode.onRoad )
-		{
-			Assert.global.IsNotNull( start.flag, "Trying to find a road path not starting at a flag" );
-			Assert.global.IsNotNull( end.flag );
-		}
+		if ( mode == PathFinder.Mode.onRoad && (start.flag == null || end.flag == null || start.flag.team != end.flag.team) )
+			return false;
+
         visited.Clear();
         openNodes = 0;
         AddNode( start, 0, null );
