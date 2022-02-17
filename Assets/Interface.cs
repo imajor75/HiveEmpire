@@ -1641,7 +1641,7 @@ public class Interface : HiveObject
 
 		public void UpdatePosition()
 		{
-			if ( target == null || !followTarget )
+			if ( target == null || !followTarget || root.viewport.camera == null )
 				return;
 
 			MoveTo( target.location.GetPositionRelativeTo( eye.position ) + Vector3.up * Constants.Node.size );
