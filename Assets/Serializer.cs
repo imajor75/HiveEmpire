@@ -11,6 +11,7 @@ using UnityEngine;
 public class Serializer
 {
 	public List<object> objects = new List<object>();
+	public Dictionary<object, int> objectIndices = new Dictionary<object, int>();
 	public int processedObjectCount = 0;
 	JsonReader reader;
 	JsonWriter writer;
@@ -253,9 +254,10 @@ public class Serializer
 		if ( type.IsClass )
 		{
 			writer.WriteStartObject();
-			int index = objects.IndexOf( value );
-			if ( index >= 0 )
+			int index;
+			if ( objectIndices.TryGetValue( value, out index ) )
 			{
+				Assert.global.AreEqual( objects[index], value );
 				writer.WritePropertyName( "$ref" );
 				writer.WriteValue( index );
 			}
@@ -263,6 +265,7 @@ public class Serializer
 			{
 				writer.WritePropertyName( "$create" );
 				writer.WriteValue( value.GetType().FullName );
+				objectIndices[value] = objects.Count;
 				objects.Add( value );
 			}
 			writer.WriteEndObject();
@@ -350,6 +353,8 @@ public class Serializer
 		writer = new JsonTextWriter( sw );
 		if ( intended )
 			writer.Formatting = Formatting.Indented;
+		objectIndices.Clear();
+		objectIndices[source] = objects.Count;
 		objects.Add( source );
 		writer.WriteStartArray();
 		while ( objects.Count != processedObjectCount )
