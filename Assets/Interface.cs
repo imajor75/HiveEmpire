@@ -158,12 +158,12 @@ public class Interface : HiveObject
 			return true;
 		}
 
-		public bool IsDown()
+		public bool IsPressed()
 		{
 			return IsSecondaryHold() && GetKeyDown( key );
 		}
 
-		public bool IsHold()
+		public bool IsDown()
 		{
 			return IsSecondaryHold() && GetKey( key );
 		}
@@ -678,11 +678,11 @@ public class Interface : HiveObject
 		// 		world.Reset();
 		// }
 
-		if ( headquartersHotkey.IsDown() && mainTeam )
+		if ( headquartersHotkey.IsPressed() && mainTeam )
 			mainTeam.mainBuilding.OnClicked( true );
-		if ( changePlayerHotkey.IsDown() )
+		if ( changePlayerHotkey.IsPressed() )
 			PlayerSelectorPanel.Create( false );
-		if ( closeWindowHotkey.IsDown() )
+		if ( closeWindowHotkey.IsPressed() )
 		{
 			if ( !viewport.ResetInputHandler() )
 			{
@@ -702,9 +702,9 @@ public class Interface : HiveObject
 				toClose?.Close();
 			}
 		}
-		if ( cameraBackHotkey.IsDown() )
+		if ( cameraBackHotkey.IsPressed() )
 			eye.RestoreOldPosition();
-		if ( mapHotkey.IsDown() )
+		if ( mapHotkey.IsPressed() )
 			Map.Create().Open( true );
 #if DEBUG
 		if ( Input.GetKeyDown( KeyCode.Keypad0 ) )
@@ -1275,7 +1275,7 @@ public class Interface : HiveObject
 
 		public void Update()
 		{
-			if ( button && hotkey != null && hotkey.IsDown() )
+			if ( button && hotkey != null && hotkey.IsPressed() )
 				button.leftClickHandler();
 		}
 	}
@@ -1850,12 +1850,12 @@ public class Interface : HiveObject
 			public void Update()
 			{
 				image.color = originalArea.center != null ? Color.green : Color.white;
-				if ( decreaseSizeHotkey.IsDown() )
+				if ( decreaseSizeHotkey.IsPressed() )
 				{
 					if ( area.radius > 1 )
 						area.radius--;
 				}
-				if ( increaseSizeHotkey.IsDown() )
+				if ( increaseSizeHotkey.IsPressed() )
 				{
 					if ( area.radius < 8 )
 						area.radius++;
@@ -3458,11 +3458,11 @@ public class Interface : HiveObject
 		new void Update()
 		{
 			base.Update();
-			if ( showNearestPossibleHotkey.IsDown() )
+			if ( showNearestPossibleHotkey.IsPressed() )
 				ShowNearestPossible( false );
-			if ( showNearestPossibleAnyDirectionHotkey.IsDown() )
+			if ( showNearestPossibleAnyDirectionHotkey.IsPressed() )
 				ShowNearestPossible( true );
-			if ( rotateCWHotkey.IsDown() )
+			if ( rotateCWHotkey.IsPressed() )
 			{
 				if ( currentFlagDirection == 0 )
 					currentFlagDirection = 5;
@@ -3470,7 +3470,7 @@ public class Interface : HiveObject
 					currentFlagDirection--;
 				CancelBlueprint();
 			}
-			if ( rotateCCWHotkey.IsDown() )
+			if ( rotateCCWHotkey.IsPressed() )
 			{
 				if ( currentFlagDirection == 5 )
 					currentFlagDirection = 0;

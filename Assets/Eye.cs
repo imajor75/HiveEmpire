@@ -167,13 +167,13 @@ public class Eye : HiveObject
 			depthOfField.focusDistance.value = altitude;
 
 		Vector3 movement = Vector3.zero;
-		if ( Interface.cameraLeftHotkey.IsHold() )
+		if ( Interface.cameraLeftHotkey.IsDown() )
 			movement += Move( -Constants.Eye.moveSpeed * Time.unscaledDeltaTime, 0 );
-		if ( Interface.cameraRightHotkey.IsHold() )
+		if ( Interface.cameraRightHotkey.IsDown() )
 			movement += Move( Constants.Eye.moveSpeed * Time.unscaledDeltaTime, 0 );
-		if ( Interface.cameraUpHotkey.IsHold() )
+		if ( Interface.cameraUpHotkey.IsDown() )
 			movement += Move( 0, Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
-		if ( Interface.cameraDownHotkey.IsHold() )
+		if ( Interface.cameraDownHotkey.IsDown() )
 			movement += Move( 0, -Constants.Eye.moveSpeed * Time.unscaledDeltaTime * 1.3f );
 		if ( target )
 		{
@@ -210,12 +210,12 @@ public class Eye : HiveObject
 			absoluteX += ground.dimension * Constants.Node.size;
 		}
 
-		if ( Interface.cameraRotateCCWHotkey.IsHold() )
+		if ( Interface.cameraRotateCCWHotkey.IsDown() )
 		{
 			rotateAround = false;
 			direction -= Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
 		}
-		if ( Interface.cameraRotateCWHotkey.IsHold() )
+		if ( Interface.cameraRotateCWHotkey.IsDown() )
 		{
 			rotateAround = false;
 			direction += Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
@@ -227,9 +227,9 @@ public class Eye : HiveObject
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
 
-		if ( Interface.cameraZoomOutHotkey.IsHold() )
+		if ( Interface.cameraZoomOutHotkey.IsDown() )
 			targetAltitude += Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
-		if ( Interface.cameraZoomInHotkey.IsHold() )
+		if ( Interface.cameraZoomInHotkey.IsDown() )
 			targetAltitude -= Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
 		if ( camera.enabled && root.viewport.mouseOver )
 		{

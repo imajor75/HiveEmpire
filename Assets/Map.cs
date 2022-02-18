@@ -52,7 +52,7 @@ public class Map : Interface.Panel
 			zoom = Constants.Map.zoomMin;
 		if ( zoom > Constants.Map.zoomMax )
 			zoom = Constants.Map.zoomMax;
-		if ( toggleFullscreenHotkey.IsDown() )
+		if ( toggleFullscreenHotkey.IsPressed() )
 		{
 			fullScreen = !fullScreen;
 			content.Setup( fullScreen );

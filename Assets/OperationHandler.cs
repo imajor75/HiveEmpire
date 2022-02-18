@@ -563,9 +563,9 @@ public class OperationHandler : HiveObject
             ExecuteOperation( executeBuffer[executeIndex++] );
         }
         
-		if ( undoHotkey.IsDown() )
+		if ( undoHotkey.IsPressed() )
 			UndoRedo( undoQueue );
-		if ( redoHotkey.IsDown() )
+		if ( redoHotkey.IsPressed() )
 			UndoRedo( redoQueue );
         if ( purgeCRCTable )
         {
