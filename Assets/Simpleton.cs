@@ -916,6 +916,9 @@ public class Simpleton : Player
                 
                 foreach ( var buffer in workshop.buffers )
                 {
+                    if ( workshop.type == Workshop.Type.stoneMine && buffer.itemType == Item.Type.fish )
+                        continue;
+                        
                     foreach ( var offset in Ground.areas[Constants.Simpleton.workshopCoverage] )
                     {
                         var building = workshop.node.Add( offset ).building;
