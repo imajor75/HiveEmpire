@@ -212,7 +212,6 @@ public class Simpleton : Player
                     if ( !valid )
                     {
                         building.simpletonDataSafe.deals.Remove( deal );
-                        Assert.global.Fail( $"Removed invalid deal from {building}" );
                         return;
                     }
                 }
