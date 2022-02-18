@@ -297,7 +297,8 @@ public class Eye : HiveObject
 	{
 		if ( target == null )
 			return;
-		oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
+		if ( approach && target.location != this.target )
+			oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
 
 		if ( approach )
 			this.target = target.location;

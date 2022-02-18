@@ -4004,7 +4004,7 @@ public class Interface : HiveObject
 
 		public void SetCameraTarget( Eye eye )
 		{
-			eye.FocusOn( unit );
+			eye.FocusOn( unit, approach:false );
 		}
 
 		public override void Update()
