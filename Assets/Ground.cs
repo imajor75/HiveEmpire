@@ -14,6 +14,7 @@ public class Ground : HiveObject
 	public Material material;
 	[JsonIgnore]
 	public List<Material> grassMaterials = new List<Material>();
+	public static int grassLayerIndex;
 
 	[Obsolete( "Compatibility with old files", true )]
 	int width { set { if ( dimension == 0 ) dimension = value; assert.AreEqual( dimension, value ); } }
@@ -144,6 +145,7 @@ public class Ground : HiveObject
 	static public void Initialize()
 	{
 		CreateAreas();
+		grassLayerIndex = LayerMask.NameToLayer( "Grass" );
 	}
 
 	void CreateBlocks()
@@ -243,7 +245,7 @@ public class Ground : HiveObject
 		foreach ( var grassMaterial in grassMaterials )
 		{
 			foreach ( var block in blocks )
-				Graphics.DrawMesh( block.mesh, block.transform.position, Quaternion.identity, grassMaterial, 0 );
+				Graphics.DrawMesh( block.mesh, block.transform.position, Quaternion.identity, grassMaterial, grassLayerIndex );
 		}
 
 		if ( grassMaterials.Count != grassLayerCount )

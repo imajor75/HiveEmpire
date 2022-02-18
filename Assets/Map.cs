@@ -97,6 +97,10 @@ public class Map : Interface.Panel
 			camera.transform.SetParent( ground.transform );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap );
+			if ( !fullScreen )
+				camera.cullingMask &= int.MaxValue - ( 1 << Ground.grassLayerIndex );
+			else
+				camera.cullingMask |= 1 << Ground.grassLayerIndex;
 			camera.gameObject.AddComponent<CameraHighlight>();
 			if ( fullScreen )
 				root.viewport.SetCamera( camera );
