@@ -348,7 +348,7 @@ public class Simpleton : Player
                 if ( configuration.plankNeeded + reservedPlank > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
                     return finished;
             }
-            if ( configuration.stoneNeeded + reservedStone > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
+            if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
                 return finished;
 
             ScanRow( nodeRow++ );
@@ -484,7 +484,7 @@ public class Simpleton : Player
                 Workshop.Type.ironMine => 0.5f,
                 Workshop.Type.goldMine => 0.5f,
                 Workshop.Type.coalMine => 0.5f,
-                Workshop.Type.stoneMine => 0.5f,
+                Workshop.Type.stoneMine => 0.01f,
                 Workshop.Type.saltMine => 0.5f,
                 Workshop.Type.hunter => 0.01f,
                 Workshop.Type.fishingHut => 0.1f,
