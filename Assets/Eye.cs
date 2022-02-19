@@ -301,7 +301,10 @@ public class Eye : HiveObject
 			oldPositions.Add( new StoredPosition() { x = x, y = y, direction = direction } );
 
 		if ( approach )
+		{
 			this.target = target.location;
+			height = target.location.height;
+		}
 		else
 		{
 			this.target = null;
@@ -309,14 +312,15 @@ public class Eye : HiveObject
 			{
 				x = target.location.positionInViewport.x;
 				y = target.location.positionInViewport.z;
+				height = target.location.positionInViewport.y;
 			}
 			else
 			{
 				x = target.transform.position.x;
 				y = target.transform.position.z;
+				height = target.location.position.y;
 			}
 		}
-		height = -1;
 		director = null;
 		this.rotateAround = rotateAround;
 		root.viewport.markEyePosition = mark;
