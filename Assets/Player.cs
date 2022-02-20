@@ -304,10 +304,22 @@ public class Team : HiveObject
 		return null;
 	}
 
-	public void Attack( Attackable target, int attackerCount )
+	public bool Attack( Attackable target, int attackerCount, bool checkOnly = false )
 	{
 		if ( soldierCount < attackerCount || ( target.attackerTeam && target.attackerTeam != this ) )
-			return;
+			return false;
+
+		int sourceCount = 0;
+		foreach ( var offset in Ground.areas[Constants.GuardHouse.attackMaxDistance] )
+		{
+			if ( target.node.Add( offset ).building is GuardHouse guardHouse && guardHouse.team == this )
+				sourceCount++;
+		}
+		if ( sourceCount == 0 )
+			return false;
+
+		if ( checkOnly )
+			return true;
 
 		List<Node> gather = new List<Node>();
 		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
@@ -329,6 +341,7 @@ public class Team : HiveObject
 			soldierCount--;
 		}
 		target.lastSpot += attackerCount;
+		return true;
 	}
 
 	public void UpdateStockRoutes( Item.Type itemType )
