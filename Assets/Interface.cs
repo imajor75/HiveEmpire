@@ -2682,7 +2682,7 @@ public class Interface : HiveObject
 				soldierCount.value = guardHouse.soldiers.Count - 1;
 				soldierCount.onValueChanged.AddListener( SoldierCountChanged );
 				if ( guardHouse.attackerTeam )
-					attackers = Text( $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackers.Count} soldiers" ).PinDownwards( borderWidth, 0, 200, 2 * iconSize );
+					attackers = Text( $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackerCount} soldiers" ).PinDownwards( borderWidth, 0, 200, 2 * iconSize );
 			}
 			else
 			{
@@ -2701,7 +2701,7 @@ public class Interface : HiveObject
 			if ( attackers )
 			{
 				if ( attackable.attackerTeam )
-					attackers.text = $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackers.Count} soldiers";
+					attackers.text = $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackerCount} soldiers";
 				else
 					attackers.text = "Not under attack";
 			}

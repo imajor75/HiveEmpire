@@ -50,6 +50,19 @@ public abstract class Attackable : Building
 	public abstract int defenderCount { get; }
 	public abstract Unit GetDefender();
 
+	public int attackerCount
+	{
+		get
+		{
+			int c = attackers.Count;
+			if ( aggressor )
+				c++;
+			if ( assassin )
+				c++;
+			return c;
+		}
+	}
+
 	public override void GameLogicUpdate()
 	{
 		base.GameLogicUpdate();
