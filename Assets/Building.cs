@@ -757,6 +757,7 @@ abstract public class Building : HiveObject
 
 	public void SetTeam( Team team )
 	{
+		this.team.flags.Remove( flag );
 		if ( Influence( node ) != 0 && this.team )
 			this.team.UnregisterInfuence( this );
 		if ( this.team )
@@ -781,7 +782,10 @@ abstract public class Building : HiveObject
 		if ( team && Influence( node ) > 0 )
 			team.RegisterInfluence( this );
 		if ( team )
+		{
 			team.buildingCounts[(int)type]++;
+			team.flags.Add( flag );
+		}
 	}
 
 	public override Node location { get { return node; } }
