@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -355,6 +355,18 @@ public class Team : HiveObject
 				hasInput = true;
 		}
 		stocksHaveNeed[i] = hasInput;
+	}
+
+	public void RebuildStockRoutes()
+	{
+		foreach ( var stock in stocks )
+		{
+			foreach ( var itemType in stock.itemData )
+				itemType.outputRoutes.Clear();
+		}
+
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+		UpdateStockRoutes( (Item.Type)i );
 	}
 
 	public new void Start()

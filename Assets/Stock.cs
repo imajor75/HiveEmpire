@@ -146,7 +146,7 @@ public class Stock : Attackable
 			for ( int i = 0; i < outputRoutes.Count; )
 			{
 				var route = outputRoutes[i];
-				if ( route.start.itemData[typeIndex].cartOutput < Constants.Stock.cartCapacity || route.end.itemData[typeIndex].cartInput == 0 )
+				if ( route.start == null || route.start.itemData[typeIndex].cartOutput < Constants.Stock.cartCapacity || route.end == null || route.end.itemData[typeIndex].cartInput == 0 )
 					route.Remove();
 				else
 					i++;
@@ -603,6 +603,7 @@ public class Stock : Attackable
 	public override bool Remove( bool takeYourTime )
 	{
 		team.UnregisterStock( this );
+		team.RebuildStockRoutes();
 		if ( main )
 			team.Remove( false );
 		return base.Remove( takeYourTime );
@@ -825,7 +826,7 @@ public class Stock : Attackable
 			assert.AreEqual( this, itemData[j].boss );
 			assert.AreEqual( j, (int)itemData[j].itemType );
 			if ( itemData[j].cartOutput >= Constants.Stock.cartCapacity && team.stocksHaveNeed[j] && itemData[j].cartInput == 0 )
-				assert.AreNotEqual( itemData[j].outputRoutes.Count, 0 );
+				assert.AreNotEqual( itemData[j].outputRoutes.Count, 0, $"Invalid route for {(Item.Type)j} in {this}" );
 		}
 	}
 }
