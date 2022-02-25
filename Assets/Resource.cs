@@ -93,7 +93,7 @@ public class Resource : HiveObject
 				toRemove.Add( resource );
 		}
 		foreach ( var resource in toRemove )
-			resource.Remove( false );
+			resource.Remove();
 	}
 
 	public static void Initialize()
@@ -326,19 +326,18 @@ public class Resource : HiveObject
 		};
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
 		if ( type == Type.pasturingAnimal && animals.Count > 0 )
 		{
 			animals[0].taskQueue.Clear();
-			animals[0].Remove( false );
+			animals[0].Remove();
 		}
 		assert.IsTrue( node.resources.Contains( this ) );
 		node.avoidGrass = false;
 		ground.SetDirty( node );
 		node.resources.Remove( this );
 		DestroyThis();
-		return true;
 	}
 
 	public bool IsReadyToBeHarvested()
@@ -369,7 +368,7 @@ public class Resource : HiveObject
 	{
 		keepAway.Start();
 		if ( type == Type.cornfield )
-			Remove( false );
+			Remove();
 	}
 
 	public override Node location { get { return node; } }

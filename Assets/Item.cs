@@ -383,7 +383,7 @@ public class Item : HiveObject
 
 	public bool lastRoad { get { return path != null && path.stepsLeft == 1; } }
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
 		transform.SetParent( null );
 		if ( hauler )
@@ -398,7 +398,6 @@ public class Item : HiveObject
 		if ( Constants.Item.creditOnRemove )
 			team.mainBuilding.itemData[(int)type].content++;
 		DestroyThis();
-		return true;
 	}
 
 	[Conditional( "Debug" )]
@@ -487,7 +486,7 @@ public class Item : HiveObject
 				assert.IsFalse( hauler.itemsInHands.Contains( this ) );
 			if ( destination )
 				assert.IsNotNull( path );	// TODO Triggered when switching a building to overclock mode, and the items had nowhere to go
-			if ( destination && !path.isFinished && path.road )
+			if ( destination && !path.isFinished && path.road && !path.road.destroyed )
 				assert.IsTrue( flag.roadsStartingHere.Contains( path.road ) );
 		}
 		else
@@ -530,7 +529,7 @@ public class Item : HiveObject
 		}
 		assert.AreNotEqual( index, -1 );
 		assert.AreEqual( team.items[index], this );
-		assert.IsTrue( world.teams.Contains( team ) );
+		assert.IsTrue( team.destroyed || world.teams.Contains( team ), $"Owner team {team} not valid for {this}" );	// TODO Fires when capturing the main building of a team
 		base.Validate( chain );
 	}
 }

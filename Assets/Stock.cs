@@ -600,17 +600,21 @@ public class Stock : Attackable
 		return list;
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
+		destroyed = true;
 		team.UnregisterStock( this );
 		team.RebuildStockRoutes();
 		if ( main )
-			team.Remove( false );
-		return base.Remove( takeYourTime );
+			team.Remove();
+		base.Remove();
 	}
 
 	new void Start()
 	{
+		if ( destroyed )
+			return;
+			
 		base.Start();
 		if ( main )
 		{
@@ -633,7 +637,7 @@ public class Stock : Attackable
 		{
 			if ( unit.team != team )
 			{
-				Remove( false );
+				Remove();
 				return;
 			}
 

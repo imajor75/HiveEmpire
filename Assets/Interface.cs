@@ -923,11 +923,23 @@ public class Interface : HiveObject
 			Assert.global.IsNotNull( highlightVolume );
 		if ( highlightType == HighlightType.area )
 			Assert.global.IsNotNull( highlightArea );
+
+		if ( !chain )	// This function is caller after load, before the Start functions would be called, so in that case skip checking the number of objects in the root
+			return;
+
 		var roots = SceneManager.GetActiveScene().GetRootGameObjects();
 		int activeObjectsAtRootLevel = 0;
 		foreach ( var go in roots )
+		{
 			if ( go.active )
+			{
+				HiveObject ho;
+				if ( go.TryGetComponent<HiveObject>( out ho ) && ho.destroyed )
+					continue;
+			
 				activeObjectsAtRootLevel++;
+			}
+		}
 		Assert.global.AreEqual( activeObjectsAtRootLevel, 4, "Interface, World, Network and the Event System should be the four active objects at root level" );
 #endif
 	}
@@ -3109,7 +3121,7 @@ public class Interface : HiveObject
 		void Remove()
 		{
 			if ( node.resources.Count > 0 )
-				node.resources[0].Remove( false );
+				node.resources[0].Remove();
 		}
 
 		void AlignHeight( float change )

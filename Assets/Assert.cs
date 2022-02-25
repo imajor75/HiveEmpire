@@ -157,6 +157,7 @@ public class Assert
 			Selection.activeGameObject = boss.gameObject;
 			problemSelected = true;
 		}
+		throw new Exception( message );
 #endif
 	}
 

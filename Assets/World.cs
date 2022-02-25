@@ -867,7 +867,7 @@ public class World : HiveCommon
 				if ( !o.ready )
 				{
 					HiveObject.Log( $"Removing road at {o.nodes[0].x}:{o.nodes[0].y}" );
-					o.Remove( false );
+					o.Remove();
 				}
 				o.ends[0] = o.nodes[0].flag;
 				o.ends[1] = o.lastNode.flag;
@@ -1148,6 +1148,9 @@ public class World : HiveCommon
 
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 		{
+			if ( ho is Interface )
+				continue;
+				
 			ho.noAssert = true;
 			ho.destroyed = true;	// To prevent decoration only roads getting an ID and registered after load
 		}
@@ -1299,7 +1302,7 @@ public class World : HiveCommon
 				toRemove.Add( resource );
 		}
 		foreach ( var resource in toRemove )
-			resource.Remove( false );
+			resource.Remove();
 
 		ores.Clear();
 		oreCount = 0;

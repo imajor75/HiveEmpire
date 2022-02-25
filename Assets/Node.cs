@@ -337,7 +337,7 @@ public class Node : HiveObject
 			if ( !overwrite )
 				return false;
 			while ( resources.Count > 0 )
-				resources[0].Remove( false );
+				resources[0].Remove();
 		}
 		assert.AreEqual( resources.Count, 0 );
 

@@ -560,7 +560,7 @@ public class Unit : HiveObject
 
 			if ( stuck.done && boss.type == Type.hauler && road.ActiveHaulerCount > 1 )
 			{
-				boss.Remove( true );
+				boss.Retire();
 				return true;
 			}
 			if ( currentPoint == -1 )
@@ -605,7 +605,7 @@ public class Unit : HiveObject
 				{
 					// As a last resort to make space is to simply remove the other hauler
 					if ( other.exclusiveMode && other.type == Type.hauler && other.road != road && other.road.ActiveHaulerCount > 1 && other.IsIdle() )
-						other.Remove( true );
+						other.Retire();
 					else
 					{
 						if ( stuck.empty )
@@ -802,7 +802,7 @@ public class Unit : HiveObject
 				{
 					// Item is hanging in the air, it never actually entered the logistic network
 					items[i].assert.IsNull( items[i].flag );
-					items[i].Remove( false );
+					items[i].Remove();
 				}
 			}
 			base.Cancel();
@@ -1033,7 +1033,7 @@ public class Unit : HiveObject
 			boss.assert.IsFalse( boss.exclusiveMode );
 			if ( boss.road == null )
 			{
-				boss.Remove( true );
+				boss.Retire();
 				return finished;    // Task failed
 			}
 			if ( boss.road.NodeIndex( boss.node ) == -1 )
@@ -1603,7 +1603,7 @@ public class Unit : HiveObject
 		}
 	}
 
-	public override bool Remove( bool returnToMainBuilding = true )
+	public override void Remove()
 	{
 		assert.IsTrue( type != Type.cart || building == null );
 		ResetTasks();
@@ -1619,15 +1619,26 @@ public class Unit : HiveObject
 			road.haulers.Remove( this );
 			road = null;
 		}
-		if ( !returnToMainBuilding )
-		{
-			foreach ( var item in itemsInHands )
-				item?.Remove( false );
-			itemsInHands[0] = itemsInHands[1] = null;
+		foreach ( var item in itemsInHands )
+			item?.Remove();
+		itemsInHands[0] = itemsInHands[1] = null;
 
-			DestroyThis();
-			return true;
+		DestroyThis();
+	}
+
+	public void Retire()
+	{
+		assert.IsTrue( type != Type.cart || building == null );
+		ResetTasks();
+		LeaveExclusivity();
+		if ( road != null )
+		{
+			road.haulers.Remove( this );
+			road = null;
 		}
+		foreach ( var item in itemsInHands )
+			item?.Remove();
+		itemsInHands[0] = itemsInHands[1] = null;
 
 		SetActive( true );       // Tinkerers are not active when they are idle
 
@@ -1649,7 +1660,6 @@ public class Unit : HiveObject
 		building = null;
 		Color = Color.black;
 		type = Type.unemployed;
-		return true;
 	}
 
 	virtual public void FindTask()
@@ -1778,7 +1788,7 @@ public class Unit : HiveObject
 	{
 		if ( ( bored.done && road.ActiveHaulerCount > 1 ) || ( road.ActiveHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
 		{
-			Remove( true );
+			Retire();
 			return;
 		}
 
@@ -2280,7 +2290,7 @@ public class Unit : HiveObject
 			building.assert.IsNotSelected();
 		ResetTasks();
 		foreach ( var item in itemsInHands )
-			item?.Remove( false );
+			item?.Remove();
 		assert.IsNull( itemsInHands[0] );
 		assert.IsNull( itemsInHands[1] );
 		walkTo = walkFrom = null;
@@ -2296,7 +2306,7 @@ public class Unit : HiveObject
 		if ( type == Type.tinkerer || type == Type.tinkererMate || type == Type.cart )
 			SetNode( building.node );
 		if ( type == Type.constructor || type == Type.unemployed )
-			Remove( false );
+			Retire();
 	}
 
 	public override Node location { get { return node; } }
@@ -2488,7 +2498,7 @@ public class Unit : HiveObject
 				if ( item && building.tinkerer == this )
 					assert.AreEqual( item.destination, building );
 		}
-		assert.IsTrue( team == null || world.teams.Contains( team ) );
+		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );
 	}

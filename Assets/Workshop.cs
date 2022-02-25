@@ -272,7 +272,7 @@ public class Workshop : Building
 			set
 			{
 				value.nextFlag.CancelItem( value );
-				value.Remove( false );
+				value.Remove();
 			}
 		}
 
@@ -320,7 +320,7 @@ public class Workshop : Building
 			{
 				resource.gathered.Start();
 				if ( !resource.infinite && --resource.charges == 0 )
-					resource.Remove( true );
+					resource.Remove();
 				else
 				{
 					if ( resource.underGround )
@@ -417,7 +417,7 @@ public class Workshop : Building
 			if ( resource.hunter == null )
 			{
 				resource.animals.Clear();
-				resource.Remove( false );
+				resource.Remove();
 				return true;
 			}
 			return false;
@@ -428,7 +428,7 @@ public class Workshop : Building
 			if ( resource )
 			{
 				resource.animals.Clear();
-				resource.Remove( false );
+				resource.Remove();
 			}
 			base.Cancel();
 		}
@@ -522,10 +522,10 @@ public class Workshop : Building
 		return this;
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
 		team.workshops.Remove( this );
-		return base.Remove( takeYourTime );
+		base.Remove();
 	}
 
 	static public Configuration GetConfiguration( Type type )

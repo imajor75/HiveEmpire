@@ -89,7 +89,7 @@ public abstract class Attackable : Building
 
 	void ProcessAttacker( Unit attacker )
 	{
-		if ( defenderCount == 0 && aggressor == null )
+//		if ( defenderCount == 0 && aggressor == null )
 		{
 			attacker.ResetTasks();
 			attacker.ScheduleWalkToNode( flag.node );
@@ -135,7 +135,7 @@ public abstract class Attackable : Building
 			trashMaterials.Add( m );
 			World.SetMaterialRecursive( soldier.body, m );
 			soldier.animator.speed = 0;
-			soldier.Remove( false );
+			soldier.Remove();
 		}
 
 		Trash( defender );
@@ -288,15 +288,15 @@ public class GuardHouse : Attackable
 			Interface.GuardHousePanel.Create().Open( this, show );
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
 		if ( removing )
-			return true;
+			return;
 
 		removing = true;
 		team.UnregisterInfuence( this );
 		team.guardHouses.Remove( this );
-		return base.Remove( takeYourTime );
+		base.Remove();
 	}
 
 	public override int Influence( Node node )

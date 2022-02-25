@@ -410,7 +410,7 @@ public class Ground : HiveObject
 			for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 			{
 				Node neighbour = node.Neighbour( j );
-				if ( node.team == neighbour.team )
+				if ( node.team == neighbour.team || node.team == null )
 				{
 					if ( node.borders[j] )
 					{
@@ -426,11 +426,11 @@ public class Ground : HiveObject
 			}
 
 			if ( node.building && node.building.team != node.team && node.building.team )
-				node.building.Remove( false );
+				node.building.Remove();
 			if ( node.flag && node.flag.team != node.team && node.flag.team )
-				node.flag.Remove( false );
+				node.flag.Remove();
 			if ( node.road && node.road.team != node.team )
-				node.road.Remove( false );
+				node.road.Remove();
 		}
 		dirtyOwnership = false;
 	}

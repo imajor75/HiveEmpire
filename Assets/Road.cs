@@ -175,7 +175,7 @@ public class Road : HiveObject, Interface.IInputHandler
 			{
 				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.cornfield || resource.type == Resource.Type.rock )
 				{
-					resource.Remove( false );
+					resource.Remove();
 					break;
 				}
 			}
@@ -596,13 +596,14 @@ public class Road : HiveObject, Interface.IInputHandler
 		team.versionedRoadNetworkChanged.Trigger();
 	}
 
-	public void Merge( Road another )
+	public void Merge( Road another, Flag middle )
 	{
 		var newRoad = Road.Create();
 		newRoad.team = team;
 		newRoad.Setup();
+		team.roads.Add( newRoad );
 
-  		if ( ends[1] == another.ends[0] || ends[1] == another.ends[1] )
+  		if ( ends[1] == middle )
 		{
 			for ( int i = 0; i < nodes.Count; i++ )
 				newRoad.nodes.Add( nodes[i] );
@@ -613,9 +614,9 @@ public class Road : HiveObject, Interface.IInputHandler
 				newRoad.nodes.Add( nodes[i] );
 		}
 
-		if ( another.ends[0] == ends[0] || another.ends[0] == ends[1] )
+		if ( another.ends[0] == middle )
 		{
-			assert.AreEqual( newRoad.nodes.Last(), another.nodes.First() );
+			assert.AreEqual( newRoad.nodes.Last(), another.nodes.First(), $"The roads {this} and {another} were not continuous when merging them" );
 			for ( int i = 1; i < another.nodes.Count; i++ )
 				newRoad.nodes.Add( another.nodes[i] );
 		}
@@ -632,8 +633,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		ReassignHaulersTo( newRoad );
 		another.ReassignHaulersTo( newRoad );
 
-		Remove( false );
-		another.Remove( false );
+		Remove();
+		another.Remove();
 		newRoad.RegisterOnGround();
 	}
 
@@ -641,8 +642,8 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		var a0 = nodes[0].flag.roadsStartingHere; var i0 = nodes[0].DirectionTo( nodes[1] );
 		var a1 = lastNode.flag.roadsStartingHere; var i1 = GetNodeFromEnd( 0 ).DirectionTo( GetNodeFromEnd( 1 ) );
-		assert.IsTrue( a0[i0] == null || a0[i0] == this );
-		assert.IsTrue( a1[i1] == null || a1[i1] == this );
+		assert.IsTrue( a0[i0] == null || a0[i0] == this, $"Cannot place road {this} at {nodes[0].x}:{nodes[0].y} (direction: {i0}), already taken by {a0[i0]}" );
+		assert.IsTrue( a1[i1] == null || a1[i1] == this, $"Cannot place road {this} at {lastNode.x}:{lastNode.y} (direction: {i1}), already taken by {a1[i1]}" );
 		a0[i0] = this;
 		a1[i1] = this;
 		for ( int i = 1; i < nodes.Count - 1; i++ )
@@ -661,8 +662,6 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	void UnregisterOnGround()
 	{
-		if ( destroyed )
-			return;
 		if ( ready )
 		{
 			if ( nodes[0].flag )	// This is always true, except when moving a flag
@@ -712,12 +711,13 @@ public class Road : HiveObject, Interface.IInputHandler
 		base.OnDestroy();
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
+		DestroyThis();
+		team.roads.Remove( this );
 		var localHaulers = haulers.GetRange( 0, haulers.Count );
 		foreach ( var hauler in localHaulers )
-			if ( !hauler.Remove() )
-				return false;
+			hauler.Remove();
 		if ( !decorationOnly )
 			UnregisterOnGround();
 		List<Unit> exclusiveHaulers = new List<Unit>();
@@ -726,10 +726,6 @@ public class Road : HiveObject, Interface.IInputHandler
 				exclusiveHaulers.Add( hauler );
 		foreach ( var hauler in exclusiveHaulers )
 			hauler.LeaveExclusivity();
-		team.roads.Remove( this );
-
-		DestroyThis();
-		return true;
 	}
 
 	public Node centerNode
@@ -936,7 +932,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public override void Reset()
 	{
 		while ( haulers.Count > 1 )
-			haulers[1].Remove( false );
+			haulers[1].Remove();
 		haulers[0].Reset();
 	}
 
@@ -951,7 +947,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	
 		ReassignHaulersTo( newRoad, secondRoad );
-		Remove( false );
+		Remove();
 		newRoad.RegisterOnGround();
 		secondRoad?.RegisterOnGround();
 		return newRoad;
@@ -1104,7 +1100,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		if ( !ready )
 			assert.AreEqual( root.viewport.inputHandler, this );
-		assert.IsTrue( team == null || world.teams.Contains( team ) );
+		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		int j = 0;
 		foreach ( var r in team.roads )
@@ -1117,10 +1113,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public void OnLostInput()
 	{
 		if ( !ready )
-		{
-			bool removed = Remove( false );
-			assert.IsTrue( removed );
-		}
+			Remove();
 		root.viewport.showGridAtMouse = false;
 		root.viewport.pickGroundOnly = false;
 		Interface.tooltip.Clear();

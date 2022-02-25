@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -96,7 +96,7 @@ public abstract class Player : HiveObject
 		return this;
 	}
 
-	public new void Remove( bool takeYourTime )
+	public override void Remove()
 	{
 		world.players.Remove( this );
 		Destroy( gameObject );
@@ -312,7 +312,7 @@ public class Team : HiveObject
 		int sourceCount = 0;
 		foreach ( var offset in Ground.areas[Constants.GuardHouse.attackMaxDistance] )
 		{
-			if ( target.node.Add( offset ).building is GuardHouse guardHouse && guardHouse.team == this )
+			if ( target.node.Add( offset ).team == this )
 				sourceCount++;
 		}
 		if ( sourceCount == 0 )
@@ -480,14 +480,36 @@ public class Team : HiveObject
 		return mainBuilding;
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
+		destroyed = true;
 		world.teams.Remove( this );
 		foreach ( var player in players )
-			player.Remove( takeYourTime );
+			player.Remove();
+
+		List<Workshop> tmpWorkshops = new List<Workshop>( workshops );
+		foreach ( var workshop in tmpWorkshops )
+			if ( workshop )
+				workshop.Remove();
+		List<Stock> tmpStocks = new List<Stock>( stocks );
+		foreach ( var stock in tmpStocks )
+			if ( stock )
+				stock.Remove();
+		List<GuardHouse> tmpGuardHouses = new List<GuardHouse>( guardHouses );
+		foreach ( var guardHouse in tmpGuardHouses )
+			if ( guardHouse )
+				guardHouse.Remove();
+		List<Flag> tmpFlags = new List<Flag>( flags );
+		foreach ( var flag in tmpFlags )
+			if ( flag )
+				flag.Remove();
+		List<Item> tmpItems = new List<Item>( items );
+		foreach ( var item in tmpItems )
+			if ( item )
+				item.Remove();
+		itemDispatcher.Remove();
 		world.ground.dirtyOwnership = true;
 		Destroy( gameObject );
-		return true;
 	}
 
 	public void RegisterInfluence( Building building )
@@ -519,6 +541,8 @@ public class Team : HiveObject
 
 	public void RegisterItem( Item item )
 	{
+		if ( item.id == 37425 )
+		{}
 		item.assert.AreEqual( item.team, this );
 		int slotIndex = firstPossibleEmptyItemSlot;
 		while ( slotIndex < items.Count && items[slotIndex] != null )

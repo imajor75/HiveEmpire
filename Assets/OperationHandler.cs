@@ -1076,7 +1076,7 @@ public class Operation
                 if ( building is GuardHouse )
                     inverse.SetupAsCreateBuilding( building.node, building.flagDirection, Building.Type.guardHouse, building.team );
 
-                building.Remove( true );
+                building.Remove();
                 return inverse;
             }
             case Type.createBuilding:
@@ -1107,8 +1107,8 @@ public class Operation
             case Type.removeRoad:
             {
                 var road = this.road;
-                if ( road == null || !road.Remove( true ) )
-                    return null;
+                if ( road )
+                    road.Remove();
                 return Create().SetupAsCreateRoad( road.nodes, road.team );    // TODO Seems to be dangerous to use the road after it was removed
             }
             case Type.createRoad:
@@ -1127,7 +1127,7 @@ public class Operation
                         {
                                 if ( !newRoad.Finish() )
                                 {
-                                    newRoad.Remove( false );
+                                    newRoad.Remove();
                                     newRoad = null;
                                 }
 
@@ -1148,8 +1148,8 @@ public class Operation
             case Type.removeFlag:
             {
                 var flag = this.flag;
-                if ( flag == null || !flag.Remove( true ) )
-                    return null;
+                if ( flag )
+                    flag.Remove();
 
                 return Create().SetupAsCreateFlag( flag.node, flag.team, flag.crossing );
             }

@@ -121,10 +121,9 @@ public abstract class HiveObject : HiveCommon
 	{
 	}
 
-	public virtual bool Remove( bool takeYourTime = false )
+	public virtual void Remove()
 	{
 		assert.Fail();
-		return false;
 	}
 
 	public abstract Node location { get; }

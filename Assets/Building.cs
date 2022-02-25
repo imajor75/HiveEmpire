@@ -185,7 +185,7 @@ abstract public class Building : HiveObject
 
 			if ( flattened )
 			{
-				builder?.Remove( true );
+				builder?.Retire();
 				builder = null;
 				return false;
 			}
@@ -281,11 +281,10 @@ abstract public class Building : HiveObject
 			Setup( flatteningArea, true, boss );
 		}
 
-		public bool Remove( bool takeYourTime )
+		public void Remove()
 		{
 			hammering?.StopAct();
-			builder?.Remove( takeYourTime );
-			return true;
+			builder?.Remove();
 		}
 
 		new public void GameLogicUpdate()
@@ -615,6 +614,9 @@ abstract public class Building : HiveObject
 
 	new public void Update()
 	{
+		if ( destroyed )
+			return;
+			
 		UpdateLook();
 		base.Update();
 	}
@@ -705,21 +707,21 @@ abstract public class Building : HiveObject
 			highlightArrow.SetActive( false );
 	}
 
-	public override bool Remove( bool takeYourTime )
+	public override void Remove()
 	{
-		construction.Remove( takeYourTime );
+		construction.Remove();
 		if ( !blueprintOnly )
 			team.buildingCounts[(int)type]--;
 
 		var list = itemsOnTheWay.GetRange( 0, itemsOnTheWay.Count );
 		foreach ( var item in list )
 			item.CancelTrip();
-		if ( exit && !exit.Remove( takeYourTime ) )		// TODO null reference exception happened here when trying to build a woodcutter in a forest. Again when trying to build a bow maker
-			return false;
-		if ( tinkerer != null && !tinkerer.Remove() )
-			return false;
-		if ( tinkererMate != null && !tinkererMate.Remove() )
-			return false;
+		if ( exit )
+			exit.Remove();		// TODO null reference exception happened here when trying to build a woodcutter in a forest. Again when trying to build a bow maker
+		if ( tinkerer )
+			tinkerer.Remove();
+		if ( tinkererMate )
+			tinkererMate.Remove();
 
 		if ( construction.area != null )	// Should never be null, but old saves are having this.
 			foreach ( var o in construction.area )
@@ -735,7 +737,6 @@ abstract public class Building : HiveObject
 			flag.Remove();
 		team?.versionedBuildingDelete.Trigger();
 		DestroyThis();
-		return true;
 	}
 
 	public virtual int Influence( Node node )
@@ -767,13 +768,13 @@ abstract public class Building : HiveObject
 		foreach ( var other in buildingsAround )
 		{
 			if ( other != this )
-				other.Remove( false );
+				other.Remove();
 		}
 
 		foreach ( var road in flag.roadsStartingHere )
 		{
 			if ( road )
-				road.Remove( false );
+				road.Remove();
 		}
 
 		this.team = team;
@@ -792,6 +793,9 @@ abstract public class Building : HiveObject
 
 	public override void Validate( bool chain )
 	{
+		if ( destroyed )
+			return;
+			
 		assert.IsTrue( flag.Buildings().Contains( this ) );
 		assert.AreEqual( team, flag.team );
 		assert.AreEqual( this, node.building );
@@ -812,7 +816,7 @@ abstract public class Building : HiveObject
 		tinkererMate?.Validate( true );
 		exit?.Validate( true );
 		construction?.Validate( true );
-		if ( team )
+		if ( team && !team.destroyed )
 			assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );

@@ -107,6 +107,10 @@ public class Flag : HiveObject
 
 	new public void Start()
 	{
+		base.Start();
+		if ( destroyed )
+			return;
+			
 		name = $"Flag {node.x}:{node.y}";
 		ground.Link( this );
 		if ( crossing )
@@ -133,7 +137,6 @@ public class Flag : HiveObject
 			if ( items[i] != null )
 				items[i].transform.SetParent( frames[i].transform, false );
 		}
-		base.Start();
 	}
 
 	public override void GameLogicUpdate()
@@ -349,25 +352,30 @@ public class Flag : HiveObject
 		Interface.FlagPanel.Create().Open( this, show );
 	}
 
-	public override bool Remove( bool takeYourTime = false )
+	public override void Remove()
 	{
+		team.flags.Remove( this );
 		foreach ( var building in Buildings() )
-			if ( !building.Remove( takeYourTime ) )
-				return false;
+		{
+			if ( building.destroyed )
+				continue;
+			building.Remove();
+		}
 		List<Road> roads = new List<Road>();
 		foreach ( var road in roadsStartingHere )
-			if ( road )
+			if ( road )	
 				roads.Add( road );
-		if ( roads.Count == 2 )
-			roads[0].Merge( roads[1] );
+		if ( roads.Count == 2 && roads[0] != roads[1] )
+			roads[0].Merge( roads[1], this );
 		else
 			foreach ( var road in roads )
-				road?.Remove( takeYourTime );
+				if ( !road.destroyed )
+					road?.Remove();	// If a road starts and ends at the same flag (making a circle) then it is listed twice in the roadsStartingHere array so it is also listed twice in the roads array, hence Remove is called twice
 
 		foreach ( var item in items )
 		{
 			if ( item )		// Could be deleted (how? but it happened), hence ?. is not enought
-				item.Remove( false );
+				item.Remove();
 		}
 
 		if ( user )
@@ -377,9 +385,7 @@ public class Flag : HiveObject
 		}
 		node.flag = null;
 		ground.SetDirty( node );	// To allow grass
-		team.flags.Remove( this );
 		DestroyThis();
-		return true;
 	}
 
 	// Returns the number of available slots at the flag
@@ -405,7 +411,7 @@ public class Flag : HiveObject
 		{
 			if ( items[i] == null || items[i].flag != this )
 				continue;
-			items[i].Remove( false );
+			items[i].Remove();
 			items[i] = null;
 		}
 		foreach ( var road in roadsStartingHere )
@@ -449,7 +455,7 @@ public class Flag : HiveObject
 		}
 		if ( crossing )
 			assert.IsNull( user );
-		if ( team )
+		if ( team && !team.destroyed )
 			assert.IsTrue( world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
