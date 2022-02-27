@@ -92,7 +92,7 @@ public class Serializer
 						currentObjectIndex = (int)id;
 					if ( reader.Value is string str )
 						currentObjectIndex = int.Parse( str );
-					Assert.global.IsTrue( currentObjectIndex > 0, $"Invalid ID {currentObjectIndex} in file {fileName}" );
+					Assert.global.IsTrue( currentObjectIndex >= 0, $"Invalid ID {currentObjectIndex} in file {fileName}" );
 					break;
 				}				
 				case "$ref":
@@ -130,10 +130,11 @@ public class Serializer
 		if ( owner == null )
 		{
 			owner = CreateObject( currentObjectType );
-			if ( currentObjectIndex != -1 )
+			if ( currentObjectIndex != -1 && currentObjectIndex >= objects.Count )
 			{
 				while ( objects.Count < currentObjectIndex + 1 )
-					objects.Add( owner );
+					objects.Add( null );
+				Assert.global.AreEqual( objects[currentObjectIndex], null, $"Object {objects[currentObjectIndex]} is already indexed with {currentObjectIndex}, no room for {owner}" );
 				objects[currentObjectIndex] = owner;
 				processedObjectCount = currentObjectIndex+1;
 				currentObjectIndex = -1;
@@ -272,7 +273,7 @@ public class Serializer
 			return;
 		}
 		if ( type.IsValueType && !type.IsPrimitive && !type.IsEnum )
-			ProcessObject( value );
+			ProcessObject( value, -1 );
 		else
 			if ( type.IsEnum )
 				writer.WriteValue( value.ToString() );
@@ -280,10 +281,15 @@ public class Serializer
 				writer.WriteValue( value );
 	}
 
-	void ProcessObject( object source )
+	void ProcessObject( object source, int index )
 	{
 		writer.WriteStartObject();
 		var type = source.GetType();
+		if ( index != -1 )
+		{
+			writer.WritePropertyName( "$id" );
+			writer.WriteValue( index );
+		}
 		foreach ( var member in type.GetMembers() )
 		{
 			if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
@@ -358,7 +364,10 @@ public class Serializer
 		objects.Add( source );
 		writer.WriteStartArray();
 		while ( objects.Count != processedObjectCount )
-			ProcessObject( objects[processedObjectCount++] );
+		{
+			ProcessObject( objects[processedObjectCount], processedObjectCount );
+			processedObjectCount++;
+		}
 		writer.WriteEndArray();
 		writer.Close();
 		sw.Close();
