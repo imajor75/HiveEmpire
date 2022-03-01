@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1148,10 +1148,10 @@ public class World : HiveCommon
 
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 		{
-			if ( ho is Interface )
+			if ( ho is Interface || ho is Challenge )
 				continue;
 				
-			ho.noAssert = true;
+			ho.noAssert = true;		// TODO This is not good, causes a lot of trouble
 			ho.destroyed = true;	// To prevent decoration only roads getting an ID and registered after load
 		}
 		hiveObjects.Clear();
