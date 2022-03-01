@@ -22,11 +22,13 @@ public class Serializer
 	public bool allowUnityTypes = false;
 	public int currentObjectIndex = -1;
 	public Type currentObjectType;
+	public List<ReferenceLink> referenceLinks = new List<ReferenceLink>();
 
-	struct Reference
+	public struct ReferenceLink
 	{
-		public object instance;
-		public string name;
+		public HiveObject referencer;
+		public MemberInfo member;
+		public HiveObject reference;
 	}
 
 	public Serializer( JsonReader reader, string fileName )
@@ -142,18 +144,19 @@ public class Serializer
 			}
 		}
 		var type = owner.GetType();
-		FieldInfo i = type.GetField( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );	// What if there are multiple ones with the same name
-		PropertyInfo p = type.GetProperty( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );
-		Assert.global.IsTrue( i != null || p != null, $"No field with the name {name} found in {type.FullName}" );
+		MemberInfo[] m = type.GetMember( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );
+		Assert.global.IsTrue( m.Length != 0, $"No member found with the name {name} in {type}" );
+		if ( m.Length > 1 ) 
+			HiveObject.Log( $"Multiple members with the name {name} in {type}" );
 		reader.Read();
 
-		if ( p != null && ( i == null || p.DeclaringType.IsSubclassOf( i.DeclaringType ) ) )
-			p.SetValue( owner, ProcessFieldValue( p.PropertyType, type.Name + '.' + name ) );
-		else
-			i.SetValue( owner, ProcessFieldValue( i.FieldType, type.Name + '.' + name ) );
+		if ( m.Last() is FieldInfo i )
+			i.SetValue( owner, ProcessFieldValue( i.FieldType, i, owner ) );
+		if ( m.Last() is PropertyInfo p )
+			p.SetValue( owner, ProcessFieldValue( p.PropertyType, p, owner ) );
 	}
 
-	object ProcessFieldValue( Type type, string owner )
+	object ProcessFieldValue( Type type, MemberInfo m, object referencer )
 	{
 		switch ( reader.TokenType )
 		{
@@ -183,7 +186,10 @@ public class Serializer
 			case JsonToken.StartObject:
 			{
 				currentObjectType = type;
-				return FillObject( null );
+				var o = FillObject( null );
+				if ( referencer is HiveObject hiveReferencer && o is HiveObject hiveReference )
+					referenceLinks.Add( new ReferenceLink{ referencer = hiveReferencer, member = m, reference = hiveReference } );
+				return o;
 			}
 			case JsonToken.StartArray:
 			{
@@ -195,7 +201,7 @@ public class Serializer
 					elementType = type.GetGenericArguments()[0];
 				if ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( LinkedList<> ) )
 					elementType = type.GetGenericArguments()[0];
-				Assert.global.IsNotNull( elementType, $"Unknown element type of {type.ToString()} for {owner}" );
+				Assert.global.IsNotNull( elementType, $"Unknown element type of {type} for {referencer.GetType().Name}.{m.Name}" );
 
 				Type listType = typeof( List<> ).MakeGenericType( new [] { elementType } );
 				IList list = (IList)Activator.CreateInstance( listType );
@@ -204,7 +210,7 @@ public class Serializer
 				{
 					if ( reader.TokenType != JsonToken.Comment )
 					{
-						object value = ProcessFieldValue( elementType, owner );
+						object value = ProcessFieldValue( elementType, m, referencer );
 						if ( value as IConvertible != null )
 							list.Add( Convert.ChangeType( value, elementType ) );
 						else
@@ -349,7 +355,10 @@ public class Serializer
 	static public rootType Read<rootType>( string fileName ) where rootType : class
 	{
 		var serializer = new Serializer();
-		return (rootType)serializer.ReadFile( fileName, typeof( rootType ) );
+		var result = (rootType)serializer.ReadFile( fileName, typeof( rootType ) );
+		foreach ( var link in serializer.referenceLinks )
+			Assert.global.IsTrue( link.referencer.destroyed || !link.reference.destroyed, $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member}" );
+		return result;
 	}
 
 	public void WriteFile( string fileName, object source, bool intended, bool allowUnityTypes )
