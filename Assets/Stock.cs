@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -608,6 +608,8 @@ public class Stock : Attackable
 		if ( main )
 			team.Remove();
 		base.Remove();
+		if ( cart )
+			cart.Remove();
 	}
 
 	new void Start()

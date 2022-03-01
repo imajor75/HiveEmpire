@@ -89,7 +89,7 @@ public abstract class Attackable : Building
 
 	void ProcessAttacker( Unit attacker )
 	{
-//		if ( defenderCount == 0 && aggressor == null )
+		if ( defenderCount == 0 && aggressor == null )
 		{
 			attacker.ResetTasks();
 			attacker.ScheduleWalkToNode( flag.node );

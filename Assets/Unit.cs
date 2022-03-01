@@ -1605,7 +1605,6 @@ public class Unit : HiveObject
 
 	public override void Remove()
 	{
-		assert.IsTrue( type != Type.cart || building == null );
 		ResetTasks();
 		if ( origin != null )
 		{
