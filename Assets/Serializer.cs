@@ -357,7 +357,20 @@ public class Serializer
 		var serializer = new Serializer();
 		var result = (rootType)serializer.ReadFile( fileName, typeof( rootType ) );
 		foreach ( var link in serializer.referenceLinks )
+		{
+			if ( link.referencer is Stock stock && link.reference is Stock.Cart cart && stock.destroyed && !cart.destroyed )
+				cart.destroyed = true;
+			if ( link.referencer is OperationHandler oh && link.reference is World.Challenge challenge && challenge.destroyed && !oh.destroyed )
+				challenge.destroyed = false;
+			if ( link.referencer is GuardHouse gh && link.reference is Unit soldier && !gh.destroyed && soldier.destroyed && gh.assassin == soldier )
+			{
+				gh.assassin = null;
+				continue;
+			}
+			if ( link.referencer is Stock.Cart && !link.referencer.destroyed && link.reference.destroyed )
+				link.referencer.destroyed = true;
 			Assert.global.IsTrue( link.referencer.destroyed || !link.reference.destroyed, $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member}" );
+		}
 		return result;
 	}
 

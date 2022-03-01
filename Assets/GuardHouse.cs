@@ -234,6 +234,12 @@ public class GuardHouse : Attackable
 	{
 		base.Start();
 		name = $"Guardhouse {node.x}:{node.y}";
+
+		// Not sure why these are needed, but it happened that the assassin reference was unity null
+		if ( assassin == null || assassin.destroyed )
+			assassin = null;
+		if ( aggressor == null || aggressor.destroyed )
+			aggressor = null;
 	}
 
 	public override GameObject Template()
