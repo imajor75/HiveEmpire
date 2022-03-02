@@ -339,6 +339,7 @@ public static class Constants
         public const float guardHouseWorkshopRatio = 1.5f;
         public const int roadLastUsedMin = Constants.World.normalSpeedPerSecond * 60 * 20;
         public const int roadLastUsedMax = Constants.World.normalSpeedPerSecond * 60 * 120;
+        public const int soldiersReserved = 10;
     }
 }
 

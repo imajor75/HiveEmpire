@@ -272,7 +272,46 @@ public class Simpleton : Player
                     boss.tasks.Add( new SplitRoadTask( boss, road ) );
             }
 
+            foreach ( var enemy in world.teams )
+            {
+                if ( enemy == boss.team )
+                    continue;
+                boss.tasks.Add( new AttackTask( boss, enemy.mainBuilding ) );
+                foreach ( var guardHouse in enemy.guardHouses )
+                    boss.tasks.Add( new AttackTask( boss, guardHouse ) );
+            }
+
             return finished;
+        }
+    }
+
+    public class AttackTask : Task
+    {
+        public Attackable target;
+
+        public AttackTask( Simpleton boss, Attackable target ) : base( boss )
+        {
+            this.target = target;
+        }
+
+        public override bool Analyze()
+        {
+            problemWeight = 0.5f;
+
+            if ( !boss.team.Attack( target, 1, true ) )
+                return finished;
+
+            int soldiersNeeded = target.defenderCount * 2 + 1;
+            if ( boss.team.soldierCount < soldiersNeeded + Constants.Simpleton.soldiersReserved )
+                return finished;
+
+            solutionEfficiency = ( boss.team.soldierCount - Constants.Simpleton.soldiersReserved ) * 0.01f;
+            return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            HiveCommon.oh.ScheduleAttack( boss.team, target, target.defenderCount * 2 + 1, true, Operation.Source.computer );
         }
     }
 
