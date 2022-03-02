@@ -25,6 +25,7 @@ public class Workshop : Building
 	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
 	public Status currentStatus = Status.unknown;
 	public World.Timer statusDuration = new World.Timer();
+	public bool outOfResourceReported;
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
@@ -975,6 +976,11 @@ public class Workshop : Building
 					return;
 				}
 			}
+		}
+		if ( ( type == Type.woodcutter || type == Type.stonemason ) && !outOfResourceReported )
+		{
+			outOfResourceReported = true;
+			team.SendMessage( "Out of resources", this );
 		}
 		ChangeStatus( Status.waitingForResource );
 	}
