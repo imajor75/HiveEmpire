@@ -6,6 +6,7 @@ using UnityEngine;
 public abstract class Player : HiveObject
 {
 	public new string name;
+	public LinkedList<Message> messages = new LinkedList<Message>();
 
 	[Obsolete( "Compatibility with old files", true )]
 	float totalEfficiency { set {} }
@@ -100,6 +101,12 @@ public abstract class Player : HiveObject
 	{
 		world.players.Remove( this );
 		Destroy( gameObject );
+	}
+
+	public class Message
+	{
+		public string text;
+		public HiveObject location;
 	}
 }
 
@@ -241,6 +248,13 @@ public class Team : HiveObject
 		return this;
 	}
 
+	public void SendMessage( string text, HiveObject location )
+	{
+		var message = new Player.Message{ text = text, location = location };
+		foreach ( var player in players )
+			player.messages.AddLast( message );
+	}
+
 	public Material GetBuoyMaterial()
 	{
 		if ( buoyMaterial == null )
@@ -341,6 +355,8 @@ public class Team : HiveObject
 			soldierCount--;
 		}
 		target.lastSpot += attackerCount;
+
+		SendMessage( $"Military building under attack!", target );
 		return true;
 	}
 

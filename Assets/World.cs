@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -813,6 +813,8 @@ public class World : HiveCommon
 				player.name = Constants.Player.names.Random();
 			if ( player is Simpleton simpleton && simpleton.isolatedNodes.Count > 100 )
 				simpleton.isolatedNodes.Clear();
+			if ( player.messages == null )
+				player.messages = new LinkedList<Player.Message>();
 		}
 
 		foreach ( var team in teams )

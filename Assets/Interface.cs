@@ -45,6 +45,7 @@ public class Interface : HiveObject
 	public MonoBehaviour replayIcon;
 	Operation lastShownOperation;
 	public int selectByID;
+	public Text messageButton;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -494,12 +495,25 @@ public class Interface : HiveObject
 		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => world.SetSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
+		messageButton = this.Text( "" ).Pin( iconSize, -50, 2 * iconSize, 2* iconSize ).AddClickHandler( OnMessagesClicked );
+		messageButton.fontSize = 40;
+		messageButton.color = Color.yellow;
+		messageButton.AddOutline();
+
 		LoadHotkeys();
 		LoadChallenges();
 
 		world = World.Create().Setup();
 		StartCoroutine( ValidateCoroutine() );
 		OpenMainPanel();
+	}
+
+	public void OnMessagesClicked()
+	{
+		var message = mainPlayer.messages.First();
+		status.SetText( this, message.text, pinX:0.5f, pinY:0.2f );
+		eye.FocusOn( message.location, true );
+		mainPlayer.messages.RemoveFirst();
 	}
 
 	public void OpenMainPanel()
@@ -656,6 +670,17 @@ public class Interface : HiveObject
 
 	new public void Update()
 	{
+		if ( mainPlayer.messages.Count != 0 )
+		{
+			messageButton.text = mainPlayer.messages.Count.ToString();
+			var color = Color.yellow;
+			color.a = (float)( 1 - ( Time.unscaledTime - Math.Floor( Time.unscaledTime ) ) );
+			messageButton.color = color;
+			messageButton.gameObject.SetActive( true );
+		}
+		else
+			messageButton.gameObject.SetActive( false );
+
 		if ( EventSystem.current.currentSelectedGameObject != null )
 		{ 
 			focusOnInputField = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
