@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,6 +15,7 @@ public class Stock : Attackable
 	public int totalTarget;
 	public int maxItems = Constants.Stock.defaultmaxItems;
 	public World.Timer offersSuspended = new World.Timer();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+	public bool fullReported;
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
 	override public bool wantFoeClicks { get { return main; } }
@@ -709,7 +710,15 @@ public class Stock : Attackable
 
 				CRC += destination.id;
 				if ( itemData[itemType].outputRoutes[i].IsAvailable() )
+				{
 					cart.TransferItems( itemData[itemType].outputRoutes[i] );
+					fullReported = false;
+				}
+				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !fullReported )
+				{
+					fullReported = true;
+					team.SendMessage( "Stock full", this );
+				}
 			}
 
 			CRC += itemData[itemType].inputMin + itemData[itemType].inputMax + itemData[itemType].outputMin + itemData[itemType].outputMax + itemData[itemType].content;
@@ -722,6 +731,12 @@ public class Stock : Attackable
 				if ( current > itemData[itemType].inputMax )
 					p = ItemDispatcher.Priority.zero;
 				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea ); // TODO Should not order more than what fits
+				fullReported = false;
+			}
+			else if ( !fullReported )
+			{
+				fullReported = true;
+				team.SendMessage( "Stock full", this );
 			}
 			if ( itemData.Count > itemType )
 			{
