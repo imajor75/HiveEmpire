@@ -551,7 +551,7 @@ public class World : HiveCommon
 		var soundSource = component.gameObject.AddComponent<AudioSource>();
 		soundSource.spatialBlend = 1;
 		soundSource.minDistance = 1;
-		soundSource.pitch = instance.speed == Speed.fast ? Constants.World.fastSpeedFactor : 1;
+		soundSource.pitch = instance.timeFactor;
 		soundSource.maxDistance = Constants.Node.size * World.soundMaxDistance;
 		return soundSource;
 	}
