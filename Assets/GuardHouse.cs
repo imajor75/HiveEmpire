@@ -252,7 +252,7 @@ public class GuardHouse : Attackable
 		base.GameLogicUpdate();
 		if ( blueprintOnly || !construction.done )
 			return;
-		if ( !ready && soldiers.Count > 0 && soldiers.First().IsIdle( true ) )
+		if ( !ready && soldiers.Count > 0 && soldiers.First().node == node )
 		{
 			ready = true;
 			team.RegisterInfluence( this );
