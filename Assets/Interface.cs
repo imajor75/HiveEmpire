@@ -4035,6 +4035,9 @@ public class Interface : HiveObject
 
 			if ( unit.type == Unit.Type.constructor )
 				unit.team.mainBuilding.OnClicked( true );
+
+			if ( unit.type == Unit.Type.soldier && unit.building )
+				unit.building.OnClicked( true );
 		}
 
 		public override CompareResult IsTheSame( Panel other )
