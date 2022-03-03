@@ -1392,7 +1392,7 @@ public class Unit : HiveObject
 	{
 		ground.Link( this, walkBase?.location );
 		Vector3 pos = node.position;
-		if ( node == building )
+		if ( building && node == building.node )
 			pos += standingOffsetInsideBuilding;
 		if ( walkTo )
 			pos = Vector3.Lerp( walkFrom.position, walkTo.position, walkProgress );
