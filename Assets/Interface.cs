@@ -31,7 +31,7 @@ public class Interface : HiveObject
 	public bool heightStrips;
 	public bool showReplayAction = true;
 	public Player mainPlayer;
-	public static Tooltip tooltip, status;
+	public static Tooltip tooltip;
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
 	public HighlightType highlightType;
@@ -273,8 +273,7 @@ public class Interface : HiveObject
 		if ( eye.target && lastShownOperation == operation )
 			return;
 
-		eye.FocusOn( operation.place, true, false, false, true );
-		status.SetText( this, operation.description, pinX:0.5f, pinY:0.2f, time:2 * Constants.Interface.showNextActionDuringReplay );
+		MessagePanel.Create( operation.description, operation.place );
 		lastShownOperation = operation;
 	}
 
@@ -284,7 +283,7 @@ public class Interface : HiveObject
 			Destroy( d.gameObject );
 		foreach ( var panel in panels )
 		{
-			if ( panel != tooltip && panel != status )
+			if ( panel != tooltip )
 				panel.Close();
 		}
 	}
@@ -452,8 +451,6 @@ public class Interface : HiveObject
 
 		tooltip = Tooltip.Create();
 		tooltip.Open();
-		status = Tooltip.Create();
-		status.Open();
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
 		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
@@ -511,8 +508,7 @@ public class Interface : HiveObject
 	public void OnMessagesClicked()
 	{
 		var message = mainPlayer.messages.First();
-		status.SetText( this, message.text, pinX:0.5f, pinY:0.2f );
-		eye.FocusOn( message.location, true );
+		MessagePanel.Create( message.text, message.location );
 		mainPlayer.messages.RemoveFirst();
 	}
 
@@ -2065,6 +2061,25 @@ public class Interface : HiveObject
 
 				}
 			}
+		}
+	}
+
+	public class MessagePanel : Panel
+	{
+		public static MessagePanel Create( string text, HiveObject location = null )
+		{
+			var result = new GameObject( "Message panel" ).AddComponent<MessagePanel>();
+			result.Open( text, location );
+			return result;
+		}
+
+		public void Open( string text, HiveObject location )
+		{
+			noResize = true;
+			reopen = true;
+			base.Open( location, 400, 60 );
+
+			Text( text ).Pin( borderWidth, -borderWidth, 400, 50 );
 		}
 	}
 
@@ -6647,7 +6662,7 @@ if ( cart )
 		{
 			var s = networkJoinDestinationInputField.text.Split( ':' );
 			world.Join( s[0], int.Parse( s[1] ) );
-			status.SetText( root, "Requesting game state from server", pinX:0.5f, pinY:0.5f );
+			MessagePanel.Create( "Requesting game state from server" );
 			Close();
 		}
 

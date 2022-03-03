@@ -447,7 +447,7 @@ public class OperationHandler : HiveObject
             Assert.global.AreEqual( orders.First().time, time, $"Network time mismatch (server: {orders.First().time}, client: {time})" );
             if ( oh.orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
             {
-                Interface.status.SetText( this, "Catching up server", pinX:0.5f, pinY:0.5f, time:100 );
+                Interface.MessagePanel.Create( "Catching up server" );
                 world.SetSpeed( World.Speed.fast );
             }
             var order = oh.orders.First();
@@ -1230,7 +1230,7 @@ public class Operation
                     team = Team.Create().Setup( teamName, Constants.Player.teamColors[HiveCommon.world.teams.Count%Constants.Player.teamColors.Length] );
                     if ( team == null )
                     {
-                        Interface.status.SetText( HiveCommon.root, "No room for a new headquarters", pinX:0.5f, pinY:0.5f, time:100 );
+                        Interface.MessagePanel.Create( "No room for a new headquarters" );
                         return null;
                     }
                     HiveCommon.world.teams.Add( team );

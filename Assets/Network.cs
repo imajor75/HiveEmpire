@@ -302,12 +302,12 @@ public class Network : HiveCommon
 						gameState.Write( buffer, 0, receivedSize );
 						gameStateWritten += receivedSize;
 						Assert.global.IsFalse( gameStateWritten > gameStateSize );
-						Interface.status.SetText( this, $"Receiving game state from server {100*gameStateWritten/gameStateSize}%", pinX:0.5f, pinY:0.5f );
+						Interface.MessagePanel.Create( $"Receiving game state from server {100*gameStateWritten/gameStateSize}%" );
 						if ( gameStateWritten == gameStateSize )
 						{
 							gameState.Close();
 							Log( $"Game state received to {gameStateFile}" );
-							Interface.status.SetText( this, "Loading game state", pinX:0.5f, pinY:0.5f, time:100 );
+							Interface.MessagePanel.Create( "Loading game state" );
 							root.Load( gameStateFile );
 							root.mainPlayer = null;
                             Interface.PlayerSelectorPanel.Create( true );
