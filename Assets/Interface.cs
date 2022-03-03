@@ -4171,7 +4171,12 @@ public class Interface : HiveObject
 					}
 					case Unit.Type.soldier:
 					{
-						status.text = "Hitting everything";
+						if ( unit.building == null )
+							status.text = "Attacking";
+						else if ( firstTask is Unit.Wait )
+							status.text = "Guarding";
+						else
+							status.text = "Walking to the post";
 						break;
 					}
 					case Unit.Type.cart:

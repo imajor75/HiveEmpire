@@ -1725,13 +1725,14 @@ public class Unit : HiveObject
 
 		if ( type == Type.soldier )
 		{
-			if ( building && building is Attackable )
+			if ( building && building is Attackable && building.team == team )
 			{
-				if ( !IsIdle( true ) && building.team == team )
+				if ( !IsIdle( true ) )
 				{
 					ScheduleWalkToNode( building.flag.node );
 					ScheduleWalkToNeighbour( building.node );
 				}
+				ScheduleWait( int.MaxValue );
 				return;
 			}
 
