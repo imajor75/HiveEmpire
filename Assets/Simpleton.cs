@@ -702,7 +702,7 @@ public class Simpleton : Player
             {
                 case Action.connect:
                 {
-                    if ( path == null || path.path == null || path.path.Count < 2 ) // TODO path.Count was 0
+                    if ( path == null || path.path == null || path.path.Count < 2 || flag == null ) // TODO path.Count was 0
                         return;
                     boss.Log( $"Connecting {flag.name} to the road network at {path.path.Last().name}" );
                     HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, Operation.Source.computer );
