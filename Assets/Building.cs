@@ -669,7 +669,7 @@ abstract public class Building : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
-		if ( !construction.done )
+		if ( !construction.done && team == root.mainTeam )
 			Interface.ConstructionPanel.Create().Open( construction, show );
 	}
 
