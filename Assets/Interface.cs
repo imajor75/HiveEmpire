@@ -4994,7 +4994,7 @@ if ( cart )
 		}
 	}
 
-	public class Viewport : HiveCommon, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IInputHandler
+	public class Viewport : HiveCommon, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IInputHandler, IPointerDownHandler, IPointerUpHandler
 	{
 		public bool mouseOver;
 		public GameObject cursor;
@@ -5016,6 +5016,9 @@ if ( cart )
 		public bool markEyePosition;
 		public bool pickGroundOnly;
 		public bool rightButton;
+		public bool rightDrag;
+		public Vector3 rightOffset, downOffset;
+		public Vector3 lastMouse;
 
 		public static Material arrowMaterial;
 
@@ -5328,15 +5331,42 @@ if ( cart )
 				return;
 				
 			var node = hiveObject as Node;
-			if ( node )
+			if ( eventData.button == PointerEventData.InputButton.Left )
 			{
-				if ( !inputHandler.OnNodeClicked( node ) )
-					inputHandler = this;
+				if ( node )
+				{
+					if ( !inputHandler.OnNodeClicked( node ) )
+						inputHandler = this;
+				}
+				else
+					if ( !inputHandler.OnObjectClicked( hiveObject ) )
+						inputHandler = this;
 			}
-			else
-				if ( !inputHandler.OnObjectClicked( hiveObject ) )
-					inputHandler = this;
 			world.gameAdvancingInProgress = false;
+		}
+
+		public void OnPointerDown( PointerEventData eventData )
+		{
+			if ( eventData.button != PointerEventData.InputButton.Right )
+				return;
+
+			rightDrag = true;
+			Ray ray = camera.ScreenPointToRay( eventData.position );
+			Physics.Raycast( ray, out RaycastHit hit, 1000,  1 << World.layerIndexGround );
+
+			Vector3 center = camera.WorldToScreenPoint( hit.point );
+			Vector3 centerWorld = camera.ScreenToWorldPoint( center );
+			Vector3 rightWorld = camera.ScreenToWorldPoint( center - Vector3.right );
+			Vector3 downWorld = camera.ScreenToWorldPoint( center - Vector3.up );
+			rightOffset = rightWorld - centerWorld;
+			downOffset = downWorld - centerWorld;
+		}
+
+		public void OnPointerUp( PointerEventData eventData )
+		{
+			if ( eventData.button == PointerEventData.InputButton.Right )
+				rightDrag = false;
+
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )
@@ -5351,6 +5381,15 @@ if ( cart )
 
 		public void Update()
 		{
+			if ( rightDrag )
+			{
+				var delta = Input.mousePosition - lastMouse;
+				Vector3 offset = delta.x * rightOffset + delta.y * downOffset;
+				eye.x += offset.x;
+				eye.y += offset.z;
+			}
+			lastMouse = Input.mousePosition;
+
 			if ( inputHandler == null || inputHandler.Equals( null ) )
 				inputHandler = this;
 
