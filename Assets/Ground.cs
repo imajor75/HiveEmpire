@@ -15,6 +15,8 @@ public class Ground : HiveObject
 	[JsonIgnore]
 	public List<Material> grassMaterials = new List<Material>();
 	public static int grassLayerIndex;
+	public Texture2D mapGroundTexture;
+	public MeshRenderer mapGround;
 
 	[Obsolete( "Compatibility with old files", true )]
 	int width { set { if ( dimension == 0 ) dimension = value; assert.AreEqual( dimension, value ); } }
@@ -86,6 +88,41 @@ public class Ground : HiveObject
 
 		Assert.global.AreEqual( grassMaterials.Count, 0 );
 		SetGrassLayerCount( Constants.Ground.grassLevels );
+
+		//mapGround = GameObject.CreatePrimitive( PrimitiveType.Sphere ).GetComponent<MeshRenderer>();
+		mapGround = new GameObject( "Map Ground" ).AddComponent<MeshRenderer>();
+		var meshFilter = mapGround.gameObject.AddComponent<MeshFilter>();
+		var mesh = meshFilter.mesh = new Mesh();
+
+		var verts = new Vector3[4];
+		var node = GetNode( 0, 0 );
+		verts[0] = node.GetPosition( 0, 0 ) * 3;
+		verts[1] = node.GetPosition( dimension, 0 ) * 3;
+		verts[2] = node.GetPosition( 0, dimension ) * 3;
+		verts[3] = node.GetPosition( dimension, dimension ) * 3;
+		verts[0].y = verts[1].y = verts[2].y = verts[3].y = 0;
+		mesh.vertices = verts;
+
+		var tris = new int[6];
+		tris[0] = 0;
+		tris[1] = 2;
+		tris[2] = 1;
+		tris[3] = 1;
+		tris[4] = 2;
+		tris[5] = 3;
+		mesh.triangles = tris;
+
+		var tcs = new Vector2[4];
+		tcs[0].Set( 0, 0 );
+		tcs[1].Set( 3, 0 );
+		tcs[2].Set( 0, 3 );
+		tcs[3].Set( 3, 3 );
+		mesh.uv = tcs;
+
+		mapGround.gameObject.layer = World.layerIndexMapOnly;
+		mapGround.transform.SetParent( transform );
+		mapGround.material = new Material( World.defaultTextureShader );
+		RecreateMapGroundTexture();
 		
 		base.Start();
 	}
@@ -237,7 +274,7 @@ public class Ground : HiveObject
 				if ( x == 0 && y == 0 )
 					continue;
 				foreach ( var block in blocks )
-					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, 0 );
+					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, World.layerIndexNotOnMap );
 			}
 		}
 
@@ -434,6 +471,46 @@ public class Ground : HiveObject
 		}
 		dirtyOwnership = false;
 	}
+
+	public void RecreateMapGroundTexture()
+	{
+		if ( mapGroundTexture )
+			Destroy( mapGroundTexture );
+
+		int size = 1024;
+		float pixelPerNode = (float)size / dimension;
+
+		mapGroundTexture = new Texture2D( size, size );
+		for ( int x = 0; x < mapGroundTexture.width; x++ )
+		{
+			for ( int y = 0; y < mapGroundTexture.height; y++ )
+			{
+				var color = Color.black;
+				int baseX = (int)((float)x/size*dimension);
+				int baseY = (int)((float)y/size*dimension);
+				float fractionX = ( x - baseX * pixelPerNode ) / pixelPerNode;
+				float fractionY = ( y - baseY * pixelPerNode ) / pixelPerNode;
+				if ( fractionY * 2 < ( 1 - fractionX ) && fractionX * 2 < ( 1 - fractionY ) )
+				{}
+				else if ( ( 1 - fractionX ) * 2 < fractionY && ( 1 - fractionY ) * 2 < fractionX )
+				{
+					baseX++;
+					baseY++;
+				}
+				else if ( fractionX < fractionY )
+					baseY++;
+				else
+					baseX++;
+				var node = GetNode( baseX, baseY );
+				if ( node && node.team )
+					color = node.team.color;
+				mapGroundTexture.SetPixel( x, y, color );
+			}
+		}
+		mapGroundTexture.Apply();
+		mapGround.material.mainTexture = mapGroundTexture;
+	}
+
 
 	[System.Serializable]
 	public class Area
