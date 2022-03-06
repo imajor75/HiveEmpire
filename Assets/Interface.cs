@@ -5385,6 +5385,7 @@ if ( cart )
 			{
 				var delta = Input.mousePosition - lastMouse;
 				Vector3 offset = delta.x * rightOffset + delta.y * downOffset;
+				eye.Move( 0, 0 );	// TODO Feels like a brutal hack
 				eye.x += offset.x;
 				eye.y += offset.z;
 			}

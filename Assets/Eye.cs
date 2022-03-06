@@ -336,7 +336,7 @@ public class Eye : HiveObject
 		currentPositionStored = false;
 	}
 
-	Vector3 Move( float side, float forward )
+	public Vector3 Move( float side, float forward )
 	{
 		OnPositionChanged();
 		root.viewport.markEyePosition = false;
