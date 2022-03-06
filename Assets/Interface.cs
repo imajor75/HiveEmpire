@@ -2080,6 +2080,7 @@ public class Interface : HiveObject
 			base.Open( location, 400, 60 );
 
 			Text( text ).Pin( borderWidth, -borderWidth, 400, 50 );
+			eye.FocusOn( location, true );
 		}
 	}
 
