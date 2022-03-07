@@ -1006,7 +1006,7 @@ public class Interface : HiveObject
 			return new GameObject( "Path visualization" ).AddComponent<PathVisualization>();
 		}
 
-		public PathVisualization Setup( Path path, Vector3 view )
+		public PathVisualization Setup( Path path )
 		{
 			if ( path == null )
 			{
@@ -1041,7 +1041,7 @@ public class Interface : HiveObject
 						int bestRoad = 0;
 						for ( int k = 0; k < path.roadPath.Count; k++ )
 						{
-							float distance = ( path.roadPath[k].nodes[0].position - eye.position ).magnitude;
+							float distance = ( path.roadPath[k].nodes[0].GetPositionRelativeTo( eye.position ) - eye.position ).magnitude;
 							if ( distance < bestDistance )
 							{
 								bestDistance = distance;
@@ -1050,9 +1050,9 @@ public class Interface : HiveObject
 						}
 						var t = bestRoad;
 						if ( path.roadPathReversed[t] )
-							currentPosition = path.roadPath[t].ends[1].node.position;
+							currentPosition = path.roadPath[t].ends[1].node.GetPositionRelativeTo( eye.position );
 						else
-							currentPosition = path.roadPath[t].ends[0].node.position;
+							currentPosition = path.roadPath[t].ends[0].node.GetPositionRelativeTo( eye.position );
 						while ( t > 0 )
 						{
 							t--;
@@ -2040,7 +2040,7 @@ public class Interface : HiveObject
 			public void OnShowTooltip( bool show )
 			{
 				if ( show && pathVisualization == null && item )
-					pathVisualization = PathVisualization.Create().Setup( item.path, root.viewport.visibleAreaCenter );
+					pathVisualization = PathVisualization.Create().Setup( item.path );
 				if ( !show )
 				{
 					Destroy( pathVisualization?.gameObject );
@@ -4216,7 +4216,7 @@ if ( cart )
 					cartDestination = cart.destination;
 					var path = cart.FindTaskInQueue<Unit.WalkToFlag>()?.path;
 					Destroy( cartPath );
-					cartPath = PathVisualization.Create().Setup( path, root.viewport.visibleAreaCenter );
+					cartPath = PathVisualization.Create().Setup( path );
 				}
 			}
 
@@ -4404,7 +4404,7 @@ if ( cart )
 				stats.text = "Age: " + item.life.age / Constants.World.normalSpeedPerSecond + " secs";
 
 			if ( item.destination && route == null )
-				route = PathVisualization.Create().Setup( item.path, root.viewport.visibleAreaCenter );
+				route = PathVisualization.Create().Setup( item.path );
 			if ( item.flag )
 				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
 			else
