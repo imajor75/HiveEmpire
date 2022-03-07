@@ -1687,11 +1687,13 @@ public class Interface : HiveObject
 			screenPosition.y += offset.y;
 			if ( screenPosition.y > Screen.height )
 				screenPosition = eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * Constants.Node.size );
-			screenPosition.y -= Screen.height;
 			if ( transform is RectTransform t )
 			{
 				if ( screenPosition.x + t.rect.width > Screen.width )
 					screenPosition.x -= t.rect.width + 2 * offset.x;
+				if ( screenPosition.y < t.rect.height )
+					screenPosition.y = t.rect.height;
+				screenPosition.y -= Screen.height;
 				float width = t.offsetMax.x - t.offsetMin.x;
 				float height = t.offsetMax.y - t.offsetMin.y;
 				t.offsetMin = screenPosition - Vector3.up * height;
