@@ -326,11 +326,14 @@ public class Interface : HiveObject
 		}
 #endif
 
-		var o = materialUIPath.mainTextureOffset;
-		o.y -= 0.015f;
-		if ( o.y < 0 )
-			o.y += 1;
-		materialUIPath.mainTextureOffset = o;
+		if ( materialUIPath )
+		{
+			var o = materialUIPath.mainTextureOffset;
+			o.y -= 0.015f;
+			if ( o.y < 0 )
+				o.y += 1;
+			materialUIPath.mainTextureOffset = o;
+		}
 	}
 
 	static void Initialize()
@@ -666,18 +669,21 @@ public class Interface : HiveObject
 
 	new public void Update()
 	{
-		if ( mainPlayer.messages.Count != 0 )
+		if ( mainPlayer && messageButton )
 		{
-			messageButton.text = mainPlayer.messages.Count.ToString();
-			var color = Color.yellow;
-			color.a = (float)( 1 - ( Time.unscaledTime - Math.Floor( Time.unscaledTime ) ) );
-			messageButton.color = color;
-			messageButton.gameObject.SetActive( true );
+			if ( mainPlayer.messages.Count != 0 )
+			{
+				messageButton.text = mainPlayer.messages.Count.ToString();
+				var color = Color.yellow;
+				color.a = (float)( 1 - ( Time.unscaledTime - Math.Floor( Time.unscaledTime ) ) );
+				messageButton.color = color;
+				messageButton.gameObject.SetActive( true );
+			}
+			else
+				messageButton.gameObject.SetActive( false );
 		}
-		else
-			messageButton.gameObject.SetActive( false );
 
-		if ( EventSystem.current.currentSelectedGameObject != null )
+		if ( EventSystem.current?.currentSelectedGameObject != null )
 		{ 
 			focusOnInputField = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
 			focusOnDropdown = EventSystem.current.currentSelectedGameObject.GetComponent<Toggle>() != null;
@@ -765,10 +771,10 @@ public class Interface : HiveObject
 #endif
 
 		CheckHighlight();
-		speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey;
-		speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey;
-		speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey;
-		if ( world.operationHandler )	// This can be null during join
+		if ( speedButtons[0] && world ) { speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey; };
+		if ( speedButtons[1] && world ) { speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey; };
+		if ( speedButtons[2] && world ) { speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey; };
+ 		if ( world?.operationHandler )	// This can be null during join
 		{
 			replayIcon.gameObject.SetActive( !playerInCharge );
 			var next = world.operationHandler.next;
@@ -5256,18 +5262,16 @@ if ( cart )
 			if ( camera == null )
 				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			int layer = 1 << World.layerIndexGround;
-			if ( !pickGroundOnly ) 
-				layer += 1 << World.layerIndexPickable;
-			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layer ) ) // TODO How long the ray should really be?
+			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexMapOnly ) )
 				return null;
 
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
-			if ( hiveObject == null )
+			if ( hiveObject == null && hit.collider.transform.parent )
 				hiveObject = hit.collider.transform.parent.GetComponent<HiveObject>();
-			if ( hiveObject == null )
+			if ( hiveObject == null && hit.collider.transform.parent?.parent )
 				hiveObject = hit.collider.transform.parent.parent.GetComponent<HiveObject>();
-			Assert.global.IsNotNull( hiveObject );
+			if ( hiveObject == null )
+				return root;
 
 			var b = hiveObject as Building;
 			if ( b && b.blueprintOnly )
@@ -5408,7 +5412,7 @@ if ( cart )
 
 			RenderOverlayInfo();
 
-			if ( !mouseOver || eye == null )
+			if ( !mouseOver || world == null || eye == null )
 				return;
 			currentNode = FindNodeAt( Input.mousePosition );
 			if ( cursor && currentNode )

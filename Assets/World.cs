@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
 using System.Linq;
 using System.Globalization;
+using UnityEditor;
 #pragma warning disable 0618
 
 public class World : HiveCommon
@@ -44,7 +45,6 @@ public class World : HiveCommon
 	static public int soundMaxDistance = 7;
 	static public int layerIndexNotOnMap;
 	static public int layerIndexMapOnly;
-	static public int layerIndexPickable;
 	static public int layerIndexGround;
 	static public int layerIndexPPVolume;
 	static public Shader defaultShader;
@@ -512,7 +512,6 @@ public class World : HiveCommon
 	{
 		layerIndexNotOnMap = LayerMask.NameToLayer( "Not on map" );
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
-		layerIndexPickable = LayerMask.NameToLayer( "Pickable" );
 		layerIndexGround = LayerMask.NameToLayer( "Ground" );
 		layerIndexPPVolume = LayerMask.NameToLayer( "PPVolume" );
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
@@ -588,7 +587,8 @@ public class World : HiveCommon
 			root.mainPlayer = instance.players[0];
 		}
 		massDestroy = false;
-		Advance();
+		for ( int i = 0; i < timeFactor; i++ )
+			Advance();
 	}
 
 	public bool Advance()
@@ -750,7 +750,8 @@ public class World : HiveCommon
 			operationHandler = OperationHandler.Create();
 			operationHandler.transform.SetParent( transform );
 		}
-		water.transform.localPosition = Vector3.up * waterLevel;
+		if ( water )
+			water.transform.localPosition = Vector3.up * waterLevel;
 	}
 
     public void Load( string fileName )
@@ -1411,15 +1412,24 @@ public class World : HiveCommon
 
 	public void SetSpeed( Speed speed )
 	{
+		// Ideally this function would simply change Time.timeScale, but setting that to 0 leads to some problems, for example Physics.Raycast works on a frozen scene 
+		// (transformation changes made to objects while timeScale==0 are ignored), which ruins mouse clicks on some objects.
 		this.speed = speed;
-		var list3 = Resources.FindObjectsOfTypeAll<AudioSource>();
+		var list1 = Resources.FindObjectsOfTypeAll<Animator>();
+		foreach ( var o in list1 )
+			o.speed = timeFactor;
+		var list2 = Resources.FindObjectsOfTypeAll<ParticleSystem>();
+		foreach ( var o in list2 )
+		{
+#if UNITY_EDITOR
+			if ( PrefabUtility.IsPartOfAnyPrefab( o ) )
+				continue;
+#endif
+			var mainModule = o.main;
+			mainModule.simulationSpeed = timeFactor;
+		}		var list3 = Resources.FindObjectsOfTypeAll<AudioSource>();
 		foreach ( var o in list3 )
 			o.pitch = timeFactor;
-		// float scale = speed == Speed.pause ? 0 : 1;
-		// if ( speed != Speed.pause )
-		// 	Time.fixedDeltaTime = 1f / ( timeFactor * Constants.World.normalSpeedPerSecond );
-		// Time.timeScale = scale;
-		Time.timeScale = timeFactor;
 	}
 
 	public static int hourTickCount { get { return (int)( 60 * 60 / UnityEngine.Time.fixedDeltaTime ); } }
@@ -1443,7 +1453,7 @@ public class World : HiveCommon
 	{
 		if ( !chain )
 			return;
-		ground.Validate( true );
+		ground?.Validate( true );
 		foreach ( var team in teams )
 			team.Validate();
 		foreach ( var team in teams )

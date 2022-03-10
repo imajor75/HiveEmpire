@@ -39,7 +39,7 @@ public class Simpleton : Player
         HiveCommon.Log( $"[{name}]: {text}" );
     }
 
-    void FixedUpdate()
+    public override void GameLogicUpdate()
     {
         if ( tasks == null && active )
         {

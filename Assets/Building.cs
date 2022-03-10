@@ -579,7 +579,6 @@ abstract public class Building : HiveObject
 		soundSource = World.CreateSoundSource( this );
 
 		body = Instantiate( Template() );
-		body.layer = World.layerIndexPickable;
 		body.transform.RotateAround( Vector3.zero, Vector3.up, 60 * ( 1 - flagDirection ) );
 		body.transform.SetParent( transform, false );
 
