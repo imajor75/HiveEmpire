@@ -581,6 +581,12 @@ abstract public class Building : HiveObject
 		body = Instantiate( Template() );
 		body.transform.RotateAround( Vector3.zero, Vector3.up, 60 * ( 1 - flagDirection ) );
 		body.transform.SetParent( transform, false );
+		var smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
+		if ( smoke )
+		{
+			var mainModule = smoke.main;
+			mainModule.simulationSpeed = world.timeFactor;
+		}
 
 		World.CollectRenderersRecursive( body, renderers );
 		float lowerLimit = transform.position.y;

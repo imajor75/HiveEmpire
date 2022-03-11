@@ -1425,6 +1425,7 @@ public class Unit : HiveObject
 			animator.applyRootMotion = false;
 			if ( itemsInHands[0] )
 				animator.Play( "idle light" );
+			animator.speed = world.timeFactor;
 		}
 		else
 			animator = null;

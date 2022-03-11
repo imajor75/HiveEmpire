@@ -613,6 +613,7 @@ public class Workshop : Building
 				a.simulationSpeed = 1;
 				smoke.Simulate( 10 );
 				smoke.Play();
+				a.simulationSpeed = world.timeFactor;
 			}
 			PlayWorkingSound();
 		}
