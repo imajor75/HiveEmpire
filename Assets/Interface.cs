@@ -5262,7 +5262,7 @@ if ( cart )
 			if ( camera == null )
 				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexMapOnly ) )
+			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, -1 - (1 << World.layerIndexMapOnly ) ) )
 				return null;
 
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
