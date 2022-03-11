@@ -18,6 +18,7 @@ public class Simpleton : Player
     public bool hasSawmill, hasWoodcutter;
     public bool active;
 	public bool showActions;
+    public bool peaceful;
 
     public override Node location => throw new NotImplementedException();
 
@@ -272,13 +273,16 @@ public class Simpleton : Player
                     boss.tasks.Add( new SplitRoadTask( boss, road ) );
             }
 
-            foreach ( var enemy in world.teams )
+            if ( !boss.peaceful )
             {
-                if ( enemy == boss.team )
-                    continue;
-                boss.tasks.Add( new AttackTask( boss, enemy.mainBuilding ) );
-                foreach ( var guardHouse in enemy.guardHouses )
-                    boss.tasks.Add( new AttackTask( boss, guardHouse ) );
+                foreach ( var enemy in world.teams )
+                {
+                    if ( enemy == boss.team )
+                        continue;
+                    boss.tasks.Add( new AttackTask( boss, enemy.mainBuilding ) );
+                    foreach ( var guardHouse in enemy.guardHouses )
+                        boss.tasks.Add( new AttackTask( boss, guardHouse ) );
+                }
             }
 
             return finished;
