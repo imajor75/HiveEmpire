@@ -285,8 +285,6 @@ public class OperationHandler : HiveObject
         }
     
         operation.scheduleAt = time;
-        if ( world.speed != World.Speed.pause )
-            operation.scheduleAt++;
         executeBuffer.Add( operation );
 	}
 
@@ -557,16 +555,14 @@ public class OperationHandler : HiveObject
         if ( this != oh )
             return;
 
-        while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time - 1 )
-        {
-            assert.AreEqual( world.speed, World.Speed.pause );
+        while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( executeBuffer[executeIndex++] );
-        }
         
 		if ( undoHotkey.IsPressed() )
 			UndoRedo( undoQueue );
 		if ( redoHotkey.IsPressed() )
 			UndoRedo( redoQueue );
+
         if ( purgeCRCTable )
         {
             CRCCodesSkipped += CRCCodes.Count;
