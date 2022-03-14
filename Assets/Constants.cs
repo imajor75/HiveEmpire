@@ -340,6 +340,7 @@ public static class Constants
         public const int roadLastUsedMin = Constants.World.normalSpeedPerSecond * 60 * 20;
         public const int roadLastUsedMax = Constants.World.normalSpeedPerSecond * 60 * 120;
         public const int soldiersReserved = 15;
+        public const float deadEndProblemFactor = 0.8f;
     }
 }
 

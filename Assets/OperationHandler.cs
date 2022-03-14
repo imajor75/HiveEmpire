@@ -1107,8 +1107,10 @@ public class Operation
             case Type.removeRoad:
             {
                 var road = this.road;
-                if ( road )
-                    road.Remove();
+                if ( road == null )
+                    return null;
+
+                road.Remove();
                 return Create().SetupAsCreateRoad( road.nodes, road.team );    // TODO Seems to be dangerous to use the road after it was removed
             }
             case Type.createRoad:

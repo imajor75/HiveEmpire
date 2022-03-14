@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1635,6 +1635,7 @@ public class Unit : HiveObject
 		}
 		foreach ( var item in itemsInHands )
 			item?.Remove();
+
 		itemsInHands[0] = itemsInHands[1] = null;
 
 		SetActive( true );       // Tinkerers are not active when they are idle
@@ -1645,7 +1646,7 @@ public class Unit : HiveObject
 		// TODO Pick the closer end
 		if ( node.road != null )
 			ScheduleWalkToRoadPoint( node.road, 0, false );
-		foreach ( var o in Ground.areas[1] )        // Tinkerers are often waiting in building, so there is a flag likely nearby
+		else foreach ( var o in Ground.areas[1] )        // Tinkerers are often waiting in building, so there is a flag likely nearby
 		{
 			if ( node.Add( o ).validFlag == null )
 				continue;
@@ -2311,25 +2312,24 @@ public class Unit : HiveObject
 
 	public override void DestroyThis( bool noAssert = false )
 	{
+		void ReleaseItemFrom( GameObject frame )
+		{
+			if ( frame == null )
+				return;
+
+			foreach ( Transform child in frame.transform )
+			{
+				Item item = child.GetComponent<Item>();
+				if ( item )
+					item.transform.SetParent( World.itemsJustCreated.transform );
+			}
+		}
 		if ( noAssert == false )
 		{
-			var box = links[(int)LinkType.haulingBoxLight];
-			if ( box )
-				assert.AreEqual( box.transform.childCount, 0 );		 // Triggered after undoing building remove, then again when auto player was playing
-			box = links[(int)LinkType.haulingBoxHeavy];
-			if ( box )
-				assert.AreEqual( box.transform.childCount, 1 );
+			ReleaseItemFrom( links[(int)LinkType.haulingBoxLight] );
+			ReleaseItemFrom( links[(int)LinkType.haulingBoxHeavy] );
+			ReleaseItemFrom( links[(int)LinkType.haulingBoxSecondary] );
 		}
-		// TODO Triggered, called from Unit:FindTask() line 1342
-		// Triggered again called from Unit.FindTask, hauler still has the plank in hand, after entering the headquarters. 
-		// Item is still registered in Player.items, and still has a valid destination (sawmill) where it is still registered in 
-		// Building.itemsOnTheWay. Item still has a flag, which is the one in front of the headquarters. 
-		// The item is still registered there in Flag.items. nextFlag is null, hauler is null. Origin is headquarters.
-		// Hopefully fixed.
-		// Triggered again, called from Unit.FindTask. Both items in itemsInHands is null. haulingBox is inactive, and has a child, a beer.
-		// This beer has no hauler and nextFlag, but the flag reference is valid (19:10). Has a destination (barrack 19:7) has a path
-		// with two roads (between 20:9 and 19:11 then between 20:9 19:8)
-		// Triggered again
 
 		base.DestroyThis( noAssert );
 	}
@@ -2496,6 +2496,7 @@ public class Unit : HiveObject
 				if ( item && building.tinkerer == this )
 					assert.AreEqual( item.destination, building );
 		}
+		
 		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );

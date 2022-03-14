@@ -398,7 +398,7 @@ public class Simpleton : Player
 
             if ( nodeRow == HiveCommon.ground.dimension - 1 )
             {
-                boss.Log( $"A new {workshopType} would be good, but there is no space" );
+                boss.Log( $"A new {workshopType} would be good, but there is no room" );
                 return finished;
             }
 
@@ -606,7 +606,6 @@ public class Simpleton : Player
                 }
             }
 
-
             int roadCount = flag.roadsStartingHereCount;
             if ( ( roadCount == 0 && flag != boss.team.mainBuilding.flag ) || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
@@ -648,23 +647,19 @@ public class Simpleton : Player
             foreach ( var road in flag.roadsStartingHere )
             {
                 if ( road == null )
-                {
-                    connectedFlags.Add( null );
                     continue;
-                }
+
                 var otherFlag = road.OtherEnd( flag );
-                int i = connectedFlags.IndexOf( otherFlag );
-                if ( i >= 0 )
-                {
-                    action = Action.removeRoad;
-                    problemWeight = solutionEfficiency = 0.5f;
-                    if ( road.nodes.Count > flag.roadsStartingHere[i].nodes.Count )
-                        this.road = road;
-                    else
-                        this.road = flag.roadsStartingHere[i];
-                    return finished;
-                }
-                connectedFlags.Add( otherFlag );
+                if ( !connectedFlags.Contains( otherFlag ) && otherFlag != flag )
+                    connectedFlags.Add( otherFlag );
+            }
+
+            if ( connectedFlags.Count < 2 && flag.Buildings().Count == 0 )
+            {
+                problemWeight = Constants.Simpleton.deadEndProblemFactor;
+                solutionEfficiency = 1;
+                action = Action.remove;
+                return finished;
             }
 
             foreach ( var road in flag.roadsStartingHere )
@@ -723,7 +718,7 @@ public class Simpleton : Player
                 }
                 case Action.remove:
                 {
-                    boss.Log( $"Removing crowded flag at {flag.node.x}:{flag.node.y}" );
+                    boss.Log( $"Removing flag at {flag.node.x}:{flag.node.y}" );
                     HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
                     break;
                 }

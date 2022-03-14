@@ -915,11 +915,8 @@ public class Road : HiveObject, Interface.IInputHandler
 				}
 				else
 				{
-					if ( hauler.type == Unit.Type.hauler)
-					{
-						hauler.type = Unit.Type.unemployed;
-						hauler.road = null;
-					}
+					if ( hauler.type == Unit.Type.hauler )
+						hauler.Retire();
 					else
 						hauler.assert.AreEqual( hauler.type, Unit.Type.cart );
 				}
