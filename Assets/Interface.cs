@@ -2165,6 +2165,12 @@ public class Interface : HiveObject
 				w = 1;
 			arrow.color = Color.Lerp( Color.green, Color.red, w );
 		}
+
+		void OnDestroy()
+		{
+			Destroy( ring?.gameObject );
+			Destroy( arrow?.gameObject );
+		}
 	}
 
 	public class BuildingPanel : Panel
