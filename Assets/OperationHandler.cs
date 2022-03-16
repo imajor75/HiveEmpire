@@ -285,6 +285,8 @@ public class OperationHandler : HiveObject
         }
     
         operation.scheduleAt = time;
+        if ( world.gameAdvancingInProgress )
+            operation.scheduleAt++;
         executeBuffer.Add( operation );
 	}
 
