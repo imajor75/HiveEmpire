@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -504,7 +504,9 @@ public class Interface : HiveObject
 		LoadChallenges();
 
 		world = World.Create().Setup();
-		StartCoroutine( ValidateCoroutine() );
+		#if DEBUG
+			StartCoroutine( ValidateCoroutine() );
+		#endif
 		OpenMainPanel();
 	}
 
@@ -931,14 +933,14 @@ public class Interface : HiveObject
 
 	IEnumerator ValidateCoroutine()
 	{
-#if DEBUG
 		while ( true )
 		{
 			yield return new WaitForEndOfFrame();
+			#if DEBUG
 			if ( !EditorApplication.isPaused )
 				Validate( true );
+			#endif
 		}
-#endif
 	}
 
 	public override void Validate( bool chain )
