@@ -10,7 +10,7 @@ public static class Constants
 
     public static class World
     {
-    	public const float autoSaveInterval = Constants.World.normalSpeedPerSecond * 60 * 5;
+    	public const float autoSaveIntervalInSecond = 60 * 5;
         public const float fastSpeedFactor = 8;
         public const int normalSpeedPerSecond = 50;
         public const int allowedAdvancePerFrame = 5;

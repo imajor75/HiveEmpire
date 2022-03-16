@@ -629,11 +629,6 @@ public class World : HiveCommon
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		oh.OnEndGameStep();
 		time++;
-		if ( time - lastAutoSave > Constants.World.autoSaveInterval )
-		{
-			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
-			lastAutoSave = time;
-		}
 		gameAdvancingInProgress = false;
 		advanceCharges--;
 		return true;
@@ -642,6 +637,11 @@ public class World : HiveCommon
 	void Update()
 	{
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
+		if ( Time.unscaledTime - lastAutoSave > Constants.World.autoSaveIntervalInSecond )
+		{
+			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
+			lastAutoSave = Time.unscaledTime;
+		}
 	}
 
 	public void Join( string address, int port )
@@ -776,6 +776,7 @@ public class World : HiveCommon
 		this.fileName = fileName;
 		if ( name == null || name == "" )
 			name = "Incredible";
+		lastAutoSave = Time.unscaledTime;
 
 		if ( !challenge )
 		{
@@ -1088,6 +1089,7 @@ public class World : HiveCommon
 	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
 		controllingPlayer = root.mainPlayer;
+		Assert.global.IsFalse( gameAdvancingInProgress );
 		Log( $"Saving game {fileName}", true );
 		if ( fileName.Contains( nextSaveFileName ) )
 			saveIndex++;
