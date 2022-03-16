@@ -469,6 +469,7 @@ public class Ground : HiveObject
 			if ( node.road && node.road.team != node.team )
 				node.road.Remove();
 		}
+		RecreateMapGroundTexture();
 		dirtyOwnership = false;
 	}
 
