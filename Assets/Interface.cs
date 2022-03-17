@@ -3551,6 +3551,9 @@ public class Interface : HiveObject
 
 		void ShowNearestPossible( bool anyDirection )
 		{
+			if ( root.viewport.currentNode == null )
+				return;
+				
 			List<int> possibleDirections = new List<int>();
 			if ( anyDirection )
 			{
