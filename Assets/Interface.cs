@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -1016,7 +1016,7 @@ public class Interface : HiveObject
 
 		public PathVisualization Setup( Path path )
 		{
-			if ( path == null )
+			if ( path == null || !path.IsValid )
 			{
 				Destroy( this );
 				return null;

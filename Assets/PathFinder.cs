@@ -43,6 +43,24 @@ public class PathFinder
 		return new PathFinder();
 	}
 
+	public bool IsValid
+	{
+		get
+		{
+			if ( !ready )
+				return false;
+
+			if ( mode != Mode.onRoad )
+				return true;
+
+			foreach ( var road in roadPath )
+				if ( road == null )
+					return false;
+
+			return true;
+		}
+	}
+
     public bool FindPathBetween( Node start, Node end, Mode mode, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null )
     {
         target = end;
