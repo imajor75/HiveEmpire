@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -673,6 +673,7 @@ public class World : HiveObject
 		gameAdvancingInProgress = true;
 		nextID = 1;
 		time = 0;
+		lastChecksum = 0;
 		string pattern = challenge.title + " #{0}";
 		name = String.Format( pattern, Interface.FirstUnusedIndex( Application.persistentDataPath + "/Saves", pattern + " (0).json" ) );
 		saveIndex = 0;
