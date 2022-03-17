@@ -509,7 +509,8 @@ public class Ground : HiveObject
 			}
 		}
 		mapGroundTexture.Apply();
-		mapGround.material.mainTexture = mapGroundTexture;
+		if ( mapGround )
+			mapGround.material.mainTexture = mapGroundTexture;
 	}
 
 
