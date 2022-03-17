@@ -19,6 +19,18 @@ public class Stock : Attackable
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
 	override public bool wantFoeClicks { get { return main; } }
+	override public int checksum
+	{
+		get
+		{
+			int checksum = base.checksum;
+			if ( cart )
+				checksum += cart.checksum;
+			foreach ( var data in itemData )
+				checksum += data.content;
+			return checksum;
+		}
+	}
 
 	static readonly Configuration stockConfiguration = new Configuration
 	{

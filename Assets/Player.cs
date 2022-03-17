@@ -145,6 +145,23 @@ public class Team : HiveObject
 	}
 
     public override Node location => throw new NotImplementedException();
+    public override int checksum
+	{
+		get
+		{
+			int checksum = base.checksum;
+			foreach ( var workshop in workshops )
+				checksum += workshop.checksum;
+			foreach ( var stock in stocks )
+				checksum += stock.checksum;
+			foreach ( var road in roads )
+				checksum += road.checksum;
+			foreach ( var flag in flags )
+				checksum += flag.checksum;
+			return checksum;
+		}
+	}
+
 
     public int lastTimeAttack;
 

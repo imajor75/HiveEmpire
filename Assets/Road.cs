@@ -43,6 +43,17 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
+	override public int checksum
+	{
+		get
+		{
+			int checksum = base.checksum;
+			foreach ( var hauler in haulers )
+				checksum += hauler.checksum;
+			return checksum;
+		}
+	}
+
 	[Obsolete( "Compatibility for old files", true )]
 	public Player owner;
 	[Obsolete( "Compatibility for old files", true )]

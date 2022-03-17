@@ -103,7 +103,7 @@ public class Serializer
 						index = (int)id;
 					if ( reader.Value is string str )
 						index = int.Parse( str );
-					Assert.global.IsTrue( index > 0 && index < objects.Count, $"Invalid ID {index} (max: {objects.Count}) referenced in file {fileName}" );
+					Assert.global.IsTrue( index >= 0 && index < objects.Count, $"Invalid ID {index} (max: {objects.Count}) referenced in file {fileName}" );
 					owner = objects[index];
 					break;
 				}

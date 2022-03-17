@@ -9,7 +9,7 @@ using System.Globalization;
 using UnityEditor;
 #pragma warning disable 0618
 
-public class World : HiveCommon
+public class World : HiveObject
 {
 	public new Ground ground;
 	public new string name;
@@ -500,11 +500,15 @@ public class World : HiveCommon
 		public bool apply;  // For debug purposes only
 	}
 
-	public int nodeCount
-	{
+	public int nodeCount { get { return ground.dimension * ground.dimension; } }
+	public override int checksum 
+	{ 
 		get
 		{
-			return ground.dimension * ground.dimension;
+			int checksum = base.checksum;
+			foreach ( var team in teams )
+				checksum += team.checksum;
+			return checksum;
 		}
 	}
 
@@ -539,7 +543,7 @@ public class World : HiveCommon
 		network = Network.Create();
 	}
 
-	public World Setup()
+	public new World Setup()
 	{
 		rnd = new System.Random();
 		return this;
@@ -591,6 +595,8 @@ public class World : HiveCommon
 			Advance();
 	}
 
+	public int lastChecksum = 0;
+
 	public bool Advance()
 	{
 		if ( !oh || advanceCharges == 0 )
@@ -603,6 +609,10 @@ public class World : HiveCommon
 			return false;
 		}
 
+		#if DEBUG
+		if ( lastChecksum > 0 )
+			Assert.global.AreEqual( checksum, lastChecksum, "Game state was modified between World.Advance calls" );
+		#endif
 		gameAdvancingInProgress = true;
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		network.OnBeginGameStep();
@@ -628,13 +638,16 @@ public class World : HiveCommon
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		oh.OnEndGameStep();
+		#if DEBUG
+		lastChecksum = checksum;
+		#endif
 		time++;
 		gameAdvancingInProgress = false;
 		advanceCharges--;
 		return true;
 	}
 
-	void Update()
+	new void Update()
 	{
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
 		if ( Time.unscaledTime - lastAutoSave > Constants.World.autoSaveIntervalInSecond )
@@ -642,6 +655,7 @@ public class World : HiveCommon
 			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 			lastAutoSave = Time.unscaledTime;
 		}
+		base.Update();
 	}
 
 	public void Join( string address, int port )
@@ -743,7 +757,7 @@ public class World : HiveCommon
 		network.SetState( Network.State.server );
 	}
 
-	void Start()
+	new void Start()
 	{
 		if ( operationHandler == null )
 		{
@@ -752,6 +766,8 @@ public class World : HiveCommon
 		}
 		if ( water )
 			water.transform.localPosition = Vector3.up * waterLevel;
+
+		base.Start();
 	}
 
     public void Load( string fileName )
@@ -1156,7 +1172,7 @@ public class World : HiveCommon
 
 		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
 		{
-			if ( ho is Interface || ho is Challenge )
+			if ( ho is Interface || ho is Challenge || ho is World )
 				continue;
 				
 			ho.noAssert = true;		// TODO This is not good, causes a lot of trouble
@@ -1292,7 +1308,7 @@ public class World : HiveCommon
 			DrawObject( c.gameObject, transform * local );
 	}
 
-	public void Reset()
+	public override void Reset()
 	{
 		ground.Reset();
 		foreach ( var team in teams )
@@ -1451,7 +1467,7 @@ public class World : HiveCommon
 		}
 	}
 
-	public void Validate( bool chain )
+	public override void Validate( bool chain )
 	{
 		if ( !chain )
 			return;

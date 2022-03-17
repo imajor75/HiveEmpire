@@ -49,6 +49,8 @@ public abstract class HiveObject : HiveCommon
 		}
 	}
 	public virtual bool wantFoeClicks { get { return false; } }
+
+	public virtual int checksum { get { return id; } }
 	
 	[JsonIgnore]
 	public Assert assert;
@@ -126,7 +128,7 @@ public abstract class HiveObject : HiveCommon
 		assert.Fail();
 	}
 
-	public abstract Node location { get; }
+	public virtual Node location { get { return null; } }
 
 	public virtual void Reset()
 	{ 

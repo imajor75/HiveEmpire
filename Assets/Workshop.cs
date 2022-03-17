@@ -52,6 +52,14 @@ public class Workshop : Building
 			return areas;
 		}
 	}
+	override public int checksum
+	{
+		get
+		{
+			int checksum = base.checksum;
+			return checksum + (int)( progress * 1000 );
+		}
+	}
 
 	public float maxOutput
 	{

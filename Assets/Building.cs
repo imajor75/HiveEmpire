@@ -48,6 +48,18 @@ abstract public class Building : HiveObject
 		}
 	}
 	public virtual List<Ground.Area> areas { get { throw new NotImplementedException(); } }
+	public override int checksum 
+	{ 
+		get 
+		{
+			int checksum = base.checksum;
+			if ( tinkerer )
+				checksum += tinkerer.checksum;
+			if ( tinkererMate )
+				checksum += tinkererMate.checksum;
+			return checksum;
+		}
+	}
 
 	public enum Type
 	{

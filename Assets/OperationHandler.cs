@@ -558,7 +558,10 @@ public class OperationHandler : HiveObject
             return;
 
         while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
+        {
+            world.lastChecksum = 0;
             ExecuteOperation( executeBuffer[executeIndex++] );
+        }
         
 		if ( undoHotkey.IsPressed() )
 			UndoRedo( undoQueue );

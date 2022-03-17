@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -61,6 +61,16 @@ public class Unit : HiveObject
 	[JsonIgnore]
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
+
+	override public int checksum
+	{
+		get
+		{
+			int checksum = base.checksum;
+			checksum += (int)( walkProgress * 1000 );
+			return checksum;
+		}
+	}
 
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;

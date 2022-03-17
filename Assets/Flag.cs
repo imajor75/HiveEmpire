@@ -37,6 +37,20 @@ public class Flag : HiveObject
 		}
 	}
 
+	override public int checksum
+	{
+		get
+		{
+			int checksum = base.checksum;
+			foreach ( var item in items )
+			{
+				if ( item )
+					checksum += item.checksum;
+			}
+			return checksum;
+		}
+	}
+
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;
 	[Obsolete( "Compatibility with old files", true )]
