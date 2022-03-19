@@ -781,7 +781,6 @@ public class World : HiveObject
 			else
 				return null;
 		}
-		HiveObject.Log( $"Loading game {fileName}" );
    		Clear();
 		Prepare();
 		challenge = null;
@@ -794,6 +793,7 @@ public class World : HiveObject
 		if ( name == null || name == "" )
 			name = "Incredible";
 		lastAutoSave = Time.unscaledTime;
+		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
 
 		if ( !challenge )
 		{
@@ -1107,7 +1107,7 @@ public class World : HiveObject
 	{
 		controllingPlayer = root.mainPlayer;
 		Assert.global.IsFalse( gameAdvancingInProgress );
-		Log( $"Saving game {fileName}", true );
+		Log( $"Saving game {fileName} (checksum: {checksum})", true );
 		if ( fileName.Contains( nextSaveFileName ) )
 			saveIndex++;
 		this.fileName = fileName;
@@ -1344,6 +1344,8 @@ public class World : HiveObject
 		Log( $"Total hill spots needed: {TotalMissing()}" );
 		foreach ( var node in ground.nodes )
 		{
+			if ( !node.real )
+				continue;
 			var r = new System.Random( rnd.Next() );
 			if ( r.NextDouble() < settings.forestChance )
 				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
@@ -1470,8 +1472,16 @@ public class World : HiveObject
 
 	public override void Validate( bool chain )
 	{
+		foreach ( var obj in hiveObjects )
+		{
+			if ( obj.location == null )
+				continue;
+			assert.IsTrue( obj.location.real, $"Not real object {obj} in the world" );
+		}
+
 		if ( !chain )
 			return;
+
 		ground?.Validate( true );
 		foreach ( var team in teams )
 			team.Validate();

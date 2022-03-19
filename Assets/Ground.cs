@@ -360,14 +360,6 @@ public class Ground : HiveObject
 		return nodes[y * ( dimension + 1 ) + x];
 	}
 
-	public void SetNode( int x, int y, Node node )
-	{
-		if ( nodes == null )
-			nodes = new Node[( dimension + 1 ) * ( dimension + 1 )];
-
-		nodes[y * ( dimension + 1 ) + x] = node;
-	}
-
 	public float GetHeightAt( float x, float y )
 	{
 		float gridY = ( y - n00y ) / ( n01y - n00y );

@@ -20,8 +20,6 @@ public class Simpleton : Player
 	public bool showActions;
     public bool peaceful;
 
-    public override Node location => throw new NotImplementedException();
-
     public static Simpleton Create()
     {
         return new GameObject( "Simpleton" ).AddComponent<Simpleton>();

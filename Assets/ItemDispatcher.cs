@@ -67,8 +67,6 @@ public class ItemDispatcher : HiveObject
 
 	public List<LogisticResult> results, resultsInThisFrame;
 
-    public override Node location => throw new System.NotImplementedException();
-
     static public ItemDispatcher Create()
 	{
 		return new GameObject().AddComponent<ItemDispatcher>();

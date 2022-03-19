@@ -165,8 +165,6 @@ public class OperationHandler : HiveObject
     public int fileIndex;
 	public string nextFileName { get { return $"{world.name} ({fileIndex})"; } }
 
-    public override Node location => throw new System.NotImplementedException();
-
 	[Obsolete( "Compatibility with old files", true )]
     string lastSave { set {} }
 	[Obsolete( "Compatibility with old files", true )]

@@ -144,7 +144,6 @@ public class Team : HiveObject
 		get { return mainBuilding.itemData[(int)Item.Type.soldier].content; } 
 	}
 
-    public override Node location => throw new NotImplementedException();
     public override int checksum
 	{
 		get
