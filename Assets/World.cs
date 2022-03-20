@@ -1098,6 +1098,25 @@ public class World : HiveObject
 		HiveObject.Log( $"Next ID: {nextID}" );
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
+		List<Resource> toRemove = new List<Resource>();
+		foreach ( var node in ground.nodes )
+		{
+			if ( !node.real )
+			{
+				foreach ( var resource in node.resources )
+				{
+					toRemove.Add( resource );
+					if ( resource.registered )
+					{
+						resource.registered = false;
+						hiveObjects.Remove( resource );
+					}
+				}
+			}
+		}
+		foreach ( var resource in toRemove )
+			resource.Remove();
+
 		Interface.ValidateAll( true );
 		bool demoMode = fileName.Contains( "demolevel" );
 		network.SetState( demoMode ? Network.State.idle : Network.State.server );
