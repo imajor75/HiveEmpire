@@ -329,6 +329,8 @@ public class Simpleton : Player
         public float bestResourceAvailability, bestRelaxAvailability, bestSourceAvailability;
         public List<Workshop.Type> dependencies = new List<Workshop.Type>();
         public Workshop.Configuration configuration;
+        public int reservedPlank, reservedStone;
+        public int currentPlank, currentStone;
 
         public YieldTask( Simpleton boss, Workshop.Type workshopType, float target ) : base( boss ) 
         {
@@ -381,15 +383,18 @@ public class Simpleton : Player
             }
 
             configuration = Workshop.GetConfiguration( workshopType );
-            int reservedPlank = boss.reservedPlank + 4, reservedStone = boss.reservedStone;
+            reservedPlank = boss.reservedPlank + 4;
+            reservedStone = boss.reservedStone;
             if ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill )
                 reservedPlank = 0;
+            currentPlank = boss.team.mainBuilding.itemData[(int)Item.Type.plank].content;
             if ( !boss.hasSawmill || !boss.hasWoodcutter )
             {
-                if ( configuration.plankNeeded + reservedPlank > boss.team.mainBuilding.itemData[(int)Item.Type.plank].content )
+                if ( configuration.plankNeeded + reservedPlank > currentPlank )
                     return finished;
             }
-            if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > boss.team.mainBuilding.itemData[(int)Item.Type.stone].content )
+            currentStone = boss.team.mainBuilding.itemData[(int)Item.Type.stone].content;
+            if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > currentStone )
                 return finished;
 
             ScanRow( nodeRow++ );
@@ -571,6 +576,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             boss.Log( $"Building a {workshopType} at {bestLocation.name} ({bestResourceAvailability}, {bestRelaxAvailability}, {bestSourceAvailability})" );
+            boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
         }
     }
