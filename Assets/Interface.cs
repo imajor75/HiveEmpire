@@ -7014,14 +7014,12 @@ public static class UIHelpers
 
         public void OnPointerClick( PointerEventData eventData )
         {
-			HiveCommon.world.gameAdvancingInProgress = true;
 			if ( eventData.button == PointerEventData.InputButton.Left && leftClickHandler != null )
 				leftClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Right && rightClickHandler != null )
 				rightClickHandler();
 			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
 				middleClickHandler();
-			HiveCommon.world.gameAdvancingInProgress = false;
         }
 
 		public void Toggle()

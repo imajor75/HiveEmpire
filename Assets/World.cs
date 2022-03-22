@@ -1138,7 +1138,7 @@ public class World : HiveObject
 	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
 		controllingPlayer = root.mainPlayer;
-		Assert.global.IsFalse( gameAdvancingInProgress );
+		Assert.global.IsFalse( gameAdvancingInProgress, "Trying to save while advancing world" );
 		Log( $"Saving game {fileName} (checksum: {checksum})", true );
 		if ( fileName.Contains( nextSaveFileName ) )
 			saveIndex++;
