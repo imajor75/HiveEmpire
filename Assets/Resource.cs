@@ -167,13 +167,13 @@ public class Resource : HiveObject
 
 		if ( !node.CheckType( needed ) )
 		{
-			DestroyThis();
+			base.Remove();
 			return null;
 		}
 
 		if ( node.block )
 		{
-			DestroyThis();
+			base.Remove();
 			return null;
 		}
 
@@ -337,7 +337,7 @@ public class Resource : HiveObject
 		node.avoidGrass = false;
 		ground.SetDirty( node );
 		node.resources.Remove( this );
-		DestroyThis();
+		base.Remove();
 	}
 
 	public bool IsReadyToBeHarvested()

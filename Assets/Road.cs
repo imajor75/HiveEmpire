@@ -168,7 +168,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		nodes.RemoveAt( nodes.Count - 1 );
 		if ( nodes.Count == 0 )
 		{
-			DestroyThis();
+			Remove();
 			return false;
 		}
 		return true;
@@ -724,7 +724,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	public override void Remove()
 	{
-		DestroyThis();
+		base.Remove();
 		team.roads.Remove( this );
 		var localHaulers = haulers.GetRange( 0, haulers.Count );
 		foreach ( var hauler in localHaulers )

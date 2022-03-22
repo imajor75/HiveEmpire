@@ -98,7 +98,7 @@ public class Flag : HiveObject
 			ground.SetDirty( node );	// Remove grass
 			return this;
 		}
-		DestroyThis();
+		base.Remove();
 		noAssert = true;
 		return null;
 	}
@@ -399,7 +399,7 @@ public class Flag : HiveObject
 		}
 		node.flag = null;
 		ground.SetDirty( node );	// To allow grass
-		DestroyThis();
+		base.Remove();
 	}
 
 	// Returns the number of available slots at the flag
@@ -573,7 +573,7 @@ public class Flag : HiveObject
 		return true;
 	}
 
-	public override void DestroyThis( bool noAssert = false )
+	public new void OnDestroy()
 	{
 		if ( noAssert == false )
 		{
@@ -581,7 +581,7 @@ public class Flag : HiveObject
 				if ( f )
 					assert.AreEqual( f.transform.childCount, 0 );	// TODO Triggered when deleting a flag
 		}
-		base.DestroyThis( noAssert );
+		base.OnDestroy();
 	}
 
 	static public SiteTestResult IsNodeSuitable( Node placeToBuildOn, Team team, Flag ignore = null, bool ignoreBlockingResources = true )

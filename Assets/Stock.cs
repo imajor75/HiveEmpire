@@ -675,7 +675,7 @@ public class Stock : Attackable
 		}
 		unit.itemsInHands[0] = unit.itemsInHands[1] = null;
 
-		unit.DestroyThis();
+		unit.Remove();
 	}
 
 	public override void GameLogicUpdate()

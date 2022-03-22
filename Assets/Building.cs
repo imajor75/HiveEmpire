@@ -527,7 +527,7 @@ abstract public class Building : HiveObject
 		this.configuration = configuration;
 		if ( !IsNodeSuitable( node, team, configuration, flagDirection, block == Resource.BlockHandling.ignore || block == Resource.BlockHandling.remove ) )
 		{
-			DestroyThis();
+			base.Remove();
 			return null;
 		}
 		
@@ -538,7 +538,7 @@ abstract public class Building : HiveObject
 		if ( flag == null )
 		{
 			Debug.Log( "Flag couldn't be created" );
-			DestroyThis();
+			base.Remove();
 			return null;
 		}
 
@@ -753,7 +753,7 @@ abstract public class Building : HiveObject
 		if ( flag.blueprintOnly )
 			flag.Remove();
 		team?.versionedBuildingDelete.Trigger();
-		DestroyThis();
+		base.Remove();
 	}
 
 	public virtual int Influence( Node node )

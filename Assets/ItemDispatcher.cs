@@ -98,7 +98,7 @@ public class ItemDispatcher : HiveObject
 	{
 		foreach ( var market in markets )
 			Destroy( market );
-		DestroyThis();
+		base.Remove();
 	}
 
 	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )

@@ -193,7 +193,7 @@ public class Node : HiveObject
 			toDestroy.Add( resource );
 		foreach ( var resourceToDestroy in toDestroy )
 			resourceToDestroy.Remove();
-		DestroyThis();
+		base.Remove();
 	}
 
 	public void OnDrawGizmos()

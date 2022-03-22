@@ -161,7 +161,7 @@ public class Item : HiveObject
 		{
 			if ( !SetTarget( destination, priority, origin ) )
 			{
-				DestroyThis();
+				base.Remove();
 				return null;
 			}
 		}
@@ -366,7 +366,7 @@ public class Item : HiveObject
 		destination.ItemArrived( this );
 
 		team.UnregisterItem( this );
-		DestroyThis();
+		base.Remove();
 	}
 
 	public Road road
@@ -397,13 +397,7 @@ public class Item : HiveObject
 		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )
 			team.mainBuilding.itemData[(int)type].content++;
-		DestroyThis();
-	}
-
-	public override void DestroyThis( bool noAssert = false )
-	{
-		assert.IsTrue( destination == null || !destination.itemsOnTheWay.Contains( this ) || World.massDestroy || noAssert, "Item on the way is destroyed" );	// TODO Triggered randomly for a beer. 
-		base.DestroyThis( noAssert );
+		base.Remove();
 	}
 
 	[Conditional( "Debug" )]

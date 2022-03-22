@@ -234,7 +234,7 @@ public class OperationHandler : HiveObject
         frameEvents = world.operationHandler.events;
         currentCRCCode = world.operationHandler.currentCRCCode;
         if ( world.operationHandler )
-            world.operationHandler.DestroyThis();
+            world.operationHandler.Remove();
         world.operationHandler = this;
 
         world.roadTutorialShowed = world.createRoadTutorialShowed = true;

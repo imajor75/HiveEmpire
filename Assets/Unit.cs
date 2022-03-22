@@ -1563,7 +1563,7 @@ public class Unit : HiveObject
 					taskQueue.Remove( task );
 			}
 		}
-		if ( IsIdle() )
+		if ( IsIdle() && !destroyed )
 			FindTask();
 	}
 
@@ -1630,7 +1630,7 @@ public class Unit : HiveObject
 			item?.Remove();
 		itemsInHands[0] = itemsInHands[1] = null;
 
-		DestroyThis();
+		base.Remove();
 	}
 
 	public void Retire()
@@ -2320,7 +2320,7 @@ public class Unit : HiveObject
 
 	public override Node location { get { return node; } }
 
-	public override void DestroyThis( bool noAssert = false )
+	public new void OnDestroy()
 	{
 		void ReleaseItemFrom( GameObject frame )
 		{
@@ -2341,7 +2341,7 @@ public class Unit : HiveObject
 			ReleaseItemFrom( links[(int)LinkType.haulingBoxSecondary] );
 		}
 
-		base.DestroyThis( noAssert );
+		base.OnDestroy();
 	}
 
 	public bool hasItems { get { return itemsInHands[0] != null; } }

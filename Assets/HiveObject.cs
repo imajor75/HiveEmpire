@@ -94,13 +94,6 @@ public abstract class HiveObject : HiveCommon
 		return nice;
 	}
 
-	public virtual void DestroyThis( bool noAssert = false )
-	{
-		destroyed = true;
-		this.noAssert = noAssert;
-		Destroy( gameObject );
-	}
-
 	public void OnDestroy()
 	{
 		world.hiveObjects.Remove( this );
@@ -125,7 +118,8 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Remove()
 	{
-		assert.Fail();
+		destroyed = true;
+		Destroy( gameObject );
 	}
 
 	public virtual Node location { get { return null; } }
@@ -145,7 +139,7 @@ public abstract class HiveObject : HiveCommon
 	{
 		gameObject.SetActive( !inactive );
 		if ( destroyed )	// If this is true, and this function is called, we are right after load. We should let unity know that this object should be treated as nonexistent
-			DestroyThis();
+			Destroy( gameObject );
 	}
 
 	public virtual void Materialize()
