@@ -818,6 +818,19 @@ public class World : HiveObject
 			challenge.Begin();
 		}
 
+		if ( ground.nodes.Count == ( ground.dimension + 1 ) * ( ground.dimension + 1 ) )
+		{
+			List<Node> newNodes = new List<Node>();
+			foreach ( var node in ground.nodes )
+			{
+				if ( node.x != ground.dimension && node.y != ground.dimension )
+					newNodes.Add( node );
+				else
+					node.Remove();
+			}
+			ground.nodes = newNodes;
+		}
+
 		if ( operationHandler == null )
 		{
 			operationHandler = OperationHandler.Create();
@@ -1101,7 +1114,7 @@ public class World : HiveObject
 		List<Resource> toRemove = new List<Resource>();
 		foreach ( var node in ground.nodes )
 		{
-			if ( !node.real )
+			if ( node.x == ground.dimension || node.y == ground.dimension )
 			{
 				foreach ( var resource in node.resources )
 				{
@@ -1493,7 +1506,7 @@ public class World : HiveObject
 	{
 		foreach ( var obj in hiveObjects )
 		{
-			if ( obj.location == null )
+			if ( obj.location == null || obj.destroyed )
 				continue;
 			assert.IsTrue( obj.location.real, $"Not real object {obj} in the world" );
 		}

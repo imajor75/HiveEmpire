@@ -2198,7 +2198,7 @@ public class Unit : HiveObject
 		else
 		{
 			transform.localPosition = Vector3.Lerp( walkFrom.GetPositionRelativeTo( walkTo ), walkTo.position, walkProgress ) + Vector3.up * Constants.Node.size * Constants.Road.bodyHeight;
-			assert.IsTrue( walkTo.valid && walkFrom.valid, "Not valid" );
+			assert.IsTrue( walkTo.real && walkFrom.real, "Walking on not real nodes" );
 			TurnTo( walkTo, walkFrom );		// TODO We should not do this in every frame
 		}
 

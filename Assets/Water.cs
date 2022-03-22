@@ -41,12 +41,17 @@ public class Water : HiveCommon
         {
             var vertices = new List<Vector3>();
             var heights = new List<Vector2>();
-            foreach ( var node in ground.nodes )
+            for ( int y = 0; y <= ground.dimension; y++ )
             {
-                var position = node.position;
-                position.y = 0;
-                vertices.Add( position );
-                heights.Add( new Vector2( world.waterLevel - node.height, 0 ) );
+                for ( int x = 0; x <= ground.dimension; x++ )
+                {
+                    Vector3 position = new Vector3();
+                    position.x = ground.n00x + ( ground.n10x - ground.n00x ) * x + ( ground.n01x - ground.n00x ) * y;
+                    position.y = 0;
+                    position.z = ground.n00y + ( ground.n10y - ground.n00y ) * x + ( ground.n01y - ground.n00y ) * y;
+                    vertices.Add( position );
+                    heights.Add( new Vector2( world.waterLevel - ground.GetNode( x, y ).height, 0 ) );
+                }
             }
             mesh.vertices = vertices.ToArray();
             mesh.uv = heights.ToArray();

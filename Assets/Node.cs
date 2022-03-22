@@ -58,16 +58,6 @@ public class Node : HiveObject
 		}
 	}
 
-	public bool valid
-	{
-		get
-		{
-			if ( x == ground.dimension || y == ground.dimension )
-				return true;
-			return ground.GetNode( x, y ) == this;
-		}
-	}
-
 	public enum Type
 	{
 		grass = 1,
@@ -192,6 +182,18 @@ public class Node : HiveObject
 
 	public override void Register()
 	{
+	}
+
+	override public void Remove()
+	{
+		building?.Remove();
+		flag?.Remove();
+		List<Resource> toDestroy = new List<Resource>();
+		foreach ( var resource in resources )
+			toDestroy.Add( resource );
+		foreach ( var resourceToDestroy in toDestroy )
+			resourceToDestroy.Remove();
+		DestroyThis();
 	}
 
 	public void OnDrawGizmos()
@@ -477,7 +479,7 @@ public class Node : HiveObject
 
 	public override void Validate( bool chain )
 	{
-		assert.IsTrue( valid );
+		assert.IsTrue( real );
 		int o = 0;
 		if ( validFlag )
 			o++;

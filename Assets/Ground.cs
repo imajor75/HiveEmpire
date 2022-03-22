@@ -6,7 +6,7 @@ using UnityEngine;
 public class Ground : HiveObject
 {
 	public int dimension;
-	public Node[] nodes;
+	public List<Node> nodes;
 	public static List<Offset>[] areas = new List<Offset>[Constants.Ground.maxArea];
 	[Range(0.0f, 1.0f)]
 	public float sharpRendering = Constants.Ground.defaultSharpRendering;
@@ -205,10 +205,10 @@ public class Ground : HiveObject
 		this.dimension = dimension;
 
 		if ( nodes == null )
-			nodes = new Node[( dimension + 1 ) * ( dimension + 1 )];
-		for ( int x = 0; x <= dimension; x++ )
-			for ( int y = 0; y <= dimension; y++ )
-				nodes[y * ( dimension + 1 ) + x] = Node.Create().Setup( this, x, y );
+			nodes = new List<Node>();
+		for ( int y = 0; y < dimension; y++ )
+			for ( int x = 0; x < dimension; x++ )
+				nodes.Add( Node.Create().Setup( this, x, y ) );
 		ScanHeights( heightMap, forestMap );
 
 		n00x = GetNode( 0, 0 ).position.x;
@@ -356,8 +356,9 @@ public class Ground : HiveObject
 			x -= dimension;
 		if ( y >= dimension )
 			y -= dimension;
-		assert.IsTrue( x >= 0 && x <= dimension && y >= 0 && y <= dimension );
-		return nodes[y * ( dimension + 1 ) + x];
+		assert.IsTrue( x >= 0 && x < dimension && y >= 0 && y < dimension );
+		assert.IsTrue( nodes.Count > y * dimension + x );
+		return nodes[y * dimension + x];
 	}
 
 	public float GetHeightAt( float x, float y )
@@ -567,7 +568,7 @@ public class Ground : HiveObject
 	override public void Validate( bool chain )
  	{
         assert.IsTrue( dimension > 0 && dimension > 0, "Map size is not correct (" + dimension + ", " + dimension );
-        assert.AreEqual( ( dimension + 1 ) * ( dimension + 1 ), nodes.Length, "Map layout size is incorrect" );
+        assert.AreEqual( dimension * dimension, nodes.Count, "Map layout size is incorrect" );
 
 		if ( !chain )
 			return;
