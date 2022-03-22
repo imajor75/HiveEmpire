@@ -629,11 +629,18 @@ public class World : HiveObject
 			hiveObjects.AddLast( newHiveObject );
 		}
 		newHiveObjects.Clear();
+		List<HiveObject> toRemove = new List<HiveObject>();
 		foreach ( var hiveObject in hiveObjects )
 		{
 			if ( hiveObject && !hiveObject.destroyed )
 				hiveObject.GameLogicUpdate();
+			else
+				toRemove.Add( hiveObject );
 		}
+
+		foreach ( var h in toRemove )
+			hiveObjects.Remove( h );
+		toRemove.Clear();
 
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
