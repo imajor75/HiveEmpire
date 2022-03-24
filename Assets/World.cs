@@ -289,7 +289,8 @@ public class World : HiveObject
 				if ( current < limit * 0.01f )
 				{
 					currentLevel = Goal.none;
-					progress = 0;
+					if ( !reversed )
+						progress = 0;
 					if ( text != null )
 					{
 						var currentLevel = reversed ? Goal.gold : Goal.none;
