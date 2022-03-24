@@ -224,6 +224,27 @@ public class World : HiveObject
 			return new GameObject( "Challenge" ).AddComponent<Challenge>();
 		}
 
+		public Challenge Setup( Challenge prototype )
+		{
+			title = prototype.title;
+			description = prototype.description;
+			reachedLevel = prototype.reachedLevel;
+			maintain = prototype.maintain;
+			fixedSeed = prototype.fixedSeed;
+			seed = prototype.seed;
+			productivityGoals = prototype.productivityGoals;
+			mainBuildingContent = prototype.mainBuildingContent;
+			buildingMax = prototype.buildingMax;
+			timeLimit = prototype.timeLimit;
+			playerCount = prototype.playerCount;
+			worldSize = prototype.worldSize;
+			simpletonCount = prototype.simpletonCount;
+			allowTimeLeftLevels = prototype.allowTimeLeftLevels;
+
+			// HiveObject.Setup() would be nice to call, but at the moment I don't want to risk it
+			return this;
+		}
+
 		void Awake()
 		{
 			id = -1;

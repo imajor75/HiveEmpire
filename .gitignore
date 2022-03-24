@@ -69,3 +69,5 @@ linuxbuild/
 *.blob
 
 UserSettings/
+
+.vscode/tasks.json

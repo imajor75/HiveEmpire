@@ -6451,7 +6451,7 @@ if ( cart )
 
 		void Restart( bool randomizeSeed )
 		{
-			var c = world.challenge;
+			var c = World.Challenge.Create().Setup( world.challenge );
 			if ( randomizeSeed && !c.fixedSeed )
 				c.seed = World.NextRnd( OperationHandler.Event.CodeLocation.challengePanelRestart );
 			root.NewGame( c );
