@@ -217,8 +217,6 @@ public class World : HiveObject
 		[Obsolete( "Compatibility with old files", true )]
 		bool randomSeed { set {} }
 
-        public override Node location => throw new NotImplementedException();
-
         public static Challenge Create()
 		{
 			return new GameObject( "Challenge" ).AddComponent<Challenge>();
@@ -266,7 +264,7 @@ public class World : HiveObject
 			reachedLevel = Goal.none;
 		}
 
-		void CriticalUpdate()
+		override public void GameLogicUpdate()
 		{
 			if ( world.challenge != this )
 				return;
@@ -740,6 +738,8 @@ public class World : HiveObject
 		Prepare();
 		Interface.ValidateAll( true );
 
+		challenge.destroyed = false;	// TODO Hack
+		challenge.Register();
 		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = challenge;
 // #if DEBUG
