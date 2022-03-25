@@ -138,6 +138,7 @@ public class Team : HiveObject
 	public int[] surplus = new int[(int)Item.Type.total];
 	public List<InputWeight> inputWeights;
 	public InputWeight plankForConstructionWeight, stoneForConstructionWeight;
+	public List<float> constructionFactors = new List<float>();
 	public int soldierCount 
 	{ 
 		set { mainBuilding.itemData[(int)Item.Type.soldier].content = value; }
@@ -160,7 +161,6 @@ public class Team : HiveObject
 			return checksum;
 		}
 	}
-
 
     public int lastTimeAttack;
 
@@ -323,6 +323,9 @@ public class Team : HiveObject
 		}
 		plankForConstructionWeight = FindInputWeight( Workshop.Type.unknown, Item.Type.plank );
 		stoneForConstructionWeight = FindInputWeight( Workshop.Type.unknown, Item.Type.stone );
+		
+		for ( int i = 0; i < (int)Building.Type.total; i++ )
+			constructionFactors.Add( i == (int)Workshop.Type.woodcutter || i == (int)Workshop.Type.stonemason ? Constants.Building.importantBuildingConstructionWeight : 1 );
 	}
 
 	public InputWeight FindInputWeight( Workshop.Type workshopType, Item.Type itemType )
@@ -411,6 +414,11 @@ public class Team : HiveObject
 
 		if ( inputWeights == null )
 			CreateInputWeights();	// For compatibility with old files
+		if ( constructionFactors.Count == 0 )
+		{
+			for ( int i = 0; i < (int)Building.Type.total; i++ )
+				constructionFactors.Add( i == (int)Workshop.Type.woodcutter || i == (int)Workshop.Type.stonemason ? Constants.Building.importantBuildingConstructionWeight : 1 );
+		}
 
 		if ( surplus.Length != (int)Item.Type.total )
 			surplus = new int[(int)Item.Type.total];

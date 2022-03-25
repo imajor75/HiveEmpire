@@ -307,9 +307,9 @@ abstract public class Building : HiveObject
 			if ( boss.reachable )
 			{
 				int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
-				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.plankForConstructionWeight.weight );
+				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.plankForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
 				int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
-				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.stoneForConstructionWeight.weight );
+				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.stoneForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
 			}
 
 			if ( builder == null && Path.Between( boss.team.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )

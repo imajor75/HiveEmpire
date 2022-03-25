@@ -29,6 +29,7 @@ public static class Constants
         public const int flatteningTime = 220;
         public const int defaultPlankNeeded = 2;
         public const int defaultStoneNeeded = 0;
+        public const float importantBuildingConstructionWeight = 2;
     }
 
     public static class Eye
