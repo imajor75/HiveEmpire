@@ -333,6 +333,11 @@ public class OperationHandler : HiveObject
 		ScheduleOperation( Operation.Create().SetupAsChangeDefenderCount( building, count ), standalone, source );
 	}
 
+	public void ScheduleToggleEmergencyConstruction( Team team, bool standalone = true, Operation.Source source = Operation.Source.manual )
+	{
+		ScheduleOperation( Operation.Create().SetupAsToggleEmergencyConstruction( team ), standalone, source );
+	}
+
 	public void ScheduleRemoveBuilding( Building building, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
         if ( building )
@@ -852,7 +857,8 @@ public class Operation
         captureRoad,
         changeBufferUsage,
         flattenFlag,
-        changeFlagType
+        changeFlagType,
+        toggleEmergencyConstruction
     }
 
     public static Operation Create()
@@ -875,6 +881,14 @@ public class Operation
         this.building = building;
         unitCount = count;
         name = "Change Defender Count";
+        return this;
+    }
+
+    public Operation SetupAsToggleEmergencyConstruction( Team team )
+    {
+        type = Type.toggleEmergencyConstruction;
+        this.team = team;
+        name = "Toggle Emergency Construction";
         return this;
     }
 
@@ -1265,6 +1279,16 @@ public class Operation
                 else
                     flag.ConvertToNormal();
                 return Create().SetupAsChangeFlagType( flag );
+            }
+            case Type.toggleEmergencyConstruction:
+            {
+                float normal = team.constructionFactors[(int)Building.Type.guardHouse] == 1 ? 0 : 1;
+                for ( int i = 0; i < (int)Building.Type.total; i++ )
+                {
+                    if ( i != (int)Workshop.Type.woodcutter && i != (int)Workshop.Type.stonemason )
+                        team.constructionFactors[i] = normal;
+                }
+                return Create().SetupAsToggleEmergencyConstruction( team );
             }
         }
         return null;

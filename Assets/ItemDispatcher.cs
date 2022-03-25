@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -310,8 +310,7 @@ public class ItemDispatcher : HiveObject
 					}
 					ConsiderResult( potential, other, Result.match );
 					int distance = other.location.DistanceFrom( potential.location );
-					float weightedDistance = distance * ( 1 - potential.weight ) * ( 1 - other.weight ) + 1;
-					float score = (int)other.priority * 1000 + 1f / weightedDistance;   // TODO Priorities?
+					float score = (int)other.priority * 10 + 1f / distance * potential.weight * other.weight;
 					if ( score >= maxScore )
 						continue;
 					if ( score > bestScore )

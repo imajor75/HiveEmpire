@@ -336,7 +336,8 @@ public static class Constants
         public const int stockSave = Constants.Stock.cartCapacity;
         public const int cartMin = 5;
         public const int itemTypesPerStock = 6;
-        public const int dealCheckPeriod = Constants.World.normalSpeedPerSecond * 60 * 10;
+        public const int itemTypesPerMainStock = 10;
+        public const int dealCheckPeriod = Constants.World.normalSpeedPerSecond * 60 * 2;
         public const float guardHouseWorkshopRatio = 1.5f;
         public const int roadLastUsedMin = Constants.World.normalSpeedPerSecond * 60 * 20;
         public const int roadLastUsedMax = Constants.World.normalSpeedPerSecond * 60 * 120;

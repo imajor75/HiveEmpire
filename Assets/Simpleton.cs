@@ -231,6 +231,11 @@ public class Simpleton : Player
             foreach ( var guardHouse in boss.team.guardHouses )
                 CheckBuilding( guardHouse );
 
+            if ( !boss.hasWoodcutter && boss.team.constructionFactors[(int)Building.Type.stock] != 0 )
+                problemWeight = solutionEfficiency = 1;
+            if ( boss.hasWoodcutter && boss.team.constructionFactors[(int)Building.Type.stock] == 0 )
+                problemWeight = solutionEfficiency = 1;
+
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
@@ -284,6 +289,11 @@ public class Simpleton : Player
             }
 
             return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            HiveCommon.oh.ScheduleToggleEmergencyConstruction( boss.team, true, Operation.Source.computer );
         }
     }
 
@@ -1025,6 +1035,7 @@ public class Simpleton : Player
         {
             Stock best = null;
             float bestScore = 0;
+            bool constructionInProgress = false;
             foreach ( var stock in boss.team.stocks )
             {
                 float score = 1f / stock.node.DistanceFrom( workshop.node );
@@ -1033,15 +1044,20 @@ public class Simpleton : Player
                 if ( stock.simpletonDataSafe.managedItemTypes.Contains( itemType ) )
                     score *= 5;
                 else
-                    if ( stock.simpletonDataSafe.managedItemTypes.Count >= Constants.Simpleton.itemTypesPerStock )
+                    if ( stock.simpletonDataSafe.managedItemTypes.Count >= ( stock.main ? Constants.Simpleton.itemTypesPerMainStock : Constants.Simpleton.itemTypesPerStock ) )
                         continue;
                 if ( score > bestScore )
                 {
-                    bestScore = score;
-                    best = stock;
+                    if ( stock.construction.done )
+                    {
+                        bestScore = score;
+                        best = stock;
+                    }
+                    else
+                        constructionInProgress = true;
                 }
             }
-            if ( best == null )
+            if ( best == null && !constructionInProgress )
                 boss.tasks.Add( new BuildStockTask( boss, workshop.node ) );
             return best;
         }
