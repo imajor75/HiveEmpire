@@ -367,8 +367,15 @@ public class Serializer
 				gh.assassin = null;
 				continue;
 			}
-			if ( link.referencer is Stock.Cart && !link.referencer.destroyed && link.reference.destroyed )
-				link.referencer.destroyed = true;
+			if ( 
+				link.referencer is Stock.Cart ct &&
+				link.member.Name == "road" &&
+				link.reference.destroyed &&
+				!ct.exclusiveMode )
+			{
+				ct.road = null;
+				continue;
+			}
 			link.reference.assert.IsTrue( link.referencer.destroyed || !link.reference.destroyed, $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member}" );
 		}
 		return result;

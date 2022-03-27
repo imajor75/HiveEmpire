@@ -2369,7 +2369,7 @@ public class Unit : HiveObject
 		transform.localPosition = node.position + Vector3.up * standingHeight;
 	}
 
-	public Node LeaveExclusivity()
+	public virtual Node LeaveExclusivity()
 	{
 		if ( !exclusiveMode || road == null )
 			return null;

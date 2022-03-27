@@ -457,6 +457,14 @@ public class Stock : Attackable
 				SetActive( false );
 		}
 
+		public override Node LeaveExclusivity()
+		{
+			var result = base.LeaveExclusivity();
+			if ( result )
+				road = null;
+			return result;
+		}
+
 		public override void Validate( bool chain )
 		{
 			base.Validate( chain );
