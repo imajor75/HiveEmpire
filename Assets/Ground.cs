@@ -127,6 +127,13 @@ public class Ground : HiveObject
 		base.Start();
 	}
 
+	override public void Remove()
+	{
+		foreach ( var node in nodes )
+			node.Remove();
+		base.Remove();
+	}
+
 	[JsonIgnore]
 	public int grassLayerCount;
 

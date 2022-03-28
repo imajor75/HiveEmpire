@@ -144,6 +144,15 @@ public abstract class Attackable : Building
 		defender = assassin = aggressor = null;
 		trashTimer.Start( Constants.GuardHouse.deathFadeTime );
 	}
+
+    public override void Remove()
+    {
+		RemoveElements( attackers );
+		aggressor?.Remove();
+		defender?.Remove();
+		assassin?.Remove();
+        base.Remove();
+    }
 }
 
 public class GuardHouse : Attackable
@@ -296,6 +305,8 @@ public class GuardHouse : Attackable
 
 	public override void Remove()
 	{
+		RemoveElements( soldiers );
+
 		if ( removing )
 			return;
 

@@ -425,7 +425,7 @@ public class Workshop : Building
 
 			if ( resource.hunter == null )
 			{
-				resource.animals.Clear();
+				resource.origin = null;
 				resource.Remove();
 				return true;
 			}
@@ -436,7 +436,7 @@ public class Workshop : Building
 		{
 			if ( resource )
 			{
-				resource.animals.Clear();
+				resource.origin = null;
 				resource.Remove();
 			}
 			base.Cancel();

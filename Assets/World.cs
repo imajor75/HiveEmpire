@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -823,6 +823,7 @@ public class World : HiveObject
 			name = "Incredible";
 		lastAutoSave = Time.unscaledTime;
 		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
+		Assert.global.AreEqual( checksum, lastChecksum, "Checksum mismatch in world" );
 
 		if ( !challenge )
 		{
@@ -1081,6 +1082,12 @@ public class World : HiveObject
 					o.infinite = true;
 				if ( o.life.empty )
 					o.life.reference = instance.time - 15000;
+				if ( o.type == Resource.Type.pasturingAnimal && o.animals.Count == 1 )
+				{
+					Assert.global.IsNull( o.origin );
+					o.origin = o.animals[0];
+					o.animals.Clear();
+				}
 			}
 		}
 		{
@@ -1224,22 +1231,23 @@ public class World : HiveObject
 		gameInProgress = false;
 		players.Clear();
 		teams.Clear();
-		eye = null;
-		Destroy( operationHandler );
-		operationHandler = null;
-		// We could simply destroy each children, which would destroy the whole scene tree, in the end destroying the same objects
-		// but if we do that, then granchilds are only destroyed at a later stage of the frame, making it possible that these objects are
-		// still getting calls like Update. Those calls cause a lot of trouble for objects which supposed to be destroyed already.
-		DestroyChildRecursive( transform );	
 
-		foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
-		{
-			if ( ho is Interface || ho is Challenge || ho is World )
-				continue;
-				
-			ho.noAssert = true;		// TODO This is not good, causes a lot of trouble
-			ho.destroyed = true;	// To prevent decoration only roads getting an ID and registered after load
-		}
+		eye?.Remove();
+		eye = null;
+
+		operationHandler?.Remove();
+		operationHandler = null;
+
+		ground?.Remove();
+		ground = null;
+
+		water?.Remove();
+		water = null;
+
+		if ( light )
+			Destroy( light.gameObject );
+		light = null;
+
 		hiveObjects.Clear();
 		newHiveObjects.Clear();
 
@@ -1259,15 +1267,6 @@ public class World : HiveObject
 		}
 
 		return null;
-	}
-
-	public static void DestroyChildRecursive( Transform parent )
-	{
-		foreach ( Transform child in parent )
-		{
-			DestroyChildRecursive( child );
-			Destroy( child.gameObject );
-		}
 	}
 
 	public static void SetLayerRecursive( GameObject gameObject, int layer )

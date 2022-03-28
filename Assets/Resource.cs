@@ -17,6 +17,7 @@ public class Resource : HiveObject
 	public World.Timer spawn = new World.Timer();
 	public Unit hunter;
 	public List<Unit> animals = new List<Unit>();
+	public Unit origin;		// Only valid for a prey, references the bunny
 	public World.Timer silence = new World.Timer();
 
 	GameObject body;
@@ -202,8 +203,8 @@ public class Resource : HiveObject
 	{
 		if ( Setup( animal.node, Type.pasturingAnimal ) == null )
 			return null;
+		origin = animal;
 
-		animals.Add( animal );
 		return this;
 	}
 
@@ -328,11 +329,14 @@ public class Resource : HiveObject
 
 	public override void Remove()
 	{
-		if ( type == Type.pasturingAnimal && animals.Count > 0 )
-		{
-			animals[0].taskQueue.Clear();
-			animals[0].Remove();
-		}
+		if ( destroyed )
+			return;
+		destroyed = true;
+		
+		RemoveElements( animals );
+		if ( origin )
+			origin.Remove();
+
 		assert.IsTrue( node.resources.Contains( this ) );
 		node.avoidGrass = false;
 		ground.SetDirty( node );
@@ -375,8 +379,12 @@ public class Resource : HiveObject
 
 	public override void Validate( bool chain )
 	{
+		if ( type != Type.animalSpawner )
+			assert.AreEqual( animals.Count, 0 );
 		if ( type == Type.pasturingAnimal )
-			assert.AreEqual( animals.Count, 1 );
+			assert.IsNotNull( origin );
+		else
+			assert.IsNull( origin );
 		if ( hunter )
 		{
 			var hunterTask = hunter.FindTaskInQueue<Workshop.GetResource>();

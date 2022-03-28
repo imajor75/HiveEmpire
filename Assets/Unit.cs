@@ -2177,11 +2177,8 @@ public class Unit : HiveObject
 			return;
 		}
 
-		//if ( bodyState != BodyState.walking )
-		{
-			animator?.SetBool( walkingID, true );
-			bodyState = BodyState.walking;
-		}
+		animator?.SetBool( walkingID, true );
+		bodyState = BodyState.walking;
 
 		if ( walkBase != null )
 		{

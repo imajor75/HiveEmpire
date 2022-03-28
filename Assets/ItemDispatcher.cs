@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -42,7 +42,19 @@ public class ItemDispatcher : HiveObject
 		public float weight = 0.5f;
 		public bool flagJammed;
 		public bool noDispenser;
-		public int id { get { return building ? building.id : item.id; } }
+		public int id 
+		{ 
+			get 
+			{ 
+				if ( building )
+					return building.id;
+					
+				if ( item )
+					return item.id; 
+
+				return -1;
+			} 
+		}
 	}
 
 	public List<Market> markets = new List<Market>();

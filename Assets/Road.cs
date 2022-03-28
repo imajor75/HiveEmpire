@@ -726,9 +726,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		base.Remove();
 		team.roads.Remove( this );
-		var localHaulers = haulers.GetRange( 0, haulers.Count );
-		foreach ( var hauler in localHaulers )
-			hauler.Remove();
+		RemoveElements( haulers );
 		if ( !decorationOnly )
 			UnregisterOnGround();
 		List<Unit> exclusiveHaulers = new List<Unit>();

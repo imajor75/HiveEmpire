@@ -188,11 +188,7 @@ public class Node : HiveObject
 	{
 		building?.Remove();
 		flag?.Remove();
-		List<Resource> toDestroy = new List<Resource>();
-		foreach ( var resource in resources )
-			toDestroy.Add( resource );
-		foreach ( var resourceToDestroy in toDestroy )
-			resourceToDestroy.Remove();
+		RemoveElements( resources );
 		base.Remove();
 	}
 

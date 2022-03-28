@@ -581,8 +581,6 @@ public class Team : HiveObject
 
 	public void RegisterItem( Item item )
 	{
-		if ( item.id == 37425 )
-		{}
 		item.assert.AreEqual( item.team, this );
 		int slotIndex = firstPossibleEmptyItemSlot;
 		while ( slotIndex < items.Count && items[slotIndex] != null )
@@ -599,6 +597,7 @@ public class Team : HiveObject
 	public void UnregisterItem( Item item )
 	{
 		item.assert.AreEqual( item.team, this );
+		item.assert.IsTrue( items.Count > item.index && item.index >= 0 );
 		item.assert.AreEqual( items[item.index], item );
 		items[item.index] = null;
 		if ( item.index < firstPossibleEmptyItemSlot )

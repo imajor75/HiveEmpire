@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent( typeof( MeshFilter ), typeof( MeshRenderer ) )]
-public class Water : HiveCommon
+public class Water : HiveObject
 {
     public Mesh mesh;
     public Material material;
@@ -23,19 +23,21 @@ public class Water : HiveCommon
 
     public Water Setup( Ground ground )
     {
+        base.Setup();
         return this;
     }
 
-    void Start()
+    new void Start()
     {
         name = "Water";
         transform.SetParent( ground.transform.parent );
         mesh = GetComponent<MeshFilter>().mesh = new Mesh();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
         gameObject.layer = World.layerIndexNotOnMap;
+        base.Start();
     }
 
-    void Update()
+    new void Update()
     {
         if ( mesh.triangles.Length != ground.dimension * ground.dimension * 3 * 2 )
         {
@@ -53,6 +55,7 @@ public class Water : HiveCommon
                     heights.Add( new Vector2( world.waterLevel - ground.GetNode( x, y ).height, 0 ) );
                 }
             }
+            Assert.global.AreEqual( vertices.Count, heights.Count );
             mesh.vertices = vertices.ToArray();
             mesh.uv = heights.ToArray();
 
@@ -87,5 +90,6 @@ public class Water : HiveCommon
 				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * Constants.Node.size, 0, y * ground.dimension * Constants.Node.size ) + transform.position, Quaternion.identity, material, World.layerIndexNotOnMap );
             }
         }
+        base.Update();
     }
 }

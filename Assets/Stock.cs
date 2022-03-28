@@ -631,6 +631,7 @@ public class Stock : Attackable
 		base.Remove();
 		if ( cart )
 			cart.Remove();
+		RemoveElements( returningUnits );
 	}
 
 	new void Start()

@@ -23,6 +23,13 @@ public class HiveCommon : MonoBehaviour
 		if ( important )
 			print( text );
 	}
+
+	public static void RemoveElements<Something>( List<Something> array ) where Something : HiveObject
+	{
+		var tmpArray = array.GetRange( 0, array.Count );
+		foreach ( var element in tmpArray )
+			element.Remove();
+	}
 }
 
 public abstract class HiveObject : HiveCommon
