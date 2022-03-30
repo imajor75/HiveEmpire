@@ -38,8 +38,8 @@ public class Workshop : Building
 	ParticleSystem smoke;
 	public Transform millWheel;
 
-	GameObject mapIndicator;
-	Material mapIndicatorMaterial;
+	[JsonIgnore]
+	Interface.WorkshopMapWidget mapIndicator;
 
 	public override List<Ground.Area> areas
 	{
@@ -601,14 +601,7 @@ public class Workshop : Building
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 ) + $" {node.x}:{node.y}";
 
-		mapIndicator = GameObject.CreatePrimitive( PrimitiveType.Plane );
-		mapIndicator.transform.SetParent( transform, false );
-		World.SetLayerRecursive( mapIndicator, World.layerIndexMapOnly );
-		mapIndicatorMaterial = mapIndicator.GetComponent<MeshRenderer>().material = new Material( World.defaultShader );
-		mapIndicatorMaterial.renderQueue = 4001;
-		mapIndicatorMaterial.mainTexture = mapIndicatorTexture;
-		mapIndicator.transform.position = node.position + Vector3.up * 3;
-		mapIndicator.SetActive( false );
+		mapIndicator = Interface.WorkshopMapWidget.Create( this );
 
 		RefreshConfiguration();
 
@@ -770,14 +763,6 @@ public class Workshop : Building
 
 			if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
 				SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
-		}
-
-		if ( mapIndicator )
-		{
-			mapIndicator.SetActive( true );
-			mapIndicator.transform.localScale = new Vector3( Constants.Node.size * productivity.current / 10, 1, Constants.Node.size * 0.02f );
-			mapIndicator.transform.rotation = Quaternion.Euler( 0, (float)( eye.direction / Math.PI * 180 ), 0 );
-			mapIndicatorMaterial.color = Color.Lerp( Color.red, Color.white, productivity.current );
 		}
 
 		if ( !blueprintOnly )

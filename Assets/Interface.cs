@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -232,7 +232,9 @@ public class Interface : HiveObject
 		replay,
 		yes,
 		no,
-		cave
+		cave,
+		box,
+		bar
 	}
 
 	public Interface()
@@ -434,6 +436,7 @@ public class Interface : HiveObject
 		Viewport.Initialize();
 		Water.Initialize();
 		Network.Initialize();
+		WorkshopMapWidget.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
@@ -2199,6 +2202,113 @@ public class Interface : HiveObject
 				return CompareResult.same;
 
 			return CompareResult.sameButDifferentTarget;
+		}
+	}
+
+	public class WorkshopMapWidget : MonoBehaviour
+	{
+		public Workshop workshop;
+		public Sprite utilization;
+		public Material barMaterial;
+		static int progressShaderID;
+
+		public static WorkshopMapWidget Create( Workshop workshop )
+		{
+			var obj = new GameObject( "Workshop Map Widget" ).AddComponent<WorkshopMapWidget>();
+			obj.Setup( workshop );
+			return obj;
+		}
+
+		public static void Initialize()
+		{
+			progressShaderID = Shader.PropertyToID( "_Progress" );
+		}
+
+		public void Setup( Workshop workshop )
+		{
+			this.workshop = workshop;
+			var bg = gameObject.AddComponent<SpriteRenderer>();
+			bg.sprite = iconTable.GetMediaData( Icon.box );
+			transform.SetParent( workshop.transform, false );
+			transform.localPosition = new Vector3( 0, 3, 0 );
+			transform.localScale = new Vector3( 0.7f, 0.5f, 1 );
+
+			if ( workshop.productionConfiguration.outputType < Item.Type.total && workshop.productionConfiguration.outputType >= 0 )
+			{
+				var output = new GameObject( "Output icon" ).AddComponent<SpriteRenderer>();
+				output.transform.SetParent( transform, false );
+				output.transform.localPosition = new Vector3( -0.6f, 0.4f, 0.1f );
+				output.transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
+				output.sprite = Item.sprites[(int)workshop.productionConfiguration.outputType];
+			}
+
+			List<SpriteRenderer> inputs = new List<SpriteRenderer>();
+			foreach ( var buffer in workshop.buffers )
+			{
+				var r = new GameObject( $"Input icon{inputs.Count}" ).AddComponent<SpriteRenderer>();
+				r.transform.SetParent( transform, false );
+				r.sprite = Item.sprites[(int)buffer.itemType];
+				inputs.Add( r );
+			}
+			switch ( inputs.Count )
+			{
+				case 1:
+				{
+					inputs[0].transform.localPosition = new Vector3( 0.6f, 0.4f, 0.1f );
+					break;
+				}
+				case 2:
+				{
+					inputs[0].transform.localPosition = new Vector3( 0.6f, 0.7f, 0.1f );
+					inputs[1].transform.localPosition = new Vector3( 0.6f, 0.1f, 0.1f );
+					break;
+				}
+				case 3:
+				{
+					inputs[0].transform.localPosition = new Vector3( 0.9f, 0.7f, 0.1f );
+					inputs[1].transform.localPosition = new Vector3( 0.9f, 0.1f, 0.1f );
+					inputs[2].transform.localPosition = new Vector3( 0.3f, 0.7f, 0.1f );
+					break;
+				}
+				case 4:
+				{
+					inputs[0].transform.localPosition = new Vector3( 0.9f, 0.7f, 0.1f );
+					inputs[1].transform.localPosition = new Vector3( 0.9f, 0.1f, 0.1f );
+					inputs[2].transform.localPosition = new Vector3( 0.3f, 0.7f, 0.1f );
+					inputs[3].transform.localPosition = new Vector3( 0.3f, 0.1f, 0.1f );
+					break;
+				}
+			}
+			if ( inputs.Count == 1 )
+				inputs[0].transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
+			else
+			{
+				foreach ( var r in inputs )
+					r.transform.localScale = new Vector3( 0.2f, 0.225f, 1 );
+			}
+
+			var arrow = new GameObject( "Arrow" ).AddComponent<SpriteRenderer>();
+			arrow.sprite = iconTable.GetMediaData( Icon.rightArrow );
+			arrow.transform.SetParent( transform, false );
+			arrow.transform.localPosition = new Vector3( 0, 0.4f, 0.1f );
+			arrow.transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
+			arrow.transform.rotation = Quaternion.Euler( 0, 180, 0 );
+
+			var bar = new GameObject( "Utilization" ).AddComponent<SpriteRenderer>();
+			bar.sprite = iconTable.GetMediaData( Icon.bar );
+			bar.transform.SetParent( transform, false );
+			bar.transform.localPosition = new Vector3( 0, -0.65f, 0.1f );
+			bar.transform.localScale = new Vector3( 1.5f, 1.5f, 1 );
+			bar.transform.rotation = Quaternion.Euler( 0, 180, 0 );
+			barMaterial = bar.material = new Material( Resources.Load<Shader>( "shaders/Progress" ) );
+				
+			World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+		}
+
+		void Update()
+		{
+			transform.rotation = Quaternion.Euler( -90, (float)( eye.direction / Math.PI * 180 ) + 180, 0 );
+			barMaterial.SetFloat( progressShaderID, workshop.productivity.current );
 		}
 	}
 
