@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -436,7 +436,7 @@ public class Interface : HiveObject
 		Viewport.Initialize();
 		Water.Initialize();
 		Network.Initialize();
-		WorkshopMapWidget.Initialize();
+		BuildingMapWidget.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
@@ -2205,77 +2205,103 @@ public class Interface : HiveObject
 		}
 	}
 
-	public class WorkshopMapWidget : MonoBehaviour
+	public class BuildingMapWidget : MonoBehaviour
 	{
-		public Workshop workshop;
+		public Building building;
 		public Sprite utilization;
-		public Material barMaterial;
-		static int progressShaderID;
+		public Material barMaterial, bgMaterial;
+		static int progressShaderID, colorShaderID;
+		static Shader spriteShader;
 
-		public static WorkshopMapWidget Create( Workshop workshop )
+		public static BuildingMapWidget Create( Building building )
 		{
-			var obj = new GameObject( "Workshop Map Widget" ).AddComponent<WorkshopMapWidget>();
-			obj.Setup( workshop );
+			var obj = new GameObject( "Workshop Map Widget" ).AddComponent<BuildingMapWidget>();
+			obj.Setup( building );
 			return obj;
 		}
 
 		public static void Initialize()
 		{
 			progressShaderID = Shader.PropertyToID( "_Progress" );
+			colorShaderID = Shader.PropertyToID( "_Color" );
+			spriteShader = Resources.Load<Shader>( "shaders/Sprite" );
 		}
 
-		public void Setup( Workshop workshop )
+		public void Setup( Building building )
 		{
-			this.workshop = workshop;
+			this.building = building;
 			var bg = gameObject.AddComponent<SpriteRenderer>();
 			bg.sprite = iconTable.GetMediaData( Icon.box );
-			transform.SetParent( workshop.transform, false );
+			bgMaterial = bg.material = new Material( spriteShader );
+			bgMaterial.renderQueue = 4004;
+			transform.SetParent( building.transform, false );
 			transform.localPosition = new Vector3( 0, 3, 0 );
 			transform.localScale = new Vector3( 0.7f, 0.5f, 1 );
+			if ( building is Workshop workshop )
+				SetupForWorkshop( workshop );
+			if ( building is Stock stock )
+				SetupForStock( stock );
+			if ( building is GuardHouse guardHouse )
+				SetupForGuardHouse( guardHouse );
+				
+			World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+		}
 
+		SpriteRenderer NewSprite( Sprite sprite, string name )
+		{
+			var renderer = new GameObject( name ).AddComponent<SpriteRenderer>();
+			renderer.sprite = sprite;
+			renderer.transform.SetParent( transform, false );
+			renderer.material = new Material( spriteShader );
+			renderer.material.renderQueue = 4004;
+			return renderer;
+		}
+
+		SpriteRenderer NewSprite( Icon icon, string name ) => NewSprite( iconTable.GetMediaData( icon ), name );
+		SpriteRenderer NewSprite( Item.Type itemType, string name ) => NewSprite( Item.sprites[(int)itemType], name );
+
+		void SetupForWorkshop( Workshop workshop )
+		{
+			bgMaterial.SetColor( "_Color", new Color( 0.3f, 0.6f, 1) );
 			if ( workshop.productionConfiguration.outputType < Item.Type.total && workshop.productionConfiguration.outputType >= 0 )
 			{
-				var output = new GameObject( "Output icon" ).AddComponent<SpriteRenderer>();
-				output.transform.SetParent( transform, false );
-				output.transform.localPosition = new Vector3( -0.6f, 0.4f, 0.1f );
+				var output = NewSprite( workshop.productionConfiguration.outputType, "Output icon" );
+				output.transform.localPosition = new Vector3( 0.6f, -0.4f, 0.1f );
 				output.transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
-				output.sprite = Item.sprites[(int)workshop.productionConfiguration.outputType];
 			}
 
 			List<SpriteRenderer> inputs = new List<SpriteRenderer>();
 			foreach ( var buffer in workshop.buffers )
 			{
-				var r = new GameObject( $"Input icon{inputs.Count}" ).AddComponent<SpriteRenderer>();
-				r.transform.SetParent( transform, false );
-				r.sprite = Item.sprites[(int)buffer.itemType];
+				var r = NewSprite( buffer.itemType, $"Input icon{inputs.Count}" );
 				inputs.Add( r );
 			}
 			switch ( inputs.Count )
 			{
 				case 1:
 				{
-					inputs[0].transform.localPosition = new Vector3( 0.6f, 0.4f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.6f, -0.4f, 0.1f );
 					break;
 				}
 				case 2:
 				{
-					inputs[0].transform.localPosition = new Vector3( 0.6f, 0.7f, 0.1f );
-					inputs[1].transform.localPosition = new Vector3( 0.6f, 0.1f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.6f, -0.7f, 0.1f );
+					inputs[1].transform.localPosition = new Vector3( -0.6f, -0.1f, 0.1f );
 					break;
 				}
 				case 3:
 				{
-					inputs[0].transform.localPosition = new Vector3( 0.9f, 0.7f, 0.1f );
-					inputs[1].transform.localPosition = new Vector3( 0.9f, 0.1f, 0.1f );
-					inputs[2].transform.localPosition = new Vector3( 0.3f, 0.7f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.9f, -0.7f, 0.1f );
+					inputs[1].transform.localPosition = new Vector3( -0.9f, -0.1f, 0.1f );
+					inputs[2].transform.localPosition = new Vector3( -0.3f, -0.7f, 0.1f );
 					break;
 				}
 				case 4:
 				{
-					inputs[0].transform.localPosition = new Vector3( 0.9f, 0.7f, 0.1f );
-					inputs[1].transform.localPosition = new Vector3( 0.9f, 0.1f, 0.1f );
-					inputs[2].transform.localPosition = new Vector3( 0.3f, 0.7f, 0.1f );
-					inputs[3].transform.localPosition = new Vector3( 0.3f, 0.1f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.9f, -0.7f, 0.1f );
+					inputs[1].transform.localPosition = new Vector3( -0.9f, -0.1f, 0.1f );
+					inputs[2].transform.localPosition = new Vector3( -0.3f, -0.7f, 0.1f );
+					inputs[3].transform.localPosition = new Vector3( -0.3f, -0.1f, 0.1f );
 					break;
 				}
 			}
@@ -2287,28 +2313,40 @@ public class Interface : HiveObject
 					r.transform.localScale = new Vector3( 0.2f, 0.225f, 1 );
 			}
 
-			var arrow = new GameObject( "Arrow" ).AddComponent<SpriteRenderer>();
-			arrow.sprite = iconTable.GetMediaData( Icon.rightArrow );
-			arrow.transform.SetParent( transform, false );
-			arrow.transform.localPosition = new Vector3( 0, 0.4f, 0.1f );
+			var arrow = NewSprite( Icon.rightArrow, "Arrow" );
+			arrow.transform.localPosition = new Vector3( 0, -0.4f, 0.1f );
 			arrow.transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
-			arrow.transform.rotation = Quaternion.Euler( 0, 180, 0 );
 
-			var bar = new GameObject( "Utilization" ).AddComponent<SpriteRenderer>();
-			bar.sprite = iconTable.GetMediaData( Icon.bar );
-			bar.transform.SetParent( transform, false );
-			bar.transform.localPosition = new Vector3( 0, -0.65f, 0.1f );
+			var bar = NewSprite( Icon.bar, "Utilization" );
+			bar.transform.localPosition = new Vector3( 0, 0.65f, 0.1f );
 			bar.transform.localScale = new Vector3( 1.5f, 1.5f, 1 );
-			bar.transform.rotation = Quaternion.Euler( 0, 180, 0 );
-			barMaterial = bar.material = new Material( Resources.Load<Shader>( "shaders/Progress" ) );
-				
-			World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+			barMaterial = bar.material;
+		}
+
+		void SetupForStock( Stock stock )
+		{
+			bgMaterial.SetColor( "_Color", Color.green );
+		}
+
+		void SetupForGuardHouse( GuardHouse guardHouse )
+		{
+			bgMaterial.SetColor( "_Color", new Color( 1, 0.2f, 0.2f ) );
 		}
 
 		void Update()
 		{
-			transform.rotation = Quaternion.Euler( -90, (float)( eye.direction / Math.PI * 180 ) + 180, 0 );
-			barMaterial.SetFloat( progressShaderID, workshop.productivity.current );
+			transform.rotation = Quaternion.Euler( -90, (float)( eye.direction / Math.PI * 180 ), 0 );
+			if ( barMaterial )
+			{
+				float progress = (building as Workshop).productivity.current;
+				barMaterial.SetFloat( progressShaderID, progress );
+				Color color;
+				if ( progress < 0.5f )
+					color = Color.Lerp( new Color( 1, 0.1f, 0 ), new Color( 1, 0.9f, 0.1f ), progress * 2 );
+				else
+					color = Color.Lerp( new Color( 1, 0.9f, 0.1f ), new Color( 0, 1, 0 ), progress * 2 - 1 );
+				barMaterial.SetColor( colorShaderID, color );
+			}
 		}
 	}
 

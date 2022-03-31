@@ -281,7 +281,7 @@ public class Ground : HiveObject
 				if ( x == 0 && y == 0 )
 					continue;
 				foreach ( var block in blocks )
-					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, World.layerIndexNotOnMap );
+					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, World.layerIndexGround );
 			}
 		}
 

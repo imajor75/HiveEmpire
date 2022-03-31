@@ -38,9 +38,6 @@ public class Workshop : Building
 	ParticleSystem smoke;
 	public Transform millWheel;
 
-	[JsonIgnore]
-	Interface.WorkshopMapWidget mapIndicator;
-
 	public override List<Ground.Area> areas
 	{
 		get
@@ -600,8 +597,6 @@ public class Workshop : Building
 			millWheel = body.transform.Find( "SM_Bld_Preset_House_Windmill_01_Blades_Optimized" );
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 ) + $" {node.x}:{node.y}";
-
-		mapIndicator = Interface.WorkshopMapWidget.Create( this );
 
 		RefreshConfiguration();
 

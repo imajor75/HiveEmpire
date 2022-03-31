@@ -32,6 +32,8 @@ abstract public class Building : HiveObject
 	public AudioSource soundSource;
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
+	[JsonIgnore]
+	protected Interface.BuildingMapWidget mapIndicator;
 
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;
@@ -614,6 +616,8 @@ abstract public class Building : HiveObject
 				m.SetFloat( Construction.sliceLevelID, level );
 			}
 		}
+
+		mapIndicator = Interface.BuildingMapWidget.Create( this );
 
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();

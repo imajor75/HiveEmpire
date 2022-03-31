@@ -7,64 +7,85 @@ public class Map : Interface.Panel
 {
 	public MapImage content;
 	static public float zoom = Constants.Map.defaultZoom;
-	public bool fullScreen;
+	public bool fullscreen;
+	UIHelpers.Button toggleGround;
 
 	static public Map Create()
 	{
 		return new GameObject( "Map" ).AddComponent<Map>();
 	}
 
-	public void Open( bool fullScreen = false )
+	public void Open( bool fullscreen = false )
 	{
-		this.fullScreen = fullScreen;
-		noCloseButton = fullScreen;
-		borderWidth = fullScreen ? 0 : 20;
+		this.fullscreen = fullscreen;
+		noCloseButton = fullscreen;
+		borderWidth = fullscreen ? 0 : 20;
 		allowInSpectateMode = true;
 		base.Open( null, 0, 0, 316, 316 );
 
 		content = MapImage.Create();
-		content.Setup( fullScreen );
 		content.Stretch( 20, 20, -20, -20 ).Link( this );
 
-		if ( fullScreen )
-		{
-			var c = gameObject.GetComponent<CanvasGroup>();
-			c.alpha = 0;
-			c.blocksRaycasts = false;
-		}
+		toggleGround = Image( Interface.Icon.map ).Pin( 0, 20, 20, 20, 0, 0 ).AddToggleHandler( ShowGround ).Link( content ).gameObject.GetComponent<UIHelpers.Button>();
+		SetFullscreen( fullscreen );
+	}
+
+	void ShowGround( bool on )
+	{
+		if ( on )
+ 			content.camera.cullingMask |= 1 << World.layerIndexGround;
+		else
+ 			content.camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexGround );
 	}
 
 	static public Interface.Hotkey toggleFullscreenHotkey = new Interface.Hotkey( "Toggle map fullscreen", KeyCode.Return );
+	static public Interface.Hotkey toggleGroundHotkey = new Interface.Hotkey( "Toggle ground on minimap", KeyCode.G );
 
 	new void Update()
 	{
 		base.Update();
+		if ( toggleGroundHotkey.IsPressed() )
+			toggleGround.Toggle();
+
 
 		if ( Interface.mapZoomInHotkey.IsDown() )
 			zoom /= 1 + Constants.Map.zoomSpeed;
 		if ( Interface.mapZoomOutHotkey.IsDown() )
 			zoom *= 1 + Constants.Map.zoomSpeed;
-		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 && fullScreen )
+		if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 && fullscreen )
 			zoom /= 1 + Constants.Map.zoomSpeedWithMouseWheel;
-		if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 && fullScreen )
+		if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 && fullscreen )
 			zoom *= 1 + Constants.Map.zoomSpeedWithMouseWheel;
 		if ( zoom < Constants.Map.zoomMin )
 			zoom = Constants.Map.zoomMin;
 		if ( zoom > Constants.Map.zoomMax )
 			zoom = Constants.Map.zoomMax;
 		if ( toggleFullscreenHotkey.IsPressed() )
-		{
-			fullScreen = !fullScreen;
-			content.Setup( fullScreen );
-			var c = gameObject.GetComponent<CanvasGroup>();
-			c.alpha = fullScreen ? 0 : 1;
-			c.blocksRaycasts = !fullScreen;
-		}
-		if ( fullScreen )
+			SetFullscreen( !fullscreen );
+		if ( fullscreen )
 			eye.moveSensitivity = zoom / 3;
 
 		float rotation = eye.direction / (float)Math.PI * 180f;
 		content.SetTarget( new Vector2( eye.x, eye.y ), zoom, rotation );
+	}
+
+	public void SetFullscreen( bool fullscreen )
+	{
+		content.Setup( fullscreen );
+		content.Link( fullscreen ? root : content );
+		content.rawImage.enabled = !fullscreen;
+		this.fullscreen = fullscreen;
+		var c = gameObject.GetComponent<CanvasGroup>();
+		c.alpha = fullscreen ? 0 : 1;
+		c.blocksRaycasts = !fullscreen;
+	}
+
+	new void OnDestroy()
+	{
+		if ( content )
+			Destroy( content.gameObject );
+
+		base.OnDestroy();
 	}
 
 	[RequireComponent( typeof( RawImage ) )]
@@ -73,18 +94,18 @@ public class Map : Interface.Panel
 		public RenderTexture renderTexture;
 		new public Camera camera;
 		public RawImage rawImage;
-		public bool fullScreen;
+		public bool fullscreen;
 
 		public static MapImage Create()
 		{
 			return new GameObject( "Map image" ).AddComponent<MapImage>();
 		}
 
-		public void Setup( bool fullScreen )
+		public void Setup( bool fullscreen )
 		{
-			this.fullScreen = fullScreen;
+			this.fullscreen = fullscreen;
 			var r = (transform as RectTransform).rect;
-			if ( !fullScreen )
+			if ( !fullscreen )
 				renderTexture = new RenderTexture( (int)r.width, (int)r.height, 24 );
 			else
 				renderTexture = null;
@@ -98,7 +119,7 @@ public class Map : Interface.Panel
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap ) - ( 1 << World.layerIndexGround ) - ( 1 << Ground.grassLayerIndex );
 			camera.gameObject.AddComponent<CameraHighlight>();
-			if ( fullScreen )
+			if ( fullscreen )
 				root.viewport.SetCamera( camera );
 			else
 				root.viewport.SetCamera( null );
@@ -124,7 +145,7 @@ public class Map : Interface.Panel
 
 		new void OnRectTransformDimensionsChange()
 		{
-			if ( !fullScreen )
+			if ( !fullscreen && camera )
 			{
 				var r = (transform as RectTransform).rect;
 				if ( r.width > 0 && r.height > 0 )
