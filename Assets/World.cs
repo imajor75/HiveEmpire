@@ -47,6 +47,7 @@ public class World : HiveObject
 	static public int layerIndexMapOnly;
 	static public int layerIndexGround;
 	static public int layerIndexPPVolume;
+	static public int layerIndexBuilding;
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
 	static public Shader defaultMapShader;
@@ -538,6 +539,7 @@ public class World : HiveObject
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
 		layerIndexGround = LayerMask.NameToLayer( "Ground" );
 		layerIndexPPVolume = LayerMask.NameToLayer( "PPVolume" );
+		layerIndexBuilding = LayerMask.NameToLayer( "Buildings" );
 		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );

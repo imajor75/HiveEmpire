@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311956, g: 0.3807402, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -171,6 +171,8 @@ MonoBehaviour:
     possiblePartner: {fileID: 0}
     possiblePartnerItemType: 0
     hasOutputStock: 0
+    failedConnections: []
+  selectThis: 0
   panels: []
   postProcessResources: {fileID: 0}
   world: {fileID: 0}
@@ -180,7 +182,6 @@ MonoBehaviour:
   heightStrips: 0
   showReplayAction: 1
   mainPlayer: {fileID: 0}
-  lastAutoSave: -1
   fullValidate: 500
   highlightType: 0
   highlightBuildingTypes: 
@@ -191,6 +192,7 @@ MonoBehaviour:
   challenges: []
   replayIcon: {fileID: 0}
   selectByID: 0
+  messageButton: {fileID: 0}
   highlightOwner: {fileID: 0}
   buildButton: {fileID: 0}
   worldProgressButton: {fileID: 0}

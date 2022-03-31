@@ -2212,6 +2212,7 @@ public class Interface : HiveObject
 		public Material barMaterial, bgMaterial;
 		static int progressShaderID, colorShaderID;
 		static Shader spriteShader;
+		static Mesh plane;
 
 		public static BuildingMapWidget Create( Building building )
 		{
@@ -2225,15 +2226,37 @@ public class Interface : HiveObject
 			progressShaderID = Shader.PropertyToID( "_Progress" );
 			colorShaderID = Shader.PropertyToID( "_Color" );
 			spriteShader = Resources.Load<Shader>( "shaders/Sprite" );
+
+			plane = new Mesh();
+			Vector3[] pos = new Vector3[4];
+			pos[0] = new Vector3( -1, -1, 0 );
+			pos[1] = new Vector3( -1, 1, 0 );
+			pos[2] = new Vector3( 1, -1, 0 );
+			pos[3] = new Vector3( 1, 1, 0 );
+			plane.vertices = pos;
+			int[] ind = new int[6];
+			ind[0] = 0;
+			ind[1] = 1;
+			ind[2] = 2;
+			ind[3] = 1;
+			ind[4] = 3;
+			ind[5] = 2;
+			plane.triangles = ind;
 		}
 
 		public void Setup( Building building )
 		{
 			this.building = building;
+
 			var bg = gameObject.AddComponent<SpriteRenderer>();
 			bg.sprite = iconTable.GetMediaData( Icon.box );
 			bgMaterial = bg.material = new Material( spriteShader );
 			bgMaterial.renderQueue = 4004;
+
+			var c = gameObject.AddComponent<MeshCollider>();
+			c.convex = true;
+			c.sharedMesh = plane;
+
 			transform.SetParent( building.transform, false );
 			transform.localPosition = new Vector3( 0, 3, 0 );
 			transform.localScale = new Vector3( 0.7f, 0.5f, 1 );
@@ -5421,7 +5444,7 @@ if ( cart )
 			if ( camera == null )
 				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, -1 - (1 << World.layerIndexMapOnly ) ) )
+			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, camera.cullingMask ) )
 				return null;
 
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
