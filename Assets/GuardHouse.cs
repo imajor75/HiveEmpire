@@ -183,6 +183,7 @@ public class GuardHouse : Attackable
 	{
 		var defender = soldiers[0];
 		soldiers.Remove( defender );
+		contentChange.Trigger();
 		return defender;
 	}
 
@@ -196,6 +197,7 @@ public class GuardHouse : Attackable
 		{
 			soldier.standingOffsetInsideBuilding = GetNextSoldierSpot();
 			soldiers.Add( soldier );
+			contentChange.Trigger();
 		}
 		attackers.Clear();
 		team.guardHouses.Remove( this );
@@ -285,6 +287,7 @@ public class GuardHouse : Attackable
 				team.soldierCount--;
 				newSoldier.standingOffsetInsideBuilding = GetNextSoldierSpot();
 				soldiers.Add( newSoldier );
+				contentChange.Trigger();
 			}
 		}
 	}

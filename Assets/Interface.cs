@@ -2393,6 +2393,20 @@ public class Interface : HiveObject
 					World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
 				}
 
+				if ( building is GuardHouse gh )
+				{
+					foreach ( Transform c in transform )
+						Destroy( c.gameObject );
+
+					for ( int i = 0; i < gh.soldiers.Count; i++ )
+					{
+						var t = NewSprite( Item.Type.soldier, "Soldier" );
+						t.transform.localPosition = new Vector3( -0.8f + 0.4f * (i % 5), -0.7f + 0.5f * (i / 5), 0.1f );
+						t.transform.localScale = new Vector3( 0.25f, 0.28f, 1 );
+					}
+					World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+				}
+
 			}
 		}
 	}
