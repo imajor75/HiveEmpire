@@ -664,6 +664,14 @@ public class Simpleton : Player
                     continue;
 
                 var otherFlag = road.OtherEnd( flag );
+                if ( otherFlag == flag )
+                {
+                    problemWeight = 0.5f;
+                    solutionEfficiency = 1.0f;
+                    this.road = road;
+                    action = Action.removeRoad;
+                    return finished;
+                }
                 if ( !connectedFlags.Contains( otherFlag ) && otherFlag != flag )
                     connectedFlags.Add( otherFlag );
             }
@@ -744,10 +752,13 @@ public class Simpleton : Player
                 }
                 case Action.removeRoad:
                 {
-                    boss.Log( $"Removing not used road {road}" );
+                    boss.Log( $"Removing road {road}" );
                     HiveCommon.oh.ScheduleRemoveRoad( road, true, Operation.Source.computer );
-                    road.ends[0].simpletonDataSafe.failedConnections.Add( road.ends[1] );
-                    road.ends[1].simpletonDataSafe.failedConnections.Add( road.ends[0] );
+                    if ( road.ends[0] != road.ends[1] )
+                    {
+                        road.ends[0].simpletonDataSafe.failedConnections.Add( road.ends[1] );
+                        road.ends[1].simpletonDataSafe.failedConnections.Add( road.ends[0] );
+                    }
                     break;
                 }
             }
