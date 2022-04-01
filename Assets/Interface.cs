@@ -2208,6 +2208,7 @@ public class Interface : HiveObject
 	public class BuildingMapWidget : MonoBehaviour
 	{
 		public Building building;
+		public Watch contentWatch = new Watch();
 		public Sprite utilization;
 		public Material barMaterial, bgMaterial;
 		static int progressShaderID, colorShaderID;
@@ -2247,6 +2248,7 @@ public class Interface : HiveObject
 		public void Setup( Building building )
 		{
 			this.building = building;
+			contentWatch.Attach( building.contentChange, false );
 
 			var bg = gameObject.AddComponent<SpriteRenderer>();
 			bg.sprite = iconTable.GetMediaData( Icon.box );
@@ -2369,6 +2371,28 @@ public class Interface : HiveObject
 				else
 					color = Color.Lerp( new Color( 1, 0.9f, 0.1f ), new Color( 0, 1, 0 ), progress * 2 - 1 );
 				barMaterial.SetColor( colorShaderID, color );
+			}
+			if ( contentWatch.status )
+			{
+				if ( building is Stock stock )
+				{
+					foreach ( Transform c in transform )
+						Destroy( c.gameObject );
+
+					int slot = 0;
+					for ( int i = 0; i < (int)Item.Type.total; i++ )
+					{
+						if ( stock.itemData[i].content == 0 )
+							continue;
+
+						var t = NewSprite( (Item.Type)i, $"Item {(Item.Type)i}" );
+						t.transform.localPosition = new Vector3( -0.8f + 0.4f * (slot % 5), -0.7f + 0.5f * (slot / 5), 0.1f );
+						t.transform.localScale = new Vector3( 0.25f, 0.28f, 1 );
+						slot++;
+					}
+					World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+				}
+
 			}
 		}
 	}

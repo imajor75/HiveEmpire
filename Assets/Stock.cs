@@ -368,6 +368,7 @@ public class Stock : Attackable
 			assert.AreEqual( route.start, boss );
 			int typeIndex = (int)route.itemType;
 			boss.itemData[typeIndex].content -= Constants.Stock.cartCapacity;
+			boss.contentChange.Trigger();
 			itemQuantity = Constants.Stock.cartCapacity;
 			this.itemType = route.itemType;
 			currentRoute = route;
@@ -531,6 +532,7 @@ public class Stock : Attackable
 				}
 				cart.itemsDelivered += cart.itemQuantity;
 				stock.itemData[(int)cart.itemType].content += cart.itemQuantity;
+				stock.contentChange.Trigger();
 				if ( stock != cartStock )
 					stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
 				cart.itemQuantity = 0;
@@ -666,6 +668,7 @@ public class Stock : Attackable
 			}
 
 			itemData[(int)Item.Type.soldier].content++;
+			contentChange.Trigger();
 			soundSource.Play();
 		}
 		assert.IsTrue( returningUnits.Contains( unit ) );
@@ -802,6 +805,7 @@ public class Stock : Attackable
 		if ( item != null )
 		{
 			itemData[(int)itemType].content--;
+			contentChange.Trigger();
 			dispenser = tinkerer.IsIdle() ? tinkerer : tinkererMate;
 			offersSuspended.Start( Constants.World.normalSpeedPerSecond );	// Cosmetic reasons only
 		}
@@ -830,6 +834,7 @@ public class Stock : Attackable
 		while ( itemData.Count <= (int)item.type )
 			itemData.Add( new ItemTypeData( this, (Item.Type)itemData.Count ) );
 		itemData[(int)item.type].content++;
+		contentChange.Trigger();
 	}
 
 	public void ClearSettings()

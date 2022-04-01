@@ -659,7 +659,7 @@ public class Versioned
 public class Watch
 {
 	public Versioned source;
-	public int localVersion;
+	public int localVersion = -1;
 
 	public void Attach( Versioned source, bool update = true )
 	{

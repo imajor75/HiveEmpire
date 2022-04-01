@@ -24,6 +24,7 @@ abstract public class Building : HiveObject
 	static List<Ground.Offset> foundationHelper;
 	public Configuration configuration;
 	public bool itemDispatchedThisFrame;
+	public Versioned contentChange = new Versioned();
 
 	protected GameObject body;
 	GameObject highlightArrow;

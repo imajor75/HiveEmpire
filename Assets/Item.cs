@@ -396,7 +396,10 @@ public class Item : HiveObject
 		CancelTrip();
 		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )
+		{
 			team.mainBuilding.itemData[(int)type].content++;
+			team.mainBuilding.contentChange.Trigger();
+		}
 		base.Remove();
 	}
 
