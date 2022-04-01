@@ -658,6 +658,7 @@ public class Simpleton : Player
             }
 
             List<Flag> connectedFlags = new List<Flag>();
+            List<Road> connections = new List<Road>();
             foreach ( var road in flag.roadsStartingHere )
             {
                 if ( road == null )
@@ -673,7 +674,19 @@ public class Simpleton : Player
                     return finished;
                 }
                 if ( !connectedFlags.Contains( otherFlag ) && otherFlag != flag )
+                {
                     connectedFlags.Add( otherFlag );
+                    connections.Add( road );
+                }
+                else
+                {
+                    var alternativeRoad = connections[connectedFlags.IndexOf( otherFlag )];
+                    problemWeight = 0.5f;
+                    solutionEfficiency = 1;
+                    action = Action.removeRoad;
+                    this.road = road.nodes.Count > alternativeRoad.nodes.Count ? road : alternativeRoad;
+                    return finished;
+                }
             }
 
             if ( connectedFlags.Count < 2 && flag.Buildings().Count == 0 )
