@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -5576,7 +5576,7 @@ if ( cart )
 
 		public void OnPointerDown( PointerEventData eventData )
 		{
-			if ( eventData.button != PointerEventData.InputButton.Right )
+			if ( eventData.button != PointerEventData.InputButton.Right || camera == null )
 				return;
 
 			rightDrag = true;
