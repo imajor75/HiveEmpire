@@ -224,8 +224,13 @@ public class Item : HiveObject
 				CancelTrip();
 		}
 
-		// If the item appears to be separated from the HQ, should not be offeted yet
-		if ( roadNetworkChangeListener.isAttached )
+		// If everything goes well, the roadNetworkChangeListener watch is not attached to a version
+		// but if the delivery of the item fails to some destination (probably due to no path) this
+		// watch gets connected, and then the item should not be offered as long as the watch is not
+		// triggered. It is also possible that the watch is not attached, but unity creates a new 
+		// instance of the Versioned class and puts that reference to roadNetworkChangeListener.source
+		// creating a fake assigment state of the watch. No nice way to check this as far as I know
+		if ( roadNetworkChangeListener.isAttached && roadNetworkChangeListener.source.version != 0 )
 		{
 			if ( !roadNetworkChangeListener.status )
 				return;
