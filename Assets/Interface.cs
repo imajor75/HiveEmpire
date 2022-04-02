@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3180,11 +3180,13 @@ public class Interface : HiveObject
 				case 4:
 				{
 					stock.itemData[(int)itemType].content = 0;
+					world.lastChecksum = 0;
 					break;
 				}
 				case 5:
 				{
 					stock.itemData[(int)itemType].content++;
+					world.lastChecksum = 0;
 					break;
 				}
 			}
