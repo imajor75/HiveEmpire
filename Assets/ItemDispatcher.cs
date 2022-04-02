@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -121,6 +121,8 @@ public class ItemDispatcher : HiveObject
 		if ( priority == Priority.zero )
 			return;
 		if ( quantity == 0 && !fullTracking )
+			return;
+		if ( weight == 0 )
 			return;
 
 		markets[(int)itemType].RegisterRequest( building, quantity, priority, area, weight );
@@ -310,6 +312,8 @@ public class ItemDispatcher : HiveObject
 				{
 					var other = list[i];
 					if ( potential.building == other.building )
+						continue;
+					if ( other.weight == 0 )
 						continue;
 					if ( !IsGoodFor( other, potential ) )
 						continue;
