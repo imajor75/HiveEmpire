@@ -390,6 +390,9 @@ public class Item : HiveObject
 
 	public override void Remove()
 	{
+		if ( destroyed )
+			return;
+			
 		transform.SetParent( null );
 		if ( hauler )
 		{
