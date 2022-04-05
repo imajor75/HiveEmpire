@@ -33,9 +33,9 @@ public class Map : Interface.Panel
 	void ShowGround( bool on )
 	{
 		if ( on )
- 			content.camera.cullingMask |= 1 << World.layerIndexGround;
+ 			content.camera.cullingMask |= 1 << World.layerIndexGround | 1 << World.layerIndexWater;
 		else
- 			content.camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexGround );
+ 			content.camera.cullingMask &= int.MaxValue - (1 << World.layerIndexGround) - (1 << World.layerIndexWater);
 	}
 
 	static public Interface.Hotkey toggleFullscreenHotkey = new Interface.Hotkey( "Toggle map fullscreen", KeyCode.Return );
@@ -117,7 +117,7 @@ public class Map : Interface.Panel
 				camera = new GameObject( "Map camera").AddComponent<Camera>();
 			camera.transform.SetParent( ground.transform );
 			camera.targetTexture = renderTexture;
-			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexNotOnMap ) - ( 1 << World.layerIndexGround ) - ( 1 << Ground.grassLayerIndex ) - ( 1 << World.layerIndexBuilding );
+			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexGround ) - ( 1 << Ground.grassLayerIndex ) - ( 1 << World.layerIndexBuildings ) - ( 1 << World.layerIndexUnits ) - ( 1 << World.layerIndexWater );
 			camera.gameObject.AddComponent<CameraHighlight>();
 			if ( fullscreen )
 				root.viewport.SetCamera( camera );

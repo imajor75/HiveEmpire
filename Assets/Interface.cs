@@ -3884,7 +3884,6 @@ public class Interface : HiveObject
 			ring.color = new Color( 0, 1, 1 );
 
 			root.viewport.inputHandler = this;
-			root.viewport.pickGroundOnly = true;	// TODO This should be a virtual property of the inputhandler
 		}
 
 		void Remove()
@@ -4057,7 +4056,6 @@ public class Interface : HiveObject
 
         public void OnLostInput()
         {
-			root.viewport.pickGroundOnly = false;
 			Close();
         }
     }
@@ -4123,7 +4121,6 @@ public class Interface : HiveObject
 				Road road = Road.Create().Setup( flag );
 				root.viewport.inputHandler = road;
 				root.viewport.showGridAtMouse = true;
-				root.viewport.pickGroundOnly = true;
 				if ( !root.world.createRoadTutorialShowed )
 				{
 					root.world.createRoadTutorialShowed = true;
@@ -5254,7 +5251,6 @@ if ( cart )
 		public Node currentNode;  // Node currently under the cursor
 		static GameObject marker;
 		public bool markEyePosition;
-		public bool pickGroundOnly;
 		public bool rightButton;
 		public bool rightDrag;
 		public Vector3 rightOffset, downOffset;
@@ -5493,7 +5489,10 @@ if ( cart )
 			if ( camera == null )
 				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
-			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, camera.cullingMask ) )
+			var layers = camera.cullingMask;
+			if ( inputHandler.pickGroundOnly )
+				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits);
+			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layers ) )
 				return null;
 
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
@@ -5554,7 +5553,6 @@ if ( cart )
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			world.gameAdvancingInProgress = true;
 			rightButton = eventData.button == PointerEventData.InputButton.Right;
 			if ( inputHandler == null )
 				inputHandler = this;
@@ -5580,7 +5578,6 @@ if ( cart )
 					if ( !inputHandler.OnObjectClicked( hiveObject ) )
 						inputHandler = this;
 			}
-			world.gameAdvancingInProgress = false;
 		}
 
 		public void OnPointerDown( PointerEventData eventData )
@@ -7105,6 +7102,7 @@ if ( cart )
 		bool OnNodeClicked( Node node );
 		bool OnObjectClicked( HiveObject target );
 		void OnLostInput();
+		bool pickGroundOnly { get { return false; } }
 	}
 
 	protected const bool keepGoing = true;	// possible return values for IInputHandler functions

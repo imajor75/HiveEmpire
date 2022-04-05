@@ -1459,7 +1459,7 @@ public class Unit : HiveObject
 		};
 		soundSource = World.CreateSoundSource( this );
 		
-		World.SetLayerRecursive( gameObject, World.layerIndexNotOnMap );
+		World.SetLayerRecursive( gameObject, World.layerIndexUnits );
 
 		mapObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );

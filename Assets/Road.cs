@@ -869,7 +869,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			oh.ScheduleCreateRoad( nodes, root.mainTeam, false );
 			root.viewport.showGridAtMouse = false;
-			root.viewport.pickGroundOnly = false;
 			return false;
 		}
 		else
@@ -880,6 +879,8 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		return false;
 	}
+
+	public bool pickGroundOnly { get { return true; } }
 
 	public override void OnClicked( bool show = false )
 	{
@@ -1121,7 +1122,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( !ready )
 			Remove();
 		root.viewport.showGridAtMouse = false;
-		root.viewport.pickGroundOnly = false;
 		Interface.tooltip.Clear();
 	}
 }

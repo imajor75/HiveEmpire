@@ -43,11 +43,12 @@ public class World : HiveObject
 	static System.Random rnd;
 	static public World instance;
 	static public int soundMaxDistance = 7;
-	static public int layerIndexNotOnMap;
 	static public int layerIndexMapOnly;
 	static public int layerIndexGround;
 	static public int layerIndexPPVolume;
-	static public int layerIndexBuilding;
+	static public int layerIndexWater;
+	static public int layerIndexBuildings;
+	static public int layerIndexUnits;
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
 	static public Shader defaultMapShader;
@@ -535,12 +536,13 @@ public class World : HiveObject
 
 	public static void Initialize()
 	{
-		layerIndexNotOnMap = LayerMask.NameToLayer( "Not on map" );
 		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
 		layerIndexGround = LayerMask.NameToLayer( "Ground" );
 		layerIndexPPVolume = LayerMask.NameToLayer( "PPVolume" );
-		layerIndexBuilding = LayerMask.NameToLayer( "Buildings" );
-		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexNotOnMap != -1 );
+		layerIndexWater = LayerMask.NameToLayer( "Water" );
+		layerIndexBuildings = LayerMask.NameToLayer( "Buildings" );
+		layerIndexUnits = LayerMask.NameToLayer( "Units" );
+		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexBuildings != -1 && layerIndexGround != -1 && layerIndexUnits != -1 && layerIndexWater != -1 && layerIndexPPVolume != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
 		defaultTextureShader = Shader.Find( "Unlit/Texture" );
@@ -699,7 +701,6 @@ public class World : HiveObject
 	{
 		if ( resetSettings )
 			settings = ScriptableObject.CreateInstance<Settings>();
-		gameAdvancingInProgress = true;
 		nextID = 1;
 		time = 0;
 		lastChecksum = 0;
@@ -784,7 +785,6 @@ public class World : HiveObject
 		}
 		Interface.ValidateAll( true );
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
-		gameAdvancingInProgress = false;
 
 		network.SetState( Network.State.server );
 	}
@@ -911,21 +911,11 @@ public class World : HiveObject
 			{
 				if ( ho is Interface )
 					continue;
-				if ( !ho.registered && !world.newHiveObjects.Contains( ho ) && !world.hiveObjects.Contains( ho ) && !ho.destroyed )
-				{
-					if ( !(ho is Challenge) )
-						ho.Register();
-				}
 				if ( ho.simpletonData != null )
 				{
 					ho.simpletonData.hiveObject = ho;
 					if ( ho.simpletonData.possiblePartner is Stock )
 						ho.simpletonData.possiblePartner = null;
-				}
-				if ( ho.id == 0 && !ho.destroyed )
-				{
-					Log( $"Fixing id for {ho} with {nextID}" );
-					ho.id = nextID++;
 				}
 			}
 		}

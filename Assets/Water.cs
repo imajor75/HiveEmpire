@@ -33,7 +33,7 @@ public class Water : HiveObject
         transform.SetParent( ground.transform.parent );
         mesh = GetComponent<MeshFilter>().mesh = new Mesh();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
-        gameObject.layer = World.layerIndexNotOnMap;
+        gameObject.layer = World.layerIndexWater;
         base.Start();
     }
 
@@ -87,7 +87,7 @@ public class Water : HiveObject
 				if ( x == 0 && y == 0 )
 					continue;
 
-				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * Constants.Node.size, 0, y * ground.dimension * Constants.Node.size ) + transform.position, Quaternion.identity, material, World.layerIndexNotOnMap );
+				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * Constants.Node.size, 0, y * ground.dimension * Constants.Node.size ) + transform.position, Quaternion.identity, material, World.layerIndexWater );
             }
         }
         base.Update();
