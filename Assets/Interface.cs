@@ -4577,6 +4577,8 @@ if ( cart )
 		public PathVisualization route;
 		public Text stats;
 		GameObject mapIcon;
+		Building destination;
+		Text destinationText;
 
 		static public ItemPanel Create()
 		{
@@ -4598,7 +4600,6 @@ if ( cart )
 			Text( "Origin:" ).Pin( 15, -55, 170 );
 			BuildingIcon( item.origin ).Pin( 100, -55, 120 );
 			Text( "Destination:" ).Pin( 15, -75, 170 );
-			BuildingIcon( item.destination )?.Pin( 100, -75, 120 );
 
 			mapIcon = new GameObject( "Map icon" );
 			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
@@ -4626,6 +4627,14 @@ if ( cart )
 				return;
 			}
 
+			if ( item.destination != destination )
+			{
+				if ( destinationText )
+					Destroy( destinationText.gameObject );
+				destinationText = BuildingIcon( item.destination )?.Pin( 100, -75, 120 );
+				destination = item.destination;
+			}
+			
 			if ( item.flag )
 				stats.text = "Age: " + item.life.age / Constants.World.normalSpeedPerSecond + " secs, at flag for " + item.atFlag.age / Constants.World.normalSpeedPerSecond + " secs";
 			else
