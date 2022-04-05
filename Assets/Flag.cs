@@ -391,6 +391,9 @@ public class Flag : HiveObject
 			if ( item )		// Could be deleted (how? but it happened), hence ?. is not enought
 				item.Remove();
 		}
+		foreach ( var f in frames )
+			if ( f )
+				assert.AreEqual( f.transform.childCount, 0 );
 
 		if ( user )
 		{

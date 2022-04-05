@@ -295,6 +295,8 @@ public class Interface : HiveObject
 		oh?.SaveReplay();
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save( manualSave:false );
+			
+		world.Clear();
 
 		logFile.Close();
 
