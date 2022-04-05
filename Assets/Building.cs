@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -331,10 +331,10 @@ abstract public class Building : HiveObject
 			if ( boss.configuration.flatteningNeeded && !flattened && base.GameLogicUpdate() )
 				return;
 
-		if ( !builder.IsIdle() )
+			if ( !builder.IsIdle() )
 				return;
 
-			if ( progress == 0 )
+			if ( progress == 0 && hammering == null )
 			{
 				Node node = boss.node.Neighbour( 0 );
 				foreach ( var offset in Ground.areas[1] )
