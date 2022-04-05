@@ -295,7 +295,7 @@ public class Interface : HiveObject
 		oh?.SaveReplay();
 		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
 			Save( manualSave:false );
-			
+
 		world.Clear();
 
 		logFile.Close();
@@ -2180,6 +2180,15 @@ public class Interface : HiveObject
 		}
 	}
 
+	public static void RemoveBuilding( Building building )
+	{
+		if ( building == null )
+			return;
+		oh.ScheduleRemoveBuilding( building );
+		if ( building.flag.roadsStartingHereCount == 0 && building.flag.Buildings().Count == 1 )
+			oh.ScheduleRemoveFlag( building.flag );
+	}
+
 	public class BuildingPanel : Panel
 	{
 		public Building building;
@@ -2556,9 +2565,7 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( workshop )
-				oh.ScheduleRemoveBuilding( workshop );
-
+			RemoveBuilding( workshop );
 			Close();
 		}
 
@@ -2990,8 +2997,7 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( guardHouse )
-				oh.ScheduleRemoveBuilding( guardHouse );
+			RemoveBuilding( guardHouse );
 			Close();
 		}
 
@@ -3216,8 +3222,7 @@ public class Interface : HiveObject
 
 		void Remove()
 		{
-			if ( stock )
-				oh.ScheduleRemoveBuilding( stock );
+			RemoveBuilding( stock );
 			Close();
 		}
 
@@ -4565,8 +4570,8 @@ if ( cart )
 
 		void Remove()
 		{
-			if ( construction != null && construction.boss != null )
-				oh.ScheduleRemoveBuilding( construction.boss );
+			if ( construction != null )
+				RemoveBuilding( construction.boss );
 		}
 	}
 
