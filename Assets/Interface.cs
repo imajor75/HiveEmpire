@@ -46,6 +46,9 @@ public class Interface : HiveObject
 	Operation lastShownOperation;
 	public int selectByID;
 	public Text messageButton;
+	public string delayedSaveName;
+	public bool delayedManualSave;
+	public bool delayedSaveValid;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -293,15 +296,8 @@ public class Interface : HiveObject
 	public void OnApplicationQuit()
 	{
 		oh?.SaveReplay();
-		if ( !Assert.error && !world.fileName.Contains( "demolevel" ) )
-			Save( manualSave:false );
-
 		world.Clear();
-
 		logFile.Close();
-
-		foreach ( var item in Resources.FindObjectsOfTypeAll<Item>() )
-			item.destination = null;    // HACK to silence the assert in Item.OnDestroy
 	}
 
 	public static bool GetKey( KeyCode key )
@@ -603,7 +599,10 @@ public class Interface : HiveObject
 	{
 		if ( fileName == "" )
 			fileName = Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json";
-		world.Save( fileName, manualSave );
+		delayedSaveName = fileName;
+		delayedManualSave = manualSave;
+		delayedSaveValid = false;
+		MessagePanel.Create( $"Saving {fileName}", autoclose:1 );
 	}
 
 	public void LoadReplay( string name )
@@ -788,6 +787,13 @@ public class Interface : HiveObject
 			if ( showReplayAction && !playerInCharge && next != null && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
 				ShowOperation( next );
 		}
+
+		if ( delayedSaveName != null && delayedSaveName != "" && delayedSaveValid )
+		{
+			world.Save( delayedSaveName, delayedManualSave );
+			delayedSaveName = null;
+		}
+		delayedSaveValid = true;
 
 		base.Update();
 	}
@@ -2081,21 +2087,34 @@ public class Interface : HiveObject
 
 	public class MessagePanel : Panel
 	{
-		public static MessagePanel Create( string text, HiveObject location = null )
+		float creationTime, autoCloseAfter;
+
+		public static MessagePanel Create( string text, HiveObject location = null, float autoclose = float.MaxValue )
 		{
 			var result = new GameObject( "Message panel" ).AddComponent<MessagePanel>();
-			result.Open( text, location );
+			result.Open( text, location, autoclose );
 			return result;
 		}
 
-		public void Open( string text, HiveObject location )
+		public void Open( string text, HiveObject location, float autoClose )
 		{
+			autoCloseAfter = autoClose;
+			creationTime = Time.unscaledTime;
 			noResize = true;
 			reopen = true;
 			base.Open( location, 400, 60 );
 
-			Text( text ).Pin( borderWidth, -borderWidth, 400, 50 );
+			var t = Text( text ).Pin( borderWidth, -borderWidth, 400, 50 );
+			SetSize( ((int)(t.preferredWidth/uiScale))+2*borderWidth, ((int)(t.preferredHeight/uiScale))+2*borderWidth );
 			eye.FocusOn( location, true );
+		}
+
+		public new void Update()
+		{
+			if ( creationTime + autoCloseAfter < Time.unscaledTime )
+				Close();
+
+			base.Update();
 		}
 	}
 
@@ -7049,7 +7068,7 @@ if ( cart )
 		}
 	}
 
-	public class WelcomePanel : Panel
+	public class WelcomePanel : Panel	// These two panels (WelcomePanel and RoadTutorialPanel) should simply be MessagePanel
 	{
 		public static WelcomePanel Create()
 		{

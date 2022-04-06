@@ -683,7 +683,7 @@ public class World : HiveObject
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
 		if ( Time.unscaledTime - lastAutoSave > Constants.World.autoSaveIntervalInSecond )
 		{
-			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
+			root.Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 			lastAutoSave = Time.unscaledTime;
 		}
 		base.Update();
