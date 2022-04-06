@@ -271,6 +271,11 @@ public class OperationHandler : HiveObject
             operation.group = currentGroup;
             operation.groupName = currentGroupName;
         }
+        ScheduleOperationRaw( operation );
+    }
+
+    public void ScheduleOperationRaw( Operation operation )
+	{
         Assert.global.AreNotEqual( network.state, Network.State.receivingGameState );
         if ( network.state == Network.State.client )
         {
@@ -293,7 +298,7 @@ public class OperationHandler : HiveObject
         if ( queue.Count == 0 )
             return;
         var operation = queue.Last();
-        ScheduleOperation( operation );
+        ScheduleOperationRaw( operation );
         queue.RemoveAt( queue.Count - 1 );
         if ( queue.Count > 0 && operation.group == queue.Last().group )
             UndoRedo( queue );

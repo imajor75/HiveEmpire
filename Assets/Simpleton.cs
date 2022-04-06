@@ -1099,6 +1099,9 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
+            if ( workshop == null )
+                return;
+                
             switch ( action )
             {
                 case Action.remove:
