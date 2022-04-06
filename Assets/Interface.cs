@@ -4239,6 +4239,7 @@ public class Interface : HiveObject
 		public Text status;
 		public ItemImage statusImage0, statusImage1;
 		public Unit.Task lastFirstTask;
+		public bool uninitializedStatus;
 		public HiveObject targetObject;
 
 		public static UnitPanel Create()
@@ -4260,6 +4261,7 @@ public class Interface : HiveObject
 			statusImage1 = ItemIcon().Pin( 130, -20 );
 			statusImage1.gameObject.SetActive( false );
 			itemCount = Text( "Items" ).Pin( 20, -70, 160 );
+			uninitializedStatus = true;
 
 			Image( Icon.home ).Pin( 160, 20, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowHome ).SetTooltip( "Show the home of the unit" );
 
@@ -4329,9 +4331,10 @@ public class Interface : HiveObject
 			Unit.Task firstTask = null;
 			if ( unit.taskQueue.Count > 0 )
 				firstTask = unit.taskQueue.First();
-			if ( lastFirstTask != firstTask )
+			if ( lastFirstTask != firstTask || uninitializedStatus )
 			{
 				lastFirstTask = firstTask;
+				uninitializedStatus = false;
 				targetObject = null;
 				statusImage0.SetItem( null );
 				statusImage1.SetItem( null );
