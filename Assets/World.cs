@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -585,7 +585,8 @@ public class World : HiveObject
 
 	static public int NextRnd( OperationHandler.Event.CodeLocation caller, int limit = 0 )
 	{
-		Assert.global.IsTrue( instance.gameAdvancingInProgress );
+		if ( world.gameInProgress )
+			Assert.global.IsTrue( instance.gameAdvancingInProgress );
 		int r = 0;
 		if ( limit != 0 )
 			r = rnd.Next( limit );
@@ -597,7 +598,8 @@ public class World : HiveObject
 
 	static public float NextFloatRnd( OperationHandler.Event.CodeLocation caller )
 	{
-		Assert.global.IsTrue( instance.gameAdvancingInProgress );
+		if ( world.gameInProgress )
+			Assert.global.IsTrue( instance.gameAdvancingInProgress );
 		var r = (float)rnd.NextDouble();
 		oh.RegisterEvent( OperationHandler.Event.Type.rndRequestFloat, caller );
 		return r;
@@ -770,7 +772,6 @@ public class World : HiveObject
 			players.Add( player );
 		}
 		ground.RecalculateOwnership();
-		gameInProgress = true;
 
 		water.transform.localPosition = Vector3.up * waterLevel;
 
@@ -787,6 +788,7 @@ public class World : HiveObject
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
 
 		network.SetState( Network.State.server );
+		gameInProgress = true;
 	}
 
 	new void Start()
