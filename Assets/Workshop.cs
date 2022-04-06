@@ -953,7 +953,6 @@ public class Workshop : Building
 		Node target;
 		foreach ( var offset in Ground.areas[range] )
 		{
-			// TODO Node exactly below the building is not enumerated here
 			target = node.Add( offset );
 			foreach ( var resource in target.resources )
 			{

@@ -913,15 +913,25 @@ public class Road : HiveObject, Interface.IInputHandler
 			{
 				hauler.road = another;
 				if ( hauler.type == Unit.Type.hauler )	// Can be a cart
+				{
 					another.haulers.Add( hauler );
+					// The field Road.ends would be logical here, but it might not yet been filled, since the road is not yet placed on the ground
+					hauler.haulerRoadBegin.Attach( another.nodes.First().flag.itemsStored );
+					hauler.haulerRoadEnd.Attach( another.nodes.Last().flag.itemsStored );
+				}
 			}
 			else
 			{
 				if ( second && hauler.EnterExclusivity( second, node ) )
 				{
-					second.haulers.Add( hauler );
+					hauler.road = second;
 					if ( hauler.type == Unit.Type.hauler )	// Can be a cart
-						hauler.road = second;
+					{
+						second.haulers.Add( hauler );
+						// The field Road.ends would be logical here, but it might not yet been filled, since the road is not yet placed on the ground
+						hauler.haulerRoadBegin.Attach( second.nodes.First().flag.itemsStored );
+						hauler.haulerRoadEnd.Attach( second.nodes.Last().flag.itemsStored );
+					}
 				}
 				else
 				{

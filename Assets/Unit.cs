@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -2502,6 +2502,12 @@ public class Unit : HiveObject
 			foreach ( var item in itemsInHands )
 				if ( item && building.tinkerer == this )
 					assert.AreEqual( item.destination, building );
+		}
+
+		if ( type == Type.hauler )
+		{
+			assert.AreEqual( haulerRoadBegin.source, road.ends[0].itemsStored );
+			assert.AreEqual( haulerRoadEnd.source, road.ends[1].itemsStored );
 		}
 		
 		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );

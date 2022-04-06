@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -977,6 +977,8 @@ public class World : HiveObject
 						o.haulerRoadBegin.Attach( o.road.ends[0].itemsStored, false );
 					if ( !o.haulerRoadEnd.isAttached )
 						o.haulerRoadEnd.Attach( o.road.ends[1].itemsStored, false );
+					o.haulerRoadBegin.Attach( o.road.ends[0].itemsStored );
+					o.haulerRoadEnd.Attach( o.road.ends[1].itemsStored );
 				}
 				//if ( o.taskQueue.Count > 0 && o.type == Unit.Type.tinkerer && o.itemsInHands[0] != null && o.itemsInHands[0].destination == null )
 				//	o.itemsInHands[0].SetRawTarget( o.building );

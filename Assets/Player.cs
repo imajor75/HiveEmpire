@@ -664,8 +664,8 @@ public class Watch
 	public void Attach( Versioned source, bool update = true )
 	{
 		this.source = source;
-		if ( update && source != null )
-			localVersion = source.version;
+		if ( source != null )
+			localVersion = source.version - ( update ? 0 : 1 );
 	}
 	public void Disconnect()
 	{
