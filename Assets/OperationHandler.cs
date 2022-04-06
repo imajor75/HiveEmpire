@@ -608,7 +608,7 @@ public class OperationHandler : HiveObject
             inverse.group = int.MaxValue - operation.group;
             switch ( operation.source )
             {
-                default:
+                case Operation.Source.manual:
                     inverse.source = Operation.Source.undo;
                     undoQueue.Add( inverse );
                     redoQueue.Clear();
