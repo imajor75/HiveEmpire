@@ -27,6 +27,10 @@ public class Water : HiveObject
         return this;
     }
 
+    override public void Register()
+    {
+    }
+
     new void Start()
     {
         name = "Water";
@@ -39,6 +43,7 @@ public class Water : HiveObject
 
     new void Update()
     {
+        Assert.global.AreEqual( this, World.water );
         if ( mesh.triangles.Length != ground.dimension * ground.dimension * 3 * 2 )
         {
             var vertices = new List<Vector3>();

@@ -829,6 +829,12 @@ public class World : HiveObject
 		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
 		Assert.global.AreEqual( checksum, lastChecksum, "Checksum mismatch in world" );
 
+		foreach ( var water in Resources.FindObjectsOfTypeAll<Water>() )
+		{
+			if ( water != World.water )
+				water.Remove();
+		}
+
 		if ( !challenge )
 		{
 			challenge = Challenge.Create();
