@@ -191,6 +191,8 @@ public class Simpleton : Player
             float soldierYield = 0;
             foreach ( var workshop in boss.team.workshops )
             {
+                if ( !workshop.construction.done )
+                    continue;
                 if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
                     soldierYield += workshop.maxOutput;
                 boss.tasks.Add( new MaintenanceTask( boss, workshop ) );
@@ -998,7 +1000,7 @@ public class Simpleton : Player
                     foreach ( var offset in Ground.areas[Constants.Simpleton.workshopCoverage] )
                     {
                         var building = workshop.node.Add( offset ).building;
-                        if ( building == null || building.team != boss.team )
+                        if ( building == null || building.team != boss.team || !building.construction.done )
                             continue;
                         if ( building is Workshop partner )
                         {
@@ -1101,7 +1103,7 @@ public class Simpleton : Player
         {
             if ( workshop == null )
                 return;
-                
+
             switch ( action )
             {
                 case Action.remove:
