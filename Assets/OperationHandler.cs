@@ -1218,10 +1218,15 @@ public class Operation
             case Type.moveRoad:
             {
                 var road = this.road;
-                var index = location.road.nodes.IndexOf( location );
-                if ( !location.road.Move( index, direction ) )
+                if ( road == null )
                     return null;
-                return Create().SetupAsMoveRoad( road, index, ( direction + Constants.Node.neighbourCount / 2 ) % Constants.Node.neighbourCount );
+                var index = road.nodes.IndexOf( location );
+                var newRoad = road.Move( index, direction );
+                if ( !newRoad )
+                    return null;
+                var newLocation = location.Neighbour( direction );
+
+                return Create().SetupAsMoveRoad( newRoad, newRoad.nodes.IndexOf( newLocation), ( direction + Constants.Node.neighbourCount / 2 ) % Constants.Node.neighbourCount );
             }
             case Type.stockAdjustment:
             {
