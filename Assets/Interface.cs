@@ -3856,7 +3856,6 @@ public class Interface : HiveObject
 
 	public class RoadPanel : Panel, IInputHandler
 	{
-		public Road road;
 		public List<ItemImage> leftItems = new List<ItemImage>(), rightItems = new List<ItemImage>(), centerItems = new List<ItemImage>();
 		public List<Text> leftNumbers = new List<Text>(), rightNumbers = new List<Text>(), centerDirections = new List<Text>();
 		public Node node;
@@ -3867,6 +3866,8 @@ public class Interface : HiveObject
 		public Text lastUsedText;
 
 		const int itemsDisplayed = 3;
+
+		public Road road { get { return node.road; } }
 
 		public static RoadPanel Create()
 		{
@@ -3879,7 +3880,6 @@ public class Interface : HiveObject
 			noResize = true;
 			offset = new Vector2( 100, 0 );
 			base.Open( node, 0, 0, 210, 185 );
-			this.road = road;
 			this.node = node;
 			Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, -10 ).AddClickHandler( Hauler ).SetTooltip( "Show the hauler working on this road" );
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 150, -10 ).AddClickHandler( Remove ).SetTooltip( "Remove the road" );
@@ -3949,11 +3949,9 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
+
 			if ( road == null )
-			{
-				Close();
 				return;
-			}
 
 			base.Update();
 			jam.text = "Items waiting: " + road.jam;
@@ -4056,24 +4054,26 @@ public class Interface : HiveObject
 			}
 		}
 
-        public bool OnMovingOverNode(Node node)
+        public bool OnMovingOverNode( Node node )
         {
 			return keepGoing;
         }
 
-        public bool OnNodeClicked(Node node)
+        public bool OnNodeClicked( Node node )
         {
-			if ( !root.viewport.rightButton )
-				oh.ScheduleMoveRoad( road, road.nodes.IndexOf( this.node ), this.node.DirectionTo( node ) );
-
-			if ( node.road )
+			if ( road )
 			{
-				road = node.road;
-				target = this.node = node;
+				var index = road.nodes.IndexOf( this.node );
+				var dir = this.node.DirectionTo( node );
+				if ( !root.viewport.rightButton && road.Move( index, dir, true ) )
+				{
+					oh.ScheduleMoveRoad( road, index, dir );
+					target = this.node = node;
+				}
 			}
-			else
-				return root.viewport.OnNodeClicked( node );
 
+			if ( root.viewport.rightButton && node.road == road )
+				target = this.node = node;
 			return keepGoing;
         }
 
@@ -5598,17 +5598,14 @@ if ( cart )
 				return;
 				
 			var node = hiveObject as Node;
-			if ( eventData.button == PointerEventData.InputButton.Left )
+			if ( node )
 			{
-				if ( node )
-				{
-					if ( !inputHandler.OnNodeClicked( node ) )
-						inputHandler = this;
-				}
-				else
-					if ( !inputHandler.OnObjectClicked( hiveObject ) )
-						inputHandler = this;
+				if ( !inputHandler.OnNodeClicked( node ) )
+					inputHandler = this;
 			}
+			else
+				if ( !inputHandler.OnObjectClicked( hiveObject ) )
+					inputHandler = this;
 		}
 
 		public void OnPointerDown( PointerEventData eventData )
@@ -5810,6 +5807,9 @@ if ( cart )
 
 		public bool OnNodeClicked( Node node )
 		{
+			if ( rightButton )
+				return true;
+
 			if ( node.building )
 			{
 				node.building.OnClicked();
