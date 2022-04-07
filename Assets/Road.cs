@@ -986,8 +986,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		bool insertAfter = nodes[nodeIndex+1].DistanceFrom( newNode ) > 1;
 		if ( insertBefore && insertAfter )
 			return null;
-		if ( checkOnly )
-			return this;
 
 		bool deleteBefore = false;
 		if ( nodeIndex >= 2 && nodes[nodeIndex-2].DistanceFrom( newNode ) < 2 )
@@ -996,6 +994,12 @@ public class Road : HiveObject, Interface.IInputHandler
 		bool deleteAfter = false;
 		if ( nodeIndex < nodes.Count-2 && nodes[nodeIndex+2].DistanceFrom( newNode ) < 2 )
 			deleteAfter = true;
+
+		if ( newNode.road == this && (deleteBefore || deleteAfter) && (insertBefore || insertAfter) )
+			return null;
+
+		if ( checkOnly )
+			return this;
 
 		if ( deleteBefore && insertBefore )
 			insertBefore = false;
