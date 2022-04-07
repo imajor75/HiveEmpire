@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 #pragma warning disable UNT0001
@@ -172,6 +173,11 @@ public abstract class HiveObject : HiveCommon
 			if ( hiveObject.id == id )
 				return hiveObject;
 		return null;
+	}
+
+	virtual public void OnDeadReference( MemberInfo member, HiveObject reference )
+	{
+		assert.Fail( $"Nondestroyed object {this} referencing the destroyed object {reference} through {member}" );
 	}
 
 	public virtual void Validate( bool chainCall )

@@ -1,9 +1,10 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.Profiling;
+using System.Reflection;
 
 [SelectionBase]
 public class Unit : HiveObject
@@ -2426,6 +2427,14 @@ public class Unit : HiveObject
 			if ( building is Attackable attackable )
 				attackable.DefenderStabbed( this );
 		}
+	}
+
+	override public void OnDeadReference( MemberInfo member, HiveObject reference )
+	{
+		if ( member.Name == "walkBase" )
+			return;
+
+		base.OnDeadReference( member, reference );
 	}
 
 	public override void Validate( bool chain )

@@ -376,7 +376,8 @@ public class Serializer
 				ct.road = null;
 				continue;
 			}
-			link.reference.assert.IsTrue( link.referencer.destroyed || !link.reference.destroyed, $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member}" );
+			if ( !link.referencer.destroyed && link.reference.destroyed )
+				link.referencer.OnDeadReference( link.member, link.reference );
 		}
 		return result;
 	}
