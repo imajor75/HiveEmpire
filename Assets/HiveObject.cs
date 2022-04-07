@@ -104,6 +104,7 @@ public abstract class HiveObject : HiveCommon
 	public void OnDestroy()
 	{
 		world.hiveObjects.Remove( this );
+		world.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
 		destroyed = true;
 		registered = false;
 	}
