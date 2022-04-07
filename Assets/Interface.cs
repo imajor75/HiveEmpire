@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -1340,7 +1340,7 @@ public class Interface : HiveObject
 		Image resizer;
 		public bool escCloses = true;
 		public bool disableDrag;
-		public Vector2 offset;
+		public Vector2 offset = new Vector2( 100, 100 );
 		public int borderWidth = 20;
 		public bool noCloseButton;
 		public bool noResize;
@@ -1696,7 +1696,7 @@ public class Interface : HiveObject
 			if ( target == null || !followTarget || root.viewport.camera == null )
 				return;
 
-			MoveTo( target.location.GetPositionRelativeTo( eye.position ) + Vector3.up * Constants.Node.size );
+			MoveTo( target.location.GetPositionRelativeTo( eye.position ) );
 		}
 
 		public void MoveTo( Vector3 position )
@@ -1704,17 +1704,19 @@ public class Interface : HiveObject
 			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
-			if ( screenPosition.y > Screen.height )
-				screenPosition = eye.camera.WorldToScreenPoint( target.location.position - Vector3.up * Constants.Node.size );
 			if ( transform is RectTransform t )
 			{
-				if ( screenPosition.x + t.rect.width > Screen.width )
-					screenPosition.x -= t.rect.width + 2 * offset.x;
-				if ( screenPosition.y < t.rect.height )
-					screenPosition.y = t.rect.height;
-				screenPosition.y -= Screen.height;
 				float width = t.offsetMax.x - t.offsetMin.x;
 				float height = t.offsetMax.y - t.offsetMin.y;
+
+				if ( screenPosition.x + width > Screen.width )
+					screenPosition.x -= width + 2 * offset.x;
+				if ( screenPosition.y < height )
+					screenPosition.y = height;
+				if ( screenPosition.y > Screen.height )
+					screenPosition.y = Screen.height;
+
+				screenPosition.y -= Screen.height;
 				t.offsetMin = screenPosition - Vector3.up * height;
 				t.offsetMax = t.offsetMin + new Vector2( width, height );
 			}
