@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3876,7 +3876,7 @@ public class Interface : HiveObject
 			borderWidth = 10;
 			noResize = true;
 			offset = new Vector2( 100, 0 );
-			base.Open( road, 0, 0, 210, 185 );
+			base.Open( node, 0, 0, 210, 185 );
 			this.road = road;
 			this.node = node;
 			Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, -10 ).AddClickHandler( Hauler ).SetTooltip( "Show the hauler working on this road" );
