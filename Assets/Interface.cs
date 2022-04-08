@@ -848,6 +848,7 @@ public class Interface : HiveObject
 			var c = highlightVolume.AddComponent<MeshCollider>();
 			c.convex = true;
 			c.sharedMesh = m;
+			highlightVolume.layer = World.layerIndexHighlightVolume;
 			CreateHighLightVolumeMesh( m );
 		}
 
@@ -1846,6 +1847,8 @@ public class Interface : HiveObject
 				"specify an area, if there is no union of these areas, items will not travel there.", Show );
 				this.AddClickHandler( OnClick );
 			}
+
+			public bool pickGroundOnly { get { return true; } }
 
 			public bool OnMovingOverNode( Node node )
 			{
@@ -5521,6 +5524,7 @@ if ( cart )
 				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
 			var layers = camera.cullingMask;
+				layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits);
 			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layers ) )
