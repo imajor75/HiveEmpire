@@ -1809,73 +1809,71 @@ public class Unit : HiveObject
 			return;
 		}
 
-		if ( node == road.nodes[0] || node == road.lastNode )
-		{
-			int restIndex = ( road.nodes.Count - 1 ) / 2;
-			if ( node == road.nodes[0] )
-				restIndex = road.nodes.Count / 2;
-			if ( road.haulerAtNodes[restIndex] )
-			{
-				for ( restIndex = 1; restIndex < road.nodes.Count - 2; restIndex++ )
-					if ( road.haulerAtNodes[restIndex] == null )
-						break;
-			}
-			ScheduleWalkToRoadPoint( road, restIndex );
-			return;
-		}
-
-		if ( !haulerRoadBegin.status && !haulerRoadEnd.status )
-			return;
-
 		if ( itemsInHands[0] == null )
 		{
 			itemsInHands[0] = itemsInHands[1];
 			itemsInHands[1] = null;
 		}
-		if ( itemsInHands[0] )
+
+		if ( itemsInHands[0] == null )
 		{
-			for ( int i = 0; i < 2; i++ )
+			if ( (haulerRoadBegin.status || haulerRoadEnd.status) && FindItemToCarry() )
 			{
-				Flag flag = road.ends[i];
-				if ( flag.freeSlots < 1 )
-					continue;
-
-				flag.ReserveItem( itemsInHands[0] );
-				bool onRoad = true;
-				if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building, or the road is rearranged by a flag magnet (Road.Split)
-				{
-					onRoad = false;
-					foreach ( var o in Ground.areas[1] )
-					{
-						var nn = node.Add( o );
-						if ( o && nn.flag == road.ends[0] || nn.flag == road.ends[1] )
-						{
-							ScheduleWalkToNeighbour( nn ); // It is possible, that the building is not there anymore
-							onRoad = true;
-							break;
-						}
-					}
-				}
-				if ( onRoad )
-					ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
-				else
-					ScheduleWalkToNode( road.ends[i].node );
-				ScheduleDeliverItem( itemsInHands[0] );
-
-				// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has space
-				// By calling CancelTrip, this expectation is eliminated, and won't cause an assert fail.
-				itemsInHands[0].CancelTrip();
+				road.lastUsed.Start();
+				Color = Color.white;
 				return;
+			}
+
+			if ( node == road.nodes[0] || node == road.lastNode )
+			{
+				int restIndex = ( road.nodes.Count - 1 ) / 2;
+				if ( node == road.nodes[0] )
+					restIndex = road.nodes.Count / 2;
+				if ( road.haulerAtNodes[restIndex] )
+				{
+					for ( restIndex = 1; restIndex < road.nodes.Count - 2; restIndex++ )
+						if ( road.haulerAtNodes[restIndex] == null )
+							break;
+				}
+				ScheduleWalkToRoadPoint( road, restIndex );
 			}
 			return;
 		}
 
-		if ( FindItemToCarry() )
+		for ( int i = 0; i < 2; i++ )
 		{
-			road.lastUsed.Start();
-			Color = Color.white;
+			Flag flag = road.ends[i];
+			if ( flag.freeSlots < 1 )
+				continue;
+
+			flag.ReserveItem( itemsInHands[0] );
+			bool onRoad = true;
+			if ( road.NodeIndex( node ) == -1 ) // Not on the road, it was stepping into a building, or the road is rearranged by a flag magnet (Road.Split)
+			{
+				onRoad = false;
+				foreach ( var o in Ground.areas[1] )
+				{
+					var nn = node.Add( o );
+					if ( o && nn.flag == road.ends[0] || nn.flag == road.ends[1] )
+					{
+						ScheduleWalkToNeighbour( nn ); // It is possible, that the building is not there anymore
+						onRoad = true;
+						break;
+					}
+				}
+			}
+			if ( onRoad )
+				ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
+			else
+				ScheduleWalkToNode( road.ends[i].node );
+			ScheduleDeliverItem( itemsInHands[0] );
+
+			// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has room
+			// By calling CancelTrip, this expectation is eliminated, and won't cause an assert fail.
+			itemsInHands[0].CancelTrip();
 			return;
 		}
+
 		Color = Color.green;
 	}
 
