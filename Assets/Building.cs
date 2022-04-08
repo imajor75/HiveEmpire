@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,7 +12,16 @@ abstract public class Building : HiveObject
 		set {} // for compatibility with old files
 	}
 	public string moniker;
-	public string nick { get { return moniker ?? title; } }
+	public string nick 
+	{ 
+		get 
+		{ 
+			if ( moniker != null && moniker != "" )
+				return moniker;
+				
+			return title; 
+		} 
+	}
 	public Unit tinkerer, tinkererMate, dispenser;	// dispenser is either the tinkerer or the mate, it can also change
 	public Flag flag;
 	public int flagDirection;
