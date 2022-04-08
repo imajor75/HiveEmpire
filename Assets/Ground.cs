@@ -406,8 +406,11 @@ public class Ground : HiveObject
 
 	public void RecalculateOwnership()
 	{
+		int previousPlayerNodeCount = 0, newPlayerNodeCount = 0;
 		foreach ( var n in nodes )
 		{
+			if ( n.team == root.mainTeam )
+				previousPlayerNodeCount++;
 			n.team = null;
 			n.influence = 0;
 		}
@@ -444,6 +447,8 @@ public class Ground : HiveObject
 
 		foreach ( var node in nodes )
 		{
+			if ( node.team == root.mainTeam )
+				newPlayerNodeCount++;
 			for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 			{
 				Node neighbour = node.Neighbour( j );
@@ -469,6 +474,10 @@ public class Ground : HiveObject
 			if ( node.road && node.road.team != node.team )
 				node.road.Remove();
 		}
+
+		if ( newPlayerNodeCount < previousPlayerNodeCount )
+			root.mainTeam.SendMessage( "You lost area due to this enemy building", world.lastAreaInfluencer );
+
 		RecreateMapGroundTexture();
 		dirtyOwnership = false;
 	}

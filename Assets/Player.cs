@@ -555,6 +555,7 @@ public class Team : HiveObject
 	public void RegisterInfluence( Building building )
 	{
 		influencers.Add( building );
+		world.lastAreaInfluencer = building;
 		HiveCommon.ground.dirtyOwnership = true;
 	}
 

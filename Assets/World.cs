@@ -18,6 +18,7 @@ public class World : HiveObject
 	public List<Player> players = new List<Player>();
 	public Player controllingPlayer;
 	public List<Team> teams = new List<Team>();
+	public Building lastAreaInfluencer;
 	public new Eye eye;
 	public new Light light;
 	public bool gameInProgress;
