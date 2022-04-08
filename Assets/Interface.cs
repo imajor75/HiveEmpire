@@ -2208,9 +2208,10 @@ public class Interface : HiveObject
 	{
 		if ( building == null )
 			return;
-		oh.ScheduleRemoveBuilding( building );
 		if ( building.flag.roadsStartingHereCount == 0 && building.flag.Buildings().Count == 1 )
 			oh.ScheduleRemoveFlag( building.flag );
+		else
+			oh.ScheduleRemoveBuilding( building );
 	}
 
 	public class BuildingPanel : Panel

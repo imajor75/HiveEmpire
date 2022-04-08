@@ -1086,6 +1086,8 @@ public class Operation
             case Type.removeBuilding:
             {
                 Building building = this.building;
+                if ( building == null )
+                    return null;
                 var inverse = Operation.Create();
                 if ( building is Workshop workshop )
                     inverse.SetupAsCreateBuilding( building.node, building.flagDirection, (Building.Type)workshop.type, building.team );
