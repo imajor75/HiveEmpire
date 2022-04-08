@@ -1148,24 +1148,19 @@ public class Workshop : Building
 	public int ResourcesLeft()
 	{
 		int left = 0;
-		void CheckNode( Node node )
+		foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
 		{
-			foreach ( var resource in node.resources )
+			var other = node + o;
+			foreach ( var resource in other.resources )
 			{
-				if ( resource == null || resource.type != productionConfiguration.gatheredResource || resource.keepAway.inProgress )
+				if ( resource == null || resource.type != productionConfiguration.gatheredResource )
 					continue;
-				if ( !resource.underGround || this.node == node || resource.node.team == team )
-				{
-					if ( resource.infinite )
-						left++;
-					else
-						left += resource.charges;
-				}
+				if ( resource.infinite )
+					left++;
+				else
+					left += resource.charges;
 			}
 		}
-		CheckNode( this.node );
-		foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
-			CheckNode( this.node + o );
 		return left;
 	}
 
