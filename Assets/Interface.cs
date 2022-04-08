@@ -6001,7 +6001,8 @@ if ( cart )
 				var i = ItemIcon( Item.Type.unknown ).Link( scroll.content ).Pin( 0, row );
 				i.SetItem( item );
 
-				BuildingIcon( item.origin ).Link( scroll.content ).Pin( 30, row, 80 );
+				if ( item.origin )
+					BuildingIcon( item.origin ).Link( scroll.content ).Pin( 30, row, 80 );
 				if ( item.destination )
 					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
 				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
