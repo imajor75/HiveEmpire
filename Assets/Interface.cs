@@ -5835,7 +5835,8 @@ if ( cart )
 
 		public bool OnObjectClicked( HiveObject target )
 		{
-			target.OnClicked();
+			if ( !rightButton )
+				target.OnClicked();
 			return true;
 		}
 	}
