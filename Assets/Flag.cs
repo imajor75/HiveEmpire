@@ -513,6 +513,9 @@ public class Flag : HiveObject
 		if ( !IsNodeSuitable( target, team, this ) )
 			return false;
 
+		if ( Buildings().Count() > 0 )
+			return false;
+
 		List<Road> shorten = new List<Road>(), change = new List<Road>(), extend = new List<Road>();
 
 		for ( int i = direction - 1; i < direction + Constants.Node.neighbourCount - 1; i++ )

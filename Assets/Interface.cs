@@ -4209,15 +4209,15 @@ public class Interface : HiveObject
 			}
 		}
 
-        public bool OnMovingOverNode(Node node)
+        public bool OnMovingOverNode( Node node )
         {
 			return keepGoing;
         }
 
-        public bool OnNodeClicked(Node node)
+        public bool OnNodeClicked( Node node )
         {
 			int i = flag.node.DirectionTo( node );
-			if ( i >= 0 && !root.viewport.rightButton )
+			if ( i >= 0 && !root.viewport.rightButton && flag.Move( i, true ) )
 				oh.ScheduleMoveFlag( flag, i );
 			else
 				root.viewport.OnNodeClicked( node );
