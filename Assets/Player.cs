@@ -598,7 +598,7 @@ public class Team : HiveObject
 	public void UnregisterItem( Item item )
 	{
 		item.assert.AreEqual( item.team, this );
-		item.assert.IsTrue( items.Count > item.index && item.index >= 0 );
+		item.assert.IsTrue( items.Count > item.index && item.index >= 0 );	// Triggered on app quit
 		item.assert.AreEqual( items[item.index], item );
 		items[item.index] = null;
 		if ( item.index < firstPossibleEmptyItemSlot )

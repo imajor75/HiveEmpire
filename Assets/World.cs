@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -983,12 +983,8 @@ public class World : HiveObject
 					o.currentColor = Color.white;
 				if ( o.team == null && teams.Count > 0 )
 					o.team = teams[0];
-				if ( o.type == Unit.Type.hauler )
+				if ( o.type == Unit.Type.hauler && o.road )
 				{
-					if ( !o.haulerRoadBegin.isAttached )
-						o.haulerRoadBegin.Attach( o.road.ends[0].itemsStored, false );
-					if ( !o.haulerRoadEnd.isAttached )
-						o.haulerRoadEnd.Attach( o.road.ends[1].itemsStored, false );
 					o.haulerRoadBegin.Attach( o.road.ends[0].itemsStored );
 					o.haulerRoadEnd.Attach( o.road.ends[1].itemsStored );
 				}

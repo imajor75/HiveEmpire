@@ -188,17 +188,23 @@ public class OperationHandler : HiveObject
         }
     }
 
-    public Operation next 
-    { 
-        get 
-        { 
-            if ( executeIndex >= executeBuffer.Count )
+    public Operation NextToExecute( Team team ) 
+    {
+        if ( executeBuffer.Count == executeIndex )
+            return null;
+
+        int index = executeIndex;
+        while ( executeBuffer[index].initiator != team )
+        {
+            index++;
+            if ( index == executeBuffer.Count )
                 return null;
-            int skip = 0;
-            while ( executeIndex+skip+1 < executeBuffer.Count && executeBuffer[executeIndex+skip+1].group == executeBuffer[executeIndex+skip].group )
-                skip++;
-            return executeBuffer[executeIndex+skip]; 
-        } 
+        }
+
+        int skip = 0;
+        while ( index+skip+1 < executeBuffer.Count && executeBuffer[index+skip+1].group == executeBuffer[index+skip].group )
+            skip++;
+        return executeBuffer[index+skip]; 
     }
 
     public static OperationHandler Create()
@@ -229,7 +235,6 @@ public class OperationHandler : HiveObject
         }
         else
             root.NewGame( challenge );
-        destroyed = false;	// TODO This is a hack. World.Clear sets this bool field to true for every hive object in the memory, not only for those which were really destroyed
 
         frameEvents = world.operationHandler.events;
         currentCRCCode = world.operationHandler.currentCRCCode;
@@ -260,6 +265,9 @@ public class OperationHandler : HiveObject
 
     public void ScheduleOperation( Operation operation, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
+        if ( mode == Mode.repeating )
+            return;
+
         operation.source = source;
         if ( standalone )
         {
@@ -495,7 +503,7 @@ public class OperationHandler : HiveObject
                 {
                     if ( !eventsDumped )
                         DumpEventDif();
-                    assert.Fail( $"CRC mismatch in frame {time}" );
+                    assert.Fail( $"CRC mismatch in frame {time} ({currentCRCCode} vs {CRCCodes[time - CRCCodesSkipped]})" );
                 }
                 RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate, CRCCodes[time - CRCCodesSkipped] );
             }
@@ -521,6 +529,8 @@ public class OperationHandler : HiveObject
 
     static void DumpEvents( List<Event> events, string file, int frame = -1 )
     {
+        if ( events == null )
+            return;
         for ( int i = 0; i < events.Count; i++ )
         {
             var ie = events[i];
@@ -623,7 +633,6 @@ public class OperationHandler : HiveObject
                     break;
             }
         }
-        operation.source = Operation.Source.archive;
     }
 
     public override void Validate( bool chain )
@@ -661,7 +670,7 @@ public class Operation
     public enum Source
     {
         manual,
-        archive,
+        archive,    // not used, listed only for compatibility reasons when loading json files
         networkClient,
         networkServer,
         computer,
@@ -679,6 +688,16 @@ public class Operation
         {
             locationX = value.x;
             locationY = value.y;
+        }
+    }
+    public Team initiator
+    {
+        get
+        {
+            if ( type == Type.attack || type == Type.toggleEmergencyConstruction || type == Type.createRoad || type == Type.createPlayer )
+                return team;
+
+            return location.team;
         }
     }
     public Building building
@@ -808,9 +827,10 @@ public class Operation
                 Type.createPlayer => "Creating a new player",
                 Type.captureRoad => "Capture nearby roads",
                 Type.changeBufferUsage => "Change Buffer Usage",
-                Type.changeFlagType => "Convert a junction to crossing or vice versa",
                 Type.flattenFlag => "Flatten the area around a junction",
-                _ => ""
+                Type.changeFlagType => "Convert a junction to crossing or vice versa",
+                Type.toggleEmergencyConstruction => "Toggle emergency construction",
+                _ => type.ToString()
             };
             if ( type == Type.createBuilding )
             {

@@ -278,7 +278,7 @@ public class Interface : HiveObject
 		if ( eye.target && lastShownOperation == operation )
 			return;
 
-		MessagePanel.Create( operation.description, operation.place );
+		MessagePanel.Create( operation.description, operation.place, 5 );
 		lastShownOperation = operation;
 	}
 
@@ -542,8 +542,9 @@ public class Interface : HiveObject
 	string ReplayTooltipGenerator()
 	{
 		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - time )}";
-		if ( oh.next != null )
-			text += $"\nNext action is {oh.next.description} in {UIHelpers.TimeToString( oh.next.scheduleAt - time )}";
+		var next = oh.NextToExecute( mainTeam );
+		if ( next != null )
+			text += $"\nNext action is {next.description} in {UIHelpers.TimeToString( next.scheduleAt - time )}";
 		return text;
 	}
 
@@ -783,9 +784,12 @@ public class Interface : HiveObject
  		if ( world?.operationHandler )	// This can be null during join
 		{
 			replayIcon.gameObject.SetActive( !playerInCharge );
-			var next = world.operationHandler.next;
-			if ( showReplayAction && !playerInCharge && next != null && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay )
-				ShowOperation( next );
+			if ( !playerInCharge )
+			{
+				var next = world.operationHandler.NextToExecute( mainTeam );
+				if ( showReplayAction && !playerInCharge && next != null && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay && next.location?.team == mainTeam )
+					ShowOperation( next );
+			}
 		}
 
 		if ( delayedSaveName != null && delayedSaveName != "" && delayedSaveValid )
