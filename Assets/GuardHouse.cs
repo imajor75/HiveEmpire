@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -173,7 +173,7 @@ public class GuardHouse : Attackable
 		{
 			int defenderCount = 0;
 			foreach ( var defender in soldiers )
-				if ( defender.IsIdle( true ) )
+				if ( defender.IsIdle( true ) || defender.taskQueue[0] is Unit.Wait )
 					defenderCount++;
 			return defenderCount;
 		}
