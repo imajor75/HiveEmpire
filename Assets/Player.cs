@@ -370,6 +370,7 @@ public class Team : HiveObject
 			attacker.ScheduleWait( attackTime - world.time );
 			attacker.ScheduleWalkToNeighbour( mainBuilding.flag.node );
 			attacker.ScheduleWalkToNode( gather[(i+target.lastSpot)%gather.Count] );
+			attacker.building = target;
 			target.attackers.Add( attacker );
 			soldierCount--;
 		}

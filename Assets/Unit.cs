@@ -1746,7 +1746,8 @@ public class Unit : HiveObject
 				return;
 			}
 
-			ReturnToHeadquarters();
+			if ( !building )
+				ReturnToHeadquarters();
 			return;
 		}
 

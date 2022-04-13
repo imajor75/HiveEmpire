@@ -4441,10 +4441,13 @@ public class Interface : HiveObject
 					}
 					case Unit.Type.soldier:
 					{
-						if ( unit.building == null )
-							status.text = "Attacking";
-						else if ( firstTask is Unit.Wait )
-							status.text = "Guarding";
+						if ( unit.building )
+						{
+							if ( unit.team != unit.building.team )
+								status.text = "Attacking";
+							else
+								status.text = "Guarding";
+						}
 						else
 							status.text = "Walking to the post";
 						break;
