@@ -1746,7 +1746,7 @@ public class Unit : HiveObject
 				return;
 			}
 
-			if ( !building )
+			if ( !building || building.type == (Building.Type)Workshop.Type.barrack )
 				ReturnToHeadquarters();
 			return;
 		}

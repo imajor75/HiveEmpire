@@ -4445,6 +4445,8 @@ public class Interface : HiveObject
 						{
 							if ( unit.team != unit.building.team )
 								status.text = "Attacking";
+							else if ( unit.building.type == (Building.Type)Workshop.Type.barrack )
+								status.text = "Joining the army";
 							else
 								status.text = "Guarding";
 						}
