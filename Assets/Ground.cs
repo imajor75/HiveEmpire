@@ -475,7 +475,7 @@ public class Ground : HiveObject
 				node.road.Remove();
 		}
 
-		if ( newPlayerNodeCount < previousPlayerNodeCount )
+		if ( newPlayerNodeCount < previousPlayerNodeCount && !world.lastAreaInfluencer.changedSide )
 			root.mainTeam.SendMessage( "You lost area due to this enemy building", world.lastAreaInfluencer );
 
 		RecreateMapGroundTexture();

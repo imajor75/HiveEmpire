@@ -34,6 +34,7 @@ abstract public class Building : HiveObject
 	public Configuration configuration;
 	public bool itemDispatchedThisFrame;
 	public Versioned contentChange = new Versioned();
+	public bool changedSide;
 
 	protected GameObject body;
 	GameObject highlightArrow;
@@ -820,6 +821,7 @@ abstract public class Building : HiveObject
 			team.buildingCounts[(int)type]++;
 			team.flags.Add( flag );
 		}
+		changedSide = true;
 	}
 
 	public override Node location { get { return node; } }
