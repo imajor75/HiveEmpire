@@ -339,6 +339,8 @@ public class Team : HiveObject
 
 	public bool Attack( Attackable target, int attackerCount, bool checkOnly = false )
 	{
+		if ( target.team == this )
+			return false;
 		if ( soldierCount < attackerCount || ( target.attackerTeam && target.attackerTeam != this ) )
 			return false;
 

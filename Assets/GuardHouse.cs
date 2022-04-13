@@ -335,7 +335,7 @@ public class GuardHouse : Attackable
 		if ( attackers.Count > 0 )
 		{
 			var enemy = attackers.First().team;
-			assert.AreNotEqual( enemy, team );
+			assert.AreNotEqual( enemy, team, "Attacking own guardhouse" );
 			foreach ( var soldier in attackers )
 				assert.AreEqual( soldier.team, enemy );
 		}
