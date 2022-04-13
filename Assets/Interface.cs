@@ -690,6 +690,12 @@ public class Interface : HiveObject
 				messageButton.gameObject.SetActive( false );
 		}
 
+		if ( mainPlayer == null && !world.defeatReported )
+		{
+			world.defeatReported = true;
+			ChallengeList.Create( true );
+		}
+
 		if ( EventSystem.current?.currentSelectedGameObject != null )
 		{ 
 			focusOnInputField = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
@@ -6569,24 +6575,30 @@ if ( cart )
 	{
 		public InputField manualSeed;
 
-		public static ChallengeList Create()
+		public static ChallengeList Create( bool defeat = false )
 		{
 			var p = new GameObject( "Challenge list" ).AddComponent<ChallengeList>();
-			p.Open();
+			p.Open( defeat );
 			return p;
 		}
 
-		void Open()
+		void Open( bool defeat )
 		{
 			allowInSpectateMode = true;
-			base.Open( 500, 300 );
-			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize * 3, -borderWidth, -borderWidth - iconSize );
+			base.Open( 500, 300 + (defeat ? (int)( iconSize * 1.5 ) : 0) );
+			int titleRow = -borderWidth;
+			if ( defeat )
+			{
+				Text( "You are defeated!", 18 ).PinCenter( 250, -30, 200 ).color = Color.red;
+				titleRow -= (int)( iconSize * 1.5 );
+			}
+			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize * 3, -borderWidth, -borderWidth + titleRow );
 			Text( "Manual seed:" ).Pin( -330, borderWidth + iconSize, 150, iconSize, 1, 0 );
 			manualSeed = InputField( new System.Random().Next().ToString() ).PinSideways( 0, borderWidth + iconSize, 150, iconSize, 1, 0 );
-			Text( "Challenge name" ).Pin( borderWidth, -borderWidth, 140, iconSize );
-			Text( "Time limit" ).PinSideways( 0, -borderWidth, 70, iconSize );
-			Text( "World size" ).PinSideways( 0, -borderWidth, 70, iconSize );
-			Text( "Best solution" ).PinSideways( 50, -borderWidth, 100, iconSize );
+			Text( "Challenge name" ).Pin( borderWidth, titleRow, 140, iconSize );
+			Text( "Time limit" ).PinSideways( 0, titleRow, 70, iconSize );
+			Text( "World size" ).PinSideways( 0, titleRow, 70, iconSize );
+			Text( "Best solution" ).PinSideways( 50, titleRow, 100, iconSize );
 			Text( "The game can be continued no matter if the current challenge is lost or won, so you can play with any of these as a free game" ).PinCenter( 0, 3 * iconSize, 400, 2 * iconSize, 0.5f, 0 ).alignment = TextAnchor.MiddleCenter;
 			var view = scroll.content;
 

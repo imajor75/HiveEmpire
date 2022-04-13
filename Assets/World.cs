@@ -17,6 +17,7 @@ public class World : HiveObject
 	public int currentSeed;
 	public List<Player> players = new List<Player>();
 	public Player controllingPlayer;
+	public bool defeatReported;		// This should be in Interface, but it would be good if it was saved
 	public List<Team> teams = new List<Team>();
 	public Building lastAreaInfluencer;
 	public new Eye eye;
@@ -766,6 +767,7 @@ public class World : HiveObject
 			if ( mainPlayer )
 				players.Add( mainPlayer );
 		}
+		defeatReported = false;
 		for ( int i = 0; i < challenge.simpletonCount; i++ )
 		{
 			var team = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors[(i+1)%Constants.Player.teamColors.Length] );
