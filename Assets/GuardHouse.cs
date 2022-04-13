@@ -143,7 +143,7 @@ public abstract class Attackable : Building
 		Trash( defender );
 		Trash( aggressor );
 		Trash( assassin );
-		defender = assassin = aggressor = null;
+		defender = this.assassin = aggressor = null;
 		trashTimer.Start( Constants.GuardHouse.deathFadeTime );
 	}
 
