@@ -2975,6 +2975,7 @@ public class Interface : HiveObject
 		public Text defenders, attackers;
 		public Image sendAttacker;
 		public int attackerCount;
+		public Watch attackedStatus = new Watch();
 
 		public static GuardHousePanel Create()
 		{
@@ -2985,6 +2986,7 @@ public class Interface : HiveObject
 		{
 			this.attackable = attackable;
 			this.guardHouse = attackable as GuardHouse;
+			attackedStatus.Attach( attackable.attackedStatus, false );
 			noResize = true;
 			if ( base.Open( attackable, 220, 120 ) )
 				return;
@@ -2997,13 +2999,11 @@ public class Interface : HiveObject
 				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
 				soldierCount.value = guardHouse.soldiers.Count - 1;
 				soldierCount.onValueChanged.AddListener( SoldierCountChanged );
-				if ( guardHouse.attackerTeam )
-					attackers = Text( $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackerCount} soldiers" ).PinDownwards( borderWidth, 0, 200, 2 * iconSize );
+				attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
 			}
 			else
 			{
 				defenders = Text().Pin( borderWidth, -borderWidth, 200 );
-				attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
 				sendAttacker = Button( "Send attacker" ).AddClickHandler( SendAttacker ).PinDownwards( 20, 0, 180 );
 			}
 			if ( show )
@@ -3014,7 +3014,7 @@ public class Interface : HiveObject
 		{
 			if ( defenders )
 				 defenders.text = $"Defenders: {attackable.defenderCount}"; 
-			if ( attackers )
+			if ( attackers && attackedStatus.status )
 			{
 				if ( attackable.attackerTeam )
 					attackers.text = $"Under attack from team\n{attackable.attackerTeam.name} with {attackable.attackerCount} soldiers";

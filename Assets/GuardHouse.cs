@@ -11,6 +11,7 @@ public abstract class Attackable : Building
 	public Unit aggressor, assassin, defender;
 	public int lastSpot;
 	public bool takeoverInProgress;
+	public Versioned attackedStatus = new Versioned();
 
 	List<GameObject> trash = new List<GameObject>();
 	List<Material> trashMaterials = new List<Material>();

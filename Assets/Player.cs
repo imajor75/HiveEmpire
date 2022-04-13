@@ -377,6 +377,7 @@ public class Team : HiveObject
 		target.lastSpot += attackerCount;
 
 		target.team.SendMessage( $"Military building under attack!", target );
+		target.attackedStatus.Trigger();
 		return true;
 	}
 
