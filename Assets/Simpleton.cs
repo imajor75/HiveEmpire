@@ -312,7 +312,7 @@ public class Simpleton : Player
         {
             problemWeight = 0.5f;
 
-            if ( !boss.team.Attack( target, 1, true ) )
+            if ( !boss.team.Attack( target, 1, true ) || target.attackerTeam )
                 return finished;
 
             int soldiersNeeded = target.defenderCount * 2 + 1;
