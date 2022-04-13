@@ -111,6 +111,7 @@ public abstract class Attackable : Building
 		}
 
 		defender = GetDefender();
+		defender.ResetTasks();
 		defender.ScheduleWalkToNeighbour( flag.node );
 		defender.ScheduleWait( attacker );
 		defender.ScheduleWalkToNeighbour( flag.node.Neighbour( 0 ), false, Unit.defendingAct );
