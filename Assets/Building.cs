@@ -790,6 +790,7 @@ abstract public class Building : HiveObject
 
 	public void SetTeam( Team team )
 	{
+		this.team.SendMessage( "Military building lost to enemy", this );
 		this.team.flags.Remove( flag );
 		if ( Influence( node ) != 0 && this.team )
 			this.team.UnregisterInfuence( this );
