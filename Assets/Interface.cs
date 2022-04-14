@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2997,9 +2997,9 @@ public class Interface : HiveObject
 			if ( base.Open( attackable, 220, 120 ) )
 				return;
 			name = "Guard House panel";
-			Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 			if ( attackable.team == root.mainTeam )
 			{
+				Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 				Text( "Defender count" ).Pin( borderWidth, -borderWidth, 200 );
 				soldierCount = Dropdown().PinDownwards( borderWidth, 0, 160 );
 				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
