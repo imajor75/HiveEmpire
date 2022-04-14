@@ -18,6 +18,7 @@ public class World : HiveObject
 	public List<Player> players = new List<Player>();
 	public Player controllingPlayer;
 	public bool defeatReported;		// This should be in Interface, but it would be good if it was saved
+	public int defeatedSimpletonCount;
 	public List<Team> teams = new List<Team>();
 	public Building lastAreaInfluencer;
 	public new Eye eye;
@@ -211,6 +212,7 @@ public class World : HiveObject
 		public int playerCount;
 		public int worldSize = 32;
 		public int simpletonCount;
+		public int simpletonCountToEliminate;
 		public List<string> conditions;
 		public string conditionsText;
 		public bool allowTimeLeftLevels;
@@ -356,6 +358,8 @@ public class World : HiveObject
 
 			if ( timeLimit > 0 )
 				CheckCondition( life.age, timeLimit, allowTimeLeftLevels, null, true );
+
+			CheckCondition( world.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
 
 			if ( playerCount != 0 )
 				CheckCondition( world.players.Count, playerCount, false, $"number of players {{0}}/{{1}}", true );
@@ -748,7 +752,7 @@ public class World : HiveObject
 		Prepare();
 		Interface.ValidateAll( true );
 
-		challenge.destroyed = false;	// TODO Hack
+		defeatedSimpletonCount = 0;
 		challenge.Register();
 		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = challenge;

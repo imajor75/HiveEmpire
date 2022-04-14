@@ -58,6 +58,7 @@
       "description": "Race agains a computer driven player and beat it",
       "worldSize": 48,
       "simpletonCount": 1,
+      "simpletonCountToEliminate": 1,
       "playerCount": 1
     }
   ]

@@ -38,6 +38,13 @@ public class Simpleton : Player
         HiveCommon.Log( $"[{name}]: {text}" );
     }
 
+    public override void Remove()
+    {
+        if ( active )
+            world.defeatedSimpletonCount++;
+        base.Remove();
+    }
+
     public override void GameLogicUpdate()
     {
         if ( tasks == null && active )
