@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -2526,13 +2526,16 @@ public class Unit : HiveObject
 					assert.IsFalse( IsIdle() );
 				if ( building is Attackable target )
 				{
-					if ( target is Stock s )
+					if ( target.team == team )
 					{
-						assert.IsTrue( s.main );
-						assert.AreEqual( this, target.defender );
+						if ( target is Stock s )
+						{
+							assert.IsTrue( s.main );
+							assert.AreEqual( this, target.defender, $"Soldier assigned to main stock, but not defending it" );
+						}
+						else
+							assert.IsTrue( (target as GuardHouse).soldiers.Contains( this ) || target.defender == this );
 					}
-					else if ( target.team == team )
-						assert.IsTrue( (target as GuardHouse).soldiers.Contains( this ) || target.defender == this );
 					else
 						assert.IsTrue( target.attackers.Contains( this ) || target.aggressor == this || target.assassin == this );
 				}
@@ -2543,7 +2546,7 @@ public class Unit : HiveObject
 		
 		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
-		assert.IsTrue( node.real );
+		assert.IsTrue( node.real, "Standing on an invalid node" );
 		base.Validate( chain );
 	}
 }
