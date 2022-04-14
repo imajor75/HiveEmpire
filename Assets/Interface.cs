@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3687,6 +3687,7 @@ public class Interface : HiveObject
 		new void OnDestroy()
 		{
 			root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.none;
+			root.viewport.ResetInputHandler();
 			base.OnDestroy();
 		}
 
