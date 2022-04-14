@@ -2517,9 +2517,33 @@ public class Unit : HiveObject
 			assert.AreEqual( haulerRoadBegin.source, road.ends[0].itemsStored );
 			assert.AreEqual( haulerRoadEnd.source, road.ends[1].itemsStored );
 		}
+
+		if ( type == Type.soldier )
+		{
+			if ( building )
+			{
+				if ( building.type == (Building.Type)Workshop.Type.barrack )
+					assert.IsFalse( IsIdle() );
+				if ( building is Attackable target )
+				{
+					if ( target is Stock s )
+					{
+						assert.IsTrue( s.main );
+						assert.AreEqual( this, target.defender );
+					}
+					else if ( target.team == team )
+						assert.IsTrue( (target as GuardHouse).soldiers.Contains( this ) || target.defender == this );
+					else
+						assert.IsTrue( target.attackers.Contains( this ) || target.aggressor == this || target.assassin == this );
+				}
+			}
+			else
+				assert.IsFalse( IsIdle() );
+		}
 		
 		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );
 		assert.IsTrue( registered );
+		assert.IsTrue( node.real );
 		base.Validate( chain );
 	}
 }
