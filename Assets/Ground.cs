@@ -355,15 +355,15 @@ public class Ground : HiveObject
 
 	public Node GetNode( int x, int y )
 	{
-		if ( x < 0 )
+		while ( x < 0 )
 			x += dimension;
-		if ( y < 0 )
+		while ( y < 0 )
 			y += dimension;
-		if ( x >= dimension )
+		while ( x >= dimension )
 			x -= dimension;
-		if ( y >= dimension )
+		while ( y >= dimension )
 			y -= dimension;
-		assert.IsTrue( x >= 0 && x < dimension && y >= 0 && y < dimension );
+		assert.IsTrue( x >= 0 && x < dimension && y >= 0 && y < dimension, $"Trying to get node {x}:{y}" );
 		assert.IsTrue( nodes.Count > y * dimension + x );
 		return nodes[y * dimension + x];
 	}
@@ -476,7 +476,7 @@ public class Ground : HiveObject
 		}
 
 		if ( newPlayerNodeCount < previousPlayerNodeCount && !world.lastAreaInfluencer.changedSide )
-			root.mainTeam.SendMessage( "You lost area due to this enemy building", world.lastAreaInfluencer );
+			root.mainTeam?.SendMessage( "You lost area due to this enemy building", world.lastAreaInfluencer );
 
 		RecreateMapGroundTexture();
 		dirtyOwnership = false;
