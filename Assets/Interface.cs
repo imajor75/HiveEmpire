@@ -6804,7 +6804,7 @@ if ( cart )
 			if ( originalSpeed > 0 )
 				root.world.SetSpeed( originalSpeed );
 			if ( worldStopped )
-				eye.ReleaseFocus( null, true );
+				eye?.ReleaseFocus( null, true );
 			base.OnDestroy();
 		}
 	}
