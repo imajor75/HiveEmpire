@@ -339,12 +339,21 @@ public class Team : HiveObject
 		return null;
 	}
 
-	public bool Attack( Attackable target, int attackerCount, bool checkOnly = false )
+	public enum AttackStatus
+	{
+		sameTeam,
+		noSoldiers,
+		tooFar,
+		available,
+		done
+	}
+
+	public AttackStatus Attack( Attackable target, int attackerCount, bool checkOnly = false )
 	{
 		if ( target.team == this )
-			return false;
+			return AttackStatus.sameTeam;
 		if ( soldierCount < attackerCount || ( target.attackerTeam && target.attackerTeam != this ) )
-			return false;
+			return AttackStatus.noSoldiers;
 
 		int sourceCount = 0;
 		foreach ( var offset in Ground.areas[Constants.GuardHouse.attackMaxDistance] )
@@ -353,10 +362,10 @@ public class Team : HiveObject
 				sourceCount++;
 		}
 		if ( sourceCount == 0 )
-			return false;
+			return AttackStatus.tooFar;
 
 		if ( checkOnly )
-			return true;
+			return AttackStatus.available;
 
 		List<Node> gather = new List<Node>();
 		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
@@ -382,7 +391,7 @@ public class Team : HiveObject
 
 		target.team.SendMessage( $"Military building under attack!", target );
 		target.attackedStatus.Trigger();
-		return true;
+		return AttackStatus.done;
 	}
 
 	public void UpdateStockRoutes( Item.Type itemType )

@@ -3038,7 +3038,18 @@ public class Interface : HiveObject
 
 		void SendAttacker()
 		{
-			oh.ScheduleAttack( root.mainTeam, attackable, 1 );
+			switch ( root.mainTeam.Attack( attackable, 1, true ) )
+			{
+				case Team.AttackStatus.noSoldiers:
+					MessagePanel.Create( "Not enough soldiers", autoclose:3 );
+					break;
+				case Team.AttackStatus.tooFar:
+					MessagePanel.Create( "No guard house nearby", autoclose:3 );
+					break;
+				case Team.AttackStatus.available:
+					oh.ScheduleAttack( root.mainTeam, attackable, 1 );
+					break;
+			}
 		}
 
 		void SoldierCountChanged( int value )
