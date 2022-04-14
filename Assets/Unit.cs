@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -70,6 +70,16 @@ public class Unit : HiveObject
 			int checksum = base.checksum;
 			checksum += (int)( walkProgress * 1000 );
 			return checksum;
+		}
+	}
+
+	public Task firstTask
+	{
+		get
+		{
+			if ( taskQueue.Count > 0 )
+				return taskQueue.First();
+			return null;			
 		}
 	}
 

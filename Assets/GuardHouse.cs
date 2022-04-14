@@ -175,7 +175,7 @@ public class GuardHouse : Attackable
 		{
 			int defenderCount = 0;
 			foreach ( var defender in soldiers )
-				if ( defender.IsIdle( true ) || defender.taskQueue[0] is Unit.Wait )
+				if ( defender.IsIdle( true ) || defender.firstTask is Unit.Wait )
 					defenderCount++;
 			return defenderCount;
 		}
