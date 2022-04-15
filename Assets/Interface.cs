@@ -5554,7 +5554,8 @@ if ( cart )
 				camera = eye.camera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
 			var layers = camera.cullingMask;
-				layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
+			layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
+			layers |= 1 << World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources);
 			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layers ) )
