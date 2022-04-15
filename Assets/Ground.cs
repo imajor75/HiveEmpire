@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -355,6 +355,8 @@ public class Ground : HiveObject
 
 	public Node GetNode( int x, int y )
 	{
+		if ( dimension == 0 )
+			return null;
 		while ( x < 0 )
 			x += dimension;
 		while ( y < 0 )

@@ -35,7 +35,6 @@ public class World : HiveObject
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Speed speed;
-	public float lastAutoSave = -1;
 	public OperationHandler operationHandler;
 	[JsonIgnore]
 	public new Network network;
@@ -98,6 +97,8 @@ public class World : HiveObject
 
 	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
 
+	[Obsolete( "Compatibility with old files", true )]
+	float lastAutoSave { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	bool victory { set {} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -693,11 +694,6 @@ public class World : HiveObject
 	new void Update()
 	{
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
-		if ( Time.unscaledTime - lastAutoSave > Constants.World.autoSaveIntervalInSecond )
-		{
-			root.Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
-			lastAutoSave = Time.unscaledTime;
-		}
 		base.Update();
 	}
 
@@ -836,7 +832,6 @@ public class World : HiveObject
 		this.fileName = fileName;
 		if ( name == null || name == "" )
 			name = "Incredible";
-		lastAutoSave = Time.unscaledTime;
 		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
 		if ( lastChecksum != 0 )
 			Assert.global.AreEqual( checksum, lastChecksum, "Checksum mismatch in world" );

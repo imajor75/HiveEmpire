@@ -49,6 +49,7 @@ public class Interface : HiveObject
 	public string delayedSaveName;
 	public bool delayedManualSave;
 	public bool delayedSaveValid;
+	public float lastSave = -1;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -586,6 +587,7 @@ public class Interface : HiveObject
 			mainPlayer = null;
 		eye.FocusOn( mainTeam.mainBuilding, approach:false );
 		WelcomePanel.Create();
+		lastSave = Time.unscaledTime;
 	}
 
 	public void Load( string fileName )
@@ -594,6 +596,7 @@ public class Interface : HiveObject
 		mainPlayer = world.controllingPlayer;
 		if ( mainPlayer == null && world.players.Count > 0 )
 			mainPlayer = world.players[0];
+		lastSave = Time.unscaledTime;
 	}
 
 	public void Save( string fileName = "", bool manualSave = false )
@@ -603,6 +606,7 @@ public class Interface : HiveObject
 		delayedSaveName = fileName;
 		delayedManualSave = manualSave;
 		delayedSaveValid = false;
+		lastSave = Time.unscaledTime;
 		MessagePanel.Create( $"Saving {fileName}", autoclose:1 );
 	}
 
@@ -676,6 +680,8 @@ public class Interface : HiveObject
 
 	new public void Update()
 	{
+		if ( Time.unscaledTime - lastSave > Constants.Interface.autoSaveIntervalInSecond )
+			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 		if ( mainPlayer && messageButton )
 		{
 			if ( mainPlayer.messages.Count != 0 )

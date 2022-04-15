@@ -6,11 +6,11 @@ public static class Constants
     public static class Interface
     {
         public const int showNextActionDuringReplay = Constants.World.normalSpeedPerSecond * 2;
+    	public const float autoSaveIntervalInSecond = 60 * 5;
     }
 
     public static class World
     {
-    	public const float autoSaveIntervalInSecond = 60 * 5;
         public const float fastSpeedFactor = 8;
         public const int normalSpeedPerSecond = 50;
         public const int allowedAdvancePerFrame = 5;
