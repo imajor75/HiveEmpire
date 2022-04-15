@@ -3765,7 +3765,7 @@ public class Interface : HiveObject
 
         public bool OnNodeClicked( Node node )
         {
-			if ( !currentBlueprint )
+			if ( !currentBlueprint || root.viewport.rightButton )
 				return true;
 
 			if ( !root.world.roadTutorialShowed )
