@@ -48,6 +48,7 @@ public class Stock : Attackable
 	public override Unit GetDefender()
 	{
 		assert.IsTrue( team.soldierCount > 0 );
+		assert.IsTrue( main );
 		team.soldierCount--;
 		return Unit.Create().SetupAsSoldier( this );
 	}

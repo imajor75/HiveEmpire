@@ -1204,7 +1204,7 @@ public class Workshop : Building
 			}
 		}
 		if ( currentStatus != Status.unknown && !World.massDestroy )
-			assert.IsTrue( statusDuration.done );
+			assert.IsTrue( statusDuration.done );	// Triggered once after pause and then switching to fast
 		assert.IsTrue( team.workshops.Contains( this ) );
 	}
 }

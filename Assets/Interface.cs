@@ -3708,6 +3708,8 @@ public class Interface : HiveObject
 			};
 		}
 
+		public bool pickGroundOnly { get { return true; } }
+
         public bool OnMovingOverNode( Node node )
         {
 			if ( constructionMode == Construct.flag || constructionMode == Construct.crossing )
@@ -5554,7 +5556,7 @@ if ( cart )
 			var layers = camera.cullingMask;
 				layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
 			if ( inputHandler.pickGroundOnly )
-				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits);
+				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources);
 			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layers ) )
 				return null;
 

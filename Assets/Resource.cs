@@ -217,7 +217,10 @@ public class Resource : HiveObject
 		name = type.ToString();
 		GameObject prefab = meshes.GetMediaData( type, bodyRandom );
 		if ( prefab )
+		{
 			body = Instantiate( prefab );
+			World.SetLayerRecursive( body, World.layerIndexResources );
+		}
 		if ( type == Type.pasturingAnimal )
 			name = "Pasturing Animal Resource";
 		if ( body != null )
