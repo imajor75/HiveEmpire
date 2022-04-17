@@ -1807,10 +1807,13 @@ public class Unit : HiveObject
 
 	void FindHaulerTask()
 	{
-		if ( ( bored.done && road.ActiveHaulerCount > 1 ) || ( road.ActiveHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
+		if ( road.haulers.Count > 1 )	// This check here is a performance optimisation, for roads with a single haluer dont chek anything further
 		{
-			Retire();
-			return;
+			if ( ( bored.done && road.ActiveHaulerCount > 1 ) || ( road.ActiveHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
+			{
+				Retire();
+				return;
+			}
 		}
 
 		if ( !exclusiveMode )

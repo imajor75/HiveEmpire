@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -365,7 +365,7 @@ public class Ground : HiveObject
 			x -= dimension;
 		while ( y >= dimension )
 			y -= dimension;
-		assert.IsTrue( x >= 0 && x < dimension && y >= 0 && y < dimension, $"Trying to get node {x}:{y}" );
+		assert.IsTrue( x >= 0 && x < dimension && y >= 0 && y < dimension/*, $"Trying to get node {x}:{y}"*/ );	// Using a string here makes sense, but really slows down the running
 		assert.IsTrue( nodes.Count > y * dimension + x );
 		return nodes[y * dimension + x];
 	}
