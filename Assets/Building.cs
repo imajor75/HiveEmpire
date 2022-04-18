@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -205,7 +205,7 @@ abstract public class Building : HiveObject
 		/// <returns>True if the function call was useful</returns>
 		public bool GameLogicUpdate()
 		{
-			if ( area == null )
+			if ( area == null || area.Count == 0 )	// If area exists, its size is never 0, but sometimes unity just creates an empty list here with no elements at all
 				return false;
 
 			if ( flattened )
