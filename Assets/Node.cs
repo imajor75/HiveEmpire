@@ -30,7 +30,7 @@ public class Node : HiveObject
 	{
 		get
 		{
-			return this == ground.GetNode( x, y );
+			return ground && this == ground.GetNode( x, y );
 		}
 		[Obsolete( "Compatibility with old files", true )]
 		set {}
