@@ -1030,7 +1030,7 @@ public class Simpleton : Player
                         break;
                 }
 
-                if ( !data.hasOutputStock && workshop.output > 1 )
+                if ( !data.hasOutputStock )
                 {
                     Stock stock = GetStock( workshop, workshop.productionConfiguration.outputType );
                     if ( stock )
