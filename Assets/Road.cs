@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -936,7 +936,13 @@ public class Road : HiveObject, Interface.IInputHandler
 				else
 				{
 					if ( hauler.type == Unit.Type.hauler )
-						hauler.Retire();
+					{
+						hauler.ResetTasks();
+						another.haulers.Add( hauler );
+						hauler.road = another;
+						hauler.haulerRoadBegin.Attach( another.nodes.First().flag.itemsStored );
+						hauler.haulerRoadEnd.Attach( another.nodes.Last().flag.itemsStored );
+					}
 					else
 						hauler.assert.AreEqual( hauler.type, Unit.Type.cart );
 				}
