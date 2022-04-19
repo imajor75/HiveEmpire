@@ -1679,6 +1679,14 @@ public class Unit : HiveObject
 		building = null;
 		Color = Color.black;
 		type = Type.unemployed;
+		RegisterAsReturning();
+	}
+
+	public void RegisterAsReturning()
+	{
+		assert.IsTrue( type == Type.soldier || type == Type.unemployed || type == Type.cart );
+		if ( !team.mainBuilding.returningUnits.Contains( this ) )
+			team.mainBuilding.returningUnits.Add( this );
 	}
 
 	virtual public void FindTask()
@@ -1790,8 +1798,7 @@ public class Unit : HiveObject
 		}
 		if ( this as Stock.Cart )
 			assert.IsNull( building as Stock );     // ?
-		if ( !team.mainBuilding.returningUnits.Contains( this ) )
-			team.mainBuilding.returningUnits.Add( this );
+		RegisterAsReturning();
 		if ( !recalled )
 		{
 			if ( node.validFlag )

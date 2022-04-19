@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -386,6 +386,7 @@ abstract public class Building : HiveObject
 			done = true;
 			builder.ScheduleWalkToNeighbour( boss.flag.node );
 			builder.type = Unit.Type.unemployed;
+			builder.RegisterAsReturning();
 			builder = null;
 			hammering = null;
 		}

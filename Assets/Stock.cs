@@ -424,6 +424,7 @@ public class Stock : Attackable
 			if ( boss == null )
 			{
 				type = Type.unemployed;
+				RegisterAsReturning();
 				return;
 			}
 			if ( node != boss.node )
@@ -876,5 +877,7 @@ public class Stock : Attackable
 			if ( itemData[j].cartOutput >= Constants.Stock.cartCapacity && team.stocksHaveNeed[j] && itemData[j].cartInput == 0 )
 				assert.AreNotEqual( itemData[j].outputRoutes.Count, 0, $"Invalid route for {(Item.Type)j} in {this}" );
 		}
+		foreach ( var ret in returningUnits )
+			assert.IsTrue( ret.type == Unit.Type.soldier || ret.type == Unit.Type.unemployed || ret.type == Unit.Type.cart );
 	}
 }
