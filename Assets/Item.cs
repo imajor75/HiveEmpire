@@ -392,6 +392,7 @@ public class Item : HiveObject
 	{
 		if ( destroyed )
 			return;
+		destroyed = true;
 			
 		transform.SetParent( null );
 		if ( hauler )
