@@ -682,8 +682,8 @@ public class Unit : HiveObject
 		public override void Validate()
 		{
 			base.Validate();
-			if ( this != boss.taskQueue[0] || road == null )	// road might be unity null here
-				return;
+			if ( this != boss.taskQueue[0] || road == null || road.destroyed )	// road might be unity null here. It is also possible that this function is called right after load, 
+				return;															// before the Start functions would have been called where road is not yet in unity null state, so the destroyed flag needs to be checked too
 
 			boss.assert.IsTrue( currentPoint >= -1 && currentPoint < road.nodes.Count );
 			int cp = road.NodeIndex( boss.node );
