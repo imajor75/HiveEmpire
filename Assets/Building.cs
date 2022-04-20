@@ -199,6 +199,11 @@ abstract public class Building : HiveObject
 					node.staticHeight = level;
 		}
 
+		virtual public void Remove()
+		{
+			builder?.Remove();
+		}
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -306,10 +311,10 @@ abstract public class Building : HiveObject
 			Setup( flatteningArea, true, boss );
 		}
 
-		public void Remove()
+		override public void Remove()
 		{
 			hammering?.StopAct();
-			builder?.Remove();
+			base.Remove();
 		}
 
 		new public void GameLogicUpdate()

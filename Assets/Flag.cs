@@ -398,6 +398,7 @@ public class Flag : HiveObject
 			user.exclusiveFlag = null;
 		}
 		node.flag = null;
+		flattening?.Remove();
 		ground.SetDirty( node );	// To allow grass
 		base.Remove();
 	}
