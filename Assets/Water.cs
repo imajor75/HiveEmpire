@@ -35,6 +35,7 @@ public class Water : HiveObject
     {
         name = "Water";
         transform.SetParent( ground.transform.parent );
+		transform.localPosition = Vector3.up * world.waterLevel;
         mesh = GetComponent<MeshFilter>().mesh = new Mesh();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
         gameObject.layer = World.layerIndexWater;
@@ -43,7 +44,7 @@ public class Water : HiveObject
 
     new void Update()
     {
-        Assert.global.AreEqual( this, World.water );
+        Assert.global.AreEqual( this, world.water );
         if ( mesh.triangles.Length != ground.dimension * ground.dimension * 3 * 2 )
         {
             var vertices = new List<Vector3>();

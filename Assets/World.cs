@@ -36,6 +36,7 @@ public class World : HiveObject
 	public bool gameAdvancingInProgress;
 	public Speed speed;
 	public OperationHandler operationHandler;
+	public Water water;
 	[JsonIgnore]
 	public new Network network;
 	[JsonIgnore]
@@ -58,7 +59,6 @@ public class World : HiveObject
 	static public Shader defaultMapShader;
 	static public Shader defaultTextureShader;
 	static public Shader defaultCutoutTextureShader;
-	static public Water water;
 	static public GameObject nodes;
 	static public GameObject itemsJustCreated, playersAndTeams;
 
@@ -838,7 +838,7 @@ public class World : HiveObject
 
 		foreach ( var water in Resources.FindObjectsOfTypeAll<Water>() )
 		{
-			if ( water != World.water )
+			if ( water != world.water )
 				water.Remove();
 		}
 
@@ -918,8 +918,8 @@ public class World : HiveObject
 				team.name = Constants.Player.teamNames.Random();
 		}
 
-		water = Water.Create().Setup( ground );
-		water.transform.localPosition = Vector3.up * waterLevel;
+		if ( water == null )	// Fix old files
+			water = Water.Create().Setup( ground );
 
 		{
 			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
@@ -1548,6 +1548,7 @@ public class World : HiveObject
 			return;
 
 		ground?.Validate( true );
+		assert.IsNotNull( water );
 		foreach ( var team in teams )
 			team.Validate();
 		foreach ( var team in teams )
