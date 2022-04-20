@@ -1030,7 +1030,7 @@ public class Simpleton : Player
                         break;
                 }
 
-                if ( !data.hasOutputStock )
+                if ( !data.hasOutputStock && workshop.productionConfiguration.outputType >= 0 && workshop.productionConfiguration.outputType < Item.Type.total )
                 {
                     Stock stock = GetStock( workshop, workshop.productionConfiguration.outputType );
                     if ( stock )
@@ -1142,6 +1142,7 @@ public class Simpleton : Player
 
                 case Action.linkToPartner:
                 boss.Log( $"Linking {itemTypeToLink} at {workshop} to {partner}" );
+                Assert.global.IsTrue( itemTypeToLink >= 0 && itemTypeToLink < Item.Type.total );
                 HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to partner" );
                 workshop.simpletonDataSafe.RegisterPartner( partner, itemTypeToLink );
                 workshop.simpletonDataSafe.possiblePartner = null;
