@@ -1149,7 +1149,7 @@ public class World : HiveObject
 		gameInProgress = true;
 		SetSpeed( speed );    // Just for the animators and sound
 
-		HiveObject.Log( $"Next ID: {nextID}" );
+		HiveObject.Log( $"Time: {time}, Next ID: {nextID}" );
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
 		List<Resource> toRemove = new List<Resource>();
