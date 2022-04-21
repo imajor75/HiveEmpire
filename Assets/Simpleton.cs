@@ -926,7 +926,7 @@ public class Simpleton : Player
                     }
                 }
             }
-            HiveCommon.Log( "No room for a new guardhouse" );
+            boss.Log( "No room for a new guardhouse" );
             return finished;
         }
 
