@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -1856,7 +1856,7 @@ public class Interface : HiveObject
 				this.area.radius = area.radius;
 				this.building = building;
 				image = gameObject.GetComponent<Image>();
-				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area", null, 
+				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area\nCtrl+LMB Focus camera on center", null, 
 				"You can specify the area where this building is sending items or getting " +
 				"items from. By default no area is specified, so items can arrive and go to " +
 				"any place in the world. Note that the other side also has an option to " +
@@ -1894,6 +1894,22 @@ public class Interface : HiveObject
 					oh.ScheduleChangeArea( building, originalArea, null, 0 );
 					if ( root.highlightArea == area )
 						root.highlightType = HighlightType.none;
+					return;
+				}
+				if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
+				{
+					if ( area.center )
+					{
+						Transform panel = transform.parent;
+						while ( panel )
+						{
+							var po = panel.GetComponent<Panel>();
+							if ( po )
+								po.followTarget = false;
+							panel = panel.parent;
+						}
+						eye.FocusOn( area.center );
+					}
 					return;
 				}
 				area.center = ground.nodes[0];
