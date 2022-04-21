@@ -1875,6 +1875,9 @@ public class Interface : HiveObject
 
 			public bool OnNodeClicked( Node node )
 			{
+				if ( root.viewport.rightButton )
+					return true;
+					
 				if ( root.highlightArea == area )
 				{
 					root.highlightType = HighlightType.none;
