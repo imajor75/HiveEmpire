@@ -4600,6 +4600,7 @@ if ( cart )
 				p.reopen = true;
 				p.Open( w );
 			}
+			Close();
 		}
 
 		public new void Update()
