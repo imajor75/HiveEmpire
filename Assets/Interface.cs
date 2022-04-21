@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2766,10 +2766,11 @@ public class Interface : HiveObject
 
 			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null, bool input = true )
 			{
+				int itemsStartX = x - xi + iconSize;
+				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, y );
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
-				int itemsStartX = UIHelpers.currentColumn = x - xi + iconSize;
 				for ( int i = 0; i < itemCount; i++ )
 					items[i] = boss.ItemIcon( itemType ).PinSideways( xi - iconSize, y );
 				int itemsEndX = UIHelpers.currentColumn;

@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -754,9 +754,9 @@ public class World : HiveObject
 		challenge.Register();
 		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = challenge;
-// #if DEBUG
-// 		operationHandler.recordCRC = true;
-// #endif
+#if DEBUG
+		operationHandler.recordCRC = true;
+#endif
 		ground = Ground.Create();
 		ground.Setup( this, heightMap, forestMap, settings.size );
 		GenerateResources();
