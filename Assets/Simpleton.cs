@@ -368,7 +368,11 @@ public class Simpleton : Player
                 foreach ( var workshop in boss.team.workshops )
                 {
                     if ( workshop.productionConfiguration.outputType == outputType && workshop.team == boss.team )
+                    {
+                        if ( workshop.output > 0 )
+                            return finished;
                         currentYield += workshop.CalculateMaxOutput();
+                    }
                     if ( workshop.type == workshopType )
                         currentWorkshopCount++;
                 }
@@ -406,13 +410,15 @@ public class Simpleton : Player
             reservedStone = boss.reservedStone;
             if ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill )
                 reservedPlank = 0;
-            currentPlank = boss.team.mainBuilding.itemData[(int)Item.Type.plank].content;
+
+            currentPlank = boss.team.Stockpile( Item.Type.plank );
+            currentStone = boss.team.Stockpile( Item.Type.stone );
+
             if ( !boss.hasSawmill || !boss.hasWoodcutter )
             {
                 if ( configuration.plankNeeded + reservedPlank > currentPlank )
                     return finished;
             }
-            currentStone = boss.team.mainBuilding.itemData[(int)Item.Type.stone].content;
             if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > currentStone )
                 return finished;
 
@@ -869,10 +875,10 @@ public class Simpleton : Player
         {
             if ( !boss.hasSawmill || !boss.hasWoodcutter )
             {
-                if ( boss.team.mainBuilding.itemData[(int)Item.Type.plank].content < GuardHouse.guardHouseConfiguration.plankNeeded )
+                if ( boss.team.Stockpile( Item.Type.plank ) < GuardHouse.guardHouseConfiguration.plankNeeded )
                     return finished;
             }
-            if ( boss.team.mainBuilding.itemData[(int)Item.Type.stone].content < GuardHouse.guardHouseConfiguration.stoneNeeded + 2 )
+            if ( boss.team.Stockpile( Item.Type.stone ) < GuardHouse.guardHouseConfiguration.stoneNeeded + 2 )
                 return finished;
             if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count )
                 return finished;
@@ -920,6 +926,7 @@ public class Simpleton : Player
                     }
                 }
             }
+            HiveCommon.Log( "No room for a new guardhouse" );
             return finished;
         }
 

@@ -177,6 +177,14 @@ public class Team : HiveObject
 		public float weight;
 	}
 
+	public int Stockpile( Item.Type itemType )
+	{
+		int amount = 0;
+		foreach ( var stock in stocks )
+			amount += stock.itemData[(int)itemType].content;
+		return amount;
+	}
+
 	public class Chart : ScriptableObject
 	{
 		public List<float> data;
