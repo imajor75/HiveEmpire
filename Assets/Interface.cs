@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2131,6 +2131,7 @@ public class Interface : HiveObject
 
 	public class MessagePanel : Panel
 	{
+		string text;
 		float creationTime, autoCloseAfter;
 
 		public static MessagePanel Create( string text, HiveObject location = null, float autoclose = float.MaxValue )
@@ -2146,9 +2147,10 @@ public class Interface : HiveObject
 			creationTime = Time.unscaledTime;
 			noResize = true;
 			reopen = true;
+			allowInSpectateMode = true;
 			base.Open( location, 400, 60 );
 
-			var t = Text( text ).Pin( borderWidth, -borderWidth, 400, 50 );
+			var t = Text( this.text = text ).Pin( borderWidth, -borderWidth, 400, 50 );
 			SetSize( ((int)(t.preferredWidth/uiScale))+2*borderWidth, ((int)(t.preferredHeight/uiScale))+2*borderWidth );
 			eye.FocusOn( location, true );
 		}
