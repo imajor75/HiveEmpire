@@ -789,7 +789,6 @@ public class World : HiveObject
 			eye.altitude = oldEye.altitude;
 			eye.targetAltitude = oldEye.targetAltitude;
 			eye.direction = oldEye.direction;
-			eye.viewDistance = oldEye.viewDistance;
 		}
 		Interface.ValidateAll( true );
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );

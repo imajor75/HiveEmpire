@@ -9,8 +9,7 @@ public class Eye : HiveObject
 {
 	public float altitude = Constants.Eye.defaultAltitude;
 	public float targetAltitude = Constants.Eye.defaultAltitude;
-	[JsonIgnore]
-	public float viewDistance = Constants.Eye.defaultViewDistance;
+	public float altitudeDirection = Constants.Eye.defaultAltitudeDirection, altitudeDirectionTarget = Constants.Eye.defaultAltitudeDirection;
 	public float x, y, height;
 	public float absoluteX, absoluteY;
 	public float direction;
@@ -153,11 +152,9 @@ public class Eye : HiveObject
 		if ( director == null )
 		{
 			director = null;
-			viewDistance = Constants.Eye.defaultViewDistance;
 		}
 		else
 		{
-			viewDistance = Constants.Eye.defaultViewDistanceWithDirector;
 			IDirector director = this.director;
 			director.SetCameraTarget( this );
 			this.director = director;
@@ -231,6 +228,15 @@ public class Eye : HiveObject
 			targetAltitude += Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
 		if ( Interface.cameraZoomInHotkey.IsDown() )
 			targetAltitude -= Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
+		if ( Interface.cameraRaiseHotkey.IsDown() )
+			altitudeDirectionTarget -= Constants.Eye.altitudeDirectopmChangeSpeed * Time.unscaledDeltaTime;
+		if ( Interface.cameraLowerHotkey.IsDown() )
+			altitudeDirectionTarget += Constants.Eye.altitudeDirectopmChangeSpeed * Time.unscaledDeltaTime;
+		if ( altitudeDirectionTarget < Constants.Eye.minAltitudeDirection )
+			altitudeDirectionTarget = Constants.Eye.minAltitudeDirection;
+		if ( altitudeDirectionTarget > Constants.Eye.maxAltitudeDirection )
+			altitudeDirectionTarget = Constants.Eye.maxAltitudeDirection;
+		
 		if ( camera.enabled && root.viewport.mouseOver )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
@@ -246,6 +252,7 @@ public class Eye : HiveObject
 
 		var f = Constants.Eye.altitudeSmoothness * Time.unscaledDeltaTime;
 		altitude = altitude * ( 1 - f ) + targetAltitude * f;
+		altitudeDirection = altitudeDirection * ( 1 - f ) + altitudeDirectionTarget * f;
 		base.Update();
 	}
 
@@ -278,7 +285,9 @@ public class Eye : HiveObject
 	public void UpdateTransformation()
 	{
 		var position = new Vector3( x, height, y );
-		Vector3 viewer = new Vector3( (float)( viewDistance*Math.Sin(direction) ), -altitude, (float)( viewDistance*Math.Cos(direction) ) );
+		float horizontal = (float)Math.Sin(altitudeDirection) * altitude;
+		float vertical = (float)Math.Cos(altitudeDirection) * altitude;
+		Vector3 viewer = new Vector3( (float)( horizontal*Math.Sin(direction) ), -vertical, (float)( horizontal*Math.Cos(direction) ) );
 		transform.position = position - viewer;
 		transform.LookAt( position );
 	}

@@ -37,7 +37,9 @@ public static class Constants
         public const float defaultAltitude = 4.0f;
         public const float minAltitude = 2.0f;
         public const float maxAltitude = 15.0f;
-        public const float defaultViewDistance = 5.0f;
+        public const float defaultAltitudeDirection = (float)Math.PI / 4;
+        public const float minAltitudeDirection = 0.6f;
+        public const float maxAltitudeDirection = 1.2f;
         public const float defaultViewDistanceWithDirector = 2.0f;
         public const float forwardForGroundBlocks = 10;
         public const float heightFollowSpeed = 2;
@@ -45,6 +47,7 @@ public static class Constants
         public const float rotateSpeed = 1.5f;
         public const float autoRotateSpeed = 0.15f;
         public const float altitudeChangeSpeed = 5;
+        public const float altitudeDirectopmChangeSpeed = 0.25f;
         public const float altitudeSmoothness = 1;
         public const float altitudeChangeSpeedWithMouseWheel = 25;
         public const float autoStorePositionAfter = 2;
