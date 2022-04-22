@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7038,6 +7038,7 @@ if ( cart )
 			networkJoinDestinationDropdown.AddClickHandler( JoinDrop );
 			Button( "Browse LAN" ).Pin( -100 - borderWidth, joinRow, 100, 25, 1 ).AddClickHandler( JoinDrop );
 			networkJoinDestinationInputField = InputField().Pin( borderWidth, joinRow -25, 250, 25 );
+			networkJoinDestinationInputField.onSubmit.AddListener( (string address) => Join() );
 
 			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
 
