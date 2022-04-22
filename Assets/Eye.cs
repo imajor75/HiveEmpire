@@ -126,6 +126,9 @@ public class Eye : HiveObject
 
     new private void Update()
 	{
+		if ( ground == null )
+			return;
+			
 		var deltaTime = Time.unscaledDeltaTime;
 		if ( deltaTime > 0.5f )
 			deltaTime = 0.5f;
@@ -154,9 +157,7 @@ public class Eye : HiveObject
 		camera.clearFlags = CameraClearFlags.Skybox;
 
 		if ( director == null )
-		{
 			director = null;
-		}
 		else
 		{
 			IDirector director = this.director;

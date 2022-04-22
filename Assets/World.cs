@@ -1233,6 +1233,8 @@ public class World : HiveObject
 	public void Clear()
 	{
 		gameInProgress = false;
+
+		RemoveElements( teams );
 		players.Clear();
 		teams.Clear();
 
@@ -1547,7 +1549,6 @@ public class World : HiveObject
 			return;
 
 		ground?.Validate( true );
-		assert.IsNotNull( water );
 		foreach ( var team in teams )
 			team.Validate();
 		foreach ( var team in teams )

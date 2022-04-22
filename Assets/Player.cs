@@ -100,6 +100,8 @@ public abstract class Player : HiveObject
 	public override void Remove()
 	{
 		world.players.Remove( this );
+		if ( root.mainPlayer == this )
+			root.mainPlayer = null;
 		Destroy( gameObject );
 	}
 
@@ -583,6 +585,9 @@ public class Team : HiveObject
 
 	public void Defeat()
 	{
+		if ( destroyed )
+			return;
+			
 		RemoveObjects();
 		itemDispatcher.Remove();
 		itemDispatcher = null;
