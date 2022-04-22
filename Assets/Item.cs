@@ -149,6 +149,7 @@ public class Item : HiveObject
 
 	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Priority priority = ItemDispatcher.Priority.zero )
 	{
+		assert.AreNotEqual( type, Item.Type.soldier );
 		this.origin = origin;
 		life.Start();
 		team = origin.team;

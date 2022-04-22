@@ -126,6 +126,10 @@ public class Eye : HiveObject
 
     new private void Update()
 	{
+		var deltaTime = Time.unscaledDeltaTime;
+		if ( deltaTime > 0.5f )
+			deltaTime = 0.5f;
+
 		ppl.enabled = root.highlightType == Interface.HighlightType.none;
 
 		while ( oldPositions.Count > Constants.Eye.maxNumberOfSavedPositions )
@@ -142,7 +146,7 @@ public class Eye : HiveObject
 		if ( h < world.waterLevel )
 			h = world.waterLevel;
 		if ( height > 0 )
-			height += ( h - height ) * Constants.Eye.heightFollowSpeed * Time.unscaledDeltaTime;
+			height += ( h - height ) * Constants.Eye.heightFollowSpeed * deltaTime;
 		else
 			height = h;
 		UpdateTransformation();
@@ -250,7 +254,7 @@ public class Eye : HiveObject
 		if ( targetAltitude > Constants.Eye.maxAltitude )
 			targetAltitude = Constants.Eye.maxAltitude;
 
-		var f = Constants.Eye.altitudeSmoothness * Time.unscaledDeltaTime;
+		var f = Constants.Eye.altitudeSmoothness * deltaTime;
 		altitude = altitude * ( 1 - f ) + targetAltitude * f;
 		altitudeDirection = altitudeDirection * ( 1 - f ) + altitudeDirectionTarget * f;
 		base.Update();
