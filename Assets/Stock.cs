@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -724,6 +724,9 @@ public class Stock : Attackable
 
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
 		{
+			if ( itemType == (int)Item.Type.soldier )
+				continue;
+
 			for ( int i = 0; i < itemData[itemType].outputRoutes.Count; i++ )
 			{
 				var destination = itemData[itemType].outputRoutes[i].end;
