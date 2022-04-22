@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -631,7 +631,7 @@ public class Stock : Attackable
 		team.UnregisterStock( this );
 		team.RebuildStockRoutes();
 		if ( main )
-			team.Remove();
+			team.Defeat();
 		base.Remove();
 		if ( cart )
 			cart.Remove();
@@ -640,10 +640,11 @@ public class Stock : Attackable
 
 	new void Start()
 	{
+		base.Start();
+
 		if ( destroyed )
 			return;
 			
-		base.Start();
 		if ( main )
 		{
 			name = "Headquarters";

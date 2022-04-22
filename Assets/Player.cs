@@ -100,8 +100,6 @@ public abstract class Player : HiveObject
 	public override void Remove()
 	{
 		world.players.Remove( this );
-		if ( root.mainPlayer == this )
-			root.mainPlayer = null;
 		Destroy( gameObject );
 	}
 
@@ -543,13 +541,8 @@ public class Team : HiveObject
 		return mainBuilding;
 	}
 
-	public override void Remove()
+	public void RemoveObjects()
 	{
-		destroyed = true;
-		world.teams.Remove( this );
-		foreach ( var player in players )
-			player.Remove();
-
 		List<Workshop> tmpWorkshops = new List<Workshop>( workshops );
 		foreach ( var workshop in tmpWorkshops )
 			if ( workshop )
@@ -570,9 +563,30 @@ public class Team : HiveObject
 		foreach ( var item in tmpItems )
 			if ( item )
 				item.Remove();
+		influencers.Clear();
+
+		mainBuilding = null;
+	}
+
+	public override void Remove()
+	{
+		destroyed = true;
+		world.teams.Remove( this );
+		foreach ( var player in players )
+			player.Remove();
+
+		RemoveObjects();
 		itemDispatcher.Remove();
 		world.ground.dirtyOwnership = true;
 		Destroy( gameObject );
+	}
+
+	public void Defeat()
+	{
+		RemoveObjects();
+		itemDispatcher.Remove();
+		itemDispatcher = null;
+		world.ground.dirtyOwnership = true;
 	}
 
 	public void RegisterInfluence( Building building )
@@ -637,7 +651,6 @@ public class Team : HiveObject
 
 	public void Validate()
 	{
-		Assert.global.IsNotNull( mainBuilding );
 		foreach ( var building in influencers )
 			Assert.global.IsNotNull( building );
 		foreach ( var stock in stocks )

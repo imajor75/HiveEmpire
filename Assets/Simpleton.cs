@@ -47,6 +47,9 @@ public class Simpleton : Player
 
     public override void GameLogicUpdate()
     {
+        if ( team.mainBuilding == null )
+            return;
+
         if ( tasks == null && active )
         {
             tasks = new List<Task>();
@@ -317,6 +320,9 @@ public class Simpleton : Player
 
         public override bool Analyze()
         {
+            if ( target == null )
+                return finished;
+                
             problemWeight = 0.5f;
 
             if ( boss.team.Attack( target, 1, true ) != Team.AttackStatus.available || target.attackerTeam )

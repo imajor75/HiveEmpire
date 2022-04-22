@@ -50,6 +50,7 @@ public class Interface : HiveObject
 	public bool delayedManualSave;
 	public bool delayedSaveValid;
 	public float lastSave = -1;
+	public bool defeatReported;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -590,6 +591,7 @@ public class Interface : HiveObject
 		eye.FocusOn( mainTeam.mainBuilding, approach:false );
 		WelcomePanel.Create();
 		lastSave = Time.unscaledTime;
+		defeatReported = false;
 	}
 
 	public void Load( string fileName )
@@ -698,9 +700,9 @@ public class Interface : HiveObject
 				messageButton.gameObject.SetActive( false );
 		}
 
-		if ( mainPlayer == null && !world.defeatReported )
+		if ( mainTeam && mainTeam.mainBuilding == null && !defeatReported )
 		{
-			world.defeatReported = true;
+			defeatReported = true;
 			ChallengeList.Create( true );
 		}
 
@@ -726,7 +728,7 @@ public class Interface : HiveObject
 		// 		world.Reset();
 		// }
 
-		if ( headquartersHotkey.IsPressed() && mainTeam )
+		if ( headquartersHotkey.IsPressed() && mainTeam?.mainBuilding )
 			mainTeam.mainBuilding.OnClicked( true );
 		if ( changePlayerHotkey.IsPressed() )
 			PlayerSelectorPanel.Create( false );
@@ -5234,6 +5236,8 @@ if ( cart )
 			buildings = new List<Building>();
 			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
 			{
+				Assert.global.IsFalse( building.destroyed );
+				Assert.global.IsNotNull( building );
 				if ( building.team != root.mainTeam || building.blueprintOnly || !building.title.Contains( filter ) )
 					continue;
 				buildings.Add( building );
