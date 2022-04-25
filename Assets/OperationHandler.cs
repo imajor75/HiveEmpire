@@ -178,9 +178,9 @@ public class OperationHandler : HiveObject
     {
         get
         {
-            if ( network.state == Network.State.client && ( orders.Count == 0 || orders.First().operationsLeftFromServer > 0 ) )
+            if ( network.state == Network.State.client && orders.Count == 0 )
             {
-                Log( $"Client is stuck at time {time}, no order from server yet" );
+                Log( $"Client is stuck at time {time}, no order from server yet" ); // TODO Is this the correct place to do this?
                 return false;
             }
 
@@ -284,16 +284,8 @@ public class OperationHandler : HiveObject
 
     public void ScheduleOperationRaw( Operation operation )
 	{
-        Assert.global.AreNotEqual( network.state, Network.State.receivingGameState );
-        if ( network.state == Network.State.client )
-        {
-            BinaryFormatter bf = new BinaryFormatter();
-            var ms = new MemoryStream();
-            bf.Serialize( ms, operation );
-            byte error;
-            NetworkTransport.Send( network.host, network.clientConnection, Network.reliableChannel, ms.ToArray(), (int)ms.Length, out error );
+        if ( !network.OnScheduleOperation( operation ) )
             return;
-        }
     
         operation.scheduleAt = time;
         if ( world.gameAdvancingInProgress )
@@ -461,13 +453,13 @@ public class OperationHandler : HiveObject
         if ( network.state == Network.State.client )
         {
             Assert.global.AreEqual( orders.First().time, time, $"Network time mismatch (server: {orders.First().time}, client: {time})" );
-            if ( oh.orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
+            if ( orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
             {
                 Interface.MessagePanel.Create( "Catching up server", autoclose:3 );
                 world.SetSpeed( World.Speed.fast );
             }
-            var order = oh.orders.First();
-            oh.orders.RemoveFirst();
+            var order = orders.First();
+            orders.RemoveFirst();
             if ( order.CRC != currentCRCCode )
             {
                 if ( !eventsDumped )
@@ -563,7 +555,6 @@ public class OperationHandler : HiveObject
     {
         public int time;
         public int CRC;
-        public int operationsLeftFromServer;
     }
 
     public LinkedList<GameStepOrder> orders = new LinkedList<GameStepOrder>();
@@ -608,9 +599,11 @@ public class OperationHandler : HiveObject
 
     void ExecuteOperation( Operation operation )
     {
-        HiveObject.Log( $"Executing {operation.name}" );
+        HiveObject.Log( $"{time}: Executing {operation.name}" );
+        network.OnExecuteOperation( operation );
+
         if ( root.mainPlayer is Simpleton simpleton && simpleton.showActions && operation.source == Operation.Source.computer )
-            root.ShowOperation( operation );
+            root.ShowOperation( operation );    // TODO Is this the correct place?
 
         var inverse = operation.ExecuteAndInvert();
         if ( inverse != null )

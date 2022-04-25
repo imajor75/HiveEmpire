@@ -653,8 +653,8 @@ public class World : HiveObject
 		#endif
 		gameAdvancingInProgress = true;
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
-		network.OnBeginGameStep();
 		oh.OnBeginGameStep();
+		network.OnBeginGameStep();
 		rnd = new System.Random( frameSeed );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
 

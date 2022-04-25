@@ -318,14 +318,13 @@ public class Network : HiveCommon
 					case State.client:
 					{
 						Assert.global.AreEqual( clientConnection, connection );
-						if ( oh.orders.Count == 0 || oh.orders.Last().operationsLeftFromServer == 0 )
+						if ( receivedSize == 2 * sizeof( int ) )
 						{
 							var frameOrder = new OperationHandler.GameStepOrder();
 							var bl = new List<byte>();
 							for ( int i = 0; i < receivedSize; i++ )
 								bl.Add( buffer[i] );
 							bl.Extract( ref frameOrder.time ).Extract( ref frameOrder.CRC );
-							bl.Extract( ref frameOrder.operationsLeftFromServer );
 							Assert.global.AreEqual( bl.Count, 0 );
 							oh.orders.AddLast( frameOrder );
 							lag = (float)oh.orders.Count / Constants.World.normalSpeedPerSecond;
@@ -340,7 +339,6 @@ public class Network : HiveCommon
 							o.source = Operation.Source.networkServer;
 							Assert.global.AreEqual( memStream.Position, memStream.Length );
 							oh.executeBuffer.Add( o );
-							oh.orders.Last().operationsLeftFromServer--;
 						}
 						break;
 					}
@@ -379,29 +377,38 @@ public class Network : HiveCommon
     {
         if ( state == State.server && serverConnections.Count != 0 )
         {
-            List<byte> endOfFramePacket = new List<byte>();
-            endOfFramePacket.Add( time ).Add( oh.currentCRCCode );
-
-			int operationCount = 0;
-			while ( oh.executeBuffer.Count > oh.executeIndex + operationCount && oh.executeBuffer[oh.executeIndex + operationCount].scheduleAt == time )
-				operationCount++;
-			endOfFramePacket.Add( operationCount );
+            List<byte> frameBeginPacket = new List<byte>();
+            frameBeginPacket.Add( time ).Add( oh.currentCRCCode );
 
             foreach ( var client in serverConnections )
-                client.tasks.Add( new Task( endOfFramePacket, client.connection ) );
-
-			BinaryFormatter bf = new BinaryFormatter();
-			for ( int i = 0; i < operationCount; i++ )
-			{
-				using (var ms = new MemoryStream())
-				{
-					bf.Serialize( ms, oh.executeBuffer[oh.executeIndex+i] );
-					foreach ( var client in serverConnections )
-						client.tasks.Add( new Task( ms.ToArray().ToList(), client.connection ) );
-				}
-			}			
+                client.tasks.Add( new Task( frameBeginPacket, client.connection ) );
         }
     }
+
+	public bool OnScheduleOperation( Operation operation )
+	{
+        Assert.global.AreNotEqual( state, State.receivingGameState );
+	    if ( state != Network.State.client )
+			return true;
+
+		BinaryFormatter bf = new BinaryFormatter();
+		var ms = new MemoryStream();
+		bf.Serialize( ms, operation );
+		byte error;
+		NetworkTransport.Send( host, clientConnection, reliableChannel, ms.ToArray(), (int)ms.Length, out error );
+		return false;
+    }
+
+	public void OnExecuteOperation( Operation operation )
+	{
+		BinaryFormatter bf = new BinaryFormatter();
+		using (var ms = new MemoryStream())
+		{
+			bf.Serialize( ms, operation );
+			foreach ( var client in serverConnections )
+				client.tasks.Add( new Task( ms.ToArray().ToList(), client.connection ) );
+		}
+	}			
 
     public void Join( string address, int port )
     {
