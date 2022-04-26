@@ -40,6 +40,9 @@ public class World : HiveObject
 	public new Network network;
 	[JsonIgnore]
 	public int advanceCharges;
+	[JsonIgnore]
+	public float lastNetworkSlowdown;
+
 
 	static public bool massDestroy;
 	static System.Random rnd;
@@ -642,8 +645,13 @@ public class World : HiveObject
 
 		if ( !oh.readyForNextGameLogicStep )
 		{
-			if ( world.speed == Speed.fast )
-				world.SetSpeed( Speed.normal );
+			if ( speed == Speed.normal && lastNetworkSlowdown + 1 < Time.unscaledTime )
+				SetSpeed( Speed.pause );
+			if ( speed == Speed.fast )
+			{
+				SetSpeed( Speed.normal );
+				lastNetworkSlowdown = Time.unscaledTime;
+			}
 			return false;
 		}
 
@@ -695,6 +703,16 @@ public class World : HiveObject
 	new void Update()
 	{
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
+        if ( oh && oh.orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond && network.state == Network.State.client )
+        {
+            if ( speed == Speed.normal )
+            {
+                Interface.MessagePanel.Create( "Catching up server", autoclose:3 );
+                SetSpeed( Speed.fast );
+            }
+            if ( speed == Speed.pause )
+                SetSpeed( Speed.normal );
+        }
 		base.Update();
 	}
 

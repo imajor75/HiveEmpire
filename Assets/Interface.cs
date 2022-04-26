@@ -494,11 +494,11 @@ public class Interface : HiveObject
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
 		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
-		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => world.SetSpeed( World.Speed.pause ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetWorldSpeed( World.Speed.pause ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
-		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => world.SetSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
+		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetWorldSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
-		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => world.SetSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
+		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
 		messageButton = this.Text( "" ).Pin( iconSize, -50, 2 * iconSize, 2* iconSize ).AddClickHandler( OnMessagesClicked );
@@ -514,6 +514,17 @@ public class Interface : HiveObject
 			StartCoroutine( ValidateCoroutine() );
 		#endif
 		OpenMainPanel();
+	}
+
+	void SetWorldSpeed( World.Speed speed )
+	{
+		if ( network.state == Network.State.client )
+		{
+			MessagePanel.Create( "Changing world speed in client mode is not allowed", null, 3 );
+			return;
+		}
+
+		world.SetSpeed( speed );
 	}
 
 	public void OnMessagesClicked()
