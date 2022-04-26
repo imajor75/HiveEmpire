@@ -19,6 +19,7 @@ public class Simpleton : Player
     public bool active;
 	public bool showActions;
     public bool peaceful;
+    public bool noRoom;
 
     public static Simpleton Create()
     {
@@ -247,6 +248,7 @@ public class Simpleton : Player
                 problemWeight = solutionEfficiency = 1;
             if ( boss.hasWoodcutter && boss.team.constructionFactors[(int)Building.Type.stock] == 0 )
                 problemWeight = solutionEfficiency = 1;
+            boss.noRoom = false;
 
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 3 ) ) );
@@ -433,6 +435,7 @@ public class Simpleton : Player
             if ( nodeRow == HiveCommon.ground.dimension - 1 )
             {
                 boss.Log( $"A new {workshopType} would be good, but there is no room" );
+                boss.noRoom = true;
                 return finished;
             }
 
@@ -884,12 +887,12 @@ public class Simpleton : Player
                 if ( boss.team.Stockpile( Item.Type.plank ) < GuardHouse.guardHouseConfiguration.plankNeeded )
                     return finished;
             }
-            if ( boss.team.Stockpile( Item.Type.stone ) < GuardHouse.guardHouseConfiguration.stoneNeeded + 2 )
+            if ( boss.team.Stockpile( Item.Type.stone ) < GuardHouse.guardHouseConfiguration.stoneNeeded )
                 return finished;
-            if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count )
+            if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count && !boss.noRoom )
                 return finished;
 
-            problemWeight = Constants.Simpleton.extensionImportance;
+            problemWeight = boss.noRoom ? 1 : Constants.Simpleton.extensionImportance;
             
             foreach ( var node in HiveCommon.ground.nodes )
             {
