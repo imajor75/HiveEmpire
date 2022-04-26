@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -51,6 +51,7 @@ public class Interface : HiveObject
 	public bool delayedSaveValid;
 	public float lastSave = -1;
 	public bool defeatReported;
+	public bool requestUpdate;
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -684,6 +685,7 @@ public class Interface : HiveObject
 
 	new public void Update()
 	{
+		requestUpdate = false;
 		if ( Time.unscaledTime - lastSave > Constants.Interface.autoSaveIntervalInSecond )
 			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 		if ( mainPlayer && messageButton )
@@ -2131,11 +2133,13 @@ public class Interface : HiveObject
 
 	public class MessagePanel : Panel
 	{
-		string text;
+		static string latestText;
 		float creationTime, autoCloseAfter;
 
 		public static MessagePanel Create( string text, HiveObject location = null, float autoclose = float.MaxValue )
 		{
+			if ( latestText != text )
+				root.requestUpdate = true;
 			var result = new GameObject( "Message panel" ).AddComponent<MessagePanel>();
 			result.Open( text, location, autoclose );
 			return result;
@@ -2150,7 +2154,7 @@ public class Interface : HiveObject
 			allowInSpectateMode = true;
 			base.Open( location, 400, 60 );
 
-			var t = Text( this.text = text ).Pin( borderWidth, -borderWidth, 400, 50 );
+			var t = Text( latestText = text ).Pin( borderWidth, -borderWidth, 400, 50 );
 			SetSize( ((int)(t.preferredWidth/uiScale))+2*borderWidth, ((int)(t.preferredHeight/uiScale))+2*borderWidth );
 			eye.FocusOn( location, true );
 		}

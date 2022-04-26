@@ -19,7 +19,8 @@ public class Network : HiveCommon
 		idle,
 		receivingGameState,
 		client,
-		server
+		server,
+		prepare
 	}
 
 	public class Client
@@ -127,6 +128,8 @@ public class Network : HiveCommon
 
 	public long gameStateSize, gameStateWritten;
 	public string gameStateFile;
+	public string gameStateFileReady;
+	public int gameStateFileReadyDelayer;
 	public BinaryWriter gameState;
 	public static int reliableChannel;
 	public static HostTopology hostTopology;
@@ -181,7 +184,7 @@ public class Network : HiveCommon
 
     void Update()
     {
-        while ( Receive() != NetworkEventType.Nothing );
+        while ( Receive() != NetworkEventType.Nothing && !root.requestUpdate );
 
 		foreach ( var client in serverConnections )
 		{
@@ -193,10 +196,22 @@ public class Network : HiveCommon
 					break;
 			}
 		}
+
+		if ( gameStateFileReady != null && gameStateFileReadyDelayer-- < 0 )
+		{
+			root.Load( gameStateFile );
+			root.mainPlayer = null;
+			Interface.PlayerSelectorPanel.Create( true );
+			SetState( State.client );
+			gameStateFileReady = null;
+		}
     }
 
     NetworkEventType Receive()
     {
+		if ( state == State.prepare )
+			return NetworkEventType.Nothing;
+
     	int host, connection, channel, receivedSize;
 		byte error;
 		NetworkEventType recData = NetworkTransport.Receive( out host, out connection, out channel, buffer, buffer.Length, out receivedSize, out error );
@@ -308,10 +323,9 @@ public class Network : HiveCommon
 							gameState.Close();
 							Log( $"Game state received to {gameStateFile}" );
 							Interface.MessagePanel.Create( "Loading game state" );
-							root.Load( gameStateFile );
-							root.mainPlayer = null;
-                            Interface.PlayerSelectorPanel.Create( true );
-							SetState( State.client );
+							SetState( State.prepare );
+							gameStateFileReady = gameStateFile;
+							gameStateFileReadyDelayer = 2;	// TODO Not a nice thing here. We delay the loading of the file in order to be able to render a message box.
 						}
 						break;
 					}
