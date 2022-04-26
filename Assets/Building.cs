@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -535,7 +535,7 @@ abstract public class Building : HiveObject
 		Node flagLocation = placeToBuild.Neighbour( flagDirection );
 		if ( flagLocation.flag && flagLocation.flag.crossing )
 			return new SiteTestResult( SiteTestResult.Result.crossingInTheWay );
-		if ( flagLocation.validFlag )
+		if ( flagLocation.validFlag && flagLocation.flag.team == team )
 			return new SiteTestResult( SiteTestResult.Result.fit );
 
 		return Flag.IsNodeSuitable( flagLocation, team, ignoreBlockingResources:ignoreBlockingResources );
