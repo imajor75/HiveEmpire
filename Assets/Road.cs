@@ -833,6 +833,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( node != lastNode )
 			return true;
 
+		if ( root.viewport.rightButton )
+			return true;
 		oh.StartGroup( "Finishing road" );
 
 		bool flagCreated = false;
