@@ -578,7 +578,7 @@ public class Team : HiveObject
 			player.Remove();
 
 		RemoveObjects();
-		itemDispatcher.Remove();
+		itemDispatcher?.Remove();
 		world.ground.dirtyOwnership = true;
 		Destroy( gameObject );
 	}
