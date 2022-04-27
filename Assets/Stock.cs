@@ -345,7 +345,7 @@ public class Stock : Attackable
 		public bool back;
 		public const int frameCount = 8;
 		public Stock boss { get { return building as Stock; } }
-		readonly GameObject[] frames = new GameObject[8];
+		readonly GameObject[] frames = new GameObject[frameCount];
 		new public static Cart Create()
 		{
 			return new GameObject().AddComponent<Cart>();
@@ -441,6 +441,9 @@ public class Stock : Attackable
 
 		public void UpdateLook()
 		{
+			if ( frames[0] == null )	// This is true if start was not yet called (rare case)
+				return;
+
 			if ( itemQuantity > 0 )
 			{
 				for ( int i = 0; i < frameCount; i++ )
