@@ -884,10 +884,10 @@ public class Simpleton : Player
         {
             if ( !boss.hasSawmill || !boss.hasWoodcutter )
             {
-                if ( boss.team.Stockpile( Item.Type.plank ) < GuardHouse.guardHouseConfiguration.plankNeeded )
+                if ( boss.team.Stockpile( Item.Type.plank ) < GuardHouse.guardHouseConfiguration.plankNeeded + boss.reservedPlank )
                     return finished;
             }
-            if ( boss.team.Stockpile( Item.Type.stone ) < GuardHouse.guardHouseConfiguration.stoneNeeded )
+            if ( boss.team.Stockpile( Item.Type.stone ) < GuardHouse.guardHouseConfiguration.stoneNeeded + boss.reservedStone )
                 return finished;
             if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count && !boss.noRoom )
                 return finished;
