@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -572,6 +572,7 @@ public class Flag : HiveObject
 		foreach ( var road in extend )
 			CloneRoad( road, null, node );
 
+		ground.Link( this );
 		UpdateBody();
 
 		return true;
