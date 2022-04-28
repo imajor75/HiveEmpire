@@ -159,12 +159,16 @@ public class Simpleton : Player
                 offset.y /= dealCount;
                 var center = workshop.node + offset;
                 int radius = 0;
+                bool hasStock = false;
                 foreach ( var deal in deals )
                 {
                     if ( deal.itemType == itemType )
                         radius = Math.Max( radius, center.DistanceFrom( deal.partner.node ) );
+                    if ( deal.partner is Stock )
+                        hasStock = true;
                 }
-                HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, Operation.Source.computer );
+                if ( workshop.type != Workshop.Type.woodcutter || hasStock )
+                    HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, Operation.Source.computer );
             }
             partner.simpletonDataSafe.RegisterPartner( hiveObject as Building, itemType );
             return true;
