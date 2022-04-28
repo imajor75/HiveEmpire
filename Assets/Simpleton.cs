@@ -101,6 +101,7 @@ public class Simpleton : Player
         public List<Deal> deals = new List<Deal>();
         public List<Item.Type> managedItemTypes = new List<Item.Type>();
         public World.Timer lastDealCheck = new World.Timer();
+        public World.Timer lastTimeHadResources = new World.Timer();
         public HiveObject hiveObject;
         public Building possiblePartner;
         public Item.Type possiblePartnerItemType;
@@ -968,9 +969,14 @@ public class Simpleton : Player
 
         public override bool Analyze()
         {
+            var data = workshop.simpletonDataSafe;
+
             if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
             {
-                if ( workshop.ResourcesLeft() == 0 )
+                if ( workshop.ResourcesLeft() != 0 )
+                    data.lastTimeHadResources.Start( Constants.Simpleton.noResourceTolerance );
+
+                if ( data.lastTimeHadResources.done )
                 {
                     action = Action.remove;
                     problemWeight = solutionEfficiency = 1;
@@ -1010,7 +1016,6 @@ public class Simpleton : Player
                 }
             }
 
-            var data = workshop.simpletonDataSafe;
             if ( data.possiblePartner == null && workshop.simpletonDataSafe.lastDealCheck.ageinf > Constants.Simpleton.dealCheckPeriod )
             {
                 workshop.simpletonDataSafe.lastDealCheck.Start();
