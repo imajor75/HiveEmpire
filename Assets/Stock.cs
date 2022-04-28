@@ -15,6 +15,7 @@ public class Stock : Attackable
 	public int totalTarget;
 	public int maxItems = Constants.Stock.defaultmaxItems;
 	public World.Timer offersSuspended = new World.Timer();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+	public World.Timer resupplyTimer = new World.Timer();
 	public bool fullReported;
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
@@ -699,6 +700,14 @@ public class Stock : Attackable
 	public override void GameLogicUpdate()
 	{
 		base.GameLogicUpdate();
+
+		if ( main && !resupplyTimer.inProgress )
+		{
+			resupplyTimer.Start( Constants.Stock.resupplyPeriod );
+			if ( itemData[(int)Item.Type.plank].content < Constants.Stock.minimumPlank )
+				itemData[(int)Item.Type.plank].content = Constants.Stock.minimumPlank;
+		}
+
 		if ( !construction.done || blueprintOnly )
 			return;
 
