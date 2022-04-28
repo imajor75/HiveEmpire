@@ -3107,6 +3107,7 @@ public class Interface : HiveObject
 
 	public class StockPanel : BuildingPanel
 	{
+		public int currentStockCRC;
 		public Stock stock;
 		public Stock.Channel channel;
 		public Text channelText;
@@ -3152,6 +3153,14 @@ public class Interface : HiveObject
 			selectedInput.gameObject.SetActive( cartInput );
 			bool cartOutput = stock.itemData[(int)selectedItemType].cartOutput >= Constants.Stock.cartCapacity;
 			selectedOutput.gameObject.SetActive( cartOutput );
+		}
+
+		int StockCRC()
+		{
+			int CRC = 0;
+			foreach ( var itemData in stock.itemData )
+				CRC += itemData.cartInput + itemData.cartOutput;
+			return CRC;
 		}
 
 		void RecreateControls()
@@ -3252,6 +3261,7 @@ public class Interface : HiveObject
 			"To utilize carts, you have to increase either the cart input or cart output numbers. Select an item type and look for the two numbers above the cart icon on the bottom." ).name = "Show cart";
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
 			UpdateRouteIcons();
+			currentStockCRC = StockCRC();
 		}
 
 		void ItemTypeAction( ItemImage image, Item.Type itemType, int code )
@@ -3327,6 +3337,8 @@ public class Interface : HiveObject
 		public override void Update()
 		{
 			base.Update();
+			if ( currentStockCRC != StockCRC() )
+				RecreateControls();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				Color c = Color.black;
@@ -5253,7 +5265,7 @@ if ( cart )
 			buildings = new List<Building>();
 			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
 			{
-				Assert.global.IsFalse( building.destroyed );
+				Assert.global.IsFalse( building.destroyed );	// Triggered
 				Assert.global.IsNotNull( building );
 				if ( building.team != root.mainTeam || building.blueprintOnly || !building.title.Contains( filter ) )
 					continue;
