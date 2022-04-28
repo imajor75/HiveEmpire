@@ -3052,13 +3052,13 @@ public class Interface : HiveObject
 				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
 				soldierCount.value = guardHouse.soldiers.Count - 1;
 				soldierCount.onValueChanged.AddListener( SoldierCountChanged );
-				attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
 			}
 			else
 			{
 				defenders = Text().Pin( borderWidth, -borderWidth, 200 );
 				sendAttacker = Button( "Send attacker" ).AddClickHandler( SendAttacker ).PinDownwards( 20, 0, 180 );
 			}
+			attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
 			if ( show )
 				eye.FocusOn( guardHouse, true );
 		}
