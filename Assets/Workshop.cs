@@ -261,7 +261,8 @@ public class Workshop : Building
 		barrack,
 		goldBarMaker,
 		total,
-		unknown = -1
+		unknown = -1,
+		construction = -2
 	}
 
 	public class GetResource : Unit.Task
@@ -516,10 +517,11 @@ public class Workshop : Building
 	public Workshop Setup( Node node, Team owner, Type type, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
 		this.type = type;
+		this.team = owner;
 		buffers.Clear();
 
 		RefreshConfiguration();
-
+		
 		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
@@ -565,7 +567,6 @@ public class Workshop : Building
 				var b = buffers[j];
 				if ( b.itemType == input.itemType )
 				{
-					b.itemType = input.itemType;
 					b.size = input.bufferSize;
 					b.stackSize = input.stackSize;
 					b.optional = productionConfiguration.commonInputs;
@@ -576,11 +577,11 @@ public class Workshop : Building
 			}
 			if ( j == buffers.Count )
 				newList.Add( new Buffer( input.itemType, input.bufferSize ) );
-			foreach ( var b in buffers )
-				b.weight = team.FindInputWeight( type, b.itemType );
 		}
 		assert.AreEqual( newList.Count, productionConfiguration.inputs.Length );
 		buffers = newList;
+		foreach ( var b in buffers )
+			b.weight = team.FindInputWeight( type, b.itemType );
 	}
 
 	public new void Start()

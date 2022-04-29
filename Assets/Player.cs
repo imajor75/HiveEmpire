@@ -347,6 +347,36 @@ public class Team : HiveObject
 		return null;
 	}
 
+	public float SetInputWeight( Workshop.Type workshopType, Item.Type itemType, float weight )
+	{
+		float prev = 0;
+		if ( workshopType == Workshop.Type.construction )
+		{
+			switch ( itemType )
+			{
+				case Item.Type.plank:
+					prev = plankForConstructionWeight.weight;
+					plankForConstructionWeight.weight = weight;
+					break;
+				case Item.Type.stone:
+					prev = stoneForConstructionWeight.weight;
+					stoneForConstructionWeight.weight = weight;
+					break;
+				default:
+					assert.Fail( $"Invalid item type {itemType} for construction" );
+					break;
+			}
+		}
+		else
+		{
+			var i = FindInputWeight( workshopType, itemType );
+			assert.IsNotNull( i, $"Invalid workshop input {itemType} at {workshopType}" );
+			prev = i.weight;
+			i.weight = weight;
+		}
+		return prev;
+	}
+
 	public enum AttackStatus
 	{
 		sameTeam,

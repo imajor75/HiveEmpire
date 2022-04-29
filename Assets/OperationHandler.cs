@@ -438,6 +438,11 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone, source );
     }
 
+    public void ScheduleInputWeightChange( Team team, Workshop.Type workshopType, Item.Type itemType, float weight, bool standalone = true, Operation.Source source = Operation.Source.manual )
+    {
+        ScheduleOperation( Operation.Create().SetupAsInputWeightChange( team, workshopType, itemType, weight ), standalone, source );
+    }
+
     public void ScheduleAttack( Team team, Attackable target, int attackedCount, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
         ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone, source );
@@ -572,7 +577,7 @@ public class OperationHandler : HiveObject
 		if ( redoHotkey.IsPressed() )
 			UndoRedo( redoQueue );
 
-        if ( purgeCRCTable )
+        if ( purgeCRCTable || !recordCRC )
         {
             CRCCodesSkipped += CRCCodes.Count;
             CRCCodes.Clear();
@@ -654,6 +659,7 @@ public class Operation
     public int networkId;
     public bool useBuffer;
     public string playerName, teamName;
+    public float weight;
 
     public enum Source
     {
@@ -818,6 +824,7 @@ public class Operation
                 Type.flattenFlag => "Flatten the area around a junction",
                 Type.changeFlagType => "Convert a junction to crossing or vice versa",
                 Type.toggleEmergencyConstruction => "Toggle emergency construction",
+                Type.inputWeightChange => "Changing input weight",
                 _ => type.ToString()
             };
             if ( type == Type.createBuilding )
@@ -871,7 +878,8 @@ public class Operation
         changeBufferUsage,
         flattenFlag,
         changeFlagType,
-        toggleEmergencyConstruction
+        toggleEmergencyConstruction,
+        inputWeightChange
     }
 
     public static Operation Create()
@@ -1048,6 +1056,17 @@ public class Operation
         this.itemType = itemType;
         itemCount = value;
         name = "Stock Adjustment";
+        return this;
+    }
+
+    public Operation SetupAsInputWeightChange( Team team, Workshop.Type workshopType, Item.Type itemType, float weight )
+    {
+        type = Type.inputWeightChange;
+        this.team = team;
+        buildingType = (Building.Type)workshopType;
+        this.itemType = itemType;
+        this.weight = weight;
+        name = "Input Weight Change";
         return this;
     }
 
@@ -1245,6 +1264,13 @@ public class Operation
                 i.ChannelValue( stockChannel ) = itemCount;
 				building.team.UpdateStockRoutes( itemType );
                 return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
+            }
+            case Type.inputWeightChange:
+            {
+                var workshopType = (Workshop.Type)buildingType;
+                var prev = team.SetInputWeight( workshopType, itemType, weight );
+                return Create().SetupAsInputWeightChange( team, workshopType, itemType, prev );
+
             }
             case Type.attack:
             {

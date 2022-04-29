@@ -201,6 +201,14 @@ public class Simpleton : Player
 
     public class GlobalTask : Task
     {
+        public enum Action
+        {   
+            toggleEmergency,
+            disableNonConstruction,
+            enableNonConstruction,
+        }
+        public Action action;
+
         public GlobalTask( Simpleton boss ) : base( boss ) {}
         public override bool Analyze()
         {
@@ -217,8 +225,11 @@ public class Simpleton : Player
             boss.reservedPlank = boss.reservedStone = 0;
             void CheckBuilding( Building building )
             {
-                boss.reservedPlank += building.construction.plankMissing;
-                boss.reservedStone += building.construction.stoneMissing;
+                if ( !building.construction.done )
+                {
+                    boss.reservedPlank += building.construction.plankMissing;
+                    boss.reservedStone += building.construction.stoneMissing;
+                }
                 foreach ( var deal in building.simpletonDataSafe.deals )
                 {
                     bool valid = false;
@@ -249,10 +260,28 @@ public class Simpleton : Player
             foreach ( var guardHouse in boss.team.guardHouses )
                 CheckBuilding( guardHouse );
 
+            if ( boss.reservedPlank > 0 && boss.team.FindInputWeight( Workshop.Type.bowMaker, Item.Type.plank ).weight > 0 )
+            {
+                action = Action.disableNonConstruction;
+                problemWeight = solutionEfficiency = 1;
+            }
+
+            if ( boss.reservedPlank == 0 && boss.team.FindInputWeight( Workshop.Type.bowMaker, Item.Type.plank ).weight == 0 )
+            {
+                action = Action.enableNonConstruction;
+                problemWeight = solutionEfficiency = 1;
+            }
+            
             if ( !boss.hasWoodcutter && boss.team.constructionFactors[(int)Building.Type.stock] != 0 )
+            {
+                action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
+            }
             if ( boss.hasWoodcutter && boss.team.constructionFactors[(int)Building.Type.stock] == 0 )
+            {
+                action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
+            }
             boss.noRoom = false;
 
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
@@ -312,7 +341,20 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            HiveCommon.oh.ScheduleToggleEmergencyConstruction( boss.team, true, Operation.Source.computer );
+            switch ( action )
+            {
+                case Action.toggleEmergency:
+                    HiveCommon.oh.ScheduleToggleEmergencyConstruction( boss.team, true, Operation.Source.computer );
+                    break;
+                case Action.disableNonConstruction:
+                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.goldBarMaker, Item.Type.log, 0 );
+                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.bowMaker, Item.Type.plank, 0 );
+                    break;
+                case Action.enableNonConstruction:
+                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.goldBarMaker, Item.Type.log, 0.5f );
+                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.bowMaker, Item.Type.plank, 0.5f );
+                    break;
+            }
         }
     }
 
