@@ -5188,6 +5188,7 @@ if ( cart )
 		List<List<Text>> inputs = new List<List<Text>>();
 		static bool reversed;
 		static Comparison<Building> comparison = CompareTypes;
+		Text summary;
 
 		static public BuildingList Create()
 		{
@@ -5221,7 +5222,9 @@ if ( cart )
 			var p = Text( "productivity", 10 ).Pin( 170, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareProductivities ); } );
 			var o = Text( "output", 10 ).Pin( 380, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareOutputs ); } );
 			var i = Text( "input", 10 ).Pin( 235, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareInputs ); } );
-			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
+			scroll = ScrollRect().Stretch( 20, 40, -20, -60 );
+
+			summary = Text().Pin( 20, 40, 200, iconSize, 0, 0 );
 
 			SetFilter( d );
 		}
@@ -5262,6 +5265,7 @@ if ( cart )
 
 		void Fill()
 		{
+			int constructionCount = 0;
 			buildings = new List<Building>();
 			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
 			{
@@ -5283,6 +5287,8 @@ if ( cart )
 
 			for ( int i = 0; i < buildings.Count; i++ )
 			{
+				if ( !buildings[i].construction.done )
+					constructionCount++;
 				BuildingIcon( buildings[i] ).Link( scroll.content ).Pin( 0, -iconSize * i, 80 );
 				productivities.Add( Text( "" ).AddOutline().Link( scroll.content ).Pin( 150, -iconSize * i, 100 ) );
 				outputs.Add( Text( "" ).Link( scroll.content ).Pin( 385, -iconSize * i, 50 ) );
@@ -5300,6 +5306,7 @@ if ( cart )
 				}
 			}
 			scroll.SetContentSize( -1, iconSize * buildings.Count );
+			summary.text = $"Total: {buildings.Count}, under construction: {constructionCount}";
 		}
 
 		new public void Update()
