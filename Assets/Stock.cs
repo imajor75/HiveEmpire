@@ -758,12 +758,12 @@ public class Stock : Attackable
 				if ( itemData[itemType].outputRoutes[i].IsAvailable() )
 				{
 					cart.TransferItems( itemData[itemType].outputRoutes[i] );
-					fullReportedCart = false;
+					destination.fullReportedCart = false;
 				}
-				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !fullReportedCart )
+				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !destination.fullReportedCart )
 				{
-					fullReportedCart = true;
-					team.SendMessage( "Stock full, cart couldn't deliver", this );
+					destination.fullReported = true;
+					team.SendMessage( "Stock full, cart couldn't deliver", destination );
 				}
 			}
 
