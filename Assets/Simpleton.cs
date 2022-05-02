@@ -400,7 +400,6 @@ public class Simpleton : Player
         public Node bestLocation;
         public int bestFlagDirection;
         public float bestScore = float.MinValue;
-        public float bestResourceAvailability, bestRelaxAvailability, bestSourceAvailability;
         public List<Workshop.Type> dependencies = new List<Workshop.Type>();
         public Workshop.Configuration configuration;
         public int reservedPlank, reservedStone;
@@ -479,10 +478,13 @@ public class Simpleton : Player
 
             ScanRow( nodeRow++ );
 
-            if ( nodeRow == HiveCommon.ground.dimension - 1 )
+            if ( nodeRow == HiveCommon.ground.dimension )
             {
-                boss.Log( $"A new {workshopType} would be good, but there is no room" );
-                boss.noRoom = true;
+                if ( bestLocation == null )
+                {
+                    boss.Log( $"A new {workshopType} would be good, but there is no room" );
+                    boss.noRoom = true;
+                }
                 return finished;
             }
 
@@ -564,16 +566,10 @@ public class Simpleton : Player
                 if ( workingFlagDirection < 0 )
                     continue;
 
-                var availability = CalculateAvailaibily( site );
-                float score = ( availability.resource + availability.relax + availability.source ) / 3;
-                if ( availability.resource == 0 )
-                    score = 0;
+                float score = CalculateAvailaibily( site );
                 if ( score > bestScore )
                 {
                     bestScore = score;
-                    bestSourceAvailability = availability.source;
-                    bestRelaxAvailability = availability.relax;
-                    bestResourceAvailability = availability.resource;
                     bestLocation = site;
                     bestFlagDirection = workingFlagDirection;
                     solutionEfficiency = score;
@@ -581,9 +577,9 @@ public class Simpleton : Player
             }
         }
 
-        (float resource, float relax, float source) CalculateAvailaibily( Node node )
+        float CalculateAvailaibily( Node node )
         {
-            int resources = 0;
+            float resources = 0;
             foreach ( var offset in Ground.areas[configuration.gatheringRange] )
             {
                 var nearby = node + offset;
@@ -604,6 +600,8 @@ public class Simpleton : Player
                 };
                 if ( isThisGood )
                     resources++;
+                if ( workshopType == Workshop.Type.woodcutter && nearby.type == Node.Type.forest )
+                    resources += 0.5f;
             }
             float expectedResourceCoverage = workshopType switch
             {
@@ -615,9 +613,14 @@ public class Simpleton : Player
                 Workshop.Type.saltMine => 0.5f,
                 Workshop.Type.hunter => 0.01f,
                 Workshop.Type.fishingHut => 0.1f,
+                Workshop.Type.woodcutter => 0.5f,
+                Workshop.Type.forester => 0.5f,
                 _ => 2f
             };
-            var resourceAvailability = (float)resources / ( Ground.areas[configuration.gatheringRange].Count * expectedResourceCoverage );
+            if ( resources == 0 )
+                return 0;
+
+            float score = ( resources > expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count ) ? Constants.Simpleton.highResourceEfficiency : Constants.Simpleton.lowResourceEfficiency;
 
             int relaxSpotCount = 0;
             foreach ( var relaxOffset in Ground.areas[Constants.Workshop.relaxAreaSize] )
@@ -629,6 +632,7 @@ public class Simpleton : Player
             float relaxAvailability = (float)relaxSpotCount / configuration.relaxSpotCountNeeded;
             if ( relaxAvailability > 1 )
                 relaxAvailability = 1;
+            score += relaxAvailability * Constants.Simpleton.relaxImportance;
 
             float sourceAvailability = 0.5f;
             int buildingCount = 0;
@@ -647,16 +651,17 @@ public class Simpleton : Player
                 }
                 sourceAvailability = (float)sourceScore / ( dependencies.Count * Constants.Simpleton.sourceSearchRange );
             }
+            score += sourceAvailability * Constants.Simpleton.sourceImportance;
 
-            if ( buildingCount > 0 )
-                relaxAvailability /= buildingCount;
+            if ( node.x == 47 && node.y == 44 )
+            {}
 
-            return ( resourceAvailability, relaxAvailability, sourceAvailability );
+            return score;
         }
 
         public override void ApplySolution()
         {
-            boss.Log( $"Building a {workshopType} at {bestLocation.name} ({bestResourceAvailability}, {bestRelaxAvailability}, {bestSourceAvailability})" );
+            boss.Log( $"Building a {workshopType} at {bestLocation.name}" );
             boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
         }
@@ -695,7 +700,12 @@ public class Simpleton : Player
             if ( ( roadCount == 0 && flag != boss.team.mainBuilding.flag ) || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
                 flag.simpletonDataSafe.isolated = true;
-                problemWeight = 1;
+
+                if ( roadCount == 0 )
+                    problemWeight = Constants.Simpleton.abandonedFlagWeight;
+                else
+                    problemWeight = Constants.Simpleton.isolatedFlagWeight;
+
                 if ( flag.CaptureRoads( true ) )
                 {
                     solutionEfficiency = 1;
@@ -864,12 +874,12 @@ public class Simpleton : Player
         {
             int onRoadLength = 0;
             if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.onRoad ) )
-                problemWeight = 1;
+                problemWeight = Constants.Simpleton.isolatedFlagWeight;
             else
             {
                 foreach ( var road in path.roadPath )
                     onRoadLength += road.nodes.Count - 1;
-                problemWeight = 1 - (float)flagA.node.DistanceFrom( flagB.node ) / onRoadLength;
+                problemWeight = Constants.Simpleton.badConnectionWeight - (float)flagA.node.DistanceFrom( flagB.node ) / onRoadLength;
             }
             if ( problemWeight < 0.5 )
                 return finished;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -283,7 +283,7 @@ public class Interface : HiveObject
 		if ( eye.target && lastShownOperation == operation )
 			return;
 
-		MessagePanel.Create( operation.description, operation.place, 5 );
+		MessagePanel.Create( operation.name, operation.place, 5 );
 		lastShownOperation = operation;
 	}
 
@@ -560,7 +560,7 @@ public class Interface : HiveObject
 		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - time )}";
 		var next = oh.NextToExecute( mainTeam );
 		if ( next != null )
-			text += $"\nNext action is {next.description} in {UIHelpers.TimeToString( next.scheduleAt - time )}";
+			text += $"\nNext action is {next.name} in {UIHelpers.TimeToString( next.scheduleAt - time )}";
 		return text;
 	}
 

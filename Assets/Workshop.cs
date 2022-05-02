@@ -76,7 +76,7 @@ public class Workshop : Building
 
 	public float CalculateMaxOutput()
 	{
-		if ( maxOutputCalculationTimer.done || maxOutputCalculationTimer.empty )
+		if ( maxOutputCalculationTimer.done || maxOutputCalculationTimer.empty || float.IsNaN( lastCalculatedMaxOutput ) )
 		{
 			maxOutputCalculationTimer.Start( Constants.Workshop.gathererMaxOutputRecalculationPeriod );
 			int itemsProducedSinceLastCheck = itemsProduced - itemsProducedAtLastCheck;
@@ -100,7 +100,12 @@ public class Workshop : Building
 					usedTime += status.length;
 			}
 			if ( hasEnoughtData )
-				lastCalculatedMaxOutput = (float)itemsProducedSinceLastCheck / Constants.Workshop.gathererMaxOutputRecalculationPeriod * (usedTime + wastedTime) / usedTime * Constants.World.normalSpeedPerSecond * 60;
+			{
+				if ( usedTime > 0 )
+					lastCalculatedMaxOutput = (float)itemsProducedSinceLastCheck / Constants.Workshop.gathererMaxOutputRecalculationPeriod * (usedTime + wastedTime) / usedTime * Constants.World.normalSpeedPerSecond * 60;
+				else
+					lastCalculatedMaxOutput = 0;
+			}
 		}
 		if ( !gatherer || lastCalculatedMaxOutput == 0 )
 			return maxOutput;

@@ -795,48 +795,6 @@ public class Operation
             bufferIndex = HiveCommon.world.teams.IndexOf( value );
         }
     }
-    public string description
-    {
-        get
-        {
-            if ( groupName != null )
-                return groupName;
-
-            string text = type switch
-            {
-                Type.changeArea => "Change area",
-                Type.changeRoutePriority => "Change route priority",
-                Type.changeHaulerCount => "Change hauler count",
-                Type.changeDefenderCount => "Change defender count",
-                Type.createBuilding => "Constructing a new ",
-                Type.createFlag => "Creating a new junction",
-                Type.createRoad => "Create new road",
-                Type.moveFlag => "Moving a junction",
-                Type.moveRoad => "Moving a road block",
-                Type.removeBuilding => "Remove a building",
-                Type.removeFlag => "Remove a junction",
-                Type.removeRoad => "Remove a road",
-                Type.stockAdjustment => "Adjust stock item counts",
-                Type.attack => "Start an attack on the enemy",
-                Type.createPlayer => "Creating a new player",
-                Type.captureRoad => "Capture nearby roads",
-                Type.changeBufferUsage => "Change Buffer Usage",
-                Type.flattenFlag => "Flatten the area around a junction",
-                Type.changeFlagType => "Convert a junction to crossing or vice versa",
-                Type.toggleEmergencyConstruction => "Toggle emergency construction",
-                Type.inputWeightChange => "Changing input weight",
-                _ => type.ToString()
-            };
-            if ( type == Type.createBuilding )
-            {
-                if ( buildingType < Building.Type.stock )
-                    text += ((Workshop.Type)buildingType).ToString().GetPrettyName( false );
-                else
-                    text += buildingType.ToString().GetPrettyName( false );
-            }
-            return text;
-        }
-    }
 
     public Node place
     {
@@ -945,7 +903,7 @@ public class Operation
         type = Type.createRoad;
         this.roadPath = path;
         this.team = team;
-        name = "Create Road";
+        name = $"Create Road at {path[1]}";
         return this;
     }
 
