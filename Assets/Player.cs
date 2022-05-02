@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -103,6 +103,14 @@ public abstract class Player : HiveObject
 		if ( root.mainPlayer == this )
 			root.mainPlayer = null;
 		Destroy( gameObject );
+	}
+
+	new void Update()
+	{
+		while ( messages.Count > Constants.Interface.maxMessages )
+			messages.RemoveLast();
+
+		base.Update();
 	}
 
 	public class Message

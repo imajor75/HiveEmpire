@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -501,7 +501,7 @@ public class Interface : HiveObject
 		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
-		messageButton = this.Text( "" ).Pin( iconSize, -50, 2 * iconSize, 2* iconSize ).AddClickHandler( OnMessagesClicked );
+		messageButton = this.Text( "" ).Pin( iconSize, -50, 6 * iconSize, 2 * iconSize ).AddClickHandler( OnMessagesClicked );
 		messageButton.fontSize = 40;
 		messageButton.color = Color.yellow;
 		messageButton.AddOutline();

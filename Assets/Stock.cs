@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,7 +16,7 @@ public class Stock : Attackable
 	public int maxItems = Constants.Stock.defaultmaxItems;
 	public World.Timer offersSuspended = new World.Timer();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
 	public World.Timer resupplyTimer = new World.Timer();
-	public bool fullReported;
+	public bool fullReported, fullReportedCart;
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
 	override public bool wantFoeClicks { get { return main; } }
@@ -259,6 +259,7 @@ public class Stock : Attackable
 			noFreeCart,
 			flagJammed,
 			inProgress,
+			stockUnderConstruction,
 			unknown
 		}
 
@@ -288,7 +289,10 @@ public class Stock : Attackable
 				return false;
 			
 			if ( !start.construction.done || !end.construction.done )
+			{
+				state = State.stockUnderConstruction;
 				return false;
+			}
 
 			int itemIndex = (int)itemType;
 			if ( start.itemData[itemIndex].content < Constants.Stock.cartCapacity )
@@ -754,12 +758,12 @@ public class Stock : Attackable
 				if ( itemData[itemType].outputRoutes[i].IsAvailable() )
 				{
 					cart.TransferItems( itemData[itemType].outputRoutes[i] );
-					fullReported = false;
+					fullReportedCart = false;
 				}
-				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !fullReported )
+				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !fullReportedCart )
 				{
-					fullReported = true;
-					team.SendMessage( "Stock full", this );
+					fullReportedCart = true;
+					team.SendMessage( "Stock full, cart couldn't deliver", this );
 				}
 			}
 
