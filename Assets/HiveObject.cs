@@ -68,6 +68,11 @@ public abstract class HiveObject : HiveCommon
 		assert = new Assert( this );
 	}
 
+	override public string ToString()
+	{
+		return name;
+	}
+
 	public virtual void Register()
 	{
 		world.newHiveObjects.AddFirst( this );

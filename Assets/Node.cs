@@ -161,7 +161,7 @@ public class Node : HiveObject
 
 	new public void Start()
 	{
-		name = "Node (" + x + ", " + y + ")";
+		name = $"node {x}:{y}";
 		transform.SetParent( World.nodes.transform );
 		transform.localPosition = position;
 

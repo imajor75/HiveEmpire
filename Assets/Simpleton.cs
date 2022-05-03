@@ -12,7 +12,7 @@ public class Simpleton : Player
     public int currentProblem;
     public World.Timer inability = new World.Timer();
     public float confidence = Constants.Simpleton.defaultConfidence;
-    public List<Node> isolatedNodes = new List<Node>();
+    public List<Node> blockedNodes = new List<Node>();
     public List<Item.Type> lackingProductions = new List<Item.Type>();
     public int reservedPlank, reservedStone;
     public bool hasSawmill, hasWoodcutter;
@@ -20,6 +20,12 @@ public class Simpleton : Player
 	public bool showActions;
     public bool peaceful;
     public bool noRoom;
+    public bool dumpTasks;
+
+   	[Obsolete( "Compatibility with old files", true )]
+    List<Node> isolatedNodes { set { blockedNodes = value; } }
+	bool insideCriticalSection { set {} }
+
 
     public static Simpleton Create()
     {
@@ -69,6 +75,19 @@ public class Simpleton : Player
         }
         else
         {
+            if ( dumpTasks )
+            {
+                tasks.Sort( ( a, b ) => b.importance.CompareTo( a.importance ) );
+                Log( "==================" );
+                Log( $"{name} tasks:" );
+                for ( int i = 0; i < tasks.Count && i < 30; i++ )
+                {
+                    var task = tasks[i];
+                    Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task.description}" );
+                }            
+                dumpTasks = false;
+            }
+
             Task best = null;
             foreach ( var task in tasks )
             {
@@ -196,6 +215,7 @@ public class Simpleton : Player
         public virtual void ApplySolution() {}
         public float problemWeight, solutionEfficiency, priority = 1;
         public float importance { get { return solutionEfficiency * problemWeight * priority; } }
+        virtual public string description { get { return ToString(); } }
         public Simpleton boss;
     }
 
@@ -294,7 +314,6 @@ public class Simpleton : Player
                 boss.lackingProductions.Clear();
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
@@ -354,6 +373,22 @@ public class Simpleton : Player
                     HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.goldBarMaker, Item.Type.log, 0.5f );
                     HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.bowMaker, Item.Type.plank, 0.5f );
                     break;
+            }
+        }
+
+        public override string description
+        {
+            get
+            {
+                string d = "GlobalTask: ";
+                d += action switch
+                {
+                    Action.toggleEmergency => "toggle emergency",
+                    Action.disableNonConstruction => "disable base material usage for economy",
+                    Action.enableNonConstruction => "enable base material usage for economy",
+                    _ => "unknown"
+                };
+                return d;
             }
         }
     }
@@ -548,7 +583,7 @@ public class Simpleton : Player
             for ( int x = 0; x < HiveCommon.ground.dimension; x++ )
             {
                 var node = HiveCommon.ground.GetNode( x, nodeRow );
-                if ( boss.isolatedNodes.Contains( node ) )
+                if ( boss.blockedNodes.Contains( node ) )
                     continue;
                 int workingFlagDirection = -1;
                 Node site = null;
@@ -659,9 +694,17 @@ public class Simpleton : Player
             return score;
         }
 
+        public override string description
+        {
+            get
+            {
+                return $"YieldTask: building {workshopType} at {bestLocation}";
+            }
+        }
+
         public override void ApplySolution()
         {
-            boss.Log( $"Building a {workshopType} at {bestLocation.name}" );
+            boss.Log( $"Building a {workshopType} at {bestLocation}" );
             boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
         }
@@ -673,7 +716,7 @@ public class Simpleton : Player
         {
             connect,
             remove,
-            removeIsolated,
+            removeBlocked,
             removeRoad,
             capture
         }
@@ -681,6 +724,43 @@ public class Simpleton : Player
         public PathFinder path = PathFinder.Create();
         public Flag flag;
         public Road road;
+        override public string description
+        { 
+            get 
+            {
+                string d = "FlagTask: ";
+                switch ( action )
+                {   
+                    case Action.connect:
+                    {
+                        if ( path == null || path.path == null || path.path.Count < 2 || flag == null )
+                            d += $"failed connect attempt of {flag.node.x}:{flag.node.y}";
+                        else
+                        {
+                            var lastNode = path.path.Last();
+                            d += $"connecting {flag.node.x}:{flag.node.y} to {lastNode.x}:{lastNode.y}";
+                        }
+                        break;
+                    }
+                    case Action.remove:
+                        d += $"removing flag at {flag.node}";
+                        break;
+                    case Action.removeBlocked:
+                        d += $"removing blocked flag at {flag.node}";
+                        break;
+                    case Action.removeRoad:
+                        d += $"removing {road}";
+                        break;
+                    case Action.capture:
+                        d += $"capturing roads around flag at {flag.node}";
+                        break;
+                    default:
+                        d += "unknown";
+                        break;
+                };
+                return d;
+            }
+        }
         public FlagTask( Simpleton boss, Flag flag ) : base( boss )
         {
             this.flag = flag;
@@ -701,10 +781,16 @@ public class Simpleton : Player
             {
                 flag.simpletonDataSafe.isolated = true;
 
-                if ( roadCount == 0 )
-                    problemWeight = Constants.Simpleton.abandonedFlagWeight;
+                var buildingCount = flag.Buildings().Count;
+                if ( buildingCount > 0 )
+                    problemWeight = Constants.Simpleton.isolatedBuildingWeight;
                 else
-                    problemWeight = Constants.Simpleton.isolatedFlagWeight;
+                {
+                    if ( roadCount == 0 )
+                        problemWeight = Constants.Simpleton.abandonedFlagWeight;
+                    else
+                        problemWeight = Constants.Simpleton.isolatedFlagWeight;
+                }
 
                 if ( flag.CaptureRoads( true ) )
                 {
@@ -712,6 +798,7 @@ public class Simpleton : Player
                     action = Action.capture;
                     return finished;
                 }
+
                 foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
                 {
                     var node = flag.node + offset;
@@ -721,10 +808,13 @@ public class Simpleton : Player
                         continue;
 
                     solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.25f );
-                    action = path.ready ? Action.connect : Action.removeIsolated;
-                    break; 
+                    action = Action.connect;
+                    return finished;
                 }
 
+                problemWeight = Constants.Simpleton.blockedFlagWeight;
+                solutionEfficiency = 1;
+                action = Action.removeBlocked;
                 return finished;
             }
             else
@@ -821,14 +911,14 @@ public class Simpleton : Player
                         return;
                     boss.Log( $"Connecting {flag.name} to the road network at {path.path.Last().name}" );
                     HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, Operation.Source.computer );
-                    boss.isolatedNodes.Clear();
+                    boss.blockedNodes.Clear();
                     break;
                 }
-                case Action.removeIsolated:
+                case Action.removeBlocked:
                 {
                     foreach ( var building in flag.Buildings() )
-                        boss.isolatedNodes.Add( building.node );
-                    boss.Log( $"Removing isolated flag at {flag.node.x}:{flag.node.y}" );
+                        boss.blockedNodes.Add( building.node );
+                    boss.Log( $"Removing blocked flag at {flag.node.x}:{flag.node.y}" );
                     HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
                     break;
                 }
@@ -953,7 +1043,7 @@ public class Simpleton : Player
             
             foreach ( var node in HiveCommon.ground.nodes )
             {
-                if ( boss.isolatedNodes.Contains( node ) )
+                if ( boss.blockedNodes.Contains( node ) )
                     continue;
 
                 if ( node.team != boss.team )

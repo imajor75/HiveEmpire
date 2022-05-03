@@ -234,9 +234,9 @@ public class Road : HiveObject, Interface.IInputHandler
 			referenceLocation = centerNode;
 		}
 		if ( nodes.Count > 1 )
-			name = $"Road {nodes[1].x}:{nodes[1].y}";
+			name = $"road {nodes[1].x}:{nodes[1].y}";
 		else
-			name = "Road";
+			name = "road";
 
 		var renderer = gameObject.GetComponent<MeshRenderer>();
 		renderer.material = material;

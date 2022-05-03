@@ -351,7 +351,9 @@ public static class Constants
         public const float deadEndProblemFactor = 0.8f;
         public const int noResourceTolerance = Constants.World.normalSpeedPerSecond * 60 * 20;
         public const float abandonedFlagWeight = 0.25f;
+        public const float isolatedBuildingWeight = 0.5f;
         public const float isolatedFlagWeight = 0.5f;
+        public const float blockedFlagWeight = 0.75f;
         public const float badConnectionWeight = 0.75f;
         public const float lowResourceEfficiency = 0.2f;
         public const float highResourceEfficiency = 0.6f;

@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -763,7 +763,7 @@ public class Stock : Attackable
 				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !destination.fullReportedCart )
 				{
 					destination.fullReported = true;
-					team.SendMessage( "Stock full, cart couldn't deliver", destination );
+					team.SendMessage( $"Stock full, cart couldn't deliver {(Item.Type)itemType}", destination );
 				}
 			}
 

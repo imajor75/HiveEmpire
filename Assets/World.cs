@@ -907,8 +907,8 @@ public class World : HiveObject
 				teams.Add( player.team );
 			if ( player.name == null )
 				player.name = Constants.Player.names.Random();
-			if ( player is Simpleton simpleton && simpleton.isolatedNodes.Count > 100 )
-				simpleton.isolatedNodes.Clear();
+			if ( player is Simpleton simpleton && simpleton.blockedNodes.Count > 100 )
+				simpleton.blockedNodes.Clear();
 			if ( player.messages == null )
 				player.messages = new LinkedList<Player.Message>();
 		}
