@@ -221,7 +221,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( ends[0] == flag )
 			return ends[1];
 
-		assert.AreEqual( ends[1], flag );
+		assert.AreEqual( ends[1], flag, $"Flag is not part of road: {flag}" );
 		return ends[0];
 	}
 

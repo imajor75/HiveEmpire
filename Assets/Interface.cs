@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -869,10 +869,7 @@ public class Interface : HiveObject
 		Mesh m;
 		if ( highlightVolume == null )
 		{
-			highlightVolume = new GameObject
-			{
-				name = "Highlight Volume"
-			};
+			highlightVolume = new GameObject( "Highlight Volume" );
 			highlightVolume.transform.SetParent( world.transform );
 			var f = highlightVolume.AddComponent<MeshFilter>();
 			var r = highlightVolume.AddComponent<MeshRenderer>();

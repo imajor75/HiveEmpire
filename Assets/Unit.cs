@@ -830,6 +830,8 @@ public class Unit : HiveObject
 		}
 		bool ConsiderSecondary( bool checkOnly = false )
 		{
+			if ( !boss.node.validFlag )
+				return false;
 			if ( items[1] || boss.type != Type.hauler )
 				return false;
 			if ( items[0].path.isFinished || items[0].buddy )
