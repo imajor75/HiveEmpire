@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1845,7 +1845,7 @@ public class Unit : HiveObject
 				return;
 			}
 
-			if ( node == road.nodes[0] || node == road.lastNode )
+			if ( node == road.nodes[0] || node == road.lastNode || node.road != road )
 			{
 				int restIndex = ( road.nodes.Count - 1 ) / 2;
 				if ( node == road.nodes[0] )
@@ -1856,7 +1856,10 @@ public class Unit : HiveObject
 						if ( road.haulerAtNodes[restIndex] == null )
 							break;
 				}
-				ScheduleWalkToRoadPoint( road, restIndex );
+				if ( node.validFlag )
+					ScheduleWalkToRoadPoint( road, restIndex );
+				else
+					LeaveExclusivity();
 			}
 			return;
 		}
@@ -1904,6 +1907,9 @@ public class Unit : HiveObject
 	/// <returns>True if an item has been found and assigned to the hauler</returns>
 	bool FindItemToCarry()
 	{
+		if ( !road.nodes.Contains( node ) )
+			return false;
+
 		Item bestItem = null;
 		Item[] bestItemOnSide = { null, null };
 		float bestScore = 0;
@@ -2052,6 +2058,7 @@ public class Unit : HiveObject
 		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
 		instance.Setup( this, road, target, exclusive );
 		ScheduleTask( instance, first );
+		instance.Validate();
 	}
 
 	public void ScheduleWalkToRoadNode( Road road, Node target, bool exclusive = true, bool first = false )
