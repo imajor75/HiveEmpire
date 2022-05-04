@@ -15,7 +15,7 @@ public class Simpleton : Player
     public List<Node> blockedNodes = new List<Node>();
     public List<Item.Type> lackingProductions = new List<Item.Type>();
     public int reservedPlank, reservedStone;
-    public bool hasSawmill, hasWoodcutter;
+    public int expectedLog, expectedPlank;
     public bool active;
 	public bool showActions;
     public bool peaceful;
@@ -24,7 +24,12 @@ public class Simpleton : Player
 
    	[Obsolete( "Compatibility with old files", true )]
     List<Node> isolatedNodes { set { blockedNodes = value; } }
+   	[Obsolete( "Compatibility with old files", true )]
 	bool insideCriticalSection { set {} }
+   	[Obsolete( "Compatibility with old files", true )]
+    bool hasSawmill { set {} }
+   	[Obsolete( "Compatibility with old files", true )]
+    bool hasWoodcutter { set {} }
 
 
     public static Simpleton Create()
@@ -265,18 +270,50 @@ public class Simpleton : Player
                 }
             }
 
-            boss.hasWoodcutter = boss.hasSawmill = false;
+            bool hasSawmill = false;
+            boss.expectedLog = 0;
+            List<Resource> countedTrees = new List<Resource>();
+            foreach ( var workshop in boss.team.workshops )
+            {
+                if ( workshop.type == Workshop.Type.woodcutter && workshop.construction.done )
+                {
+                    bool hasForester = false;
+                    int forestNodeCount = 0, treeCount = 0;
+                    foreach ( var offset in Ground.areas[Workshop.GetConfiguration( Workshop.Type.woodcutter ).gatheringRange] )
+                    {
+                        var node = workshop.node + offset;
+                        if ( node.building && node.building.type == (Building.Type)Workshop.Type.forester && node.building.team == boss.team && node.building.construction.done )
+                            hasForester = true;
+                        if ( node.type == Node.Type.forest )
+                            forestNodeCount++;
+                        foreach ( var resource in node.resources )
+                        {
+                            if ( resource.type != Resource.Type.tree )
+                                continue;
+                            if ( resource.charges > 0 )
+                            {
+                                resource.charges = 0;   // TODO Not so nice
+                                countedTrees.Add( resource );
+                                treeCount++;
+                            }
+                        }
+                    }
+                    int expectedLocalLog = treeCount;
+                    if ( hasForester && forestNodeCount >= Constants.Simpleton.forestNodeCountForRenew )
+                        expectedLocalLog = Constants.Simpleton.expectedLogFromRenewWoodcutter;
+                    boss.expectedLog += expectedLocalLog;
+                }
+                if ( workshop.type == Workshop.Type.sawmill && workshop.construction.done )
+                    hasSawmill = true;
+            }
+            foreach ( var tree in countedTrees )
+                tree.charges = 1;
+            boss.expectedPlank = hasSawmill ? boss.expectedLog : 0;
 
             foreach ( var stock in boss.team.stocks )
                 CheckBuilding( stock );
             foreach ( var workshop in boss.team.workshops )
-            {
-                if ( workshop.type == Workshop.Type.woodcutter && workshop.construction.done )
-                    boss.hasWoodcutter = true;
-                if ( workshop.type == Workshop.Type.sawmill && workshop.construction.done )
-                    boss.hasSawmill = true;
                 CheckBuilding( workshop );
-            }
             foreach ( var guardHouse in boss.team.guardHouses )
                 CheckBuilding( guardHouse );
 
@@ -292,12 +329,12 @@ public class Simpleton : Player
                 problemWeight = solutionEfficiency = 1;
             }
             
-            if ( !boss.hasWoodcutter && boss.team.constructionFactors[(int)Building.Type.stock] != 0 )
+            if ( boss.expectedPlank < Constants.Simpleton.expectedPlankPanic && boss.team.constructionFactors[(int)Building.Type.stock] != 0 )
             {
                 action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
             }
-            if ( boss.hasWoodcutter && boss.team.constructionFactors[(int)Building.Type.stock] == 0 )
+            if ( boss.expectedPlank >= Constants.Simpleton.expectedPlankPanic && boss.team.constructionFactors[(int)Building.Type.stock] == 0 )
             {
                 action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
@@ -495,19 +532,16 @@ public class Simpleton : Player
             }
 
             configuration = Workshop.GetConfiguration( workshopType );
-            reservedPlank = boss.reservedPlank + 4;
+            reservedPlank = boss.reservedPlank;
             reservedStone = boss.reservedStone;
-            if ( workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill )
-                reservedPlank = 0;
+            if ( workshopType != Workshop.Type.woodcutter && workshopType != Workshop.Type.sawmill && workshopType != Workshop.Type.forester )
+                reservedPlank += 4;
 
-            currentPlank = boss.team.Stockpile( Item.Type.plank );
+            currentPlank = boss.team.Stockpile( Item.Type.plank ) + boss.expectedPlank;
             currentStone = boss.team.Stockpile( Item.Type.stone );
 
-            if ( !boss.hasSawmill || !boss.hasWoodcutter )
-            {
-                if ( configuration.plankNeeded + reservedPlank > currentPlank )
-                    return finished;
-            }
+            if ( configuration.plankNeeded + reservedPlank > currentPlank )
+                return finished;
             if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > currentStone )
                 return finished;
 
@@ -687,9 +721,6 @@ public class Simpleton : Player
                 sourceAvailability = (float)sourceScore / ( dependencies.Count * Constants.Simpleton.sourceSearchRange );
             }
             score += sourceAvailability * Constants.Simpleton.sourceImportance;
-
-            if ( node.x == 47 && node.y == 44 )
-            {}
 
             return score;
         }
@@ -1029,11 +1060,8 @@ public class Simpleton : Player
         public ExtendBorderTask( Simpleton boss ) : base( boss ) {}
         public override bool Analyze()
         {
-            if ( !boss.hasSawmill || !boss.hasWoodcutter )
-            {
-                if ( boss.team.Stockpile( Item.Type.plank ) < GuardHouse.guardHouseConfiguration.plankNeeded + boss.reservedPlank )
-                    return finished;
-            }
+            if ( boss.team.Stockpile( Item.Type.plank ) + boss.expectedPlank < GuardHouse.guardHouseConfiguration.plankNeeded + boss.reservedPlank )
+                return finished;
             if ( boss.team.Stockpile( Item.Type.stone ) < GuardHouse.guardHouseConfiguration.stoneNeeded + boss.reservedStone )
                 return finished;
             if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count && !boss.noRoom )

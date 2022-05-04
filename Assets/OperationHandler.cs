@@ -1289,7 +1289,7 @@ public class Operation
                 float normal = team.constructionFactors[(int)Building.Type.guardHouse] == 1 ? 0 : 1;
                 for ( int i = 0; i < (int)Building.Type.total; i++ )
                 {
-                    if ( i != (int)Workshop.Type.woodcutter && i != (int)Workshop.Type.stonemason )
+                    if ( i != (int)Workshop.Type.woodcutter && i != (int)Workshop.Type.stonemason && i != (int)Workshop.Type.sawmill && i != (int)Workshop.Type.forester )
                         team.constructionFactors[i] = normal;
                 }
                 return Create().SetupAsToggleEmergencyConstruction( team );

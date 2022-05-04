@@ -359,6 +359,9 @@ public static class Constants
         public const float highResourceEfficiency = 0.6f;
         public const float relaxImportance = 0.2f;
         public const float sourceImportance = 0.2f;
+        public const int forestNodeCountForRenew = 15;
+        public const int expectedLogFromRenewWoodcutter = 50;
+        public const int expectedPlankPanic = 40;
     }
 }
 
