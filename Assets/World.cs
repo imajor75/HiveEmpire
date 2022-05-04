@@ -1275,6 +1275,10 @@ public class World : HiveObject
 		hiveObjects.Clear();
 		newHiveObjects.Clear();
 
+		Destroy( transform.Find( "Items just created" )?.gameObject );
+		Destroy( transform.Find( "Players and teams" )?.gameObject );
+		Destroy( transform.Find( "Nodes" )?.gameObject );
+
 		massDestroy = true;
 		root.Clear();
 	}
