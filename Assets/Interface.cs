@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -1493,7 +1493,7 @@ public class Interface : HiveObject
 		{
 			root.panels.Remove( this );
 			if ( eye )
-				eye.rotateAround = false;
+				eye.StopAutoChange();
 		}
 
 		public void SetSize( int x, int y )
@@ -7078,7 +7078,8 @@ if ( cart )
 			if ( focusOnMainBuilding && root.mainPlayer )
 			{
 				grabbedEye = eye;
-				grabbedEye.FocusOn( root.mainTeam.mainBuilding?.flag?.node, true, false, true, false );
+				grabbedEye.FocusOn( root.mainTeam.mainBuilding?.flag?.node, true, approach:false );
+				grabbedEye.autoMove = new Vector2( 0.8f, 0.17f );
 				escCloses = false;
 			}
 

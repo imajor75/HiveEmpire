@@ -16,7 +16,8 @@ public class Eye : HiveObject
 	public List<StoredPosition> oldPositions = new List<StoredPosition>();
 	public float autoStorePositionTimer;
 	public bool currentPositionStored;
-	public bool rotateAround;
+	public float autoRotate;
+	public Vector2 autoMove = Vector2.zero;
 	public new Camera camera;
 	public float moveSensitivity;
 	DepthOfField depthOfField;
@@ -53,6 +54,8 @@ public class Eye : HiveObject
 	float targetY { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	bool hasTarget { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	bool rotateAround { set {} }
 
 	public static Eye Create()
 	{
@@ -68,6 +71,13 @@ public class Eye : HiveObject
 		base.Setup();
 		return this;
 	}
+
+	public void StopAutoChange()
+	{
+		autoRotate = 0;
+		autoMove = Vector2.zero;
+	}
+
 
 	public void Awake()
 	{
@@ -184,8 +194,8 @@ public class Eye : HiveObject
 				targetApproachSpeed = 1;
 			movement += ( target.GetPositionRelativeTo( position ) - position ) * targetApproachSpeed * Time.unscaledDeltaTime;
 		}
-		x += movement.x;
-		y += movement.z;
+		x += movement.x + autoMove.x * Time.unscaledDeltaTime;
+		y += movement.z + autoMove.y * Time.unscaledDeltaTime;
 
 		while ( y < -ground.dimension * Constants.Node.size / 2 )
 		{
@@ -214,16 +224,15 @@ public class Eye : HiveObject
 
 		if ( Interface.cameraRotateCCWHotkey.IsDown() )
 		{
-			rotateAround = false;
-			direction -= Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
+			autoRotate = 0;
+			StopAutoChange();
 		}
 		if ( Interface.cameraRotateCWHotkey.IsDown() )
 		{
-			rotateAround = false;
+			StopAutoChange();
 			direction += Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
 		}
-		if ( rotateAround )
-			direction += Constants.Eye.autoRotateSpeed * Time.unscaledDeltaTime;
+		direction += autoRotate * Time.unscaledDeltaTime;
 		if ( direction >= Math.PI * 2 )
 			direction -= (float)Math.PI * 2;
 		if ( direction < 0 )
@@ -282,7 +291,7 @@ public class Eye : HiveObject
 		y = last.y;
 		direction = last.direction;
 		height = -1;
-		rotateAround = false;
+		StopAutoChange();
 		oldPositions.RemoveAt( oldPositions.Count-1 );
 		return true;
 	}
@@ -304,7 +313,7 @@ public class Eye : HiveObject
 
 		this.director = null;
 		RestoreOldPosition();
-		rotateAround = false;
+		StopAutoChange();
 	}
 
 	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false, bool useLogicalPosition = false, bool approach = true )
@@ -336,7 +345,7 @@ public class Eye : HiveObject
 			}
 		}
 		director = null;
-		this.rotateAround = rotateAround;
+		this.autoRotate = rotateAround ? Constants.Eye.autoRotateSpeed : 0;
 		root.viewport.markEyePosition = mark;
 		autoStorePositionTimer = 0;
 		currentPositionStored = false;
@@ -345,7 +354,7 @@ public class Eye : HiveObject
 
 	void OnPositionChanged()
 	{
-		rotateAround = false;
+		StopAutoChange();
 		autoStorePositionTimer = 0;
 		currentPositionStored = false;
 	}
