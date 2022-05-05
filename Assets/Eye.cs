@@ -224,8 +224,8 @@ public class Eye : HiveObject
 
 		if ( Interface.cameraRotateCCWHotkey.IsDown() )
 		{
-			autoRotate = 0;
 			StopAutoChange();
+			direction -= Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
 		}
 		if ( Interface.cameraRotateCWHotkey.IsDown() )
 		{
