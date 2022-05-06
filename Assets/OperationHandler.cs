@@ -15,7 +15,6 @@ public class OperationHandler : HiveObject
 	public List<Operation> undoQueue = new List<Operation>(), redoQueue = new List<Operation>(), executeBuffer = new List<Operation>();
     public List<int> CRCCodes = new List<int>();
     public int CRCCodesSkipped;
-    public bool purgeCRCTable;
     public int currentCRCCode;
     public Mode mode;
     public World.Challenge challenge;
@@ -167,6 +166,8 @@ public class OperationHandler : HiveObject
 
 	[Obsolete( "Compatibility with old files", true )]
     string lastSave { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+    bool purgeCRCTable { set {} }
 	[Obsolete( "Compatibility with old files", true )]
     List<Operation> repeatBuffer { set { executeBuffer = value; } }
 	[Obsolete( "Compatibility with old files", true )]
@@ -576,13 +577,6 @@ public class OperationHandler : HiveObject
 			UndoRedo( undoQueue );
 		if ( redoHotkey.IsPressed() )
 			UndoRedo( redoQueue );
-
-        if ( purgeCRCTable || !recordCRC )
-        {
-            CRCCodesSkipped += CRCCodes.Count;
-            CRCCodes.Clear();
-            purgeCRCTable = false;
-        }
 
         if ( dumpEventsInFrame != 0 )
         {

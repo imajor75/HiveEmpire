@@ -52,6 +52,8 @@ public class Interface : HiveObject
 	public float lastSave = -1;
 	public bool defeatReported;
 	public bool requestUpdate;
+    public bool purgeOperationHandlerCRCTable;
+
 
 	static Material highlightMaterial;
 	public GameObject highlightOwner;
@@ -827,6 +829,12 @@ public class Interface : HiveObject
 			delayedSaveName = null;
 		}
 		delayedSaveValid = true;
+
+        if ( purgeOperationHandlerCRCTable )
+        {
+            oh.PurgeCRCTable();
+            purgeOperationHandlerCRCTable = false;
+        }
 
 		base.Update();
 	}
