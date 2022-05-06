@@ -362,6 +362,7 @@ public static class Constants
         public const int forestNodeCountForRenew = 15;
         public const int expectedLogFromRenewWoodcutter = 50;
         public const int expectedPlankPanic = 40;
+        public const float valuableNodePenalty = 0.5f;
     }
 }
 

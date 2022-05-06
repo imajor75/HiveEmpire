@@ -722,6 +722,9 @@ public class Simpleton : Player
             }
             score += sourceAvailability * Constants.Simpleton.sourceImportance;
 
+            if ( node.valuable )
+                score *= Constants.Simpleton.valuableNodePenalty;
+
             return score;
         }
 
@@ -1005,7 +1008,7 @@ public class Simpleton : Player
             if ( problemWeight < 0.5 )
                 return finished;
 
-            if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.forRoads, true ) )
+            if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.forRoads, true, tryToAvoidValuableNodes:true ) )
                 return finished;
 
             solutionEfficiency = 1 - (float)(path.path.Count - 1) / onRoadLength;

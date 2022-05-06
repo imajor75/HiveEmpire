@@ -532,11 +532,28 @@ public class Workshop : Building
 
 		team.workshops.Add( this );
 
+		if ( type == Type.woodcutter || type == Type.forester || type == Type.farm )
+		{
+			foreach ( var nearbyNodeOffset in Ground.areas[productionConfiguration.gatheringRange] )
+			{
+				var nearbyNode = node + nearbyNodeOffset;
+				if ( type == Type.farm && nearbyNode.type == Node.Type.grass )
+					nearbyNode.valuable = true;
+				if ( ( type == Type.woodcutter || type == Type.forester ) && nearbyNode.type == Node.Type.forest )
+					nearbyNode.valuable = true;
+			}
+		}
+
 		return this;
 	}
 
 	public override void Remove()
 	{
+		if ( type == Type.woodcutter || type == Type.forester || type == Type.farm )
+		{
+			foreach ( var nearbyNode in Ground.areas[productionConfiguration.gatheringRange] )
+				node.Add( nearbyNode ).valuable = false;
+		}
 		team.workshops.Remove( this );
 		base.Remove();
 	}
