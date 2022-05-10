@@ -762,7 +762,7 @@ public class Stock : Attackable
 				}
 				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !destination.fullReportedCart )
 				{
-					destination.fullReported = true;
+					destination.fullReportedCart = true;
 					team.SendMessage( $"Stock full, cart couldn't deliver {(Item.Type)itemType}", destination );
 				}
 			}
