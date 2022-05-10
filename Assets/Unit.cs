@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -177,7 +177,7 @@ public class Unit : HiveObject
 	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
 	{
 		protected const bool finished = true;
-		protected const bool needModeCalls = false;
+		protected const bool needMoreCalls = false;
 		public Unit boss;
 
 		public Task Setup( Unit boss )
@@ -260,7 +260,7 @@ public class Unit : HiveObject
 				return finished;
 			}
 
-			return needModeCalls;
+			return needMoreCalls;
 		}
 	}
 
@@ -999,7 +999,7 @@ public class Unit : HiveObject
 			}
 
 			if ( !timer.done )
-				return needModeCalls;
+				return needMoreCalls;
 
 			boss.itemsDelivered++;
 			if ( items[1] )

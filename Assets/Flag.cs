@@ -330,6 +330,7 @@ public class Flag : HiveObject
 					assert.IsNull( oldItem.buddy );
 					oldItem.flag = null;
 					item.buddy = null;
+					LinkToFrame( item, i );
 					return oldItem;
 				}
 			}
@@ -338,27 +339,34 @@ public class Flag : HiveObject
 		{
 			if ( items[i] == item )
 			{
-				if ( frames[i] )
-				{
-					var t = frames[i].transform;
-					item.transform.SetParent( t, false );
-
-					// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
-					Vector3 framePos = frames[i].transform.position;
-					framePos.y = ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
-					assert.IsTrue( framePos.y < 10000 && framePos.y > -10000 );
-					t.position = framePos;
-					
-					frames[i].transform.LookAt( transform );
-					frames[i].transform.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)items[i].type], 0, 0 );
-				}
-				else	// This only happens rarely, when after load flag.Start is not called before this point is reached
-					item.transform.SetParent( transform, false );	
+				LinkToFrame( item, i );
 				break;
 			}
 		}
 		assert.IsTrue( items.Contains( item ) );
 		return null;
+	}
+
+	void LinkToFrame( Item item, int frameIndex )
+	{
+		if ( frames[frameIndex] == null )
+		{
+			// This only happens rarely, when after load flag.Start is not called before this point is reached
+			item.transform.SetParent( transform, false );	
+			return;
+		}
+
+		var t = frames[frameIndex].transform;
+		item.transform.SetParent( t, false );
+
+		// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
+		Vector3 framePos = t.position;
+		framePos.y = ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
+		assert.IsTrue( framePos.y < 10000 && framePos.y > -10000 );
+		t.position = framePos;
+		
+		t.LookAt( transform );
+		t.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)item.type], 0, 0 );
 	}
 
 	public override void OnClicked( bool show = false )

@@ -318,7 +318,7 @@ public class Workshop : Building
 				timer.Start( (boss.building as Workshop).productionConfiguration.productionTime );
 
 			if ( !timer.done )
-				return needModeCalls;
+				return needMoreCalls;
 
 			if ( resource )
 				ProcessResource( resource );
