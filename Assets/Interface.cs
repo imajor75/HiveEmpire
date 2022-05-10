@@ -4024,6 +4024,8 @@ public class Interface : HiveObject
 		void Split()
 		{
 			oh.ScheduleCreateFlag( node, root.mainTeam );
+			FlagPanel.Create().Open( null, node );
+			Close();
 			ValidateAll();
 		}
 
@@ -4183,6 +4185,7 @@ public class Interface : HiveObject
 	public class FlagPanel : Panel, IInputHandler
 	{
 		public Flag flag;
+		public Node node;
 		public ItemImage[] items = new ItemImage[Constants.Flag.maxItems];
 		public Image[] itemTimers = new Image[Constants.Flag.maxItems];
 		public Image shovelingIcon, convertIcon;
@@ -4192,10 +4195,10 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<FlagPanel>();
 		}
 
-		public void Open( Flag flag, bool show = false )
+		public void Open( Flag flag, Node node = null, bool show = false )
 		{
 #if DEBUG
-			Selection.activeGameObject = flag.gameObject;
+			Selection.activeGameObject = flag?.gameObject;
 #endif
 			borderWidth = 10;
 			noResize = true;
@@ -4203,10 +4206,11 @@ public class Interface : HiveObject
 				return;
 
 			this.flag = flag;
+			this.node = node;
 			int col = 16;
 			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
 			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
-			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( () => oh.ScheduleCaptureRoad( flag ) ).SetTooltip( "Merge nearby roads to this junction" );
+			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( Capture ).SetTooltip( "Merge nearby roads to this junction" );
 			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
 			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
@@ -4220,11 +4224,16 @@ public class Interface : HiveObject
 				col += iconSize+5;
 			}
 			name = "Flag panel";
-			if ( show )
+			if ( show && flag )
 				eye.FocusOn( flag, true );
 			Update();
 
 			root.viewport.inputHandler = this;
+		}
+
+		void Capture()
+		{
+			oh.ScheduleCaptureRoad( flag );
 		}
 
 		void Remove()
@@ -4262,7 +4271,12 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
+			if ( flag == null )
+				flag = node.flag;
 			base.Update();
+
+			if ( flag == null )
+				return;
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
