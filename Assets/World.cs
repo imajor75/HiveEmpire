@@ -367,9 +367,6 @@ public class World : HiveObject
 
 			CheckCondition( world.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
 
-			if ( playerCount != 0 )
-				CheckCondition( world.players.Count, playerCount, false, $"number of players {{0}}/{{1}}", true );
-
 			void CheckGoal( Goal goal, Timer timer )
 			{
 				if ( reachedLevel >= goal )
