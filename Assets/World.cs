@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -365,7 +365,8 @@ public class World : HiveObject
 			if ( timeLimit > 0 )
 				CheckCondition( life.age, timeLimit, allowTimeLeftLevels, null, true );
 
-			CheckCondition( world.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
+			if ( simpletonCountToEliminate > 0 )
+				CheckCondition( world.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
 
 			void CheckGoal( Goal goal, Timer timer )
 			{
