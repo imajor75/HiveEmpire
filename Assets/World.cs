@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -978,6 +978,8 @@ public class World : HiveObject
 			{
 				if ( GetValue<Player>( o, "owner" ) )
 					o.team = GetValue<Player>( o, "owner" ).team;
+				if ( o.flag && o.flag.team != o.team )
+					o.SetTeam( o.flag.team );
 			}
 		}
 

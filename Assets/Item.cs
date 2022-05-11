@@ -278,6 +278,15 @@ public class Item : HiveObject
 		team.itemDispatcher.RegisterOffer( this, offerPriority, Ground.Area.empty );
 	}
 
+	public void SetTeam( Team team )
+	{
+		this.team.UnregisterItem( this );
+		this.team = team;
+		CancelTrip();
+		if ( team )
+			team.RegisterItem( this );
+	}
+
 	public void SetRawTarget( Building building, ItemDispatcher.Priority priority = ItemDispatcher.Priority.low )
 	{
 		assert.IsNull( destination );
@@ -495,6 +504,7 @@ public class Item : HiveObject
 		if ( flag )
 		{
 			assert.IsTrue( flag.items.Contains( this ) );
+			assert.AreEqual( flag.team, team );
 			if ( hauler )
 				assert.IsFalse( hauler.itemsInHands.Contains( this ) );
 			if ( destination )

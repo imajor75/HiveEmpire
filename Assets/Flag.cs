@@ -119,6 +119,20 @@ public class Flag : HiveObject
 		}
 	}
 
+	public void SetTeam( Team team )
+	{
+		this.team.flags.Remove( this );
+		this.team = team;
+		foreach ( var item in items )
+		{
+			if ( item == null )
+				continue;
+			item.SetTeam( team );
+		}
+		if ( team )
+			team.flags.Add( this );
+	}
+
 	new public void Start()
 	{
 		base.Start();

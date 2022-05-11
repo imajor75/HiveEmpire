@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -798,7 +798,6 @@ abstract public class Building : HiveObject
 	public void SetTeam( Team team )
 	{
 		this.team.SendMessage( "Military building lost to enemy", this );
-		this.team.flags.Remove( flag );
 		if ( Influence( node ) != 0 && this.team )
 			this.team.UnregisterInfuence( this );
 		if ( this.team )
@@ -818,15 +817,12 @@ abstract public class Building : HiveObject
 		}
 
 		this.team = team;
-		flag.team = team;
+		flag.SetTeam( team );
 
 		if ( team && Influence( node ) > 0 )
 			team.RegisterInfluence( this );
 		if ( team )
-		{
 			team.buildingCounts[(int)type]++;
-			team.flags.Add( flag );
-		}
 		changedSide = true;
 	}
 
