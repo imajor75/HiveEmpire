@@ -243,3 +243,17 @@ The following packages were updated:
   com.unity.postprocessing from version 3.1.1 to 3.2.0
   com.unity.render-pipelines.universal from version 12.1.2 to 12.1.5
   com.unity.timeline from version 1.6.2 to 1.6.4
+
+=== Wed May 11 15:16:15 2022
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.collab-proxy from version 1.15.12 to 1.15.16
+  com.unity.ide.rider from version 3.0.12 to 3.0.13
+  com.unity.nuget.newtonsoft-json from version 3.0.1 to 3.0.2
+  com.unity.postprocessing from version 3.2.0 to 3.2.1
+  com.unity.render-pipelines.universal from version 12.1.5 to 13.1.8
+  com.unity.test-framework from version 1.1.29 to 1.1.31
+  com.unity.timeline from version 1.6.4 to 1.7.1
