@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -103,6 +103,10 @@ public abstract class Player : HiveObject
 		if ( root.mainPlayer == this )
 			root.mainPlayer = null;
 		Destroy( gameObject );
+	}
+
+	public virtual void Defeat()
+	{
 	}
 
 	new void Update()
@@ -627,6 +631,8 @@ public class Team : HiveObject
 			return;
 			
 		RemoveObjects();
+		foreach ( var player in players )
+			player.Defeat();
 		itemDispatcher.Remove();
 		itemDispatcher = null;
 		world.ground.dirtyOwnership = true;

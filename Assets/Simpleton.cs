@@ -50,11 +50,11 @@ public class Simpleton : Player
         HiveCommon.Log( $"[{name}]: {text}" );
     }
 
-    public override void Remove()
+    public override void Defeat()
     {
         if ( active )
             world.defeatedSimpletonCount++;
-        base.Remove();
+        base.Defeat();
     }
 
     public override void GameLogicUpdate()
