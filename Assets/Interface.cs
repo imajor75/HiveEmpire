@@ -4900,7 +4900,7 @@ if ( cart )
 			Text( "Rate" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
 			Text( "Total" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
 			Text( "Status" ).PinSideways( 0, -borderWidth - iconSize, 100, iconSize );
-			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 2 );
+			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 3 );
 			return this;
 		}
 
@@ -5006,7 +5006,7 @@ if ( cart )
 					last[i].text = "-";
 				rate[i].text = $"~{(list[i].averageTransferRate*Constants.World.normalSpeedPerSecond*60).ToString( "F2" )}/m";
 				total[i].text = list[i].itemsDelivered.ToString();
-				cart[i].gameObject.SetActive( list[i].start.cart.currentRoute == list[i] );
+				cart[i].gameObject.SetActive( list[i].start.cart?.currentRoute == list[i] );
 				priority[i].text = list[i].priority.ToString();
 				status[i].text = list[i].state switch
 				{
