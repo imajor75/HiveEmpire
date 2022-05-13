@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -198,10 +198,9 @@ public class Ground : HiveObject
 			Destroy( block );
 		blocks.Clear();
 
-		const int blockCount = 4;
-		for ( int x = dimension / blockCount / 2; x < dimension; x += dimension / blockCount )
-			for ( int y = dimension / blockCount / 2; y < dimension; y += dimension / blockCount )
-				blocks.Add( Block.Create().Setup( this, GetNode( x, y ), dimension / blockCount ) );
+		for ( int x = dimension / Constants.Ground.blockCount / 2; x < dimension; x += dimension / Constants.Ground.blockCount )
+			for ( int y = dimension / Constants.Ground.blockCount / 2; y < dimension; y += dimension / Constants.Ground.blockCount )
+				blocks.Add( Block.Create().Setup( this, GetNode( x, y ), dimension / Constants.Ground.blockCount ) );
 	}
 
 	public float n00x, n00y, n10x, n10y, n01x, n01y;

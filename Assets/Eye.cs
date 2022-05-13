@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -117,12 +117,26 @@ public class Eye : HiveObject
 		}
 	}
 
-	// Approximation only
 	public Vector3 visibleAreaCenter
 	{
 		get
 		{
-			return transform.position + transform.forward * Constants.Eye.forwardForGroundBlocks;
+			Vector3 near = camera.ScreenToWorldPoint( new Vector3( Screen.width / 2, 0, camera.farClipPlane ) );
+			Vector3 far = camera.ScreenToWorldPoint( new Vector3( Screen.width / 2, Screen.height, camera.farClipPlane ) );
+			Vector3 cameraPos = camera.transform.position;
+			float nearFactor = ( cameraPos.y - Constants.Eye.groundHeightDefault ) / ( cameraPos.y - near.y );
+			Vector3 nearGround = Vector3.Lerp( cameraPos, near, nearFactor );
+			if ( far.y < Constants.Eye.groundHeightDefault )
+			{
+				float farFactor = ( cameraPos.y - Constants.Eye.groundHeightDefault ) / ( cameraPos.y - far.y );
+				Vector3 farGround = Vector3.Lerp( cameraPos, far, farFactor );
+				float dist = ( farGround - nearGround ).magnitude;
+				float center = dist / 2;
+				if ( center > ground.dimension * Constants.Node.size * Constants.Eye.maxDistance )
+					center = ground.dimension * Constants.Node.size * Constants.Eye.maxDistance;
+				return Vector3.Lerp( nearGround, farGround, center / dist );
+			}
+			return position + ( position - nearGround );
 		}
 	}
 

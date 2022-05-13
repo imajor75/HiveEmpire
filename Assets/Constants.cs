@@ -42,7 +42,7 @@ public static class Constants
         public const float minAltitudeDirection = 0.6f;
         public const float maxAltitudeDirection = 1.2f;
         public const float defaultViewDistanceWithDirector = 2.0f;
-        public const float forwardForGroundBlocks = 10;
+        public const float groundHeightDefault = 3;
         public const float heightFollowSpeed = 2;
         public const float moveSpeed = 5;
         public const float rotateSpeed = 1.5f;
@@ -53,6 +53,7 @@ public static class Constants
         public const float altitudeChangeSpeedWithMouseWheel = 25;
         public const float autoStorePositionAfter = 2;
         public const int maxNumberOfSavedPositions = 10;
+        public const float maxDistance = 0.35f;
     }
 
     public static class Flag
@@ -143,6 +144,7 @@ public static class Constants
         public const int grassLevels = 30;
         public const int grassMaskDimension = 256;
         public const float grassDensity = 0.4f;
+		public const int blockCount = 6;
     }
 
     public static class GuardHouse
