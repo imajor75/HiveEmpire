@@ -10,7 +10,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.Networking;
+using static UnityEngine.UI.Dropdown;
 #pragma warning disable 0618
 
 public class Interface : HiveObject
@@ -1460,7 +1460,7 @@ public class Interface : HiveObject
 			}
 			if ( !noResize )
 			{
-				resizer = Image( iconTable.GetMediaData( Icon.resizer ) ).Pin( -iconSize, iconSize, iconSize, iconSize, 1, 0 );
+				resizer = Image( Icon.resizer ).Pin( -iconSize, iconSize, iconSize, iconSize, 1, 0 );
 				resizer.name = "Resizer";
 			}
 		}
@@ -1623,9 +1623,9 @@ public class Interface : HiveObject
 
 		public Image AreaIcon( Building building, Ground.Area area )
 		{
-			var bg = Image( iconTable.GetMediaData( Icon.smallFrame ) );
+			var bg = Image( Icon.smallFrame );
 			bg.color = Color.grey;
-			var i = Image( iconTable.GetMediaData( Icon.crosshair ) ).AddOutline();
+			var i = Image( Icon.crosshair ).AddOutline();
 			var a = i.gameObject.AddComponent<AreaControl>();
 			a.Setup( building, area );
 			i.Link( bg );
@@ -2628,12 +2628,13 @@ public class Interface : HiveObject
 
 			if ( ( contentToShow & Content.controlIcons ) != 0 )
 			{
-				Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 190, row ).AddClickHandler( Remove ).SetTooltip( "Remove the building" );
-				Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, row ).AddClickHandler( ShowTinkerer ).SetTooltip( "Show the tinkerer of the building" );
+				Image( Icon.destroy ).Pin( 190, row ).AddClickHandler( Remove ).SetTooltip( "Remove the building" );
+				Image( Icon.hauler ).Pin( 170, row ).AddClickHandler( ShowTinkerer ).SetTooltip( "Show the tinkerer of the building" );
 				changeModeImage = Image( GetModeIcon() ).Pin( 150, row ).AddClickHandler( ChangeMode ).SetTooltip( "Current running mode of the building\nLMB to cycle throught possible modes", null, 
 				"Clock (default) - Work when needed\n" +
 				"Alarm - Work even if not needed\n" +
 				"Bed - Don't work at all" );
+				Image( Icon.buildings ).Pin( 130, row ).AddClickHandler( () => BuildingList.Create().Open( building.type ) ).SetTooltip( "Show a list of buildings with the same type" );
 				changeModeImage.color = Color.black;
 				row -= 25;
 			}
@@ -3051,7 +3052,7 @@ public class Interface : HiveObject
 			name = "Guard House panel";
 			if ( attackable.team == root.mainTeam )
 			{
-				Image( iconTable.GetMediaData( Icon.destroy ) ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
+				Image( Icon.destroy ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 				Text( "Defender count" ).Pin( borderWidth, -borderWidth, 200 );
 				soldierCount = Dropdown().PinDownwards( borderWidth, 0, 160 );
 				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
@@ -3066,6 +3067,7 @@ public class Interface : HiveObject
 			attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
 			if ( show )
 				eye.FocusOn( guardHouse, true );
+			Image( Icon.buildings ).Pin( 145, 30, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( Building.Type.guardHouse ) ).SetTooltip( "Show a list of buildings with the same type" );
 		}
 
 		new void Update()
@@ -3259,12 +3261,13 @@ public class Interface : HiveObject
 			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.7f );
 			selectedOutput.color = new Color( 1, 0.75f, 0.15f );
 
-			Image( iconTable.GetMediaData( Icon.reset ) ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).SetTooltip( "Reset all values to default" ).name = "Reset";
-			Image( iconTable.GetMediaData( Icon.cart ) ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).SetTooltip( "Show the cart of the stock", null, 
+			Image( Icon.reset ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).SetTooltip( "Reset all values to default" ).name = "Reset";
+			Image( Icon.cart ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).SetTooltip( "Show the cart of the stock", null, 
 			$"Every stock has a cart which can transport {Constants.Stock.cartCapacity} items at the same time. " +
 			"For optimal performance the cart should be used for long range transport, haulers should be restricted by areas only to short range local transport. " +
 			"To utilize carts, you have to increase either the cart input or cart output numbers. Select an item type and look for the two numbers above the cart icon on the bottom." ).name = "Show cart";
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
+			Image( Icon.destroy ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
+			Image( Icon.buildings ).Link( controls ).Pin( 155, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( Building.Type.stock ) ).SetTooltip( "Show a list of buildings with the same type" );
 			UpdateRouteIcons();
 			currentStockCRC = StockCRC();
 		}
@@ -3973,9 +3976,9 @@ public class Interface : HiveObject
 			offset = new Vector2( 100, 0 );
 			base.Open( node, 0, 0, 210, 185 );
 			this.node = node;
-			Image( iconTable.GetMediaData( Icon.hauler ) ).Pin( 170, -10 ).AddClickHandler( Hauler ).SetTooltip( "Show the hauler working on this road" );
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 150, -10 ).AddClickHandler( Remove ).SetTooltip( "Remove the road" );
-			Image( iconTable.GetMediaData( Icon.junction ) ).Pin( 130, -10, 20, 20 ).AddClickHandler( Split ).SetTooltip( "Split the road by inserting a junction at the selected location" );
+			Image( Icon.hauler ).Pin( 170, -10 ).AddClickHandler( Hauler ).SetTooltip( "Show the hauler working on this road" );
+			Image( Icon.destroy ).Pin( 150, -10 ).AddClickHandler( Remove ).SetTooltip( "Remove the road" );
+			Image( Icon.junction ).Pin( 130, -10, 20, 20 ).AddClickHandler( Split ).SetTooltip( "Split the road by inserting a junction at the selected location" );
 			jam = Text( "Jam" ).Pin( 12, -4, 120 );
 			units = Text( "Hauler count" ).Pin( 12, -28, 120 );
 			name = "Road panel";
@@ -4208,11 +4211,11 @@ public class Interface : HiveObject
 			this.flag = flag;
 			this.node = node;
 			int col = 16;
-			Image( iconTable.GetMediaData( Icon.destroy ) ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
-			Image( iconTable.GetMediaData( Icon.newRoad ) ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
-			Image( iconTable.GetMediaData( Icon.magnet ) ).PinSideways( 0, -45 ).AddClickHandler( Capture ).SetTooltip( "Merge nearby roads to this junction" );
-			shovelingIcon = Image( iconTable.GetMediaData( Icon.shovel ) ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
-			convertIcon = Image( iconTable.GetMediaData( Icon.crossing ) ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
+			Image( Icon.destroy ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
+			Image( Icon.newRoad ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
+			Image( Icon.magnet ).PinSideways( 0, -45 ).AddClickHandler( Capture ).SetTooltip( "Merge nearby roads to this junction" );
+			shovelingIcon = Image( Icon.shovel ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
+			convertIcon = Image( Icon.crossing ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
@@ -5204,7 +5207,7 @@ if ( cart )
 		List<Building> buildings = new List<Building>();
 		List<Text> productivities = new List<Text>();
 		List<Text> outputs = new List<Text>();
-		static string filter = "";
+		static Building.Type filter = Building.Type.unknown;
 		List<List<Text>> inputs = new List<List<Text>>();
 		static bool reversed;
 		static Comparison<Building> comparison = CompareTypes;
@@ -5215,27 +5218,27 @@ if ( cart )
 			return new GameObject( "Building list" ).AddComponent<BuildingList>();
 		}
 
-		public void Open()
+		public void Open( Building.Type buildingType = Building.Type.unknown ) 
 		{
 			base.Open( null, 0, 0, 500, 420 );
+
+			if ( buildingType != Building.Type.unknown )
+				filter = buildingType;
 
 			Text( "Filter:" ).Pin( 20, -20, 150 );
 			var d = Dropdown().Pin( 80, -20, 150 );
 			List<string> options = new List<string>();
-			for ( int j = 0; j < (int)Workshop.Type.total; j++ )
+			for ( int j = 0; j < (int)Building.Type.total; j++ )
 			{
-				string typeName = ((Workshop.Type)j).ToString().GetPrettyName();
-				if ( !typeName.Contains( "Obsolete" ) )
+				string typeName = BuildingTypeToString( (Building.Type)j );
+				if ( typeName != null )
 					options.Add( typeName );
 			}
-			options.Add( "Stock" );
-			options.Add( "Guard House" );
 			options.Sort();
 			options.Add( "All" );
 			d.AddOptions( options );
-			d.value = options.Count - 1;
-			if ( options.Contains( filter ) )
-				d.value = options.IndexOf( filter );
+			d.value = options.IndexOf( BuildingTypeToString( filter ) );
+
 			d.onValueChanged.AddListener( delegate { SetFilter( d ); } );
 
 			var t = Text( "type", 10 ).Pin( 20, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareTypes ); } );
@@ -5249,26 +5252,35 @@ if ( cart )
 			SetFilter( d );
 		}
 
+		public string BuildingTypeToString( Building.Type type )
+		{
+			if ( type == Building.Type.unknown )
+				return "All";
+			if ( type == (Building.Type)Workshop.Type._geologistObsolete )
+				return null;
+			string name = "";
+			if ( type < Building.Type.stock )
+				name = ((Workshop.Type)type).ToString();
+			else
+				name = type.ToString();
+			return Nice( name );
+		}
+
 		void SetFilter( Dropdown d )
 		{
-			filter = d.options[d.value].text;
-			if ( filter == "All" )
-			{
+			for ( int i = 0; i < (int)Building.Type.total; i++ )
+				if ( BuildingTypeToString( (Building.Type)i ) == d.options[d.value].text )
+					filter = (Building.Type)i;
+			if ( d.options[d.value].text == "All" )
+				filter = Building.Type.unknown;
+			if ( filter == Building.Type.unknown )
 				root.highlightType = HighlightType.none;
-				filter = "";
-			}
 			else
 			{
 				root.highlightType = HighlightType.buildingType;
 				root.highlightOwner = gameObject;
 				root.highlightBuildingTypes.Clear();
-				for ( int i = 0; i < (int)Building.Type.total; i++ )
-				{
-					if ( i < (int)Workshop.Type.total && ((Workshop.Type)i).ToString().GetPrettyName() == filter )
-						root.highlightBuildingTypes.Add( (Building.Type)i );
-					if ( ((Building.Type)i).ToString().GetPrettyName() == filter )
-						root.highlightBuildingTypes.Add( (Building.Type)i );
-				}
+				root.highlightBuildingTypes.Add( filter );
 			}
 			Fill();
 		}
@@ -5291,7 +5303,7 @@ if ( cart )
 			{
 				Assert.global.IsFalse( building.destroyed );	// Triggered
 				Assert.global.IsNotNull( building );
-				if ( building.team != root.mainTeam || building.blueprintOnly || !building.title.Contains( filter ) )
+				if ( building.team != root.mainTeam || building.blueprintOnly || ( building.type != filter && filter != Building.Type.unknown ) )
 					continue;
 				buildings.Add( building );
 			}
@@ -6543,7 +6555,7 @@ if ( cart )
 				var t = (Item.Type)i;
 				ItemIcon( (Item.Type)i ).Pin( 20 + i * iconSize, -20 ).AddClickHandler( delegate { selected = t; } );
 			}
-			itemFrame = Image( iconTable.GetMediaData( Icon.tinyFrame ) ).Pin( 17, -17, 26, 26 );
+			itemFrame = Image( Icon.tinyFrame ).Pin( 17, -17, 26, 26 );
 			chart = Image().Pin( 20, -40, 410, 240 );
 			record = Text().Pin( 25, -45, 150 );
 			record.color = Color.yellow;

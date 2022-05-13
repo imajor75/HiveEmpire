@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -79,7 +79,8 @@ abstract public class Building : HiveObject
 		stock = Workshop.Type.total,
 		headquarters,
 		guardHouse,
-		total
+		total,
+		unknown = -1
 	}
 
 	public Type type 
