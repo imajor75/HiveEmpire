@@ -777,7 +777,8 @@ public class Stock : Attackable
 				if ( current > itemData[itemType].inputMax )
 					p = ItemDispatcher.Priority.zero;
 				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea ); // TODO Should not order more than what fits
-				fullReported = false;
+				if ( total < maxItems - Constants.Stock.fullTolerance )
+					fullReported = false;
 			}
 			else if ( !fullReported )
 			{

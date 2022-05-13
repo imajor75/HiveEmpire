@@ -295,6 +295,7 @@ public static class Constants
         public const int startSoldierCount = 15;
         public const int resupplyPeriod = Constants.World.normalSpeedPerSecond * 60 * 30;
         public const int minimumPlank = 2;
+        public const int fullTolerance = 20;
     }
 
     public static class Unit
