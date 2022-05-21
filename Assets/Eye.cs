@@ -92,6 +92,14 @@ public class Eye : HiveObject
 		if ( ppv && ppv.profile )
 			depthOfField = ppv.profile.settings[0] as DepthOfField;
 		ppl = GetComponent<PostProcessLayer>();
+		bool depthOfField = Constants.Eye.depthOfField;
+		if ( depthOfField )
+		{
+			var ppv = world.light.GetComponent<PostProcessVolume>();
+			if ( ppv && ppv.profile )
+				depthOfField = ppv.profile.settings[0] as DepthOfField;
+			ppl = GetComponent<PostProcessLayer>();
+		}
 		base.Start();
 	}
 
@@ -157,7 +165,8 @@ public class Eye : HiveObject
 		if ( deltaTime > 0.5f )
 			deltaTime = 0.5f;
 
-		ppl.enabled = root.highlightType == Interface.HighlightType.none;
+		if ( ppl )
+			ppl.enabled = root.highlightType == Interface.HighlightType.none;
 
 		while ( oldPositions.Count > Constants.Eye.maxNumberOfSavedPositions )
 			oldPositions.RemoveAt( 0 );

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1224,10 +1224,14 @@ public class World : HiveObject
 		light.shadows = LightShadows.Soft;
 		light.color = new Color( 1, 1, 1 );
 		light.transform.SetParent( transform );
-		var ppv = lightObject.AddComponent<PostProcessVolume>();
-		ppv.isGlobal = true;
-		ppv.profile = Instantiate( Resources.Load<PostProcessProfile>( "Post-processing Profile" ) );
-		Assert.global.IsNotNull( ppv.profile );
+		bool depthOfField = Constants.Eye.depthOfField;
+		if ( depthOfField )
+		{
+			var ppv = lightObject.AddComponent<PostProcessVolume>();
+			ppv.isGlobal = true;
+			ppv.profile = Instantiate( Resources.Load<PostProcessProfile>( "Post-processing Profile" ) );
+			Assert.global.IsNotNull( ppv.profile );
+		}
 
 		{
 			// HACK The event system needs to be recreated after the main camera is destroyed,

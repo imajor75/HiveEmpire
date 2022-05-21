@@ -54,6 +54,7 @@ public static class Constants
         public const float autoStorePositionAfter = 2;
         public const int maxNumberOfSavedPositions = 10;
         public const float maxDistance = 0.35f;
+        public const bool depthOfField = false;
     }
 
     public static class Flag
