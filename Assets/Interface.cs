@@ -890,7 +890,7 @@ public class Interface : HiveObject
 			CreateHighLightVolumeMesh( m );
 		}
 
-		highlightVolume.transform.localPosition = highlightVolumeCenter.GetPositionRelativeTo( viewport.visibleAreaCenter );
+		highlightVolume.transform.localPosition = highlightVolumeCenter.GetPositionRelativeTo( eye.visibleAreaCenter );
 		float scale = ( highlightVolumeRadius + 0.5f ) * Constants.Node.size;
 		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
 		Destroy( highlightVolume.GetComponent<MeshCollider>() );
@@ -1732,7 +1732,7 @@ public class Interface : HiveObject
 
 		public void UpdatePosition()
 		{
-			if ( target == null || !followTarget || root.viewport.camera == null )
+			if ( target == null || !followTarget )
 				return;
 
 			MoveTo( target.location.GetPositionRelativeTo( eye.position ) );
@@ -1740,7 +1740,7 @@ public class Interface : HiveObject
 
 		public void MoveTo( Vector3 position )
 		{
-			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
+			Vector3 screenPosition = eye.centerCamera.WorldToScreenPoint( position );
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( transform is RectTransform t )
@@ -2230,7 +2230,7 @@ public class Interface : HiveObject
 			if ( ring == null )
 				return;
 
-			var c = root.viewport.camera;
+			var c = HiveCommon.eye.centerCamera;
 			// A null reference crash happened here in map mode, so safety check
 			if ( c == null || hiveObject == null || hiveObject.location == null )
 				return;
@@ -4055,7 +4055,7 @@ public class Interface : HiveObject
 			units.text = "Hauler count: " + road.haulers.Count;
 
 			bool reversed = false;
-			var camera = eye.camera;
+			var camera = eye.centerCamera;
 			float x0 = camera.WorldToScreenPoint( road.nodes[0].position ).x;
 			float x1 = camera.WorldToScreenPoint( road.lastNode.position ).x;
 			if ( x1 < x0 )
@@ -4128,7 +4128,7 @@ public class Interface : HiveObject
 					lastUsedText.text = $"Last used {UIHelpers.TimeToString( road.lastUsed.age )} ago";
 			}
 
-			var c = root.viewport.camera;
+			var c = HiveCommon.eye.centerCamera;
 			var p = c.WorldToScreenPoint( node.positionInViewport );
 			ring.transform.position = p;
 			float scale;
@@ -5405,7 +5405,6 @@ if ( cart )
 		public static Material greenCheckOnGround;
 		public static Material redCrossOnGround;
 		public static Mesh plane;
-		public new Camera camera;
 		public Vector3 lastMouseOnGround;
 		static int gridMaskXID;
 		static int gridMaskZID;
@@ -5625,34 +5624,9 @@ if ( cart )
 			marker.transform.localScale = Vector3.one * 2;
 		}
 
-		public void SetCamera( Camera camera )
-		{
-			this.camera = camera;
-			if ( camera )
-				eye.camera.enabled = false;
-			else
-			{
-				camera = eye.camera;
-				camera.enabled = true;
-			}
-		}
-
-		public Vector3 visibleAreaCenter
-		{
-			// TODO This should be way cleaner
-			get
-			{
-				if ( eye && eye.camera.enabled )
-					return eye.visibleAreaCenter;
-				else
-					return camera.transform.position;
-			}
-		}
-
 		public HiveObject FindObjectAt( Vector3 screenPosition )
 		{
-			if ( camera == null )
-				camera = eye.camera;
+			var camera = eye.centerCamera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
 			var layers = camera.cullingMask;
 			layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
@@ -5686,8 +5660,7 @@ if ( cart )
 		public Node FindNodeAt( Vector3 screenPosition )
 		{ 
 			RaycastHit hit = new RaycastHit();
-			if ( camera == null )
-				camera = eye.camera;
+			var camera = eye.centerCamera;
 			Ray ray = camera.ScreenPointToRay( screenPosition );
 
 			foreach ( var block in ground.blocks )
@@ -5746,12 +5719,13 @@ if ( cart )
 
 		public void OnPointerDown( PointerEventData eventData )
 		{
-			if ( eventData.button != PointerEventData.InputButton.Right || camera == null )
+			if ( eventData.button != PointerEventData.InputButton.Right )
 				return;
 
 			rightDrag = true;
+			var camera = eye.centerCamera;
 			Ray ray = camera.ScreenPointToRay( eventData.position );
-			Physics.Raycast( ray, out RaycastHit hit, 1000,  1 << World.layerIndexGround );
+			Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexGround );
 
 			Vector3 center = camera.WorldToScreenPoint( hit.point );
 			Vector3 centerWorld = camera.ScreenToWorldPoint( center );
@@ -5765,7 +5739,6 @@ if ( cart )
 		{
 			if ( eventData.button == PointerEventData.InputButton.Right )
 				rightDrag = false;
-
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )

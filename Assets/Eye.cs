@@ -18,13 +18,16 @@ public class Eye : HiveObject
 	public bool currentPositionStored;
 	public float autoRotate;
 	public Vector2 autoMove = Vector2.zero;
-	public new Camera camera;
 	public float moveSensitivity;
 	DepthOfField depthOfField;
 	[JsonIgnore]
 	PostProcessLayer ppl;
 	public Node target;
 	public float targetApproachSpeed;
+	[JsonIgnore]
+	public List<Camera> cameraGrid;
+	public Camera centerCamera { get { return cameraGrid[4]; } }
+	public bool enableSideCameras = true;
 
 	[JsonIgnore]
 	public IDirector director;
@@ -87,11 +90,17 @@ public class Eye : HiveObject
 	new public void Start()
 	{
 		gameObject.AddComponent<CameraHighlight>();
-		camera = GetComponent<Camera>();
-		var ppv = world.light.GetComponent<PostProcessVolume>();
-		if ( ppv && ppv.profile )
-			depthOfField = ppv.profile.settings[0] as DepthOfField;
-		ppl = GetComponent<PostProcessLayer>();
+		for ( int y = -1; y <= 1; y++ )
+			for ( int x = -1; x <= 1; x++ )
+				cameraGrid.Add( new GameObject( $"Camera {x}:{y}" ).AddComponent<Camera>() );
+		foreach ( var camera in cameraGrid )
+		{
+			camera.clearFlags = CameraClearFlags.Nothing;
+			camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
+			camera.transform.SetParent( transform, false );
+		}
+		centerCamera.depth = -1;
+		centerCamera.clearFlags = CameraClearFlags.Skybox;
 		bool depthOfField = Constants.Eye.depthOfField;
 		if ( depthOfField )
 		{
@@ -129,9 +138,9 @@ public class Eye : HiveObject
 	{
 		get
 		{
-			Vector3 near = camera.ScreenToWorldPoint( new Vector3( Screen.width / 2, 0, camera.farClipPlane ) );
-			Vector3 far = camera.ScreenToWorldPoint( new Vector3( Screen.width / 2, Screen.height, camera.farClipPlane ) );
-			Vector3 cameraPos = camera.transform.position;
+			Vector3 near = centerCamera.ScreenToWorldPoint( new Vector3( Screen.width / 2, 0, centerCamera.farClipPlane ) );
+			Vector3 far = centerCamera.ScreenToWorldPoint( new Vector3( Screen.width / 2, Screen.height, centerCamera.farClipPlane ) );
+			Vector3 cameraPos = centerCamera.transform.position;
 			float nearFactor = ( cameraPos.y - Constants.Eye.groundHeightDefault ) / ( cameraPos.y - near.y );
 			Vector3 nearGround = Vector3.Lerp( cameraPos, near, nearFactor );
 			if ( far.y < Constants.Eye.groundHeightDefault )
@@ -186,8 +195,6 @@ public class Eye : HiveObject
 		else
 			height = h;
 		UpdateTransformation();
-		camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
-		camera.clearFlags = CameraClearFlags.Skybox;
 
 		if ( director == null )
 			director = null;
@@ -274,7 +281,7 @@ public class Eye : HiveObject
 		if ( altitudeDirectionTarget > Constants.Eye.maxAltitudeDirection )
 			altitudeDirectionTarget = Constants.Eye.maxAltitudeDirection;
 		
-		if ( camera.enabled && root.viewport.mouseOver )
+		if ( root.viewport.mouseOver )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
 				targetAltitude += Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.unscaledDeltaTime;
@@ -290,6 +297,18 @@ public class Eye : HiveObject
 		var f = Constants.Eye.altitudeSmoothness * deltaTime;
 		altitude = altitude * ( 1 - f ) + targetAltitude * f;
 		altitudeDirection = altitudeDirection * ( 1 - f ) + altitudeDirectionTarget * f;
+
+		for ( int i = 0; i < cameraGrid.Count; i++ )
+		{
+			int x = ( i % 3 ) - 1;
+			int y = ( i / 3 ) - 1;
+			var right = new Vector3( 1, 0, 0 ) * Constants.Node.size * ground.dimension;
+			var up = new Vector3( 0.5f, 0, 1 ) * Constants.Node.size * ground.dimension;
+			cameraGrid[i].transform.position = eye.position + x * right + y * up;
+			if ( x != 0 && y != 0 )
+				cameraGrid[i].enabled = enableSideCameras;
+		}
+
 		base.Update();
 	}
 

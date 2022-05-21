@@ -119,10 +119,7 @@ public class Map : Interface.Panel
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexGround ) - ( 1 << Ground.grassLayerIndex ) - ( 1 << World.layerIndexBuildings ) - ( 1 << World.layerIndexUnits ) - ( 1 << World.layerIndexWater );
 			camera.gameObject.AddComponent<CameraHighlight>();
-			if ( fullscreen )
-				root.viewport.SetCamera( camera );
-			else
-				root.viewport.SetCamera( null );
+			Assert.global.Fail( "Map camera not implemented" );
 				
 			float rotation = eye.direction / (float)Math.PI * 180f;
 			SetTarget( new Vector2( eye.x, eye.y ), zoom, rotation );
@@ -140,7 +137,7 @@ public class Map : Interface.Panel
 		{
 			base.OnDestroy();
 			Destroy( camera.gameObject );
-			root.viewport.SetCamera( null );
+			Assert.global.Fail( "Map camera not implemented" );
 		}
 
 		new void OnRectTransformDimensionsChange()
