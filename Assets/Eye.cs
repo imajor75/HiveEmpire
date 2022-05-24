@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
-[RequireComponent( typeof( Camera ), typeof( AudioListener ) )]
+[RequireComponent( typeof( AudioListener ) )]
 public class Eye : HiveObject
 {
 	public float altitude = Constants.Eye.defaultAltitude;
@@ -25,7 +25,7 @@ public class Eye : HiveObject
 	public Node target;
 	public float targetApproachSpeed;
 	[JsonIgnore]
-	public List<Camera> cameraGrid;
+	public List<Camera> cameraGrid = new List<Camera>();
 	public Camera centerCamera { get { return cameraGrid[4]; } }
 	public bool enableSideCameras = true;
 
@@ -62,11 +62,7 @@ public class Eye : HiveObject
 
 	public static Eye Create()
 	{
-		var o = Instantiate( Resources.Load<GameObject>( "eye" ) );
-		o.name = "Eye";
-		Eye eye = o.GetComponent<Eye>();
-		eye.destroyed = false;
-		return eye;
+		return new GameObject( "eye" ).AddComponent<Eye>();
 	}
 
 	public Eye Setup( World world )
@@ -304,8 +300,8 @@ public class Eye : HiveObject
 			int y = ( i / 3 ) - 1;
 			var right = new Vector3( 1, 0, 0 ) * Constants.Node.size * ground.dimension;
 			var up = new Vector3( 0.5f, 0, 1 ) * Constants.Node.size * ground.dimension;
-			cameraGrid[i].transform.position = eye.position + x * right + y * up;
-			if ( x != 0 && y != 0 )
+			cameraGrid[i].transform.position = eye.transform.position + x * right + y * up;
+			if ( x != 0 || y != 0 )
 				cameraGrid[i].enabled = enableSideCameras;
 		}
 
