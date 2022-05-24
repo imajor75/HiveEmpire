@@ -342,7 +342,8 @@ public class Resource : HiveObject
 
 		assert.IsTrue( node.resources.Contains( this ) );
 		node.avoidGrass = false;
-		ground.SetDirty( node );
+		if ( type == Type.cornfield )
+			ground.SetDirty( node );
 		node.resources.Remove( this );
 		base.Remove();
 	}
