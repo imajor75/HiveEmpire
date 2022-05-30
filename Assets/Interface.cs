@@ -5666,16 +5666,22 @@ if ( cart )
 		public Node FindNodeAt( Vector3 screenPosition )
 		{ 
 			RaycastHit hit = new RaycastHit();
-			var camera = eye.centerCamera;
-			Ray ray = camera.ScreenPointToRay( screenPosition );
 
-			foreach ( var block in ground.blocks )
+			foreach ( var camera in eye.cameraGrid )
 			{
-				var c = block.collider;
-				if ( c == null )
-					continue;
+				Ray ray = camera.ScreenPointToRay( screenPosition );
 
-				if ( c.Raycast( ray, out hit, 1000 ) ) // TODO How long the ray should really be?
+				foreach ( var block in ground.blocks )
+				{
+					var c = block.collider;
+					if ( c == null )
+						continue;
+
+					if ( c.Raycast( ray, out hit, 1000 ) ) // TODO How long the ray should really be?
+						break;
+				}
+
+				if ( hit.collider != null )
 					break;
 			}
 
