@@ -26,7 +26,6 @@ public class World : HiveObject
 	public new int time;
 	public int nextID = 1;
 	public int frameSeed;
-	public int overseas = 2;
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public string fileName;
@@ -135,6 +134,8 @@ public class World : HiveObject
 	bool defeatReported { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int replayIndex { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int overseas;
 	public Settings settings;
 
 	[System.Serializable]
@@ -738,7 +739,6 @@ public class World : HiveObject
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
-		overseas = 2;
 		var oldEye = eye;
 
 		this.challenge = challenge;
