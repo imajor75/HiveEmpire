@@ -5626,14 +5626,20 @@ if ( cart )
 
 		public HiveObject FindObjectAt( Vector3 screenPosition )
 		{
-			var camera = eye.centerCamera;
-			Ray ray = camera.ScreenPointToRay( screenPosition );
-			var layers = camera.cullingMask;
+			var layers = eye.centerCamera.cullingMask;
 			layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
 			layers |= 1 << World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources);
-			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layers ) )
+			RaycastHit hit = new RaycastHit();
+			foreach ( var camera in eye.cameraGrid )
+			{
+				Ray ray = camera.ScreenPointToRay( screenPosition );
+				if ( Physics.Raycast( ray, out hit, 1000, layers ) )
+					break;
+			}
+
+			if ( hit.collider == null )
 				return null;
 
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
