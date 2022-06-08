@@ -1,32 +1,75 @@
-﻿Shader "Unlit/HighloightVolume"
+﻿Shader "Unlit/HighlightVolume"
 {
 	SubShader
 	{
-		Tags { "Queue" = "Overlay" "RenderType" = "Transparent" }
 		LOD 100
 		ZWrite Off
+        Blend One One
+        ZTest Less
 
 		Pass
 		{
-			ColorMask Off
 			Cull Back
-			Stencil
-			{
-				Ref 1
-				Comp Always
-				Pass DecrWrap
-			}
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "UnityCG.cginc"
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+            };
+
+            struct v2f
+            {
+                float4 vertex : SV_POSITION;
+            };
+
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                return o;
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                return fixed4(0.1,0.1,0.1,1);
+            }
+            ENDCG
 		}
 		Pass
 		{
-			ColorMask Off
 			Cull Front
-			Stencil
-			{
-				Ref 1
-				Comp Always
-				Pass IncrWrap
-			}
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "UnityCG.cginc"
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+            };
+
+            struct v2f
+            {
+                float4 vertex : SV_POSITION;
+            };
+
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                return o;
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                return fixed4(-0.1,-0.1,-0.1,1);
+            }
+            ENDCG
 		}
 	}
 }

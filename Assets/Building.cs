@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -36,7 +36,7 @@ abstract public class Building : HiveObject
 	public Versioned contentChange = new Versioned();
 	public bool changedSide;
 
-	protected GameObject body;
+	public GameObject body;
 	GameObject highlightArrow;
 	[JsonIgnore]
 	public Road exit;
@@ -721,23 +721,17 @@ abstract public class Building : HiveObject
 		if ( !construction.done && !blueprintOnly )
 			level = lowerLimit + ( upperLimit - lowerLimit ) * (float)Math.Pow( construction.progress, levelBrake );
 
-		bool highlight = root.highlightType == Interface.HighlightType.buildingType && root.highlightBuildingTypes.Contains( type );
-
-		if ( currentHighlight != highlight || currentLevel != level )
+		if ( currentLevel != level )
 		{
 			currentLevel = level;
-			currentHighlight = highlight;
 			foreach ( var r in renderers )
 			{
 				foreach ( var m in r.materials )
-				{
 					m.SetFloat( Construction.sliceLevelID, level );
-					m.SetInt( highlightID, highlight ? 1 : 0 );
-				}
 			}
 		}
 
-		if ( root.highlightType == Interface.HighlightType.area && root.highlightArea != null && root.highlightArea.IsInside( node ) )
+		if ( eye.highlight.type == Eye.Highlight.Type.area && eye.highlight.area != null && eye.highlight.area.IsInside( node ) )
 		{
 			highlightArrow.transform.localPosition = Vector3.up * ( ( float )( height + 0.3f * Math.Sin( 2 * Time.time ) ) );
 			highlightArrow.transform.rotation = Quaternion.Euler( 0, Time.time * 200, 0 );

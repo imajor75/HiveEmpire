@@ -3,9 +3,9 @@
 	Properties
 	{
 		_MainTex("Main Texture", 2D) = "white" {}
+		_Mask("Mask", 2D) = "white" {}
 		_OffsetX("Offset X", Float) = 0.004
 		_OffsetY("Offset Y", Float) = 0.006
-		[IntRange] _StencilRef("Stencil Reference Value", Range(0,255)) = 0
 	}
 
 	SubShader
@@ -14,12 +14,6 @@
 		ZTest Always
 		ZWrite Off
 		Cull Off
-
-		Stencil
-		{
-			Ref [_StencilRef]
-			Comp Equal
-		}
 
         Pass
         {
@@ -44,6 +38,7 @@
 			};
 
 			sampler _MainTex;
+			sampler _Mask;
             float _OffsetX;
             float _OffsetY;
 
@@ -58,11 +53,15 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float4 col = tex2D(_MainTex, i.uv);
-				col += tex2D(_MainTex, i.uv + float2(_OffsetX, -_OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(_OffsetX, _OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, _OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, -_OffsetY));
-				return col * 0.15f;
+				if ( tex2D(_Mask, i.uv).r < 0.51 )
+				{
+					col += tex2D(_MainTex, i.uv + float2(_OffsetX, -_OffsetY));
+					col += tex2D(_MainTex, i.uv + float2(_OffsetX, _OffsetY));
+					col += tex2D(_MainTex, i.uv + float2(-_OffsetX, _OffsetY));
+					col += tex2D(_MainTex, i.uv + float2(-_OffsetX, -_OffsetY));
+					col *= 0.15f;
+				}
+				return col;
             }
             ENDCG
         }

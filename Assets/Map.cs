@@ -47,7 +47,6 @@ public class Map : Interface.Panel
 		if ( toggleGroundHotkey.IsPressed() )
 			toggleGround.Toggle();
 
-
 		if ( Interface.mapZoomInHotkey.IsDown() )
 			zoom /= 1 + Constants.Map.zoomSpeed;
 		if ( Interface.mapZoomOutHotkey.IsDown() )
@@ -118,7 +117,6 @@ public class Map : Interface.Panel
 			camera.transform.SetParent( ground.transform );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask &= int.MaxValue - ( 1 << World.layerIndexGround ) - ( 1 << Ground.grassLayerIndex ) - ( 1 << World.layerIndexBuildings ) - ( 1 << World.layerIndexUnits ) - ( 1 << World.layerIndexWater );
-			camera.gameObject.AddComponent<CameraHighlight>();
 			Assert.global.Fail( "Map camera not implemented" );
 				
 			float rotation = eye.direction / (float)Math.PI * 180f;

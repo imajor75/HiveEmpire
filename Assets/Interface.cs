@@ -34,12 +34,6 @@ public class Interface : HiveObject
 	public static Tooltip tooltip;
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
-	public HighlightType highlightType;
-	public List<Building.Type> highlightBuildingTypes = new List<Building.Type>(); 
-	public Ground.Area highlightArea;
-	public GameObject highlightVolume;
-	Node highlightVolumeCenter;
-	int highlightVolumeRadius;
 	Image[] speedButtons = new Image[3];
 	public List<World.Challenge> challenges;
 	public MonoBehaviour replayIcon;
@@ -54,9 +48,6 @@ public class Interface : HiveObject
 	public bool requestUpdate;
     public bool purgeOperationHandlerCRCTable;
 
-
-	static Material highlightMaterial;
-	public GameObject highlightOwner;
 	public static Material materialUIPath;
 	static bool focusOnInputField, focusOnDropdown;
 	static KeyCode ignoreKey = KeyCode.None;
@@ -183,14 +174,6 @@ public class Interface : HiveObject
 		{
 			public List<Hotkey> list;
 		}
-	}
-
-	public enum HighlightType
-	{
-		none,
-		buildingType,
-		volume,
-		area
 	}
 
 	public enum Icon
@@ -388,9 +371,6 @@ public class Interface : HiveObject
 		// 	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
 		// }
 
-		var highlightShader = Resources.Load<Shader>( "shaders/HighlightVolume" );
-		highlightMaterial = new Material( highlightShader );
-
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.global.IsNotNull( font );
 		object[] table = {
@@ -437,11 +417,11 @@ public class Interface : HiveObject
 		Workshop.Initialize();
 		Stock.Initialize();
 		GuardHouse.Initialize();
-		CameraHighlight.Initialize();
 		Viewport.Initialize();
 		Water.Initialize();
 		Network.Initialize();
 		BuildingMapWidget.Initialize();
+		Eye.Highlight.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
@@ -808,7 +788,6 @@ public class Interface : HiveObject
 		}
 #endif
 
-		CheckHighlight();
 		if ( speedButtons[0] && world ) { speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey; };
 		if ( speedButtons[1] && world ) { speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey; };
 		if ( speedButtons[2] && world ) { speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey; };
@@ -850,120 +829,6 @@ public class Interface : HiveObject
 #endif
 	}
 
-	void CheckHighlight()
-	{
-		if ( highlightOwner == null )
-			highlightType = HighlightType.none;
-		if ( highlightType == HighlightType.area && highlightArea.center == null )
-			highlightType = HighlightType.none;
-		if ( highlightType != HighlightType.area || highlightArea.center == null )
-		{
-			Destroy( highlightVolume );
-			highlightVolume = null;
-			return;
-		}
-
-		UpdateHighlight();
-	}
-
-	void UpdateHighlight()
-	{
-		if ( highlightVolume && highlightVolumeCenter == highlightArea.center && highlightVolumeRadius == highlightArea.radius )
-			return;
-
-		highlightVolumeCenter = highlightArea.center;
-		highlightVolumeRadius = highlightArea.radius;
-
-		Mesh m;
-		if ( highlightVolume == null )
-		{
-			highlightVolume = new GameObject( "Highlight Volume" );
-			highlightVolume.transform.SetParent( world.transform );
-			var f = highlightVolume.AddComponent<MeshFilter>();
-			var r = highlightVolume.AddComponent<MeshRenderer>();
-			r.material = highlightMaterial;
-			m = f.mesh = new Mesh();
-			var c = highlightVolume.AddComponent<MeshCollider>();
-			c.convex = true;
-			c.sharedMesh = m;
-			highlightVolume.layer = World.layerIndexHighlightVolume;
-			CreateHighLightVolumeMesh( m );
-		}
-
-		highlightVolume.transform.localPosition = highlightVolumeCenter.GetPositionRelativeTo( eye.visibleAreaCenter );
-		float scale = ( highlightVolumeRadius + 0.5f ) * Constants.Node.size;
-		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
-		Destroy( highlightVolume.GetComponent<MeshCollider>() );
-		highlightVolume.AddComponent<MeshCollider>();
-	}
-
-	void CreateHighLightVolumeMesh( Mesh m )
-	{
-		var vertices = new Vector3[Constants.Node.neighbourCount * 2];
-		var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
-		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
-		{
-			float x = corners[i, 0] - corners[i, 1] / 2f;
-			float y = corners[i, 1];
-			vertices[i * 2 + 0] = new Vector3( x, -1, y );
-			vertices[i * 2 + 1] = new Vector3( x, +1, y );
-		}
-		m.vertices = vertices;
-
-		var triangles = new int[Constants.Node.neighbourCount * 2 * 3 + 2 * 3 * (Constants.Node.neighbourCount - 2)];
-		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
-		{
-			int a = i * 2;
-			int b = i * 2 + 2;
-			if ( b == Constants.Node.neighbourCount * 2 )
-				b = 0;
-
-			triangles[i * 2 * 3 + 0] = a + 0;
-			triangles[i * 2 * 3 + 1] = a + 1;
-			triangles[i * 2 * 3 + 2] = b + 0;
-
-			triangles[i * 2 * 3 + 3] = a + 1;
-			triangles[i * 2 * 3 + 4] = b + 1;
-			triangles[i * 2 * 3 + 5] = b + 0;
-		}
-		assert.AreEqual( Constants.Node.neighbourCount, 6 );
-		int cap = Constants.Node.neighbourCount * 6;
-		triangles[cap++] = 0;
-		triangles[cap++] = 2;
-		triangles[cap++] = 10;
-
-		triangles[cap++] = 10;
-		triangles[cap++] = 2;
-		triangles[cap++] = 8;
-
-		triangles[cap++] = 8;
-		triangles[cap++] = 2;
-		triangles[cap++] = 4;
-
-		triangles[cap++] = 8;
-		triangles[cap++] = 4;
-		triangles[cap++] = 6;
-
-		triangles[cap++] = 11;
-		triangles[cap++] = 3;
-		triangles[cap++] = 1;
-
-		triangles[cap++] = 9;
-		triangles[cap++] = 3;
-		triangles[cap++] = 11;
-
-		triangles[cap++] = 5;
-		triangles[cap++] = 3;
-		triangles[cap++] = 9;
-
-		triangles[cap++] = 7;
-		triangles[cap++] = 5;
-		triangles[cap++] = 9;
-		m.triangles = triangles;
-
-		highlightVolume.GetComponent<MeshCollider>().sharedMesh = m;
-	}
-
 	void SetHeightStrips( bool value )
 	{
 		this.heightStrips = value;
@@ -998,10 +863,6 @@ public class Interface : HiveObject
 #if DEBUG
 		if ( chain )
 			world.Validate( true );
-		if ( highlightType == HighlightType.volume )
-			Assert.global.IsNotNull( highlightVolume );
-		if ( highlightType == HighlightType.area )
-			Assert.global.IsNotNull( highlightArea );
 
 		if ( !chain )	// This function is caller after load, before the Start functions would be called, so in that case skip checking the number of objects in the root
 			return;
@@ -1900,10 +1761,10 @@ public class Interface : HiveObject
 				if ( root.viewport.rightButton )
 					return true;
 					
-				if ( root.highlightArea == area )
+				if ( eye.highlight.area == area )
 				{
-					root.highlightType = HighlightType.none;
-					root.highlightArea = null;
+					eye.highlight.type = Eye.Highlight.Type.none;
+					eye.highlight.area = null;
 				}
 				oh.ScheduleChangeArea( building, originalArea, area.center, area.radius );
 				return false;
@@ -1914,8 +1775,8 @@ public class Interface : HiveObject
 				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
 					oh.ScheduleChangeArea( building, originalArea, null, 0 );
-					if ( root.highlightArea == area )
-						root.highlightType = HighlightType.none;
+					if ( eye.highlight.area == area )
+						eye.highlight.type = Eye.Highlight.Type.none;
 					return;
 				}
 				if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
@@ -1936,9 +1797,7 @@ public class Interface : HiveObject
 				}
 				area.center = ground.nodes[0];
 				area.radius = 2;
-				root.highlightType = HighlightType.area;
-				root.highlightArea = area;
-				root.highlightOwner = gameObject;
+				eye.highlight.HighlightArea( area, gameObject );
 				root.viewport.inputHandler = this;
 			}
 
@@ -1949,14 +1808,12 @@ public class Interface : HiveObject
 					if ( originalArea.center == null )
 						return;
 
-					root.highlightType = HighlightType.area;
-					root.highlightOwner = gameObject;
-					root.highlightArea = originalArea;
+					eye.highlight.HighlightArea( originalArea, gameObject );
 				}
 				else
 				{
-					if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == originalArea )
-						root.highlightType = HighlightType.none;
+					if ( root.viewport.inputHandler != this as IInputHandler && eye.highlight.area == originalArea )
+						eye.highlight.type = Eye.Highlight.Type.none;
 				}
 			}
 
@@ -1980,9 +1837,9 @@ public class Interface : HiveObject
 
 			public void OnLostInput()
 			{
-				if ( root.highlightArea != area )
+				if ( eye.highlight.area != area )
 					return;
-				root.highlightType = HighlightType.none;
+				eye.highlight.type = Eye.Highlight.Type.none;
 			}
 
 			public bool OnObjectClicked( HiveObject target )
@@ -5274,14 +5131,9 @@ if ( cart )
 			if ( d.options[d.value].text == "All" )
 				filter = Building.Type.unknown;
 			if ( filter == Building.Type.unknown )
-				root.highlightType = HighlightType.none;
+				eye.highlight.type = Eye.Highlight.Type.none;
 			else
-			{
-				root.highlightType = HighlightType.buildingType;
-				root.highlightOwner = gameObject;
-				root.highlightBuildingTypes.Clear();
-				root.highlightBuildingTypes.Add( filter );
-			}
+				eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
 			Fill();
 		}
 
@@ -5532,17 +5384,11 @@ if ( cart )
 		void HighlightStocks( bool state )
 		{
 			if ( state )
-			{
-				root.highlightType = HighlightType.buildingType;
-				root.highlightOwner = gameObject;
-				root.highlightBuildingTypes.Clear();
-				root.highlightBuildingTypes.Add( Building.Type.headquarters );
-				root.highlightBuildingTypes.Add( Building.Type.stock );
-			}
+				eye.highlight.HighlightBuildingTypes( Building.Type.headquarters, Building.Type.stock, gameObject );
 			else
 			{
-				if ( root.highlightOwner == gameObject )
-					root.highlightType = HighlightType.none;
+				if ( eye.highlight.owner == gameObject )
+					eye.highlight.type = Eye.Highlight.Type.none;
 			}
 		}
 
