@@ -22,17 +22,30 @@ public class Eye : HiveObject
 	public float autoRotate;
 	public Vector2 autoMove = Vector2.zero;
 	public float moveSensitivity;
+	public bool mapMode;
 	DepthOfField depthOfField;
 	[JsonIgnore]
 	PostProcessLayer ppl;
 	public Node target;
 	public float targetApproachSpeed;
 	[JsonIgnore]
-	public List<Camera> cameraGrid = new List<Camera>();
-	public Camera centerCamera { get { return cameraGrid[4]; } }
-	public bool enableSideCameras = true;
+	public CameraGrid cameraGrid;
 	[JsonIgnore]
 	public Highlight highlight;
+
+	public void SetMapMode( bool mapMode )
+	{
+		this.mapMode = mapMode;
+		cameraGrid.orthographic = mapMode;
+		if ( mapMode )
+		{
+			cameraGrid.cullingMask = int.MaxValue - (1 << Ground.grassLayerIndex ) - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits);
+			if ( !Interface.Viewport.showGround )
+				cameraGrid.cullingMask = cameraGrid.cullingMask - (1 << World.layerIndexWater) - (1 << World.layerIndexGround);
+		}
+		else
+			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly);
+	}
 
 	[JsonIgnore]
 	public IDirector director;
@@ -64,6 +77,8 @@ public class Eye : HiveObject
 	bool hasTarget { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	bool rotateAround { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	bool enableSideCameras { set {} }
 
 	public static Eye Create()
 	{
@@ -90,20 +105,8 @@ public class Eye : HiveObject
 
 	new public void Start()
 	{
-		for ( int y = -1; y <= 1; y++ )
-			for ( int x = -1; x <= 1; x++ )
-				cameraGrid.Add( new GameObject( $"Camera {x}:{y}" ).AddComponent<Camera>() );
-		foreach ( var camera in cameraGrid )
-		{
-			camera.clearFlags = CameraClearFlags.Nothing;
-			camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
-			camera.transform.SetParent( transform, false );
-			camera.allowMSAA = false;
-		}
-		centerCamera.depth = -1;
-		centerCamera.clearFlags = CameraClearFlags.Skybox;
-		cameraGrid.Last().gameObject.AddComponent<Highlight.Applier>();
-		cameraGrid.Last().depth = 1;
+		cameraGrid = new GameObject( "Camera grid" ).AddComponent<CameraGrid>();
+		cameraGrid.transform.SetParent( transform, false );
 		bool depthOfField = Constants.Eye.depthOfField;
 		if ( depthOfField )
 		{
@@ -145,9 +148,9 @@ public class Eye : HiveObject
 	{
 		get
 		{
-			Vector3 near = centerCamera.ScreenToWorldPoint( new Vector3( Screen.width / 2, 0, centerCamera.farClipPlane ) );
-			Vector3 far = centerCamera.ScreenToWorldPoint( new Vector3( Screen.width / 2, Screen.height, centerCamera.farClipPlane ) );
-			Vector3 cameraPos = centerCamera.transform.position;
+			Vector3 near = cameraGrid.center.ScreenToWorldPoint( new Vector3( Screen.width / 2, 0, cameraGrid.center.farClipPlane ) );
+			Vector3 far = cameraGrid.center.ScreenToWorldPoint( new Vector3( Screen.width / 2, Screen.height, cameraGrid.center.farClipPlane ) );
+			Vector3 cameraPos = cameraGrid.center.transform.position;
 			float nearFactor = ( cameraPos.y - Constants.Eye.groundHeightDefault ) / ( cameraPos.y - near.y );
 			Vector3 nearGround = Vector3.Lerp( cameraPos, near, nearFactor );
 			if ( far.y < Constants.Eye.groundHeightDefault )
@@ -201,7 +204,6 @@ public class Eye : HiveObject
 			height += ( h - height ) * Constants.Eye.heightFollowSpeed * deltaTime;
 		else
 			height = h;
-		UpdateTransformation();
 
 		if ( director == null )
 			director = null;
@@ -305,16 +307,7 @@ public class Eye : HiveObject
 		altitude = altitude * ( 1 - f ) + targetAltitude * f;
 		altitudeDirection = altitudeDirection * ( 1 - f ) + altitudeDirectionTarget * f;
 
-		for ( int i = 0; i < cameraGrid.Count; i++ )
-		{
-			int x = ( i % 3 ) - 1;
-			int y = ( i / 3 ) - 1;
-			var right = new Vector3( 1, 0, 0 ) * Constants.Node.size * ground.dimension;
-			var up = new Vector3( 0.5f, 0, 1 ) * Constants.Node.size * ground.dimension;
-			cameraGrid[i].transform.position = eye.transform.position + x * right + y * up;
-			if ( x != 0 || y != 0 )
-				cameraGrid[i].enabled = enableSideCameras;
-		}
+		UpdateTransformation();
 
 		base.Update();
 	}
@@ -348,6 +341,14 @@ public class Eye : HiveObject
 	public void UpdateTransformation()
 	{
 		var position = new Vector3( x, height, y );
+		if ( mapMode )
+		{
+			transform.position = position + Vector3.up * altitude;
+			transform.LookAt( position, new Vector3( (float)Math.Sin(direction), 0, (float)Math.Cos(direction) ) );
+			if ( cameraGrid )
+				cameraGrid.orthographicSize = altitude;
+			return;
+		}
 		float horizontal = (float)Math.Sin(altitudeDirection) * altitude;
 		float vertical = (float)Math.Cos(altitudeDirection) * altitude;
 		Vector3 viewer = new Vector3( (float)( horizontal*Math.Sin(direction) ), -vertical, (float)( horizontal*Math.Cos(direction) ) );
@@ -414,12 +415,74 @@ public class Eye : HiveObject
 		root.viewport.markEyePosition = false;
 		director = null;
 		target = null;
-		return transform.right * side * moveSensitivity + transform.forward * forward * moveSensitivity;
+		var forwardDir = transform.forward;
+		if ( mapMode )
+			forwardDir = transform.up;
+		return transform.right * side * moveSensitivity + forwardDir * forward * moveSensitivity;
 	}
 
 	public interface IDirector
 	{
 		void SetCameraTarget( Eye eye );
+	}
+
+	public class CameraGrid : HiveCommon
+	{
+		public List<Camera> cameras = new List<Camera>();
+		public Camera center { get { return cameras[4]; } }
+		public Camera first { get { return center; } }
+		public Camera last { get { return cameras.Last(); } }
+		public bool enableSideCameras = true;
+
+		void Start()
+		{
+			for ( int y = -1; y <= 1; y++ )
+				for ( int x = -1; x <= 1; x++ )
+					cameras.Add( new GameObject( $"Camera {x}:{y}" ).AddComponent<Camera>() );
+			foreach ( var camera in cameras )
+			{
+				camera.clearFlags = CameraClearFlags.Nothing;
+				camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
+				camera.transform.SetParent( transform, false );
+				camera.allowMSAA = false;
+			}
+			center.depth = -1;
+			center.clearFlags = CameraClearFlags.Skybox;
+			last.gameObject.AddComponent<Highlight.Applier>();
+			last.depth = 1;
+		}
+
+		void Update()
+		{
+			for ( int i = 0; i < cameras.Count; i++ )
+			{
+				int x = ( i % 3 ) - 1;
+				int y = ( i / 3 ) - 1;
+				var right = new Vector3( 1, 0, 0 ) * Constants.Node.size * ground.dimension;
+				var up = new Vector3( 0.5f, 0, 1 ) * Constants.Node.size * ground.dimension;
+				cameras[i].transform.position = eye.transform.position + x * right + y * up;
+				if ( x != 0 || y != 0 )
+					cameras[i].enabled = enableSideCameras;
+			}
+		}
+
+		public int cullingMask
+		{
+			get { return center.cullingMask; }
+			set { foreach ( var camera in cameras ) camera.cullingMask = value; }
+		}
+
+		public bool orthographic
+		{
+			get { return center.orthographic; }
+			set { foreach ( var camera in cameras ) camera.orthographic = value; }
+		}
+
+		public float orthographicSize
+		{
+			get { return center.orthographicSize; }
+			set { foreach ( var camera in cameras ) camera.orthographicSize = value; }
+		}
 	}
 
 	public class Highlight : HiveCommon
@@ -497,8 +560,8 @@ public class Eye : HiveObject
 				Graphics.Blit( source, target );
 			else
 			{
-				GL.modelview = eye.centerCamera.worldToCameraMatrix;
-				GL.LoadProjectionMatrix( eye.centerCamera.projectionMatrix );
+				GL.modelview = eye.cameraGrid.center.worldToCameraMatrix;
+				GL.LoadProjectionMatrix( eye.cameraGrid.center.projectionMatrix );
 				Graphics.ExecuteCommandBuffer( maskCreator );
 				Graphics.Blit( source, target, mainMaterial );
 			}

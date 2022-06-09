@@ -59,7 +59,7 @@ public class Interface : HiveObject
 	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
 	static public Hotkey cameraBackHotkey = new Hotkey( "Camera back", KeyCode.LeftArrow, false, true );
 
-	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M, true );
+	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M );
 
 	static public Hotkey cameraLeftHotkey = new Hotkey( "Camera move left (continuous)", KeyCode.A );
 	static public Hotkey cameraRightHotkey = new Hotkey( "Camera move right (continuous)", KeyCode.D );
@@ -227,7 +227,8 @@ public class Interface : HiveObject
 		no,
 		cave,
 		box,
-		bar
+		bar,
+		ground
 	}
 
 	public Interface()
@@ -443,42 +444,47 @@ public class Interface : HiveObject
 		tooltip = Tooltip.Create();
 		tooltip.Open();
 
-		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
-		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
-		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
+		var iconFolder = new GameObject( "Icons" ).AddComponent<Image>();
+		iconFolder.transform.SetParent( transform, false );
+		iconFolder.enabled = false;
+		iconFolder.rectTransform.offsetMin = iconFolder.rectTransform.offsetMax = Vector2.zero;
+		iconFolder.rectTransform.anchorMin = iconFolder.rectTransform.anchorMax = new Vector2( 0, 1 );
 
-		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
+		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( iconFolder.transform ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
+		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
+		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
+		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
 		buildingListButton.SetTooltip( () => $"List all buildings (hotkey: {buildingListButton.GetHotkey().keyName})" );
-		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
+		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
-		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
+		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
-		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
-		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
+		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
 		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
-		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R, false, false, true );
+		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R, false, false, true );
 		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
-		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
+		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
 		worldProgressButton.SetTooltip( () => $"Show challenge progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
-		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
+		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
-		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
+		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M, true );
 		mapButton.SetTooltip( () => $"Minimap (hotkey: {mapButton.GetHotkey().keyName})" );
-		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
+		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
 		hotkeyButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
-		var challengesButton = this.Image( Icon.exc ).AddClickHandler( () => ChallengeList.Create() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
+		var challengesButton = this.Image( Icon.exc ).AddClickHandler( () => ChallengeList.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
 		challengesButton.SetTooltip( () => $"Show list of possible challenges (hotkey: {challengesButton.GetHotkey().keyName})" );
-		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
+		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
 		showNearestCaveButton.SetTooltip( () => $"Show nearest animal cave (hotkey: {showNearestCaveButton.GetHotkey().keyName})" );
 
-		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
+		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( iconFolder.transform ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
 		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
-		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetWorldSpeed( World.Speed.pause ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetWorldSpeed( World.Speed.pause ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
-		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetWorldSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
+		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetWorldSpeed( World.Speed.normal ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
 		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
@@ -750,7 +756,7 @@ public class Interface : HiveObject
 		if ( cameraBackHotkey.IsPressed() )
 			eye.RestoreOldPosition();
 		if ( mapHotkey.IsPressed() )
-			Map.Create().Open( true );
+			eye.SetMapMode( !eye.mapMode );
 #if DEBUG
 		if ( Input.GetKeyDown( KeyCode.Keypad0 ) )
 		{
@@ -1601,7 +1607,7 @@ public class Interface : HiveObject
 
 		public void MoveTo( Vector3 position )
 		{
-			Vector3 screenPosition = eye.centerCamera.WorldToScreenPoint( position );
+			Vector3 screenPosition = eye.cameraGrid.center.WorldToScreenPoint( position );
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( transform is RectTransform t )
@@ -2087,7 +2093,7 @@ public class Interface : HiveObject
 			if ( ring == null )
 				return;
 
-			var c = HiveCommon.eye.centerCamera;
+			var c = HiveCommon.eye.cameraGrid.center;
 			// A null reference crash happened here in map mode, so safety check
 			if ( c == null || hiveObject == null || hiveObject.location == null )
 				return;
@@ -3912,7 +3918,7 @@ public class Interface : HiveObject
 			units.text = "Hauler count: " + road.haulers.Count;
 
 			bool reversed = false;
-			var camera = eye.centerCamera;
+			var camera = eye.cameraGrid.center;
 			float x0 = camera.WorldToScreenPoint( road.nodes[0].position ).x;
 			float x1 = camera.WorldToScreenPoint( road.lastNode.position ).x;
 			if ( x1 < x0 )
@@ -3985,7 +3991,7 @@ public class Interface : HiveObject
 					lastUsedText.text = $"Last used {UIHelpers.TimeToString( road.lastUsed.age )} ago";
 			}
 
-			var c = HiveCommon.eye.centerCamera;
+			var c = HiveCommon.eye.cameraGrid.center;
 			var p = c.WorldToScreenPoint( node.positionInViewport );
 			ring.transform.position = p;
 			float scale;
@@ -5269,6 +5275,7 @@ if ( cart )
 		public bool markEyePosition;
 		public bool rightButton;
 		public bool rightDrag;
+		public static bool showGround = true;
 		public Vector3 rightOffset, downOffset;
 		public Vector3 lastMouse;
 
@@ -5312,7 +5319,6 @@ if ( cart )
 			return new GameObject().AddComponent<Viewport>();
 		}
 
-
 		public void Start()
 		{
 			transform.SetParent( root.transform );
@@ -5323,7 +5329,7 @@ if ( cart )
 			image.rectTransform.anchorMin = Vector2.zero;
 			image.rectTransform.anchorMax = Vector2.one;
 			image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
-			image.color = new Color( 1, 1, 1, 0 );
+			image.color = new Color( 0, 0, 0, 0 );
 
 			inputHandler = this;
 			marker.transform.SetParent( transform );
@@ -5347,7 +5353,7 @@ if ( cart )
 			redCrossOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
 			redCrossOnGround.mainTexture = Resources.Load<Texture>( "icons/redCross" );
 
-			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -240, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.F1 );
+			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -280, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.F1 );
 			showGridButton.SetTooltip( () => $"Show grid (hotkey: {showGridButton.GetHotkey().keyName})" );
 			var showNodeButton = this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show node at cursor", KeyCode.F2 );
 			showNodeButton.SetTooltip( () => $"Show node at cursor (hotkey: {showNodeButton.GetHotkey().keyName})" );
@@ -5359,6 +5365,8 @@ if ( cart )
 			showStockContentButton.SetTooltip( () => $"Show stock contents (hotkey: {showStockContentButton.GetHotkey().keyName})" );
 			var showStocksButton = this.Image( Icon.stock ).AddToggleHandler( HighlightStocks ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Highlight stocks", KeyCode.F6 );
 			showStocksButton.SetTooltip( () => $"Show stocks (hotkey: {showStocksButton.GetHotkey().keyName})" );
+			var toggleGroundButton = this.Image( Icon.ground ).AddToggleHandler( ToggleGround, true ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Toggle ground on map", KeyCode.G, true );
+			toggleGroundButton.SetTooltip( () => $"Toggle between ground and political display on map (hotkey: {toggleGroundButton.GetHotkey().keyName})" );
 			root.LoadHotkeys();
 
 			arrowMaterial = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
@@ -5379,6 +5387,15 @@ if ( cart )
 		void ShowStockContent( bool state )
 		{
 			nodeInfoToShow = state ? OverlayInfoType.stockContent : OverlayInfoType.none;
+		}
+
+		void ToggleGround( bool ground )
+		{
+			if ( ground )
+				eye.cameraGrid.cullingMask = eye.cameraGrid.cullingMask | (1 << World.layerIndexWater) | (1 << World.layerIndexGround);
+			else
+				eye.cameraGrid.cullingMask = eye.cameraGrid.cullingMask & (int.MaxValue - (1 << World.layerIndexWater) - (1 << World.layerIndexGround) );
+			showGround = ground;
 		}
 
 		void HighlightStocks( bool state )
@@ -5472,13 +5489,13 @@ if ( cart )
 
 		public HiveObject FindObjectAt( Vector3 screenPosition )
 		{
-			var layers = eye.centerCamera.cullingMask;
+			var layers = eye.cameraGrid.cullingMask;
 			layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
 			layers |= 1 << World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources);
 			RaycastHit hit = new RaycastHit();
-			foreach ( var camera in eye.cameraGrid )
+			foreach ( var camera in eye.cameraGrid.cameras )
 			{
 				Ray ray = camera.ScreenPointToRay( screenPosition );
 				if ( Physics.Raycast( ray, out hit, 1000, layers ) )
@@ -5513,7 +5530,7 @@ if ( cart )
 		{ 
 			RaycastHit hit = new RaycastHit();
 
-			foreach ( var camera in eye.cameraGrid )
+			foreach ( var camera in eye.cameraGrid.cameras )
 			{
 				Ray ray = camera.ScreenPointToRay( screenPosition );
 
@@ -5581,7 +5598,7 @@ if ( cart )
 				return;
 
 			rightDrag = true;
-			var camera = eye.centerCamera;
+			var camera = eye.cameraGrid.center;	// TODO Only works with the center camera?
 			Ray ray = camera.ScreenPointToRay( eventData.position );
 			Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexGround );
 
@@ -7403,6 +7420,7 @@ public static class UIHelpers
 	{
 		var h = g.gameObject.AddComponent<Interface.HotkeyControl>();
 		h.Open( name, key, ctrl, alt, shift );
+		g.name = name;
 		return g;
 	}
 
