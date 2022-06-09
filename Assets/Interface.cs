@@ -5391,10 +5391,19 @@ if ( cart )
 
 		void ToggleGround( bool ground )
 		{
-			if ( ground )
-				eye.cameraGrid.cullingMask = eye.cameraGrid.cullingMask | (1 << World.layerIndexWater) | (1 << World.layerIndexGround);
-			else
-				eye.cameraGrid.cullingMask = eye.cameraGrid.cullingMask & (int.MaxValue - (1 << World.layerIndexWater) - (1 << World.layerIndexGround) );
+			Eye.CameraGrid grid = null;
+			if ( eye.mapMode )
+				grid = eye.cameraGrid;
+			if ( Map.MapImage.instance )
+				grid = Map.MapImage.instance.camera;
+
+			if ( grid )
+			{
+				if ( ground )
+					grid.cullingMask = grid.cullingMask | (1 << World.layerIndexWater) | (1 << World.layerIndexGround);
+				else
+					grid.cullingMask = grid.cullingMask & (int.MaxValue - (1 << World.layerIndexWater) - (1 << World.layerIndexGround) );
+			}
 			showGround = ground;
 		}
 
