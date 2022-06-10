@@ -649,7 +649,7 @@ public class Eye : HiveObject
 					if ( type == Type.area )
 					{
 						float s = ( area.radius + 0.5f ) * Constants.Node.size;
-						DrawMeshRepeatedly( volume, Matrix4x4.TRS( area.center.position, Quaternion.identity, new Vector3( s, 100, s ) ), volumeMaterial );
+						DrawMeshRepeatedly( volume, Matrix4x4.TRS( area.center.position, Quaternion.identity, new Vector3( s, 20, s ) ), volumeMaterial );
 					}
 					maskCreatorCRC = CRC;
 				}
@@ -659,7 +659,7 @@ public class Eye : HiveObject
 			{
 				float maskLimit = 0.5f;
 				var distance = area.center.DistanceFrom( eye.transform.position );
-				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size )
+				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size && !eye.mapMode )
 					maskLimit = -0.5f;
 
 				mainMaterial.SetFloat( maskLimitID, maskLimit );
