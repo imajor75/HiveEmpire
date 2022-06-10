@@ -180,6 +180,7 @@ public class Ground : HiveObject
 			levelMaterial.SetTexture( "_SideMove", sideMoveTexture );
 			levelMaterial.SetTexture( "_Mask", maskTexture );
 			levelMaterial.SetTexture( "_Color", grassTexture );
+			levelMaterial.SetFloat( "_WorldScale", dimension );
 			levelMaterial.renderQueue = 2500 - i;
 			grassMaterials.Add( levelMaterial );
 		}
