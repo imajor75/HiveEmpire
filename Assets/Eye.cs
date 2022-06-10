@@ -344,7 +344,7 @@ public class Eye : HiveObject
 		var position = new Vector3( x, height, y );
 		if ( mapMode )
 		{
-			transform.position = position + Vector3.up * altitude;
+			transform.position = position + Vector3.up * 50;
 			transform.LookAt( position, new Vector3( (float)Math.Sin(direction), 0, (float)Math.Cos(direction) ) );
 			if ( cameraGrid )
 				cameraGrid.orthographicSize = altitude;
