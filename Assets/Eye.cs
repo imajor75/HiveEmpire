@@ -445,6 +445,8 @@ public class Eye : HiveObject
 				camera.clearFlags = CameraClearFlags.Nothing;
 				camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
 				camera.transform.SetParent( transform, false );
+				camera.nearClipPlane = 0.03f;
+				camera.farClipPlane = 100;
 				camera.allowMSAA = false;
 				camera.depth = depth;
 			}
@@ -502,6 +504,7 @@ public class Eye : HiveObject
 		int volumeRadius;
 		public RenderTexture mask;
 		public static Material markerMaterial, mainMaterial, blurMaterial, volumeMaterial;
+		public static int maskLimitID;
 		public CommandBuffer maskCreator;
 		public int maskCreatorCRC;
 		public GameObject owner;
@@ -542,6 +545,8 @@ public class Eye : HiveObject
 			mainMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
 			blurMaterial = new Material( Resources.Load<Shader>( "shaders/Blur" ) );
 			volumeMaterial = new Material( Resources.Load<Shader>( "shaders/HighlightVolume" ) );
+
+			maskLimitID = Shader.PropertyToID( "_MaskLimit" );
 		}
 
 		public void HighlightArea( Ground.Area area, GameObject owner )
@@ -563,7 +568,7 @@ public class Eye : HiveObject
 
 		public void ApplyHighlight( RenderTexture source, RenderTexture target )
 		{
-			if ( maskCreator == null )
+			if ( maskCreator == null || mask.width != Screen.width || mask.height != Screen.height )
 				Graphics.Blit( source, target );
 			else
 			{
@@ -611,7 +616,7 @@ public class Eye : HiveObject
 					maskCreator.name = "Highlight mask creation";
 
 					maskCreator.SetRenderTarget( maskId, currentId );
-					maskCreator.ClearRenderTarget( false, true, new Color( 0.5f, 0.5f, 0.5f, 1 ) );
+					maskCreator.ClearRenderTarget( false, true, Color.black );
 
 					void DrawMeshRepeatedly( Mesh mesh, Matrix4x4 location, Material material )
 					{
@@ -648,6 +653,16 @@ public class Eye : HiveObject
 					}
 					maskCreatorCRC = CRC;
 				}
+			}
+
+			if ( type == Type.area )
+			{
+				float maskLimit = 0.5f;
+				var distance = area.center.DistanceFrom( eye.transform.position );
+				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size )
+					maskLimit = -0.5f;
+
+				mainMaterial.SetFloat( maskLimitID, maskLimit );
 			}
 		}
 

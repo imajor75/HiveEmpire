@@ -306,6 +306,23 @@ public class Node : HiveObject
 		return Mathf.Max( h, Mathf.Max( v, d ) );
 	}
 
+	public float DistanceFrom( Vector3 position )
+	{
+		var dif = GetPositionRelativeTo( position ) - position;
+
+		float xa = dif.x + dif.z / 2;
+		float xb = dif.x - dif.z / 2;
+
+		if ( dif.z < 0 )
+			dif.z *= -1;
+		if ( xa < 0 )
+			xa *= -1;
+		if ( xb < 0 )
+			xb *= -1;
+
+		return Math.Max( Math.Max( xa, xb ), dif.z );
+	}
+
 	public Vector3 Offset( Node another )
 	{
 		return another.GetPositionRelativeTo( this ) - position;

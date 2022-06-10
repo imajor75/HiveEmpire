@@ -6,6 +6,7 @@
 		_Mask("Mask", 2D) = "white" {}
 		_OffsetX("Offset X", Float) = 0.004
 		_OffsetY("Offset Y", Float) = 0.006
+		_MaskLimit("Mask Limit", Float) = 0.5
 	}
 
 	SubShader
@@ -41,6 +42,7 @@
 			sampler _Mask;
             float _OffsetX;
             float _OffsetY;
+			float _MaskLimit;
 
             v2f vert (appdata v)
             {
@@ -53,7 +55,7 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float4 col = tex2D(_MainTex, i.uv);
-				if ( tex2D(_Mask, i.uv).r < 0.51 )
+				if ( tex2D(_Mask, i.uv).r < _MaskLimit )
 				{
 					col += tex2D(_MainTex, i.uv + float2(_OffsetX, -_OffsetY));
 					col += tex2D(_MainTex, i.uv + float2(_OffsetX, _OffsetY));
