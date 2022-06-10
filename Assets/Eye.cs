@@ -431,8 +431,8 @@ public class Eye : HiveObject
 	{
 		public List<Camera> cameras = new List<Camera>();
 		public Camera center { get { return cameras[4]; } }
-		public Camera first { get { return center; } }
-		public Camera last { get { return cameras.Last(); } }
+		public Camera first;
+		public Camera last;
 		public bool enableSideCameras = true;
 
 		public void Setup( float depth = 0 )
@@ -440,6 +440,8 @@ public class Eye : HiveObject
 			for ( int y = -1; y <= 1; y++ )
 				for ( int x = -1; x <= 1; x++ )
 					cameras.Add( new GameObject( $"Camera {x}:{y}" ).AddComponent<Camera>() );
+			first = cameras.First();
+			last = cameras.Last();
 			foreach ( var camera in cameras )
 			{
 				camera.clearFlags = CameraClearFlags.Nothing;
@@ -449,24 +451,57 @@ public class Eye : HiveObject
 				camera.farClipPlane = 100;
 				camera.allowMSAA = false;
 				camera.depth = depth;
+				camera.gameObject.AddComponent<Highlight.Applier>().enabled = false;
 			}
-			center.depth = depth-1;
-			center.clearFlags = CameraClearFlags.Skybox;
-			last.gameObject.AddComponent<Highlight.Applier>();
+			first.depth = depth-1;
+			first.clearFlags = CameraClearFlags.Skybox;
+			last.gameObject.GetComponent<Highlight.Applier>().enabled = true;
 			last.depth = depth+1;
 		}
 
 		void LateUpdate()
 		{
+			float closest = float.MaxValue, furthest = float.MinValue;
+			var forward = center.transform.forward;
 			for ( int i = 0; i < cameras.Count; i++ )
 			{
 				int x = ( i % 3 ) - 1;
 				int y = ( i / 3 ) - 1;
 				var right = new Vector3( 1, 0, 0 ) * Constants.Node.size * ground.dimension;
 				var up = new Vector3( 0.5f, 0, 1 ) * Constants.Node.size * ground.dimension;
-				cameras[i].transform.position = transform.position + x * right + y * up;
+				var newPosition = transform.position + x * right + y * up;
+				cameras[i].transform.position = newPosition;
 				if ( x != 0 || y != 0 )
 					cameras[i].enabled = enableSideCameras;
+				float depth = Vector3.Dot( forward, newPosition );
+				if ( depth < closest )
+					closest = depth;
+				if ( depth > furthest )
+					furthest = depth;
+				cameras[i].depth = depth;
+			}
+			foreach ( var camera in cameras )
+			{
+				if ( camera.depth == furthest )
+				{
+					if ( last != camera )
+					{
+						last.gameObject.GetComponent<Highlight.Applier>().enabled = false;
+						camera.gameObject.GetComponent<Highlight.Applier>().enabled = true;
+						camera.clearFlags = CameraClearFlags.Nothing;
+						last = camera;
+					}
+				}
+				else if ( camera.depth == closest )
+				{
+					if ( first != camera )
+					{
+						camera.clearFlags = CameraClearFlags.Skybox;
+						first = camera;
+					}
+				}
+				else
+					camera.clearFlags = CameraClearFlags.Nothing;
 			}
 		}
 
