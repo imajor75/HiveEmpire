@@ -537,7 +537,7 @@ public class Eye : HiveObject
 		public Mesh volume;
 		Node volumeCenter;
 		int volumeRadius;
-		public RenderTexture mask;
+		public RenderTexture mask, blur;
 		public static Material markerMaterial, mainMaterial, blurMaterial, volumeMaterial;
 		public static int maskLimitID;
 		public CommandBuffer maskCreator;
@@ -612,6 +612,7 @@ public class Eye : HiveObject
 				GL.modelview = eye.cameraGrid.center.worldToCameraMatrix;
 				GL.LoadProjectionMatrix( eye.cameraGrid.center.projectionMatrix );
 				Graphics.ExecuteCommandBuffer( maskCreator );
+				Graphics.Blit( source, blur, blurMaterial );
 				Graphics.Blit( source, target, mainMaterial );
 			}
 		}
@@ -641,7 +642,20 @@ public class Eye : HiveObject
 					mask = new RenderTexture( Screen.width, Screen.height, 0, RenderTextureFormat.RFloat );
 					mask.name = "Eye highlight mask";
 					mainMaterial.SetTexture( "_Mask", mask );
+					mainMaterial.SetFloat( "_OffsetX", 1f / Screen.width );
+					mainMaterial.SetFloat( "_OffsetY", 1f / Screen.height );
 					maskCreator = null;
+				}
+
+				if ( blur == null || blur.width != Screen.width || blur.height != Screen.height )
+				{
+					Destroy( blur );
+
+					blur = new RenderTexture( Screen.width, Screen.height, 0 );
+					blur.name = "Eye highlight blur";
+					mainMaterial.SetTexture( "_Blur", blur );
+					blurMaterial.SetFloat( "_OffsetX", 1f / Screen.width );
+					blurMaterial.SetFloat( "_OffsetY", 1f / Screen.height );
 				}
 
 				if ( maskCreator == null || maskCreatorCRC != CRC )

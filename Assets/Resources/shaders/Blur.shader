@@ -19,8 +19,6 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag alpha
-            // make fog work
-            #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
 
