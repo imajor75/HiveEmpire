@@ -516,6 +516,8 @@ public class Eye : HiveObject
 				int CRC = 0;
 				if ( type == Type.buildingType )
 				{
+					if ( eye.mapMode )
+						CRC++;
 					foreach ( var t in buildingTypes )
 						CRC += (int)t;
 					CRC += root.mainTeam.stocks.Count();
@@ -637,7 +639,13 @@ public class Eye : HiveObject
 							if ( !buildingTypes.Contains( building.type ) )
 								return;
 								
-							DrawMeshRepeatedly( building.body.GetComponent<MeshFilter>().mesh, building.body.transform.localToWorldMatrix, markerMaterial );
+							if ( eye.mapMode )
+							{
+								var shiftUp = Matrix4x4.Translate( new Vector3( 0, 10, 0 ) );
+								DrawMeshRepeatedly( building.mapIndicator.GetComponent<MeshCollider>().sharedMesh, shiftUp * building.mapIndicator.transform.localToWorldMatrix, markerMaterial );
+							}
+							else
+								DrawMeshRepeatedly( building.body.GetComponent<MeshFilter>().mesh, building.body.transform.localToWorldMatrix, markerMaterial );
 						}
 						foreach ( var stock in root.mainTeam.stocks )
 							ProcessBuilding( stock );

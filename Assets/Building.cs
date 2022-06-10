@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -44,7 +44,7 @@ abstract public class Building : HiveObject
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
 	[JsonIgnore]
-	protected Interface.BuildingMapWidget mapIndicator;
+	public Interface.BuildingMapWidget mapIndicator;
 
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;
