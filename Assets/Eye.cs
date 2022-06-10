@@ -39,7 +39,7 @@ public class Eye : HiveObject
 		cameraGrid.orthographic = mapMode;
 		if ( mapMode )
 		{
-			cameraGrid.cullingMask = int.MaxValue - (1 << Ground.grassLayerIndex ) - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits);
+			cameraGrid.cullingMask = int.MaxValue - (1 << Ground.grassLayerIndex ) - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexRoads);
 			if ( !Interface.Viewport.showGround )
 				cameraGrid.cullingMask = cameraGrid.cullingMask - (1 << World.layerIndexWater) - (1 << World.layerIndexGround);
 		}

@@ -53,6 +53,7 @@ public class World : HiveObject
 	static public int layerIndexHighlightVolume;
 	static public int layerIndexWater;
 	static public int layerIndexBuildings;
+	static public int layerIndexRoads;
 	static public int layerIndexResources;
 	static public int layerIndexUnits;
 	static public Shader defaultShader;
@@ -554,9 +555,10 @@ public class World : HiveObject
 		layerIndexHighlightVolume = LayerMask.NameToLayer( "HighlightVolume" );
 		layerIndexWater = LayerMask.NameToLayer( "Water" );
 		layerIndexBuildings = LayerMask.NameToLayer( "Buildings" );
+		layerIndexRoads = LayerMask.NameToLayer( "Roads" );
 		layerIndexResources = LayerMask.NameToLayer( "Resources" );
 		layerIndexUnits = LayerMask.NameToLayer( "Units" );
-		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexBuildings != -1 && layerIndexGround != -1 && layerIndexUnits != -1 && layerIndexWater != -1 && layerIndexPPVolume != -1 && layerIndexHighlightVolume != -1 && layerIndexResources != -1 );
+		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexBuildings != -1 && layerIndexGround != -1 && layerIndexUnits != -1 && layerIndexWater != -1 && layerIndexPPVolume != -1 && layerIndexHighlightVolume != -1 && layerIndexResources != -1 && layerIndexRoads != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
 		defaultTextureShader = Shader.Find( "Unlit/Texture" );
