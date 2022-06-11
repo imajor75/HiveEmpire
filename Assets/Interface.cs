@@ -1768,10 +1768,7 @@ public class Interface : HiveObject
 					return true;
 					
 				if ( eye.highlight.area == area )
-				{
-					eye.highlight.type = Eye.Highlight.Type.none;
-					eye.highlight.area = null;
-				}
+					eye.highlight.TurnOff();
 				oh.ScheduleChangeArea( building, originalArea, area.center, area.radius );
 				return false;
 			}
@@ -1782,7 +1779,7 @@ public class Interface : HiveObject
 				{
 					oh.ScheduleChangeArea( building, originalArea, null, 0 );
 					if ( eye.highlight.area == area )
-						eye.highlight.type = Eye.Highlight.Type.none;
+						eye.highlight.TurnOff();
 					return;
 				}
 				if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
@@ -1819,7 +1816,7 @@ public class Interface : HiveObject
 				else
 				{
 					if ( root.viewport.inputHandler != this as IInputHandler && eye.highlight.area == originalArea )
-						eye.highlight.type = Eye.Highlight.Type.none;
+						eye.highlight.TurnOff();
 				}
 			}
 
@@ -1845,7 +1842,7 @@ public class Interface : HiveObject
 			{
 				if ( eye.highlight.area != area )
 					return;
-				eye.highlight.type = Eye.Highlight.Type.none;
+				eye.highlight.TurnOff();
 			}
 
 			public bool OnObjectClicked( HiveObject target )
@@ -5137,7 +5134,7 @@ if ( cart )
 			if ( d.options[d.value].text == "All" )
 				filter = Building.Type.unknown;
 			if ( filter == Building.Type.unknown )
-				eye.highlight.type = Eye.Highlight.Type.none;
+				eye.highlight.TurnOff();
 			else
 				eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
 			Fill();
@@ -5414,7 +5411,7 @@ if ( cart )
 			else
 			{
 				if ( eye.highlight.owner == gameObject )
-					eye.highlight.type = Eye.Highlight.Type.none;
+					eye.highlight.TurnOff();
 			}
 		}
 

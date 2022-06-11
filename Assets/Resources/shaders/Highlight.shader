@@ -8,6 +8,7 @@
 		_GlowColor("Glow Color", Color) = (1,1,1,1)
 		_SmoothMask("Smooth Mask", 2D) = "white" {}
 		_MaskLimit("Mask Limit", Float) = 0.5
+        _Strength("Strength", Range(0,1)) = 1
 	}
 
 	SubShader
@@ -43,6 +44,7 @@
 			sampler _Blur;
 			float _MaskLimit;
 			float4 _GlowColor;
+			float _Strength;
 
             v2f vert (appdata v)
             {
@@ -54,12 +56,13 @@
 
 			fixed4 frag(v2f i) : SV_Target
 			{
-				if ( tex2D(_Mask, i.uv).r < _MaskLimit )
-				{
-					float4 col = tex2D(_Blur, i.uv);
-					return col * 0.75f + _GlowColor * tex2D(_SmoothMask, i.uv).r;
-				}
-				return tex2D(_MainTex, i.uv);
+				float4 base = tex2D(_MainTex, i.uv);
+				if ( tex2D(_Mask, i.uv).r > _MaskLimit )
+					return base;
+
+				float4 col = tex2D(_Blur, i.uv);
+				float4 highlight = col * 0.75f + _GlowColor * tex2D(_SmoothMask, i.uv).r;
+				return lerp( base, highlight, _Strength );
             }
             ENDCG
         }

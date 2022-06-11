@@ -544,6 +544,8 @@ public class Eye : HiveObject
 		public CommandBuffer maskCreator;
 		public int maskCreatorCRC;
 		public GameObject owner;
+		public float strength, strengthChange;
+		static int strengthID;
 
 		public class Smoother
 		{
@@ -632,6 +634,7 @@ public class Eye : HiveObject
 			mainMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
 			volumeMaterial = new Material( Resources.Load<Shader>( "shaders/HighlightVolume" ) );
 			mainMaterial.SetColor( "_GlowColor", Constants.Eye.highlightEffectGlowColor );
+			strengthID = Shader.PropertyToID( "_Strength" );
 
 			maskLimitID = Shader.PropertyToID( "_MaskLimit" );
 		}
@@ -641,6 +644,8 @@ public class Eye : HiveObject
 			type = Type.area;
 			this.area = area;
 			this.owner = owner;
+			strength = 0;
+			strengthChange = 1 / Constants.Eye.highlightSwitchTime;
 		}
 
 		public void HighlightBuildingTypes( Building.Type buildingType0, Building.Type buildingType1 = Building.Type.unknown, GameObject owner = null )
@@ -651,6 +656,13 @@ public class Eye : HiveObject
 			if ( buildingType1 != Building.Type.unknown )
 				buildingTypes.Add( buildingType1 );
 			this.owner = owner;
+			strength = 0;
+			strengthChange = 1 / Constants.Eye.highlightSwitchTime;
+		}
+
+		public void TurnOff()
+		{
+			strengthChange = -1 / Constants.Eye.highlightSwitchTime;
 		}
 
 		public void ApplyHighlight( RenderTexture source, RenderTexture target )
@@ -674,6 +686,12 @@ public class Eye : HiveObject
 				type = Type.none;
 			if ( type == Type.area && area.center == null )
 				type = Type.none;
+			strength += strengthChange * Time.unscaledDeltaTime;
+			if ( strength > 1 )
+				strength = 1;
+			if ( strength < 0 )
+				type = Type.none;
+			mainMaterial.SetFloat( strengthID, strength );
 
 			if ( type == Type.none )
 			{
