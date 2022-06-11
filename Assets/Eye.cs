@@ -537,9 +537,9 @@ public class Eye : HiveObject
 		public Mesh volume;
 		Node volumeCenter;
 		int volumeRadius;
-		public RenderTexture mask, blur;
+		public RenderTexture mask, blur, smoothMask;
 		public static Material markerMaterial, mainMaterial, volumeMaterial;
-		public Smoother colorSmoother = new Smoother();
+		public Smoother colorSmoother = new Smoother(), maskSmoother = new Smoother();
 		public static int maskLimitID;
 		public CommandBuffer maskCreator;
 		public int maskCreatorCRC;
@@ -550,7 +550,7 @@ public class Eye : HiveObject
 			public RenderTexture temporary;
 			public List<Material> materials = new List<Material>();
 
-			public void Setup( int width, int height, int steps )
+			public void Setup( int width, int height, int steps, RenderTextureFormat format = RenderTextureFormat.ARGB32 )
 			{
 				if ( temporary )
 					Destroy( temporary );
@@ -558,7 +558,7 @@ public class Eye : HiveObject
 
 				if ( steps > 1 )
 				{
-					temporary = new RenderTexture( width, height, 0 );
+					temporary = new RenderTexture( width, height, 0, format );
 					temporary.name = "Smoother temporary";
 				}
 
@@ -631,6 +631,7 @@ public class Eye : HiveObject
 			markerMaterial = new Material( Resources.Load<Shader>( "shaders/highlightMarker" ) );
 			mainMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
 			volumeMaterial = new Material( Resources.Load<Shader>( "shaders/HighlightVolume" ) );
+			mainMaterial.SetColor( "_GlowColor", Constants.Eye.highlightEffectGlowColor );
 
 			maskLimitID = Shader.PropertyToID( "_MaskLimit" );
 		}
@@ -662,7 +663,7 @@ public class Eye : HiveObject
 				GL.LoadProjectionMatrix( eye.cameraGrid.center.projectionMatrix );
 				Graphics.ExecuteCommandBuffer( maskCreator );
 				colorSmoother.Blur( source, blur );
-
+				maskSmoother.Blur( mask, smoothMask );
 				Graphics.Blit( source, target, mainMaterial );
 			}
 		}
@@ -691,7 +692,11 @@ public class Eye : HiveObject
 
 					mask = new RenderTexture( Screen.width, Screen.height, 0, RenderTextureFormat.RFloat );
 					mask.name = "Eye highlight mask";
+					smoothMask = new RenderTexture( Screen.width, Screen.height, 0, RenderTextureFormat.RFloat );
+					smoothMask.name = "Eye highlight smooth mask";
 					mainMaterial.SetTexture( "_Mask", mask );
+					mainMaterial.SetTexture( "_SmoothMask", smoothMask );
+					maskSmoother.Setup( Screen.width, Screen.height, Constants.Eye.highlightEffectGlowSize, RenderTextureFormat.RFloat );
 					maskCreator = null;
 				}
 

@@ -5,6 +5,8 @@
 		_MainTex("Main Texture", 2D) = "white" {}
 		_Mask("Mask", 2D) = "white" {}
 		_Blur("Blur", 2D) = "white" {}
+		_GlowColor("Glow Color", Color) = (1,1,1,1)
+		_SmoothMask("Smooth Mask", 2D) = "white" {}
 		_MaskLimit("Mask Limit", Float) = 0.5
 	}
 
@@ -37,8 +39,10 @@
 
 			sampler _MainTex;
 			sampler _Mask;
+			sampler _SmoothMask;
 			sampler _Blur;
 			float _MaskLimit;
+			float4 _GlowColor;
 
             v2f vert (appdata v)
             {
@@ -53,7 +57,7 @@
 				if ( tex2D(_Mask, i.uv).r < _MaskLimit )
 				{
 					float4 col = tex2D(_Blur, i.uv);
-					return col * 0.75f;
+					return col * 0.75f + _GlowColor * tex2D(_SmoothMask, i.uv).r;
 				}
 				return tex2D(_MainTex, i.uv);
             }

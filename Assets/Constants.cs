@@ -55,7 +55,9 @@ public static class Constants
         public const int maxNumberOfSavedPositions = 10;
         public const float maxDistance = 0.35f;
         public const bool depthOfField = false;
-        public const int highlightEffectLevels = 2;
+        public const int highlightEffectLevels = 1;
+        public const int highlightEffectGlowSize = 2;
+        public static Color highlightEffectGlowColor = Color.white;
     }
 
     public static class Flag
