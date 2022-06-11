@@ -537,13 +537,62 @@ public class Eye : HiveObject
 		public Mesh volume;
 		Node volumeCenter;
 		int volumeRadius;
-		public RenderTexture mask, blur, superBlur;
-		public static Material markerMaterial, mainMaterial, volumeMaterial, blurMaterial0, blurMaterial1;
-		public static Shader blurShader;
+		public RenderTexture mask, blur;
+		public static Material markerMaterial, mainMaterial, volumeMaterial;
+		public Smoother colorSmoother = new Smoother();
 		public static int maskLimitID;
 		public CommandBuffer maskCreator;
 		public int maskCreatorCRC;
 		public GameObject owner;
+
+		public class Smoother
+		{
+			public RenderTexture temporary;
+			public List<Material> materials = new List<Material>();
+
+			public void Setup( int width, int height, int steps )
+			{
+				if ( temporary )
+					Destroy( temporary );
+				materials.Clear();
+
+				if ( steps > 1 )
+				{
+					temporary = new RenderTexture( width, height, 0 );
+					temporary.name = "Smoother temporary";
+				}
+
+				for ( int i = 0; i < steps; i++ )
+				{
+					var material = new Material( Resources.Load<Shader>( "shaders/blur" ) );
+					var factor = (float)Math.Pow( 4, i );
+					material.SetFloat( "_XStart", -2.5f / width * factor );
+					material.SetFloat( "_YStart", -2.5f / height * factor );
+					material.SetFloat( "_XMove", 2f / width * factor );
+					material.SetFloat( "_YMove", 2f / height * factor );
+					materials.Add( material );
+				}
+			}
+			public void Blur( RenderTexture source, RenderTexture destination )
+			{
+				if ( temporary )
+				{
+					Assert.global.AreEqual( source.width, temporary.width );
+					Assert.global.AreEqual( source.height, temporary.height );
+					Assert.global.AreEqual( destination.width, temporary.width );
+					Assert.global.AreEqual( destination.height, temporary.height );
+				}
+				for ( int i = 0; i < materials.Count; i++ )
+				{
+					var blitSource = source;
+					var left = materials.Count - i - 1;
+					var blitDestination = left % 2 == 0 ? destination : temporary;
+					if ( i > 0 )
+						blitSource = blitDestination == temporary ? destination : temporary;
+					Graphics.Blit( blitSource, blitDestination, materials[i] );
+				}
+			}
+		}
 
 		public int CRC
 		{
@@ -581,7 +630,6 @@ public class Eye : HiveObject
 		{
 			markerMaterial = new Material( Resources.Load<Shader>( "shaders/highlightMarker" ) );
 			mainMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
-			blurShader = Resources.Load<Shader>( "shaders/Blur" );
 			volumeMaterial = new Material( Resources.Load<Shader>( "shaders/HighlightVolume" ) );
 
 			maskLimitID = Shader.PropertyToID( "_MaskLimit" );
@@ -613,8 +661,7 @@ public class Eye : HiveObject
 				GL.modelview = eye.cameraGrid.center.worldToCameraMatrix;
 				GL.LoadProjectionMatrix( eye.cameraGrid.center.projectionMatrix );
 				Graphics.ExecuteCommandBuffer( maskCreator );
-				Graphics.Blit( source, blur, blurMaterial0 );
-				Graphics.Blit( blur, superBlur, blurMaterial1 );
+				colorSmoother.Blur( source, blur );
 
 				Graphics.Blit( source, target, mainMaterial );
 			}
@@ -651,27 +698,11 @@ public class Eye : HiveObject
 				if ( blur == null || blur.width != Screen.width || blur.height != Screen.height )
 				{
 					Destroy( blur );
-					Destroy( superBlur );
 
 					blur = new RenderTexture( Screen.width, Screen.height, 0 );
 					blur.name = "Eye highlight blur";
-					superBlur = new RenderTexture( Screen.width, Screen.height, 0 );
-					superBlur.name = "Eye highlight super blur";
-					mainMaterial.SetTexture( "_Blur", superBlur );
-
-					float horizontalPixel = 1f / Screen.width, verticalPixel = 1f / Screen.height;
-
-					blurMaterial0 = new Material( blurShader );
-					blurMaterial0.SetFloat( "_XStart", -2.5f * horizontalPixel );
-					blurMaterial0.SetFloat( "_YStart", -2.5f * verticalPixel );
-					blurMaterial0.SetFloat( "_XMove", horizontalPixel * 2 );
-					blurMaterial0.SetFloat( "_YMove", verticalPixel * 2 );
-
-					blurMaterial1 = new Material( blurShader );
-					blurMaterial1.SetFloat( "_XStart", -12 * horizontalPixel );
-					blurMaterial1.SetFloat( "_YStart", -12 * verticalPixel );
-					blurMaterial1.SetFloat( "_XMove", horizontalPixel * 8 );
-					blurMaterial1.SetFloat( "_YMove", verticalPixel * 8 );
+					mainMaterial.SetTexture( "_Blur", blur );
+					colorSmoother.Setup( Screen.width, Screen.height, Constants.Eye.highlightEffectLevels );
 				}
 
 				if ( maskCreator == null || maskCreatorCRC != CRC )
