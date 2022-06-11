@@ -537,8 +537,9 @@ public class Eye : HiveObject
 		public Mesh volume;
 		Node volumeCenter;
 		int volumeRadius;
-		public RenderTexture mask, blur;
-		public static Material markerMaterial, mainMaterial, blurMaterial, volumeMaterial;
+		public RenderTexture mask, blur, superBlur;
+		public static Material markerMaterial, mainMaterial, volumeMaterial, blurMaterial0, blurMaterial1;
+		public static Shader blurShader;
 		public static int maskLimitID;
 		public CommandBuffer maskCreator;
 		public int maskCreatorCRC;
@@ -580,7 +581,7 @@ public class Eye : HiveObject
 		{
 			markerMaterial = new Material( Resources.Load<Shader>( "shaders/highlightMarker" ) );
 			mainMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
-			blurMaterial = new Material( Resources.Load<Shader>( "shaders/Blur" ) );
+			blurShader = Resources.Load<Shader>( "shaders/Blur" );
 			volumeMaterial = new Material( Resources.Load<Shader>( "shaders/HighlightVolume" ) );
 
 			maskLimitID = Shader.PropertyToID( "_MaskLimit" );
@@ -612,7 +613,9 @@ public class Eye : HiveObject
 				GL.modelview = eye.cameraGrid.center.worldToCameraMatrix;
 				GL.LoadProjectionMatrix( eye.cameraGrid.center.projectionMatrix );
 				Graphics.ExecuteCommandBuffer( maskCreator );
-				Graphics.Blit( source, blur, blurMaterial );
+				Graphics.Blit( source, blur, blurMaterial0 );
+				Graphics.Blit( blur, superBlur, blurMaterial1 );
+
 				Graphics.Blit( source, target, mainMaterial );
 			}
 		}
@@ -642,20 +645,33 @@ public class Eye : HiveObject
 					mask = new RenderTexture( Screen.width, Screen.height, 0, RenderTextureFormat.RFloat );
 					mask.name = "Eye highlight mask";
 					mainMaterial.SetTexture( "_Mask", mask );
-					mainMaterial.SetFloat( "_OffsetX", 1f / Screen.width );
-					mainMaterial.SetFloat( "_OffsetY", 1f / Screen.height );
 					maskCreator = null;
 				}
 
 				if ( blur == null || blur.width != Screen.width || blur.height != Screen.height )
 				{
 					Destroy( blur );
+					Destroy( superBlur );
 
 					blur = new RenderTexture( Screen.width, Screen.height, 0 );
 					blur.name = "Eye highlight blur";
-					mainMaterial.SetTexture( "_Blur", blur );
-					blurMaterial.SetFloat( "_OffsetX", 1f / Screen.width );
-					blurMaterial.SetFloat( "_OffsetY", 1f / Screen.height );
+					superBlur = new RenderTexture( Screen.width, Screen.height, 0 );
+					superBlur.name = "Eye highlight super blur";
+					mainMaterial.SetTexture( "_Blur", superBlur );
+
+					float horizontalPixel = 1f / Screen.width, verticalPixel = 1f / Screen.height;
+
+					blurMaterial0 = new Material( blurShader );
+					blurMaterial0.SetFloat( "_XStart", -2.5f * horizontalPixel );
+					blurMaterial0.SetFloat( "_YStart", -2.5f * verticalPixel );
+					blurMaterial0.SetFloat( "_XMove", horizontalPixel * 2 );
+					blurMaterial0.SetFloat( "_YMove", verticalPixel * 2 );
+
+					blurMaterial1 = new Material( blurShader );
+					blurMaterial1.SetFloat( "_XStart", -12 * horizontalPixel );
+					blurMaterial1.SetFloat( "_YStart", -12 * verticalPixel );
+					blurMaterial1.SetFloat( "_XMove", horizontalPixel * 8 );
+					blurMaterial1.SetFloat( "_YMove", verticalPixel * 8 );
 				}
 
 				if ( maskCreator == null || maskCreatorCRC != CRC )

@@ -3,8 +3,10 @@
 	Properties
 	{
 		_MainTex("Main Texture", 2D) = "white" {}
-		_OffsetX("Offset X", Float) = 0.002
-		_OffsetY("Offset Y", Float) = 0.003
+		_XStart("X Start", Float) = -0.005
+		_YStart("Y Start", Float) = -0.0075
+		_XMove("X Move", Float) = 0.002
+		_YMove("Y Move", Float) = 0.003
 	}
 		
 	SubShader
@@ -35,8 +37,10 @@
 			};
 
 			sampler _MainTex;
-            float _OffsetX;
-            float _OffsetY;
+            float _XStart;
+            float _YStart;
+            float _XMove;
+            float _YMove;
 
             v2f vert (appdata v)
             {
@@ -48,12 +52,11 @@
 
 			fixed4 frag(v2f i) : SV_Target
 			{
-				float4 col = tex2D(_MainTex, i.uv);
-				col += tex2D(_MainTex, i.uv + float2(_OffsetX, -_OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(_OffsetX, _OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, _OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, -_OffsetY));
-				return col * 0.2f;
+				float4 col = float4( 0, 0, 0, 0 );
+                for ( int x = 0; x < 4; x++ )
+                    for ( int y = 0; y < 4; y++ )
+				        col += tex2D(_MainTex, i.uv + float2( _XStart + _XMove * x, _YStart + _YMove * y ) );
+				return col / 16;
             }
             ENDCG
         }
