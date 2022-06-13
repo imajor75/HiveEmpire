@@ -45,6 +45,7 @@ public class Eye : HiveObject
 		}
 		else
 			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly);
+		RenderSettings.fog = !mapMode;
 	}
 
 	[JsonIgnore]

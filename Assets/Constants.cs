@@ -59,6 +59,9 @@ public static class Constants
         public const int highlightEffectGlowSize = 2;
         public static Color highlightEffectGlowColor = Color.white;
         public const float highlightSwitchTime = 0.5f;
+        public const float clipDistance = 1.5f;
+        public const float fogDistance = 1.2f;
+        public static Color fogColor = new Color( 0.6f, 0.75f, 0.63f );
     }
 
     public static class Flag

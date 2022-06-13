@@ -89,7 +89,6 @@ public class Ground : HiveObject
 		Assert.global.AreEqual( grassMaterials.Count, 0 );
 		SetGrassLayerCount( Constants.Ground.grassLevels );
 
-		//mapGround = GameObject.CreatePrimitive( PrimitiveType.Sphere ).GetComponent<MeshRenderer>();
 		mapGround = new GameObject( "Map Ground" ).AddComponent<MeshRenderer>();
 		var meshFilter = mapGround.gameObject.AddComponent<MeshFilter>();
 		var mesh = meshFilter.mesh = new Mesh();
@@ -123,6 +122,14 @@ public class Ground : HiveObject
 		mapGround.transform.SetParent( transform );
 		mapGround.material = new Material( World.defaultTextureShader );
 		RecreateMapGroundTexture();
+
+		RenderSettings.fog = true;
+		RenderSettings.fogMode = FogMode.Linear;
+		RenderSettings.fogColor = Constants.Eye.fogColor;
+		RenderSettings.fogStartDistance = dimension * Constants.Node.size * Constants.Eye.fogDistance;
+		RenderSettings.fogEndDistance = dimension * Constants.Node.size * Constants.Eye.clipDistance;
+		RenderSettings.skybox = new Material( World.defaultTextureShader );
+		RenderSettings.skybox.mainTexture = Resources.Load<Texture>( "textures/skybox" );
 		
 		base.Start();
 	}
@@ -133,7 +140,7 @@ public class Ground : HiveObject
 			node.Remove();
 		base.Remove();
 	}
-
+	
 	[JsonIgnore]
 	public int grassLayerCount;
 

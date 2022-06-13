@@ -33,7 +33,7 @@ Shader "Unlit/Water"
             struct v2f
             {
                 float2 uv0 : TEXCOORD0;
-                float2 uv1 : TEXCOORD1;
+                float2 uv1 : TEXCOORD4;
                 float depth : TEXCOORD3;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
