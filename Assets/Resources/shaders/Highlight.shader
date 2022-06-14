@@ -3,9 +3,12 @@
 	Properties
 	{
 		_MainTex("Main Texture", 2D) = "white" {}
-		_OffsetX("Offset X", Float) = 0.004
-		_OffsetY("Offset Y", Float) = 0.006
-		[IntRange] _StencilRef("Stencil Reference Value", Range(0,255)) = 0
+		_Mask("Mask", 2D) = "white" {}
+		_Blur("Blur", 2D) = "white" {}
+		_GlowColor("Glow Color", Color) = (1,1,1,1)
+		_SmoothMask("Smooth Mask", 2D) = "white" {}
+		_MaskValueOffset("Mask Value Offset", Float) = 0
+        _Strength("Strength", Range(0,1)) = 1
 	}
 
 	SubShader
@@ -15,19 +18,11 @@
 		ZWrite Off
 		Cull Off
 
-		Stencil
-		{
-			Ref [_StencilRef]
-			Comp Equal
-		}
-
         Pass
         {
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag alpha
-            // make fog work
-            #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
 
@@ -44,8 +39,12 @@
 			};
 
 			sampler _MainTex;
-            float _OffsetX;
-            float _OffsetY;
+			sampler _Mask;
+			sampler _SmoothMask;
+			sampler _Blur;
+			float _MaskValueOffset;
+			float4 _GlowColor;
+			float _Strength;
 
             v2f vert (appdata v)
             {
@@ -57,12 +56,13 @@
 
 			fixed4 frag(v2f i) : SV_Target
 			{
-				float4 col = tex2D(_MainTex, i.uv);
-				col += tex2D(_MainTex, i.uv + float2(_OffsetX, -_OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(_OffsetX, _OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, _OffsetY));
-				col += tex2D(_MainTex, i.uv + float2(-_OffsetX, -_OffsetY));
-				return col * 0.15f;
+				float4 base = tex2D(_MainTex, i.uv);
+				if ( tex2D(_Mask, i.uv).r + _MaskValueOffset > 0.5 )
+					return base;
+
+				float4 col = tex2D(_Blur, i.uv);
+				float4 highlight = col * 0.75f + _GlowColor * ( tex2D(_SmoothMask, i.uv).r + _MaskValueOffset );
+				return lerp( base, highlight, _Strength );
             }
             ENDCG
         }

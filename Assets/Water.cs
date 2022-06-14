@@ -85,17 +85,6 @@ public class Water : HiveObject
         material.SetFloat( offset1ID, (float)Math.Cos( t * Math.PI / 2 ) );
         material.SetFloat( iterID, (float)( t - Math.Floor( t ) ) );
         
-		var overseas = world.overseas + 1;
-		for ( int x = -overseas; x <= overseas; x++ )
-		{
-			for ( int y = -overseas; y <= overseas; y++ )
-			{
-				if ( x == 0 && y == 0 )
-					continue;
-
-				Graphics.DrawMesh( mesh, new Vector3( ( x + (float)y / 2 )* ground.dimension * Constants.Node.size, 0, y * ground.dimension * Constants.Node.size ) + transform.position, Quaternion.identity, material, World.layerIndexWater );
-            }
-        }
         base.Update();
     }
 }

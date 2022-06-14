@@ -26,7 +26,6 @@ public class World : HiveObject
 	public new int time;
 	public int nextID = 1;
 	public int frameSeed;
-	public int overseas = 2;
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public string fileName;
@@ -54,6 +53,7 @@ public class World : HiveObject
 	static public int layerIndexHighlightVolume;
 	static public int layerIndexWater;
 	static public int layerIndexBuildings;
+	static public int layerIndexRoads;
 	static public int layerIndexResources;
 	static public int layerIndexUnits;
 	static public Shader defaultShader;
@@ -135,6 +135,8 @@ public class World : HiveObject
 	bool defeatReported { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int replayIndex { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int overseas;
 	public Settings settings;
 
 	[System.Serializable]
@@ -553,9 +555,10 @@ public class World : HiveObject
 		layerIndexHighlightVolume = LayerMask.NameToLayer( "HighlightVolume" );
 		layerIndexWater = LayerMask.NameToLayer( "Water" );
 		layerIndexBuildings = LayerMask.NameToLayer( "Buildings" );
+		layerIndexRoads = LayerMask.NameToLayer( "Roads" );
 		layerIndexResources = LayerMask.NameToLayer( "Resources" );
 		layerIndexUnits = LayerMask.NameToLayer( "Units" );
-		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexBuildings != -1 && layerIndexGround != -1 && layerIndexUnits != -1 && layerIndexWater != -1 && layerIndexPPVolume != -1 && layerIndexHighlightVolume != -1 && layerIndexResources != -1 );
+		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexBuildings != -1 && layerIndexGround != -1 && layerIndexUnits != -1 && layerIndexWater != -1 && layerIndexPPVolume != -1 && layerIndexHighlightVolume != -1 && layerIndexResources != -1 && layerIndexRoads != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
 		defaultTextureShader = Shader.Find( "Unlit/Texture" );
@@ -738,7 +741,6 @@ public class World : HiveObject
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
-		overseas = 2;
 		var oldEye = eye;
 
 		this.challenge = challenge;
@@ -1224,10 +1226,14 @@ public class World : HiveObject
 		light.shadows = LightShadows.Soft;
 		light.color = new Color( 1, 1, 1 );
 		light.transform.SetParent( transform );
-		var ppv = lightObject.AddComponent<PostProcessVolume>();
-		ppv.isGlobal = true;
-		ppv.profile = Instantiate( Resources.Load<PostProcessProfile>( "Post-processing Profile" ) );
-		Assert.global.IsNotNull( ppv.profile );
+		bool depthOfField = Constants.Eye.depthOfField;
+		if ( depthOfField )
+		{
+			var ppv = lightObject.AddComponent<PostProcessVolume>();
+			ppv.isGlobal = true;
+			ppv.profile = Instantiate( Resources.Load<PostProcessProfile>( "Post-processing Profile" ) );
+			Assert.global.IsNotNull( ppv.profile );
+		}
 
 		{
 			// HACK The event system needs to be recreated after the main camera is destroyed,

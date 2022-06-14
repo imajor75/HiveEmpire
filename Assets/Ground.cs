@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,7 +23,7 @@ public class Ground : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	int height { set { if ( dimension == 0 ) dimension = value; assert.AreEqual( dimension, value ); } }
 	[Obsolete( "Compatibility with old files", true )]
-	int overseas { set { world.overseas = value; } }
+	int overseas { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int layoutVersion, meshVersion;
 	new World world 
@@ -89,7 +89,6 @@ public class Ground : HiveObject
 		Assert.global.AreEqual( grassMaterials.Count, 0 );
 		SetGrassLayerCount( Constants.Ground.grassLevels );
 
-		//mapGround = GameObject.CreatePrimitive( PrimitiveType.Sphere ).GetComponent<MeshRenderer>();
 		mapGround = new GameObject( "Map Ground" ).AddComponent<MeshRenderer>();
 		var meshFilter = mapGround.gameObject.AddComponent<MeshFilter>();
 		var mesh = meshFilter.mesh = new Mesh();
@@ -123,6 +122,14 @@ public class Ground : HiveObject
 		mapGround.transform.SetParent( transform );
 		mapGround.material = new Material( World.defaultTextureShader );
 		RecreateMapGroundTexture();
+
+		RenderSettings.fog = true;
+		RenderSettings.fogMode = FogMode.Linear;
+		RenderSettings.fogColor = Constants.Eye.fogColor;
+		RenderSettings.fogStartDistance = dimension * Constants.Node.size * Constants.Eye.fogDistance;
+		RenderSettings.fogEndDistance = dimension * Constants.Node.size * Constants.Eye.clipDistance;
+		RenderSettings.skybox = new Material( World.defaultTextureShader );
+		RenderSettings.skybox.mainTexture = Resources.Load<Texture>( "textures/skybox" );
 		
 		base.Start();
 	}
@@ -133,7 +140,7 @@ public class Ground : HiveObject
 			node.Remove();
 		base.Remove();
 	}
-
+	
 	[JsonIgnore]
 	public int grassLayerCount;
 
@@ -180,6 +187,7 @@ public class Ground : HiveObject
 			levelMaterial.SetTexture( "_SideMove", sideMoveTexture );
 			levelMaterial.SetTexture( "_Mask", maskTexture );
 			levelMaterial.SetTexture( "_Color", grassTexture );
+			levelMaterial.SetFloat( "_WorldScale", dimension );
 			levelMaterial.renderQueue = 2500 - i;
 			grassMaterials.Add( levelMaterial );
 		}
@@ -230,30 +238,9 @@ public class Ground : HiveObject
 		return this;
     }
 
-	public Block FindClosestBlock( Node node )
-	{
-		foreach ( var block in blocks )
-		{
-			if ( node.x < block.center.x - block.dimension / 2 )
-				continue;
-			if ( node.x > block.center.x + block.dimension / 2 )
-				continue;
-			if ( node.y < block.center.y - block.dimension / 2 )
-				continue;
-			if ( node.y > block.center.y + block.dimension / 2 )
-				continue;
-			return block;
-		}
-		return null;
-	}
-
 	public void Link( HiveObject hiveObject, Node location = null )
 	{
-		var bestBlock = FindClosestBlock( location ?? hiveObject.location );
-		if ( bestBlock )
-			hiveObject.transform.SetParent( bestBlock.transform, false );
-		else
-			hiveObject.transform.SetParent( transform, false );
+		hiveObject.transform.SetParent( transform, false );
 	}
 
 	public override void GameLogicUpdate()
@@ -267,22 +254,6 @@ public class Ground : HiveObject
 		float timeFraction = 0.003f * time;
 		foreach ( var grassMaterial in grassMaterials )
 			grassMaterial.SetFloat( "_TimeFraction", timeFraction );
-
-		var camera = root.viewport.visibleAreaCenter;
-		foreach ( var block in blocks )
-			block.UpdateOffset( camera );
-			
-		var overseas = world.overseas;
-		for ( int x = -overseas; x <= overseas; x++ )
-		{
-			for ( int y = -overseas; y <= overseas; y++ )
-			{
-				if ( x == 0 && y == 0 )
-					continue;
-				foreach ( var block in blocks )
-					Graphics.DrawMesh( block.mesh, new Vector3( ( x + (float)y / 2 )* dimension * Constants.Node.size, 0, y * dimension * Constants.Node.size ) + block.transform.position, Quaternion.identity, material, World.layerIndexGround );
-			}
-		}
 
 		// TODO Need sorting
 		foreach ( var grassMaterial in grassMaterials )
@@ -873,22 +844,6 @@ public class Ground : HiveObject
 					triangles.Add( c );
 				}
 			}
-		}
-
-		public void UpdateOffset( Vector3 camera )
-		{
-			var thisPosition = center.position;
-			float limit = boss.dimension / 2 * Constants.Node.size;
-			int xo = 0, yo = 0;
-			if ( camera.z - thisPosition.z > limit )
-				yo = 1;
-			if ( thisPosition.z - camera.z > limit )
-				yo = -1;
-			if ( camera.x - thisPosition.x - Constants.Node.size * boss.dimension / 2 * yo > limit )
-				xo = 1;
-			if ( thisPosition.x - camera.x + Constants.Node.size * boss.dimension / 2 * yo > limit )
-				xo = -1;
-			transform.localPosition = new Vector3( Constants.Node.size * boss.dimension / 2 * ( xo * 2 + yo ), 0, Constants.Node.size * boss.dimension * yo );
 		}
 	}
 }

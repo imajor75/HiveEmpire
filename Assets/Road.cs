@@ -227,6 +227,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	new public void Start()
 	{
+		gameObject.layer = World.layerIndexRoads;
 		ground.Link( this );
 		if ( nodes.Count > 0 )
 		{

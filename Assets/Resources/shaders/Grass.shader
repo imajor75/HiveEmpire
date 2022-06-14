@@ -7,6 +7,7 @@ Shader "Custom/Grass"
         _Color ("Color", 2D) = "white" {}
         _Offset ("Offset", Range(-1,1)) = 0.0
         _TimeFraction ("Time Fraction", Range(0,1)) = 0.0
+        _WorldScale ("World Scale", Float) = 32
     }
     SubShader
     {
@@ -24,6 +25,7 @@ Shader "Custom/Grass"
 
         half _Offset;
         float _TimeFraction;
+        float _WorldScale;
 
         struct Input
         {
@@ -47,15 +49,15 @@ Shader "Custom/Grass"
 
         void surf( Input IN, inout SurfaceOutputStandard o )
         {
-            fixed2 uv = IN.worldPos.xz / 2;
+            fixed2 uv = float2( IN.worldPos.x / _WorldScale * 2 + IN.worldPos.z / _WorldScale, IN.worldPos.z / _WorldScale * 2 );
             fixed swing = _Offset * _Offset * 0.08;
-            fixed2 move = tex2D( _SideMove, uv * 0.1 + fixed2( _TimeFraction, _TimeFraction * 0.31 ) ) - fixed2( 0.5, 0.5 );
-            fixed2 swinged = uv + swing * move;
+            fixed2 move = tex2D( _SideMove, uv + fixed2( _TimeFraction, _TimeFraction * 0.31 ) ) - fixed2( 0.5, 0.5 );
+            fixed2 swinged = uv * _WorldScale / 4 + swing * move;
             float a = tex2D( _Mask, swinged ).r * IN.weights.r * IN.uv_Mask.r;
             a -= ( 1 - a ) * _Offset * 0.9;
             clip( a - 0.1 );
             o.Alpha = a;
-            o.Albedo = tex2D( _Color, uv ) * ( 0.0 + 0.7 * _Offset );
+            o.Albedo = tex2D( _Color, uv * _WorldScale / 4 ) * ( 0.0 + 0.7 * _Offset );
         }
 
         ENDCG

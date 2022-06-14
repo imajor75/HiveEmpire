@@ -34,12 +34,6 @@ public class Interface : HiveObject
 	public static Tooltip tooltip;
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
-	public HighlightType highlightType;
-	public List<Building.Type> highlightBuildingTypes = new List<Building.Type>(); 
-	public Ground.Area highlightArea;
-	public GameObject highlightVolume;
-	Node highlightVolumeCenter;
-	int highlightVolumeRadius;
 	Image[] speedButtons = new Image[3];
 	public List<World.Challenge> challenges;
 	public MonoBehaviour replayIcon;
@@ -54,9 +48,6 @@ public class Interface : HiveObject
 	public bool requestUpdate;
     public bool purgeOperationHandlerCRCTable;
 
-
-	static Material highlightMaterial;
-	public GameObject highlightOwner;
 	public static Material materialUIPath;
 	static bool focusOnInputField, focusOnDropdown;
 	static KeyCode ignoreKey = KeyCode.None;
@@ -68,7 +59,7 @@ public class Interface : HiveObject
 	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
 	static public Hotkey cameraBackHotkey = new Hotkey( "Camera back", KeyCode.LeftArrow, false, true );
 
-	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M, true );
+	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M );
 
 	static public Hotkey cameraLeftHotkey = new Hotkey( "Camera move left (continuous)", KeyCode.A );
 	static public Hotkey cameraRightHotkey = new Hotkey( "Camera move right (continuous)", KeyCode.D );
@@ -185,14 +176,6 @@ public class Interface : HiveObject
 		}
 	}
 
-	public enum HighlightType
-	{
-		none,
-		buildingType,
-		volume,
-		area
-	}
-
 	public enum Icon
 	{
 		exit,
@@ -244,7 +227,8 @@ public class Interface : HiveObject
 		no,
 		cave,
 		box,
-		bar
+		bar,
+		ground
 	}
 
 	public Interface()
@@ -388,9 +372,6 @@ public class Interface : HiveObject
 		// 	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
 		// }
 
-		var highlightShader = Resources.Load<Shader>( "shaders/HighlightVolume" );
-		highlightMaterial = new Material( highlightShader );
-
 		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
 		Assert.global.IsNotNull( font );
 		object[] table = {
@@ -437,11 +418,11 @@ public class Interface : HiveObject
 		Workshop.Initialize();
 		Stock.Initialize();
 		GuardHouse.Initialize();
-		CameraHighlight.Initialize();
 		Viewport.Initialize();
 		Water.Initialize();
 		Network.Initialize();
 		BuildingMapWidget.Initialize();
+		Eye.Highlight.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
@@ -463,42 +444,47 @@ public class Interface : HiveObject
 		tooltip = Tooltip.Create();
 		tooltip.Open();
 
-		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( this ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
-		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
-		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
+		var iconFolder = new GameObject( "Icons" ).AddComponent<Image>();
+		iconFolder.transform.SetParent( transform, false );
+		iconFolder.enabled = false;
+		iconFolder.rectTransform.offsetMin = iconFolder.rectTransform.offsetMax = Vector2.zero;
+		iconFolder.rectTransform.anchorMin = iconFolder.rectTransform.anchorMax = new Vector2( 0, 1 );
 
-		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( this ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
+		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( iconFolder.transform ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
+		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
+		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
+		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
 		buildingListButton.SetTooltip( () => $"List all buildings (hotkey: {buildingListButton.GetHotkey().keyName})" );
-		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
+		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
-		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
+		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
-		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
-		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
+		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
 		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
-		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R, false, false, true );
+		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R, false, false, true );
 		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
-		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
+		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
 		worldProgressButton.SetTooltip( () => $"Show challenge progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
-		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
+		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
-		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M );
+		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M, true );
 		mapButton.SetTooltip( () => $"Minimap (hotkey: {mapButton.GetHotkey().keyName})" );
-		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
+		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
 		hotkeyButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
-		var challengesButton = this.Image( Icon.exc ).AddClickHandler( () => ChallengeList.Create() ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
+		var challengesButton = this.Image( Icon.exc ).AddClickHandler( () => ChallengeList.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
 		challengesButton.SetTooltip( () => $"Show list of possible challenges (hotkey: {challengesButton.GetHotkey().keyName})" );
-		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( this ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
+		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
 		showNearestCaveButton.SetTooltip( () => $"Show nearest animal cave (hotkey: {showNearestCaveButton.GetHotkey().keyName})" );
 
-		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( this ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
+		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( iconFolder.transform ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
 		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
-		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetWorldSpeed( World.Speed.pause ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetWorldSpeed( World.Speed.pause ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
-		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetWorldSpeed( World.Speed.normal ) ).Link( this ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
+		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetWorldSpeed( World.Speed.normal ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
 		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
@@ -770,7 +756,7 @@ public class Interface : HiveObject
 		if ( cameraBackHotkey.IsPressed() )
 			eye.RestoreOldPosition();
 		if ( mapHotkey.IsPressed() )
-			Map.Create().Open( true );
+			eye.SetMapMode( !eye.mapMode );
 #if DEBUG
 		if ( Input.GetKeyDown( KeyCode.Keypad0 ) )
 		{
@@ -808,7 +794,6 @@ public class Interface : HiveObject
 		}
 #endif
 
-		CheckHighlight();
 		if ( speedButtons[0] && world ) { speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey; };
 		if ( speedButtons[1] && world ) { speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey; };
 		if ( speedButtons[2] && world ) { speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey; };
@@ -850,120 +835,6 @@ public class Interface : HiveObject
 #endif
 	}
 
-	void CheckHighlight()
-	{
-		if ( highlightOwner == null )
-			highlightType = HighlightType.none;
-		if ( highlightType == HighlightType.area && highlightArea.center == null )
-			highlightType = HighlightType.none;
-		if ( highlightType != HighlightType.area || highlightArea.center == null )
-		{
-			Destroy( highlightVolume );
-			highlightVolume = null;
-			return;
-		}
-
-		UpdateHighlight();
-	}
-
-	void UpdateHighlight()
-	{
-		if ( highlightVolume && highlightVolumeCenter == highlightArea.center && highlightVolumeRadius == highlightArea.radius )
-			return;
-
-		highlightVolumeCenter = highlightArea.center;
-		highlightVolumeRadius = highlightArea.radius;
-
-		Mesh m;
-		if ( highlightVolume == null )
-		{
-			highlightVolume = new GameObject( "Highlight Volume" );
-			highlightVolume.transform.SetParent( world.transform );
-			var f = highlightVolume.AddComponent<MeshFilter>();
-			var r = highlightVolume.AddComponent<MeshRenderer>();
-			r.material = highlightMaterial;
-			m = f.mesh = new Mesh();
-			var c = highlightVolume.AddComponent<MeshCollider>();
-			c.convex = true;
-			c.sharedMesh = m;
-			highlightVolume.layer = World.layerIndexHighlightVolume;
-			CreateHighLightVolumeMesh( m );
-		}
-
-		highlightVolume.transform.localPosition = highlightVolumeCenter.GetPositionRelativeTo( viewport.visibleAreaCenter );
-		float scale = ( highlightVolumeRadius + 0.5f ) * Constants.Node.size;
-		highlightVolume.transform.localScale = new Vector3( scale, 20, scale );
-		Destroy( highlightVolume.GetComponent<MeshCollider>() );
-		highlightVolume.AddComponent<MeshCollider>();
-	}
-
-	void CreateHighLightVolumeMesh( Mesh m )
-	{
-		var vertices = new Vector3[Constants.Node.neighbourCount * 2];
-		var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
-		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
-		{
-			float x = corners[i, 0] - corners[i, 1] / 2f;
-			float y = corners[i, 1];
-			vertices[i * 2 + 0] = new Vector3( x, -1, y );
-			vertices[i * 2 + 1] = new Vector3( x, +1, y );
-		}
-		m.vertices = vertices;
-
-		var triangles = new int[Constants.Node.neighbourCount * 2 * 3 + 2 * 3 * (Constants.Node.neighbourCount - 2)];
-		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
-		{
-			int a = i * 2;
-			int b = i * 2 + 2;
-			if ( b == Constants.Node.neighbourCount * 2 )
-				b = 0;
-
-			triangles[i * 2 * 3 + 0] = a + 0;
-			triangles[i * 2 * 3 + 1] = a + 1;
-			triangles[i * 2 * 3 + 2] = b + 0;
-
-			triangles[i * 2 * 3 + 3] = a + 1;
-			triangles[i * 2 * 3 + 4] = b + 1;
-			triangles[i * 2 * 3 + 5] = b + 0;
-		}
-		assert.AreEqual( Constants.Node.neighbourCount, 6 );
-		int cap = Constants.Node.neighbourCount * 6;
-		triangles[cap++] = 0;
-		triangles[cap++] = 2;
-		triangles[cap++] = 10;
-
-		triangles[cap++] = 10;
-		triangles[cap++] = 2;
-		triangles[cap++] = 8;
-
-		triangles[cap++] = 8;
-		triangles[cap++] = 2;
-		triangles[cap++] = 4;
-
-		triangles[cap++] = 8;
-		triangles[cap++] = 4;
-		triangles[cap++] = 6;
-
-		triangles[cap++] = 11;
-		triangles[cap++] = 3;
-		triangles[cap++] = 1;
-
-		triangles[cap++] = 9;
-		triangles[cap++] = 3;
-		triangles[cap++] = 11;
-
-		triangles[cap++] = 5;
-		triangles[cap++] = 3;
-		triangles[cap++] = 9;
-
-		triangles[cap++] = 7;
-		triangles[cap++] = 5;
-		triangles[cap++] = 9;
-		m.triangles = triangles;
-
-		highlightVolume.GetComponent<MeshCollider>().sharedMesh = m;
-	}
-
 	void SetHeightStrips( bool value )
 	{
 		this.heightStrips = value;
@@ -998,10 +869,6 @@ public class Interface : HiveObject
 #if DEBUG
 		if ( chain )
 			world.Validate( true );
-		if ( highlightType == HighlightType.volume )
-			Assert.global.IsNotNull( highlightVolume );
-		if ( highlightType == HighlightType.area )
-			Assert.global.IsNotNull( highlightArea );
 
 		if ( !chain )	// This function is caller after load, before the Start functions would be called, so in that case skip checking the number of objects in the root
 			return;
@@ -1732,7 +1599,7 @@ public class Interface : HiveObject
 
 		public void UpdatePosition()
 		{
-			if ( target == null || !followTarget || root.viewport.camera == null )
+			if ( target == null || !followTarget )
 				return;
 
 			MoveTo( target.location.GetPositionRelativeTo( eye.position ) );
@@ -1740,7 +1607,7 @@ public class Interface : HiveObject
 
 		public void MoveTo( Vector3 position )
 		{
-			Vector3 screenPosition = root.viewport.camera.WorldToScreenPoint( position );
+			Vector3 screenPosition = eye.cameraGrid.center.WorldToScreenPoint( position );
 			screenPosition.x += offset.x;
 			screenPosition.y += offset.y;
 			if ( transform is RectTransform t )
@@ -1900,11 +1767,8 @@ public class Interface : HiveObject
 				if ( root.viewport.rightButton )
 					return true;
 					
-				if ( root.highlightArea == area )
-				{
-					root.highlightType = HighlightType.none;
-					root.highlightArea = null;
-				}
+				if ( eye.highlight.area == area )
+					eye.highlight.TurnOff();
 				oh.ScheduleChangeArea( building, originalArea, area.center, area.radius );
 				return false;
 			}
@@ -1914,8 +1778,8 @@ public class Interface : HiveObject
 				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
 				{
 					oh.ScheduleChangeArea( building, originalArea, null, 0 );
-					if ( root.highlightArea == area )
-						root.highlightType = HighlightType.none;
+					if ( eye.highlight.area == area )
+						eye.highlight.TurnOff();
 					return;
 				}
 				if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
@@ -1936,9 +1800,7 @@ public class Interface : HiveObject
 				}
 				area.center = ground.nodes[0];
 				area.radius = 2;
-				root.highlightType = HighlightType.area;
-				root.highlightArea = area;
-				root.highlightOwner = gameObject;
+				eye.highlight.HighlightArea( area, gameObject );
 				root.viewport.inputHandler = this;
 			}
 
@@ -1949,14 +1811,12 @@ public class Interface : HiveObject
 					if ( originalArea.center == null )
 						return;
 
-					root.highlightType = HighlightType.area;
-					root.highlightOwner = gameObject;
-					root.highlightArea = originalArea;
+					eye.highlight.HighlightArea( originalArea, gameObject );
 				}
 				else
 				{
-					if ( root.viewport.inputHandler != this as IInputHandler && root.highlightArea == originalArea )
-						root.highlightType = HighlightType.none;
+					if ( root.viewport.inputHandler != this as IInputHandler && eye.highlight.area == originalArea )
+						eye.highlight.TurnOff();
 				}
 			}
 
@@ -1980,9 +1840,9 @@ public class Interface : HiveObject
 
 			public void OnLostInput()
 			{
-				if ( root.highlightArea != area )
+				if ( eye.highlight.area != area )
 					return;
-				root.highlightType = HighlightType.none;
+				eye.highlight.TurnOff();
 			}
 
 			public bool OnObjectClicked( HiveObject target )
@@ -2230,7 +2090,7 @@ public class Interface : HiveObject
 			if ( ring == null )
 				return;
 
-			var c = root.viewport.camera;
+			var c = HiveCommon.eye.cameraGrid.center;
 			// A null reference crash happened here in map mode, so safety check
 			if ( c == null || hiveObject == null || hiveObject.location == null )
 				return;
@@ -4055,7 +3915,7 @@ public class Interface : HiveObject
 			units.text = "Hauler count: " + road.haulers.Count;
 
 			bool reversed = false;
-			var camera = eye.camera;
+			var camera = eye.cameraGrid.center;
 			float x0 = camera.WorldToScreenPoint( road.nodes[0].position ).x;
 			float x1 = camera.WorldToScreenPoint( road.lastNode.position ).x;
 			if ( x1 < x0 )
@@ -4128,7 +3988,7 @@ public class Interface : HiveObject
 					lastUsedText.text = $"Last used {UIHelpers.TimeToString( road.lastUsed.age )} ago";
 			}
 
-			var c = root.viewport.camera;
+			var c = HiveCommon.eye.cameraGrid.center;
 			var p = c.WorldToScreenPoint( node.positionInViewport );
 			ring.transform.position = p;
 			float scale;
@@ -5274,14 +5134,9 @@ if ( cart )
 			if ( d.options[d.value].text == "All" )
 				filter = Building.Type.unknown;
 			if ( filter == Building.Type.unknown )
-				root.highlightType = HighlightType.none;
+				eye.highlight.TurnOff();
 			else
-			{
-				root.highlightType = HighlightType.buildingType;
-				root.highlightOwner = gameObject;
-				root.highlightBuildingTypes.Clear();
-				root.highlightBuildingTypes.Add( filter );
-			}
+				eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
 			Fill();
 		}
 
@@ -5405,7 +5260,6 @@ if ( cart )
 		public static Material greenCheckOnGround;
 		public static Material redCrossOnGround;
 		public static Mesh plane;
-		public new Camera camera;
 		public Vector3 lastMouseOnGround;
 		static int gridMaskXID;
 		static int gridMaskZID;
@@ -5418,6 +5272,7 @@ if ( cart )
 		public bool markEyePosition;
 		public bool rightButton;
 		public bool rightDrag;
+		public static bool showGround = true;
 		public Vector3 rightOffset, downOffset;
 		public Vector3 lastMouse;
 
@@ -5461,7 +5316,6 @@ if ( cart )
 			return new GameObject().AddComponent<Viewport>();
 		}
 
-
 		public void Start()
 		{
 			transform.SetParent( root.transform );
@@ -5472,7 +5326,7 @@ if ( cart )
 			image.rectTransform.anchorMin = Vector2.zero;
 			image.rectTransform.anchorMax = Vector2.one;
 			image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
-			image.color = new Color( 1, 1, 1, 0 );
+			image.color = new Color( 0, 0, 0, 0 );
 
 			inputHandler = this;
 			marker.transform.SetParent( transform );
@@ -5496,7 +5350,7 @@ if ( cart )
 			redCrossOnGround = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
 			redCrossOnGround.mainTexture = Resources.Load<Texture>( "icons/redCross" );
 
-			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -240, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.F1 );
+			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -280, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.F1 );
 			showGridButton.SetTooltip( () => $"Show grid (hotkey: {showGridButton.GetHotkey().keyName})" );
 			var showNodeButton = this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show node at cursor", KeyCode.F2 );
 			showNodeButton.SetTooltip( () => $"Show node at cursor (hotkey: {showNodeButton.GetHotkey().keyName})" );
@@ -5508,6 +5362,8 @@ if ( cart )
 			showStockContentButton.SetTooltip( () => $"Show stock contents (hotkey: {showStockContentButton.GetHotkey().keyName})" );
 			var showStocksButton = this.Image( Icon.stock ).AddToggleHandler( HighlightStocks ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Highlight stocks", KeyCode.F6 );
 			showStocksButton.SetTooltip( () => $"Show stocks (hotkey: {showStocksButton.GetHotkey().keyName})" );
+			var toggleGroundButton = this.Image( Icon.ground ).AddToggleHandler( ToggleGround, true ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Toggle ground on map", KeyCode.G, true );
+			toggleGroundButton.SetTooltip( () => $"Toggle between ground and political display on map (hotkey: {toggleGroundButton.GetHotkey().keyName})" );
 			root.LoadHotkeys();
 
 			arrowMaterial = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
@@ -5530,20 +5386,32 @@ if ( cart )
 			nodeInfoToShow = state ? OverlayInfoType.stockContent : OverlayInfoType.none;
 		}
 
+		void ToggleGround( bool ground )
+		{
+			Eye.CameraGrid grid = null;
+			if ( eye.mapMode )
+				grid = eye.cameraGrid;
+			if ( Map.MapImage.instance )
+				grid = Map.MapImage.instance.camera;
+
+			if ( grid )
+			{
+				if ( ground )
+					grid.cullingMask = grid.cullingMask | (1 << World.layerIndexWater) | (1 << World.layerIndexGround);
+				else
+					grid.cullingMask = grid.cullingMask & (int.MaxValue - (1 << World.layerIndexWater) - (1 << World.layerIndexGround) );
+			}
+			showGround = ground;
+		}
+
 		void HighlightStocks( bool state )
 		{
 			if ( state )
-			{
-				root.highlightType = HighlightType.buildingType;
-				root.highlightOwner = gameObject;
-				root.highlightBuildingTypes.Clear();
-				root.highlightBuildingTypes.Add( Building.Type.headquarters );
-				root.highlightBuildingTypes.Add( Building.Type.stock );
-			}
+				eye.highlight.HighlightBuildingTypes( Building.Type.headquarters, Building.Type.stock, gameObject );
 			else
 			{
-				if ( root.highlightOwner == gameObject )
-					root.highlightType = HighlightType.none;
+				if ( eye.highlight.owner == gameObject )
+					eye.highlight.TurnOff();
 			}
 		}
 
@@ -5625,41 +5493,22 @@ if ( cart )
 			marker.transform.localScale = Vector3.one * 2;
 		}
 
-		public void SetCamera( Camera camera )
-		{
-			this.camera = camera;
-			if ( camera )
-				eye.camera.enabled = false;
-			else
-			{
-				camera = eye.camera;
-				camera.enabled = true;
-			}
-		}
-
-		public Vector3 visibleAreaCenter
-		{
-			// TODO This should be way cleaner
-			get
-			{
-				if ( eye && eye.camera.enabled )
-					return eye.visibleAreaCenter;
-				else
-					return camera.transform.position;
-			}
-		}
-
 		public HiveObject FindObjectAt( Vector3 screenPosition )
 		{
-			if ( camera == null )
-				camera = eye.camera;
-			Ray ray = camera.ScreenPointToRay( screenPosition );
-			var layers = camera.cullingMask;
+			var layers = eye.cameraGrid.cullingMask;
 			layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
 			layers |= 1 << World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources);
-			if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, layers ) )
+			RaycastHit hit = new RaycastHit();
+			foreach ( var camera in eye.cameraGrid.cameras )
+			{
+				Ray ray = camera.ScreenPointToRay( screenPosition );
+				if ( Physics.Raycast( ray, out hit, 1000, layers ) )
+					break;
+			}
+
+			if ( hit.collider == null )
 				return null;
 
 			var hiveObject = hit.collider.GetComponent<HiveObject>();
@@ -5686,17 +5535,22 @@ if ( cart )
 		public Node FindNodeAt( Vector3 screenPosition )
 		{ 
 			RaycastHit hit = new RaycastHit();
-			if ( camera == null )
-				camera = eye.camera;
-			Ray ray = camera.ScreenPointToRay( screenPosition );
 
-			foreach ( var block in ground.blocks )
+			foreach ( var camera in eye.cameraGrid.cameras )
 			{
-				var c = block.collider;
-				if ( c == null )
-					continue;
+				Ray ray = camera.ScreenPointToRay( screenPosition );
 
-				if ( c.Raycast( ray, out hit, 1000 ) ) // TODO How long the ray should really be?
+				foreach ( var block in ground.blocks )
+				{
+					var c = block.collider;
+					if ( c == null )
+						continue;
+
+					if ( c.Raycast( ray, out hit, 1000 ) ) // TODO How long the ray should really be?
+						break;
+				}
+
+				if ( hit.collider != null )
 					break;
 			}
 
@@ -5746,12 +5600,13 @@ if ( cart )
 
 		public void OnPointerDown( PointerEventData eventData )
 		{
-			if ( eventData.button != PointerEventData.InputButton.Right || camera == null )
+			if ( eventData.button != PointerEventData.InputButton.Right )
 				return;
 
 			rightDrag = true;
+			var camera = eye.cameraGrid.center;	// TODO Only works with the center camera?
 			Ray ray = camera.ScreenPointToRay( eventData.position );
-			Physics.Raycast( ray, out RaycastHit hit, 1000,  1 << World.layerIndexGround );
+			Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexGround );
 
 			Vector3 center = camera.WorldToScreenPoint( hit.point );
 			Vector3 centerWorld = camera.ScreenToWorldPoint( center );
@@ -5765,7 +5620,6 @@ if ( cart )
 		{
 			if ( eventData.button == PointerEventData.InputButton.Right )
 				rightDrag = false;
-
 		}
 
 		public void OnPointerEnter( PointerEventData eventData )
@@ -5813,7 +5667,7 @@ if ( cart )
 			if ( cursor && currentNode )
 			{
 				cursor.transform.localPosition = currentNode.position;
-				cursor.transform.SetParent( ground.FindClosestBlock( currentNode ).transform, false );
+				cursor.transform.SetParent( ground.transform, false );
 			}
 			if ( currentNode && !inputHandler.OnMovingOverNode( currentNode ) )
 				inputHandler = this;
@@ -7572,6 +7426,7 @@ public static class UIHelpers
 	{
 		var h = g.gameObject.AddComponent<Interface.HotkeyControl>();
 		h.Open( name, key, ctrl, alt, shift );
+		g.name = name;
 		return g;
 	}
 

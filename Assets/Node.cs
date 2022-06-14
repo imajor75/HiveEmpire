@@ -173,7 +173,7 @@ public class Node : HiveObject
 			if ( decoration )
 			{
 				var d = Instantiate( decoration ).transform;
-				d.SetParent( ground.FindClosestBlock( this ).transform );
+				d.SetParent( ground.transform );
 				var o = Neighbour( decorationDirection );
 				d.position = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
 			}
@@ -304,6 +304,23 @@ public class Node : HiveObject
 			d = a * 2 - d;
 
 		return Mathf.Max( h, Mathf.Max( v, d ) );
+	}
+
+	public float DistanceFrom( Vector3 position )
+	{
+		var dif = GetPositionRelativeTo( position ) - position;
+
+		float xa = dif.x + dif.z / 2;
+		float xb = dif.x - dif.z / 2;
+
+		if ( dif.z < 0 )
+			dif.z *= -1;
+		if ( xa < 0 )
+			xa *= -1;
+		if ( xb < 0 )
+			xb *= -1;
+
+		return Math.Max( Math.Max( xa, xb ), dif.z );
 	}
 
 	public Vector3 Offset( Node another )

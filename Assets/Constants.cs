@@ -54,6 +54,14 @@ public static class Constants
         public const float autoStorePositionAfter = 2;
         public const int maxNumberOfSavedPositions = 10;
         public const float maxDistance = 0.35f;
+        public const bool depthOfField = false;
+        public const int highlightEffectLevels = 1;
+        public const int highlightEffectGlowSize = 2;
+        public static Color highlightEffectGlowColor = Color.white;
+        public const float highlightSwitchTime = 0.5f;
+        public const float clipDistance = 1.5f;
+        public const float fogDistance = 1.2f;
+        public static Color fogColor = new Color( 0.6f, 0.75f, 0.63f );
     }
 
     public static class Flag
@@ -144,7 +152,7 @@ public static class Constants
         public const int grassLevels = 30;
         public const int grassMaskDimension = 256;
         public const float grassDensity = 0.4f;
-		public const int blockCount = 6;
+		public const int blockCount = 8;
     }
 
     public static class GuardHouse

@@ -1,10 +1,13 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.Rendering;
 
-[RequireComponent( typeof( Camera ), typeof( AudioListener ) )]
+[RequireComponent( typeof( AudioListener ) )]
 public class Eye : HiveObject
 {
 	public float altitude = Constants.Eye.defaultAltitude;
@@ -18,13 +21,32 @@ public class Eye : HiveObject
 	public bool currentPositionStored;
 	public float autoRotate;
 	public Vector2 autoMove = Vector2.zero;
-	public new Camera camera;
 	public float moveSensitivity;
+	public bool mapMode;
 	DepthOfField depthOfField;
 	[JsonIgnore]
 	PostProcessLayer ppl;
 	public Node target;
 	public float targetApproachSpeed;
+	[JsonIgnore]
+	public CameraGrid cameraGrid;
+	[JsonIgnore]
+	public Highlight highlight;
+
+	public void SetMapMode( bool mapMode )
+	{
+		this.mapMode = mapMode;
+		cameraGrid.orthographic = mapMode;
+		if ( mapMode )
+		{
+			cameraGrid.cullingMask = int.MaxValue - (1 << Ground.grassLayerIndex ) - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexRoads);
+			if ( !Interface.Viewport.showGround )
+				cameraGrid.cullingMask = cameraGrid.cullingMask - (1 << World.layerIndexWater) - (1 << World.layerIndexGround);
+		}
+		else
+			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly);
+		RenderSettings.fog = !mapMode;
+	}
 
 	[JsonIgnore]
 	public IDirector director;
@@ -56,14 +78,12 @@ public class Eye : HiveObject
 	bool hasTarget { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	bool rotateAround { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	bool enableSideCameras { set {} }
 
 	public static Eye Create()
 	{
-		var o = Instantiate( Resources.Load<GameObject>( "eye" ) );
-		o.name = "Eye";
-		Eye eye = o.GetComponent<Eye>();
-		eye.destroyed = false;
-		return eye;
+		return new GameObject( "eye" ).AddComponent<Eye>();
 	}
 
 	public Eye Setup( World world )
@@ -86,12 +106,21 @@ public class Eye : HiveObject
 
 	new public void Start()
 	{
-		gameObject.AddComponent<CameraHighlight>();
-		camera = GetComponent<Camera>();
-		var ppv = world.light.GetComponent<PostProcessVolume>();
-		if ( ppv && ppv.profile )
-			depthOfField = ppv.profile.settings[0] as DepthOfField;
-		ppl = GetComponent<PostProcessLayer>();
+		cameraGrid = new GameObject( "Camera grid" ).AddComponent<CameraGrid>();
+		cameraGrid.transform.SetParent( transform, false );
+		cameraGrid.Setup();
+		bool depthOfField = Constants.Eye.depthOfField;
+		if ( depthOfField )
+		{
+			var ppv = world.light.GetComponent<PostProcessVolume>();
+			if ( ppv && ppv.profile )
+				depthOfField = ppv.profile.settings[0] as DepthOfField;
+			ppl = GetComponent<PostProcessLayer>();
+		}
+
+		highlight = new GameObject( "Highlight" ).AddComponent<Highlight>();
+		highlight.transform.SetParent( transform );
+
 		base.Start();
 	}
 
@@ -121,9 +150,9 @@ public class Eye : HiveObject
 	{
 		get
 		{
-			Vector3 near = camera.ScreenToWorldPoint( new Vector3( Screen.width / 2, 0, camera.farClipPlane ) );
-			Vector3 far = camera.ScreenToWorldPoint( new Vector3( Screen.width / 2, Screen.height, camera.farClipPlane ) );
-			Vector3 cameraPos = camera.transform.position;
+			Vector3 near = cameraGrid.center.ScreenToWorldPoint( new Vector3( Screen.width / 2, 0, cameraGrid.center.farClipPlane ) );
+			Vector3 far = cameraGrid.center.ScreenToWorldPoint( new Vector3( Screen.width / 2, Screen.height, cameraGrid.center.farClipPlane ) );
+			Vector3 cameraPos = cameraGrid.center.transform.position;
 			float nearFactor = ( cameraPos.y - Constants.Eye.groundHeightDefault ) / ( cameraPos.y - near.y );
 			Vector3 nearGround = Vector3.Lerp( cameraPos, near, nearFactor );
 			if ( far.y < Constants.Eye.groundHeightDefault )
@@ -157,7 +186,8 @@ public class Eye : HiveObject
 		if ( deltaTime > 0.5f )
 			deltaTime = 0.5f;
 
-		ppl.enabled = root.highlightType == Interface.HighlightType.none;
+		if ( ppl )
+			ppl.enabled = eye.highlight.type == Eye.Highlight.Type.none;
 
 		while ( oldPositions.Count > Constants.Eye.maxNumberOfSavedPositions )
 			oldPositions.RemoveAt( 0 );
@@ -176,9 +206,6 @@ public class Eye : HiveObject
 			height += ( h - height ) * Constants.Eye.heightFollowSpeed * deltaTime;
 		else
 			height = h;
-		UpdateTransformation();
-		camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
-		camera.clearFlags = CameraClearFlags.Skybox;
 
 		if ( director == null )
 			director = null;
@@ -265,7 +292,7 @@ public class Eye : HiveObject
 		if ( altitudeDirectionTarget > Constants.Eye.maxAltitudeDirection )
 			altitudeDirectionTarget = Constants.Eye.maxAltitudeDirection;
 		
-		if ( camera.enabled && root.viewport.mouseOver )
+		if ( root.viewport.mouseOver )
 		{
 			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
 				targetAltitude += Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.unscaledDeltaTime;
@@ -281,6 +308,9 @@ public class Eye : HiveObject
 		var f = Constants.Eye.altitudeSmoothness * deltaTime;
 		altitude = altitude * ( 1 - f ) + targetAltitude * f;
 		altitudeDirection = altitudeDirection * ( 1 - f ) + altitudeDirectionTarget * f;
+
+		UpdateTransformation();
+
 		base.Update();
 	}
 
@@ -313,6 +343,14 @@ public class Eye : HiveObject
 	public void UpdateTransformation()
 	{
 		var position = new Vector3( x, height, y );
+		if ( mapMode )
+		{
+			transform.position = position + Vector3.up * 50;
+			transform.LookAt( position, new Vector3( (float)Math.Sin(direction), 0, (float)Math.Cos(direction) ) );
+			if ( cameraGrid )
+				cameraGrid.orthographicSize = altitude;
+			return;
+		}
 		float horizontal = (float)Math.Sin(altitudeDirection) * altitude;
 		float vertical = (float)Math.Cos(altitudeDirection) * altitude;
 		Vector3 viewer = new Vector3( (float)( horizontal*Math.Sin(direction) ), -vertical, (float)( horizontal*Math.Cos(direction) ) );
@@ -379,75 +417,455 @@ public class Eye : HiveObject
 		root.viewport.markEyePosition = false;
 		director = null;
 		target = null;
-		return transform.right * side * moveSensitivity + transform.forward * forward * moveSensitivity;
+		var forwardDir = transform.forward;
+		if ( mapMode )
+			forwardDir = transform.up;
+		return transform.right * side * moveSensitivity + forwardDir * forward * moveSensitivity;
 	}
 
 	public interface IDirector
 	{
 		void SetCameraTarget( Eye eye );
 	}
-}
 
-public class CameraHighlight : HiveCommon
-{
-	public static Material highlightMaterial;
-	static Material blurMaterial;
-	static int highLightStencilRef;
-
-	public static void Initialize()
+	public class CameraGrid : HiveCommon
 	{
-		highlightMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
-		blurMaterial = new Material( Resources.Load<Shader>( "shaders/Blur" ) );
-		highLightStencilRef = Shader.PropertyToID( "_StencilRef" );
-	}
+		public List<Camera> cameras = new List<Camera>();
+		public Camera center { get { return cameras[4]; } }
+		public Camera first;
+		public Camera last;
+		public bool enableSideCameras = true;
 
-	void OnRenderImage( RenderTexture src, RenderTexture dst )
-	{
-		var volume = root.highlightVolume;
-		if ( volume )
+		public void Setup( float depth = 0 )
 		{
-			var collider = volume.GetComponent<MeshCollider>();
-			collider.sharedMesh = volume.GetComponent<MeshFilter>().mesh;
-			var eye = transform.position;
-			var center = volume.transform.position;
-			var ray = new Ray( eye, center - eye );
-			var outside = collider.Raycast( ray, out _, 100 );
-			highlightMaterial.SetInt( highLightStencilRef, outside ? 0 : 1 );
-		}
-		else
-			highlightMaterial.SetInt( highLightStencilRef, 0 );
-
-		// TODO Do the postprocess with less blit calls
-		// This should be possible theoretically with a single blit from src
-		// to dst using the stencil from src. But since the stencil values are
-		// from the destination, a mixed rendertarget is needed, where the color
-		// buffer is from dst, but the depth/stencil is from src. Theoretically
-		// Graphics.SetRenderTarget can use RenderBuffers from two different
-		// render textures, but Graphics.Blit will ruin this, so a manual blit
-		// needs to be used (using GL.Begin(GL.QUADS) etc..). Unfortunately the 
-		// practic shows that it is not working for unknown reasons. This needs 
-		// to be tested withmap future versions of unity.
-		if ( root.highlightType == Interface.HighlightType.none )
-		{
-			Graphics.Blit( src, dst );
-			return;
+			for ( int y = -1; y <= 1; y++ )
+				for ( int x = -1; x <= 1; x++ )
+					cameras.Add( new GameObject( $"Camera {x}:{y}" ).AddComponent<Camera>() );
+			first = cameras.First();
+			last = cameras.Last();
+			foreach ( var camera in cameras )
+			{
+				camera.clearFlags = CameraClearFlags.Nothing;
+				camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
+				camera.transform.SetParent( transform, false );
+				camera.nearClipPlane = 0.03f;
+				camera.farClipPlane = 100;
+				camera.allowMSAA = false;
+				camera.depth = depth;
+				camera.gameObject.AddComponent<Highlight.Applier>().enabled = false;
+			}
+			first.depth = depth-1;
+			first.clearFlags = CameraClearFlags.Skybox;
+			last.gameObject.GetComponent<Highlight.Applier>().enabled = true;
+			last.depth = depth+1;
 		}
 
-		var tempRT = RenderTexture.GetTemporary( src.width, src.height, 24 );
+		void LateUpdate()
+		{
+			float closest = float.MaxValue, furthest = float.MinValue;
+			var forward = center.transform.forward;
+			for ( int i = 0; i < cameras.Count; i++ )
+			{
+				int x = ( i % 3 ) - 1;
+				int y = ( i / 3 ) - 1;
+				var right = new Vector3( 1, 0, 0 ) * Constants.Node.size * ground.dimension;
+				var up = new Vector3( 0.5f, 0, 1 ) * Constants.Node.size * ground.dimension;
+				var newPosition = transform.position + x * right + y * up;
+				cameras[i].transform.position = newPosition;
+				if ( x != 0 || y != 0 )
+					cameras[i].enabled = enableSideCameras;
+				float depth = Vector3.Dot( forward, newPosition ) + 0.01f * i;	 // The end of this line is needed because in map mode all the cameras will have the same depth, and we cannot select the closest
+				if ( depth < closest )
+					closest = depth;
+				if ( depth > furthest )
+					furthest = depth;
+				cameras[i].depth = depth;
+			}
+			foreach ( var camera in cameras )
+			{
+				if ( camera.depth == furthest )
+				{
+					if ( last != camera )
+					{
+						last.gameObject.GetComponent<Highlight.Applier>().enabled = false;
+						camera.gameObject.GetComponent<Highlight.Applier>().enabled = true;
+						camera.clearFlags = CameraClearFlags.Nothing;
+						last = camera;
+					}
+				}
+				else if ( camera.depth == closest )
+				{
+					if ( first != camera )
+					{
+						camera.clearFlags = CameraClearFlags.Skybox;
+						first = camera;
+					}
+				}
+				else
+					camera.clearFlags = CameraClearFlags.Nothing;
+			}
+		}
 
-		Graphics.Blit( src, tempRT, blurMaterial );
-		Graphics.Blit( tempRT, src, highlightMaterial );
-		Graphics.Blit( src, dst );
+		public int cullingMask
+		{
+			get { return center.cullingMask; }
+			set { foreach ( var camera in cameras ) camera.cullingMask = value; }
+		}
 
-		RenderTexture.ReleaseTemporary( tempRT );
+		public bool orthographic
+		{
+			get { return center.orthographic; }
+			set { foreach ( var camera in cameras ) camera.orthographic = value; }
+		}
+
+		public float orthographicSize
+		{
+			get { return center.orthographicSize; }
+			set { foreach ( var camera in cameras ) camera.orthographicSize = value; }
+		}
+
+		public RenderTexture targetTexture
+		{
+			set { foreach ( var camera in cameras ) camera.targetTexture = value; }
+		}
 	}
 
-	void Update()
+	public class Highlight : HiveCommon
 	{
-		blurMaterial.SetFloat( "_OffsetX", 1f / Screen.width );
-		blurMaterial.SetFloat( "_OffsetY", 1f / Screen.height );
-		highlightMaterial.SetFloat( "_OffsetX", 2f / Screen.width );
-		highlightMaterial.SetFloat( "_OffsetY", 2f / Screen.height );
+		public Type type;
+		public List<Building.Type> buildingTypes = new List<Building.Type>(); 
+		public Ground.Area area;
+		public Mesh volume;
+		Node volumeCenter;
+		int volumeRadius;
+		public RenderTexture mask, blur, smoothMask;
+		public static Material markerMaterial, mainMaterial, volumeMaterial;
+		public Smoother colorSmoother = new Smoother(), maskSmoother = new Smoother();
+		public static int maskValueOffsetID;
+		public CommandBuffer maskCreator;
+		public int maskCreatorCRC;
+		public GameObject owner;
+		public float strength, strengthChange;
+		static int strengthID;
+
+		public class Smoother
+		{
+			public RenderTexture temporary;
+			public List<Material> materials = new List<Material>();
+
+			public void Setup( int width, int height, int steps, RenderTextureFormat format = RenderTextureFormat.ARGB32 )
+			{
+				if ( temporary )
+					Destroy( temporary );
+				materials.Clear();
+
+				if ( steps > 1 )
+				{
+					temporary = new RenderTexture( width, height, 0, format );
+					temporary.name = "Smoother temporary";
+				}
+
+				for ( int i = 0; i < steps; i++ )
+				{
+					var material = new Material( Resources.Load<Shader>( "shaders/blur" ) );
+					var factor = (float)Math.Pow( 4, i );
+					material.SetFloat( "_XStart", -2.5f / width * factor );
+					material.SetFloat( "_YStart", -2.5f / height * factor );
+					material.SetFloat( "_XMove", 2f / width * factor );
+					material.SetFloat( "_YMove", 2f / height * factor );
+					materials.Add( material );
+				}
+			}
+			public void Blur( RenderTexture source, RenderTexture destination )
+			{
+				if ( temporary )
+				{
+					Assert.global.AreEqual( source.width, temporary.width );
+					Assert.global.AreEqual( source.height, temporary.height );
+					Assert.global.AreEqual( destination.width, temporary.width );
+					Assert.global.AreEqual( destination.height, temporary.height );
+				}
+				for ( int i = 0; i < materials.Count; i++ )
+				{
+					var blitSource = source;
+					var left = materials.Count - i - 1;
+					var blitDestination = left % 2 == 0 ? destination : temporary;
+					if ( i > 0 )
+						blitSource = blitDestination == temporary ? destination : temporary;
+					Graphics.Blit( blitSource, blitDestination, materials[i] );
+				}
+			}
+		}
+
+		public int CRC
+		{
+			get
+			{
+				int CRC = 0;
+				if ( type == Type.buildingType )
+				{
+					if ( eye.mapMode )
+						CRC++;
+					foreach ( var t in buildingTypes )
+						CRC += (int)t;
+					CRC += root.mainTeam.stocks.Count();
+					CRC += root.mainTeam.workshops.Count();
+					CRC += root.mainTeam.guardHouses.Count();
+				}
+				if ( type == Type.area )
+				{
+					CRC += area.center.x;
+					CRC += area.center.y * 100;
+					CRC += area.radius;
+				}
+				return CRC;
+			}
+		}
+
+		public enum Type
+		{
+			none,
+			buildingType,
+			area
+		}
+
+		public static void Initialize()
+		{
+			markerMaterial = new Material( Resources.Load<Shader>( "shaders/highlightMarker" ) );
+			mainMaterial = new Material( Resources.Load<Shader>( "shaders/Highlight" ) );
+			volumeMaterial = new Material( Resources.Load<Shader>( "shaders/HighlightVolume" ) );
+			mainMaterial.SetColor( "_GlowColor", Constants.Eye.highlightEffectGlowColor );
+			strengthID = Shader.PropertyToID( "_Strength" );
+
+			maskValueOffsetID = Shader.PropertyToID( "_MaskValueOffset" );
+		}
+
+		public void HighlightArea( Ground.Area area, GameObject owner )
+		{
+			type = Type.area;
+			this.area = area;
+			this.owner = owner;
+			strength = 0;
+			strengthChange = 1 / Constants.Eye.highlightSwitchTime;
+		}
+
+		public void HighlightBuildingTypes( Building.Type buildingType0, Building.Type buildingType1 = Building.Type.unknown, GameObject owner = null )
+		{
+			type = Type.buildingType;
+			buildingTypes.Clear();
+			buildingTypes.Add( buildingType0 );
+			if ( buildingType1 != Building.Type.unknown )
+				buildingTypes.Add( buildingType1 );
+			this.owner = owner;
+			strength = 0;
+			strengthChange = 1 / Constants.Eye.highlightSwitchTime;
+		}
+
+		public void TurnOff()
+		{
+			strengthChange = -1 / Constants.Eye.highlightSwitchTime;
+		}
+
+		public void ApplyHighlight( RenderTexture source, RenderTexture target )
+		{
+			if ( maskCreator == null || mask.width != Screen.width || mask.height != Screen.height )
+				Graphics.Blit( source, target );
+			else
+			{
+				GL.modelview = eye.cameraGrid.center.worldToCameraMatrix;
+				GL.LoadProjectionMatrix( eye.cameraGrid.center.projectionMatrix );
+				Graphics.ExecuteCommandBuffer( maskCreator );
+				colorSmoother.Blur( source, blur );
+				maskSmoother.Blur( mask, smoothMask );
+				Graphics.Blit( source, target, mainMaterial );
+			}
+		}
+
+		void Update()
+		{
+			if ( owner == null )
+				type = Type.none;
+			if ( type == Type.area && area.center == null )
+				type = Type.none;
+			strength += strengthChange * Time.unscaledDeltaTime;
+			if ( strength > 1 )
+				strength = 1;
+			if ( strength < 0 )
+				type = Type.none;
+			mainMaterial.SetFloat( strengthID, strength );
+
+			if ( type == Type.none )
+			{
+				if ( mask )
+				{
+					Destroy( mask );
+					mask = null;
+					maskCreator = null;
+				}
+			}
+			else
+			{
+				if ( mask == null || mask.width != Screen.width || mask.height != Screen.height )
+				{
+					Destroy( mask );
+
+					mask = new RenderTexture( Screen.width, Screen.height, 0, RenderTextureFormat.RFloat );
+					mask.name = "Eye highlight mask";
+					smoothMask = new RenderTexture( Screen.width, Screen.height, 0, RenderTextureFormat.RFloat );
+					smoothMask.name = "Eye highlight smooth mask";
+					mainMaterial.SetTexture( "_Mask", mask );
+					mainMaterial.SetTexture( "_SmoothMask", smoothMask );
+					maskSmoother.Setup( Screen.width, Screen.height, Constants.Eye.highlightEffectGlowSize, RenderTextureFormat.RFloat );
+					maskCreator = null;
+				}
+
+				if ( blur == null || blur.width != Screen.width || blur.height != Screen.height )
+				{
+					Destroy( blur );
+
+					blur = new RenderTexture( Screen.width, Screen.height, 0 );
+					blur.name = "Eye highlight blur";
+					mainMaterial.SetTexture( "_Blur", blur );
+					colorSmoother.Setup( Screen.width, Screen.height, Constants.Eye.highlightEffectLevels );
+				}
+
+				if ( maskCreator == null || maskCreatorCRC != CRC )
+				{
+					var maskId = new RenderTargetIdentifier( mask );
+					var currentId = new RenderTargetIdentifier( BuiltinRenderTextureType.CurrentActive );
+
+					maskCreator = new CommandBuffer();
+					maskCreator.name = "Highlight mask creation";
+
+					maskCreator.SetRenderTarget( maskId, currentId );
+					maskCreator.ClearRenderTarget( false, true, Color.black );
+
+					void DrawMeshRepeatedly( Mesh mesh, Matrix4x4 location, Material material )
+					{
+						var rightShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size, 0, 0 ) );
+						var leftShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size, 0, 0 ) );
+						var upShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size / 2, 0, ground.dimension * Constants.Node.size ) );
+						var downShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size / 2, 0, -ground.dimension * Constants.Node.size ) );
+						maskCreator.DrawMesh( mesh, location, material );
+						maskCreator.DrawMesh( mesh, rightShift * location, material );
+						maskCreator.DrawMesh( mesh, leftShift * location, material );
+						maskCreator.DrawMesh( mesh, upShift * location, material );
+						maskCreator.DrawMesh( mesh, downShift * location, material );
+					}
+					if ( type == Type.buildingType )
+					{
+						void ProcessBuilding( Building building )
+						{
+							if ( !buildingTypes.Contains( building.type ) )
+								return;
+								
+							if ( eye.mapMode )
+							{
+								var shiftUp = Matrix4x4.Translate( new Vector3( 0, 10, 0 ) );
+								DrawMeshRepeatedly( building.mapIndicator.GetComponent<MeshCollider>().sharedMesh, shiftUp * building.mapIndicator.transform.localToWorldMatrix, markerMaterial );
+							}
+							else
+								DrawMeshRepeatedly( building.body.GetComponent<MeshFilter>().mesh, building.body.transform.localToWorldMatrix, markerMaterial );
+						}
+						foreach ( var stock in root.mainTeam.stocks )
+							ProcessBuilding( stock );
+						foreach ( var workshop in root.mainTeam.workshops )
+							ProcessBuilding( workshop );
+						foreach ( var guardHouse in root.mainTeam.guardHouses )
+							ProcessBuilding( guardHouse );
+					}
+					if ( type == Type.area )
+					{
+						float s = ( area.radius + 0.5f ) * Constants.Node.size;
+						DrawMeshRepeatedly( volume, Matrix4x4.TRS( area.center.position, Quaternion.identity, new Vector3( s, 20, s ) ), volumeMaterial );
+					}
+					maskCreatorCRC = CRC;
+				}
+			}
+
+			if ( type == Type.area )
+			{
+				float maskValueOffset = 0;
+				var distance = area.center.DistanceFrom( eye.transform.position );
+				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size && !eye.mapMode )
+					maskValueOffset = 1;
+
+				mainMaterial.SetFloat( maskValueOffsetID, maskValueOffset );
+			}
+		}
+
+		void Start()
+		{
+			volume = new Mesh();
+			var vertices = new Vector3[Constants.Node.neighbourCount * 2];
+			var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
+			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+			{
+				float x = corners[i, 0] - corners[i, 1] / 2f;
+				float y = corners[i, 1];
+				vertices[i * 2 + 0] = new Vector3( x, -1, y );
+				vertices[i * 2 + 1] = new Vector3( x, +1, y );
+			}
+			volume.vertices = vertices;
+
+			var triangles = new int[Constants.Node.neighbourCount * 2 * 3 + 2 * 3 * (Constants.Node.neighbourCount - 2)];
+			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+			{
+				int a = i * 2;
+				int b = i * 2 + 2;
+				if ( b == Constants.Node.neighbourCount * 2 )
+					b = 0;
+
+				triangles[i * 2 * 3 + 0] = a + 0;
+				triangles[i * 2 * 3 + 1] = a + 1;
+				triangles[i * 2 * 3 + 2] = b + 0;
+
+				triangles[i * 2 * 3 + 3] = a + 1;
+				triangles[i * 2 * 3 + 4] = b + 1;
+				triangles[i * 2 * 3 + 5] = b + 0;
+			}
+			Assert.global.AreEqual( Constants.Node.neighbourCount, 6 );
+			int cap = Constants.Node.neighbourCount * 6;
+			triangles[cap++] = 0;
+			triangles[cap++] = 2;
+			triangles[cap++] = 10;
+
+			triangles[cap++] = 10;
+			triangles[cap++] = 2;
+			triangles[cap++] = 8;
+
+			triangles[cap++] = 8;
+			triangles[cap++] = 2;
+			triangles[cap++] = 4;
+
+			triangles[cap++] = 8;
+			triangles[cap++] = 4;
+			triangles[cap++] = 6;
+
+			triangles[cap++] = 11;
+			triangles[cap++] = 3;
+			triangles[cap++] = 1;
+
+			triangles[cap++] = 9;
+			triangles[cap++] = 3;
+			triangles[cap++] = 11;
+
+			triangles[cap++] = 5;
+			triangles[cap++] = 3;
+			triangles[cap++] = 9;
+
+			triangles[cap++] = 7;
+			triangles[cap++] = 5;
+			triangles[cap++] = 9;
+			volume.triangles = triangles;
+		}
+
+		public class Applier : HiveCommon
+		{
+			void OnRenderImage( RenderTexture source, RenderTexture target )
+			{
+				eye.highlight.ApplyHighlight( source, target );
+			}
+		}
 	}
 }
-
