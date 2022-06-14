@@ -474,7 +474,7 @@ public class Eye : HiveObject
 				cameras[i].transform.position = newPosition;
 				if ( x != 0 || y != 0 )
 					cameras[i].enabled = enableSideCameras;
-				float depth = Vector3.Dot( forward, newPosition );
+				float depth = Vector3.Dot( forward, newPosition ) + 0.01f * i;	 // The end of this line is needed because in map mode all the cameras will have the same depth, and we cannot select the closest
 				if ( depth < closest )
 					closest = depth;
 				if ( depth > furthest )
