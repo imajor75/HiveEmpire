@@ -22,6 +22,7 @@ public class Eye : HiveObject
 	public float autoRotate;
 	public Vector2 autoMove = Vector2.zero;
 	public float moveSensitivity;
+	[JsonIgnore]
 	public bool mapMode;
 	DepthOfField depthOfField;
 	[JsonIgnore]
