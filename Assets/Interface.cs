@@ -448,7 +448,8 @@ public class Interface : HiveObject
 		iconFolder.transform.SetParent( transform, false );
 		iconFolder.enabled = false;
 		iconFolder.rectTransform.offsetMin = iconFolder.rectTransform.offsetMax = Vector2.zero;
-		iconFolder.rectTransform.anchorMin = iconFolder.rectTransform.anchorMax = new Vector2( 0, 1 );
+		iconFolder.rectTransform.anchorMin = Vector2.zero;
+		iconFolder.rectTransform.anchorMax = Vector2.one;
 
 		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( iconFolder.transform ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
 		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
@@ -481,12 +482,12 @@ public class Interface : HiveObject
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( iconFolder.transform ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
-		replayIcon = this.Image( Icon.replay ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
+		replayIcon = this.Image( Icon.replay ).Link( iconFolder.transform ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
 		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetWorldSpeed( World.Speed.pause ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
 		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetWorldSpeed( World.Speed.normal ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
-		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
+		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
 		messageButton = this.Text( "" ).Pin( iconSize, -50, 6 * iconSize, 2 * iconSize ).AddClickHandler( OnMessagesClicked );
