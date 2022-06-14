@@ -238,30 +238,9 @@ public class Ground : HiveObject
 		return this;
     }
 
-	public Block FindClosestBlock( Node node )
-	{
-		foreach ( var block in blocks )
-		{
-			if ( node.x < block.center.x - block.dimension / 2 )
-				continue;
-			if ( node.x > block.center.x + block.dimension / 2 )
-				continue;
-			if ( node.y < block.center.y - block.dimension / 2 )
-				continue;
-			if ( node.y > block.center.y + block.dimension / 2 )
-				continue;
-			return block;
-		}
-		return null;
-	}
-
 	public void Link( HiveObject hiveObject, Node location = null )
 	{
-		var bestBlock = FindClosestBlock( location ?? hiveObject.location );
-		if ( bestBlock )
-			hiveObject.transform.SetParent( bestBlock.transform, false );
-		else
-			hiveObject.transform.SetParent( transform, false );
+		hiveObject.transform.SetParent( transform, false );
 	}
 
 	public override void GameLogicUpdate()

@@ -1280,7 +1280,7 @@ public class Unit : HiveObject
 		team = road.team;
 		currentColor = Color.grey;
 		Building main = road.team.mainBuilding;
-		SetNode( main.node );
+		node = main.node;
 		this.road = road;
 		exclusiveMode = false;
 		ScheduleWalkToNeighbour( main.flag.node );
@@ -1327,7 +1327,7 @@ public class Unit : HiveObject
 		currentColor = Color.cyan;
 		team = flag.team;
 		Building main = team.mainBuilding;
-		SetNode( main.node );
+		node = main.node;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( flag );
 		base.Setup();
@@ -1345,7 +1345,7 @@ public class Unit : HiveObject
 		
 		team = building.team;
 		this.building = building;
-		SetNode( building.node );
+		node = building.node;
 		base.Setup();
 		return this;
 	}
@@ -1359,7 +1359,7 @@ public class Unit : HiveObject
 		
 		this.team = team;
 		this.building = target;
-		SetNode( team.mainBuilding.node );
+		node = team.mainBuilding.node;
 		base.Setup();
 		return this;
 	}
@@ -1371,13 +1371,13 @@ public class Unit : HiveObject
 		Building main = team.mainBuilding;
 		if ( main && main != building )
 		{
-			SetNode( main.node );
+			node = main.node;
 			ScheduleWalkToNeighbour( main.flag.node );
 			ScheduleWalkToFlag( building.flag );
 			ScheduleWalkToNeighbour( building.node );
 		}
 		else
-			SetNode( building.node );
+			node = building.node;
 		base.Setup();
 		return this;
 	}
@@ -1386,7 +1386,7 @@ public class Unit : HiveObject
 	{
 		World.CRC( node.id, OperationHandler.Event.CodeLocation.unitSetupAsAnimal );
 		look = type = Type.wildAnimal;
-		SetNode( node );
+		this.node = node;
 		this.origin = origin;
 		base.Setup();
 		return this;
@@ -1397,7 +1397,7 @@ public class Unit : HiveObject
 		World.CRC( stock.id, OperationHandler.Event.CodeLocation.unitSetupAsCart );
 		look = type = Type.cart;
 		building = stock;
-		SetNode( stock.node );
+		node = stock.node;
 		speed = Constants.Stock.cartSpeed;
 		team = stock.team;
 		currentColor = Color.white;
@@ -1405,15 +1405,9 @@ public class Unit : HiveObject
 		return this;
 	}
 
-	public void SetNode( Node node )
-	{
-		this.node = node;
-		ground.Link( this, walkBase?.location );
-	}
-
 	new public void Start()
 	{
-		ground.Link( this, walkBase?.location );
+		transform.SetParent( ground.transform );
 		Vector3 pos = node.position;
 		if ( building && node == building.node )
 			pos += standingOffsetInsideBuilding;
@@ -1532,7 +1526,7 @@ public class Unit : HiveObject
 		assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
 		currentSpeed = speed * SpeedBetween( target, node );
 		walkFrom = node;
-		SetNode( walkTo = target );
+		node = walkTo = target;
 	}
 
 	// Update is called once per frame
@@ -2335,11 +2329,11 @@ public class Unit : HiveObject
 		{
 			assert.IsNotNull( road );
 			int newIndex = road.nodes.Count / 2;
-			SetNode( road.nodes[newIndex] );
+			node = road.nodes[newIndex];
 			EnterExclusivity( road, road.nodes[newIndex] );
 		}
 		if ( type == Type.tinkerer || type == Type.tinkererMate || type == Type.cart )
-			SetNode( building.node );
+			node = building.node;
 		if ( type == Type.constructor || type == Type.unemployed )
 			Retire();
 	}

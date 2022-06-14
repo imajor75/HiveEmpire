@@ -173,7 +173,7 @@ public class Node : HiveObject
 			if ( decoration )
 			{
 				var d = Instantiate( decoration ).transform;
-				d.SetParent( ground.FindClosestBlock( this ).transform );
+				d.SetParent( ground.transform );
 				var o = Neighbour( decorationDirection );
 				d.position = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
 			}

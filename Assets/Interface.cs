@@ -5667,7 +5667,7 @@ if ( cart )
 			if ( cursor && currentNode )
 			{
 				cursor.transform.localPosition = currentNode.position;
-				cursor.transform.SetParent( ground.FindClosestBlock( currentNode ).transform, false );
+				cursor.transform.SetParent( ground.transform, false );
 			}
 			if ( currentNode && !inputHandler.OnMovingOverNode( currentNode ) )
 				inputHandler = this;
