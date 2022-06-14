@@ -47,6 +47,8 @@ public class Interface : HiveObject
 	public bool defeatReported;
 	public bool requestUpdate;
     public bool purgeOperationHandlerCRCTable;
+	public Text FPSDisplay;
+	public float FPS;
 
 	public static Material materialUIPath;
 	static bool focusOnInputField, focusOnDropdown;
@@ -74,6 +76,8 @@ public class Interface : HiveObject
 
 	static public Hotkey mapZoomInHotkey = new Hotkey( "Map zoom in", KeyCode.KeypadPlus );
 	static public Hotkey mapZoomOutHotkey = new Hotkey( "Map zoom out", KeyCode.KeypadMinus );
+
+	static public Hotkey showFPSHotkey = new Hotkey( "Show FPS", KeyCode.UpArrow, true, true );
 
 	public bool playerInCharge { get { return world.operationHandler.mode == OperationHandler.Mode.recording; } }
 	public Team mainTeam { get { return mainPlayer?.team; } }
@@ -490,6 +494,10 @@ public class Interface : HiveObject
 		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
+		FPSDisplay = this.Text().Link( iconFolder.transform ).Pin( 20, 20, 200, 20, 0, 0 ).AddOutline();
+		FPSDisplay.color = Color.white;
+		FPSDisplay.enabled = false;
+
 		messageButton = this.Text( "" ).Pin( iconSize, -50, 6 * iconSize, 2 * iconSize ).AddClickHandler( OnMessagesClicked );
 		messageButton.fontSize = 40;
 		messageButton.color = Color.yellow;
@@ -821,6 +829,11 @@ public class Interface : HiveObject
             oh.PurgeCRCTable();
             purgeOperationHandlerCRCTable = false;
         }
+
+		FPS = 0.9f * FPS + 0.1f * ( 1 / Time.unscaledDeltaTime );
+		FPSDisplay.text = FPS.ToString();
+		if ( showFPSHotkey.IsPressed() )
+			FPSDisplay.enabled = !FPSDisplay.enabled;
 
 		base.Update();
 	}
