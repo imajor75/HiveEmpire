@@ -541,7 +541,7 @@ public class Eye : HiveObject
 		public RenderTexture mask, blur, smoothMask;
 		public static Material markerMaterial, mainMaterial, volumeMaterial;
 		public Smoother colorSmoother = new Smoother(), maskSmoother = new Smoother();
-		public static int maskLimitID;
+		public static int maskValueOffsetID;
 		public CommandBuffer maskCreator;
 		public int maskCreatorCRC;
 		public GameObject owner;
@@ -637,7 +637,7 @@ public class Eye : HiveObject
 			mainMaterial.SetColor( "_GlowColor", Constants.Eye.highlightEffectGlowColor );
 			strengthID = Shader.PropertyToID( "_Strength" );
 
-			maskLimitID = Shader.PropertyToID( "_MaskLimit" );
+			maskValueOffsetID = Shader.PropertyToID( "_MaskValueOffset" );
 		}
 
 		public void HighlightArea( Ground.Area area, GameObject owner )
@@ -785,12 +785,12 @@ public class Eye : HiveObject
 
 			if ( type == Type.area )
 			{
-				float maskLimit = 0.5f;
+				float maskValueOffset = 0;
 				var distance = area.center.DistanceFrom( eye.transform.position );
 				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size && !eye.mapMode )
-					maskLimit = -0.5f;
+					maskValueOffset = 1;
 
-				mainMaterial.SetFloat( maskLimitID, maskLimit );
+				mainMaterial.SetFloat( maskValueOffsetID, maskValueOffset );
 			}
 		}
 

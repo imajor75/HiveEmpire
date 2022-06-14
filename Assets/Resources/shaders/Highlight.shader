@@ -7,7 +7,7 @@
 		_Blur("Blur", 2D) = "white" {}
 		_GlowColor("Glow Color", Color) = (1,1,1,1)
 		_SmoothMask("Smooth Mask", 2D) = "white" {}
-		_MaskLimit("Mask Limit", Float) = 0.5
+		_MaskValueOffset("Mask Value Offset", Float) = 0
         _Strength("Strength", Range(0,1)) = 1
 	}
 
@@ -42,7 +42,7 @@
 			sampler _Mask;
 			sampler _SmoothMask;
 			sampler _Blur;
-			float _MaskLimit;
+			float _MaskValueOffset;
 			float4 _GlowColor;
 			float _Strength;
 
@@ -57,11 +57,11 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float4 base = tex2D(_MainTex, i.uv);
-				if ( tex2D(_Mask, i.uv).r > _MaskLimit )
+				if ( tex2D(_Mask, i.uv).r + _MaskValueOffset > 0.5 )
 					return base;
 
 				float4 col = tex2D(_Blur, i.uv);
-				float4 highlight = col * 0.75f + _GlowColor * tex2D(_SmoothMask, i.uv).r;
+				float4 highlight = col * 0.75f + _GlowColor * ( tex2D(_SmoothMask, i.uv).r + _MaskValueOffset );
 				return lerp( base, highlight, _Strength );
             }
             ENDCG
