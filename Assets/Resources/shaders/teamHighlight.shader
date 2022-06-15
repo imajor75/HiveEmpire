@@ -17,7 +17,7 @@ Shader "Custom/teamHighlight"
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows keepalpha
+        #pragma surface surf Standard addshadow keepalpha
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0

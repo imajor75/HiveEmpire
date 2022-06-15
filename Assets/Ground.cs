@@ -602,7 +602,9 @@ public class Ground : HiveObject
 			collider = gameObject.GetComponent<MeshCollider>();
 			mesh = meshFilter.mesh = new Mesh();
 			mesh.name = "GroundMesh";
-			GetComponent<MeshRenderer>().material = boss.material;
+			var renderer = GetComponent<MeshRenderer>();
+			renderer.material = boss.material;
+			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
 			transform.SetParent( boss.transform );
 			name = $"Ground block {center.x}:{center.y}";
