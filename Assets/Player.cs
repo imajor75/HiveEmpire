@@ -299,6 +299,7 @@ public class Team : HiveObject
 		{
 			buoyMaterial = new Material( World.defaultShader );
 			buoyMaterial.color = color;
+			buoyMaterial.enableInstancing = true;
 		}
 		return buoyMaterial;
 	}

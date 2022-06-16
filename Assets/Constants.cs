@@ -152,7 +152,7 @@ public static class Constants
         public const int grassLevels = 30;
         public const int grassMaskDimension = 256;
         public const float grassDensity = 0.4f;
-		public const int blockCount = 8;
+		public const int blockCount = 4;
     }
 
     public static class GuardHouse

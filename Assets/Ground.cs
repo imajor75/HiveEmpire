@@ -11,9 +11,11 @@ public class Ground : HiveObject
 	[Range(0.0f, 1.0f)]
 	public float sharpRendering = Constants.Ground.defaultSharpRendering;
 	public List<Block> blocks = new List<Block>();
+	public List<GrassBlock> grassBlocks = new List<GrassBlock>();
 	public Material material;
 	[JsonIgnore]
 	public List<Material> grassMaterials = new List<Material>();
+	List<Matrix4x4> grassMatrices = new List<Matrix4x4>();	
 	public static int grassLayerIndex;
 	public Texture2D mapGroundTexture;
 	public MeshRenderer mapGround;
@@ -39,6 +41,12 @@ public class Ground : HiveObject
 	}
 
 	public bool dirtyOwnership;
+
+	public class GrassBlock
+	{
+		public Block block;
+		public float depth;
+	}
 
 	public class Offset
 	{
@@ -83,11 +91,11 @@ public class Ground : HiveObject
 		transform.SetParent( world.transform );
 		material = Resources.Load<Material>( "GroundMaterial" );
 
-		if ( blocks.Count == 0 )
+		if ( blocks.Count == 0 || blocks.Count != grassBlocks.Count )
 			CreateBlocks();		// Compatibility with old files
 
-		Assert.global.AreEqual( grassMaterials.Count, 0 );
-		SetGrassLayerCount( Constants.Ground.grassLevels );
+		grassLayerCount = Constants.Ground.grassLevels;
+		InitializeGrass();
 
 		mapGround = new GameObject( "Map Ground" ).AddComponent<MeshRenderer>();
 		var meshFilter = mapGround.gameObject.AddComponent<MeshFilter>();
@@ -144,19 +152,12 @@ public class Ground : HiveObject
 	[JsonIgnore]
 	public int grassLayerCount;
 
-	void SetGrassLayerCount( int layers )
+	void InitializeGrass()
 	{
-		foreach ( var m in grassMaterials )
-			Destroy( m );
-		grassMaterials.Clear();
-
 		var r = new System.Random( 0 );
 
 		var grassShader = Resources.Load<Shader>( "shaders/Grass" );
-		Assert.global.IsNotNull( grassMaterials );
-
 		var grassTexture = Resources.Load<Texture>( "icons/grass" );
-
 		var sideMoveTexture = new Texture2D( 8, 8 );
 		for ( int x = 0; x < 8; x++ )
 		{
@@ -179,19 +180,24 @@ public class Ground : HiveObject
 			maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
 		maskTexture.Apply();
 
-		for ( int i = 0; i < layers; i++ )
+		for ( int i = 0; i < Constants.Ground.blockCount * Constants.Ground.blockCount; i++ )
 		{
-			Assert.global.AreEqual( i, grassMaterials.Count );
-			var levelMaterial = new Material( grassShader );
-			levelMaterial.SetFloat( "_Offset", 1 - ( (float)i ) / layers );
-			levelMaterial.SetTexture( "_SideMove", sideMoveTexture );
-			levelMaterial.SetTexture( "_Mask", maskTexture );
-			levelMaterial.SetTexture( "_Color", grassTexture );
-			levelMaterial.SetFloat( "_WorldScale", dimension );
-			levelMaterial.renderQueue = 2500 - i;
-			grassMaterials.Add( levelMaterial );
+			var material = new Material( grassShader );
+			material.SetTexture( "_SideMove", sideMoveTexture );
+			material.SetTexture( "_Mask", maskTexture );
+			material.SetTexture( "_Color", grassTexture );
+			material.SetFloat( "_WorldScale", dimension );
+			material.renderQueue = 2450 + i;
+			material.enableInstancing = true;
+			grassMaterials.Add( material );
 		}
-		grassLayerCount = layers;
+
+		grassMatrices.Clear();
+		for ( int i = 0; i < grassLayerCount; i++ )
+		{
+			float offset = ( (float)i ) / grassLayerCount;
+			grassMatrices.Add( Matrix4x4.Translate( new Vector3( 0, offset * 0.15f, 0 ) ) );
+		}			
 	}
 
 	static public void Initialize()
@@ -203,12 +209,16 @@ public class Ground : HiveObject
 	void CreateBlocks()
 	{
 		foreach ( var block in blocks )
-			Destroy( block );
+			Destroy( block.gameObject );
 		blocks.Clear();
 
 		for ( int x = dimension / Constants.Ground.blockCount / 2; x < dimension; x += dimension / Constants.Ground.blockCount )
 			for ( int y = dimension / Constants.Ground.blockCount / 2; y < dimension; y += dimension / Constants.Ground.blockCount )
 				blocks.Add( Block.Create().Setup( this, GetNode( x, y ), dimension / Constants.Ground.blockCount ) );
+
+		grassBlocks.Clear();
+		foreach ( var block in blocks )
+			grassBlocks.Add( new GrassBlock { block = block } );
 	}
 
 	public float n00x, n00y, n10x, n10y, n01x, n01y;
@@ -252,18 +262,20 @@ public class Ground : HiveObject
 	public void LateUpdate()
 	{
 		float timeFraction = 0.003f * time;
-		foreach ( var grassMaterial in grassMaterials )
-			grassMaterial.SetFloat( "_TimeFraction", timeFraction );
 
-		// TODO Need sorting
-		foreach ( var grassMaterial in grassMaterials )
+		foreach ( var grass in grassBlocks )
 		{
-			foreach ( var block in blocks )
-				Graphics.DrawMesh( block.mesh, block.transform.position, Quaternion.identity, grassMaterial, grassLayerIndex );
+			var a = eye.cameraGrid.center.transform.position;
+			var b = grass.block.center.position;
+			var d = a - b;
+			float yDif = Math.Abs( d.z );
+			float xDif = Math.Abs( d.x - d.z / 2 );
+			grass.depth = Math.Max( xDif, yDif );
 		}
+		grassBlocks.Sort( ( a, b ) => b.depth.CompareTo( a.depth ) );
 
-		if ( grassMaterials.Count != grassLayerCount )
-			SetGrassLayerCount( grassLayerCount );
+		for ( int i = 0; i < grassBlocks.Count; i++ )
+			Graphics.DrawMeshInstanced( grassBlocks[i].block.mesh, 0, grassMaterials[i], grassMatrices, null, UnityEngine.Rendering.ShadowCastingMode.Off, true, grassLayerIndex );
 	}
 
 	static void CreateAreas()
