@@ -180,7 +180,8 @@ public class Ground : HiveObject
 			maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
 		maskTexture.Apply();
 
-		for ( int i = 0; i < Constants.Ground.blockCount * Constants.Ground.blockCount; i++ )
+		int materialsNeeded = Math.Max( Constants.Ground.blockCount * Constants.Ground.blockCount, Constants.Ground.grassLevels );
+		for ( int i = 0; i < materialsNeeded; i++ )
 		{
 			var material = new Material( grassShader );
 			material.SetTexture( "_SideMove", sideMoveTexture );
@@ -261,8 +262,6 @@ public class Ground : HiveObject
 
 	public void LateUpdate()
 	{
-		float timeFraction = 0.003f * time;
-
 		foreach ( var grass in grassBlocks )
 		{
 			var a = eye.cameraGrid.center.transform.position;
@@ -275,7 +274,18 @@ public class Ground : HiveObject
 		grassBlocks.Sort( ( a, b ) => b.depth.CompareTo( a.depth ) );
 
 		for ( int i = 0; i < grassBlocks.Count; i++ )
+		{
+			// It seems that the Graphics.DrawMeshInstanced is not working in the standalone version. This feels like a unity bug which is reported
+			// (https://unity3d.atlassian.net/servicedesk/customer/portal/2/IN-7570)
+			// As a workaround the editor uses the Graphics.DrawMeshInstanced call, while the standalone version uses multiple Graphics.DrawMesh calls to
+			// achieve the same effect at the cost of performance. Once the issue is solved both versions should use the Graphics.DrawMeshInstanced call.
+#if UNITY_EDITOR
 			Graphics.DrawMeshInstanced( grassBlocks[i].block.mesh, 0, grassMaterials[i], grassMatrices, null, UnityEngine.Rendering.ShadowCastingMode.Off, true, grassLayerIndex );
+#else
+			for ( int j = 0; j < grassMatrices.Count; j++ )
+				Graphics.DrawMesh( grassBlocks[i].block.mesh, grassMatrices[j], grassMaterials[j], grassLayerIndex, null, 0, null, false, true );
+#endif
+		}
 	}
 
 	static void CreateAreas()

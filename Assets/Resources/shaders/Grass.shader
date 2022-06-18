@@ -9,7 +9,7 @@ Shader "Custom/Grass"
     }
     SubShader
     {
-        Tags { "RenderType"="Transparent" "Queue"="Transparent" }
+        Tags { "RenderType"="Transparent" }
         ZWrite Off
         Blend SrcAlpha OneMinusSrcAlpha
         CGPROGRAM
@@ -27,11 +27,6 @@ Shader "Custom/Grass"
             float4 weights : COLOR;
             float2 uv_Mask;
             float3 worldPos;
-        };
-
-        struct v2f
-        {
-            float4 position : POSITION;
         };
 
         void surf( Input IN, inout SurfaceOutputStandard o )
