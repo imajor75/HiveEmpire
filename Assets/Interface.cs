@@ -427,6 +427,7 @@ public class Interface : HiveObject
 		Network.Initialize();
 		BuildingMapWidget.Initialize();
 		Eye.Highlight.Initialize();
+		Ground.Grass.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );

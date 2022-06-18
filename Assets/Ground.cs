@@ -11,16 +11,16 @@ public class Ground : HiveObject
 	[Range(0.0f, 1.0f)]
 	public float sharpRendering = Constants.Ground.defaultSharpRendering;
 	public List<Block> blocks = new List<Block>();
-	public List<GrassBlock> grassBlocks = new List<GrassBlock>();
+	public Grass grass;
 	public int gameTimeID;
 	public Material material;
-	[JsonIgnore]
-	public List<Material> grassMaterials = new List<Material>();
-	List<Matrix4x4> grassMatrices = new List<Matrix4x4>();	
-	public static int grassLayerIndex;
 	public Texture2D mapGroundTexture;
 	public MeshRenderer mapGround;
 
+	[Obsolete( "Compatibility with old files", true )]
+	List<GrassBlock> grassBlocks { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	List<Matrix4x4> grassMatrices { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int width { set { if ( dimension == 0 ) dimension = value; assert.AreEqual( dimension, value ); } }
 	[Obsolete( "Compatibility with old files", true )]
@@ -92,11 +92,10 @@ public class Ground : HiveObject
 		transform.SetParent( world.transform );
 		material = Resources.Load<Material>( "GroundMaterial" );
 
-		if ( blocks.Count == 0 || blocks.Count != grassBlocks.Count )
+		if ( blocks.Count == 0 )
 			CreateBlocks();		// Compatibility with old files
 
 		grassLayerCount = Constants.Ground.grassLevels;
-		InitializeGrass();
 
 		mapGround = new GameObject( "Map Ground" ).AddComponent<MeshRenderer>();
 		var meshFilter = mapGround.gameObject.AddComponent<MeshFilter>();
@@ -139,6 +138,9 @@ public class Ground : HiveObject
 		RenderSettings.fogEndDistance = dimension * Constants.Node.size * Constants.Eye.clipDistance;
 		RenderSettings.skybox = new Material( World.defaultTextureShader );
 		RenderSettings.skybox.mainTexture = Resources.Load<Texture>( "textures/skybox" );
+
+		if ( grass == null )
+			grass = Grass.Create().Setup();
 		
 		base.Start();
 	}
@@ -153,61 +155,9 @@ public class Ground : HiveObject
 	[JsonIgnore]
 	public int grassLayerCount;
 
-	void InitializeGrass()
-	{
-		var r = new System.Random( 0 );
-
-		var grassShader = Resources.Load<Shader>( "shaders/Grass" );
-		var grassTexture = Resources.Load<Texture>( "icons/grass" );
-		var sideMoveTexture = new Texture2D( 8, 8 );
-		for ( int x = 0; x < 8; x++ )
-		{
-			for ( int y = 0; y < 8; y++ )
-				sideMoveTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
-		}
-		sideMoveTexture.wrapMode = TextureWrapMode.Mirror;
-		sideMoveTexture.Apply();
-
-		var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
-		maskTexture.filterMode = FilterMode.Trilinear;
-		var grassMaskNull = new Color( 0, 0, 0, 0 );
-		for ( int x = 0; x < Constants.Ground.grassMaskDimension; x++ )
-		{
-			for ( int y = 0; y < Constants.Ground.grassMaskDimension; y++ )
-				maskTexture.SetPixel( x, y, grassMaskNull );
-		}
-		int grassCount = (int)( Constants.Ground.grassMaskDimension * Constants.Ground.grassMaskDimension * Constants.Ground.grassDensity );
-		for ( int i = 0; i < grassCount; i++ )
-			maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
-		maskTexture.Apply();
-
-		int materialsNeeded = Math.Max( Constants.Ground.blockCount * Constants.Ground.blockCount, Constants.Ground.grassLevels );
-		for ( int i = 0; i < materialsNeeded; i++ )
-		{
-			var material = new Material( grassShader );
-			material.SetTexture( "_SideMove", sideMoveTexture );
-			material.SetTexture( "_Mask", maskTexture );
-			material.SetTexture( "_Color", grassTexture );
-			material.SetFloat( "_WorldScale", dimension );
-			material.renderQueue = 2450 + i;
-			material.enableInstancing = true;
-			grassMaterials.Add( material );
-		}
-
-		gameTimeID = Shader.PropertyToID( "_GameTime" );
-
-		grassMatrices.Clear();
-		for ( int i = 0; i < grassLayerCount; i++ )
-		{
-			float offset = ( (float)i ) / grassLayerCount;
-			grassMatrices.Add( Matrix4x4.Translate( new Vector3( 0, offset * 0.15f, 0 ) ) );
-		}			
-	}
-
 	static public void Initialize()
 	{
 		CreateAreas();
-		grassLayerIndex = LayerMask.NameToLayer( "Grass" );
 	}
 
 	void CreateBlocks()
@@ -219,10 +169,6 @@ public class Ground : HiveObject
 		for ( int x = dimension / Constants.Ground.blockCount / 2; x < dimension; x += dimension / Constants.Ground.blockCount )
 			for ( int y = dimension / Constants.Ground.blockCount / 2; y < dimension; y += dimension / Constants.Ground.blockCount )
 				blocks.Add( Block.Create().Setup( this, GetNode( x, y ), dimension / Constants.Ground.blockCount ) );
-
-		grassBlocks.Clear();
-		foreach ( var block in blocks )
-			grassBlocks.Add( new GrassBlock { block = block } );
 	}
 
 	public float n00x, n00y, n10x, n10y, n01x, n01y;
@@ -247,6 +193,7 @@ public class Ground : HiveObject
 		n10y = GetNode( 1, 0 ).position.z;
 
 		CreateBlocks();
+		grass = Grass.Create().Setup();
 		base.Setup();
 
 		return this;
@@ -261,36 +208,6 @@ public class Ground : HiveObject
 	{
 		if ( dirtyOwnership )
 			RecalculateOwnership();
-	}
-
-	public void LateUpdate()
-	{
-		foreach ( var grass in grassBlocks )
-		{
-			var a = eye.cameraGrid.center.transform.position;
-			var b = grass.block.center.position;
-			var d = a - b;
-			float yDif = Math.Abs( d.z );
-			float xDif = Math.Abs( d.x - d.z / 2 );
-			grass.depth = Math.Max( xDif, yDif );
-		}
-		grassBlocks.Sort( ( a, b ) => b.depth.CompareTo( a.depth ) );
-
-		Shader.SetGlobalInt( gameTimeID, time );
-
-		for ( int i = 0; i < grassBlocks.Count; i++ )
-		{
-			// It seems that the Graphics.DrawMeshInstanced is not working in the standalone version. This feels like a unity bug which is reported
-			// (https://unity3d.atlassian.net/servicedesk/customer/portal/2/IN-7570)
-			// As a workaround the editor uses the Graphics.DrawMeshInstanced call, while the standalone version uses multiple Graphics.DrawMesh calls to
-			// achieve the same effect at the cost of performance. Once the issue is solved both versions should use the Graphics.DrawMeshInstanced call.
-#if UNITY_EDITOR
-			Graphics.DrawMeshInstanced( grassBlocks[i].block.mesh, 0, grassMaterials[i], grassMatrices, null, UnityEngine.Rendering.ShadowCastingMode.Off, true, grassLayerIndex );
-#else
-			for ( int j = 0; j < grassMatrices.Count; j++ )
-				Graphics.DrawMesh( grassBlocks[i].block.mesh, grassMatrices[j], grassMaterials[j], grassLayerIndex, null, 0, null, false, true );
-#endif
-		}
 	}
 
 	static void CreateAreas()
@@ -521,6 +438,121 @@ public class Ground : HiveObject
 			mapGround.material.mainTexture = mapGroundTexture;
 	}
 
+	public class Grass : HiveCommon
+	{
+		public static List<Block> blocks = new List<Block>();
+		public static int gameTimeID;
+		public static List<Material> materials = new List<Material>();
+		static List<Matrix4x4> matrices = new List<Matrix4x4>();	
+		public static int layerIndex;
+
+		public class Block
+		{
+			public Ground.Block block;
+			public float depth;
+		}
+
+		public static void Initialize()
+		{
+			layerIndex = LayerMask.NameToLayer( "Grass" );
+
+			var r = new System.Random( 0 );
+
+			var shader = Resources.Load<Shader>( "shaders/Grass" );
+			var texture = Resources.Load<Texture>( "icons/grass" );
+			var sideMoveTexture = new Texture2D( 8, 8 );
+			for ( int x = 0; x < 8; x++ )
+			{
+				for ( int y = 0; y < 8; y++ )
+					sideMoveTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
+			}
+			sideMoveTexture.wrapMode = TextureWrapMode.Mirror;
+			sideMoveTexture.Apply();
+
+			var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
+			maskTexture.filterMode = FilterMode.Trilinear;
+			var grassMaskNull = new Color( 0, 0, 0, 0 );
+			for ( int x = 0; x < Constants.Ground.grassMaskDimension; x++ )
+			{
+				for ( int y = 0; y < Constants.Ground.grassMaskDimension; y++ )
+					maskTexture.SetPixel( x, y, grassMaskNull );
+			}
+			int grassCount = (int)( Constants.Ground.grassMaskDimension * Constants.Ground.grassMaskDimension * Constants.Ground.grassDensity );
+			for ( int i = 0; i < grassCount; i++ )
+				maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
+			maskTexture.Apply();
+
+			int materialsNeeded = Math.Max( Constants.Ground.blockCount * Constants.Ground.blockCount, Constants.Ground.grassLevels );
+			for ( int i = 0; i < materialsNeeded; i++ )
+			{
+				var material = new Material( shader );
+				material.SetTexture( "_SideMove", sideMoveTexture );
+				material.SetTexture( "_Mask", maskTexture );
+				material.SetTexture( "_Color", texture );
+				material.renderQueue = 2450 + i;
+				material.enableInstancing = true;
+				materials.Add( material );
+			}
+
+			gameTimeID = Shader.PropertyToID( "_GameTime" );
+
+			matrices.Clear();
+			for ( int i = 0; i < Constants.Ground.grassLevels; i++ )
+			{
+				float offset = ( (float)i ) / Constants.Ground.grassLevels;
+				matrices.Add( Matrix4x4.Translate( new Vector3( 0, offset * 0.15f, 0 ) ) );
+			}			
+		}
+
+		public static Grass Create()
+		{
+			return new GameObject( "Grass" ).AddComponent<Grass>();
+		}
+
+		public Grass Setup()
+		{
+			blocks.Clear();
+			foreach ( var block in ground.blocks )
+				blocks.Add( new Block { block = block } );
+			Shader.SetGlobalFloat( "_WorldScale", ground.dimension );
+			return this;
+		}
+
+		public void Start()
+		{
+			transform.SetParent( ground.transform, false );
+		}
+
+		public void LateUpdate()
+		{
+			Shader.SetGlobalInt( gameTimeID, time );
+			
+			foreach ( var grass in blocks )
+			{
+				var a = eye.cameraGrid.center.transform.position;
+				var b = grass.block.center.position;
+				var d = a - b;
+				float yDif = Math.Abs( d.z );
+				float xDif = Math.Abs( d.x - d.z / 2 );
+				grass.depth = Math.Max( xDif, yDif );
+			}
+			blocks.Sort( ( a, b ) => b.depth.CompareTo( a.depth ) );
+
+			for ( int i = 0; i < blocks.Count; i++ )
+			{
+				// It seems that the Graphics.DrawMeshInstanced is not working in the standalone version. This feels like a unity bug which is reported
+				// (https://unity3d.atlassian.net/servicedesk/customer/portal/2/IN-7570)
+				// As a workaround the editor uses the Graphics.DrawMeshInstanced call, while the standalone version uses multiple Graphics.DrawMesh calls to
+				// achieve the same effect at the cost of performance. Once the issue is solved both versions should use the Graphics.DrawMeshInstanced call.
+	#if UNITY_EDITOR
+				Graphics.DrawMeshInstanced( blocks[i].block.mesh, 0, materials[i], matrices, null, UnityEngine.Rendering.ShadowCastingMode.Off, true, layerIndex );
+	#else
+				for ( int j = 0; j < grassMatrices.Count; j++ )
+					Graphics.DrawMesh( grassBlocks[i].block.mesh, grassMatrices[j], grassMaterials[j], grassLayerIndex, null, 0, null, false, true );
+	#endif
+			}
+		}
+	}
 
 	[System.Serializable]
 	public class Area

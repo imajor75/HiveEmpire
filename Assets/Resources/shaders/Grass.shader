@@ -5,7 +5,6 @@ Shader "Custom/Grass"
         _Mask ("Mask", 2D) = "white" {}
         _SideMove ("Side Move", 2D) = "white" {}
         _Color ("Color", 2D) = "white" {}
-        _WorldScale ("World Scale", Float) = 32
     }
     SubShader
     {
