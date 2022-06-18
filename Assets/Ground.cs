@@ -12,6 +12,7 @@ public class Ground : HiveObject
 	public float sharpRendering = Constants.Ground.defaultSharpRendering;
 	public List<Block> blocks = new List<Block>();
 	public List<GrassBlock> grassBlocks = new List<GrassBlock>();
+	public int gameTimeID;
 	public Material material;
 	[JsonIgnore]
 	public List<Material> grassMaterials = new List<Material>();
@@ -193,6 +194,8 @@ public class Ground : HiveObject
 			grassMaterials.Add( material );
 		}
 
+		gameTimeID = Shader.PropertyToID( "_GameTime" );
+
 		grassMatrices.Clear();
 		for ( int i = 0; i < grassLayerCount; i++ )
 		{
@@ -272,6 +275,8 @@ public class Ground : HiveObject
 			grass.depth = Math.Max( xDif, yDif );
 		}
 		grassBlocks.Sort( ( a, b ) => b.depth.CompareTo( a.depth ) );
+
+		Shader.SetGlobalInt( gameTimeID, time );
 
 		for ( int i = 0; i < grassBlocks.Count; i++ )
 		{

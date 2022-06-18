@@ -21,6 +21,7 @@ Shader "Custom/Grass"
         sampler2D _Color;
 
         float _WorldScale;
+        int _GameTime;
 
         struct Input
         {
@@ -34,7 +35,7 @@ Shader "Custom/Grass"
             float offset = unity_ObjectToWorld[1][3] * 6.66666;
             fixed2 uv = float2( IN.worldPos.x / _WorldScale * 2 + IN.worldPos.z / _WorldScale, IN.worldPos.z / _WorldScale * 2 );
             fixed swing = offset * offset * 0.08;
-            fixed2 move = tex2D( _SideMove, uv + fixed2( _Time.g * 0.2, _Time.g * 0.071 ) ) - fixed2( 0.5, 0.5 );
+            fixed2 move = tex2D( _SideMove, uv + fixed2( _GameTime * 0.004, _GameTime * 0.0015 ) ) - fixed2( 0.5, 0.5 );
             fixed2 swinged = uv * _WorldScale / 4 + swing * move;
             float a = tex2D( _Mask, swinged ).r * IN.weights.r * IN.uv_Mask.r;
             a -= ( 1 - a ) * offset * 0.9;
