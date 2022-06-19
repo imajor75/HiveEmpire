@@ -547,8 +547,8 @@ public class Ground : HiveObject
 	#if UNITY_EDITOR
 				Graphics.DrawMeshInstanced( blocks[i].block.mesh, 0, materials[i], matrices, null, UnityEngine.Rendering.ShadowCastingMode.Off, true, layerIndex );
 	#else
-				for ( int j = 0; j < grassMatrices.Count; j++ )
-					Graphics.DrawMesh( grassBlocks[i].block.mesh, grassMatrices[j], grassMaterials[j], grassLayerIndex, null, 0, null, false, true );
+				for ( int j = 0; j < matrices.Count; j++ )
+					Graphics.DrawMesh( blocks[i].block.mesh, matrices[j], materials[j], layerIndex, null, 0, null, false, true );
 	#endif
 			}
 		}
