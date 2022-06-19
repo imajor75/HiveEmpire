@@ -617,14 +617,14 @@ public class Simpleton : Player
             for ( int x = 0; x < HiveCommon.ground.dimension; x++ )
             {
                 var node = HiveCommon.ground.GetNode( x, nodeRow );
-                if ( boss.blockedNodes.Contains( node ) )
-                    continue;
                 int workingFlagDirection = -1;
                 Node site = null;
                 for ( int flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
                 {
                     int o = ( flagDirection + ( Constants.Node.neighbourCount / 2 ) ) % Constants.Node.neighbourCount;
                     site = node.Neighbour( o );
+                    if ( boss.blockedNodes.Contains( site ) )
+                        continue;
                     if ( Workshop.IsNodeSuitable( site, boss.team, configuration, flagDirection ) )
                     {
                         workingFlagDirection = flagDirection;
