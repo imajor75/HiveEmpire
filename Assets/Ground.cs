@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -440,7 +440,7 @@ public class Ground : HiveObject
 
 	public class Grass : HiveCommon
 	{
-		public static List<Block> blocks = new List<Block>();
+		public List<Block> blocks = new List<Block>();
 		public static int gameTimeID;
 		public static List<Material> materials = new List<Material>();
 		static List<Matrix4x4> matrices = new List<Matrix4x4>();	
