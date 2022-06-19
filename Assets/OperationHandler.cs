@@ -880,7 +880,10 @@ public class Operation
         this.direction = direction;
         this.buildingType = buildingType;
         this.team = team;
-        name = "Create Building";
+        if ( buildingType < Building.Type.stock )
+            name = $"Building a {(Workshop.Type)buildingType}";
+        else
+            name = $"Building a {buildingType}";
         return this;
     }
 
