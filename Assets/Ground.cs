@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -534,7 +534,7 @@ public class Ground : HiveObject
 				var d = a - b;
 				float yDif = Math.Abs( d.z );
 				float xDif = Math.Abs( d.x - d.z / 2 );
-				grass.depth = Math.Max( xDif, yDif );
+				grass.depth = xDif + yDif;
 			}
 			blocks.Sort( ( a, b ) => b.depth.CompareTo( a.depth ) );
 
