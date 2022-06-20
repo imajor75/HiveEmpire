@@ -757,6 +757,15 @@ public class Eye : HiveObject
 					{
 						void ProcessBuilding( Building building )
 						{
+							void DrawMeshRecursively( GameObject o )
+							{
+								MeshFilter filter;
+								o.TryGetComponent<MeshFilter>( out filter );
+								if ( filter && filter.mesh )
+									DrawMeshRepeatedly( filter.mesh, o.transform.localToWorldMatrix, markerMaterial );
+								foreach ( Transform child in o.transform )
+									DrawMeshRecursively( child.gameObject );
+							}
 							if ( !buildingTypes.Contains( building.type ) )
 								return;
 								
@@ -766,7 +775,7 @@ public class Eye : HiveObject
 								DrawMeshRepeatedly( building.mapIndicator.GetComponent<MeshCollider>().sharedMesh, shiftUp * building.mapIndicator.transform.localToWorldMatrix, markerMaterial );
 							}
 							else
-								DrawMeshRepeatedly( building.body.GetComponent<MeshFilter>().mesh, building.body.transform.localToWorldMatrix, markerMaterial );
+								DrawMeshRecursively( building.body );
 						}
 						foreach ( var stock in root.mainTeam.stocks )
 							ProcessBuilding( stock );
