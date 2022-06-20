@@ -861,6 +861,7 @@ public class Operation
     {
         type = Type.toggleEmergencyConstruction;
         this.team = team;
+        location = team.mainBuilding.node;  // only for demo mode
         name = "Toggle Emergency Construction";
         return this;
     }
