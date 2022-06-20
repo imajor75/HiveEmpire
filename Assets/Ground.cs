@@ -514,12 +514,12 @@ public class Ground : HiveObject
 			blocks.Clear();
 			foreach ( var block in ground.blocks )
 				blocks.Add( new Block { block = block } );
-			Shader.SetGlobalFloat( "_WorldScale", ground.dimension );
 			return this;
 		}
 
 		public void Start()
 		{
+			Shader.SetGlobalFloat( "_WorldScale", ground.dimension );
 			transform.SetParent( ground.transform, false );
 		}
 
