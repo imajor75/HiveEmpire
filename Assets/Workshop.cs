@@ -70,7 +70,7 @@ public class Workshop : Building
 		}
 	}
 
-	public float lastCalculatedMaxOutput;
+	public float lastCalculatedMaxOutput = -1;
 	public World.Timer maxOutputCalculationTimer = new World.Timer();
 	public int itemsProducedAtLastCheck = int.MaxValue;
 
@@ -89,25 +89,31 @@ public class Workshop : Building
 			for ( var statusNode = statuses.Last; statusNode != null; statusNode = statusNode.Previous )
 			{
 				var status = statusNode.Value;
+				int statusTime = status.length;
+				if ( status.startTime < time - Constants.Workshop.gathererMaxOutputRecalculationPeriod )
+					statusTime -= time - Constants.Workshop.gathererMaxOutputRecalculationPeriod - status.startTime;
+				if ( statusTime > 0 )
+				{
+					if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 )
+						wastedTime += status.length;
+					else
+						usedTime += status.length;
+				}
 				if ( status.startTime < time - Constants.Workshop.gathererMaxOutputRecalculationPeriod )
 				{
 					hasEnoughtData = true;
 					break;
 				}
-				if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 )
-					wastedTime += status.length;
-				else
-					usedTime += status.length;
 			}
 			if ( hasEnoughtData )
 			{
 				if ( usedTime > 0 )
 					lastCalculatedMaxOutput = (float)itemsProducedSinceLastCheck / Constants.Workshop.gathererMaxOutputRecalculationPeriod * (usedTime + wastedTime) / usedTime * Constants.World.normalSpeedPerSecond * 60;
 				else
-					lastCalculatedMaxOutput = 0;
+					lastCalculatedMaxOutput = -1;
 			}
 		}
-		if ( !gatherer || lastCalculatedMaxOutput == 0 )
+		if ( !gatherer || lastCalculatedMaxOutput < 0 )
 			return maxOutput;
 
 		return lastCalculatedMaxOutput;
