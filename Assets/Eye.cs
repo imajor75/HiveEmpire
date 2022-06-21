@@ -461,6 +461,18 @@ public class Eye : HiveObject
 			last.depth = depth+1;
 		}
 
+		void OnEnable()
+		{
+			foreach ( var camera in cameras )
+				camera.enabled = true;
+		}
+
+		void OnDisable()
+		{
+			foreach ( var camera in cameras )
+				camera.enabled = false;
+		}
+
 		void LateUpdate()
 		{
 			float closest = float.MaxValue, furthest = float.MinValue;
