@@ -35,6 +35,7 @@ public class World : HiveObject
 	public Speed speed;
 	public OperationHandler operationHandler;
 	public Water water;
+	public bool autoValidate = true;
 	[JsonIgnore]
 	public new Network network;
 	[JsonIgnore]

@@ -314,7 +314,7 @@ public class Interface : HiveObject
 	public void FixedUpdate()
 	{
 #if DEBUG
-		if ( --fullValidate < 0 )
+		if ( --fullValidate < 0 && world.autoValidate )
 		{
 			ValidateAll();
 			fullValidate = fullValidateInterval;
@@ -832,7 +832,7 @@ public class Interface : HiveObject
         }
 
 		FPS = 0.9f * FPS + 0.1f * ( 1 / Time.unscaledDeltaTime );
-		FPSDisplay.text = FPS.ToString();
+		FPSDisplay.text = FPS.ToString( "F1" ) + " FPS";
 		if ( showFPSHotkey.IsPressed() )
 			FPSDisplay.enabled = !FPSDisplay.enabled;
 
@@ -873,7 +873,7 @@ public class Interface : HiveObject
 		{
 			yield return new WaitForEndOfFrame();
 			#if DEBUG
-			if ( !EditorApplication.isPaused )
+			if ( !EditorApplication.isPaused && world.autoValidate )
 				Validate( true );
 			#endif
 		}
