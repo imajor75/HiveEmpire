@@ -2686,7 +2686,17 @@ public class Interface : HiveObject
 					disableIndicator = boss.Image( Icon.emptyFrame ).Pin( itemsStartX, y - iconSize / 2 + 2, itemsEndX - itemsStartX + 4, 4 );
 					disableIndicator.color = Color.Lerp( Color.red, Color.black, 0.5f );
 				}
+				boss.Image( Icon.buildings ).PinSideways( 0, y ).AddClickHandler( () => ShowProducers( itemType ) ).SetTooltip( "Show a list of buildings which produce this" );
+			}
 
+			void ShowProducers( Item.Type itemType )
+			{
+				for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+				{
+					var config = Workshop.GetConfiguration( (Workshop.Type)i );
+					if ( config != null && config.outputType == itemType )
+						BuildingList.Create().Open( (Building.Type)i );
+				}
 			}
 
 			void SetDisabled( bool disabled )
