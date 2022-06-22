@@ -624,6 +624,8 @@ public class Eye : HiveObject
 					CRC += root.mainTeam.stocks.Count();
 					CRC += root.mainTeam.workshops.Count();
 					CRC += root.mainTeam.guardHouses.Count();
+					if ( buildingTypes.Contains( (Building.Type)(Workshop.Type.mill) ) )
+						CRC += time;	// TODO In case of mills the command buffer is always recreated
 				}
 				if ( type == Type.area )
 				{
