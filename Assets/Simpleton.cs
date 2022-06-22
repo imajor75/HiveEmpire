@@ -20,7 +20,7 @@ public class Simpleton : Player
 	public bool showActions;
     public bool peaceful;
     public bool noRoom;
-    public bool dumpTasks;
+    public bool dumpTasks, dumpYields;
 
    	[Obsolete( "Compatibility with old files", true )]
     List<Node> isolatedNodes { set { blockedNodes = value; } }
@@ -91,6 +91,20 @@ public class Simpleton : Player
                     Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task.description}" );
                 }            
                 dumpTasks = false;
+            }
+
+            if ( dumpYields )
+            {
+                Log( "==================" );
+                foreach ( var task in tasks )
+                {
+                    if ( task is YieldTask yieldTask )
+                    {
+                        var currentYield = yieldTask.surplus ? "surplus" : yieldTask.currentYield.ToString();
+                        Log( $"{yieldTask.workshopType} - target: {yieldTask.target}, current: {currentYield}, best location: {yieldTask.bestLocation}" );
+                    }
+                }
+                dumpYields = false;
             }
 
             Task best = null;
@@ -468,6 +482,7 @@ public class Simpleton : Player
         public Workshop.Type workshopType;
         public float target;
         public float currentYield = -1;
+        public bool surplus;
         public int nodeRow;
         public Node bestLocation;
         public int bestFlagDirection;
@@ -496,7 +511,10 @@ public class Simpleton : Player
                     if ( workshop.productionConfiguration.outputType == outputType && workshop.team == boss.team )
                     {
                         if ( workshop.output > 0 )
+                        {
+                            surplus = true;
                             return finished;
+                        }
                         currentYield += workshop.CalculateMaxOutput();
                     }
                     if ( workshop.type == workshopType )
