@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 
 [SelectionBase]
@@ -20,6 +21,7 @@ public class Resource : HiveObject
 	public Unit origin;		// Only valid for a prey, references the bunny
 	public World.Timer silence = new World.Timer();
 
+	static Material bark, leaves;
 	GameObject body;
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
@@ -100,18 +102,9 @@ public class Resource : HiveObject
 	public static void Initialize()
 	{
 		object[] meshes = {
-		//"prefabs/trees/large01", Type.tree,
-		//"prefabs/trees/large02", Type.tree,
-		"prefabs/trees/round01", Type.tree,
-		"prefabs/trees/round02", Type.tree,
-		"prefabs/trees/round03", Type.tree,
-		"prefabs/trees/round04", Type.tree,
-		"prefabs/trees/thin01", Type.tree,
-		"prefabs/trees/thin02", Type.tree,
-		"prefabs/trees/thin03", Type.tree,
-		"prefabs/trees/thin04", Type.tree,
-		"prefabs/trees/thin05", Type.tree,
-		"prefabs/trees/thin06", Type.tree,
+		"prefabs/trees/Tree0", Type.tree,
+		"prefabs/trees/Tree1", Type.tree,
+		"prefabs/trees/Tree2", Type.tree,
 
 		"prefabs/rocks/rock01", Type.rock,
 		"prefabs/rocks/rock02", Type.rock,
@@ -129,6 +122,9 @@ public class Resource : HiveObject
 			"bird4", Constants.Resource.treeSoundTime, Type.tree };
 		ambientSounds.fileNamePrefix = "effects/";
 		ambientSounds.Fill( sounds );
+
+		bark = Resources.Load<Material>( "treeBark" );
+		leaves = Resources.Load<Material>( "treeLeaf" );
 	}
 
 	static public Resource Create()
@@ -220,6 +216,16 @@ public class Resource : HiveObject
 		{
 			body = Instantiate( prefab );
 			World.SetLayerRecursive( body, World.layerIndexResources );
+			Tree treeCreator;
+			if ( body.TryGetComponent<Tree>( out treeCreator ) )
+			{
+				Destroy( treeCreator );
+				var renderer = body.GetComponent<MeshRenderer>();
+				var materials = new Material[2];
+				materials[0] = bark;
+				materials[1] = leaves;			
+				renderer.materials = materials;
+			}
 		}
 		if ( type == Type.pasturingAnimal )
 			name = "Pasturing Animal Resource";
