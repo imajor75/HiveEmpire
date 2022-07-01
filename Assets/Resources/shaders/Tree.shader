@@ -7,6 +7,8 @@ Shader "Custom/Tree"
         _NormalMap ("Normal", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
+        _xFactor ("XFactor", Float) = 1.0
+        _heightFactor ("Height XFactor", Float) = 1.0
     }
     SubShader
     {
@@ -16,7 +18,9 @@ Shader "Custom/Tree"
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
+        #pragma vertex vert
         #pragma surface surf Standard addshadow
+        #include "wind.cginc"
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
@@ -32,6 +36,8 @@ Shader "Custom/Tree"
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
+        float _xFactor;
+        float _heightFactor;
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -40,11 +46,21 @@ Shader "Custom/Tree"
             // put more per-instance properties here
         UNITY_INSTANCING_BUFFER_END(Props)
 
+        void vert( inout appdata_full v )
+        {
+            float3 worldPos = mul( unity_ObjectToWorld, v.vertex );
+            float3 wind = calculateWindAt( worldPos );
+            float3 localShift = float4( wind.x, 0, wind.y, 0 );
+            float height = worldPos.y - unity_ObjectToWorld[1][3];
+            float strength = height * height * _heightFactor;
+            v.vertex += strength * mul( unity_WorldToObject, localShift );
+        }
+
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             // Albedo comes from a texture tinted by color
             float2 tc = IN.uv_MainTex;
-            tc.x = tc.x * 2;
+            tc.x = tc.x * _xFactor;
             fixed4 c = tex2D (_MainTex, tc) * _Color;
             clip( c.a - 0.5 );
             o.Albedo = c.rgb;

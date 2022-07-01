@@ -460,14 +460,14 @@ public class Ground : HiveObject
 
 			var shader = Resources.Load<Shader>( "shaders/Grass" );
 			var texture = Resources.Load<Texture>( "icons/grass" );
-			var sideMoveTexture = new Texture2D( 8, 8 );
+			var windTexture = new Texture2D( 8, 8 );
 			for ( int x = 0; x < 8; x++ )
 			{
 				for ( int y = 0; y < 8; y++ )
-					sideMoveTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
+					windTexture.SetPixel( x, y, new Color( (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble() ) );
 			}
-			sideMoveTexture.wrapMode = TextureWrapMode.Mirror;
-			sideMoveTexture.Apply();
+			windTexture.wrapMode = TextureWrapMode.Mirror;
+			windTexture.Apply();
 
 			var maskTexture = new Texture2D( Constants.Ground.grassMaskDimension, Constants.Ground.grassMaskDimension );
 			maskTexture.filterMode = FilterMode.Trilinear;
@@ -482,11 +482,11 @@ public class Ground : HiveObject
 				maskTexture.SetPixel( r.Next( Constants.Ground.grassMaskDimension ), r.Next( Constants.Ground.grassMaskDimension ), Color.white );
 			maskTexture.Apply();
 
+			Shader.SetGlobalTexture( "_Wind", windTexture );
 			int materialsNeeded = Math.Max( Constants.Ground.blockCount * Constants.Ground.blockCount, Constants.Ground.grassLevels );
 			for ( int i = 0; i < materialsNeeded; i++ )
 			{
 				var material = new Material( shader );
-				material.SetTexture( "_SideMove", sideMoveTexture );
 				material.SetTexture( "_Mask", maskTexture );
 				material.SetTexture( "_Color", texture );
 				material.renderQueue = 2450 + i;

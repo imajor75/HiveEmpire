@@ -35,7 +35,6 @@ Shader "Unlit/Water"
                 float2 uv0 : TEXCOORD0;
                 float2 uv1 : TEXCOORD4;
                 float depth : TEXCOORD3;
-                UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
                 float2 localPos : TEXCOORD2;
             };
@@ -54,17 +53,13 @@ Shader "Unlit/Water"
                 o.depth = v.uv.x;
                 o.uv0 = TRANSFORM_TEX( ( ( v.vertex.xz + float2( Offset0, 0 ) ) / 20 ), _MainTex );
                 o.uv1 = TRANSFORM_TEX( ( ( v.vertex.xz + float2( Offset1, Offset1 ) ) / 20 ), _MainTex );
-                UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // sample the texture
                 fixed3 col0 = tex2D( _MainTex, i.uv0 );
                 fixed3 col1 = tex2D( _MainTex, i.uv1 );
-                // apply fog
-                //UNITY_APPLY_FOG(i.fogCoord, col);
                 fixed innerAlpha = saturate( i.depth * 2 );
                 fixed4 inner = fixed4( lerp( col0, col1, 0.5), innerAlpha );
                 fixed4 outer = tex2D( _FoamTex, i.localPos / 20 );
