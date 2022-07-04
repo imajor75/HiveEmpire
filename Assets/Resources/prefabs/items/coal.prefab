@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6149536354617429440}
   - component: {fileID: 6188181519558397526}
   m_Layer: 0
-  m_Name: common
+  m_Name: coal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

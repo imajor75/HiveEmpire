@@ -95,7 +95,8 @@ public static class Constants
 		    float.MaxValue,     //beer
 		    float.MaxValue,     //pork
 		    float.MaxValue,     //goldBar
-		    float.MaxValue      //soldier
+		    float.MaxValue,     //soldier
+		    float.MaxValue      //apple
         };
         public static float[] yawAtFlag = new float[(int)(global::Item.Type.total)]
         {
@@ -118,7 +119,8 @@ public static class Constants
 		    0,     //beer
 		    0,     //pork
 		    0,     //goldBar
-		    0      //soldier
+		    0,     //soldier
+		    0      //apple
         };
         public static Vector3[] secondItemOffset = new Vector3[(int)(global::Item.Type.total)]
         {
@@ -141,7 +143,8 @@ public static class Constants
 		    new Vector3( 0, 0.7f, 0 ),     //beer
 		    new Vector3( 0, 0.4f, 0 ),     //pork
 		    new Vector3( 0, 0.3f, 0 ),     //goldBar
-		    new Vector3( 0, 0, 0 )      //soldier
+		    new Vector3( 0, 0, 0 ),      //soldier
+		    new Vector3( 0, 0.8f, 0 )     //apple
         };
     }
 
@@ -273,6 +276,7 @@ public static class Constants
         public const int cornfieldGrowthTime = 20000;
         public const int animalSpawnTime = 1000;
         public const int treeSoundTime = 60000;
+        public const int rockCharges = 6;
     }
 
     public static class Road
@@ -319,6 +323,7 @@ public static class Constants
     {
 	    public const int mineOreRestTime = Constants.World.normalSpeedPerSecond * 400;
 	    public const int fishRestTime = Constants.World.normalSpeedPerSecond * 320;
+	    public const int appleRestTime = Constants.World.normalSpeedPerSecond * 320;
 	    public const int pasturingTime = Constants.World.normalSpeedPerSecond * 2;
 	    public const float pasturingPrayChance = 0.2f;  
     	public const int maxSavedStatusTime = Constants.World.normalSpeedPerSecond * 60 * 60 * 10;

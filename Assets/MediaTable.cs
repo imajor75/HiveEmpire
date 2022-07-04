@@ -36,9 +36,11 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		foreach ( var g in data )
 		{
 			if ( g is string file )
+				table.Add( new Media { file = file } );
+			if ( g == null )
 			{
-				Media media = new Media { file = file };
-				table.Add( media );
+				table.Add( new Media() );
+				continue;
 			}
 			if ( g.GetType() == typeof( Key ) )
 				table[table.Count - 1].keys.Add( (Key)g );
@@ -53,7 +55,8 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		{
 			if ( l.keys.Count == 0 )
 				failure = l;
-			l.Load( fileNamePrefix );
+			if ( l.file != null )
+				l.Load( fileNamePrefix );
 		}
 	}
 

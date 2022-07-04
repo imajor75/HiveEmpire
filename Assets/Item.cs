@@ -95,6 +95,7 @@ public class Item : HiveObject
 		pork,
 		goldBar,
 		soldier,
+		apple,
 		total,
 		unknown = -1
 	}
@@ -102,8 +103,8 @@ public class Item : HiveObject
 	public static void Initialize()
 	{
 		object[] looksData = {
-			"prefabs/items/common",
-			"prefabs/items/barrel dispenser", Type.beer,
+			"prefabs/items/package",
+			"prefabs/items/coal", Type.coal,
 			"prefabs/items/bucket", Type.water,
 			"prefabs/items/pretzel", Type.pretzel,
 			"prefabs/items/plank", Type.plank,
@@ -121,6 +122,7 @@ public class Item : HiveObject
 			"prefabs/items/hay", Type.grain,
 			"prefabs/items/jar", Type.salt,
 			"prefabs/items/soldier", Type.soldier,
+			"prefabs/items/apple", Type.apple,
 			"prefabs/items/wood", Type.log
 		};
 		looks.Fill( looksData );

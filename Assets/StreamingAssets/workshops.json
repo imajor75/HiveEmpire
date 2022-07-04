@@ -8,6 +8,14 @@
     "outputType": "log"
   },
   {
+    "type": "appleGatherer",
+    "flatteningNeeded": false,
+    "gatheredResource": "apple",
+	  "productionTime": 0,
+    "approximatedProductionTime": 2500,
+    "outputType": "apple"
+  },
+  {
     "type": "sawmill",
     "outputType": "plank",
     "inputs": [

@@ -1191,6 +1191,12 @@ public class World : HiveObject
 		foreach ( var resource in toRemove )
 			resource.Remove();
 
+		if ( challenge?.productivityGoals != null )
+		{
+			while ( challenge.productivityGoals.Count < (int)Item.Type.total )
+				challenge.productivityGoals.Add( 0 );
+		}
+
 		Interface.ValidateAll( true );
 		bool demoMode = fileName.Contains( "demolevel" );
 		network.SetState( demoMode ? Network.State.idle : Network.State.server );

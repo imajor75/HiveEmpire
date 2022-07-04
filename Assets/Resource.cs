@@ -76,6 +76,7 @@ public class Resource : HiveObject
 		stone,
 		expose,	// Obsolete, kept only to be able to load old saves
 		soil,
+		apple,
 		total,
 		unknown = -1	
 	}
@@ -112,7 +113,8 @@ public class Resource : HiveObject
 		"prefabs/rocks/rock04", Type.rock,
 
 		"prefabs/others/cave", Type.animalSpawner,
-		"prefabs/others/field", Type.cornfield };
+		"prefabs/others/field", Type.cornfield,
+		null, Type.apple };
 		Resource.meshes.Fill( meshes );
 
 		object[] sounds = {
@@ -137,18 +139,18 @@ public class Resource : HiveObject
 		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
 	}
 
-	public Resource Setup( Node node, Type type, int charges = -1, float strength = 1 )
+	public Resource Setup( Node node, Type type, int charges = -1, float strength = 1, bool allowBlocking = false )
 	{
 		this.type = type;
 		this.strength = strength;
 		if ( charges < 1 )
 		{
-			if ( underGround || type == Type.fish )
+			if ( underGround || type == Type.fish || type == Type.apple )
 				charges = int.MaxValue;
 			else
 			{
 				if ( type == Type.rock )
-					charges = 6;
+					charges = Constants.Resource.rockCharges;
 				else
 					charges = 1;
 			}
@@ -168,7 +170,7 @@ public class Resource : HiveObject
 			return null;
 		}
 
-		if ( node.block )
+		if ( !allowBlocking && node.block )
 		{
 			base.Remove();
 			return null;
@@ -191,7 +193,11 @@ public class Resource : HiveObject
 			node.avoidGrass = true;
 			ground.SetDirty( node );
 		}
+		if ( type == Type.tree )
+			Create().Setup( node, Type.apple, allowBlocking:true );
+
 		base.Setup();
+
 		return this;
 	}
 
@@ -332,6 +338,7 @@ public class Resource : HiveObject
 			Type.gold => Item.Type.gold,
 			Type.coal => Item.Type.coal,
 			Type.stone => Item.Type.stone,
+			Type.apple => Item.Type.apple,
 			_ => Item.Type.unknown,
 		};
 	}
@@ -342,6 +349,17 @@ public class Resource : HiveObject
 			return;
 		destroyed = true;
 		
+		if ( type == Type.tree )
+		{
+			foreach ( var r in node.resources )
+			{
+				if ( r.type == Type.apple )
+				{
+					r.Remove();
+					break;
+				}
+			}
+		}
 		RemoveElements( animals );
 		if ( origin )
 			origin.Remove();

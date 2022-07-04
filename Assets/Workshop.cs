@@ -271,6 +271,7 @@ public class Workshop : Building
 		butcher,
 		barrack,
 		goldBarMaker,
+		appleGatherer,
 		total,
 		unknown = -1,
 		construction = -2
@@ -345,6 +346,8 @@ public class Workshop : Building
 						resource.keepAway.Start( (int)( Constants.Workshop.mineOreRestTime / resource.strength ) );
 					if ( resource.type == Resource.Type.fish )
 						resource.keepAway.Start( Constants.Workshop.fishRestTime );
+					if ( resource.type == Resource.Type.apple )
+						resource.keepAway.Start( Constants.Workshop.appleRestTime );
 				}
 			}
 			else
@@ -487,7 +490,7 @@ public class Workshop : Building
 			"Mines/ironmine_final", 1.5f, Type.ironMine,
 			"Mines/goldmine_final", 1.5f, Type.goldMine,
 			"Mines/stonemine_final", 1.5f, Type.stoneMine,
-			"Forest/woodcutter_final", 1.2f, Type.woodcutter,
+			"Forest/woodcutter_final", 1.2f, Type.woodcutter, Type.appleGatherer,
 			"Forest/forester_final", 1.33f, Type.forester,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,

@@ -47,7 +47,7 @@ public class Unit : HiveObject
 	static public MediaTable<AudioClip, AnimationSound> animationSounds;
 	static public List<GameObject> templates = new List<GameObject>();
 	static public int walkingID, pickupHeavyID, pickupLightID, putdownID, deathID;
-	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID;
+	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID, gatheringID;
 	static public int attackID, defendID, stabID;
 
 	public Animator animator;
@@ -1154,6 +1154,7 @@ public class Unit : HiveObject
 		fishingID = Animator.StringToHash( "fishing" );
 		shovelingID = Animator.StringToHash( "shoveling" );
 		harvestingID = Animator.StringToHash( "harvesting" );
+		gatheringID = Animator.StringToHash( "gathering" );
 		sowingID = Animator.StringToHash( "sowing" );
 		attackID = Animator.StringToHash( "hitting" );
 		defendID = Animator.StringToHash( "suffering" );
@@ -1195,6 +1196,12 @@ public class Unit : HiveObject
 		{
 			animation = harvestingID,
 			timeToInterrupt = 1.0f,
+			duration = 500
+		};
+		resourceCollectAct[(int)Resource.Type.apple] = new Act( "gatherApple" )
+		{
+			animation = gatheringID,
+			timeToInterrupt = 0.7f,
 			duration = 500
 		};
 		resourceCollectAct[(int)Resource.Type.pasturingAnimal] = new Act( "pasture" )
