@@ -184,7 +184,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			foreach ( var resource in node.resources )
 			{
-				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.cornfield || resource.type == Resource.Type.rock )
+				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.cornField || resource.type == Resource.Type.wheatField || resource.type == Resource.Type.rock )
 				{
 					resource.Remove();
 					break;
@@ -860,7 +860,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			bool treeOrFieldBlocking = false;
 			foreach( var r in node.resources )
-				if ( r.type == Resource.Type.tree || r.type == Resource.Type.cornfield )
+				if ( r.type == Resource.Type.tree || r.type == Resource.Type.cornField || r.type == Resource.Type.wheatField )
 					treeOrFieldBlocking = true;
 			if ( !treeOrFieldBlocking )
 				return true;

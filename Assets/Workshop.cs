@@ -252,8 +252,10 @@ public class Workshop : Building
 		sawmill,
 		stonemason,
 		fishingHut,
-		farm,
+		wheatFarm,
+		cornFarm,
 		mill,
+		cornMill,
 		bakery,
 		hunter,
 		saltMine,
@@ -483,8 +485,8 @@ public class Workshop : Building
 			"prefabs/buildings/hunter", 1.6f, Type.hunter,
 			"prefabs/buildings/sawmill", 2.9f, Type.sawmill,
 			"prefabs/buildings/smallCabin", 1.4f, Type.stonemason,
-			"prefabs/buildings/farm", 1.8f, Type.farm,
-			"prefabs/buildings/mill", 3.5f, Type.mill,
+			"prefabs/buildings/farm", 1.8f, Type.wheatFarm, Type.cornFarm,
+			"prefabs/buildings/mill", 3.5f, Type.mill, Type.cornMill,
 			"Mines/saltmine_final", 1.5f, Type.saltMine,
 			"Mines/coalmine_final", 1.1f, Type.coalMine,
 			"Mines/ironmine_final", 1.5f, Type.ironMine,
@@ -541,12 +543,12 @@ public class Workshop : Building
 
 		team.workshops.Add( this );
 
-		if ( type == Type.woodcutter || type == Type.forester || type == Type.farm )
+		if ( type == Type.woodcutter || type == Type.forester || type == Type.wheatFarm || type == Type.cornFarm )
 		{
 			foreach ( var nearbyNodeOffset in Ground.areas[productionConfiguration.gatheringRange] )
 			{
 				var nearbyNode = node + nearbyNodeOffset;
-				if ( type == Type.farm && nearbyNode.type == Node.Type.grass )
+				if ( ( type == Type.wheatFarm || type == Type.cornFarm ) && nearbyNode.type == Node.Type.grass )
 					nearbyNode.valuable = true;
 				if ( ( type == Type.woodcutter || type == Type.forester ) && nearbyNode.type == Node.Type.forest )
 					nearbyNode.valuable = true;
@@ -558,7 +560,7 @@ public class Workshop : Building
 
 	public override void Remove()
 	{
-		if ( type == Type.woodcutter || type == Type.forester || type == Type.farm )
+		if ( type == Type.woodcutter || type == Type.forester || type == Type.wheatFarm || type == Type.cornFarm )
 		{
 			foreach ( var nearbyNode in Ground.areas[productionConfiguration.gatheringRange] )
 				node.Add( nearbyNode ).valuable = false;
@@ -803,8 +805,10 @@ public class Workshop : Building
 
 		switch ( type )
 		{
-			case Type.farm:
+			case Type.wheatFarm:
+			case Type.cornFarm:
 			{
+				var resourceType = type == Type.cornFarm ? Resource.Type.cornField : Resource.Type.wheatField;
 				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
 					if ( output < productionConfiguration.outputMax )
@@ -816,7 +820,7 @@ public class Workshop : Building
 								continue;
 							foreach ( var resource in place.resources )
 							{
-								if ( resource.type != Resource.Type.cornfield || resource.hunter || !resource.IsReadyToBeHarvested() )
+								if ( resource.type != resourceType || resource.hunter || !resource.IsReadyToBeHarvested() )
 									continue;
 								CollectResourceFromNode( resource );
 								return;
@@ -831,7 +835,7 @@ public class Workshop : Building
 						Node place = node.Add( o );
 						if ( place.block || !place.CheckType( Node.Type.grass ) )
 							continue;
-						PlantAt( place, Resource.Type.cornfield );
+						PlantAt( place, resourceType );
 						return;
 					}
 					tinkerer.ScheduleWait( 300 );

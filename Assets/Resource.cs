@@ -35,7 +35,8 @@ public class Resource : HiveObject
 				Type.tree => Node.Block.Type.unitsAndBuildings,
 				Type.rock => Node.Block.Type.unitsAndBuildings,
 				Type.fish => Node.Block.Type.none,
-				Type.cornfield => Node.Block.Type.buildings,
+				Type.cornField => Node.Block.Type.buildings,
+				Type.wheatField => Node.Block.Type.buildings,
 				Type.animalSpawner => Node.Block.Type.all,
 				Type.pasturingAnimal => Node.Block.Type.buildings,
 				Type.salt => Node.Block.Type.none,
@@ -66,7 +67,8 @@ public class Resource : HiveObject
 		tree,
 		rock,
 		fish,
-		cornfield,
+		cornField,
+		wheatField,
 		animalSpawner,
 		pasturingAnimal,
 		salt,
@@ -93,7 +95,7 @@ public class Resource : HiveObject
 		List<Resource> toRemove = new List<Resource>();
 		foreach ( var resource in node.resources )
 		{
-			if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornfield )
+			if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornField || resource.type == Resource.Type.wheatField )
 				toRemove.Add( resource );
 		}
 		foreach ( var resource in toRemove )
@@ -113,7 +115,8 @@ public class Resource : HiveObject
 		"prefabs/rocks/rock04", Type.rock,
 
 		"prefabs/others/cave", Type.animalSpawner,
-		"prefabs/others/field", Type.cornfield,
+		"prefabs/others/field", Type.cornField,
+		"prefabs/others/wheatField", Type.wheatField,
 		null, Type.apple };
 		Resource.meshes.Fill( meshes );
 
@@ -159,7 +162,7 @@ public class Resource : HiveObject
 		Node.Type needed = Node.Type.aboveWater;
 		if ( underGround )
 			needed = Node.Type.high;
-		if ( type == Type.cornfield )
+		if ( type == Type.cornField || type == Type.wheatField )
 			needed = Node.Type.grass;
 		if ( type == Type.tree )
 			needed = Node.Type.land;
@@ -188,7 +191,7 @@ public class Resource : HiveObject
 		life.Start();
 		bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
 
-		if ( type == Type.cornfield )
+		if ( type == Type.cornField || type == Type.wheatField )
 		{
 			node.avoidGrass = true;
 			ground.SetDirty( node );
@@ -242,8 +245,8 @@ public class Resource : HiveObject
 			body.transform.SetParent( transform );
 			body.transform.localPosition = Vector3.zero;
 
-			// Align cornfield to ground
-			if ( type == Type.cornfield )
+			// Align field to ground
+			if ( type == Type.cornField || type == Type.wheatField )
 			{
 				foreach ( Transform c in body.transform )
 				{
@@ -259,15 +262,18 @@ public class Resource : HiveObject
 
 	new public void Update()
 	{
-		if ( type == Type.cornfield )
+		if ( type == Type.cornField || type == Type.wheatField )
 		{
-			float growth = (float)life.age / Constants.Resource.cornfieldGrowthTime;
-			if ( node.type != Node.Type.grass )
-				growth /= 2;
+			float growth = (float)life.age;
+			if ( type == Type.cornField )
+				growth /= Constants.Resource.cornFieldGrowthTime;
+			else
+				growth /= Constants.Resource.wheatFieldGrowthTime;
+
 			if ( growth > 1 )
 				growth = 1;
-			var p = node.position;
-			transform.localPosition = node.position + Vector3.up * ( -0.4f + 0.4f * growth );
+			foreach ( Transform plant in body.transform )
+				plant.localScale = new Vector3( growth, growth, growth );
 		}
 		if ( type == Type.tree )
 		{
@@ -331,7 +337,8 @@ public class Resource : HiveObject
 			Type.tree => Item.Type.log,
 			Type.rock => Item.Type.stone,
 			Type.fish => Item.Type.fish,
-			Type.cornfield => Item.Type.grain,
+			Type.cornField => Item.Type.corn,
+			Type.wheatField => Item.Type.grain,
 			Type.pasturingAnimal => Item.Type.hide,
 			Type.salt => Item.Type.salt,
 			Type.iron => Item.Type.iron,
@@ -366,7 +373,7 @@ public class Resource : HiveObject
 
 		assert.IsTrue( node.resources.Contains( this ) );
 		node.avoidGrass = false;
-		if ( type == Type.cornfield )
+		if ( type == Type.cornField || type == Type.wheatField )
 			ground.SetDirty( node );
 		node.resources.Remove( this );
 		base.Remove();
@@ -382,12 +389,10 @@ public class Resource : HiveObject
 				return life.age > Constants.Resource.treeGrowthTime;
 			return life.age > Constants.Resource.treeGrowthTime * 2;
 		}
-		if ( type == Type.cornfield )
-		{
-			if ( node.type == Node.Type.grass )
-				return life.age > Constants.Resource.cornfieldGrowthTime;
-			return life.age > Constants.Resource.cornfieldGrowthTime * 2;
-		}
+		if ( type == Type.cornField )
+			return life.age > Constants.Resource.cornFieldGrowthTime;
+		if ( type == Type.wheatField )
+			return life.age > Constants.Resource.wheatFieldGrowthTime;
 		return true;
 	}
 
@@ -399,7 +404,7 @@ public class Resource : HiveObject
 	public override void Reset()
 	{
 		keepAway.Start();
-		if ( type == Type.cornfield )
+		if ( type == Type.cornField || type == Type.wheatField )
 			Remove();
 	}
 

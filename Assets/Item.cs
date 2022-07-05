@@ -96,6 +96,8 @@ public class Item : HiveObject
 		goldBar,
 		soldier,
 		apple,
+		corn,
+		cornFlour,
 		total,
 		unknown = -1
 	}
@@ -123,6 +125,8 @@ public class Item : HiveObject
 			"prefabs/items/jar", Type.salt,
 			"prefabs/items/soldier", Type.soldier,
 			"prefabs/items/apple", Type.apple,
+			"prefabs/items/sack", Type.corn,
+			"prefabs/items/jar2", Type.cornFlour,
 			"prefabs/items/wood", Type.log
 		};
 		looks.Fill( looksData );

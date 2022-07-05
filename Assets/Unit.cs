@@ -1192,7 +1192,7 @@ public class Unit : HiveObject
 			duration = 500,
 			turnTo = Act.Direction.water
 		};
-		resourceCollectAct[(int)Resource.Type.cornfield] = new Act( "harvestCorn" )
+		resourceCollectAct[(int)Resource.Type.cornField] = resourceCollectAct[(int)Resource.Type.wheatField] = new Act( "harvestCorn" )
 		{
 			animation = harvestingID,
 			timeToInterrupt = 1.0f,
@@ -1509,7 +1509,13 @@ public class Unit : HiveObject
 		{
 			if ( itemsInHands[0] )
 				itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
-			itemsInHands[1].transform.SetParent( links[(int)LinkType.haulingBoxSecondary].transform, false );
+	
+			var secondaryBox = links[(int)LinkType.haulingBoxSecondary].transform;
+			if ( secondaryBox )
+			{
+				itemsInHands[1].transform.SetParent( secondaryBox, false );
+				secondaryBox.localPosition = Constants.Item.secondItemOffset[(int)itemsInHands[1].type];
+			}
 		}
 		else if ( itemsInHands[0] )
 			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxLight].transform, false );

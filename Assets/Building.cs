@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -497,7 +497,7 @@ abstract public class Building : HiveObject
 				bool resourceBlocking = false;
 				foreach ( var resource in basis.resources )
 				{
-					if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornfield )
+					if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornField || resource.type == Resource.Type.wheatField )
 					resourceBlocking = true;
 				}
 				if ( !ignoreBlockingResources || !resourceBlocking )

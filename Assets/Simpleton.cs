@@ -355,6 +355,7 @@ public class Simpleton : Player
             }
             boss.noRoom = false;
 
+            // TODO Dynamic
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 3 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
@@ -367,7 +368,7 @@ public class Simpleton : Player
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.farm, soldierYield * 3 ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.wheatFarm, soldierYield * 3 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, Math.Max( soldierYield, 1 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, Math.Max( soldierYield * 2, 2 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
@@ -580,12 +581,13 @@ public class Simpleton : Player
 
         void GatherDependencies()
         {
+            // TODO Dynamic
             if ( workshopType == Workshop.Type.woodcutter )
                 dependencies.Add( Workshop.Type.forester );
             if ( workshopType == Workshop.Type.sawmill )
                 dependencies.Add( Workshop.Type.woodcutter );
             if ( workshopType == Workshop.Type.mill )
-                dependencies.Add( Workshop.Type.farm );
+                dependencies.Add( Workshop.Type.wheatFarm );
             if ( workshopType == Workshop.Type.bowMaker )
             {
                 dependencies.Add( Workshop.Type.sawmill );
@@ -609,12 +611,12 @@ public class Simpleton : Player
             if ( workshopType == Workshop.Type.brewery )
             {
                 dependencies.Add( Workshop.Type.well );
-                dependencies.Add( Workshop.Type.farm );
+                dependencies.Add( Workshop.Type.wheatFarm );
             }
             if ( workshopType == Workshop.Type.butcher )
             {
                 dependencies.Add( Workshop.Type.brewery );
-                dependencies.Add( Workshop.Type.farm );
+                dependencies.Add( Workshop.Type.wheatFarm );
             }
             if ( workshopType == Workshop.Type.barrack )
             {
@@ -679,7 +681,7 @@ public class Simpleton : Player
                     Workshop.Type.stoneMine => nearby.HasResource( Resource.Type.stone ),
                     Workshop.Type.saltMine => nearby.HasResource( Resource.Type.salt ),
                     Workshop.Type.goldMine => nearby.HasResource( Resource.Type.gold ),
-                    Workshop.Type.farm => nearby.type == Node.Type.grass,
+                    Workshop.Type.wheatFarm => nearby.type == Node.Type.grass,
                     Workshop.Type.forester => nearby.type == Node.Type.forest,
                     Workshop.Type.fishingHut => nearby.HasResource( Resource.Type.fish ),
                     Workshop.Type.hunter => nearby.HasResource( Resource.Type.animalSpawner ),

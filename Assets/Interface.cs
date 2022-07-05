@@ -2492,7 +2492,8 @@ public class Interface : HiveObject
 					Workshop.Type.stonemason => "Rocks on the ground have multiple charges, but they are eventually running out. In that case the stonemason should be destroyed. Build stone mines if you need more stone.",
 					Workshop.Type.woodcutter => "If the ground is good for planting trees (brown) build a forester nearby to replant trees, that way the woodcutter will be able to work forever.",
 					Workshop.Type.forester => "",
-					Workshop.Type.farm => "If there are enough free spots around the farm, the farmer will plant and create new fields, so it will never run out of grain.",
+					Workshop.Type.wheatFarm => "If there are enough free spots around the farm, the farmer will plant and create new fields, so it will never run out of grain.",
+					Workshop.Type.cornFarm => "If there are enough free spots around the farm, the farmer will plant and create new fields, so it will never run out of corn.",
 					Workshop.Type.fishingHut => "Fish willl never run out, it just needs time to respawn, so it is pointless to put too much fishing hut around a small lake.",
 					_ => "When an ore is mined it becomes unavailable for a while, and need some time to recharge. This time is always the same, and ores are always recharging, so ore deposits are never running out."
 				};
@@ -2597,7 +2598,9 @@ public class Interface : HiveObject
 				string text = workshop.type switch
 				{
 					Workshop.Type.woodcutter => $"Trees left: {workshop.ResourcesLeft()}",
-					Workshop.Type.farm => $"Fields left: {workshop.ResourcesLeft()}",
+					Workshop.Type.appleGatherer => $"Trees left: {workshop.ResourcesLeft()}",
+					Workshop.Type.wheatFarm => $"Fields left: {workshop.ResourcesLeft()}",
+					Workshop.Type.cornFarm => $"Fields left: {workshop.ResourcesLeft()}",
 					Workshop.Type.forester => "",
 					Workshop.Type.stonemason => $"Rock charges left: {workshop.ResourcesLeft()}",
 					Workshop.Type.fishingHut => $"Fish left: {workshop.ResourcesLeft()}",
@@ -3466,7 +3469,8 @@ public class Interface : HiveObject
 					Workshop.Type.butcher => "This building produces one type of the food for mines, pork. To have an optimal supply of mines with food, " +
 						"both pork and pretzel should be produced.",
 					Workshop.Type.coalMine => "Most important type of mine, accepts all kind of food.",
-					Workshop.Type.farm => "Produces grain which is the base for both pretzel and pork, also needed for beer. Need free green space around.",
+					Workshop.Type.wheatFarm => "Produces grain. Need free green space around.",
+					Workshop.Type.cornFarm => "Produces corn. Need free green space around.",
 					Workshop.Type.fishingHut => "Simpliest building to produce food. Salt mines only accept fish, so unavoidable there. Should be built close to water.",
 					Workshop.Type.forester => "This building doesn't produce or need anything, just plants trees around the house in the brown area.",
 					Workshop.Type.goldBarMaker => "Gold bars are needed by the barrack to produce soldiers.",
@@ -5477,7 +5481,7 @@ if ( cart )
 			var greyMaterial = new Material( World.defaultShader )      { color = Color.grey };
 			buildCategories.Add( new BuildPossibility
 			{
-				configuration = Workshop.GetConfiguration( Workshop.Type.farm ),
+				configuration = Workshop.GetConfiguration( Workshop.Type.wheatFarm ),
 				material = greenMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/bigHouse" ),
 				scale = 1.5f

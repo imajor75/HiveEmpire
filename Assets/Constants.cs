@@ -96,7 +96,9 @@ public static class Constants
 		    float.MaxValue,     //pork
 		    float.MaxValue,     //goldBar
 		    float.MaxValue,     //soldier
-		    float.MaxValue      //apple
+		    float.MaxValue,     //apple
+		    float.MaxValue,     //corn
+		    float.MaxValue      //cornFlour
         };
         public static float[] yawAtFlag = new float[(int)(global::Item.Type.total)]
         {
@@ -120,7 +122,9 @@ public static class Constants
 		    0,     //pork
 		    0,     //goldBar
 		    0,     //soldier
-		    0      //apple
+		    0,     //apple
+		    0,     //corn
+		    0      //cornFlour
         };
         public static Vector3[] secondItemOffset = new Vector3[(int)(global::Item.Type.total)]
         {
@@ -144,7 +148,9 @@ public static class Constants
 		    new Vector3( 0, 0.4f, 0 ),     //pork
 		    new Vector3( 0, 0.3f, 0 ),     //goldBar
 		    new Vector3( 0, 0, 0 ),      //soldier
-		    new Vector3( 0, 0.8f, 0 )     //apple
+		    new Vector3( 0, 0.8f, 0 ),    //apple
+		    new Vector3( 0, 0.6f, 0 ),      //corn
+		    new Vector3( 0, 1.3f, 0 )     //cornFlour
         };
     }
 
@@ -273,7 +279,8 @@ public static class Constants
     public static class Resource
     {
         public const int treeGrowthTime = 15000;    // 5 minutes
-        public const int cornfieldGrowthTime = 20000;
+        public const int cornFieldGrowthTime = 22000;
+        public const int wheatFieldGrowthTime = 10000;
         public const int animalSpawnTime = 1000;
         public const int treeSoundTime = 60000;
         public const int rockCharges = 6;

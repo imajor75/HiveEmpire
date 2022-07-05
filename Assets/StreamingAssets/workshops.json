@@ -47,17 +47,27 @@
     "outputType": "fish"
   },
   {
-    "type": "farm",
+    "type": "wheatFarm",
     "huge": true,
-    "outputStackSize": 2,
-    "gatheredResource": "cornfield",
+    "gatheredResource": "wheatField",
     "gatheringRange": 3,
     "productionTime": 0,
     "approximatedProductionTime": 5000,
     "stoneNeeded": 2,
     "outputType": "grain",
     "groundTypeNeeded": "grass"
- 
+  },
+  {
+    "type": "cornFarm",
+    "huge": true,
+    "outputStackSize": 2,
+    "gatheredResource": "cornField",
+    "gatheringRange": 3,
+    "productionTime": 0,
+    "approximatedProductionTime": 5000,
+    "stoneNeeded": 2,
+    "outputType": "corn",
+    "groundTypeNeeded": "grass"
   },
   {
     "type": "mill",
@@ -68,6 +78,18 @@
     "inputs": [
       {
         "itemType": "grain"
+      }
+    ]
+  },
+  {
+    "type": "cornMill",
+    "flatteningNeeded": true,
+	  "groundTypeNeeded": "mountain",
+    "outputType": "cornflour",
+    "productionTime": 900,
+    "inputs": [
+      {
+        "itemType": "corn"
       }
     ]
   },

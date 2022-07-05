@@ -621,7 +621,7 @@ public class Flag : HiveObject
 			bool resourceBlocking = false;
 			foreach ( var resource in placeToBuildOn.resources )
 			{
-				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornfield )
+				if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornField || resource.type == Resource.Type.wheatField )
 					resourceBlocking = true;
 			}
 			if ( !ignoreBlockingResources || !resourceBlocking )
