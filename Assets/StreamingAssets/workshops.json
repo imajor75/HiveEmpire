@@ -179,12 +179,54 @@
     ]
   },
   {
+    "type": "copperMine",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+	  "groundTypeNeeded": "hill",
+    "gatheredResource": "copper",
+    "outputType": "copper",
+    "commonInputs": true,
+    "inputs": [
+      {
+        "itemType": "fish",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pork",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pretzel",
+        "bufferSize": 2
+      }
+    ]
+  },
+  {
     "type": "goldMine",
     "stoneNeeded": 2,
     "flatteningNeeded": false,
 	  "groundTypeNeeded": "hill",
     "gatheredResource": "gold",
     "outputType": "gold",
+    "commonInputs": true,
+    "inputs": [
+      {
+        "itemType": "pork",
+        "bufferSize": 2
+      },
+      {
+        "itemType": "pretzel",
+        "bufferSize": 2
+      }
+    ]
+  },
+  {
+    "type": "silverMine",
+    "stoneNeeded": 2,
+    "flatteningNeeded": false,
+	  "groundTypeNeeded": "hill",
+    "gatheredResource": "silver",
+    "outputType": "silver",
     "commonInputs": true,
     "inputs": [
       {
@@ -310,14 +352,14 @@
         "itemType": "bow"
       },
       {
-        "itemType": "goldBar"
+        "itemType": "jewelry"
       }
 	]
   },
   {
-    "type": "goldBarMaker",
+    "type": "jeweler",
     "stoneNeeded": 2,
-    "outputType": "goldBar",
+    "outputType": "jewelry",
     "inputs": [
       {
         "itemType": "log"

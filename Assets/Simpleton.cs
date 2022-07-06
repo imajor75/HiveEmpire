@@ -371,7 +371,7 @@ public class Simpleton : Player
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.wheatFarm, soldierYield * 3 ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, Math.Max( soldierYield, 1 ) ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, Math.Max( soldierYield * 2, 2 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldBarMaker, soldierYield ) );
+            boss.tasks.Add( new YieldTask( boss, Workshop.Type.jeweler, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
             boss.tasks.Add( new YieldTask( boss, Workshop.Type.ironMine, soldierYield ) );
@@ -418,11 +418,11 @@ public class Simpleton : Player
                     HiveCommon.oh.ScheduleToggleEmergencyConstruction( boss.team, true, Operation.Source.computer );
                     break;
                 case Action.disableNonConstruction:
-                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.goldBarMaker, Item.Type.log, 0 );
+                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.jeweler, Item.Type.log, 0 );
                     HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.bowMaker, Item.Type.plank, 0 );
                     break;
                 case Action.enableNonConstruction:
-                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.goldBarMaker, Item.Type.log, 0.5f );
+                    HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.jeweler, Item.Type.log, 0.5f );
                     HiveCommon.oh.ScheduleInputWeightChange( boss.team, Workshop.Type.bowMaker, Item.Type.plank, 0.5f );
                     break;
             }
@@ -622,10 +622,10 @@ public class Simpleton : Player
             {
                 dependencies.Add( Workshop.Type.bowMaker );
                 dependencies.Add( Workshop.Type.brewery );
-                dependencies.Add( Workshop.Type.goldBarMaker );
+                dependencies.Add( Workshop.Type.jeweler );
                 dependencies.Add( Workshop.Type.weaponMaker );
             }
-            if ( workshopType == Workshop.Type.goldBarMaker )
+            if ( workshopType == Workshop.Type.jeweler )
             {
                 dependencies.Add( Workshop.Type.goldMine );
                 dependencies.Add( Workshop.Type.woodcutter );

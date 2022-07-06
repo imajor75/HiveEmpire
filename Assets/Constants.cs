@@ -86,15 +86,17 @@ public static class Constants
 		    float.MaxValue,     //pretzel
 		    -0.2f,     //hide
 		    float.MaxValue,     //iron
+		    float.MaxValue,     //copper
 		    float.MaxValue,     //coal
 		    float.MaxValue,     //gold
+		    float.MaxValue,     //silver
 		    float.MaxValue,     //bow
 		    float.MaxValue,     //steel
 		    float.MaxValue,     //weapon
 		    float.MaxValue,     //water
 		    float.MaxValue,     //beer
 		    float.MaxValue,     //pork
-		    float.MaxValue,     //goldBar
+		    float.MaxValue,     //jewelry
 		    float.MaxValue,     //soldier
 		    float.MaxValue,     //apple
 		    float.MaxValue,     //corn
@@ -112,15 +114,17 @@ public static class Constants
 		    0,     //pretzel
 		    -100,    //hide
 		    0,     //iron
+		    0,     //copper
 		    0,     //coal
 		    0,     //gold
+		    0,     //silver
 		    0,     //bow
 		    0,     //steel
 		    0,     //weapon
 		    0,     //water
 		    0,     //beer
 		    0,     //pork
-		    0,     //goldBar
+		    0,     //jewelry
 		    0,     //soldier
 		    0,     //apple
 		    0,     //corn
@@ -138,15 +142,17 @@ public static class Constants
 		    new Vector3( 0, 0.3f, 0 ),     //pretzel
 		    new Vector3( 0, 0, 0 ),    //hide
 		    new Vector3( 0, 0, -0.25f ),     //iron
+		    new Vector3( 0, 0.7f, 0 ),     //copper
 		    new Vector3( 0, 0.8f, 0 ),     //coal
 		    new Vector3( 0, 0.7f, 0 ),     //gold
+		    new Vector3( 0, 0.7f, 0 ),     //silver
 		    new Vector3( 0, 0, -0.25f ),     //bow
 		    new Vector3( 0, 0.3f, 0 ),     //steel
 		    new Vector3( 0, 0, -0.25f ),     //weapon
-		    new Vector3( 0, 0.7f, 0 ),     //water
+		    new Vector3( 0, 1.3f, 0 ),     //water
 		    new Vector3( 0, 0.7f, 0 ),     //beer
 		    new Vector3( 0, 0.4f, 0 ),     //pork
-		    new Vector3( 0, 0.3f, 0 ),     //goldBar
+		    new Vector3( 0, 0.8f, 0 ),     //jewelry
 		    new Vector3( 0, 0, 0 ),      //soldier
 		    new Vector3( 0, 0.8f, 0 ),    //apple
 		    new Vector3( 0, 0.6f, 0 ),      //corn

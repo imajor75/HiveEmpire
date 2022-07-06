@@ -504,8 +504,10 @@ public class World : HiveObject
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
 		public float idealIron = 0.05f;
+		public float idealCopper = 0.05f;
 		public float idealCoal = 0.1f;
 		public float idealGold = 0.04f;
+		public float idealSilver = 0.04f;
 		public float idealSalt = 0.02f;
 		public float idealStone = 0.01f;
 
@@ -1430,6 +1432,7 @@ public class World : HiveObject
 		foreach ( var resource in toRemove )
 			resource.Remove();
 
+		// TODO Dynamic
 		ores.Clear();
 		oreCount = 0;
 		animalSpawnerCount = 0; 
@@ -1439,6 +1442,8 @@ public class World : HiveObject
 		ores.Add( new Ore{ resourceType = Resource.Type.gold, ideal = settings.idealGold / oreStrength } );
 		ores.Add( new Ore{ resourceType = Resource.Type.salt, ideal = settings.idealSalt / oreStrength } );
 		ores.Add( new Ore{ resourceType = Resource.Type.stone, ideal = settings.idealStone / oreStrength } );
+		ores.Add( new Ore{ resourceType = Resource.Type.copper, ideal = settings.idealCopper / oreStrength } );
+		ores.Add( new Ore{ resourceType = Resource.Type.silver, ideal = settings.idealSilver / oreStrength } );
 
 		int TotalMissing() { int total = 0; foreach ( var ore in ores ) total += ore.missing; return total; };
 

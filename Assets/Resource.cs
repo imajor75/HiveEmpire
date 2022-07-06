@@ -79,6 +79,8 @@ public class Resource : HiveObject
 		expose,	// Obsolete, kept only to be able to load old saves
 		soil,
 		apple,
+		silver,
+		copper,
 		total,
 		unknown = -1	
 	}
@@ -139,7 +141,7 @@ public class Resource : HiveObject
 
 	public static bool IsUnderGround( Type type )
 	{
-		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt;
+		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt || type == Type.copper || type == Type.silver;
 	}
 
 	public Resource Setup( Node node, Type type, int charges = -1, float strength = 1, bool allowBlocking = false )
@@ -342,7 +344,9 @@ public class Resource : HiveObject
 			Type.pasturingAnimal => Item.Type.hide,
 			Type.salt => Item.Type.salt,
 			Type.iron => Item.Type.iron,
+			Type.copper => Item.Type.copper,
 			Type.gold => Item.Type.gold,
+			Type.silver => Item.Type.silver,
 			Type.coal => Item.Type.coal,
 			Type.stone => Item.Type.stone,
 			Type.apple => Item.Type.apple,

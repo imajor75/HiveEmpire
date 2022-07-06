@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -85,15 +85,17 @@ public class Item : HiveObject
 		pretzel,
 		hide,
 		iron,
+		copper,
 		coal,
 		gold,
+		silver,
 		bow,
 		steel,
 		weapon,
 		water,
 		beer,
 		pork,
-		goldBar,
+		jewelry,
 		soldier,
 		apple,
 		corn,
@@ -107,17 +109,20 @@ public class Item : HiveObject
 		object[] looksData = {
 			"prefabs/items/package",
 			"prefabs/items/coal", Type.coal,
-			"prefabs/items/bucket", Type.water,
+			"prefabs/items/jug", Type.water,
+			"prefabs/items/barrel dispenser", Type.beer,
 			"prefabs/items/pretzel", Type.pretzel,
 			"prefabs/items/plank", Type.plank,
 			"prefabs/items/fish", Type.fish,
 			"prefabs/items/crystal", Type.iron,
+			"prefabs/items/spice", Type.copper,
 			"prefabs/items/pot", Type.gold,
+			"prefabs/items/bucket", Type.silver,
 			"prefabs/items/sword", Type.weapon,
 			"prefabs/items/bow", Type.bow,
 			"prefabs/items/animal pelt", Type.hide,
 			"prefabs/items/beam cap", Type.stone,
-			"prefabs/items/gold ignot", Type.goldBar,
+			"prefabs/items/chest", Type.jewelry,
 			"prefabs/items/iron ignot", Type.steel,
 			"prefabs/items/meat ribs", Type.pork,
 			"prefabs/items/pouch", Type.flour,

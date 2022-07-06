@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3473,7 +3473,7 @@ public class Interface : HiveObject
 					Workshop.Type.cornFarm => "Produces corn. Need free green space around.",
 					Workshop.Type.fishingHut => "Simpliest building to produce food. Salt mines only accept fish, so unavoidable there. Should be built close to water.",
 					Workshop.Type.forester => "This building doesn't produce or need anything, just plants trees around the house in the brown area.",
-					Workshop.Type.goldBarMaker => "Gold bars are needed by the barrack to produce soldiers.",
+					Workshop.Type.jeweler => "Jewelry is needed by the barrack to produce soldiers.",
 					Workshop.Type.goldMine => "This type of mine does not accept fish, only pretzel or pork.",
 					Workshop.Type.hunter => "The hunter captures and kills wild rabbits, and produces hide which is needed for bow. Should be built close to the wild " +
 						" animal spawners (weird rock with bunnies around)",

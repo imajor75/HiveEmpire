@@ -260,9 +260,11 @@ public class Workshop : Building
 		hunter,
 		saltMine,
 		ironMine,
+		copperMine,
 		coalMine,
 		stoneMine,
 		goldMine,
+		silverMine,
 		forester,
 		_geologistObsolete,	// Obsolete, kept here only to remain compatible with old files
 		bowMaker,
@@ -272,7 +274,7 @@ public class Workshop : Building
 		brewery,
 		butcher,
 		barrack,
-		goldBarMaker,
+		jeweler,
 		appleGatherer,
 		total,
 		unknown = -1,
@@ -490,7 +492,9 @@ public class Workshop : Building
 			"Mines/saltmine_final", 1.5f, Type.saltMine,
 			"Mines/coalmine_final", 1.1f, Type.coalMine,
 			"Mines/ironmine_final", 1.5f, Type.ironMine,
+			"Mines/ironmine_final", 1.5f, Type.copperMine,
 			"Mines/goldmine_final", 1.5f, Type.goldMine,
+			"Mines/goldmine_final", 1.5f, Type.silverMine,
 			"Mines/stonemine_final", 1.5f, Type.stoneMine,
 			"Forest/woodcutter_final", 1.2f, Type.woodcutter, Type.appleGatherer,
 			"Forest/forester_final", 1.33f, Type.forester,
@@ -500,7 +504,7 @@ public class Workshop : Building
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
 			"prefabs/buildings/slaughterhouse", 1.5f, Type.butcher,
 			"SAdK/barrack_final", 1.8f, Type.barrack,
-			"SAdK/coinmaker_final", 2f, Type.goldBarMaker,
+			"SAdK/coinmaker_final", 2f, Type.jeweler,
 			"prefabs/buildings/well", 1.1f, Type.well };
 		looks.Fill( looksData );
 		object[] sounds = {
@@ -508,7 +512,7 @@ public class Workshop : Building
 			"smelter", 1.0f, Type.smelter,
 			"windmill", 1.0f, Type.mill,
 			"brewery", 0.7f, Type.brewery,
-			"coinmaker", 0.5f, Type.goldBarMaker,
+			"coinmaker", 0.5f, Type.jeweler,
 			"pig", 1.0f, Type.butcher,
 			"kneading", 1.0f, Type.bakery,
 			"weaponforging", 0.7f, Type.weaponMaker,
