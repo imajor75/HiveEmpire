@@ -90,6 +90,17 @@
     ]
   },
   {
+    "type": "charcoalKiln",
+    "flatteningNeeded": false,
+    "outputType": "charcoal",
+    "productionTime": 3900,
+    "inputs": [
+      {
+        "itemType": "log"
+      }
+    ]
+  },
+  {
     "type": "cornMill",
     "flatteningNeeded": true,
 	  "groundTypeNeeded": "mountain",

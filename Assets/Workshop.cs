@@ -278,6 +278,7 @@ public class Workshop : Building
 		jeweler,
 		appleGatherer,
 		dungCollector,
+		charcoalKiln,
 		total,
 		unknown = -1,
 		construction = -2
@@ -499,7 +500,7 @@ public class Workshop : Building
 			"Mines/goldmine_final", 1.5f, Type.silverMine,
 			"Mines/stonemine_final", 1.5f, Type.stoneMine,
 			"Forest/woodcutter_final", 1.2f, Type.woodcutter, Type.appleGatherer,
-			"Forest/forester_final", 1.33f, Type.forester, Type.dungCollector,
+			"Forest/forester_final", 1.33f, Type.forester, Type.dungCollector, Type.charcoalKiln,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowMaker,

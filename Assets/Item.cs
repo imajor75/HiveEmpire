@@ -101,6 +101,7 @@ public class Item : HiveObject
 		corn,
 		cornFlour,
 		dung,
+		charcoal,
 		total,
 		unknown = -1
 	}
@@ -114,6 +115,7 @@ public class Item : HiveObject
 			"prefabs/items/barrel dispenser", Type.beer,
 			"prefabs/items/pretzel", Type.pretzel,
 			"prefabs/items/plank", Type.plank,
+			"prefabs/items/crate", Type.charcoal,
 			"prefabs/items/fish", Type.fish,
 			"prefabs/items/crystal", Type.iron,
 			"prefabs/items/spice", Type.copper,
