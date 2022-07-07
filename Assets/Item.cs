@@ -102,6 +102,7 @@ public class Item : HiveObject
 		cornFlour,
 		dung,
 		charcoal,
+		pie,
 		total,
 		unknown = -1
 	}
@@ -130,6 +131,7 @@ public class Item : HiveObject
 			"prefabs/items/meat ribs", Type.pork,
 			"prefabs/items/pouch", Type.flour,
 			"prefabs/items/hay", Type.grain,
+			"prefabs/items/pie", Type.pie,
 			"prefabs/items/jar", Type.salt,
 			"prefabs/items/soldier", Type.soldier,
 			"prefabs/items/apple", Type.apple,
