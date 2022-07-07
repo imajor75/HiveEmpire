@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -100,6 +100,7 @@ public class Item : HiveObject
 		apple,
 		corn,
 		cornFlour,
+		dung,
 		total,
 		unknown = -1
 	}
@@ -132,6 +133,7 @@ public class Item : HiveObject
 			"prefabs/items/apple", Type.apple,
 			"prefabs/items/sack", Type.corn,
 			"prefabs/items/jar2", Type.cornFlour,
+			"prefabs/items/sack open", Type.dung,
 			"prefabs/items/wood", Type.log
 		};
 		looks.Fill( looksData );

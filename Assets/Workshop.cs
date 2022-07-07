@@ -158,6 +158,7 @@ public class Workshop : Building
 		public int relaxSpotCountNeeded = Constants.Workshop.defaultRelaxSpotNeeded;
 		public int maxRestTime = Constants.Workshop.defaultMaxRestTime;
 		public int outputMax = Constants.Workshop.defaultOutputMax;
+		public bool producesDung = false;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }
@@ -276,6 +277,7 @@ public class Workshop : Building
 		barrack,
 		jeweler,
 		appleGatherer,
+		dungCollector,
 		total,
 		unknown = -1,
 		construction = -2
@@ -497,7 +499,7 @@ public class Workshop : Building
 			"Mines/goldmine_final", 1.5f, Type.silverMine,
 			"Mines/stonemine_final", 1.5f, Type.stoneMine,
 			"Forest/woodcutter_final", 1.2f, Type.woodcutter, Type.appleGatherer,
-			"Forest/forester_final", 1.33f, Type.forester,
+			"Forest/forester_final", 1.33f, Type.forester, Type.dungCollector,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowMaker,
@@ -963,6 +965,18 @@ public class Workshop : Building
 			if ( progress > 1 )
 			{
 				output += productionConfiguration.outputStackSize;
+				if ( productionConfiguration.producesDung )
+				{
+					Resource dung = null;
+					foreach ( var resource in node.resources )
+					{
+						if ( resource.type == Resource.Type.dung )
+							dung = resource;
+					}
+					if ( !dung )
+						dung = Resource.Create().Setup( node, Resource.Type.dung, 0, allowBlocking:true );
+					dung.charges += productionConfiguration.outputStackSize;
+				}
 				SetWorking( false );
 				itemsProduced += productionConfiguration.outputStackSize;
 				if ( productionConfiguration.outputType != Item.Type.unknown )

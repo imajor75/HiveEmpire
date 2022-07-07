@@ -81,6 +81,7 @@ public class Resource : HiveObject
 		apple,
 		silver,
 		copper,
+		dung,
 		total,
 		unknown = -1	
 	}
@@ -148,7 +149,7 @@ public class Resource : HiveObject
 	{
 		this.type = type;
 		this.strength = strength;
-		if ( charges < 1 )
+		if ( charges < 0 )
 		{
 			if ( underGround || type == Type.fish || type == Type.apple )
 				charges = int.MaxValue;
@@ -350,6 +351,7 @@ public class Resource : HiveObject
 			Type.coal => Item.Type.coal,
 			Type.stone => Item.Type.stone,
 			Type.apple => Item.Type.apple,
+			Type.dung => Item.Type.dung,
 			_ => Item.Type.unknown,
 		};
 	}

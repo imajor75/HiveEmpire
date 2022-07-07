@@ -100,7 +100,8 @@ public static class Constants
 		    float.MaxValue,     //soldier
 		    float.MaxValue,     //apple
 		    float.MaxValue,     //corn
-		    float.MaxValue      //cornFlour
+		    float.MaxValue,     //cornFlour
+		    float.MaxValue      //dung
         };
         public static float[] yawAtFlag = new float[(int)(global::Item.Type.total)]
         {
@@ -128,7 +129,8 @@ public static class Constants
 		    0,     //soldier
 		    0,     //apple
 		    0,     //corn
-		    0      //cornFlour
+		    0,     //cornFlour
+		    0      //dung
         };
         public static Vector3[] secondItemOffset = new Vector3[(int)(global::Item.Type.total)]
         {
@@ -156,7 +158,8 @@ public static class Constants
 		    new Vector3( 0, 0, 0 ),      //soldier
 		    new Vector3( 0, 0.8f, 0 ),    //apple
 		    new Vector3( 0, 0.6f, 0 ),      //corn
-		    new Vector3( 0, 1.3f, 0 )     //cornFlour
+		    new Vector3( 0, 1.3f, 0 ),    //cornFlour
+		    new Vector3( 0, 1.2f, 0 )     //dung
         };
     }
 

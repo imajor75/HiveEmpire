@@ -32,6 +32,14 @@
     "flatteningNeeded": false
   },
   {
+    "type": "dungCollector",
+    "outputType": "dung",
+  	"gatheredResource": "dung",
+	  "productionTime": 0,
+    "approximatedProductionTime": 2500,
+    "flatteningNeeded": false
+  },
+  {
     "type": "stonemason",
     "gatheredResource": "rock",
   	"productionTime": 0,
@@ -327,9 +335,10 @@
     "stoneNeeded": 2,
 	  "productionTime": 1000,
     "outputType": "pork",
+    "producesDung": true,
     "inputs": [
       {
-        "itemType": "beer"
+        "itemType": "water"
       },
       {
         "itemType": "grain"
