@@ -30,7 +30,6 @@ public class Workshop : Building
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 
-	public static Configuration[] configurations;
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> processingSounds;
 	static Texture2D mapIndicatorTexture;
@@ -148,6 +147,7 @@ public class Workshop : Building
 		}
 		public Type type;
 
+		public int inputBufferSize = Constants.Workshop.defaultBufferSize;
 		public Resource.Type gatheredResource = Resource.Type.unknown;
 		public int gatheringRange = Constants.Workshop.defaultGatheringRange;
 
@@ -164,7 +164,23 @@ public class Workshop : Building
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }
 
 		public bool commonInputs = false;	// If true, the workshop will work with the input buffers separately, if any has any item it will work (f.e. mines). Otherwise each input is needed.
+		[Obsolete( "Compatibility with old files" )]
 		public Input[] inputs;
+		public List<Item.Type> generatedInputs;
+		public Material baseMaterials;
+
+		public class Material
+		{
+			virtual public List<Item.Type> GenerateList( System.Random rnd )
+			{
+				Assert.global.AreNotEqual( type, Item.Type.unknown );
+				List<Item.Type> result = new List<Item.Type>();
+				result.Add( type );
+				return result;
+			}
+
+			Item.Type type = Item.Type.unknown;
+		}
 	}
 
 	public enum Status
@@ -236,7 +252,8 @@ public class Workshop : Building
 		}
 		public Item.Type itemType;
 		public int size = Constants.Workshop.defaultBufferSize;
-		public int stackSize = 1;
+		[Obsolete( "Compatibility with old files", true )]
+		int stackSize { set {} }
 		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
 		public int stored;
 		public int onTheWay;
@@ -479,16 +496,6 @@ public class Workshop : Building
 
 	public static new void Initialize()
 	{
-		using ( var sw = new StreamReader( Application.streamingAssetsPath + "/workshops.json" ) )
-		using ( var reader = new JsonTextReader( sw ) )
-		{
-			var serializer = JsonSerializer.Create();
-			configurations = serializer.Deserialize<Configuration[]>( reader );
-			foreach ( var c in configurations )
-				if ( c.constructionTime == 0 )
-					c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
-		}
-
 		object[] looksData = {
 			"prefabs/buildings/fishingHut", 1.25f, Type.fishingHut,
 			"prefabs/buildings/bakery", 3.6f, Type.bakery, Type.confectionery, Type.cheeseFactory,
@@ -581,9 +588,33 @@ public class Workshop : Building
 		base.Remove();
 	}
 
+	static public void ResetConfigurations()
+	{
+		System.Random rnd = new System.Random( World.rnd.Next() );
+		foreach ( var configuration in world.workshopConfigurations )
+		{
+			if ( configuration.baseMaterials == null )
+			{	
+#pragma warning disable 0618
+				if ( configuration.inputs == null )
+					continue;
+				configuration.generatedInputs = new List<Item.Type>();
+				foreach ( var input in configuration.inputs )
+				{
+					configuration.generatedInputs.Add( input.itemType );
+					configuration.inputBufferSize = input.bufferSize;
+					Assert.global.AreEqual( input.stackSize, 1 );
+				}
+#pragma warning restore 0618
+			}
+			else
+				configuration.generatedInputs = configuration.baseMaterials.GenerateList( rnd );
+		}
+	}
+
 	static public Configuration GetConfiguration( Type type )
 	{
-		foreach ( var c in configurations )
+		foreach ( var c in world.workshopConfigurations )
 		{
 			if ( c.type == type )
 				return c;
@@ -596,24 +627,23 @@ public class Workshop : Building
 		configuration = GetConfiguration( type );
 		assert.IsNotNull( configuration );
 
-		if ( productionConfiguration.inputs == null )
+		if ( productionConfiguration.generatedInputs == null )
 		{
 			buffers.Clear();
 			return;
 		}
 
 		var newList = new List<Buffer>();
-		for ( int i = 0; i < productionConfiguration.inputs.Length; i++ )
+		for ( int i = 0; i < productionConfiguration.generatedInputs.Count; i++ )
 		{
-			var input = productionConfiguration.inputs[i];
+			var input = productionConfiguration.generatedInputs[i];
 			int j = 0;
 			while ( j < buffers.Count )
 			{
 				var b = buffers[j];
-				if ( b.itemType == input.itemType )
+				if ( b.itemType == input )
 				{
-					b.size = input.bufferSize;
-					b.stackSize = input.stackSize;
+					b.size = productionConfiguration.inputBufferSize;
 					b.optional = productionConfiguration.commonInputs;
 					newList.Add( b );
 					break;
@@ -621,9 +651,9 @@ public class Workshop : Building
 				j++;
 			}
 			if ( j == buffers.Count )
-				newList.Add( new Buffer( input.itemType, input.bufferSize ) );
+				newList.Add( new Buffer( input, productionConfiguration.inputBufferSize ) );
 		}
-		assert.AreEqual( newList.Count, productionConfiguration.inputs.Length );
+		assert.AreEqual( newList.Count, productionConfiguration.generatedInputs.Count );
 		buffers = newList;
 		foreach ( var b in buffers )
 			b.weight = team.FindInputWeight( type, b.itemType );

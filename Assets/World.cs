@@ -7,6 +7,7 @@ using UnityEngine.Rendering.PostProcessing;
 using System.Linq;
 using System.Globalization;
 using UnityEditor;
+using System.IO;
 #pragma warning disable 0618
 
 public class World : HiveObject
@@ -30,6 +31,7 @@ public class World : HiveObject
 	public bool createRoadTutorialShowed;
 	public string fileName;
 	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>(), newHiveObjects = new LinkedList<HiveObject>();
+	public Workshop.Configuration[] workshopConfigurations;
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Speed speed;
@@ -45,7 +47,7 @@ public class World : HiveObject
 
 
 	static public bool massDestroy;
-	static System.Random rnd;
+	static public System.Random rnd;
 	static public World instance;
 	static public int soundMaxDistance = 7;
 	static public int layerIndexMapOnly;
@@ -584,6 +586,16 @@ public class World : HiveObject
 	{
 		settings = ScriptableObject.CreateInstance<Settings>();
 		network = Network.Create();
+
+		using ( var sw = new StreamReader( Application.streamingAssetsPath + "/workshops.json" ) )
+		using ( var reader = new JsonTextReader( sw ) )
+		{
+			var serializer = JsonSerializer.Create();
+			workshopConfigurations = serializer.Deserialize<Workshop.Configuration[]>( reader );
+			foreach ( var c in workshopConfigurations )
+				if ( c.constructionTime == 0 )
+					c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
+		}
 	}
 
 	public new World Setup()
@@ -732,6 +744,7 @@ public class World : HiveObject
 	{
 		if ( resetSettings )
 			settings = ScriptableObject.CreateInstance<Settings>();
+		Workshop.ResetConfigurations();
 		nextID = 1;
 		time = 0;
 		lastChecksum = 0;

@@ -330,16 +330,16 @@ public class Team : HiveObject
 			itemType = Item.Type.stone,
 			weight = 1
 		} );
-		foreach ( var c in Workshop.configurations )
+		foreach ( var c in world.workshopConfigurations )
 		{
-			if ( c.inputs == null )
+			if ( c.generatedInputs == null )
 				continue;
-			foreach ( var b in c.inputs )
+			foreach ( var b in c.generatedInputs )
 			{
 				inputWeights.Add( new InputWeight
 				{
 					workshopType = c.type,
-					itemType = b.itemType,
+					itemType = b,
 					weight = Constants.Player.defaultInputWeight
 				} );
 			}

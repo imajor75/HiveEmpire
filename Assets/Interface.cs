@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -5481,28 +5481,28 @@ if ( cart )
 			var greyMaterial = new Material( World.defaultShader )      { color = Color.grey };
 			buildCategories.Add( new BuildPossibility
 			{
-				configuration = Workshop.GetConfiguration( Workshop.Type.wheatFarm ),
+				configuration = new Workshop.Configuration { huge = true },
 				material = greenMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/bigHouse" ),
 				scale = 1.5f
 			} );
 			buildCategories.Add( new BuildPossibility
 			{
-				configuration = Workshop.GetConfiguration( Workshop.Type.sawmill ),
+				configuration = new Workshop.Configuration(),
 				material = blueMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/mediumHouse" ),
 				scale = 1.5f
 			} );
 			buildCategories.Add( new BuildPossibility
 			{
-				configuration = Workshop.GetConfiguration( Workshop.Type.woodcutter ),
+				configuration = new Workshop.Configuration { flatteningNeeded = false },
 				material = yellowMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/smallHouse" ),
 				scale = 1.5f
 			} );
 			buildCategories.Add( new BuildPossibility
 			{
-				configuration = Workshop.GetConfiguration( Workshop.Type.ironMine ),
+				configuration = new Workshop.Configuration { groundTypeNeeded = Node.Type.hill },
 				material = orangeMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/mine" ),
 				scale = 0.7f
@@ -6496,7 +6496,7 @@ if ( cart )
 			}
 			max = Math.Max( max, 0.0001f );
 			int tickPerBuilding = 2000, workshopCount = 0;
-			foreach ( var c in Workshop.configurations )
+			foreach ( var c in world.workshopConfigurations )
 			{
 				if ( c.outputType == selected && c.productionTime != 0 )
 				{
