@@ -281,6 +281,7 @@ public class Workshop : Building
 		charcoalKiln,
 		confectionery,
 		dairy,
+		poultryRun,
 		total,
 		unknown = -1,
 		construction = -2
@@ -507,7 +508,7 @@ public class Workshop : Building
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowMaker,
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
-			"prefabs/buildings/slaughterhouse", 1.5f, Type.butcher, Type.dairy,
+			"prefabs/buildings/slaughterhouse", 1.5f, Type.butcher, Type.dairy, Type.poultryRun,
 			"SAdK/barrack_final", 1.8f, Type.barrack,
 			"SAdK/coinmaker_final", 2f, Type.jeweler,
 			"prefabs/buildings/well", 1.1f, Type.well };

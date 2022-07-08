@@ -104,6 +104,7 @@ public class Item : HiveObject
 		charcoal,
 		pie,
 		milk,
+		egg,
 		total,
 		unknown = -1
 	}
@@ -130,6 +131,7 @@ public class Item : HiveObject
 			"prefabs/items/beam cap", Type.stone,
 			"prefabs/items/chest", Type.jewelry,
 			"prefabs/items/iron ignot", Type.steel,
+			"prefabs/items/basket", Type.egg,
 			"prefabs/items/meat ribs", Type.pork,
 			"prefabs/items/pouch", Type.flour,
 			"prefabs/items/hay", Type.grain,

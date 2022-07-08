@@ -388,6 +388,22 @@
     ]
   },
   {
+    "type": "poultryRun",
+	  "huge": true,
+    "stoneNeeded": 2,
+	  "productionTime": 1000,
+    "outputType": "egg",
+    "producesDung": true,
+    "inputs": [
+      {
+        "itemType": "water"
+      },
+      {
+        "itemType": "grain"
+      }
+    ]
+  },
+  {
     "type": "barrack",
     "stoneNeeded": 2,
     "productionTime": 2000,
