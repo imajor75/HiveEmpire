@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3418,7 +3418,7 @@ public class Interface : HiveObject
 		public void Open()
 		{
 			noResize = true;
-			base.Open( null, 0, 0, 360, 420 );
+			base.Open( null, 0, 0, 360, 460 );
 			name = "Build panel";
 
 			int row = -20;
@@ -3496,14 +3496,14 @@ public class Interface : HiveObject
 				if ( i % 2 != 0 )
 					row -= 20;
 			}
-			BuildButton( 20, -360, "Junction", AddFlag ).SetTooltip( "Junction without a building", null, "Junctions can be built separately from a building, which can be added later. Junctions are " +
+			BuildButton( 20, -400, "Junction", AddFlag ).SetTooltip( "Junction without a building", null, "Junctions can be built separately from a building, which can be added later. Junctions are " +
 			" exclusive for haulers, so a junction with multiple roads with high traffic might be inefficient." );
-			BuildButton( 180, -360, "Crossing", AddCrossing ).SetTooltip( "Crossing", null, "Crossings are like junctions, but they are not exclusive to halulers, so they can manage high traffic, " +
+			BuildButton( 180, -400, "Crossing", AddCrossing ).SetTooltip( "Crossing", null, "Crossings are like junctions, but they are not exclusive to halulers, so they can manage high traffic, " +
 			" but they cannot be used as an exit for buildings" );
 
-			BuildButton( 20, -380, "Guardhouse", AddGuardHouse ).SetTooltip( "Guard houses are needed to extend the border of the empire.", null, $"Only if a soldier occupies a guard house it extends the border. " +
+			BuildButton( 20, -420, "Guardhouse", AddGuardHouse ).SetTooltip( "Guard houses are needed to extend the border of the empire.", null, $"Only if a soldier occupies a guard house it extends the border. " +
 			$"As there is only {Constants.Stock.startSoldierCount} soldiers are available at start, soldier production should start after building the first {Constants.Stock.startSoldierCount} guardhouses." );
-			BuildButton( 180, -380, "Stock", AddStock ).SetTooltip( "Stocks are used to store items temporarily", null, "They are also very important as starting and end point of routes, so there should be a stock close to every buildings. Stocks can be built on hills also." +
+			BuildButton( 180, -420, "Stock", AddStock ).SetTooltip( "Stocks are used to store items temporarily", null, "They are also very important as starting and end point of routes, so there should be a stock close to every buildings. Stocks can be built on hills also." +
 			"See the route list for more details." );
 		}
 

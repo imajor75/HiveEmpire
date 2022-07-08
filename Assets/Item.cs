@@ -106,6 +106,7 @@ public class Item : HiveObject
 		milk,
 		egg,
 		cheese,
+		sling,
 		total,
 		unknown = -1
 	}
@@ -123,6 +124,7 @@ public class Item : HiveObject
 			"prefabs/items/crate", Type.charcoal,
 			"prefabs/items/fish", Type.fish,
 			"prefabs/items/crystal", Type.iron,
+			"prefabs/items/gun", Type.sling,
 			"prefabs/items/spice", Type.copper,
 			"prefabs/items/pot", Type.gold,
 			"prefabs/items/bucket", Type.silver,

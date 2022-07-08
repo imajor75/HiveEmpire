@@ -318,6 +318,20 @@
     ]
   },
   {
+    "type": "slingMaker",
+	  "huge": true,
+	  "productionTime": 2100,
+    "outputType": "sling",
+    "inputs": [
+      {
+        "itemType": "plank"
+      },
+      {
+        "itemType": "stone"
+      }
+    ]
+  },
+  {
     "type": "smelter",
     "outputType": "steel",
 	  "productionTime": 3500,

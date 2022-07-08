@@ -283,6 +283,7 @@ public class Workshop : Building
 		dairy,
 		poultryRun,
 		cheeseFactory,
+		slingMaker,
 		total,
 		unknown = -1,
 		construction = -2
@@ -507,7 +508,7 @@ public class Workshop : Building
 			"Forest/forester_final", 1.33f, Type.forester, Type.dungCollector, Type.charcoalKiln,
 			"SAdK/smelter_final", 2f, Type.smelter,
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,
-			"prefabs/buildings/bowmaker", 2.5f, Type.bowMaker,
+			"prefabs/buildings/bowmaker", 2.5f, Type.bowMaker, Type.slingMaker,
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
 			"prefabs/buildings/slaughterhouse", 1.5f, Type.butcher, Type.dairy, Type.poultryRun,
 			"SAdK/barrack_final", 1.8f, Type.barrack,
