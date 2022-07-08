@@ -18,11 +18,7 @@
   {
     "type": "sawmill",
     "outputType": "plank",
-    "inputs": [
-      {
-        "itemType": "log"
-      }
-    ]
+    "baseMaterials": "log"
   },
   {
     "type": "forester",

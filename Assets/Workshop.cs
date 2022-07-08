@@ -178,6 +178,7 @@ public class Workshop : Building
 				result.Add( type );
 				return result;
 			}
+			public static explicit operator Material( string itemTypeName ) { return new Material { type = Enum.Parse<Item.Type>( itemTypeName ) }; }
 
 			Item.Type type = Item.Type.unknown;
 		}
