@@ -105,6 +105,7 @@ public class Item : HiveObject
 		pie,
 		milk,
 		egg,
+		cheese,
 		total,
 		unknown = -1
 	}
@@ -142,6 +143,7 @@ public class Item : HiveObject
 			"prefabs/items/sack", Type.corn,
 			"prefabs/items/jar2", Type.cornFlour,
 			"prefabs/items/sack open", Type.dung,
+			"prefabs/items/cheese", Type.cheese,
 			"prefabs/items/wood", Type.log
 		};
 		looks.Fill( looksData );

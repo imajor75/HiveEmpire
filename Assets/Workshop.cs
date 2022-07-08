@@ -282,6 +282,7 @@ public class Workshop : Building
 		confectionery,
 		dairy,
 		poultryRun,
+		cheeseFactory,
 		total,
 		unknown = -1,
 		construction = -2
@@ -489,7 +490,7 @@ public class Workshop : Building
 
 		object[] looksData = {
 			"prefabs/buildings/fishingHut", 1.25f, Type.fishingHut,
-			"prefabs/buildings/bakery", 3.6f, Type.bakery, Type.confectionery,
+			"prefabs/buildings/bakery", 3.6f, Type.bakery, Type.confectionery, Type.cheeseFactory,
 			"prefabs/buildings/hunter", 1.6f, Type.hunter,
 			"prefabs/buildings/sawmill", 2.9f, Type.sawmill,
 			"prefabs/buildings/smallCabin", 1.4f, Type.stonemason,
