@@ -164,23 +164,70 @@ public class Workshop : Building
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }
 
 		public bool commonInputs = false;	// If true, the workshop will work with the input buffers separately, if any has any item it will work (f.e. mines). Otherwise each input is needed.
-		[Obsolete( "Compatibility with old files" )]
-		public Input[] inputs;
 		public List<Item.Type> generatedInputs;
 		public Material baseMaterials;
 
+		[System.Serializable]
 		public class Material
 		{
 			virtual public List<Item.Type> GenerateList( System.Random rnd )
 			{
-				Assert.global.AreNotEqual( type, Item.Type.unknown );
-				List<Item.Type> result = new List<Item.Type>();
-				result.Add( type );
+				var result = new List<Item.Type>();
+
+				if ( type != Item.Type.unknown )
+				{
+					result.Add( type );
+					return result;
+				}
+
+				var remainingOptions = new List<Material>();
+				var remainingChances = new List<float>();
+				for ( int i = 0; i < options.Count; i++ )
+				{
+					remainingOptions.Add( options[i] );
+					if ( chances != null )
+						remainingChances.Add( chances[i] );
+					else
+						remainingChances.Add( 1 );
+				}
+				int targetCount = rnd.Next( min, max + 1 );
+
+				while ( result.Count < targetCount )
+				{
+					float totalChance = 0;
+					foreach ( var chance in remainingChances )
+						totalChance += chance;
+
+					var selection = rnd.NextDouble() * totalChance;
+
+					float currentChance = 0;
+					for ( int i = 0; i < remainingOptions.Count; i++ )
+					{
+						if ( selection < currentChance + remainingChances[i] )
+						{
+							result = result.Concat( remainingOptions[i].GenerateList( rnd ) ).ToList();
+							remainingOptions.RemoveAt( i );
+							remainingChances.RemoveAt( i );
+							break;
+						}
+						currentChance += remainingChances[i];
+					}
+
+				}
+
 				return result;
 			}
-			public static explicit operator Material( string itemTypeName ) { return new Material { type = Enum.Parse<Item.Type>( itemTypeName ) }; }
+
+			static public implicit operator Material( string value )
+			{
+				return new Material { type = Enum.Parse<Item.Type>( value ) };
+			}
 
 			Item.Type type = Item.Type.unknown;
+			public List<Material> options;
+			public List<float> chances;
+			public int min = 1, max = 1;
+			public List<Material> include { set { options = value; min = max = value.Count; } }
 		}
 	}
 
@@ -593,24 +640,7 @@ public class Workshop : Building
 	{
 		System.Random rnd = new System.Random( World.rnd.Next() );
 		foreach ( var configuration in world.workshopConfigurations )
-		{
-			if ( configuration.baseMaterials == null )
-			{	
-#pragma warning disable 0618
-				if ( configuration.inputs == null )
-					continue;
-				configuration.generatedInputs = new List<Item.Type>();
-				foreach ( var input in configuration.inputs )
-				{
-					configuration.generatedInputs.Add( input.itemType );
-					configuration.inputBufferSize = input.bufferSize;
-					Assert.global.AreEqual( input.stackSize, 1 );
-				}
-#pragma warning restore 0618
-			}
-			else
-				configuration.generatedInputs = configuration.baseMaterials.GenerateList( rnd );
-		}
+			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
 	}
 
 	static public Configuration GetConfiguration( Type type )

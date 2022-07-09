@@ -1,461 +1,403 @@
-[
-  {
-    "type": "woodcutter",
-    "flatteningNeeded": false,
-    "gatheredResource": "tree",
-	  "productionTime": 0,
-    "approximatedProductionTime": 2500,
-    "outputType": "log"
-  },
-  {
-    "type": "appleGatherer",
-    "flatteningNeeded": false,
-    "gatheredResource": "apple",
-	  "productionTime": 0,
-    "approximatedProductionTime": 2500,
-    "outputType": "apple"
-  },
-  {
-    "type": "sawmill",
-    "outputType": "plank",
-    "baseMaterials": "log"
-  },
-  {
-    "type": "forester",
-  	"gatheredResource": "soil",
-	  "productionTime": 0,
-    "approximatedProductionTime": 2500,
-    "flatteningNeeded": false
-  },
-  {
-    "type": "dungCollector",
-    "outputType": "dung",
-  	"gatheredResource": "dung",
-	  "productionTime": 0,
-    "approximatedProductionTime": 2500,
-    "flatteningNeeded": false
-  },
-  {
-    "type": "stonemason",
-    "gatheredResource": "rock",
-  	"productionTime": 0,
-    "approximatedProductionTime": 2500,
-    "outputType": "stone"
-  },
-  {
-    "type": "fishingHut",
-  	"flatteningNeeded": true,
-    "gatheredResource": "fish",
-	  "productionTime": 0,
-    "approximatedProductionTime": 2500,
-    "outputType": "fish"
-  },
-  {
-    "type": "wheatFarm",
-    "huge": true,
-    "gatheredResource": "wheatField",
-    "gatheringRange": 3,
-    "productionTime": 0,
-    "approximatedProductionTime": 5000,
-    "stoneNeeded": 2,
-    "outputType": "grain",
-    "groundTypeNeeded": "grass"
-  },
-  {
-    "type": "cornFarm",
-    "huge": true,
-    "outputStackSize": 2,
-    "gatheredResource": "cornField",
-    "gatheringRange": 3,
-    "productionTime": 0,
-    "approximatedProductionTime": 5000,
-    "stoneNeeded": 2,
-    "outputType": "corn",
-    "groundTypeNeeded": "grass"
-  },
-  {
-    "type": "mill",
-    "flatteningNeeded": true,
-	  "groundTypeNeeded": "mountain",
-    "outputType": "flour",
-    "productionTime": 900,
-    "inputs": [
+{
+  "list":
+  [
+    {
+      "type": "woodcutter",
+      "flatteningNeeded": false,
+      "gatheredResource": "tree",
+      "productionTime": 0,
+      "approximatedProductionTime": 2500,
+      "outputType": "log"
+    },
+    {
+      "type": "appleGatherer",
+      "flatteningNeeded": false,
+      "gatheredResource": "apple",
+      "productionTime": 0,
+      "approximatedProductionTime": 2500,
+      "outputType": "apple"
+    },
+    {
+      "type": "sawmill",
+      "outputType": "plank",
+      "baseMaterials": "log"
+    },
+    {
+      "type": "forester",
+      "gatheredResource": "soil",
+      "productionTime": 0,
+      "approximatedProductionTime": 2500,
+      "flatteningNeeded": false
+    },
+    {
+      "type": "dungCollector",
+      "outputType": "dung",
+      "gatheredResource": "dung",
+      "productionTime": 0,
+      "approximatedProductionTime": 2500,
+      "flatteningNeeded": false
+    },
+    {
+      "type": "stonemason",
+      "gatheredResource": "rock",
+      "productionTime": 0,
+      "approximatedProductionTime": 2500,
+      "outputType": "stone"
+    },
+    {
+      "type": "fishingHut",
+      "flatteningNeeded": true,
+      "gatheredResource": "fish",
+      "productionTime": 0,
+      "approximatedProductionTime": 2500,
+      "outputType": "fish"
+    },
+    {
+      "type": "wheatFarm",
+      "huge": true,
+      "gatheredResource": "wheatField",
+      "gatheringRange": 3,
+      "productionTime": 0,
+      "approximatedProductionTime": 5000,
+      "stoneNeeded": 2,
+      "outputType": "grain",
+      "groundTypeNeeded": "grass"
+    },
+    {
+      "type": "cornFarm",
+      "huge": true,
+      "outputStackSize": 2,
+      "gatheredResource": "cornField",
+      "gatheringRange": 3,
+      "productionTime": 0,
+      "approximatedProductionTime": 5000,
+      "stoneNeeded": 2,
+      "outputType": "corn",
+      "groundTypeNeeded": "grass"
+    },
+    {
+      "type": "mill",
+      "flatteningNeeded": true,
+      "groundTypeNeeded": "mountain",
+      "outputType": "flour",
+      "productionTime": 900,
+      "baseMaterials": "grain"
+    },
+    {
+      "type": "charcoalKiln",
+      "flatteningNeeded": false,
+      "outputType": "charcoal",
+      "productionTime": 3900,
+      "baseMaterials": "log"
+    },
+    {
+      "type": "cornMill",
+      "flatteningNeeded": true,
+      "groundTypeNeeded": "mountain",
+      "outputType": "cornFlour",
+      "productionTime": 900,
+      "baseMaterials": "corn"
+    },
+    {
+      "type": "bakery",
+      "stoneNeeded": 2,
+      "outputStackSize": 2,
+      "flatteningNeeded": true,
+      "outputType": "pretzel",
+      "baseMaterials": 
       {
-        "itemType": "grain"
+        "include":
+        [
+          { "options": [ "flour", "cornFlour" ] },
+          { "options": [ "salt", "cheese", "egg" ] }
+        ]
       }
-    ]
-  },
-  {
-    "type": "charcoalKiln",
-    "flatteningNeeded": false,
-    "outputType": "charcoal",
-    "productionTime": 3900,
-    "inputs": [
+    },
+    {
+      "type": "cheeseFactory",
+      "stoneNeeded": 2,
+      "outputStackSize": 2,
+      "flatteningNeeded": true,
+      "outputType": "cheese",
+      "baseMaterials": "milk"
+    },
+    {
+      "type": "confectionery",
+      "stoneNeeded": 2,
+      "outputStackSize": 2,
+      "flatteningNeeded": true,
+      "outputType": "pie",
+      "baseMaterials":
       {
-        "itemType": "log"
+        "include":
+        [
+          { "options": [ "flour", "cornFlour" ] },
+          { "options": [ "apple", "egg" ] }
+        ]
       }
-    ]
-  },
-  {
-    "type": "cornMill",
-    "flatteningNeeded": true,
-	  "groundTypeNeeded": "mountain",
-    "outputType": "cornflour",
-    "productionTime": 900,
-    "inputs": [
+    },
+    {
+      "type": "hunter",
+      "plankNeeded": 1,
+      "flatteningNeeded": true,
+      "productionTime": 0,
+      "approximatedProductionTime": 2500,
+      "gatheredResource": "pasturingAnimal",
+      "outputType": "hide"
+    },
+    {
+      "type": "coalMine",
+      "stoneNeeded": 2,
+      "flatteningNeeded": false,
+      "groundTypeNeeded": "hill",
+      "gatheredResource": "coal",
+      "outputType": "coal",
+      "commonInputs": true,
+      "baseMaterials":
       {
-        "itemType": "corn"
+        "min": 2,
+        "max": 3,
+        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
-    ]
-  },
-  {
-    "type": "bakery",
-    "stoneNeeded": 2,
-	  "outputStackSize": 2,
-    "flatteningNeeded": true,
-    "outputType": "pretzel",
-    "inputs": [
+    },
+    {
+      "type": "saltMine",
+      "stoneNeeded": 2,
+      "flatteningNeeded": false,
+      "groundTypeNeeded": "hill",
+      "gatheredResource": "salt",
+      "outputType": "salt",
+      "commonInputs": true,
+      "baseMaterials":
       {
-        "itemType": "salt"
-      },
-      {
-        "itemType": "flour"
+        "min": 2,
+        "max": 3,
+        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
-    ]
-  },
-  {
-    "type": "cheeseFactory",
-    "stoneNeeded": 2,
-	  "outputStackSize": 2,
-    "flatteningNeeded": true,
-    "outputType": "cheese",
-    "inputs": [
+    },
+    {
+      "type": "ironMine",
+      "stoneNeeded": 2,
+      "flatteningNeeded": false,
+      "groundTypeNeeded": "hill",
+      "gatheredResource": "iron",
+      "outputType": "iron",
+      "commonInputs": true,
+      "baseMaterials":
       {
-        "itemType": "milk"
+        "min": 2,
+        "max": 3,
+        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
-    ]
-  },
-  {
-    "type": "confectionery",
-    "stoneNeeded": 2,
-	  "outputStackSize": 2,
-    "flatteningNeeded": true,
-    "outputType": "pie",
-    "inputs": [
+    },
+    {
+      "type": "copperMine",
+      "stoneNeeded": 2,
+      "flatteningNeeded": false,
+      "groundTypeNeeded": "hill",
+      "gatheredResource": "copper",
+      "outputType": "copper",
+      "commonInputs": true,
+      "baseMaterials":
       {
-        "itemType": "apple"
-      },
-      {
-        "itemType": "flour"
+        "min": 2,
+        "max": 3,
+        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
-    ]
-  },
-  {
-    "type": "hunter",
-    "plankNeeded": 1,
-    "flatteningNeeded": true,
-	  "productionTime": 0,
-    "approximatedProductionTime": 2500,
-    "gatheredResource": "pasturingAnimal",
-    "outputType": "hide"
-  },
-  {
-    "type": "coalMine",
-    "stoneNeeded": 2,
-    "flatteningNeeded": false,
-	  "groundTypeNeeded": "hill",
-    "gatheredResource": "coal",
-    "outputType": "coal",
-    "commonInputs": true,
-    "inputs": [
+    },
+    {
+      "type": "goldMine",
+      "stoneNeeded": 2,
+      "flatteningNeeded": false,
+      "groundTypeNeeded": "hill",
+      "gatheredResource": "gold",
+      "outputType": "gold",
+      "commonInputs": true,
+      "baseMaterials":
       {
-        "itemType": "fish",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pork",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pretzel",
-        "bufferSize": 2
+        "min": 2,
+        "max": 3,
+        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
-    ]
-  },
-  {
-    "type": "saltMine",
-    "stoneNeeded": 2,
-    "flatteningNeeded": false,
-	  "groundTypeNeeded": "hill",
-    "gatheredResource": "salt",
-    "outputType": "salt",
-    "commonInputs": true,
-    "inputs": [
+    },
+    {
+      "type": "silverMine",
+      "stoneNeeded": 2,
+      "flatteningNeeded": false,
+      "groundTypeNeeded": "hill",
+      "gatheredResource": "silver",
+      "outputType": "silver",
+      "commonInputs": true,
+      "baseMaterials":
       {
-        "itemType": "fish",
-        "bufferSize": 2
+        "min": 2,
+        "max": 3,
+        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
-    ]
-  },
-  {
-    "type": "ironMine",
-    "stoneNeeded": 2,
-    "flatteningNeeded": false,
-	  "groundTypeNeeded": "hill",
-    "gatheredResource": "iron",
-    "outputType": "iron",
-    "commonInputs": true,
-    "inputs": [
+    },
+    {
+      "type": "stoneMine",
+      "flatteningNeeded": false,
+      "groundTypeNeeded": "hill",
+      "gatheredResource": "stone",
+      "outputType": "stone",
+      "commonInputs": true,
+      "baseMaterials":
       {
-        "itemType": "fish",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pork",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pretzel",
-        "bufferSize": 2
+        "min": 2,
+        "max": 3,
+        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
-    ]
-  },
-  {
-    "type": "copperMine",
-    "stoneNeeded": 2,
-    "flatteningNeeded": false,
-	  "groundTypeNeeded": "hill",
-    "gatheredResource": "copper",
-    "outputType": "copper",
-    "commonInputs": true,
-    "inputs": [
+    },
+    {
+      "type": "bowMaker",
+      "huge": true,
+      "productionTime": 2100,
+      "outputType": "bow",
+      "baseMaterials":
       {
-        "itemType": "fish",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pork",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pretzel",
-        "bufferSize": 2
+        "include":
+        [
+          { "options": [ "plank", "log" ] },
+          "hide"         ]
       }
-    ]
-  },
-  {
-    "type": "goldMine",
-    "stoneNeeded": 2,
-    "flatteningNeeded": false,
-	  "groundTypeNeeded": "hill",
-    "gatheredResource": "gold",
-    "outputType": "gold",
-    "commonInputs": true,
-    "inputs": [
+    },
+    {
+      "type": "slingMaker",
+      "huge": true,
+      "productionTime": 2100,
+      "outputType": "sling",
+      "baseMaterials":
       {
-        "itemType": "pork",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pretzel",
-        "bufferSize": 2
+        "include":
+        [
+          { "options": [ "plank", "log" ] },
+          "stone"
+        ]
       }
-    ]
-  },
-  {
-    "type": "silverMine",
-    "stoneNeeded": 2,
-    "flatteningNeeded": false,
-	  "groundTypeNeeded": "hill",
-    "gatheredResource": "silver",
-    "outputType": "silver",
-    "commonInputs": true,
-    "inputs": [
+    },
+    {
+      "type": "smelter",
+      "outputType": "steel",
+      "productionTime": 3500,
+      "baseMaterials":
       {
-        "itemType": "pork",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pretzel",
-        "bufferSize": 2
+        "include":
+        [
+          { "options": [ "coal", "charcoal" ] },
+          "iron"
+        ]
       }
-    ]
-  },
-  {
-    "type": "stoneMine",
-    "flatteningNeeded": false,
-	  "groundTypeNeeded": "hill",
-    "gatheredResource": "stone",
-    "outputType": "stone",
-    "commonInputs": true,
-    "inputs": [
+    },
+    {
+      "type": "weaponMaker",
+      "outputType": "weapon",
+      "productionTime": 2500,
+      "huge": true,
+      "baseMaterials":
       {
-        "itemType": "fish",
-        "bufferSize": 2
-      },
-      {
-        "itemType": "pretzel",
-        "bufferSize": 2
+        "include":
+        [
+          { "options": [ "coal", "charcoal" ] },
+          { "options": [ "iron", "steel", "copper" ] }
+        ]
       }
-    ]
-  },
-  {
-    "type": "bowMaker",
-	  "huge": true,
-	  "productionTime": 2100,
-    "outputType": "bow",
-    "inputs": [
+    },
+    {
+      "type": "well",
+      "groundTypeNeededAtEdge": "underWater",
+      "outputType": "water",
+      "plankNeeded": 1,
+      "stoneNeeded": 1,
+      "flatteningNeeded": false
+    },
+    {
+      "type": "brewery",
+      "huge": true,
+      "stoneNeeded": 2,
+      "outputType": "beer",
+      "outputStackSize": 2,
+      "baseMaterials":
       {
-        "itemType": "plank"
-      },
-      {
-        "itemType": "hide"
+        "include":
+        [
+          { "options": [ "flour", "cornFlour" ] },
+          "water"
+        ]
       }
-    ]
-  },
-  {
-    "type": "slingMaker",
-	  "huge": true,
-	  "productionTime": 2100,
-    "outputType": "sling",
-    "inputs": [
+    },
+    {
+      "type": "butcher",
+      "huge": true,
+      "stoneNeeded": 2,
+      "productionTime": 1000,
+      "outputType": "pork",
+      "producesDung": true,
+      "baseMaterials":
       {
-        "itemType": "plank"
-      },
-      {
-        "itemType": "stone"
+        "include":
+        [
+          { "options": [ "flour", "cornFlour" ] },
+          { "options": [ "water", "beer" ] }
+        ]
       }
-    ]
-  },
-  {
-    "type": "smelter",
-    "outputType": "steel",
-	  "productionTime": 3500,
-    "inputs": [
+    },
+    {
+      "type": "dairy",
+      "huge": true,
+      "stoneNeeded": 2,
+      "productionTime": 1000,
+      "outputType": "milk",
+      "producesDung": true,
+      "baseMaterials":
       {
-        "itemType": "coal"
-      },
-      {
-        "itemType": "iron"
+        "include":
+        [
+          { "options": [ "flour", "cornFlour" ] },
+          "water"
+        ]
       }
-    ]
-  },
-  {
-    "type": "weaponMaker",
-    "outputType": "weapon",
-	  "productionTime": 2500,
-	  "huge": true,
-    "inputs": [
+    },
+    {
+      "type": "poultryRun",
+      "huge": true,
+      "stoneNeeded": 2,
+      "productionTime": 1000,
+      "outputType": "egg",
+      "producesDung": true,
+      "baseMaterials":
       {
-        "itemType": "coal"
-      },
-      {
-        "itemType": "steel"
+        "include":
+        [
+          { "options": [ "flour", "cornFlour" ] },
+          "water"
+        ]
       }
-    ]
-  },
-  {
-    "type": "well",
-    "groundTypeNeededAtEdge": "underWater",
-    "outputType": "water",
-    "plankNeeded": 1,
-    "stoneNeeded": 1,
-    "flatteningNeeded": false
-  },
-  {
-    "type": "brewery",
-	  "huge": true,
-    "stoneNeeded": 2,
-    "outputType": "beer",
-  	"outputStackSize": 2,
-    "inputs": [
-      {
-        "itemType": "water"
-      },
-      {
-        "itemType": "grain"
+    },
+    {
+      "type": "barrack",
+      "stoneNeeded": 2,
+      "productionTime": 2000,
+      "outputType": "soldier",
+      "baseMaterials":
+      { 
+        "min": 3,
+        "max": 3,
+        "options": [ "weapon", "bow", "beer", "sling", "jewelry" ]
       }
-    ]
-  },
-  {
-    "type": "butcher",
-	  "huge": true,
-    "stoneNeeded": 2,
-	  "productionTime": 1000,
-    "outputType": "pork",
-    "producesDung": true,
-    "inputs": [
+    },
+    {
+      "type": "jeweler",
+      "stoneNeeded": 2,
+      "outputType": "jewelry",
+      "baseMaterials":
       {
-        "itemType": "water"
-      },
-      {
-        "itemType": "grain"
+        "include":
+        [
+          { "options": [ "log", "charcoal", "coal" ] },
+          { "options": [ "gold", "silver" ] }
+        ]
       }
-    ]
-  },
-  {
-    "type": "dairy",
-	  "huge": true,
-    "stoneNeeded": 2,
-	  "productionTime": 1000,
-    "outputType": "milk",
-    "producesDung": true,
-    "inputs": [
-      {
-        "itemType": "water"
-      },
-      {
-        "itemType": "grain"
-      }
-    ]
-  },
-  {
-    "type": "poultryRun",
-	  "huge": true,
-    "stoneNeeded": 2,
-	  "productionTime": 1000,
-    "outputType": "egg",
-    "producesDung": true,
-    "inputs": [
-      {
-        "itemType": "water"
-      },
-      {
-        "itemType": "grain"
-      }
-    ]
-  },
-  {
-    "type": "barrack",
-    "stoneNeeded": 2,
-    "productionTime": 2000,
-    "outputType": "soldier",
-    "inputs": [
-      {
-        "itemType": "beer"
-      },
-      {
-        "itemType": "weapon"
-      },
-      {
-        "itemType": "bow"
-      },
-      {
-        "itemType": "jewelry"
-      }
-	]
-  },
-  {
-    "type": "jeweler",
-    "stoneNeeded": 2,
-    "outputType": "jewelry",
-    "inputs": [
-      {
-        "itemType": "log"
-      },
-      {
-        "itemType": "gold"
-      }
-    ]
-  }
-]
+    }
+  ]
+}

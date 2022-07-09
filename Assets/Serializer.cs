@@ -23,6 +23,15 @@ public class Serializer
 	public int currentObjectIndex = -1;
 	public Type currentObjectType;
 	public List<ReferenceLink> referenceLinks = new List<ReferenceLink>();
+	public TypeConverter typeConverter;
+
+	public class TypeConverter
+	{
+		public virtual object ChangeType( object value, Type conversionType )
+		{
+			return Convert.ChangeType( value, conversionType );
+		}
+	}
 
 	public struct ReferenceLink
 	{
@@ -117,6 +126,7 @@ public class Serializer
 				case "$type":
 				{
 					currentObjectType = Type.GetType( reader.Value as string );
+					Assert.global.IsNotNull( currentObjectType, $"Unknown type {reader.Value}" );
 					break;
 				}
 				default:
@@ -179,7 +189,7 @@ public class Serializer
 						result = Enum.ToObject( type, reader.Value );
 				}
 				else
-					result = Convert.ChangeType( reader.Value, type );
+					result = typeConverter.ChangeType( reader.Value, type );
 				reader.Read();
 				return result;
 			}
@@ -352,9 +362,10 @@ public class Serializer
 		return objects.First();
 	}
 
-	static public rootType Read<rootType>( string fileName ) where rootType : class
+	static public rootType Read<rootType>( string fileName, TypeConverter typeConverter = null ) where rootType : class
 	{
 		var serializer = new Serializer();
+		serializer.typeConverter = typeConverter ?? new TypeConverter();
 		var result = (rootType)serializer.ReadFile( fileName, typeof( rootType ) );
 		foreach ( var link in serializer.referenceLinks )
 		{

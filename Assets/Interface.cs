@@ -11,7 +11,6 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static UnityEngine.UI.Dropdown;
-#pragma warning disable 0618
 
 public class Interface : HiveObject
 {
@@ -892,7 +891,7 @@ public class Interface : HiveObject
 		int activeObjectsAtRootLevel = 0;
 		foreach ( var go in roots )
 		{
-			if ( go.active )
+			if ( go.activeSelf )
 			{
 				HiveObject ho;
 				if ( go.TryGetComponent<HiveObject>( out ho ) && ho.destroyed )
@@ -3436,14 +3435,15 @@ public class Interface : HiveObject
 				var b = BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
 				string tooltip = "";
 				var o = Workshop.GetConfiguration( type );
-				if ( o.inputs != null && o.inputs.Length > 0 )
+				var l = o.generatedInputs;
+				if ( l != null && l.Count > 0 )
 				{
 					tooltip += "Requires ";
-					for ( int h = 0; h < o.inputs.Length; h++ )
+					for ( int h = 0; h < l.Count; h++ )
 					{
 						if ( h > 0 )
 						{
-							if ( h == o.inputs.Length - 1 && o.inputs.Length > 1 )
+							if ( h == l.Count - 1 && l.Count > 1 )
 							{
 								if ( o.commonInputs )
 									tooltip += " or ";
@@ -3453,7 +3453,7 @@ public class Interface : HiveObject
 							else
 								tooltip += ", ";
 						}
-						tooltip += o.inputs[h].itemType.ToString().GetPrettyName( false );
+						tooltip += l[h].ToString().GetPrettyName( false );
 					}
 					tooltip += "\n";
 				}
