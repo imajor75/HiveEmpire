@@ -3078,9 +3078,11 @@ public class Interface : HiveObject
 			name.SetTooltip( "LMB to rename" );
 
 			int row = -55;
+			int offset = 0;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
 			{
-				int offset = j % 2 > 0 ? 140 : 0;
+				if ( world.itemTypeUsage[j] == false )
+					continue;
 				var t = (Item.Type)j;
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
 				string tooltip = "LMB Select item type\nRMB Popup menu";
@@ -3104,18 +3106,17 @@ public class Interface : HiveObject
 #endif
 				options.Add( "Cancel" );
 				d.AddOptions( options );
-				Item.Type y = (Item.Type)j;
-				d.onValueChanged.AddListener( (x) => ItemTypeAction( i, y, x ) );
+				d.onValueChanged.AddListener( (x) => ItemTypeAction( i, t, x ) );
 				i.AddClickHandler( () => PopupForItemType( d ), UIHelpers.ClickType.right );
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
-				if ( j % 2 > 0 )
+				counts[j].AddClickHandler( () => SelectItemType( t ) );
+				if ( offset > 0 )
+				{
 					row -= iconSize + 5;
-			}
-
-			for ( int i = 0; i < counts.Length; i++ )
-			{
-				Item.Type j = (Item.Type)i;
-				counts[i].AddClickHandler( () => SelectItemType( j ) );
+					offset = 0;
+				}
+				else
+					offset = 140;
 			}
 
 			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 180, 70, 100, 40, 0, 0 );
@@ -3236,6 +3237,8 @@ public class Interface : HiveObject
 				RecreateControls();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
+				if ( counts[i] == null )
+					continue;
 				Color c = Color.black;
 				if ( stock.itemData[i].content < stock.itemData[i].inputMin )
 					c = Color.red.Dark();

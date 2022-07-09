@@ -636,11 +636,41 @@ public class Workshop : Building
 		base.Remove();
 	}
 
-	static public void ResetConfigurations()
+	static public void GenerateConfigurations()
 	{
 		System.Random rnd = new System.Random( World.rnd.Next() );
 		foreach ( var configuration in world.workshopConfigurations )
 			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
+
+		world.itemTypeUsage = new List<bool>();
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+		{
+			if ( i == (int)Item.Type.stone || i == (int)Item.Type.plank || i == (int)Item.Type.soldier )
+				world.itemTypeUsage.Add( true );
+			else
+				world.itemTypeUsage.Add( false );
+		}
+
+		bool typeAdded;
+		do
+		{
+			typeAdded = false;
+			foreach ( var workshopConfiguration in world.workshopConfigurations )
+			{
+				if ( workshopConfiguration.outputType == Item.Type.unknown || world.itemTypeUsage[(int)workshopConfiguration.outputType] == false || workshopConfiguration.generatedInputs == null )
+					continue;
+
+				foreach ( var input in workshopConfiguration.generatedInputs )
+				{
+					if ( world.itemTypeUsage[(int)input] == false )
+					{
+						world.itemTypeUsage[(int)input] = true;
+						typeAdded = true;
+					}
+				}
+			}
+
+		} while ( typeAdded );
 	}
 
 	static public Configuration GetConfiguration( Type type )

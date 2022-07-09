@@ -32,6 +32,7 @@ public class World : HiveObject
 	public string fileName;
 	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>(), newHiveObjects = new LinkedList<HiveObject>();
 	public List<Workshop.Configuration> workshopConfigurations;
+	public List<bool> itemTypeUsage;
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Speed speed;
@@ -776,7 +777,7 @@ public class World : HiveObject
 
 		rnd = new System.Random( seed );
 		currentSeed = seed;
-		Workshop.ResetConfigurations();
+		Workshop.GenerateConfigurations();
 
 		var heightMap = HeightMap.Create();
 		heightMap.Setup( settings, rnd.Next() );
