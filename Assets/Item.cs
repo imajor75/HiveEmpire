@@ -107,6 +107,7 @@ public class Item : HiveObject
 		egg,
 		cheese,
 		sling,
+		friedFish,
 		total,
 		unknown = -1
 	}
@@ -132,6 +133,7 @@ public class Item : HiveObject
 			"prefabs/items/bow", Type.bow,
 			"prefabs/items/animal pelt", Type.hide,
 			"prefabs/items/beam cap", Type.stone,
+			"prefabs/items/roasted fish", Type.friedFish,
 			"prefabs/items/chest", Type.jewelry,
 			"prefabs/items/iron ignot", Type.steel,
 			"prefabs/items/basket", Type.egg,

@@ -114,6 +114,21 @@
       }
     },
     {
+      "type": "fishFryer",
+      "stoneNeeded": 2,
+      "outputStackSize": 2,
+      "flatteningNeeded": true,
+      "outputType": "friedFish",
+      "baseMaterials": 
+      {
+        "include":
+        [
+          "fish",
+          { "options": [ "log", "charcoal" ] }
+        ]
+      }
+    },
+    {
       "type": "cheeseFactory",
       "stoneNeeded": 2,
       "outputStackSize": 2,
@@ -157,7 +172,7 @@
       {
         "min": 2,
         "max": 3,
-        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
+        "options": [ "friedFish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
     },
     {
@@ -172,7 +187,7 @@
       {
         "min": 2,
         "max": 3,
-        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
+        "options": [ "friedFish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
     },
     {
@@ -187,7 +202,7 @@
       {
         "min": 2,
         "max": 3,
-        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
+        "options": [ "friedFish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
     },
     {
@@ -202,7 +217,7 @@
       {
         "min": 2,
         "max": 3,
-        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
+        "options": [ "friedFish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
     },
     {
@@ -217,7 +232,7 @@
       {
         "min": 2,
         "max": 3,
-        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
+        "options": [ "friedFish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
     },
     {
@@ -232,7 +247,7 @@
       {
         "min": 2,
         "max": 3,
-        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
+        "options": [ "friedFish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
     },
     {
@@ -246,7 +261,7 @@
       {
         "min": 2,
         "max": 3,
-        "options": [ "fish", "apple", "pretzel", "pie", "pork", "cheese" ]
+        "options": [ "friedFish", "apple", "pretzel", "pie", "pork", "cheese" ]
       }
     },
     {

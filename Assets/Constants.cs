@@ -107,7 +107,8 @@ public static class Constants
 		    float.MaxValue,     //milk
 		    float.MaxValue,     //egg
 		    float.MaxValue,     //cheese
-		    float.MaxValue      //sling
+		    float.MaxValue,     //sling
+		    float.MaxValue      //friedFish
         };
         public static float[] yawAtFlag = new float[(int)(global::Item.Type.total)]
         {
@@ -142,6 +143,7 @@ public static class Constants
 		    0,     //milk
 		    0,     //egg
 		    0,     //cheese
+		    0,     //friedFish
 		    0      //sling
         };
         public static Vector3[] secondItemOffset = new Vector3[(int)(global::Item.Type.total)]
@@ -177,7 +179,8 @@ public static class Constants
 		    new Vector3( 0, 1.2f, 0 ),    //milk
 		    new Vector3( 0, 0.8f, 0 ),    //egg
 		    new Vector3( 0, 0.5f, 0 ),    //cheese
-		    new Vector3( 0, 0, -0.3f )    //sling
+		    new Vector3( 0, 0, -0.3f ),   //sling
+		    new Vector3( 0, 0.4f, 0 )    //friedFish
         };
     }
 
