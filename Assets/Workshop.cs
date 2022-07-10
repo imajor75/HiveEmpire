@@ -671,6 +671,17 @@ public class Workshop : Building
 			}
 
 		} while ( typeAdded );
+
+		world.workshopTypeUsage = new List<bool>();
+		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			world.workshopTypeUsage.Add( false );
+		foreach ( var configuration in world.workshopConfigurations )
+		{
+			if ( configuration.outputType == Item.Type.unknown || world.itemTypeUsage[(int)configuration.outputType] == false )
+				continue;
+
+			world.workshopTypeUsage[(int)configuration.type] = true;
+		}
 	}
 
 	static public Configuration GetConfiguration( Type type )

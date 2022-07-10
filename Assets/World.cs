@@ -33,6 +33,7 @@ public class World : HiveObject
 	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>(), newHiveObjects = new LinkedList<HiveObject>();
 	public List<Workshop.Configuration> workshopConfigurations;
 	public List<bool> itemTypeUsage;
+	public List<bool> workshopTypeUsage;
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Speed speed;

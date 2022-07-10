@@ -3428,6 +3428,9 @@ public class Interface : HiveObject
 
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
+				if ( world.workshopTypeUsage[i] == false )
+					continue;
+					
 				var type = (Workshop.Type)i;
 				if ( type.ToString().StartsWith( "_" ) )
 					continue;
