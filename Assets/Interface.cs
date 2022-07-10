@@ -5131,6 +5131,8 @@ if ( cart )
 			List<string> options = new List<string>();
 			for ( int j = 0; j < (int)Building.Type.total; j++ )
 			{
+				if ( j < world.workshopTypeUsage.Count && world.workshopTypeUsage[j] == false )
+					continue;
 				string typeName = BuildingTypeToString( (Building.Type)j );
 				if ( typeName != null )
 					options.Add( typeName );
