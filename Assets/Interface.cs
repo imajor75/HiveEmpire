@@ -4723,6 +4723,7 @@ if ( cart )
 		public Text direction;
 		public Stock tempPickedStock;
 		public Stock.Route toHighlight;
+		public List<int> itemTypeSelectorMap = new List<int>();
 
 		static public RouteList Create()
 		{
@@ -4764,7 +4765,12 @@ if ( cart )
 				var d = Dropdown().PinSideways( 0, -borderWidth, 150, iconSize );
 				List<string> options = new List<string>();
 				for ( int i = 0; i < (int)Item.Type.total; i++ )
+				{
+					if ( world.itemTypeUsage[i] == false )
+						continue;
 					options.Add( ((Item.Type)i).ToString().GetPrettyName() );
+					itemTypeSelectorMap.Add( i );
+				}
 				d.AddOptions( options );
 				d.value = (int)itemType;
 				d.onValueChanged.AddListener( OnItemTypeChanged );
@@ -4807,7 +4813,7 @@ if ( cart )
 
 		void OnItemTypeChanged( int newType )
 		{
-			itemType = (Item.Type)newType;
+			itemType = (Item.Type)itemTypeSelectorMap[newType];
 			forceRefill = true;
 		}
 
