@@ -6315,18 +6315,21 @@ if ( cart )
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
 
+			int row = 0;
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
-				int row = i * - ( iconSize + 5 );
+				if ( world.itemTypeUsage[i] == false )
+					continue;
 				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
 				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 40, iconSize );
 				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
 				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 80, row, 40 );
 				surplus[i] = Text( "0" ).Link( scroll.content ).Pin( 130, row, 40 );
 				production[i] = Text( "0" ).Link( scroll.content ).Pin( 180, row, 40 );
+				row -= iconSize + 5;
 			}
 
-			scroll.SetContentSize( -1, (int)Item.Type.total * ( iconSize + 5 ) );
+			scroll.SetContentSize( -1, -row );
 		}
 
 		int CompareInStock( int a, int b )
@@ -6400,6 +6403,9 @@ if ( cart )
 
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
+				if ( itemIcon[i] == null )
+					continue;
+
 				itemIcon[i].SetType( (Item.Type)order[i] );
 				inStock[i].text = inStockCount[order[i]].ToString();
 				stockButtons[i].onClick.RemoveAllListeners();
