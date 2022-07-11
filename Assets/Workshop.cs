@@ -153,6 +153,7 @@ public class Workshop : Building
 
 		public Item.Type outputType = Item.Type.unknown;
 		public int outputStackSize = 1;
+		public float outputCount = 1.2f;
 		public int productionTime = Constants.Workshop.defaultProductionTime;
 		public int productionTimeMin = -1, productionTimeMax = -1;
 		public int approximatedProductionTime = Constants.Workshop.defaultProductionTime;
@@ -684,6 +685,9 @@ public class Workshop : Building
 				configuration.productionTime = configuration.productionTimeMin + (int)( (configuration.productionTimeMax - configuration.productionTimeMin) * Math.Pow( rnd.NextDouble(), 2 ) );
 				configuration.productionTime -= configuration.productionTime % Constants.World.normalSpeedPerSecond;
 			}
+
+			if ( configuration.outputCount > 0 )
+				configuration.outputStackSize = (int)Math.Floor( configuration.outputCount + rnd.NextDouble() );
 
 			if ( configuration.outputType == Item.Type.unknown || world.itemTypeUsage[(int)configuration.outputType] == false )
 				continue;
