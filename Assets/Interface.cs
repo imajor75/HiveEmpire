@@ -3081,7 +3081,7 @@ public class Interface : HiveObject
 			int offset = 0;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
 			{
-				if ( world.itemTypeUsage[j] == false )
+				if ( world.itemTypeUsage[j] == 0 )
 					continue;
 				var t = (Item.Type)j;
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
@@ -3429,7 +3429,7 @@ public class Interface : HiveObject
 
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
-				if ( world.workshopTypeUsage[i] == false )
+				if ( world.workshopTypeUsage[i] == 0 )
 					continue;
 					
 				var type = (Workshop.Type)i;
@@ -3471,7 +3471,7 @@ public class Interface : HiveObject
 				List<Workshop.Type> consumers = new List<Workshop.Type>();
 				foreach ( var configuration in world.workshopConfigurations )
 				{
-					if ( configuration.generatedInputs == null || world.workshopTypeUsage[(int)configuration.type] == false )
+					if ( configuration.generatedInputs == null || world.workshopTypeUsage[(int)configuration.type] == 0 )
 						continue;
 					foreach ( var input in configuration.generatedInputs )
 					{
@@ -4808,7 +4808,7 @@ if ( cart )
 				List<string> options = new List<string>();
 				for ( int i = 0; i < (int)Item.Type.total; i++ )
 				{
-					if ( world.itemTypeUsage[i] == false )
+					if ( world.itemTypeUsage[i] == 0 )
 						continue;
 					options.Add( ((Item.Type)i).ToString().GetPrettyName() );
 					itemTypeSelectorMap.Add( i );
@@ -5170,7 +5170,7 @@ if ( cart )
 			List<string> options = new List<string>();
 			for ( int j = 0; j < (int)Building.Type.total; j++ )
 			{
-				if ( j < world.workshopTypeUsage.Count && world.workshopTypeUsage[j] == false )
+				if ( j < world.workshopTypeUsage.Count && world.workshopTypeUsage[j] == 0 )
 					continue;
 				string typeName = BuildingTypeToString( (Building.Type)j );
 				if ( typeName != null )
@@ -6368,7 +6368,7 @@ if ( cart )
 			int row = 0;
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
-				if ( world.itemTypeUsage[i] == false )
+				if ( world.itemTypeUsage[i] == 0 )
 					continue;
 				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
 				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 40, iconSize );

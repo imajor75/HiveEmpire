@@ -32,8 +32,8 @@ public class World : HiveObject
 	public string fileName;
 	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>(), newHiveObjects = new LinkedList<HiveObject>();
 	public List<Workshop.Configuration> workshopConfigurations;
-	public List<bool> itemTypeUsage;
-	public List<bool> workshopTypeUsage;
+	public List<float> itemTypeUsage;
+	public List<float> workshopTypeUsage;
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Speed speed;
@@ -507,13 +507,6 @@ public class World : HiveObject
 		public float forestChance = 0.006f;
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
-		public float idealIron = 0.05f;
-		public float idealCopper = 0.05f;
-		public float idealCoal = 0.1f;
-		public float idealGold = 0.04f;
-		public float idealSilver = 0.04f;
-		public float idealSalt = 0.02f;
-		public float idealStone = 0.01f;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float ironChance;
@@ -778,7 +771,7 @@ public class World : HiveObject
 
 		rnd = new System.Random( seed );
 		currentSeed = seed;
-		Workshop.GenerateConfigurations();
+		Workshop.GenerateInputs();
 
 		var heightMap = HeightMap.Create();
 		heightMap.Setup( settings, rnd.Next() );
@@ -1462,13 +1455,21 @@ public class World : HiveObject
 		oreCount = 0;
 		animalSpawnerCount = 0; 
 		int treeCount = 0, rockCount = 0;
-		ores.Add( new Ore{ resourceType = Resource.Type.coal, ideal = settings.idealCoal / oreStrength } );
-		ores.Add( new Ore{ resourceType = Resource.Type.iron, ideal = settings.idealIron / oreStrength } );
-		ores.Add( new Ore{ resourceType = Resource.Type.gold, ideal = settings.idealGold / oreStrength } );
-		ores.Add( new Ore{ resourceType = Resource.Type.salt, ideal = settings.idealSalt / oreStrength } );
-		ores.Add( new Ore{ resourceType = Resource.Type.stone, ideal = settings.idealStone / oreStrength } );
-		ores.Add( new Ore{ resourceType = Resource.Type.copper, ideal = settings.idealCopper / oreStrength } );
-		ores.Add( new Ore{ resourceType = Resource.Type.silver, ideal = settings.idealSilver / oreStrength } );
+		void AddOre( Resource.Type resourceType )
+		{
+			float weight = world.itemTypeUsage[(int)Resource.ItemType( resourceType )];
+			if ( weight == 0 )
+				return;
+
+			ores.Add( new Ore{ resourceType = resourceType, ideal = weight / oreStrength } );
+		}
+		AddOre( Resource.Type.coal );
+		AddOre( Resource.Type.iron );
+		AddOre( Resource.Type.gold );
+		AddOre( Resource.Type.salt );
+		AddOre( Resource.Type.stone );
+		AddOre( Resource.Type.copper );
+		AddOre( Resource.Type.silver );
 
 		int TotalMissing() { int total = 0; foreach ( var ore in ores ) total += ore.missing; return total; };
 

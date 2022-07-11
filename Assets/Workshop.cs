@@ -639,45 +639,12 @@ public class Workshop : Building
 		base.Remove();
 	}
 
-	static public void GenerateConfigurations()
+	static public void GenerateInputs()
 	{
 		System.Random rnd = new System.Random( World.rnd.Next() );
 		foreach ( var configuration in world.workshopConfigurations )
 			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
 
-		world.itemTypeUsage = new List<bool>();
-		for ( int i = 0; i < (int)Item.Type.total; i++ )
-		{
-			if ( i == (int)Item.Type.stone || i == (int)Item.Type.plank || i == (int)Item.Type.soldier )
-				world.itemTypeUsage.Add( true );
-			else
-				world.itemTypeUsage.Add( false );
-		}
-
-		bool typeAdded;
-		do
-		{
-			typeAdded = false;
-			foreach ( var workshopConfiguration in world.workshopConfigurations )
-			{
-				if ( workshopConfiguration.outputType == Item.Type.unknown || world.itemTypeUsage[(int)workshopConfiguration.outputType] == false || workshopConfiguration.generatedInputs == null )
-					continue;
-
-				foreach ( var input in workshopConfiguration.generatedInputs )
-				{
-					if ( world.itemTypeUsage[(int)input] == false )
-					{
-						world.itemTypeUsage[(int)input] = true;
-						typeAdded = true;
-					}
-				}
-			}
-
-		} while ( typeAdded );
-
-		world.workshopTypeUsage = new List<bool>();
-		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
-			world.workshopTypeUsage.Add( false );
 		foreach ( var configuration in world.workshopConfigurations )
 		{
 			if ( configuration.productionTimeMax >= 0 )
@@ -688,12 +655,41 @@ public class Workshop : Building
 
 			if ( configuration.outputCount > 0 )
 				configuration.outputStackSize = (int)Math.Floor( configuration.outputCount + rnd.NextDouble() );
-
-			if ( configuration.outputType == Item.Type.unknown || world.itemTypeUsage[(int)configuration.outputType] == false )
-				continue;
-
-			world.workshopTypeUsage[(int)configuration.type] = true;
 		}
+
+		world.itemTypeUsage = new List<float>();
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+			world.itemTypeUsage.Add( 0 );
+		world.workshopTypeUsage = new List<float>();
+		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			world.workshopTypeUsage.Add( 0 );
+
+		void AddWeight( Item.Type itemType, float weight )
+		{
+			world.itemTypeUsage[(int)itemType] += weight;
+			foreach ( var configuration in world.workshopConfigurations )
+			{
+				if ( configuration.outputType != itemType )
+					continue;
+				var workshopWeight = weight / configuration.outputStackSize;
+				world.workshopTypeUsage[(int)configuration.type] += workshopWeight;
+				if ( configuration.generatedInputs == null )
+					continue;
+
+				var newWeight = configuration.commonInputs ? workshopWeight / configuration.generatedInputs.Count : workshopWeight;
+				if ( newWeight < 0.01 )
+				{
+					Assert.global.Fail( "Infinite cycle in workshop configurations" );
+					return;
+				}
+				foreach ( var input in configuration.generatedInputs )
+					AddWeight( input, newWeight );
+			}
+		}
+
+		AddWeight( Item.Type.plank, 1 );
+		AddWeight( Item.Type.stone, 1 );
+		AddWeight( Item.Type.soldier, 1 );
 	}
 
 	static public Configuration GetConfiguration( Type type )
