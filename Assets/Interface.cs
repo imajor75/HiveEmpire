@@ -3465,7 +3465,35 @@ public class Interface : HiveObject
 				}
 				if ( o.outputType != Item.Type.unknown )
 					tooltip += $"Produces {( o.outputStackSize > 1 ? "2*" : "")}{o.outputType.ToString().GetPrettyName( false )}\n";
-				tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F0" )}s";
+				if ( o.productionTime != 0 )
+					tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F0" )}s\n";
+				List<Workshop.Type> consumers = new List<Workshop.Type>();
+				foreach ( var configuration in world.workshopConfigurations )
+				{
+					if ( configuration.generatedInputs == null || world.workshopTypeUsage[(int)configuration.type] == false )
+						continue;
+					foreach ( var input in configuration.generatedInputs )
+					{
+						if ( input == o.outputType )
+						{
+							consumers.Add( configuration.type );
+							break;
+						}
+					}
+				}
+				if ( consumers.Count > 0 )
+				{
+					tooltip += "Consumed by ";
+					for ( int j = 0; j < consumers.Count; j++ )
+					{
+						tooltip += consumers[j].ToString().GetPrettyName();
+						if ( j == consumers.Count - 2 )
+							tooltip += " and ";
+						if ( j < consumers.Count - 2 )
+							tooltip += ", ";
+					}
+					tooltip += "\n";
+				}
 
 				string additionalTooltip = type switch 
 				{
