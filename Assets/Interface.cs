@@ -3465,7 +3465,7 @@ public class Interface : HiveObject
 				}
 				if ( o.outputType != Item.Type.unknown )
 					tooltip += $"Produces {( o.outputStackSize > 1 ? "2*" : "")}{o.outputType.ToString().GetPrettyName( false )}\n";
-				tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F2" )}s";
+				tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F0" )}s";
 
 				string additionalTooltip = type switch 
 				{

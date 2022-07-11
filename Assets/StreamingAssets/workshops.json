@@ -20,6 +20,8 @@
     {
       "type": "sawmill",
       "outputType": "plank",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "baseMaterials": "log"
     },
     {
@@ -80,14 +82,16 @@
       "flatteningNeeded": true,
       "groundTypeNeeded": "mountain",
       "outputType": "flour",
-      "productionTime": 900,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "baseMaterials": "grain"
     },
     {
       "type": "charcoalKiln",
       "flatteningNeeded": false,
       "outputType": "charcoal",
-      "productionTime": 3900,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "baseMaterials": "log"
     },
     {
@@ -95,7 +99,8 @@
       "flatteningNeeded": true,
       "groundTypeNeeded": "mountain",
       "outputType": "cornFlour",
-      "productionTime": 900,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "baseMaterials": "corn"
     },
     {
@@ -104,6 +109,8 @@
       "outputStackSize": 2,
       "flatteningNeeded": true,
       "outputType": "pretzel",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "baseMaterials": 
       {
         "include":
@@ -117,6 +124,8 @@
       "type": "fishFryer",
       "stoneNeeded": 2,
       "outputStackSize": 2,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "flatteningNeeded": true,
       "outputType": "friedFish",
       "baseMaterials": 
@@ -131,6 +140,8 @@
     {
       "type": "cheeseFactory",
       "stoneNeeded": 2,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputStackSize": 2,
       "flatteningNeeded": true,
       "outputType": "cheese",
@@ -139,6 +150,8 @@
     {
       "type": "confectionery",
       "stoneNeeded": 2,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputStackSize": 2,
       "flatteningNeeded": true,
       "outputType": "pie",
@@ -162,6 +175,8 @@
     },
     {
       "type": "coalMine",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "stoneNeeded": 2,
       "flatteningNeeded": false,
       "groundTypeNeeded": "hill",
@@ -177,6 +192,8 @@
     },
     {
       "type": "saltMine",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "stoneNeeded": 2,
       "flatteningNeeded": false,
       "groundTypeNeeded": "hill",
@@ -192,6 +209,8 @@
     },
     {
       "type": "ironMine",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "stoneNeeded": 2,
       "flatteningNeeded": false,
       "groundTypeNeeded": "hill",
@@ -207,6 +226,8 @@
     },
     {
       "type": "copperMine",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "stoneNeeded": 2,
       "flatteningNeeded": false,
       "groundTypeNeeded": "hill",
@@ -222,6 +243,8 @@
     },
     {
       "type": "goldMine",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "stoneNeeded": 2,
       "flatteningNeeded": false,
       "groundTypeNeeded": "hill",
@@ -237,6 +260,8 @@
     },
     {
       "type": "silverMine",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "stoneNeeded": 2,
       "flatteningNeeded": false,
       "groundTypeNeeded": "hill",
@@ -252,6 +277,8 @@
     },
     {
       "type": "stoneMine",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "flatteningNeeded": false,
       "groundTypeNeeded": "hill",
       "gatheredResource": "stone",
@@ -267,7 +294,8 @@
     {
       "type": "bowMaker",
       "huge": true,
-      "productionTime": 2100,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputType": "bow",
       "baseMaterials":
       {
@@ -280,7 +308,8 @@
     {
       "type": "slingMaker",
       "huge": true,
-      "productionTime": 2100,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputType": "sling",
       "baseMaterials":
       {
@@ -294,7 +323,8 @@
     {
       "type": "smelter",
       "outputType": "steel",
-      "productionTime": 3500,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "baseMaterials":
       {
         "include":
@@ -307,7 +337,8 @@
     {
       "type": "weaponMaker",
       "outputType": "weapon",
-      "productionTime": 2500,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "huge": true,
       "baseMaterials":
       {
@@ -322,6 +353,8 @@
       "type": "well",
       "groundTypeNeededAtEdge": "underWater",
       "outputType": "water",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "plankNeeded": 1,
       "stoneNeeded": 1,
       "flatteningNeeded": false
@@ -330,6 +363,8 @@
       "type": "brewery",
       "huge": true,
       "stoneNeeded": 2,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputType": "beer",
       "outputStackSize": 2,
       "baseMaterials":
@@ -345,7 +380,8 @@
       "type": "butcher",
       "huge": true,
       "stoneNeeded": 2,
-      "productionTime": 1000,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputType": "pork",
       "producesDung": true,
       "baseMaterials":
@@ -361,7 +397,8 @@
       "type": "dairy",
       "huge": true,
       "stoneNeeded": 2,
-      "productionTime": 1000,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputType": "milk",
       "producesDung": true,
       "baseMaterials":
@@ -377,7 +414,8 @@
       "type": "poultryRun",
       "huge": true,
       "stoneNeeded": 2,
-      "productionTime": 1000,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputType": "egg",
       "producesDung": true,
       "baseMaterials":
@@ -392,7 +430,8 @@
     {
       "type": "barrack",
       "stoneNeeded": 2,
-      "productionTime": 2000,
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
       "outputType": "soldier",
       "baseMaterials":
       { 
@@ -404,7 +443,9 @@
     {
       "type": "jeweler",
       "stoneNeeded": 2,
-      "outputType": "jewelry",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
+     "outputType": "jewelry",
       "baseMaterials":
       {
         "include":
