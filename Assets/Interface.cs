@@ -3424,6 +3424,7 @@ public class Interface : HiveObject
 			name = "Build panel";
 
 			int row = -20;
+			int column = 20;
 			var workshops = FindObjectsOfType<Workshop>( true );
 
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
@@ -3438,7 +3439,7 @@ public class Interface : HiveObject
 				foreach ( var workshop in workshops )
 					if ( workshop.type == type && workshop.team == root.mainTeam )
 						c++;
-				var b = BuildButton( i % 2 == 0 ? 20 : 180, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
+				var b = BuildButton( column, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
 				string tooltip = "";
 				var o = Workshop.GetConfiguration( type );
 				var l = o.generatedInputs;
@@ -3527,18 +3528,28 @@ public class Interface : HiveObject
 
 				b.SetTooltip( tooltip, null, additionalTooltip  );
 
-				if ( i % 2 != 0 )
+				if ( column == 20 )
+					column = 180;
+				else
+				{
+					column = 20;
 					row -= 20;
+				}
 			}
-			BuildButton( 20, -400, "Junction", AddFlag ).SetTooltip( "Junction without a building", null, "Junctions can be built separately from a building, which can be added later. Junctions are " +
+			if ( column == 180 )
+				row -= 20;
+			BuildButton( 20, row, "Junction", AddFlag ).SetTooltip( "Junction without a building", null, "Junctions can be built separately from a building, which can be added later. Junctions are " +
 			" exclusive for haulers, so a junction with multiple roads with high traffic might be inefficient." );
-			BuildButton( 180, -400, "Crossing", AddCrossing ).SetTooltip( "Crossing", null, "Crossings are like junctions, but they are not exclusive to halulers, so they can manage high traffic, " +
+			BuildButton( 180, row, "Crossing", AddCrossing ).SetTooltip( "Crossing", null, "Crossings are like junctions, but they are not exclusive to halulers, so they can manage high traffic, " +
 			" but they cannot be used as an exit for buildings" );
+			row -= 20;
 
-			BuildButton( 20, -420, "Guardhouse", AddGuardHouse ).SetTooltip( "Guard houses are needed to extend the border of the empire.", null, $"Only if a soldier occupies a guard house it extends the border. " +
+			BuildButton( 20, row, "Guardhouse", AddGuardHouse ).SetTooltip( "Guard houses are needed to extend the border of the empire.", null, $"Only if a soldier occupies a guard house it extends the border. " +
 			$"As there is only {Constants.Stock.startSoldierCount} soldiers are available at start, soldier production should start after building the first {Constants.Stock.startSoldierCount} guardhouses." );
-			BuildButton( 180, -420, "Stock", AddStock ).SetTooltip( "Stocks are used to store items temporarily", null, "They are also very important as starting and end point of routes, so there should be a stock close to every buildings. Stocks can be built on hills also." +
+			BuildButton( 180, row, "Stock", AddStock ).SetTooltip( "Stocks are used to store items temporarily", null, "They are also very important as starting and end point of routes, so there should be a stock close to every buildings. Stocks can be built on hills also." +
 			"See the route list for more details." );
+
+			SetSize( 360, 40 - row );
 		}
 
 		Image BuildButton( int x, int y, string title, Action action )
