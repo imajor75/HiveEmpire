@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -385,7 +385,7 @@ public class Flag : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
-		Interface.FlagPanel.Create().Open( this, null, show );
+		Interface.FlagPanel.Create().Open( this, show );
 	}
 
 	public override void Remove()

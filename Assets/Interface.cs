@@ -48,6 +48,8 @@ public class Interface : HiveObject
     public bool purgeOperationHandlerCRCTable;
 	public Text FPSDisplay;
 	public float FPS;
+	[JsonIgnore]
+	public Node openFlagPanel;
 
 	public static Material materialUIPath;
 	static bool focusOnInputField, focusOnDropdown;
@@ -834,6 +836,12 @@ public class Interface : HiveObject
 		FPSDisplay.text = FPS.ToString( "F1" ) + " FPS";
 		if ( showFPSHotkey.IsPressed() )
 			FPSDisplay.enabled = !FPSDisplay.enabled;
+
+		if ( openFlagPanel?.flag )
+		{
+			FlagPanel.Create().Open( openFlagPanel.flag );
+			openFlagPanel = null;
+		}
 
 		base.Update();
 	}
@@ -3961,8 +3969,8 @@ public class Interface : HiveObject
 		void Split()
 		{
 			oh.ScheduleCreateFlag( node, root.mainTeam );
-			FlagPanel.Create().Open( null, node );
-			Close();
+			if ( Flag.IsNodeSuitable( node, node.team ) )
+				root.openFlagPanel = node;
 			ValidateAll();
 		}
 
@@ -4122,7 +4130,6 @@ public class Interface : HiveObject
 	public class FlagPanel : Panel, IInputHandler
 	{
 		public Flag flag;
-		public Node node;
 		public ItemImage[] items = new ItemImage[Constants.Flag.maxItems];
 		public Image[] itemTimers = new Image[Constants.Flag.maxItems];
 		public Image shovelingIcon, convertIcon;
@@ -4132,10 +4139,10 @@ public class Interface : HiveObject
 			return new GameObject().AddComponent<FlagPanel>();
 		}
 
-		public void Open( Flag flag, Node node = null, bool show = false )
+		public void Open( Flag flag, bool show = false )
 		{
 #if DEBUG
-			Selection.activeGameObject = flag?.gameObject;
+			Selection.activeGameObject = flag.gameObject;
 #endif
 			borderWidth = 10;
 			noResize = true;
@@ -4143,7 +4150,6 @@ public class Interface : HiveObject
 				return;
 
 			this.flag = flag;
-			this.node = node;
 			int col = 16;
 			Image( Icon.destroy ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
 			Image( Icon.newRoad ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
@@ -4161,7 +4167,7 @@ public class Interface : HiveObject
 				col += iconSize+5;
 			}
 			name = "Flag panel";
-			if ( show && flag )
+			if ( show )
 				eye.FocusOn( flag, true );
 			Update();
 
@@ -4208,12 +4214,7 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
-			if ( flag == null )
-				flag = node.flag;
 			base.Update();
-
-			if ( flag == null )
-				return;
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
 			{
