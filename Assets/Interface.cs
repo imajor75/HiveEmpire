@@ -469,7 +469,7 @@ public class Interface : HiveObject
 		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
 		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
-		resourceListButton.SetTooltip( () => $"Show item type statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
+		resourceListButton.SetTooltip( () => $"Show resource statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
 		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R, false, false, true );
 		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
 		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
@@ -484,6 +484,8 @@ public class Interface : HiveObject
 		challengesButton.SetTooltip( () => $"Show list of possible challenges (hotkey: {challengesButton.GetHotkey().keyName})" );
 		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
 		showNearestCaveButton.SetTooltip( () => $"Show nearest animal cave (hotkey: {showNearestCaveButton.GetHotkey().keyName})" );
+		var showProductionChainButton = this.Image( Icon.cave ).AddClickHandler( () => ProductionChainPanel.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
+		showProductionChainButton.SetTooltip( () => $"Show production chain in this world (hotkey: {showProductionChainButton.GetHotkey().keyName})" );
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( iconFolder.transform ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
@@ -3416,6 +3418,153 @@ public class Interface : HiveObject
 		}
 	}
 
+	public class ProductionChainPanel : Panel
+	{
+		public static ProductionChainPanel Create()
+		{
+			var panel = new GameObject( "Production chain panel" ).AddComponent<ProductionChainPanel>();
+			panel.Open();
+			return panel;
+		}
+
+		class Flow
+		{
+			public Item.Type itemType;
+			public int startColumn = -1, startRow, row;
+			public Color color;
+		}
+
+		class Range
+		{
+			public int start, width;
+		}
+
+		public void Open()
+		{
+			int width = 400;
+			base.Open( width, 400 );
+
+			var lineParent = Image().Stretch();
+			lineParent.color = new Color( 0, 0, 0, 0 );
+
+			int maxWorkshopsPerLine = 5;
+			var flows = new List<Flow>();
+			flows.Add( new Flow { itemType = Item.Type.soldier, startColumn = width / 2, startRow = -20, row = -20 } );
+			int expectedWorkshopCountInRow = 1;
+			int row = -80;
+			var freeSpace = new List<Range>();
+			freeSpace.Add( new Range { start = 0, width = width } );
+			List<Color> flowColors = new List<Color> { Color.black, Color.red, Color.blue, Color.green };
+			int flowColorIndex = 0;
+
+			int AllocColumn( int width, int preferred = -1 )
+			{
+				int halfWidth = width / 2;
+				Range best = null;
+				int bestDiff = int.MaxValue;
+				foreach ( var range in freeSpace )
+				{
+					if ( range.width < width )
+						continue;
+
+					int option = preferred;
+					if ( range.start > preferred - halfWidth )
+						option = range.start + halfWidth;
+					if ( range.start + range.width < preferred + halfWidth )
+						option = range.start + range.width - halfWidth;
+					var diff = Math.Abs( preferred - option );
+					if ( diff < bestDiff )
+					{
+						bestDiff = diff;
+						best = range;
+					}
+				}
+
+				if ( best == null )
+					return 0;
+				int result = preferred;
+				if ( best.start > preferred - halfWidth )
+					result = best.start + halfWidth;
+				if ( best.start + best.width < preferred + halfWidth )
+					result = best.start + best.width - halfWidth;
+				freeSpace.Remove( best );
+				freeSpace.Add( new Range { start = best.start, width = result - halfWidth - best.start } );
+				freeSpace.Add( new Range { start = result + halfWidth, width = best.start + best.width - result - halfWidth } );
+				return result;
+			}
+
+			int workshopIndexInRow = 0;
+			int nextFlowRow = row - 30;
+			while ( flows.Count > 0 )
+			{
+				Flow current = null;
+				foreach ( var connection in flows )
+					if ( connection.startRow != row )
+						current = connection;
+
+				if ( workshopIndexInRow == maxWorkshopsPerLine || current == null )
+				{
+					foreach ( var flow in flows )
+					{
+						if ( flow.startRow == row )
+							continue;
+
+						int tmpColumn = AllocColumn( 5, flow.startColumn );
+						Image().PinCenter( flow.startColumn, ( flow.startRow + flow.row ) / 2, 3, flow.startRow - flow.row ).Link( lineParent ).color = flow.color;
+						Image().PinCenter( ( flow.startColumn + tmpColumn ) / 2, flow.row, Math.Abs( flow.startColumn - tmpColumn ), 3 ).Link( lineParent ).color = flow.color;
+						Image().PinCenter( tmpColumn, ( flow.row + row ) / 2, 3, flow.row - row ).Link( lineParent ).color = flow.color;
+						ItemIcon( flow.itemType ).PinCenter( tmpColumn, ( flow.row + row ) / 2 );
+
+						flow.startColumn = tmpColumn;
+						flow.row = nextFlowRow;
+						flow.startRow = row;
+						nextFlowRow += 5;
+					}
+					workshopIndexInRow = 0;
+					freeSpace.Clear();
+					freeSpace.Add( new Range { start = 0, width = width } );
+					row = nextFlowRow - 40;
+					nextFlowRow = row - 30;
+					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, flows.Count );
+					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
+					continue;
+				}
+				int column = AllocColumn( iconSize * 2, width / expectedWorkshopCountInRow / 2 * ( workshopIndexInRow * 2 + 1 ) );
+				Workshop.Configuration workshop = null;
+				foreach ( var configuration in world.workshopConfigurations )
+					if ( configuration.outputType == current.itemType && configuration.type != Workshop.Type.stonemason )
+						workshop = configuration;
+				Assert.global.IsNotNull( workshop );
+
+				Image().PinCenter( current.startColumn, ( current.startRow + current.row ) / 2, 3, current.startRow - current.row ).Link( lineParent ).color = current.color;
+				Image().PinCenter( ( current.startColumn + column ) / 2, current.row, Math.Abs( current.startColumn - column ), 3 ).Link( lineParent ).color = current.color;
+				Image().PinCenter( column, ( current.row + row ) / 2, 3, current.row - row ).Link( lineParent ).color = current.color;
+				ItemIcon( current.itemType ).PinCenter( column, ( current.row + row ) / 2 );
+
+				Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( $"{workshop.type}\nspeed: {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec");
+
+				int flowRow = nextFlowRow;
+				nextFlowRow -= 5;
+
+				if ( workshop.generatedInputs != null )
+				{
+					foreach ( var input in workshop.generatedInputs )
+					{
+						bool alreadyProcessed = false;
+						foreach ( var connection in flows )
+							if ( connection.itemType == input )
+								alreadyProcessed = true;
+						if ( !alreadyProcessed )
+							flows.Insert( 0, new Flow { itemType = input, startColumn = column, startRow = row, row = flowRow, color = flowColors[(flowColorIndex++) % flowColors.Count] } );
+					}
+				}
+
+				flows.Remove( current );
+				workshopIndexInRow++;
+			}
+			SetSize( 400, -row + 40 );
+		}
+	}
 	public class BuildPanel : Panel
 	{
 		public int showID;
