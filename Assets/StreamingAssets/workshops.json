@@ -365,7 +365,7 @@
       {
         "include":
         [
-          { "options": [ "flour", "cornFlour" ] },
+          { "options": [ "grain", "corn" ] },
           "water"
         ]
       }
