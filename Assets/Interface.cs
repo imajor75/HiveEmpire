@@ -3604,7 +3604,7 @@ public class Interface : HiveObject
 							flows.Insert( 0, new Flow { itemType = input, startColumn = column, startRow = row, row = flowRow, color = flowColors[(flowColorIndex++) % flowColors.Count], remainingOrigins = itemTypeUsage[(int)input] - 1 } );
 						else
 						{
-							existing.AddLine( Image().PinCenter( column, ( row + existing.row ) / 2, 3, existing.row - row ).Link( lineParent ) );
+							existing.AddLine( Image().PinCenter( column, ( row + existing.row ) / 2, 3, row - existing.row ).Link( lineParent ) );
 							existing.AddLine( Image().PinCenter( ( existing.startColumn + column ) / 2, existing.row, Math.Abs( existing.startColumn - column ), 3 ).Link( lineParent ) );
 							existing.remainingOrigins--;
 						}
