@@ -3420,6 +3420,8 @@ public class Interface : HiveObject
 
 	public class ProductionChainPanel : Panel
 	{
+		static Flow highlight;
+
 		public static ProductionChainPanel Create()
 		{
 			var panel = new GameObject( "Production chain panel" ).AddComponent<ProductionChainPanel>();
@@ -3432,6 +3434,14 @@ public class Interface : HiveObject
 			public Item.Type itemType;
 			public int startColumn = -1, startRow, row;
 			public Color color;
+			public int remainingOrigins;
+			public List<Image> lines = new List<Image>();
+			public void AddLine( Image line )
+			{
+				lines.Add( line );
+				line.color = color;
+				line.SetTooltip( ( show ) => { ProductionChainPanel.highlight = show ? this : null; if ( !show ) foreach ( var line in lines ) line.color = color; } );
+			}
 		}
 
 		class Range
@@ -3446,6 +3456,30 @@ public class Interface : HiveObject
 
 			var lineParent = Image().Stretch();
 			lineParent.color = new Color( 0, 0, 0, 0 );
+
+			var itemTypeUsage = new int[(int)Item.Type.total];
+			var itemTypes = new List<Item.Type>();
+			itemTypes.Add( Item.Type.soldier );
+			int itemTypeIndex = 0;
+			while ( itemTypes.Count != itemTypeIndex )
+			{
+				var itemType = itemTypes[itemTypeIndex++];
+				foreach ( var configuration in world.workshopConfigurations )
+				{
+					if ( configuration.outputType != itemType || configuration.generatedInputs == null )
+						continue;
+					if ( configuration.type == Workshop.Type.stonemason )
+						continue;
+
+					foreach ( var input in configuration.generatedInputs )
+					{
+						itemTypeUsage[(int)input]++;
+						Log( $"depend {input} on {itemType}, new {itemTypeUsage[(int)input]}" );
+						if ( !itemTypes.Contains( input ) )
+							itemTypes.Add( input );
+					}
+				}
+			}
 
 			int maxWorkshopsPerLine = 5;
 			var flows = new List<Flow>();
@@ -3493,13 +3527,23 @@ public class Interface : HiveObject
 				return result;
 			}
 
+			void DrawFlow( Flow flow, int column, int row )
+			{
+				flow.AddLine( Image().PinCenter( flow.startColumn, ( flow.startRow + flow.row ) / 2, 3, flow.startRow - flow.row ) );
+				flow.AddLine( Image().PinCenter( ( flow.startColumn + column ) / 2, flow.row, Math.Abs( flow.startColumn - column ), 3 ) );
+				flow.AddLine( Image().PinCenter( column, ( flow.row + row ) / 2, 3, flow.row - row ) );
+				foreach ( var line in flow.lines )
+					line.Link( lineParent );
+				ItemIcon( flow.itemType ).PinCenter( column, ( flow.row + row ) / 2 );
+			}
+
 			int workshopIndexInRow = 0;
 			int nextFlowRow = row - 30;
 			while ( flows.Count > 0 )
 			{
 				Flow current = null;
 				foreach ( var connection in flows )
-					if ( connection.startRow != row )
+					if ( connection.startRow != row && connection.remainingOrigins == 0 )
 						current = connection;
 
 				if ( workshopIndexInRow == maxWorkshopsPerLine || current == null )
@@ -3509,23 +3553,25 @@ public class Interface : HiveObject
 						if ( flow.startRow == row )
 							continue;
 
-						int tmpColumn = AllocColumn( 5, flow.startColumn );
-						Image().PinCenter( flow.startColumn, ( flow.startRow + flow.row ) / 2, 3, flow.startRow - flow.row ).Link( lineParent ).color = flow.color;
-						Image().PinCenter( ( flow.startColumn + tmpColumn ) / 2, flow.row, Math.Abs( flow.startColumn - tmpColumn ), 3 ).Link( lineParent ).color = flow.color;
-						Image().PinCenter( tmpColumn, ( flow.row + row ) / 2, 3, flow.row - row ).Link( lineParent ).color = flow.color;
-						ItemIcon( flow.itemType ).PinCenter( tmpColumn, ( flow.row + row ) / 2 );
+						int tmpColumn = AllocColumn( 10, flow.startColumn );
+						DrawFlow( flow, tmpColumn, row );
 
 						flow.startColumn = tmpColumn;
 						flow.row = nextFlowRow;
 						flow.startRow = row;
-						nextFlowRow += 5;
+						nextFlowRow -= 10;
 					}
 					workshopIndexInRow = 0;
 					freeSpace.Clear();
 					freeSpace.Add( new Range { start = 0, width = width } );
 					row = nextFlowRow - 40;
 					nextFlowRow = row - 30;
-					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, flows.Count );
+					int readyFlowCount = 0;
+					foreach ( var flow in flows )
+						if ( flow.remainingOrigins == 0 )
+							readyFlowCount++;
+					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, readyFlowCount );
+					Assert.global.IsTrue( expectedWorkshopCountInRow > 0 );
 					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
 					continue;
 				}
@@ -3536,26 +3582,29 @@ public class Interface : HiveObject
 						workshop = configuration;
 				Assert.global.IsNotNull( workshop );
 
-				Image().PinCenter( current.startColumn, ( current.startRow + current.row ) / 2, 3, current.startRow - current.row ).Link( lineParent ).color = current.color;
-				Image().PinCenter( ( current.startColumn + column ) / 2, current.row, Math.Abs( current.startColumn - column ), 3 ).Link( lineParent ).color = current.color;
-				Image().PinCenter( column, ( current.row + row ) / 2, 3, current.row - row ).Link( lineParent ).color = current.color;
-				ItemIcon( current.itemType ).PinCenter( column, ( current.row + row ) / 2 );
+				DrawFlow( current, column, row );
 
 				Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( $"{workshop.type}\nspeed: {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec");
 
 				int flowRow = nextFlowRow;
-				nextFlowRow -= 5;
+				nextFlowRow -= 10;
 
 				if ( workshop.generatedInputs != null )
 				{
 					foreach ( var input in workshop.generatedInputs )
 					{
-						bool alreadyProcessed = false;
+						Flow existing = null;
 						foreach ( var connection in flows )
 							if ( connection.itemType == input )
-								alreadyProcessed = true;
-						if ( !alreadyProcessed )
-							flows.Insert( 0, new Flow { itemType = input, startColumn = column, startRow = row, row = flowRow, color = flowColors[(flowColorIndex++) % flowColors.Count] } );
+								existing = connection;
+						if ( existing == null )
+							flows.Insert( 0, new Flow { itemType = input, startColumn = column, startRow = row, row = flowRow, color = flowColors[(flowColorIndex++) % flowColors.Count], remainingOrigins = itemTypeUsage[(int)input] - 1 } );
+						else
+						{
+							existing.AddLine( Image().PinCenter( column, ( row + existing.row ) / 2, 3, existing.row - row ).Link( lineParent ) );
+							existing.AddLine( Image().PinCenter( ( existing.startColumn + column ) / 2, existing.row, Math.Abs( existing.startColumn - column ), 3 ).Link( lineParent ) );
+							existing.remainingOrigins--;
+						}
 					}
 				}
 
@@ -3563,6 +3612,14 @@ public class Interface : HiveObject
 				workshopIndexInRow++;
 			}
 			SetSize( 400, -row + 40 );
+		}
+
+		new void Update()
+		{
+			if ( highlight != null )
+				foreach ( var line in highlight.lines )
+					line.color = Color.Lerp( highlight.color, Color.white, (float)( Math.Sin( Time.unscaledTime * 4 ) + 1 ) * 0.5f );
+			base.Update();
 		}
 	}
 	public class BuildPanel : Panel
