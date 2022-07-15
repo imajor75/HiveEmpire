@@ -3489,6 +3489,8 @@ public class Interface : HiveObject
 			var freeSpace = new List<Range>();
 			freeSpace.Add( new Range { start = 0, width = width } );
 			List<Color> flowColors = new List<Color> { Color.black, Color.red, Color.blue, Color.green };
+			for ( int i = 0; i < flowColors.Count; i++ )
+				flowColors[i] = Color.Lerp( flowColors[i], Color.gray, 0.5f );
 			int flowColorIndex = 0;
 
 			int AllocColumn( int width, int preferred = -1 )
