@@ -3543,24 +3543,14 @@ public class Interface : HiveObject
 			{
 				Flow current = null;
 				foreach ( var connection in flows )
-					if ( connection.startRow != row && connection.remainingOrigins == 0 )
+					if ( connection.startRow != row )
+						current = connection;
+				foreach ( var connection in flows )
+					if ( connection.remainingOrigins > 0 && connection.startRow != row )
 						current = connection;
 
 				if ( workshopIndexInRow == maxWorkshopsPerLine || current == null )
 				{
-					foreach ( var flow in flows )
-					{
-						if ( flow.startRow == row )
-							continue;
-
-						int tmpColumn = AllocColumn( 10, flow.startColumn );
-						DrawFlow( flow, tmpColumn, row );
-
-						flow.startColumn = tmpColumn;
-						flow.row = nextFlowRow;
-						flow.startRow = row;
-						nextFlowRow -= 10;
-					}
 					workshopIndexInRow = 0;
 					freeSpace.Clear();
 					freeSpace.Add( new Range { start = 0, width = width } );
@@ -3573,6 +3563,17 @@ public class Interface : HiveObject
 					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, readyFlowCount );
 					Assert.global.IsTrue( expectedWorkshopCountInRow > 0 );
 					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
+					continue;
+				}
+				if ( current.remainingOrigins > 0 )
+				{
+					int tmpColumn = AllocColumn( 10, current.startColumn );
+					DrawFlow( current, tmpColumn, row );
+
+					current.startColumn = tmpColumn;
+					current.row = nextFlowRow;
+					current.startRow = row;
+					nextFlowRow -= 10;
 					continue;
 				}
 				int column = AllocColumn( iconSize * 2, width / expectedWorkshopCountInRow / 2 * ( workshopIndexInRow * 2 + 1 ) );
