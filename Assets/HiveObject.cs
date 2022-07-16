@@ -31,6 +31,26 @@ public class HiveCommon : MonoBehaviour
 		foreach ( var element in tmpArray )
 			element.Remove();
 	}
+	
+	static public string Nice( string raw )
+	{
+		string nice = "";
+		bool capitalize = true;
+		foreach ( var c in raw )
+		{
+			char current = c;
+			if ( Char.IsUpper( c ) )
+				nice += " ";
+			if ( capitalize )
+			{
+				current = Char.ToUpper( c );
+				capitalize = false;
+			}
+			nice += current;
+		}
+		return nice;
+	}
+
 }
 
 public abstract class HiveObject : HiveCommon
@@ -86,25 +106,6 @@ public abstract class HiveObject : HiveCommon
 		Register();
 		if ( !blueprintOnly )
 			id = world.nextID++;
-	}
-
-	static public string Nice( string raw )
-	{
-		string nice = "";
-		bool capitalize = true;
-		foreach ( var c in raw )
-		{
-			char current = c;
-			if ( Char.IsUpper( c ) )
-				nice += " ";
-			if ( capitalize )
-			{
-				current = Char.ToUpper( c );
-				capitalize = false;
-			}
-			nice += current;
-		}
-		return nice;
 	}
 
 	public void OnDestroy()

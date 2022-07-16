@@ -3445,12 +3445,22 @@ public class Interface : HiveObject
 				else
 					foreach ( var line in lines ) line.color = color;
 			}
+			string TooltipText()
+			{
+				var tooltipText = $"{HiveCommon.Nice( itemType.ToString() )}\nSource: {HiveCommon.Nice( source.type.ToString() )}\nTargets: ";
+				foreach ( var target in targets )
+					tooltipText += $"{HiveCommon.Nice( target.type.ToString() )}, ";
+				tooltipText = tooltipText.Remove( tooltipText.Length - 2, 2 );
+				return tooltipText;
+			}
 			public void AddLine( Image line )
 			{
 				lines.Add( line );
 				line.color = color;
-				line.SetTooltip( Highlight );
+				line.SetTooltip( Highlight, TooltipText );
 			}
+			public Workshop.Configuration source;
+			public List<Workshop.Configuration> targets = new List<Workshop.Configuration>();
 		}
 
 		class Range
@@ -3600,6 +3610,8 @@ public class Interface : HiveObject
 
 				Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( $"{workshop.type}\nspeed: {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec");
 
+				current.source = workshop;
+
 				int flowRow = nextFlowRow;
 				nextFlowRow -= 10;
 
@@ -3612,12 +3624,17 @@ public class Interface : HiveObject
 							if ( connection.itemType == input )
 								existing = connection;
 						if ( existing == null )
-							flows.Insert( 0, new Flow { itemType = input, startColumn = column, startRow = row, row = flowRow, color = flowColors[(flowColorIndex++) % flowColors.Count], remainingOrigins = itemTypeUsage[(int)input] - 1 } );
+						{
+							var newFlow = new Flow { itemType = input, startColumn = column, startRow = row, row = flowRow, color = flowColors[(flowColorIndex++) % flowColors.Count], remainingOrigins = itemTypeUsage[(int)input] - 1 };
+							newFlow.targets.Add( workshop );
+							flows.Insert( 0, newFlow );
+						}
 						else
 						{
 							existing.AddLine( Image().PinCenter( column, ( row + existing.row ) / 2, 3, row - existing.row ).Link( lineParent ) );
 							existing.AddLine( Image().PinCenter( ( existing.startColumn + column ) / 2, existing.row, Math.Abs( existing.startColumn - column ), 3 ).Link( lineParent ) );
 							existing.remainingOrigins--;
+							existing.targets.Add( workshop );
 						}
 					}
 				}
@@ -7716,9 +7733,9 @@ public static class UIHelpers
 		return SetTooltip( g, text == null ? null as Func<string> : () => text, image, additionalText, onShow );
 	}
 
-	public static UIElement SetTooltip<UIElement>( this UIElement g, Action<bool> onShow ) where UIElement : Component
+	public static UIElement SetTooltip<UIElement>( this UIElement g, Action<bool> onShow, Func<string> textGenerator = null ) where UIElement : Component
 	{
-		return SetTooltip( g, "", null, null, onShow );
+		return SetTooltip( g, textGenerator, null, null, onShow );
 	}
 
 	public static UIElement RemoveTooltip<UIElement>( this UIElement g ) where UIElement : Component
