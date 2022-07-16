@@ -3422,6 +3422,7 @@ public class Interface : HiveObject
 	public class ProductionChainPanel : Panel
 	{
 		static Flow highlight;
+		List<Image> tmpImages = new List<Image>();
 
 		public static ProductionChainPanel Create()
 		{
@@ -3624,6 +3625,7 @@ public class Interface : HiveObject
 				var workshopImage = Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( tooltip );
 				if ( workshop.outputStackSize > 1 )
 					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( 10, -20, 10, 10 ).Rotate( 90 ).color = Color.yellow;
+				workshopImage.AddClickHandler( () => OnWorkshopClick( workshopImage, workshop ), UIHelpers.ClickType.right );
 
 				current.source = workshop;
 
@@ -3658,6 +3660,39 @@ public class Interface : HiveObject
 				workshopIndexInRow++;
 			}
 			SetSize( 400, -row + 40 );
+		}
+
+		void OnWorkshopClick( Image workshop, Workshop.Configuration configuration )
+		{
+			foreach ( var image in tmpImages )
+				Destroy( image );
+			tmpImages.Clear();
+			tmpImages.Add( Image( Icon.hammer ).Link( workshop ).PinCenter( 2 * iconSize, -10, iconSize, iconSize ).AddClickHandler( () => BuildNewWorkshop( configuration.type ) ) );
+			tmpImages.Add( Image( Icon.house ).Link( workshop ).PinCenter( 2 * iconSize, -30, iconSize, iconSize ).AddClickHandler( () => ListCurrentWorkshops( configuration.type ) ) );
+		}
+
+		void BuildNewWorkshop( Workshop.Type type )
+		{
+			tmpImages.Clear();
+			Close();
+			NewBuildingPanel.Create( NewBuildingPanel.Construct.workshop, type );
+		}
+
+		void ListCurrentWorkshops( Workshop.Type type )
+		{
+			tmpImages.Clear();
+			Close();
+			BuildingList.Create().Open( (Building.Type)type );
+		}
+
+		public override void Close()
+		{
+			if ( tmpImages.Count == 0 )
+				base.Close();
+
+			foreach ( var image in tmpImages )
+				Destroy( image );
+			tmpImages.Clear();
 		}
 
 		new void Update()
