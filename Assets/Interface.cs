@@ -3608,7 +3608,9 @@ public class Interface : HiveObject
 
 				DrawFlow( current, column, row );
 
-				Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( $"{workshop.type}\nspeed: {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec");
+				var workshopImage = Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( $"{workshop.type}\nspeed: {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec");
+				if ( workshop.outputStackSize > 1 )
+					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( 10, -20, 10, 10 ).Rotate( 90 ).color = Color.yellow;
 
 				current.source = workshop;
 
