@@ -3436,11 +3436,19 @@ public class Interface : HiveObject
 			public Color color;
 			public int remainingOrigins;
 			public List<Image> lines = new List<Image>();
+			public void Highlight( bool on )
+			{
+				ProductionChainPanel.highlight = on ? this : null;
+				if ( on )
+					foreach ( var line in lines ) line.transform.SetAsLastSibling();
+				else
+					foreach ( var line in lines ) line.color = color;
+			}
 			public void AddLine( Image line )
 			{
 				lines.Add( line );
 				line.color = color;
-				line.SetTooltip( ( show ) => { ProductionChainPanel.highlight = show ? this : null; if ( !show ) foreach ( var line in lines ) line.color = color; } );
+				line.SetTooltip( Highlight );
 			}
 		}
 
@@ -3485,6 +3493,7 @@ public class Interface : HiveObject
 			var flows = new List<Flow>();
 			flows.Add( new Flow { itemType = Item.Type.soldier, startColumn = width / 2, startRow = -20, row = -20 } );
 			int expectedWorkshopCountInRow = 1;
+			int logicalRow = 0;
 			int row = -80;
 			var freeSpace = new List<Range>();
 			freeSpace.Add( new Range { start = 0, width = width } );
@@ -3565,11 +3574,12 @@ public class Interface : HiveObject
 					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, readyFlowCount );
 					Assert.global.IsTrue( expectedWorkshopCountInRow > 0 );
 					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
+					logicalRow++;
 					continue;
 				}
 				if ( current.remainingOrigins > 0 )
 				{
-					int tmpColumn = AllocColumn( 10, current.startColumn );
+					int tmpColumn = AllocColumn( 20, current.startColumn );
 					DrawFlow( current, tmpColumn, row );
 
 					current.startColumn = tmpColumn;
