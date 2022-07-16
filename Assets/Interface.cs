@@ -3608,7 +3608,20 @@ public class Interface : HiveObject
 
 				DrawFlow( current, column, row );
 
-				var workshopImage = Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( $"{workshop.type}\nspeed: {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec");
+				string tooltip = $"{HiveCommon.Nice( workshop.type.ToString() )}\nProduces ";
+				if ( workshop.outputStackSize > 1 )
+					tooltip += "2X ";
+				tooltip += $"{HiveCommon.Nice( workshop.outputType.ToString() )}";
+				if ( workshop.productionTime > 0 )
+					tooltip += $" in {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec";
+				if ( workshop.generatedInputs != null )
+				{
+					tooltip += "\nBase materials: ";
+					foreach ( var input in workshop.generatedInputs )
+						tooltip += HiveCommon.Nice( input.ToString() ) + ", ";
+					tooltip = tooltip.Remove( tooltip.Length - 2, 2 );
+				}
+				var workshopImage = Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( tooltip );
 				if ( workshop.outputStackSize > 1 )
 					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( 10, -20, 10, 10 ).Rotate( 90 ).color = Color.yellow;
 
