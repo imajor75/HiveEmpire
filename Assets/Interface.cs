@@ -1142,7 +1142,8 @@ public class Interface : HiveObject
 				image.enabled = false;
 				SetSize( this.width = width, height = (int)( this.text.preferredHeight + this.additionalText.preferredHeight ) + 2 * borderWidth );
 			}
-			gameObject.SetActive( true );
+			if ( text != "" )
+				gameObject.SetActive( true );
 			if ( pinX < 0 || pinY < 0 )
 			{
 				pinned = false;
