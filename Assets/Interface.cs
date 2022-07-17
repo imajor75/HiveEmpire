@@ -3667,8 +3667,8 @@ public class Interface : HiveObject
 			foreach ( var image in tmpImages )
 				Destroy( image );
 			tmpImages.Clear();
-			tmpImages.Add( Image( Icon.hammer ).Link( workshop ).PinCenter( 2 * iconSize, -10, iconSize, iconSize ).AddClickHandler( () => BuildNewWorkshop( configuration.type ) ) );
-			tmpImages.Add( Image( Icon.house ).Link( workshop ).PinCenter( 2 * iconSize, -30, iconSize, iconSize ).AddClickHandler( () => ListCurrentWorkshops( configuration.type ) ) );
+			tmpImages.Add( Image( Icon.hammer ).Link( workshop ).PinCenter( 3 * iconSize, -iconSize, iconSize, iconSize ).AddClickHandler( () => BuildNewWorkshop( configuration.type ) ) );
+			tmpImages.Add( Image( Icon.house ).Link( workshop ).PinCenter( 3 * iconSize, -3 * iconSize, iconSize, iconSize ).AddClickHandler( () => ListCurrentWorkshops( configuration.type ) ) );
 		}
 
 		void BuildNewWorkshop( Workshop.Type type )
