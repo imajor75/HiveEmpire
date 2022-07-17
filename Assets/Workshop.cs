@@ -33,6 +33,7 @@ public class Workshop : Building
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> processingSounds;
 	static Texture2D mapIndicatorTexture;
+	static public Sprite[] sprites = new Sprite[(int)Type.total];
 	
 	ParticleSystem smoke;
 	public Transform millWheel;
@@ -593,6 +594,34 @@ public class Workshop : Building
 		processingSounds.fileNamePrefix = "effects/";
 		processingSounds.Fill( sounds );	// bool equals "dont loop"
 		mapIndicatorTexture = Resources.Load<Texture2D>( "icons/brick" );
+
+		var dl = new GameObject( "Temporary directional light" );
+		var l = dl.AddComponent<Light>();
+		l.type = LightType.Directional;
+		l.color = new Color( .7f, .7f, .7f );
+		dl.transform.rotation = Quaternion.LookRotation( RuntimePreviewGenerator.PreviewDirection );
+
+		RuntimePreviewGenerator.BackgroundColor = new Color( 0.5f, 0.5f, 0.5f, 0 );
+		for ( int i = 0; i < (int)Type.total; i++ )
+		{
+			var look = looks.GetMediaData( (Type)i );
+			if ( look == null )
+				continue;
+			var handle = new GameObject( "Temporary for workshop thumbnail" ).transform;
+			Instantiate( look ).transform.SetParent( handle );
+			var smoke = World.FindChildRecursive( handle, "smoke" );
+			if ( smoke )
+			{
+				smoke.SetParent( null );
+				Destroy( smoke.gameObject );
+			}
+			Texture2D tex = RuntimePreviewGenerator.GenerateModelPreview( handle, 256, 256 );
+			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
+			Assert.global.IsNotNull( sprites[i] );
+			Destroy( handle.gameObject );
+		}
+
+		Destroy( dl );
 	}
 
 	public static Workshop Create()

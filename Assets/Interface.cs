@@ -3622,7 +3622,7 @@ public class Interface : HiveObject
 						tooltip += HiveCommon.Nice( input.ToString() ) + ", ";
 					tooltip = tooltip.Remove( tooltip.Length - 2, 2 );
 				}
-				var workshopImage = Image( Icon.house ).PinCenter( column, row, 2 * iconSize, 2 * iconSize ).SetTooltip( tooltip );
+				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( tooltip, Workshop.sprites[(int)workshop.type] );
 				if ( workshop.outputStackSize > 1 )
 					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( 10, -20, 10, 10 ).Rotate( 90 ).color = Color.yellow;
 				workshopImage.AddClickHandler( () => OnWorkshopClick( workshopImage, workshop ), UIHelpers.ClickType.right );
