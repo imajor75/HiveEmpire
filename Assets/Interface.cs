@@ -3473,9 +3473,12 @@ public class Interface : HiveObject
 		public void Open()
 		{
 			int width = 400;
-			base.Open( width, 400 );
+			base.Open( width + 2 * iconSize, 400 );
 
-			var lineParent = Image().Stretch();
+			Text( "Production chain is randomized based on the current world seed. If you start a new world it will be different" ).Pin( borderWidth, -borderWidth, width, 2 * iconSize );
+			var scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - 2 * iconSize );
+
+			var lineParent = Image().Stretch().Link( scroll.content );
 			lineParent.color = new Color( 0, 0, 0, 0 );
 
 			var itemTypeUsage = new int[(int)Item.Type.total];
@@ -3558,7 +3561,7 @@ public class Interface : HiveObject
 				flow.AddLine( Image().PinCenter( column, ( flow.row + row ) / 2, 3, flow.row - row ) );
 				foreach ( var line in flow.lines )
 					line.Link( lineParent );
-				ItemIcon( flow.itemType ).PinCenter( column, ( flow.row + row ) / 2 );
+				ItemIcon( flow.itemType ).PinCenter( column, ( flow.row + row ) / 2 ).Link( scroll.content );
 			}
 
 			int workshopIndexInRow = 0;
@@ -3610,7 +3613,7 @@ public class Interface : HiveObject
 
 				DrawFlow( current, column, row );
 
-				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ), Workshop.sprites[(int)workshop.type] );
+				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ), Workshop.sprites[(int)workshop.type] ).Link( scroll.content );
 				if ( workshop.outputStackSize > 1 )
 					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
 				workshopImage.AddClickHandler( () => OnWorkshopClick( workshopImage, workshop ), UIHelpers.ClickType.right );
@@ -3647,7 +3650,7 @@ public class Interface : HiveObject
 				flows.Remove( current );
 				workshopIndexInRow++;
 			}
-			SetSize( 400, -row + 40 );
+			scroll.SetContentSize( -1, 20 - row );
 		}
 
 		string WorkshopTooltip( Flow flow )
