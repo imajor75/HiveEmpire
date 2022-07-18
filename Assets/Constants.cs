@@ -364,8 +364,6 @@ public static class Constants
 	    public const int pasturingTime = Constants.World.normalSpeedPerSecond * 2;
 	    public const float pasturingPrayChance = 0.2f;  
     	public const int maxSavedStatusTime = Constants.World.normalSpeedPerSecond * 60 * 60 * 10;
-        public const int productivityTimingLength = 300;
-        public const float productivityWeight = 0.05f;
         public const int defaultProductionTime = Constants.World.normalSpeedPerSecond * 30;
         public const int defaultMaxRestTime = Constants.World.normalSpeedPerSecond * 60;
         public const int defaultRelaxSpotNeeded = 20;
@@ -374,7 +372,7 @@ public static class Constants
         public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
         public const int relaxAreaSize = 3;
-        public const int gathererMaxOutputRecalculationPeriod = Constants.World.normalSpeedPerSecond * 60 * 30;
+        public const int productivityRecalculationPeriod = Constants.World.normalSpeedPerSecond * 60 * 30;
     }
 
     public static class Simpleton

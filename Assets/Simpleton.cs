@@ -516,7 +516,7 @@ public class Simpleton : Player
                             surplus = true;
                             return finished;
                         }
-                        currentYield += workshop.CalculateMaxOutput();
+                        currentYield += workshop.CalculateProductivity( true );
                     }
                     if ( workshop.type == workshopType )
                         currentWorkshopCount++;

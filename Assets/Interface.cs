@@ -2345,7 +2345,8 @@ public class Interface : HiveObject
 			transform.rotation = Quaternion.Euler( -90, (float)( eye.direction / Math.PI * 180 ), 0 );
 			if ( barMaterial )
 			{
-				float progress = (building as Workshop).productivity.current;
+				var workshop = building as Workshop;
+				float progress = workshop.productionConfiguration.productivity / workshop.CalculateProductivity();
 				barMaterial.SetFloat( progressShaderID, progress );
 				Color color;
 				if ( progress < 0.5f )
@@ -2636,7 +2637,7 @@ public class Interface : HiveObject
 				var productionSec = workshop.productionConfiguration.productionTime * Time.fixedDeltaTime;
 				var restSec = workshop.restTime * Time.fixedDeltaTime;
 				progressBar.SetTooltip( 
-					$"Maximum output: {workshop.CalculateMaxOutput().ToString( "n2" )}/min\n" +
+					$"Maximum output: {workshop.CalculateProductivity( true ).ToString( "n2" )}/min\n" +
 					$"Time needed to produce a new item: {productionSec.ToString( "F2" )}s\n" +
 					$"Resting needed between item productions: {restSec.ToString( "F2" )}s\n" +
 					$"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null,
@@ -2651,7 +2652,7 @@ public class Interface : HiveObject
 
 		static public void UpdateProductivity( Text text, Workshop workshop )
 		{
-			var percentage = (int)Math.Min( workshop.productivity.current * 101, 100 );
+			var percentage = (int)Math.Min( workshop.productionConfiguration.productivity / workshop.CalculateProductivity() * 101, 100 );
 			text.text = percentage.ToString() + "%";
 			if ( percentage == 100 )
 				text.color = Color.green;
@@ -3609,22 +3610,9 @@ public class Interface : HiveObject
 
 				DrawFlow( current, column, row );
 
-				string tooltip = $"{HiveCommon.Nice( workshop.type.ToString() )}\nProduces ";
+				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ), Workshop.sprites[(int)workshop.type] );
 				if ( workshop.outputStackSize > 1 )
-					tooltip += "2X ";
-				tooltip += $"{HiveCommon.Nice( workshop.outputType.ToString() )}";
-				if ( workshop.productionTime > 0 )
-					tooltip += $" in {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec";
-				if ( workshop.generatedInputs != null )
-				{
-					tooltip += "\nBase materials: ";
-					foreach ( var input in workshop.generatedInputs )
-						tooltip += HiveCommon.Nice( input.ToString() ) + ", ";
-					tooltip = tooltip.Remove( tooltip.Length - 2, 2 );
-				}
-				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( tooltip, Workshop.sprites[(int)workshop.type] );
-				if ( workshop.outputStackSize > 1 )
-					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( 10, -20, 10, 10 ).Rotate( 90 ).color = Color.yellow;
+					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
 				workshopImage.AddClickHandler( () => OnWorkshopClick( workshopImage, workshop ), UIHelpers.ClickType.right );
 
 				current.source = workshop;
@@ -3660,6 +3648,46 @@ public class Interface : HiveObject
 				workshopIndexInRow++;
 			}
 			SetSize( 400, -row + 40 );
+		}
+
+		string WorkshopTooltip( Flow flow )
+		{
+			var workshop = flow.source;
+			string tooltip = $"{HiveCommon.Nice( workshop.type.ToString() )}\nProduces ";
+			if ( workshop.outputStackSize > 1 )
+				tooltip += "2X ";
+			tooltip += $"{HiveCommon.Nice( workshop.outputType.ToString() )}";
+			if ( workshop.productionTime > 0 )
+				tooltip += $" in {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec";
+			if ( workshop.generatedInputs != null )
+			{
+				tooltip += "\nBase materials: ";
+				foreach ( var input in workshop.generatedInputs )
+					tooltip += HiveCommon.Nice( input.ToString() ) + ", ";
+				tooltip = tooltip.Remove( tooltip.Length - 2, 2 );
+			}
+			int instanceCount = 0;
+			float currentProduction = 0;
+			foreach ( var playerWorkshop in root.mainTeam.workshops )
+			{
+				if ( playerWorkshop.type != workshop.type )
+					continue;
+				instanceCount++;
+				currentProduction += playerWorkshop.CalculateProductivity();
+			}
+			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/sec";
+			float demand = 0;
+			foreach ( var target in flow.targets )
+			{
+				foreach ( var playerWorkshop in root.mainTeam.workshops )
+				{
+					if ( playerWorkshop.type == target.type )
+						demand += playerWorkshop.CalculateProductivity();
+				}
+			}
+			if ( demand > 0 )
+				tooltip += $"\nDemand: {demand.ToString( "N2" )}/sec";
+			return tooltip;
 		}
 
 		void OnWorkshopClick( Image workshop, Workshop.Configuration configuration )
@@ -5583,8 +5611,8 @@ if ( cart )
 
 		static int CompareProductivities( Building a, Building b )
 		{
-			float ap = a is Workshop workshopA ? workshopA.productivity.current : -1;
-			float bp = b is Workshop workshopB ? workshopB.productivity.current : -1;
+			float ap = a is Workshop workshopA ? workshopA.CalculateProductivity() : -1;
+			float bp = b is Workshop workshopB ? workshopB.CalculateProductivity() : -1;
 			return ap.CompareTo( bp );
 		}
 

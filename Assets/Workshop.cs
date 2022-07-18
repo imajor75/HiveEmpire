@@ -21,9 +21,9 @@ public class Workshop : Building
 	public Mode mode = Mode.whenNeeded;
 	public int itemsProduced;
 	public World.Timer resting = new World.Timer();
-	public Productivity productivity = new Productivity( 0 );
 	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
 	public Status currentStatus = Status.unknown;
+	public int statusProduction;
 	public World.Timer statusDuration = new World.Timer();
 	public bool outOfResourceReported;
 	
@@ -70,19 +70,18 @@ public class Workshop : Building
 		}
 	}
 
-	public float lastCalculatedMaxOutput = -1;
-	public World.Timer maxOutputCalculationTimer = new World.Timer();
-	public int itemsProducedAtLastCheck = int.MaxValue;
+	public float[] lastCalculatedProductivity = { -1, -1 };
+	public World.Timer[] productivityCalculationTimer = { new World.Timer(), new World.Timer() };
+	public int[] lastProductivityCalculationTimeRange = { 0, 0 };
 
-	public float CalculateMaxOutput()
+	public float CalculateProductivity( bool maximumPossible = false, int timeRange = Constants.Workshop.productivityRecalculationPeriod )
 	{
-		if ( maxOutputCalculationTimer.done || maxOutputCalculationTimer.empty || float.IsNaN( lastCalculatedMaxOutput ) )
+		int index = maximumPossible ? 1 : 0;
+		var startTime = time - timeRange;
+		if ( productivityCalculationTimer[index].done || productivityCalculationTimer[index].empty || float.IsNaN( lastCalculatedProductivity[index] ) || lastProductivityCalculationTimeRange[index] != timeRange )
 		{
-			maxOutputCalculationTimer.Start( Constants.Workshop.gathererMaxOutputRecalculationPeriod );
-			int itemsProducedSinceLastCheck = itemsProduced - itemsProducedAtLastCheck;
-			itemsProducedAtLastCheck = itemsProduced;
-			if ( itemsProducedSinceLastCheck < 0 )
-				return maxOutput;
+			productivityCalculationTimer[index].Start( timeRange );
+			int itemsProduced = 0;
 				
 			int wastedTime = 0, usedTime = 0;
 			bool hasEnoughtData = false;
@@ -90,16 +89,17 @@ public class Workshop : Building
 			{
 				var status = statusNode.Value;
 				int statusTime = status.length;
-				if ( status.startTime < time - Constants.Workshop.gathererMaxOutputRecalculationPeriod )
-					statusTime -= time - Constants.Workshop.gathererMaxOutputRecalculationPeriod - status.startTime;
+				if ( status.startTime < startTime )
+					statusTime -= startTime - status.startTime;
 				if ( statusTime > 0 )
 				{
 					if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 )
 						wastedTime += status.length;
 					else
 						usedTime += status.length;
+					itemsProduced += status.itemsProduced;
 				}
-				if ( status.startTime < time - Constants.Workshop.gathererMaxOutputRecalculationPeriod )
+				if ( status.startTime < startTime )
 				{
 					hasEnoughtData = true;
 					break;
@@ -107,16 +107,16 @@ public class Workshop : Building
 			}
 			if ( hasEnoughtData )
 			{
-				if ( usedTime > 0 )
-					lastCalculatedMaxOutput = (float)itemsProducedSinceLastCheck / Constants.Workshop.gathererMaxOutputRecalculationPeriod * (usedTime + wastedTime) / usedTime * Constants.World.normalSpeedPerSecond * 60;
-				else
-					lastCalculatedMaxOutput = -1;
+				lastCalculatedProductivity[index] = (float)itemsProduced / timeRange * Constants.World.normalSpeedPerSecond * 60;
+				if ( maximumPossible && usedTime > 0 )
+					lastCalculatedProductivity[index] *= (usedTime + wastedTime) / usedTime;
 			}
+			lastProductivityCalculationTimeRange[index] = timeRange;
 		}
-		if ( !gatherer || lastCalculatedMaxOutput < 0 )
+		if ( lastCalculatedProductivity[index] < 0 && maximumPossible )
 			return maxOutput;
 
-		return lastCalculatedMaxOutput;
+		return lastCalculatedProductivity[index];
 	}
 
 	[Obsolete( "Compatibility with old files", true )]
@@ -162,6 +162,7 @@ public class Workshop : Building
 		public int maxRestTime = Constants.Workshop.defaultMaxRestTime;
 		public int outputMax = Constants.Workshop.defaultOutputMax;
 		public bool producesDung = false;
+		public float productivity {get { return (float)Constants.World.normalSpeedPerSecond / productionTime; } }
 
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }
@@ -255,41 +256,7 @@ public class Workshop : Building
 		public Status status;
 		public int length;
 		public int startTime;
-	}
-
-	public class Productivity
-	{
-		public Productivity()
-		{
-			weight = Constants.Workshop.productivityWeight;
-			timinglength = Constants.Workshop.productivityTimingLength;
-		}
-		public Productivity( float current )
-		{
-			this.current = current;
-			workCounter = 0;
-			weight = Constants.Workshop.productivityWeight;
-			timinglength = Constants.Workshop.productivityTimingLength;
-		}
-		public void GameLogicUpdate( Workshop boss )
-		{
-			if ( timer.empty )
-				timer.Start();
-			if ( boss.working )
-				workCounter++;
-			if ( timer.age >= timinglength )
-			{
-				float p = (float)workCounter / timer.age;
-				current = current * ( 1 - weight ) + p * weight;
-				workCounter = 0;
-				timer.Start();
-			}
-		}
-		public float current;
-		public World.Timer timer = new World.Timer();
-		public int workCounter;
-		public float weight;
-		public int timinglength;
+		public int itemsProduced;
 	}
 
 	[System.Serializable]
@@ -874,6 +841,7 @@ public class Workshop : Building
 		output += productionConfiguration.outputStackSize;
 		itemsProduced += productionConfiguration.outputStackSize;
 		team.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+		statusProduction += productionConfiguration.outputStackSize;
 		resting.Start( restTime );
 		ChangeStatus( Status.resting );
 		SetWorking( false );
@@ -890,14 +858,14 @@ public class Workshop : Building
 		}
 
 		if ( currentStatus != Status.unknown )
-			statuses.AddLast( new PastStatus { status = currentStatus, length = statusDuration.age, startTime = statusDuration.reference } );
+			statuses.AddLast( new PastStatus { status = currentStatus, length = statusDuration.age, startTime = statusDuration.reference, itemsProduced = statusProduction } );
 		currentStatus = status;
 		statusDuration.Start();
+		statusProduction = 0;
 	}
 
 	public override void GameLogicUpdate()
 	{
-		productivity.GameLogicUpdate( this );
 		base.GameLogicUpdate();
 
 		if ( !construction.done || blueprintOnly )
@@ -1125,7 +1093,10 @@ public class Workshop : Building
 				SetWorking( false );
 				itemsProduced += productionConfiguration.outputStackSize;
 				if ( productionConfiguration.outputType != Item.Type.unknown )
+				{
 					team.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+					statusProduction += productionConfiguration.outputStackSize;
+				}
 				resting.Start( restTime );
 				ChangeStatus( Status.resting );
 			}
