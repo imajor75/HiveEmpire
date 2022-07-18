@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -233,7 +233,8 @@ public class Interface : HiveObject
 		cave,
 		box,
 		bar,
-		ground
+		ground,
+		prod
 	}
 
 	public Interface()
@@ -484,7 +485,7 @@ public class Interface : HiveObject
 		challengesButton.SetTooltip( () => $"Show list of possible challenges (hotkey: {challengesButton.GetHotkey().keyName})" );
 		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
 		showNearestCaveButton.SetTooltip( () => $"Show nearest animal cave (hotkey: {showNearestCaveButton.GetHotkey().keyName})" );
-		var showProductionChainButton = this.Image( Icon.cave ).AddClickHandler( () => ProductionChainPanel.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
+		var showProductionChainButton = this.Image( Icon.prod ).AddClickHandler( () => ProductionChainPanel.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
 		showProductionChainButton.SetTooltip( () => $"Show production chain in this world (hotkey: {showProductionChainButton.GetHotkey().keyName})" );
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( iconFolder.transform ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
@@ -537,21 +538,21 @@ public class Interface : HiveObject
 
 	public void OpenMainPanel()
 	{
-		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-		if ( directory.Exists )
-		{
-			var myFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
-			if ( myFiles.Count() > 0 )
-				Load( myFiles.First().FullName );
-		}
-		if ( !world.gameInProgress )
-		{
-			var demoFile = Application.streamingAssetsPath + "/demolevel.json";
-			if ( File.Exists( demoFile ) )
-				Load( demoFile );
-			else
+		// var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+		// if ( directory.Exists )
+		// {
+		// 	var myFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
+		// 	if ( myFiles.Count() > 0 )
+		// 		Load( myFiles.First().FullName );
+		// }
+		// if ( !world.gameInProgress )
+		// {
+		// 	var demoFile = Application.streamingAssetsPath + "/demolevel.json";
+		// 	if ( File.Exists( demoFile ) )
+		// 		Load( demoFile );
+		// 	else
 				NewGame( challenges.First() );
-		}
+		//}
 
 		MainPanel.Create().Open( true );
 	}
