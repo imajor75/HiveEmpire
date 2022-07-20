@@ -368,7 +368,10 @@ public class Simpleton : Player
                     Workshop.Type.stoneMine => 1,
                     _ => 0
                 };
-                boss.tasks.Add( new YieldTask( boss, workshopType.type, Math.Max( soldierYield * world.itemTypeUsage[(int)workshopType.outputType], targetMinimum ) ) );
+                var outputType = workshopType.outputType;
+                if ( workshopType.type == Workshop.Type.forester )
+                    outputType = Item.Type.log;
+                boss.tasks.Add( new YieldTask( boss, workshopType.type, Math.Max( soldierYield * world.itemTypeUsage[(int)outputType], targetMinimum ) ) );
             }
 
             foreach ( var flag in boss.team.flags )

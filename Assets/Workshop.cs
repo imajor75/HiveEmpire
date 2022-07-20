@@ -686,6 +686,7 @@ public class Workshop : Building
 		AddWeight( Item.Type.plank, 1 );
 		AddWeight( Item.Type.stone, 1 );
 		AddWeight( Item.Type.soldier, 1 );
+		world.workshopTypeUsage[(int)Workshop.Type.forester] = world.workshopTypeUsage[(int)Workshop.Type.woodcutter];
 	}
 
 	static public Configuration GetConfiguration( Type type )
