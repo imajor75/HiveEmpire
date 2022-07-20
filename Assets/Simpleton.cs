@@ -355,33 +355,21 @@ public class Simpleton : Player
             }
             boss.noRoom = false;
 
-            // TODO Dynamic
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.woodcutter, Math.Max( soldierYield * 2, 3 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.sawmill, Math.Max( soldierYield, 3 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stonemason, 1 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bakery, soldierYield * 2 ) );
-            if ( boss.lackingProductions.Count == 0 )
-                boss.tasks.Add( new YieldTask( boss, Workshop.Type.barrack, soldierYield + 0.1f ) );
-            else
-                boss.lackingProductions.Clear();
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.bowMaker, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.brewery, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.butcher, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.coalMine, soldierYield * 2 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.wheatFarm, soldierYield * 3 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.fishingHut, Math.Max( soldierYield, 1 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.forester, Math.Max( soldierYield * 2, 2 ) ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.jeweler, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.goldMine, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.hunter, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.ironMine, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.mill, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.saltMine, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.smelter, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.stoneMine, 1 ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.weaponMaker, soldierYield ) );
-            boss.tasks.Add( new YieldTask( boss, Workshop.Type.well, soldierYield * 2 ) );
-            boss.tasks.Add( new ExtendBorderTask( boss ) );
+            foreach ( var workshopType in world.workshopConfigurations )
+            {
+                if ( workshopType.type == Workshop.Type.barrack && boss.lackingProductions.Count != 0 )
+                    continue;
+                float targetMinimum = workshopType.type switch
+                {
+                    Workshop.Type.barrack => soldierYield + 0.1f,
+                    Workshop.Type.woodcutter => 3,
+                    Workshop.Type.sawmill => 3,
+                    Workshop.Type.forester => 2,
+                    Workshop.Type.stoneMine => 1,
+                    _ => 0
+                };
+                boss.tasks.Add( new YieldTask( boss, workshopType.type, Math.Max( soldierYield * world.itemTypeUsage[(int)workshopType.outputType], targetMinimum ) ) );
+            }
 
             foreach ( var flag in boss.team.flags )
             {
