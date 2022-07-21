@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -71,53 +71,42 @@ public class Workshop : Building
 		}
 	}
 
-	public float[] lastCalculatedProductivity = { -1, -1 };
-	public World.Timer[] productivityCalculationTimer = { new World.Timer(), new World.Timer() };
-	public int[] lastProductivityCalculationTimeRange = { 0, 0 };
+	[Obsolete( "Compatibility with old files", true )]
+	float[] lastCalculatedProductivity { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer[] productivityCalculationTimer { set{} }
+	[Obsolete( "Compatibility with old files", true )]
+	int[] lastProductivityCalculationTimeRange { set{} }
 
-	public float CalculateProductivity( bool maximumPossible = false, int timeRange = Constants.Workshop.productivityRecalculationPeriod )
+	public float CalculateProductivity( bool maximumPossible = false, int timeRange = Constants.Workshop.productivityPeriod )
 	{
-		int index = maximumPossible ? 1 : 0;
 		var startTime = time - timeRange;
-		if ( productivityCalculationTimer[index].done || productivityCalculationTimer[index].empty || float.IsNaN( lastCalculatedProductivity[index] ) || lastProductivityCalculationTimeRange[index] != timeRange )
+		int itemsProduced = 0;
+			
+		int wastedTime = 0, usedTime = 0;
+		for ( var statusNode = statuses.Last; statusNode != null; statusNode = statusNode.Previous )
 		{
-			productivityCalculationTimer[index].Start( timeRange );
-			int itemsProduced = 0;
-				
-			int wastedTime = 0, usedTime = 0;
-			bool hasEnoughtData = false;
-			for ( var statusNode = statuses.Last; statusNode != null; statusNode = statusNode.Previous )
+			var status = statusNode.Value;
+			int statusTime = status.length;
+			if ( status.startTime < startTime )
+				statusTime -= startTime - status.startTime;
+			if ( statusTime > 0 )
 			{
-				var status = statusNode.Value;
-				int statusTime = status.length;
-				if ( status.startTime < startTime )
-					statusTime -= startTime - status.startTime;
-				if ( statusTime > 0 )
-				{
-					if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 )
-						wastedTime += status.length;
-					else
-						usedTime += status.length;
-					itemsProduced += status.itemsProduced;
-				}
-				if ( status.startTime < startTime )
-				{
-					hasEnoughtData = true;
-					break;
-				}
+				if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 )
+					wastedTime += status.length;
+				else
+					usedTime += status.length;
+				itemsProduced += status.itemsProduced;
 			}
-			if ( hasEnoughtData )
-			{
-				lastCalculatedProductivity[index] = (float)itemsProduced / timeRange * Constants.World.normalSpeedPerSecond * 60;
-				if ( maximumPossible && usedTime > 0 )
-					lastCalculatedProductivity[index] *= (usedTime + wastedTime) / usedTime;
-			}
-			lastProductivityCalculationTimeRange[index] = timeRange;
+			if ( status.startTime < startTime )
+				break;
 		}
-		if ( lastCalculatedProductivity[index] < 0 && maximumPossible )
-			return maxOutput;
 
-		return lastCalculatedProductivity[index];
+		var result = (float)itemsProduced / timeRange * Constants.World.normalSpeedPerSecond * 60;
+		if ( maximumPossible && usedTime > 0 )
+			result *= (usedTime + wastedTime) / usedTime;
+
+		return result;
 	}
 
 	[Obsolete( "Compatibility with old files", true )]
@@ -163,7 +152,7 @@ public class Workshop : Building
 		public int maxRestTime = Constants.Workshop.defaultMaxRestTime;
 		public int outputMax = Constants.Workshop.defaultOutputMax;
 		public bool producesDung = false;
-		public float productivity {get { return (float)Constants.World.normalSpeedPerSecond / productionTime; } }
+		public float productivity {get { return (float)Constants.World.normalSpeedPerSecond * 60 / productionTime; } }
 
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }

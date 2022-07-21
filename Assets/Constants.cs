@@ -372,7 +372,7 @@ public static class Constants
         public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
         public const int relaxAreaSize = 3;
-        public const int productivityRecalculationPeriod = Constants.World.normalSpeedPerSecond * 60 * 30;
+        public const int productivityPeriod = Constants.World.normalSpeedPerSecond * 60;
     }
 
     public static class Simpleton
@@ -414,6 +414,7 @@ public static class Constants
         public const int expectedLogFromRenewWoodcutter = 50;
         public const int expectedPlankPanic = 40;
         public const float valuableNodePenalty = 0.5f;
+        public const int maximumProductionCalculatingPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
     }
 }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2346,11 +2346,13 @@ public class Interface : HiveObject
 
 		void Update()
 		{
+			if ( ( eye.cameraGrid.center.cullingMask & ( 1 << gameObject.layer ) ) == 0 )
+				return;
 			transform.rotation = Quaternion.Euler( -90, (float)( eye.direction / Math.PI * 180 ), 0 );
 			if ( barMaterial )
 			{
 				var workshop = building as Workshop;
-				float progress = workshop.productionConfiguration.productivity / workshop.CalculateProductivity();
+				float progress = workshop.CalculateProductivity() / workshop.productionConfiguration.productivity;
 				barMaterial.SetFloat( progressShaderID, progress );
 				Color color;
 				if ( progress < 0.5f )
@@ -2656,7 +2658,7 @@ public class Interface : HiveObject
 
 		static public void UpdateProductivity( Text text, Workshop workshop )
 		{
-			var percentage = (int)Math.Min( workshop.productionConfiguration.productivity / workshop.CalculateProductivity() * 101, 100 );
+			var percentage = (int)Math.Min( workshop.CalculateProductivity() / workshop.productionConfiguration.productivity * 101, 100 );
 			text.text = percentage.ToString() + "%";
 			if ( percentage == 100 )
 				text.color = Color.green;
