@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +16,7 @@ public class Workshop : Building
 	public bool working;
 	new public Type type = Type.unknown;
 	public List<Buffer> buffers = new List<Buffer>();
+	public Item.Type lastUsedInput = Item.Type.unknown;
 	public float millWheelSpeed = 0;
 	public Node resourcePlace;
 	public Mode mode = Mode.whenNeeded;
@@ -280,6 +281,7 @@ public class Workshop : Building
 		public Team.InputWeight weight;
 		public bool disabled;
 		public bool optional;
+		public bool bored;
 	}
 
 	new public enum Type
@@ -1023,6 +1025,8 @@ public class Workshop : Building
 		for ( int i = 0; i < buffers.Count; i++ )
 		{
 			var b = buffers[i];
+			if ( b.bored )
+				continue;
 			sum += b.stored;
 			if ( min > b.stored )
 			{
@@ -1048,6 +1052,17 @@ public class Workshop : Building
 			if ( common )
 			{
 				int used = Math.Min( b.stored, count );
+				if ( used > 0 )
+				{
+					if ( lastUsedInput == b.itemType )
+						b.bored = true;
+					else
+						lastUsedInput = b.itemType;
+
+					foreach ( var otherBuffer in buffers )
+						if ( otherBuffer != b )
+							otherBuffer.bored = false;
+				}
 				count -= used;
 				b.stored -= used;
 			}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -234,7 +234,10 @@ public class Interface : HiveObject
 		box,
 		bar,
 		ground,
-		prod
+		prod,
+		happy,
+		bored,
+		angry
 	}
 
 	public Interface()
@@ -2681,8 +2684,23 @@ public class Interface : HiveObject
 			Workshop.Buffer buffer;
 			Image disableIndicator, disableIcon;
 
+			class Taste : MonoBehaviour
+			{
+				public Workshop boss;
+				public Workshop.Buffer buffer;
+				public Image image;
+				void Update()
+				{
+					if ( buffer.bored )
+						image.sprite = Interface.iconTable.GetMediaData( Icon.angry );
+					else
+						image.sprite = Interface.iconTable.GetMediaData( boss.lastUsedInput == buffer.itemType ? Icon.bored : Icon.happy );
+				}
+			}
+
 			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null, bool input = true )
 			{
+				var workshop = boss.building as Workshop;
 				int itemsStartX = x - xi + iconSize;
 				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, y );
 				items = new ItemImage[itemCount];
@@ -2690,6 +2708,14 @@ public class Interface : HiveObject
 				this.itemType = itemType;
 				for ( int i = 0; i < itemCount; i++ )
 					items[i] = boss.ItemIcon( itemType ).PinSideways( xi - iconSize, y );
+				if ( workshop && workshop.productionConfiguration.commonInputs && buffer != null )
+				{
+					var image = boss.Image().PinSideways( 0, y );
+					var taste = image.gameObject.AddComponent<Taste>();
+					taste.image = image;
+					taste.boss = workshop;
+					taste.buffer = buffer;
+				}
 				int itemsEndX = UIHelpers.currentColumn;
 				if ( itemCount > 0 )
 					boss.Text( "?" ).PinSideways( 0, y, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
