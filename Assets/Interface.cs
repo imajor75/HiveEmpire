@@ -6006,16 +6006,20 @@ if ( cart )
 				return;
 
 			rightDrag = true;
-			var camera = eye.cameraGrid.center;	// TODO Only works with the center camera?
-			Ray ray = camera.ScreenPointToRay( eventData.position );
-			Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexGround );
+			foreach ( var camera in eye.cameraGrid.cameras )
+			{
+				Ray ray = camera.ScreenPointToRay( eventData.position );
+				if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexGround ) )
+					continue;
 
-			Vector3 center = camera.WorldToScreenPoint( hit.point );
-			Vector3 centerWorld = camera.ScreenToWorldPoint( center );
-			Vector3 rightWorld = camera.ScreenToWorldPoint( center - Vector3.right );
-			Vector3 downWorld = camera.ScreenToWorldPoint( center - Vector3.up );
-			rightOffset = rightWorld - centerWorld;
-			downOffset = downWorld - centerWorld;
+				Vector3 center = camera.WorldToScreenPoint( hit.point );
+				Vector3 centerWorld = camera.ScreenToWorldPoint( center );
+				Vector3 rightWorld = camera.ScreenToWorldPoint( center - Vector3.right );
+				Vector3 downWorld = camera.ScreenToWorldPoint( center - Vector3.up );
+				rightOffset = rightWorld - centerWorld;
+				downOffset = downWorld - centerWorld;
+				break;
+			}
 		}
 
 		public void OnPointerUp( PointerEventData eventData )
