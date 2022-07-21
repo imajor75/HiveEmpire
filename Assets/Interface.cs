@@ -2695,13 +2695,13 @@ public class Interface : HiveObject
 					boss.Text( "?" ).PinSideways( 0, y, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
 				if ( area != null )
 					boss.AreaIcon( boss.building, area ).PinSideways( 0, y );
+				boss.Image( Icon.buildings ).PinSideways( 0, y ).AddClickHandler( () => ShowProducers( itemType ) ).SetTooltip( "Show a list of buildings which produce this" );
 				if ( buffer != null && buffer.optional )
 				{
 					disableIcon = boss.Image( Icon.exit ).PinSideways( 0, y ).AddToggleHandler( SetDisabled, buffer.disabled );
 					disableIndicator = boss.Image( Icon.emptyFrame ).Pin( itemsStartX, y - iconSize / 2 + 2, itemsEndX - itemsStartX + 4, 4 );
 					disableIndicator.color = Color.Lerp( Color.red, Color.black, 0.5f );
 				}
-				boss.Image( Icon.buildings ).PinSideways( 0, y ).AddClickHandler( () => ShowProducers( itemType ) ).SetTooltip( "Show a list of buildings which produce this" );
 			}
 
 			void ShowProducers( Item.Type itemType )
