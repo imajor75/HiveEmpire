@@ -178,6 +178,7 @@
       "gatheredResource": "coal",
       "outputType": "coal",
       "commonInputs": true,
+      "inputBufferSize": 2,
       "baseMaterials":
       {
         "min": 2,
@@ -195,6 +196,7 @@
       "gatheredResource": "salt",
       "outputType": "salt",
       "commonInputs": true,
+      "inputBufferSize": 2,
       "baseMaterials":
       {
         "min": 2,
@@ -212,6 +214,7 @@
       "gatheredResource": "iron",
       "outputType": "iron",
       "commonInputs": true,
+      "inputBufferSize": 2,
       "baseMaterials":
       {
         "min": 2,
@@ -229,6 +232,7 @@
       "gatheredResource": "copper",
       "outputType": "copper",
       "commonInputs": true,
+      "inputBufferSize": 2,
       "baseMaterials":
       {
         "min": 2,
@@ -246,6 +250,7 @@
       "gatheredResource": "gold",
       "outputType": "gold",
       "commonInputs": true,
+      "inputBufferSize": 2,
       "baseMaterials":
       {
         "min": 2,
@@ -263,6 +268,7 @@
       "gatheredResource": "silver",
       "outputType": "silver",
       "commonInputs": true,
+      "inputBufferSize": 2,
       "baseMaterials":
       {
         "min": 2,
@@ -279,6 +285,7 @@
       "gatheredResource": "stone",
       "outputType": "stone",
       "commonInputs": true,
+      "inputBufferSize": 2,
       "baseMaterials":
       {
         "min": 2,

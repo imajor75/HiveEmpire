@@ -849,6 +849,30 @@ public class World : HiveObject
 		base.Start();
 	}
 
+	void UpdateWorkshopConfigurations()
+	{
+		var originalWorkshopConfigurations = Serializer.Read<WorkshopConfigurations>( Application.streamingAssetsPath + "/workshops.json", new WorkshopConfigurationsTypeConverter() ).list;
+		foreach ( var c in originalWorkshopConfigurations )
+			if ( c.constructionTime == 0 )
+				c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
+
+		foreach ( var configuration in workshopConfigurations )
+		{
+			foreach ( var originalConfiguration in originalWorkshopConfigurations )
+			{
+				if ( configuration.type != originalConfiguration.type )
+					continue;
+
+				configuration.inputBufferSize = originalConfiguration.inputBufferSize;
+				configuration.gatheredResource = originalConfiguration.gatheredResource;
+				configuration.gatheringRange = originalConfiguration.gatheringRange;
+				configuration.relaxSpotCountNeeded = originalConfiguration.relaxSpotCountNeeded;
+				configuration.producesDung = originalConfiguration.producesDung;
+				configuration.commonInputs = originalConfiguration.commonInputs;
+			}
+		}
+	}
+
     public void Load( string fileName )
 	{
 		ValueType GetValue<ValueType>( object from, string field ) where ValueType : class
@@ -873,6 +897,8 @@ public class World : HiveObject
 		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
 		if ( lastChecksum != 0 )
 			Assert.global.AreEqual( checksum, lastChecksum, "Checksum mismatch in world" );
+
+		UpdateWorkshopConfigurations();
 
 		foreach ( var water in Resources.FindObjectsOfTypeAll<Water>() )
 		{
