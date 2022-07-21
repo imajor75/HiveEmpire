@@ -3132,6 +3132,8 @@ public class Interface : HiveObject
 					offset = 140;
 			}
 
+			SetSize( 300, 100 - row );
+
 			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 180, 70, 100, 40, 0, 0 );
 			selectedItemArea.name = "Selected item area";
 			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
