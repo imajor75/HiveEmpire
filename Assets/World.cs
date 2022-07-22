@@ -1454,7 +1454,6 @@ public class World : HiveObject
 		foreach ( var resource in toRemove )
 			resource.Remove();
 
-		// TODO Dynamic
 		ores.Clear();
 		oreCount = 0;
 		animalSpawnerCount = 0; 
@@ -1552,6 +1551,8 @@ public class World : HiveObject
 		int idealAnimalSpawnerCount = (int)( settings.size * settings.size * settings.animalSpawnerChance );
 		if ( idealAnimalSpawnerCount == 0 )
 			idealAnimalSpawnerCount = 1;
+		if ( itemTypeUsage[(int)Item.Type.hide] == 0 )
+			idealAnimalSpawnerCount = 0;
 		while ( animalSpawnerCount != idealAnimalSpawnerCount )
 		{
 			var location = ground.GetNode( rnd.Next( settings.size ), rnd.Next( settings.size ) );
