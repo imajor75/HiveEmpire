@@ -2704,7 +2704,7 @@ public class Interface : HiveObject
 			{
 				var workshop = boss.building as Workshop;
 				int itemsStartX = x - xi + iconSize;
-				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, y );
+				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, y ).SetTooltip( Nice( itemType.ToString() ) );
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
@@ -2717,6 +2717,10 @@ public class Interface : HiveObject
 					taste.image = image;
 					taste.boss = workshop;
 					taste.buffer = buffer;
+					image.SetTooltip( "This image shows how much the owner of the building likes this type of food\n"+
+					"happy face: the owner likes this food and is happy to eat it next time\n"+
+					"bored face: the owner is getting bored with this type of food as it was eating this last time, but still willing to eat it again\n"+
+					"angry face: indicates that the owner hate this food because it was eating it two times in a row and is not willing to eat it next time" );
 				}
 				int itemsEndX = UIHelpers.currentColumn;
 				if ( itemCount > 0 )
