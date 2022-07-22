@@ -3159,7 +3159,7 @@ public class Interface : HiveObject
 				i.AddClickHandler( () => PopupForItemType( d ), UIHelpers.ClickType.right );
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				counts[j].AddClickHandler( () => SelectItemType( t ) );
-				if ( offset > 0 )
+				if ( offset >= 140 )
 				{
 					row -= iconSize + 5;
 					offset = 0;
