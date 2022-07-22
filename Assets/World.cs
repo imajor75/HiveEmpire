@@ -577,30 +577,10 @@ public class World : HiveObject
 		return new GameObject( "World" ).AddComponent<World>();
 	}
 
-	class WorkshopConfigurations
-	{
-		public List<Workshop.Configuration> list;
-	}
-
-	class WorkshopConfigurationsTypeConverter : Serializer.TypeConverter
-	{
-		public override object ChangeType( object value, Type conversionType )
-		{
-			if ( value.GetType() == typeof( string ) && conversionType == typeof( Workshop.Configuration.Material ) )
-				return (Workshop.Configuration.Material)(string)value;
-			return base.ChangeType( value, conversionType );
-		}
-	}
-
 	public void Awake()
 	{
 		settings = ScriptableObject.CreateInstance<Settings>();
 		network = Network.Create();
-		
-		workshopConfigurations = Serializer.Read<WorkshopConfigurations>( Application.streamingAssetsPath + "/workshops.json", new WorkshopConfigurationsTypeConverter() ).list;
-		foreach ( var c in workshopConfigurations )
-			if ( c.constructionTime == 0 )
-				c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
 	}
 
 	public new World Setup()
@@ -747,6 +727,7 @@ public class World : HiveObject
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
 	{
+		workshopConfigurations = Workshop.LoadConfigurations();
 		if ( resetSettings )
 			settings = ScriptableObject.CreateInstance<Settings>();
 		nextID = 1;
@@ -851,10 +832,7 @@ public class World : HiveObject
 
 	void UpdateWorkshopConfigurations()
 	{
-		var originalWorkshopConfigurations = Serializer.Read<WorkshopConfigurations>( Application.streamingAssetsPath + "/workshops.json", new WorkshopConfigurationsTypeConverter() ).list;
-		foreach ( var c in originalWorkshopConfigurations )
-			if ( c.constructionTime == 0 )
-				c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
+		var originalWorkshopConfigurations = Workshop.LoadConfigurations();
 
 		foreach ( var configuration in workshopConfigurations )
 		{

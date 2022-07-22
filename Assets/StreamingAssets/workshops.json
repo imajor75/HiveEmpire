@@ -63,6 +63,11 @@
       "approximatedProductionTime": 5000,
       "stoneNeeded": 2,
       "outputType": "grain",
+      "baseMaterials":
+      { 
+        "min": 0,
+        "options": [ "water", "dung" ]
+      },
       "groundTypeNeeded": "grass"
     },
     {
@@ -74,6 +79,11 @@
       "approximatedProductionTime": 5000,
       "stoneNeeded": 2,
       "outputType": "corn",
+      "baseMaterials":
+      { 
+        "min": 0,
+        "options": [ "water", "dung" ]
+      },
       "groundTypeNeeded": "grass"
     },
     {

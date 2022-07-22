@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -77,6 +77,31 @@ public class Workshop : Building
 	World.Timer[] productivityCalculationTimer { set{} }
 	[Obsolete( "Compatibility with old files", true )]
 	int[] lastProductivityCalculationTimeRange { set{} }
+
+	class Configurations
+	{
+		public List<Configuration> list;
+	}
+
+	class ConfigurationTypeConverter : Serializer.TypeConverter
+	{
+		public override object ChangeType( object value, System.Type conversionType )
+		{
+			if ( value.GetType() == typeof( string ) && conversionType == typeof( Configuration.Material ) )
+				return (Workshop.Configuration.Material)(string)value;
+			return base.ChangeType( value, conversionType );
+		}
+	}
+
+	static public List<Configuration> LoadConfigurations()
+	{
+
+		var workshopConfigurations = Serializer.Read<Configurations>( Application.streamingAssetsPath + "/workshops.json", new ConfigurationTypeConverter() ).list;
+		foreach ( var c in workshopConfigurations )
+			if ( c.constructionTime == 0 )
+				c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
+		return workshopConfigurations;
+	}
 
 	public float CalculateProductivity( bool maximumPossible = false, int timeRange = Constants.Workshop.productivityPeriod )
 	{
