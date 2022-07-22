@@ -2472,6 +2472,10 @@ public class Interface : HiveObject
 					var bui = new Buffer();
 					bui.Setup( this, b, col, row, iconSize + 5 );
 					buffers.Add( bui );
+					if ( b == workshop.buffers.Last() )
+						Text( workshop.productionConfiguration.outputStackSize > 1 ? "= 2x" : "  =" ).Pin( borderWidth - 5, row - 20, 50 );
+					else
+						Text( workshop.productionConfiguration.commonInputs ? " or" : "and" ).Pin( borderWidth - 5, row - 20, 50 );
 					row -= iconSize * 3 / 2;
 				}
 			}
