@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -24,6 +24,7 @@ public class Serializer
 	public Type currentObjectType;
 	public List<ReferenceLink> referenceLinks = new List<ReferenceLink>();
 	public TypeConverter typeConverter;
+	Dictionary<Type, List<MemberInfo>> cachedMembers = new();
 
 	public class TypeConverter
 	{
@@ -306,30 +307,43 @@ public class Serializer
 			writer.WritePropertyName( "$id" );
 			writer.WriteValue( index );
 		}
-		foreach ( var member in type.GetMembers() )
+		List<MemberInfo> members = null;
+		cachedMembers.TryGetValue( type, out members );
+		if ( members == null )
 		{
-			if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
-				continue;
+			members = new List<MemberInfo>();
+			foreach ( var member in type.GetMembers() )
+			{
+				if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
+					continue;
 
-			if ( !allowUnityTypes && member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
-				continue;
+				if ( !allowUnityTypes && member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
+					continue;
 
+				if ( member is FieldInfo fi )
+				{
+					if ( fi.IsLiteral || fi.IsInitOnly || fi.IsStatic || !fi.IsPublic )
+						continue;
+					if ( !allowUnityTypes && fi.FieldType.Namespace == "UnityEngine" && fi.FieldType != typeof( Color ) && fi.FieldType != typeof( Vector2 ) && fi.FieldType != typeof( Vector3 ) )
+						continue;
+					members.Add( member );
+				}
+				else if ( member is PropertyInfo pi )
+				{
+					if ( pi.GetCustomAttribute<JsonPropertyAttribute>() == null )
+						continue;
+					members.Add( member );
+				}
+			}
+			cachedMembers[type] = members;
+		}
+		foreach ( var member in members )
+		{
+			writer.WritePropertyName( member.Name );
 			if ( member is FieldInfo fi )
-			{
-				if ( fi.IsLiteral || fi.IsInitOnly || fi.IsStatic || !fi.IsPublic )
-					continue;
-				if ( !allowUnityTypes && fi.FieldType.Namespace == "UnityEngine" && fi.FieldType != typeof( Color ) && fi.FieldType != typeof( Vector2 ) && fi.FieldType != typeof( Vector3 ) )
-					continue;
-				writer.WritePropertyName( member.Name );
 				WriteObjectAsValue( writer, fi.GetValue( source ) );
-			}
 			else if ( member is PropertyInfo pi )
-			{
-				if ( pi.GetCustomAttribute<JsonPropertyAttribute>() == null )
-					continue;
-				writer.WritePropertyName( member.Name );
 				WriteObjectAsValue( writer, pi.GetValue( source ) );
-			}
 		}
 		writer.WriteEndObject();
 	}
