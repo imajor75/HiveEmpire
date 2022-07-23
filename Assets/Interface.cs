@@ -2892,8 +2892,7 @@ public class Interface : HiveObject
 					t.name = interval.ToString();
 					t.color = interval == this.interval ? Color.white : Color.grey;
 				}
-				UIHelpers.currentColumn = -180;
-				AddIntervalText( "10h", Constants.World.normalSpeedPerSecond * 60 * 60 * 10 );
+				UIHelpers.currentColumn = -160;
 				AddIntervalText( "1h", Constants.World.normalSpeedPerSecond * 60 * 60 );
 				AddIntervalText( "30m", Constants.World.normalSpeedPerSecond * 60 * 30 );
 				AddIntervalText( "10m", Constants.World.normalSpeedPerSecond * 60 * 10 );

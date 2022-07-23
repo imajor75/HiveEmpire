@@ -266,7 +266,7 @@ public class Workshop : Building
 	}
 
 	[Serializable]
-	public class PastStatus
+	public struct PastStatus
 	{
 		public Status status;
 		public int length;
@@ -782,6 +782,9 @@ public class Workshop : Building
 			}
 			PlayWorkingSound();
 		}
+
+		while ( statuses.Count > 0 && statuses.First().startTime + statuses.First().length < time - Constants.Workshop.maxSavedStatusTime )
+			statuses.RemoveFirst();
 	}
 
 	public override GameObject Template()
@@ -874,6 +877,8 @@ public class Workshop : Building
 			return;
 		}
 
+		while ( statuses.Count > 0 && statuses.First().startTime + statuses.First().length < time - Constants.Workshop.maxSavedStatusTime )
+			statuses.RemoveFirst();
 		if ( currentStatus != Status.unknown )
 			statuses.AddLast( new PastStatus { status = currentStatus, length = statusDuration.age, startTime = statusDuration.reference, itemsProduced = statusProduction } );
 		currentStatus = status;
@@ -904,9 +909,6 @@ public class Workshop : Building
 
 		if ( gatherer && tinkerer.IsIdle() && tinkerer.node == node )
 			SetWorking( false );
-
-		while ( statuses.Count > 0 && time - statuses.First().startTime > Constants.Workshop.maxSavedStatusTime )
-			statuses.RemoveFirst();
 
 		if ( reachable )
 		{

@@ -363,7 +363,7 @@ public static class Constants
 	    public const int appleRestTime = Constants.World.normalSpeedPerSecond * 320;
 	    public const int pasturingTime = Constants.World.normalSpeedPerSecond * 2;
 	    public const float pasturingPrayChance = 0.2f;  
-    	public const int maxSavedStatusTime = Constants.World.normalSpeedPerSecond * 60 * 60 * 10;
+    	public const int maxSavedStatusTime = Constants.World.normalSpeedPerSecond * 60 * 60;
         public const int defaultProductionTime = Constants.World.normalSpeedPerSecond * 30;
         public const int defaultMaxRestTime = Constants.World.normalSpeedPerSecond * 60;
         public const int defaultRelaxSpotNeeded = 20;
