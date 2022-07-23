@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -410,6 +410,27 @@ public class Serializer
 			processedObjectCount++;
 		}
 		writer.WriteEndArray();
+	#if UNITY_EDITOR
+		{
+			Dictionary<Type, int> content = new Dictionary<Type, int>();
+			foreach ( var processedObject in objects )
+			{
+				var type = processedObject.GetType();
+				if ( content.ContainsKey( type ) )
+					content[type]++;
+				else
+					content[type] = 1;
+			}
+			List<(Type, int)> types = new List<(Type, int)>();
+			foreach ( var type in content )
+				types.Add( (type.Key, type.Value) );
+			types.Sort( ( a, b ) => b.Item2.CompareTo( a.Item2 ) );
+			HiveCommon.Log( "Types in file\n================" );
+			foreach ( var type in types )
+				HiveCommon.Log( $"{type.Item1} : {type.Item2}" );
+
+		}
+	#endif
 		writer.Close();
 		sw.Close();
 	}
