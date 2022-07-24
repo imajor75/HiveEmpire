@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6834,6 +6834,7 @@ if ( cart )
 	public class History : Panel
 	{
 		Item.Type selected;
+		int selectedColumn;
 		Team team;
 		float lastProductivity;
 		Image chart, itemFrame;
@@ -6853,17 +6854,23 @@ if ( cart )
 				return;
 
 			name = "History panel";
+			UIHelpers.currentColumn = borderWidth;
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
+				if ( world.itemTypeUsage[i] == 0 )
+					continue;
 				var t = (Item.Type)i;
-				ItemIcon( (Item.Type)i ).Pin( 20 + i * iconSize, -20 ).AddClickHandler( delegate { selected = t; } );
+				int column = UIHelpers.currentColumn;
+				ItemIcon( t ).PinSideways( 0, -20 ).AddClickHandler( () => { selected = t; selectedColumn = column; } );
 			}
+			int panelIdealWidth = UIHelpers.currentColumn + borderWidth;
 			itemFrame = Image( Icon.tinyFrame ).Pin( 17, -17, 26, 26 );
-			chart = Image().Pin( 20, -40, 410, 240 );
+			chart = Image().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize );
 			record = Text().Pin( 25, -45, 150 );
 			record.color = Color.yellow;
 			selected = Item.Type.soldier;
 			lastProductivity = -1;
+			SetSize( panelIdealWidth, 300 );
 		}
 
 		int PerMinuteToPixel( float perMinute )
@@ -6900,7 +6907,7 @@ if ( cart )
 			if ( lastProductivity == a.current )
 				return;
 
-			var t = new Texture2D( (int)chart.rectTransform.sizeDelta.x, (int)chart.rectTransform.sizeDelta.y );
+			var t = new Texture2D( 512, 256 );
 			for ( int x = 0; x < t.width; x++ )
 			{
 				for ( int y = 0; y < t.height; y++ )
@@ -6988,7 +6995,7 @@ if ( cart )
 			chart.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
 			Assert.global.IsNotNull( chart.sprite );
 			record.text = "Record: " + a.record;
-			itemFrame.PinCenter( 30 + (int)selected * iconSize, -30 );
+			itemFrame.Pin( selectedColumn, -borderWidth );
 			lastProductivity = a.current;
 		}
 	}
