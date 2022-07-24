@@ -6844,6 +6844,7 @@ if ( cart )
 		Team team;
 		float lastProductivity;
 		Image chart, itemFrame;
+		Texture2D chartContent;
 		Text record;
 		public float scale = 1;
 
@@ -6861,22 +6862,50 @@ if ( cart )
 
 			name = "History panel";
 			UIHelpers.currentColumn = borderWidth;
+			selected = Item.Type.soldier;
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				if ( world.itemTypeUsage[i] == 0 )
 					continue;
 				var t = (Item.Type)i;
 				int column = UIHelpers.currentColumn;
+				if ( t == selected )
+					selectedColumn = column;
 				ItemIcon( t ).PinSideways( 0, -20 ).AddClickHandler( () => { selected = t; selectedColumn = column; } );
 			}
 			int panelIdealWidth = UIHelpers.currentColumn + borderWidth;
 			itemFrame = Image( Icon.tinyFrame ).Pin( 17, -17, 26, 26 );
-			chart = Image().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize );
+			chart = Image().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize ).SetTooltip( Tooltip );
 			record = Text().Pin( 25, -45, 150 );
 			record.color = Color.yellow;
-			selected = Item.Type.soldier;
 			lastProductivity = -1;
 			SetSize( panelIdealWidth, 300 );
+		}
+
+		string Tooltip()
+		{
+			if ( chartContent == null )
+				return null;
+
+			Vector3[] corners = new Vector3[4];
+			chart.rectTransform.GetWorldCorners( corners );
+			var cursorInside = Input.mousePosition - corners[0];
+			var diagonal = corners[2] - corners[0];
+			var relative = new Vector3( cursorInside.x / diagonal.x, cursorInside.y / diagonal.y, cursorInside.z / diagonal.z );
+			int ticks = (int)( Constants.Player.productivityAdvanceTime * ( 1 - relative.x ) * chartContent.width );
+			var hours = ticks / 60 / 60 / Constants.World.normalSpeedPerSecond;
+			string time = $"{(ticks/60/Constants.World.normalSpeedPerSecond)%60} minutes ago\n";
+			if ( hours > 1 )
+				time = $"{hours} hours and " + time;
+			else if ( hours == 1 )
+				time = "1 hour and " + time;
+			var data = root.mainTeam.itemProductivityHistory[(int)selected].data;
+			string recorded = "No recorded data yet\n";
+			int index = (int)( ( 1 - relative.x ) * chartContent.width );
+			if ( data.Count > index )
+				recorded = $"{(data[data.Count - index - 1]).ToString( "N2" )} per minute recorded\n";
+			string atCursor = $"{PixelToPerMinute( (int)( relative.y * chartContent.height ) ).ToString( "N2" )} per minute at cursor";
+			return time + recorded + atCursor;
 		}
 
 		int PerMinuteToPixel( float perMinute )
@@ -6895,25 +6924,10 @@ if ( cart )
 			base.Update();
 			var a = team.itemProductivityHistory[(int)selected];
 
-			if ( chart.Contains( Input.mousePosition ) )
-			{
-				Vector3[] corners = new Vector3[4];
-				chart.rectTransform.GetWorldCorners( corners );
-				var cursorInsideChart = Input.mousePosition - corners[0];
-				int ticks = Constants.Player.productivityAdvanceTime * (int)( corners[2].x - Input.mousePosition.x );
-				var hours = ticks / 60 / 60 / Constants.World.normalSpeedPerSecond;
-				string time = $"{(ticks/60/Constants.World.normalSpeedPerSecond)%60} minutes ago";
-				if ( hours > 1 )
-					time = $"{hours} hours and " + time;
-				else if ( hours == 1 )
-					time = "1 hour and " + time;
-				chart.SetTooltip( $"{time}\n{PixelToPerMinute( (int)cursorInsideChart.y )} per minute" );
-			}
-
 			if ( lastProductivity == a.current )
 				return;
 
-			var t = new Texture2D( 512, 256 );
+			var t = chartContent = new Texture2D( 512, 256 );
 			for ( int x = 0; x < t.width; x++ )
 			{
 				for ( int y = 0; y < t.height; y++ )
