@@ -6876,7 +6876,7 @@ if ( cart )
 			int panelIdealWidth = UIHelpers.currentColumn + borderWidth;
 			itemFrame = Image( Icon.tinyFrame ).Pin( 17, -17, 26, 26 );
 			chart = Image().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize ).SetTooltip( Tooltip );
-			record = Text().Pin( 25, -45, 150 );
+			record = Text().Pin( 25, -45, 500 );
 			record.color = Color.yellow;
 			lastProductivity = -1;
 			SetSize( panelIdealWidth, 300 );
@@ -7014,7 +7014,7 @@ if ( cart )
 			t.Apply();
 			chart.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
 			Assert.global.IsNotNull( chart.sprite );
-			record.text = "Record: " + a.record;
+			record.text = $"Record: {a.record.ToString( "N2" )} per minute {UIHelpers.TimeToString( time - a.recordIndex * Constants.Player.productivityAdvanceTime, true, true )} ago, current: {a.current.ToString( "N2" )} per minute";
 			itemFrame.Pin( selectedColumn, -borderWidth );
 			lastProductivity = a.current;
 		}
@@ -7957,23 +7957,56 @@ public static class UIHelpers
 		return scroll;
 	}
 
-	public static string TimeToString( int time )
+	public static string TimeToString( int time, bool text = false, bool ignodeSeconds = false )
 	{
 		string result = "";
 		bool hasHours = false, hasDays = false;
-		if ( time >= 24*60*60*Constants.World.normalSpeedPerSecond )
+		int days = time/24/60/60/Constants.World.normalSpeedPerSecond;
+		if ( days > 0 )
 		{
-			result = $"{time/24/60/60/Constants.World.normalSpeedPerSecond}:";
+			result = $"{days}";
+			if ( text )
+			{
+				if ( days > 1 )
+					result += " days and ";
+				else
+					result += " day and ";
+			}
+			else
+				result += ":";
 			hasDays = true;
 		}
-		if ( time >= Constants.World.normalSpeedPerSecond*60*60 )
+		int hours = time/Constants.World.normalSpeedPerSecond/60/60;
+		if ( hours > 0 )
 		{
-			result += $"{((time/Constants.World.normalSpeedPerSecond/60/60)%24).ToString( hasDays ? "d2" : "d1" )}:";
+			result += $"{(hours%24).ToString( hasDays ? "d2" : "d1" )}";
+			if ( text )
+			{
+				if ( hours % 24 > 1 )
+					result += " hours and ";
+				else
+					result += " hour and ";
+			}
+			else
+				result += ":";
 			hasHours = true;
 		}
-		result += $"{((time/Constants.World.normalSpeedPerSecond/60)%60).ToString( hasHours ? "d2" : "d1" )}";
-		if ( !hasDays )
-			result += $":{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
+		var minutes = time/Constants.World.normalSpeedPerSecond/60;
+		result += $"{(minutes%60).ToString( hasHours ? "d2" : "d1" )}";
+		if ( text )
+		{
+			result += " minute";
+			if ( minutes % 60 > 1 )
+				result += "s";
+		}
+		if ( !hasDays &&!ignodeSeconds )
+		{
+			if ( text )
+				result += " and ";
+			else
+				result += ":";
+			result += $"{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
+		}
 		return result;
 	}
 
