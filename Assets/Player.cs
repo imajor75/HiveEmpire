@@ -6,7 +6,7 @@ using UnityEngine;
 public abstract class Player : HiveObject
 {
 	public new string name;
-	public LinkedList<Message> messages = new LinkedList<Message>();
+	public LinkedList<Message> messages = new ();
 
 	[Obsolete( "Compatibility with old files", true )]
 	float totalEfficiency { set {} }
@@ -126,33 +126,33 @@ public abstract class Player : HiveObject
 
 public class Team : HiveObject
 {
-	public List<Player> players = new List<Player>();
+	public List<Player> players = new ();
 	public Color color;
 	public new string name;
 
 	public Stock mainBuilding;
-	public List<float> itemHaulPriorities = new List<float>();
+	public List<float> itemHaulPriorities = new ();
 	public ItemDispatcher itemDispatcher;
-	public Versioned versionedRoadDelete = new Versioned();
-	public Versioned versionedRoadNetworkChanged = new Versioned();
-	public Versioned versionedBuildingDelete = new Versioned();
-	public List<Building> influencers = new List<Building>();
-	public World.Timer chartAdvanceTimer = new World.Timer(), productivityUpdateTimer = new World.Timer();
-	public List<Chart> itemProductivityHistory = new List<Chart>();
-	public List<Stock> stocks = new List<Stock>();
-	public List<Flag> flags = new List<Flag>();
-	public List<Road> roads = new List<Road>();
-	public List<Workshop> workshops = new List<Workshop>();
-	public List<GuardHouse> guardHouses = new List<GuardHouse>();
+	public Versioned versionedRoadDelete = new ();
+	public Versioned versionedRoadNetworkChanged = new ();
+	public Versioned versionedBuildingDelete = new ();
+	public List<Building> influencers = new ();
+	public World.Timer chartAdvanceTimer = new (), productivityUpdateTimer = new ();
+	public List<Chart> itemProductivityHistory = new ();
+	public List<Stock> stocks = new ();
+	public List<Flag> flags = new ();
+	public List<Road> roads = new ();
+	public List<Workshop> workshops = new ();
+	public List<GuardHouse> guardHouses = new ();
 
-	public List<bool> stocksHaveNeed = new List<bool>();
-	public List<int> buildingCounts = new List<int>();
-	public List<Item> items = new List<Item>();
+	public List<bool> stocksHaveNeed = new ();
+	public List<int> buildingCounts = new ();
+	public List<Item> items = new ();
 	public int firstPossibleEmptyItemSlot = 0;
 	public int[] surplus = new int[(int)Item.Type.total];
 	public List<InputWeight> inputWeights;
 	public InputWeight plankForConstructionWeight, stoneForConstructionWeight;
-	public List<float> constructionFactors = new List<float>();
+	public List<float> constructionFactors = new ();
 	public int soldierCount 
 	{ 
 		set { mainBuilding.itemData[(int)Item.Type.soldier].content = value; }
@@ -221,7 +221,7 @@ public class Team : HiveObject
 		public Chart Setup( Item.Type itemType )
 		{
 			this.itemType = itemType;
-			data = new List<float>();
+			data = new ();
 			record = current = 0;
 			recordIndex = production = 0;
 			return this;
@@ -236,7 +236,7 @@ public class Team : HiveObject
 		public void Advance()
 		{
 			if ( data == null )
-				data = new List<float>();
+				data = new ();
 
 			if ( current > record )
 			{
@@ -317,7 +317,7 @@ public class Team : HiveObject
 
 	void CreateInputWeights()
 	{
-		inputWeights = new List<InputWeight>();
+		inputWeights = new ();
 		inputWeights.Add( new InputWeight
 		{
 			workshopType = Workshop.Type.unknown,
@@ -418,7 +418,7 @@ public class Team : HiveObject
 		if ( checkOnly )
 			return AttackStatus.available;
 
-		List<Node> gather = new List<Node>();
+		List<Node> gather = new ();
 		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
 		{
 			Node n = target.flag.node.Neighbour( i );
@@ -517,7 +517,7 @@ public class Team : HiveObject
 		int closestEnemy = 0;
 		float heightdDif = float.MaxValue;
 		var area = Building.GetFoundation( true, flagDirection );
-		List<Ground.Offset> extendedArea = new List<Ground.Offset>();
+		List<Ground.Offset> extendedArea = new ();
 		foreach ( var p in area )
 		{
 			foreach ( var o in Ground.areas[1] )

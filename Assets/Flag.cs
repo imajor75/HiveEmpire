@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +13,10 @@ public class Flag : HiveObject
 	public bool crossing;
 	public bool recentlyLeftCrossing;	// Only for validaion, debug purposes
 	public Road[] roadsStartingHere = new Road[Constants.Node.neighbourCount];
-	public Versioned itemsStored = new Versioned();
-	public Watch freeSlotsWatch = new Watch();
+	public Versioned itemsStored = new ();
+	public Watch freeSlotsWatch = new ();
 	public bool requestFlattening;
-	public Building.Flattening flattening = new Building.Flattening();
+	public Building.Flattening flattening = new ();
 
 	[JsonIgnore]
 	public GameObject[] frames = new GameObject[Constants.Flag.maxItems];
@@ -173,7 +173,7 @@ public class Flag : HiveObject
 		{
 			requestFlattening = false;
 			if ( flattening == null )	// This should never be null, only after loading old files.
-				flattening = new Building.Flattening();
+				flattening = new ();
 			var area = new List<Node>();
 			area.Add( node );
 			foreach ( var o in Ground.areas[1] )
@@ -397,7 +397,7 @@ public class Flag : HiveObject
 				continue;
 			building.Remove();
 		}
-		List<Road> roads = new List<Road>();
+		List<Road> roads = new ();
 		foreach ( var road in roadsStartingHere )
 			if ( road )	
 				roads.Add( road );
@@ -515,7 +515,7 @@ public class Flag : HiveObject
 	/// <returns></returns>
 	public List<Building> Buildings()
 	{
-		List<Building> list = new List<Building>();
+		List<Building> list = new ();
 		foreach ( var o in Ground.areas[1] )
 		{
 			if ( !o )
@@ -536,7 +536,7 @@ public class Flag : HiveObject
 		if ( Buildings().Count() > 0 )
 			return false;
 
-		List<Road> shorten = new List<Road>(), change = new List<Road>(), extend = new List<Road>();
+		List<Road> shorten = new (), change = new (), extend = new ();
 
 		for ( int i = direction - 1; i < direction + Constants.Node.neighbourCount - 1; i++ )
 		{

@@ -10,7 +10,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		public float floatData;
 		public int intData;
 		public bool boolData;
-		public List<Key> keys = new List<Key>();
+		public List<Key> keys = new ();
 
 		public void Load( string prefix, string file = "" )
 		{
@@ -32,7 +32,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 
 	public void Fill( object[] data )
 	{
-		table = new List<Media>();
+		table = new ();
 		foreach ( var g in data )
 		{
 			if ( g is string file )
@@ -63,8 +63,8 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 	public Media GetMedia( Key key, int randomNumber = -1 )
 	{
 		if ( table == null )
-			table = new List<Media>();
-		List<Media> candidates = new List<Media>();
+			table = new ();
+		List<Media> candidates = new ();
 		foreach ( Media media in table )
 			if ( media.keys.Contains( key ) )
 				candidates.Add( media );
@@ -74,7 +74,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			if ( failure != null )
 				return failure;
 
-			Media media = new Media();
+			Media media = new ();
 			media.Load( fileNamePrefix, key.ToString() );
 			media.keys.Add( key );
 			table.Add( media );

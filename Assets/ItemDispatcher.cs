@@ -57,7 +57,7 @@ public class ItemDispatcher : HiveObject
 		}
 	}
 
-	public List<Market> markets = new List<Market>();
+	public List<Market> markets = new ();
 	public Building queryBuilding;
 	public Item.Type queryItemType;
 	public Potential.Type queryType;
@@ -155,7 +155,7 @@ public class ItemDispatcher : HiveObject
 
 		results = resultsInThisFrame;
 		if ( queryBuilding )
-			resultsInThisFrame = new List<LogisticResult>();
+			resultsInThisFrame = new ();
 		else
 			resultsInThisFrame = null;
 	}
@@ -163,8 +163,8 @@ public class ItemDispatcher : HiveObject
 	public class Market : ScriptableObject
 	{
 		public Item.Type itemType;
-		public List<Potential> offers = new List<Potential>();
-		public List<Potential> requests = new List<Potential>();
+		public List<Potential> offers = new ();
+		public List<Potential> requests = new ();
 		public List<Potential> oldOffers;
 		public List<Potential> oldRequests;
 		public ItemDispatcher boss;
@@ -293,8 +293,8 @@ public class ItemDispatcher : HiveObject
 
 			oldRequests = requests;
 			oldOffers = offers;
-			requests = new List<Potential>();
-			offers = new List<Potential>();
+			requests = new ();
+			offers = new ();
 		}
 
 		// This function is trying to fulfill a request or offer from a list of offers/requests. Returns true, if the request/offer

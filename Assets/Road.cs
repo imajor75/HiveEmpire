@@ -9,18 +9,18 @@ using System.Linq;
 [SelectionBase, RequireComponent( typeof( MeshRenderer ) )]
 public class Road : HiveObject, Interface.IInputHandler
 {
-	public List<Unit> haulers = new List<Unit>();
+	public List<Unit> haulers = new ();
 	public int tempNodes = 0;
-	public List<Node> nodes = new List<Node>();
-	public List<Unit> haulerAtNodes = new List<Unit>();
+	public List<Node> nodes = new ();
+	public List<Unit> haulerAtNodes = new ();
 	public Flag[] ends = new Flag[2];
-	public World.Timer haulerAdded = new World.Timer();
-	public World.Timer lastUsed = new World.Timer();
+	public World.Timer haulerAdded = new ();
+	public World.Timer lastUsed = new ();
 	public bool decorationOnly;
 	public float cachedCost = 0;
 	public int targetHaulerCount;   // Zero means automatic
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
-	public Watch watchStartFlag = new Watch(), watchEndFlag = new Watch();
+	public Watch watchStartFlag = new (), watchEndFlag = new ();
 	public Node referenceLocation;
 	[JsonIgnore]
 	public List<Vector3> nodePositions;
@@ -243,10 +243,10 @@ public class Road : HiveObject, Interface.IInputHandler
 		renderer.material = material;
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		var filter = gameObject.AddComponent<MeshFilter>();
-		mesh = filter.mesh = new Mesh();
+		mesh = filter.mesh = new ();
 
 		GameObject mapObject = new GameObject( "Map" );
-		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new Mesh();
+		mapMesh = mapObject.AddComponent<MeshFilter>().mesh = new ();
 		var r = mapObject.AddComponent<MeshRenderer>();
 		mapMaterial = r.material = new Material( World.defaultMapShader );
 		mapMaterial.renderQueue = 4000;
@@ -506,7 +506,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		if ( nodePositions == null || nodePositions.Count != nodes.Count )
 		{
-			nodePositions = new List<Vector3>();
+			nodePositions = new ();
 
 			int i = 0;
 			while ( nodes[i] != referenceLocation && i < nodes.Count - 1 )
@@ -534,7 +534,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( curves[0] != null && curves[0].Count == nodes.Count - 1 )
 			return;
 
-		List<Vector3> directions = new List<Vector3>();
+		List<Vector3> directions = new ();
 		for ( int j = 0; j < nodes.Count; j++ )
 		{
 			int p = Math.Max( j - 1, 0 );
@@ -543,7 +543,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		for ( int i = 0; i < 3; i++ )
 		{
-			curves[i] = new List<CubicCurve>();
+			curves[i] = new ();
 			for ( int j = 0; j < nodes.Count - 1; j++ )
 			{
 				if ( i == 1 )
@@ -730,7 +730,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RemoveElements( haulers );
 		if ( !decorationOnly )
 			UnregisterOnGround();
-		List<Unit> exclusiveHaulers = new List<Unit>();
+		List<Unit> exclusiveHaulers = new ();
 		foreach ( var hauler in haulerAtNodes )
 			if ( hauler )
 				exclusiveHaulers.Add( hauler );
@@ -901,7 +901,7 @@ public class Road : HiveObject, Interface.IInputHandler
 				second.haulerAtNodes.Add( null );
 		}
 
-		List<Unit> haulersToMove = new List<Unit>();
+		List<Unit> haulersToMove = new ();
 		foreach ( var hauler in haulerAtNodes )
 			if ( hauler )
 				haulersToMove.Add( hauler );

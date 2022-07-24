@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -29,11 +29,11 @@ public class Unit : HiveObject
 	public Flag exclusiveFlag;
 	public bool recalled;
 	public int itemsDelivered;
-	public World.Timer bored = new World.Timer();
+	public World.Timer bored = new ();
 	public BodyState bodyState = BodyState.unknown;
 	public Color currentColor;
-	public List<Task> taskQueue = new List<Task>();
-	public Watch haulerRoadBegin = new Watch(), haulerRoadEnd = new Watch();
+	public List<Task> taskQueue = new ();
+	public Watch haulerRoadBegin = new (), haulerRoadEnd = new ();
 
 	[JsonIgnore]
 	public bool debugReset;
@@ -45,7 +45,7 @@ public class Unit : HiveObject
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> walkSounds;
 	static public MediaTable<AudioClip, AnimationSound> animationSounds;
-	static public List<GameObject> templates = new List<GameObject>();
+	static public List<GameObject> templates = new ();
 	static public int walkingID, pickupHeavyID, pickupLightID, putdownID, deathID;
 	static public int buildingID, shovelingID, fishingID, harvestingID, sowingID, choppingID, miningID, skinningID, gatheringID;
 	static public int attackID, defendID, stabID;
@@ -268,7 +268,7 @@ public class Unit : HiveObject
 	{
 		[JsonIgnore]
 		public Act act;
-		public World.Timer timer = new World.Timer(), timeSinceStarted = new World.Timer();
+		public World.Timer timer = new (), timeSinceStarted = new ();
 		public bool started = false;
 		public BodyState preState;
 		GameObject tool;
@@ -502,7 +502,7 @@ public class Unit : HiveObject
 		public HiveObject ignoreObject;
 		public Node avoid;
 
-		public World.Timer interruptionTimer = new World.Timer();
+		public World.Timer interruptionTimer = new ();
 		[JsonIgnore]
 		public Act lastStepInterruption;
 		[JsonProperty]
@@ -563,7 +563,7 @@ public class Unit : HiveObject
 		public int targetPoint;
 		public int wishedPoint = -1;
 		public bool exclusive;
-		public World.Timer stuck = new World.Timer();
+		public World.Timer stuck = new ();
 
 		public void Setup( Unit boss, Road road, int point, bool exclusive )
 		{
@@ -774,7 +774,7 @@ public class Unit : HiveObject
 		public Item[] items = new Item[2];
 		public Path path;  // Save the path just to be able to test if it has been changed
 		public bool[] reparented = new bool[2];	// See PickupItem.Cancel. Originally I wanted to save the Transformation reference, but that cannot be serialized
-		public World.Timer timer = new World.Timer();
+		public World.Timer timer = new ();
 		public bool expectingSecondary;
 
 		[Obsolete( "Compatibility with old files", true )]
@@ -946,7 +946,7 @@ public class Unit : HiveObject
 		static public int putdownTimeStart = 120;
 		static public int putdownRelinkTime = 80;
 		public Item[] items = new Item[2];
-		public World.Timer timer = new World.Timer();
+		public World.Timer timer = new ();
 
 		[Obsolete( "Compatibility with old files", true )]
 		Item item { set { items[0] = value; } }
@@ -1068,7 +1068,7 @@ public class Unit : HiveObject
 	public class Wait : Task
 	{
 		public int time;
-		public World.Timer timer = new World.Timer();
+		public World.Timer timer = new ();
 
 		public void Setup( Unit boss, int time )
 		{
@@ -1254,7 +1254,7 @@ public class Unit : HiveObject
 			duration = 150
 		};
 
-		actLibrary = new List<Act>();
+		actLibrary = new ();
 		foreach ( var act in resourceCollectAct )
 			if ( act != null )
 				actLibrary.Add( act );

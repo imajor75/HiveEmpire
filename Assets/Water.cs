@@ -36,7 +36,7 @@ public class Water : HiveObject
         name = "Water";
         transform.SetParent( ground.transform.parent );
 		transform.localPosition = Vector3.up * world.waterLevel;
-        mesh = GetComponent<MeshFilter>().mesh = new Mesh();
+        mesh = GetComponent<MeshFilter>().mesh = new ();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
         gameObject.layer = World.layerIndexWater;
         base.Start();
@@ -53,7 +53,7 @@ public class Water : HiveObject
             {
                 for ( int x = 0; x <= ground.dimension; x++ )
                 {
-                    Vector3 position = new Vector3();
+                    Vector3 position = new ();
                     position.x = ground.n00x + ( ground.n10x - ground.n00x ) * x + ( ground.n01x - ground.n00x ) * y;
                     position.y = 0;
                     position.z = ground.n00y + ( ground.n10y - ground.n00y ) * x + ( ground.n01y - ground.n00y ) * y;

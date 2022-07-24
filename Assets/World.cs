@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,10 +16,10 @@ public class World : HiveObject
 	public new string name;
 	public int saveIndex;
 	public int currentSeed;
-	public List<Player> players = new List<Player>();
+	public List<Player> players = new ();
 	public Player controllingPlayer;
 	public int defeatedSimpletonCount;
-	public List<Team> teams = new List<Team>();
+	public List<Team> teams = new ();
 	public Building lastAreaInfluencer;
 	public new Eye eye;
 	public new Light light;
@@ -30,7 +30,7 @@ public class World : HiveObject
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public string fileName;
-	public LinkedList<HiveObject> hiveObjects = new LinkedList<HiveObject>(), newHiveObjects = new LinkedList<HiveObject>();
+	public LinkedList<HiveObject> hiveObjects = new (), newHiveObjects = new ();
 	public List<Workshop.Configuration> workshopConfigurations;
 	public List<float> itemTypeUsage;
 	public List<float> workshopTypeUsage;
@@ -215,9 +215,9 @@ public class World : HiveObject
 		public int maintain;
 		public bool fixedSeed;
 		public int seed;
-		public Timer maintainBronze = new Timer(), maintainSilver = new Timer(), maintainGold = new Timer();
+		public Timer maintainBronze = new (), maintainSilver = new (), maintainGold = new ();
 		public float progress;
-		public Timer life = new Timer();
+		public Timer life = new ();
 		public List<float> productivityGoals;
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
@@ -412,7 +412,7 @@ public class World : HiveObject
 					case "headquarters":
 					{
 						if ( mainBuildingContent == null )
-							mainBuildingContent = new List<int>();
+							mainBuildingContent = new ();
 						Item.Type itemType;
 						if ( !Enum.TryParse( p[1], out itemType ) )
 						{
@@ -427,7 +427,7 @@ public class World : HiveObject
 					case "production":
 					{
 						if ( productivityGoals == null )
-							productivityGoals = new List<float>();
+							productivityGoals = new ();
 						Item.Type itemType;
 						if ( !Enum.TryParse( p[1], out itemType ) )
 						{
@@ -442,7 +442,7 @@ public class World : HiveObject
 					case "buildingMax":
 					{
 						if ( buildingMax == null )
-							buildingMax = new List<int>();
+							buildingMax = new ();
 						Building.Type buildingType;
 						if ( !Enum.TryParse( p[1], out buildingType ) )
 						{
@@ -486,7 +486,7 @@ public class World : HiveObject
 	public Challenge challenge;
 
 	public int oreCount;
-	public List<Ore> ores = new List<Ore>();
+	public List<Ore> ores = new ();
 	public int animalSpawnerCount;
 
 	public class Settings : HeightMap.Settings
@@ -585,7 +585,7 @@ public class World : HiveObject
 
 	public new World Setup()
 	{
-		rnd = new System.Random();
+		rnd = new ();
 		return this;
 	}
 
@@ -676,7 +676,7 @@ public class World : HiveObject
 			hiveObjects.AddLast( newHiveObject );
 		}
 		newHiveObjects.Clear();
-		List<HiveObject> toRemove = new List<HiveObject>();
+		List<HiveObject> toRemove = new ();
 		foreach ( var hiveObject in hiveObjects )
 		{
 			if ( hiveObject && !hiveObject.destroyed )
@@ -888,7 +888,7 @@ public class World : HiveObject
 		{
 			challenge = Challenge.Create();
 			challenge.timeLimit = Constants.World.normalSpeedPerSecond * 60;
-			challenge.mainBuildingContent = new List<int>();
+			challenge.mainBuildingContent = new ();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				if ( i == (int)Item.Type.soldier )
@@ -896,7 +896,7 @@ public class World : HiveObject
 				else
 					challenge.mainBuildingContent.Add( -1 );
 			}
-			challenge.buildingMax = new List<int>();
+			challenge.buildingMax = new ();
 			for ( int i = 0; i < (int)Building.Type.total; i++ )
 			{
 				if ( i == (int)Building.Type.guardHouse )
@@ -909,7 +909,7 @@ public class World : HiveObject
 
 		if ( ground.nodes.Count == ( ground.dimension + 1 ) * ( ground.dimension + 1 ) )
 		{
-			List<Node> newNodes = new List<Node>();
+			List<Node> newNodes = new ();
 			foreach ( var node in ground.nodes )
 			{
 				if ( node.x != ground.dimension && node.y != ground.dimension )
@@ -935,7 +935,7 @@ public class World : HiveObject
 			if ( player is Simpleton simpleton && simpleton.blockedNodes.Count > 100 )
 				simpleton.blockedNodes.Clear();
 			if ( player.messages == null )
-				player.messages = new LinkedList<Player.Message>();
+				player.messages = new ();
 		}
 
 		foreach ( var team in teams )
@@ -1051,7 +1051,7 @@ public class World : HiveObject
 			foreach ( var o in list )
 			{
 				if ( o.configuration == null )
-					o.configuration = new Building.Configuration();
+					o.configuration = new ();
 				if ( o.dispenser == null )
 					o.dispenser = o.tinkererMate ?? o.tinkerer;
 				if ( o.construction.done )
@@ -1158,7 +1158,7 @@ public class World : HiveObject
 			foreach ( var f in list )
 			{
 				if ( f.flattening == null )
-					f.flattening = new Building.Flattening();
+					f.flattening = new ();
 				if ( !f.freeSlotsWatch.isAttached )
 					f.freeSlotsWatch.Attach( f.itemsStored );
 				if ( GetValue<Player>( f, "owner" ) )
@@ -1196,7 +1196,7 @@ public class World : HiveObject
 		HiveObject.Log( $"Time: {time}, Next ID: {nextID}" );
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
-		List<Resource> toRemove = new List<Resource>();
+		List<Resource> toRemove = new ();
 		foreach ( var node in ground.nodes )
 		{
 			if ( node.x == ground.dimension || node.y == ground.dimension )
@@ -1445,7 +1445,7 @@ public class World : HiveObject
 
 	public void GenerateResources( float oreStrength = 1 )
 	{	
-		List<Resource> toRemove = new List<Resource>();
+		List<Resource> toRemove = new ();
 		foreach ( var node in ground.nodes )
 		{
 			foreach ( var resource in node.resources )

@@ -7,15 +7,15 @@ using UnityEngine;
 
 public abstract class Attackable : Building
 {
-	public List<Unit> attackers = new List<Unit>();
+	public List<Unit> attackers = new ();
 	public Unit aggressor, assassin, defender;
 	public int lastSpot;
 	public bool takeoverInProgress;
-	public Versioned attackedStatus = new Versioned();
+	public Versioned attackedStatus = new ();
 
-	List<GameObject> trash = new List<GameObject>();
-	List<Material> trashMaterials = new List<Material>();
-	World.Timer trashTimer = new World.Timer();
+	List<GameObject> trash = new ();
+	List<Material> trashMaterials = new ();
+	World.Timer trashTimer = new ();
 
 	public Team attackerTeam
 	{
@@ -162,12 +162,12 @@ public class GuardHouse : Attackable
 	// TODO Guardhouses are sometimes not visible, only after reload
 	// Somehow they are offset, but they are linked to the correct block.
 	// TODO They are completely built even before the construction
-	public List<Unit> soldiers = new List<Unit>();
+	public List<Unit> soldiers = new ();
 	public int influence = Constants.GuardHouse.defaultInfluence;
 	public bool ready;
 	public int optimalSoldierCount;
 	public static GameObject template;
-	public static readonly Configuration guardHouseConfiguration = new Configuration();
+	public static readonly Configuration guardHouseConfiguration = new ();
 	bool removing;
 	public override int defenderCount
 	{

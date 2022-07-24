@@ -30,11 +30,11 @@ public class Item : HiveObject
 	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;	// This member shows the priority of the current order the item is fulfilling, so the destination member should not be zero. If this priority is low, the item keeps offering itself at higher priorities, so it is possible that the item changes its destination while on the way to the previous one. (for example a log is carried to a stock, but meanwhile a sawmill requests a new one)
 	public Building destination;	// The current destination of the item. This could be null at any point, if the item is not needed anywhere. The game is trying to avoid it, so buildings are only spitting out items if they know that the item is needed somewhere, but the player might remove the destination building at any time. The current destination can change also if the game finds a better use for the item, except on the last road, where the item is not offered, even if it is delivered to a stock.
 	public Building origin;			// This is where the item comes from. Only used for statistical and validation purposes. The game is constantly checking this reference to make sure it is valid, and if it is not, it sets it to null. Otherwise this reference might keep old buildings alive in the memory while the player already removed them from the game.
-	public Watch watchRoadDelete = new Watch();
-	public Watch watchBuildingDelete = new Watch();
+	public Watch watchRoadDelete = new ();
+	public Watch watchBuildingDelete = new ();
 	public bool tripCancelled;		// If this boolean is true, the items destination was lost, so the current value of the destination member is zero. It will be tudned back to false once a new destination for the item is found.
-	public World.Timer life = new World.Timer();
-	public World.Timer atFlag = new World.Timer();
+	public World.Timer life = new ();
+	public World.Timer atFlag = new ();
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // This reference is used when two items at the different end of a road are swapping space, one goes to one direction, while the other one is going the opposite. 
 						// Otherwise this member is null. Without this feature a deadlock at a road can very easily occur. When a hauler notices that there is a possibility to swap two items, 
@@ -48,7 +48,7 @@ public class Item : HiveObject
 						// 		free slot at the flag, but replace another item. B.buddy is null, cleared in Flag.ReleaseItem
 						// 3. A is already delivered, the hauler is now carrying B as normal. Both A.buddy and B.buddy is null. The latter got cleared in Flag.FinalizeItem
 	public int index = -1;
-	public Watch roadNetworkChangeListener = new Watch();
+	public Watch roadNetworkChangeListener = new ();
 	public float bottomHeight	// y coordinate of the plane at the bottom of the item in the parent transformation
 	{
 		get

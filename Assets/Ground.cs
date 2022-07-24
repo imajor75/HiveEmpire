@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +10,7 @@ public class Ground : HiveObject
 	public static List<Offset>[] areas = new List<Offset>[Constants.Ground.maxArea];
 	[Range(0.0f, 1.0f)]
 	public float sharpRendering = Constants.Ground.defaultSharpRendering;
-	public List<Block> blocks = new List<Block>();
+	public List<Block> blocks = new ();
 	public Grass grass;
 	public int gameTimeID;
 	public Material material;
@@ -179,7 +179,7 @@ public class Ground : HiveObject
 		this.dimension = dimension;
 
 		if ( nodes == null )
-			nodes = new List<Node>();
+			nodes = new ();
 		for ( int y = 0; y < dimension; y++ )
 			for ( int x = 0; x < dimension; x++ )
 				nodes.Add( Node.Create().Setup( this, x, y ) );
@@ -213,7 +213,7 @@ public class Ground : HiveObject
 	static void CreateAreas()
 	{
 		for ( int i = 0; i < areas.Length; i++ )
-			areas[i] = new List<Offset>();
+			areas[i] = new ();
 
 		for ( int x = -Constants.Ground.maxArea; x < Constants.Ground.maxArea; x++ )
 		{
@@ -440,10 +440,10 @@ public class Ground : HiveObject
 
 	public class Grass : HiveCommon
 	{
-		public List<Block> blocks = new List<Block>();
+		public List<Block> blocks = new ();
 		public static int gameTimeID;
-		public static List<Material> materials = new List<Material>();
-		static List<Matrix4x4> matrices = new List<Matrix4x4>();	
+		public static List<Material> materials = new ();
+		static List<Matrix4x4> matrices = new ();	
 		public static int layerIndex;
 
 		public class Block
@@ -559,9 +559,9 @@ public class Ground : HiveObject
 	{
 		public Node center;
 		public int radius = 8;
-		public static Area global = new Area();
+		public static Area global = new ();
 
-		public static Area empty = new Area();
+		public static Area empty = new ();
 
 		public Area()
 		{
@@ -659,7 +659,7 @@ public class Ground : HiveObject
 			gameObject.layer = World.layerIndexGround;
 			MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 			collider = gameObject.GetComponent<MeshCollider>();
-			mesh = meshFilter.mesh = new Mesh();
+			mesh = meshFilter.mesh = new ();
 			mesh.name = "GroundMesh";
 			var renderer = GetComponent<MeshRenderer>();
 			renderer.material = boss.material;

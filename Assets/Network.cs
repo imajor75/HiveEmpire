@@ -30,7 +30,7 @@ public class Network : HiveCommon
 			this.connection = connection;
 		}
 		public int connection;
-		public List<Task> tasks = new List<Task>();
+		public List<Task> tasks = new ();
 	}
 
 	public class Task
@@ -140,9 +140,9 @@ public class Network : HiveCommon
 	public int broadcastPort;
 	public int broadcastHost;
 	public int clientConnection;
-	public List<Client> serverConnections = new List<Client>();
+	public List<Client> serverConnections = new ();
 	byte[] buffer = new byte[Constants.Network.bufferSize];
-	public List<String> localDestinations = new List<string>();
+	public List<String> localDestinations = new ();
 
 	public float lag;
 	
@@ -153,10 +153,10 @@ public class Network : HiveCommon
 
     public static void Initialize()
     {
-		GlobalConfig g = new GlobalConfig();
+		GlobalConfig g = new ();
 		g.MaxPacketSize = 50000;
 		NetworkTransport.Init( g );
-		ConnectionConfig config = new ConnectionConfig();
+		ConnectionConfig config = new ();
 		reliableChannel = config.AddChannel( QosType.ReliableSequenced );
 		hostTopology = new HostTopology( config, 10 );
     }
@@ -391,7 +391,7 @@ public class Network : HiveCommon
     {
         if ( state == State.server && serverConnections.Count != 0 )
         {
-            List<byte> frameBeginPacket = new List<byte>();
+            List<byte> frameBeginPacket = new ();
             frameBeginPacket.Add( time ).Add( oh.currentCRCCode );
 
             foreach ( var client in serverConnections )
@@ -405,7 +405,7 @@ public class Network : HiveCommon
 	    if ( state != Network.State.client )
 			return true;
 
-		BinaryFormatter bf = new BinaryFormatter();
+		BinaryFormatter bf = new ();
 		var ms = new MemoryStream();
 		bf.Serialize( ms, operation );
 		byte error;
@@ -415,7 +415,7 @@ public class Network : HiveCommon
 
 	public void OnExecuteOperation( Operation operation )
 	{
-		BinaryFormatter bf = new BinaryFormatter();
+		BinaryFormatter bf = new ();
 		using (var ms = new MemoryStream())
 		{
 			bf.Serialize( ms, operation );
@@ -439,7 +439,7 @@ public class Network : HiveCommon
 	public static int GetAvailablePort( int startingPort = Constants.Network.defaultPort )
 	{
 		IPEndPoint[] endPoints;
-		List<int> portArray = new List<int>();
+		List<int> portArray = new ();
 
 		IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
 

@@ -12,8 +12,8 @@ using UnityEngine.Networking;
 
 public class OperationHandler : HiveObject
 {
-	public List<Operation> undoQueue = new List<Operation>(), redoQueue = new List<Operation>(), executeBuffer = new List<Operation>();
-    public List<int> CRCCodes = new List<int>();
+	public List<Operation> undoQueue = new (), redoQueue = new (), executeBuffer = new ();
+    public List<int> CRCCodes = new ();
     public int CRCCodesSkipped;
     public int currentCRCCode;
     public Mode mode;
@@ -22,7 +22,7 @@ public class OperationHandler : HiveObject
     public int replayLength = -1;
     public int currentGroup = 0;
     public string currentGroupName;
-    public List<string> saveFileNames = new List<string>();
+    public List<string> saveFileNames = new ();
     public bool recordCRC;
     public bool recordEvents;
     public bool recalculateCRC;
@@ -98,7 +98,7 @@ public class OperationHandler : HiveObject
         }
     }
 
-    List<Event> events = new List<Event>(), frameEvents = new List<Event>(), previousFrameEvents;
+    List<Event> events = new (), frameEvents = new (), previousFrameEvents;
     bool eventsDumped;
 
 	[Conditional( "DEBUG" )]
@@ -375,7 +375,7 @@ public class OperationHandler : HiveObject
             StartGroup( "Removing a junction" );
         foreach ( var building in flag.Buildings() )
             ScheduleRemoveBuilding( building, false, source );
-        List<Road> realRoads = new List<Road>();
+        List<Road> realRoads = new ();
         foreach ( var road in flag.roadsStartingHere )
             if ( road )
                 realRoads.Add( road );
@@ -507,7 +507,7 @@ public class OperationHandler : HiveObject
             }
         }
         previousFrameEvents = frameEvents;
-        frameEvents = new List<Event>();
+        frameEvents = new ();
 #else
         if ( recordCRC && mode == Mode.recording )
             CRCCodesSkipped += 1;
@@ -558,7 +558,7 @@ public class OperationHandler : HiveObject
         public int CRC;
     }
 
-    public LinkedList<GameStepOrder> orders = new LinkedList<GameStepOrder>();
+    public LinkedList<GameStepOrder> orders = new ();
 
     new void Update()
     {
@@ -637,7 +637,7 @@ public class Operation
     public int areaX, areaY;
     public Building.Type buildingType;
     public int direction;
-    public List<int> roadPathX = new List<int>(), roadPathY = new List<int>();
+    public List<int> roadPathX = new (), roadPathY = new ();
     public bool crossing;
     public int group = -1;
     public string groupName;
@@ -763,7 +763,7 @@ public class Operation
         {
             if ( roadPathX == null )
                 return null;
-            List<Node> roadPath = new List<Node>();
+            List<Node> roadPath = new ();
             Assert.global.AreEqual( roadPathX.Count, roadPathY.Count );
             for ( int i = 0; i < roadPathX.Count; i++ )
             roadPath.Add( HiveCommon.ground.GetNode( roadPathX[i], roadPathY[i] ) );

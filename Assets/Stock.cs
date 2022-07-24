@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,16 +6,16 @@ using UnityEngine;
 public class Stock : Attackable
 {
 	public bool main = false;
-	public List<ItemTypeData> itemData = new List<ItemTypeData>();
-	public List<Unit> returningUnits = new List<Unit>();	// This list is maintained for returning units to store them during save, because they usually have no building
+	public List<ItemTypeData> itemData = new ();
+	public List<Unit> returningUnits = new ();	// This list is maintained for returning units to store them during save, because they usually have no building
 	public Cart cart;
-	public Ground.Area inputArea = new Ground.Area();
-	public Ground.Area outputArea = new Ground.Area();
+	public Ground.Area inputArea = new ();
+	public Ground.Area outputArea = new ();
 	public int total;
 	public int totalTarget;
 	public int maxItems = Constants.Stock.defaultmaxItems;
-	public World.Timer offersSuspended = new World.Timer();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
-	public World.Timer resupplyTimer = new World.Timer();
+	public World.Timer offersSuspended = new ();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+	public World.Timer resupplyTimer = new ();
 	public bool fullReported, fullReportedCart;
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
@@ -73,7 +73,7 @@ public class Stock : Attackable
 			for ( int i = 0; i < value.Length; i++ )
 			{
 				if ( outputRoutes[i] == null )
-					outputRoutes[i] = new List<Route>();
+					outputRoutes[i] = new ();
 				if ( value[i] )
 					outputRoutes[i].Add( new Route { start = this, end = value[i], itemType = (Item.Type)i } );
 			}
@@ -129,7 +129,7 @@ public class Stock : Attackable
 		public int inputMax = Constants.Stock.defaultInputMax, inputMin = Constants.Stock.defaultInputMin;
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
 		public int cartOutput = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
-		public List<Route> outputRoutes = new List<Route>();
+		public List<Route> outputRoutes = new ();
 		public Stock boss;
 		public Item.Type itemType;
 
@@ -239,7 +239,7 @@ public class Stock : Attackable
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
-	List<int> target = new List<int>();
+	List<int> target = new ();
 
 	[Serializable]
 	public class Route
@@ -619,7 +619,7 @@ public class Stock : Attackable
 	public List<Route> GetInputRoutes( Item.Type itemType )
 	{
 		int typeIndex = (int)itemType;
-		List<Route> list = new List<Route>();
+		List<Route> list = new ();
 		foreach ( var stock in team.stocks )
 		{
 			if ( stock == this )

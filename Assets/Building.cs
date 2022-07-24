@@ -26,14 +26,14 @@ abstract public class Building : HiveObject
 	public Flag flag;
 	public int flagDirection;
 	public Node node;
-	public Construction construction = new Construction();
+	public Construction construction = new ();
 	public float height = 1.5f;
 	public float levelBrake = 1;
-	public List<Item> itemsOnTheWay = new List<Item>();
+	public List<Item> itemsOnTheWay = new ();
 	static List<Ground.Offset> foundationHelper;
 	public Configuration configuration;
 	public bool itemDispatchedThisFrame;
-	public Versioned contentChange = new Versioned();
+	public Versioned contentChange = new ();
 	public bool changedSide;
 
 	public GameObject body;
@@ -56,7 +56,7 @@ abstract public class Building : HiveObject
 		set
 		{
 			if ( configuration == null )
-				configuration = new Configuration();
+				configuration = new ();
 			configuration.huge = value;
 		}
 	}
@@ -107,7 +107,7 @@ abstract public class Building : HiveObject
 			isolated = false;
 	}
 
-	public Watch roadNetworkChangeListener = new Watch();
+	public Watch roadNetworkChangeListener = new ();
 	public bool isolated;
 	public bool reachable
 	{
@@ -161,7 +161,7 @@ abstract public class Building : HiveObject
 		public bool permanent;
 		public bool flattened = false;	// I would rather call this 'done', but unity gives an error message then
 		public HiveObject ignoreDuringWalking;
-		public World.Timer suspend = new World.Timer();
+		public World.Timer suspend = new ();
 		public float level;
 		public Unit builder;
 		public List<Node> area;
@@ -293,7 +293,7 @@ abstract public class Building : HiveObject
 			if ( !boss.configuration.flatteningNeeded )
 				return;
 			
-			List<Node> flatteningArea = new List<Node>();
+			List<Node> flatteningArea = new ();
 			var area = boss.foundation;
 			flatteningArea.Add( boss.node );
 			foreach ( var o in area )
@@ -606,7 +606,7 @@ abstract public class Building : HiveObject
 		name = $"Building {node.x}:{node.y}";
 		ground.Link( this );
 		UpdateBody();
-		renderers = new List<MeshRenderer>();
+		renderers = new ();
 
 		soundSource = World.CreateSoundSource( this );
 

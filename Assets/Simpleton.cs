@@ -10,10 +10,10 @@ public class Simpleton : Player
     [JsonIgnore]
     public List<Task> tasks;
     public int currentProblem;
-    public World.Timer inability = new World.Timer();
+    public World.Timer inability = new ();
     public float confidence = Constants.Simpleton.defaultConfidence;
-    public List<Node> blockedNodes = new List<Node>();
-    public List<Item.Type> lackingProductions = new List<Item.Type>();
+    public List<Node> blockedNodes = new ();
+    public List<Item.Type> lackingProductions = new ();
     public int reservedPlank, reservedStone;
     public int expectedLog, expectedPlank;
     public bool active;
@@ -64,7 +64,7 @@ public class Simpleton : Player
 
         if ( tasks == null && active )
         {
-            tasks = new List<Task>();
+            tasks = new ();
             tasks.Add( new GlobalTask( this ) );
             currentProblem = 0;
             return;
@@ -135,16 +135,16 @@ public class Simpleton : Player
     public class Data
     {
         public bool isolated;
-        public World.Timer lastCleanup = new World.Timer();
-        public List<Deal> deals = new List<Deal>();
-        public List<Item.Type> managedItemTypes = new List<Item.Type>();
-        public World.Timer lastDealCheck = new World.Timer();
-        public World.Timer lastTimeHadResources = new World.Timer();
+        public World.Timer lastCleanup = new ();
+        public List<Deal> deals = new ();
+        public List<Item.Type> managedItemTypes = new ();
+        public World.Timer lastDealCheck = new ();
+        public World.Timer lastTimeHadResources = new ();
         public HiveObject hiveObject;
         public Building possiblePartner;
         public Item.Type possiblePartnerItemType;
         public bool hasOutputStock;
-        public List<Flag> failedConnections = new List<Flag>();
+        public List<Flag> failedConnections = new ();
 
        	[Obsolete( "Compatibility with old files", true )]
         Building possibleDealer { set {} }
@@ -286,7 +286,7 @@ public class Simpleton : Player
 
             bool hasSawmill = false;
             boss.expectedLog = 0;
-            List<Resource> countedTrees = new List<Resource>();
+            List<Resource> countedTrees = new ();
             foreach ( var workshop in boss.team.workshops )
             {
                 if ( workshop.type == Workshop.Type.woodcutter && workshop.construction.done )
@@ -479,7 +479,7 @@ public class Simpleton : Player
         public Node bestLocation;
         public int bestFlagDirection;
         public float bestScore = float.MinValue;
-        public List<Workshop.Type> dependencies = new List<Workshop.Type>();
+        public List<Workshop.Type> dependencies = new ();
         public Workshop.Configuration configuration;
         public int reservedPlank, reservedStone;
         public int currentPlank, currentStone;
@@ -873,8 +873,8 @@ public class Simpleton : Player
                 return finished;
             }
 
-            List<Flag> connectedFlags = new List<Flag>();
-            List<Road> connections = new List<Road>();
+            List<Flag> connectedFlags = new ();
+            List<Road> connections = new ();
             foreach ( var road in flag.roadsStartingHere )
             {
                 if ( road == null )
@@ -1148,8 +1148,8 @@ public class Simpleton : Player
         public Action action;
         public Building partner;
         public Item.Type itemTypeToLink;
-        public List<Road> cleanupRoads = new List<Road>();
-        public List<Flag> cleanupFlags = new List<Flag>();
+        public List<Road> cleanupRoads = new ();
+        public List<Flag> cleanupFlags = new ();
         public MaintenanceTask( Simpleton boss, Workshop workshop ) : base( boss )
         {
             this.workshop = workshop;

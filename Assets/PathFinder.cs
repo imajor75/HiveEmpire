@@ -6,10 +6,10 @@ public class PathFinder
 {
 	// TODO Detect when circumstances change, and invalidate the path
 	public Node target, avoidNode;
-	public List<Reached> visited = new List<Reached>();
-	public List<Node> path = new List<Node>();
-	public List<Road> roadPath = new List<Road>();
-	public List<bool> roadPathReversed = new List<bool>();
+	public List<Reached> visited = new ();
+	public List<Node> path = new ();
+	public List<Road> roadPath = new ();
+	public List<bool> roadPathReversed = new ();
 	public HiveObject ignoreObject;
 	public bool tryToAvoidValuableNodes;
 	public bool ready = false;

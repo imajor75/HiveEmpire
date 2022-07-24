@@ -10,22 +10,22 @@ using UnityEngine.Profiling;
 public class Workshop : Building
 {
 	public int output;
-	public Ground.Area outputArea = new Ground.Area();
+	public Ground.Area outputArea = new ();
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
 	public float progress;
 	public bool working;
 	new public Type type = Type.unknown;
-	public List<Buffer> buffers = new List<Buffer>();
+	public List<Buffer> buffers = new ();
 	public Item.Type lastUsedInput = Item.Type.unknown;
 	public float millWheelSpeed = 0;
 	public Node resourcePlace;
 	public Mode mode = Mode.whenNeeded;
 	public int itemsProduced;
-	public World.Timer resting = new World.Timer();
-	public LinkedList<PastStatus> statuses = new LinkedList<PastStatus>();
+	public World.Timer resting = new ();
+	public LinkedList<PastStatus> statuses = new ();
 	public Status currentStatus = Status.unknown;
 	public int statusProduction;
-	public World.Timer statusDuration = new World.Timer();
+	public World.Timer statusDuration = new ();
 	public bool outOfResourceReported;
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
@@ -291,7 +291,7 @@ public class Workshop : Building
 		public int stored;
 		public int onTheWay;
 		public int important = Constants.Workshop.defaultImportantInBuffer;
-		public Ground.Area area = new Ground.Area();
+		public Ground.Area area = new ();
 		public Team.InputWeight weight;
 		public bool disabled;
 		public bool optional;
@@ -348,7 +348,7 @@ public class Workshop : Building
 		public Node node;
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public Resource.Type resourceType;
-		public World.Timer timer = new World.Timer();
+		public World.Timer timer = new ();
 		[Obsolete( "Compatibility with old files", true )]
 		Item item
 		{
@@ -431,7 +431,7 @@ public class Workshop : Building
 	public class Plant : Unit.Task
 	{
 		public Node node;
-		public World.Timer wait = new World.Timer();
+		public World.Timer wait = new ();
 		public bool done;
 		public Resource.Type resourceType;
 
@@ -484,7 +484,7 @@ public class Workshop : Building
 		public Resource resource;
 		[Obsolete( "Compatibility with old files", true )]
 		int timer;
-		public World.Timer pasturingTimer = new World.Timer();
+		public World.Timer pasturingTimer = new ();
 		public override bool ExecuteFrame()
 		{
 			if ( pasturingTimer.empty )
@@ -669,10 +669,10 @@ public class Workshop : Building
 				configuration.outputStackSize = (int)Math.Floor( configuration.outputCount + rnd.NextDouble() );
 		}
 
-		world.itemTypeUsage = new List<float>();
+		world.itemTypeUsage = new ();
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 			world.itemTypeUsage.Add( 0 );
-		world.workshopTypeUsage = new List<float>();
+		world.workshopTypeUsage = new ();
 		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			world.workshopTypeUsage.Add( 0 );
 

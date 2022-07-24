@@ -10,7 +10,7 @@ public class Node : HiveObject
 	public Building building;
 	public Flag flag;
 	public Road road;
-	public List<Resource> resources = new List<Resource>();
+	public List<Resource> resources = new ();
 	public int roadIndex;
 	public float height = 0;
 	public int index = -1;

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ public class Eye : HiveObject
 	public float x, y, height;
 	public float absoluteX, absoluteY;
 	public float direction;
-	public List<StoredPosition> oldPositions = new List<StoredPosition>();
+	public List<StoredPosition> oldPositions = new ();
 	public float autoStorePositionTimer;
 	public bool currentPositionStored;
 	public float autoRotate;
@@ -431,7 +431,7 @@ public class Eye : HiveObject
 
 	public class CameraGrid : HiveCommon
 	{
-		public List<Camera> cameras = new List<Camera>();
+		public List<Camera> cameras = new ();
 		public Camera center { get { return cameras[4]; } }
 		public Camera first;
 		public Camera last;
@@ -546,14 +546,14 @@ public class Eye : HiveObject
 	public class Highlight : HiveCommon
 	{
 		public Type type;
-		public List<Building.Type> buildingTypes = new List<Building.Type>(); 
+		public List<Building.Type> buildingTypes = new (); 
 		public Ground.Area area;
 		public Mesh volume;
 		Node volumeCenter;
 		int volumeRadius;
 		public RenderTexture mask, blur, smoothMask;
 		public static Material markerMaterial, mainMaterial, volumeMaterial;
-		public Smoother colorSmoother = new Smoother(), maskSmoother = new Smoother();
+		public Smoother colorSmoother = new (), maskSmoother = new ();
 		public static int maskValueOffsetID;
 		public CommandBuffer maskCreator;
 		public int maskCreatorCRC;
@@ -564,7 +564,7 @@ public class Eye : HiveObject
 		public class Smoother
 		{
 			public RenderTexture temporary;
-			public List<Material> materials = new List<Material>();
+			public List<Material> materials = new ();
 
 			public void Setup( int width, int height, int steps, RenderTextureFormat format = RenderTextureFormat.ARGB32 )
 			{
@@ -749,7 +749,7 @@ public class Eye : HiveObject
 					var maskId = new RenderTargetIdentifier( mask );
 					var currentId = new RenderTargetIdentifier( BuiltinRenderTextureType.CurrentActive );
 
-					maskCreator = new CommandBuffer();
+					maskCreator = new ();
 					maskCreator.name = "Highlight mask creation";
 
 					maskCreator.SetRenderTarget( maskId, currentId );
@@ -820,7 +820,7 @@ public class Eye : HiveObject
 
 		void Start()
 		{
-			volume = new Mesh();
+			volume = new ();
 			var vertices = new Vector3[Constants.Node.neighbourCount * 2];
 			var corners = new int[,] { { 1, 1 }, { 0, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, 0 } };
 			for ( int i = 0; i < Constants.Node.neighbourCount; i++ )

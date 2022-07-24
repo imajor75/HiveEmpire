@@ -8,18 +8,18 @@ public class Resource : HiveObject
 {
 	public Node node;
 	public Type type;
-	public World.Timer life = new World.Timer();
+	public World.Timer life = new ();
 	public int charges = 1;
 	public float strength = 1;
 	public bool infinite;
 	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
-	public World.Timer gathered = new World.Timer();
-	public World.Timer keepAway = new World.Timer();
-	public World.Timer spawn = new World.Timer();
+	public World.Timer gathered = new ();
+	public World.Timer keepAway = new ();
+	public World.Timer spawn = new ();
 	public Unit hunter;
-	public List<Unit> animals = new List<Unit>();
+	public List<Unit> animals = new ();
 	public Unit origin;		// Only valid for a prey, references the bunny
-	public World.Timer silence = new World.Timer();
+	public World.Timer silence = new ();
 
 	static Material bark, leaves;
 	GameObject body;
@@ -95,7 +95,7 @@ public class Resource : HiveObject
 
 	public static void RemoveFromGround( Node node )
 	{
-		List<Resource> toRemove = new List<Resource>();
+		List<Resource> toRemove = new ();
 		foreach ( var resource in node.resources )
 		{
 			if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock || resource.type == Resource.Type.cornField || resource.type == Resource.Type.wheatField )

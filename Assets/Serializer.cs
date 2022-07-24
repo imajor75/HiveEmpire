@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -10,8 +10,8 @@ using UnityEngine;
 
 public class Serializer
 {
-	public List<object> objects = new List<object>();
-	public Dictionary<object, int> objectIndices = new Dictionary<object, int>();
+	public List<object> objects = new ();
+	public Dictionary<object, int> objectIndices = new ();
 	public int processedObjectCount = 0;
 	JsonReader reader;
 	JsonWriter writer;
@@ -22,9 +22,9 @@ public class Serializer
 	public bool allowUnityTypes = false;
 	public int currentObjectIndex = -1;
 	public Type currentObjectType;
-	public List<ReferenceLink> referenceLinks = new List<ReferenceLink>();
+	public List<ReferenceLink> referenceLinks = new ();
 	public TypeConverter typeConverter;
-	Dictionary<Type, List<MemberInfo>> cachedMembers = new();
+	Dictionary<Type, List<MemberInfo>> cachedMembers = new ();
 
 	public class TypeConverter
 	{
@@ -311,7 +311,7 @@ public class Serializer
 		cachedMembers.TryGetValue( type, out members );
 		if ( members == null )
 		{
-			members = new List<MemberInfo>();
+			members = new ();
 			foreach ( var member in type.GetMembers() )
 			{
 				if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
@@ -426,7 +426,7 @@ public class Serializer
 		writer.WriteEndArray();
 	#if UNITY_EDITOR
 		{
-			Dictionary<Type, int> content = new Dictionary<Type, int>();
+			Dictionary<Type, int> content = new ();
 			foreach ( var processedObject in objects )
 			{
 				var type = processedObject.GetType();
@@ -435,7 +435,7 @@ public class Serializer
 				else
 					content[type] = 1;
 			}
-			List<(Type, int)> types = new List<(Type, int)>();
+			List<(Type, int)> types = new ();
 			foreach ( var type in content )
 				types.Add( (type.Key, type.Value) );
 			types.Sort( ( a, b ) => b.Item2.CompareTo( a.Item2 ) );

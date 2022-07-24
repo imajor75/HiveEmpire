@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +15,7 @@ using static UnityEngine.UI.Dropdown;
 public class Interface : HiveObject
 {
 	public StreamWriter logFile;
-	public List<Panel> panels = new List<Panel>();
+	public List<Panel> panels = new ();
 	public PostProcessResources postProcessResources;
 	public const int iconSize = 20;
 	public static float uiScale = 1.5f;
@@ -92,7 +92,7 @@ public class Interface : HiveObject
 		public bool core;
 		[JsonIgnore]
 		public Hotkey original;
-		public static List<Hotkey> instances = new List<Hotkey>();
+		public static List<Hotkey> instances = new ();
 
 		public Hotkey()
 		{
@@ -259,7 +259,7 @@ public class Interface : HiveObject
 		{
 			position = Input.mousePosition
 		};
-		List<RaycastResult> result = new List<RaycastResult>();
+		List<RaycastResult> result = new ();
 		EventSystem.current.RaycastAll( p, result );
 		if ( result.Count == 0 )
 			return null;
@@ -971,11 +971,11 @@ public class Interface : HiveObject
 			var renderer = gameObject.AddComponent<MeshRenderer>();
 			renderer.material = materialUIPath;
 			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			var route = gameObject.AddComponent<MeshFilter>().mesh = new Mesh();
+			var route = gameObject.AddComponent<MeshFilter>().mesh = new ();
 
-			List<Vector3> vertices = new List<Vector3>();
-			List<Vector2> uvs = new List<Vector2>();
-			List<int> triangles = new List<int>();
+			List<Vector3> vertices = new ();
+			List<Vector2> uvs = new ();
+			List<int> triangles = new ();
 			Vector3? currentPosition = null;
 			for ( int j = 0; j < path.roadPath.Count; j++ )
 			{
@@ -1051,7 +1051,7 @@ public class Interface : HiveObject
 		void AlignColors()
 		{
 			var route = gameObject.GetComponent<MeshFilter>().mesh;
-			List<Color> colors = new List<Color>();
+			List<Color> colors = new ();
 			for ( int j = 0; j < path.roadPath.Count; j++ )
 			{
 				Color segmentColor = j < path.progress ? Color.green.Light() : new Color( 0, 0.5f, 1 );
@@ -1098,7 +1098,7 @@ public class Interface : HiveObject
 		Image image;
 		public new bool pinned;
 		int width, height;
-		public World.Timer life = new World.Timer();
+		public World.Timer life = new ();
 
 		public static Tooltip Create()
 		{
@@ -1769,7 +1769,7 @@ public class Interface : HiveObject
 			public void Setup( Building building, Ground.Area area )
 			{
 				this.originalArea = area;
-				this.area = new Ground.Area();
+				this.area = new ();
 				this.area.center = area.center;
 				this.area.radius = area.radius;
 				this.building = building;
@@ -2194,7 +2194,7 @@ public class Interface : HiveObject
 	public class BuildingMapWidget : MonoBehaviour
 	{
 		public Building building;
-		public Watch contentWatch = new Watch();
+		public Watch contentWatch = new ();
 		public Sprite utilization;
 		public Material barMaterial, bgMaterial;
 		static int progressShaderID, colorShaderID;
@@ -2214,7 +2214,7 @@ public class Interface : HiveObject
 			colorShaderID = Shader.PropertyToID( "_Color" );
 			spriteShader = Resources.Load<Shader>( "shaders/Sprite" );
 
-			plane = new Mesh();
+			plane = new ();
 			Vector3[] pos = new Vector3[4];
 			pos[0] = new Vector3( -1, -1, 0 );
 			pos[1] = new Vector3( -1, 1, 0 );
@@ -2281,7 +2281,7 @@ public class Interface : HiveObject
 				output.transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
 			}
 
-			List<SpriteRenderer> inputs = new List<SpriteRenderer>();
+			List<SpriteRenderer> inputs = new ();
 			foreach ( var buffer in workshop.buffers )
 			{
 				var r = NewSprite( buffer.itemType, $"Input icon{inputs.Count}" );
@@ -2466,7 +2466,7 @@ public class Interface : HiveObject
 			if ( ( contentToShow & Content.buffers ) > 0 )
 			{
 				int col = 20;
-				buffers = new List<Buffer>();
+				buffers = new ();
 				foreach ( var b in workshop.buffers )
 				{
 					var bui = new Buffer();
@@ -2484,7 +2484,7 @@ public class Interface : HiveObject
 			{
 				if ( showOutputBuffer )
 				{
-					outputs = new Buffer();
+					outputs = new ();
 					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5, workshop.outputArea, false );
 					row -= iconSize * 3 / 2;
 				}
@@ -2806,10 +2806,10 @@ public class Interface : HiveObject
 			public Color[] statusColors;
 			public List<Workshop.Status> statusList;
 			public Workshop workshop;
-			public World.Timer autoRefresh = new World.Timer();
+			public World.Timer autoRefresh = new ();
 			public Image circle;
 			const int autoRefreshInterval = Constants.World.normalSpeedPerSecond * 60;
-			public List<Text> intervalTexts = new List<Text>();
+			public List<Text> intervalTexts = new ();
 
 			public static PastStatuses Create()
 			{
@@ -2855,7 +2855,7 @@ public class Interface : HiveObject
 					return;
 				}
 
-				statusList = new List<Workshop.Status>();
+				statusList = new ();
 				for ( int i = 0; i < ticksInStatus.Length; i++ )
 				{
 					percentInStatus[i] = 100 * ticksInStatus[i] / totalTicks;
@@ -2969,7 +2969,7 @@ public class Interface : HiveObject
 		public Text defenders, attackers;
 		public Image sendAttacker;
 		public int attackerCount;
-		public Watch attackedStatus = new Watch();
+		public Watch attackedStatus = new ();
 
 		public static GuardHousePanel Create()
 		{
@@ -3461,7 +3461,7 @@ public class Interface : HiveObject
 	public class ProductionChainPanel : Panel
 	{
 		static Flow highlight;
-		List<Image> tmpImages = new List<Image>();
+		List<Image> tmpImages = new ();
 
 		public static ProductionChainPanel Create()
 		{
@@ -3476,7 +3476,7 @@ public class Interface : HiveObject
 			public int startColumn = -1, startRow, row;
 			public Color color;
 			public int remainingOrigins;
-			public List<Image> lines = new List<Image>();
+			public List<Image> lines = new ();
 			public void Highlight( bool on )
 			{
 				ProductionChainPanel.highlight = on ? this : null;
@@ -3500,7 +3500,7 @@ public class Interface : HiveObject
 				line.SetTooltip( Highlight, TooltipText );
 			}
 			public Workshop.Configuration source;
-			public List<Workshop.Configuration> targets = new List<Workshop.Configuration>();
+			public List<Workshop.Configuration> targets = new ();
 		}
 
 		class Range
@@ -3832,7 +3832,7 @@ public class Interface : HiveObject
 					tooltip += $"Produces {( o.outputStackSize > 1 ? "2*" : "")}{o.outputType.ToString().GetPrettyName( false )}\n";
 				if ( o.productionTime != 0 )
 					tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F0" )}s\n";
-				List<Workshop.Type> consumers = new List<Workshop.Type>();
+				List<Workshop.Type> consumers = new ();
 				foreach ( var configuration in world.workshopConfigurations )
 				{
 					if ( configuration.generatedInputs == null || world.workshopTypeUsage[(int)configuration.type] == 0 )
@@ -4186,7 +4186,7 @@ public class Interface : HiveObject
 			if ( root.viewport.currentNode == null )
 				return;
 				
-			List<int> possibleDirections = new List<int>();
+			List<int> possibleDirections = new ();
 			if ( anyDirection )
 			{
 				for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
@@ -4940,9 +4940,9 @@ if ( cart )
 			ItemIcon( Item.Type.plank ).Link( missingText ).Pin( 60, 0 );
 			ItemIcon( Item.Type.stone ).Link( missingText ).Pin( 120, 0 );
 
-			planks = new WorkshopPanel.Buffer();
+			planks = new ();
 			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, 20, row - 5, iconSize + 5 );
-			stones = new WorkshopPanel.Buffer();
+			stones = new ();
 			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, 120, row - 5, iconSize + 5 );
 
 			progress = Progress().Pin( 20, row - 30, ( iconSize + 5 ) * 4 );
@@ -5117,12 +5117,12 @@ if ( cart )
 		public static Material arrowMaterialYellow, arrowMaterialGreen, arrowMaterialRed;
 		public Text[] last, rate, total, status, priority;
 		public Image[] cart;
-		public List<Stock> stockOptions = new List<Stock>();
+		public List<Stock> stockOptions = new ();
 		public bool forceRefill;
 		public Text direction;
 		public Stock tempPickedStock;
 		public Stock.Route toHighlight;
-		public List<int> itemTypeSelectorMap = new List<int>();
+		public List<int> itemTypeSelectorMap = new ();
 
 		static public RouteList Create()
 		{
@@ -5139,7 +5139,7 @@ if ( cart )
 			{
 				var d = Dropdown().Pin( borderWidth, -borderWidth, 150, iconSize );
 				int currentValue = 0;
-				List<string> options = new List<string>();
+				List<string> options = new ();
 				stockOptions.Clear();
 				foreach ( var s in root.mainTeam.stocks )
 				{
@@ -5162,7 +5162,7 @@ if ( cart )
 
 			{
 				var d = Dropdown().PinSideways( 0, -borderWidth, 150, iconSize );
-				List<string> options = new List<string>();
+				List<string> options = new ();
 				for ( int i = 0; i < (int)Item.Type.total; i++ )
 				{
 					if ( world.itemTypeUsage[i] == 0 )
@@ -5228,7 +5228,7 @@ if ( cart )
 			List<Stock.Route> currentList;
 			if ( stock == null )
 			{
-				currentList = new List<Stock.Route>();
+				currentList = new ();
 				foreach ( var stock in root.mainTeam.stocks )
 				{
 					foreach ( var r in stock.itemData[(int)itemType].outputRoutes )
@@ -5501,11 +5501,11 @@ if ( cart )
 	public class BuildingList : Panel
 	{
 		ScrollRect scroll;
-		List<Building> buildings = new List<Building>();
-		List<Text> productivities = new List<Text>();
-		List<Text> outputs = new List<Text>();
+		List<Building> buildings = new ();
+		List<Text> productivities = new ();
+		List<Text> outputs = new ();
 		static Building.Type filter = Building.Type.unknown;
-		List<List<Text>> inputs = new List<List<Text>>();
+		List<List<Text>> inputs = new ();
 		static bool reversed;
 		static Comparison<Building> comparison = CompareTypes;
 		Text summary;
@@ -5524,7 +5524,7 @@ if ( cart )
 
 			Text( "Filter:" ).Pin( 20, -20, 150 );
 			var d = Dropdown().Pin( 80, -20, 150 );
-			List<string> options = new List<string>();
+			List<string> options = new ();
 			for ( int j = 0; j < (int)Building.Type.total; j++ )
 			{
 				if ( j < world.workshopTypeUsage.Count && world.workshopTypeUsage[j] == 0 )
@@ -5592,7 +5592,7 @@ if ( cart )
 		void Fill()
 		{
 			int constructionCount = 0;
-			buildings = new List<Building>();
+			buildings = new ();
 			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
 			{
 				Assert.global.IsFalse( building.destroyed );	// Triggered
@@ -5705,7 +5705,7 @@ if ( cart )
 		public bool showGridAtMouse;
 		public OverlayInfoType nodeInfoToShow;
 		public Building relaxCenter;
-		static readonly List<BuildPossibility> buildCategories = new List<BuildPossibility>();
+		static readonly List<BuildPossibility> buildCategories = new ();
 		public Node currentNode;  // Node currently under the cursor
 		static GameObject marker;
 		public bool markEyePosition;
@@ -5770,7 +5770,7 @@ if ( cart )
 			inputHandler = this;
 			marker.transform.SetParent( transform );
 
-			plane = new Mesh();
+			plane = new ();
 			plane.vertices = new Vector3[4] { 
 				new Vector3( -0.5f, 0, -0.5f ), 
 				new Vector3( -0.5f, 0, 0.5f ), 
@@ -5898,7 +5898,7 @@ if ( cart )
 			} );
 			buildCategories.Add( new BuildPossibility
 			{
-				configuration = new Workshop.Configuration(),
+				configuration = new (),
 				material = blueMaterial,
 				mesh = Resources.Load<Mesh>( "meshes/groundSigns/mediumHouse" ),
 				scale = 1.5f
@@ -5939,7 +5939,7 @@ if ( cart )
 			layers |= 1 << World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources);
-			RaycastHit hit = new RaycastHit();
+			RaycastHit hit = new ();
 			foreach ( var camera in eye.cameraGrid.cameras )
 			{
 				Ray ray = camera.ScreenPointToRay( screenPosition );
@@ -5973,7 +5973,7 @@ if ( cart )
 
 		public Node FindNodeAt( Vector3 screenPosition )
 		{ 
-			RaycastHit hit = new RaycastHit();
+			RaycastHit hit = new ();
 
 			foreach ( var camera in eye.cameraGrid.cameras )
 			{
@@ -6321,7 +6321,7 @@ if ( cart )
 		{
 			scroll.Clear();
 
-			List<Road> sortedRoads = new List<Road>();
+			List<Road> sortedRoads = new ();
 			foreach ( var road in team.roads )
 			{
 				if ( road )
@@ -6417,7 +6417,7 @@ if ( cart )
 			int row = 0;
 			scroll.Clear();
 
-			List<Item> sortedItems = new List<Item>();
+			List<Item> sortedItems = new ();
 			foreach ( var item in team.items )
 			{
 				if ( item )
@@ -6524,7 +6524,7 @@ if ( cart )
 			foreach ( Transform child in scroll.content )
 				Destroy( child.gameObject );
 
-			List<Resource> sortedResources = new List<Resource>();
+			List<Resource> sortedResources = new ();
 			foreach ( var resource in Resources.FindObjectsOfTypeAll<Resource>() )
 			{
 				if ( resource.underGround )
@@ -6804,7 +6804,7 @@ if ( cart )
 				onWayCount[(int)item.type]++;
 			}
 
-			List<int> order = new List<int>();
+			List<int> order = new ();
 			for ( int i = 0; i < inStock.Length; i++ )
 				order.Add( i );
 			if ( currentComparison != null )
@@ -7254,7 +7254,7 @@ if ( cart )
 
 			selectorTitle = Text( createNewPlayer ? "Select team" : "Select player" ).PinDownwards( borderWidth, 0, 200 );
 			selector = Dropdown().PinDownwards( borderWidth, 0, 260 );
-			List<string> items = new List<string>();
+			List<string> items = new ();
 			int currentPlayer = 0;
 			if ( createNewPlayer )
 			{
@@ -7435,7 +7435,7 @@ if ( cart )
 		void JoinDrop()
 		{
 			networkJoinDestinationDropdown.ClearOptions();
-			List<string> options = new List<string>();
+			List<string> options = new ();
 			var current = networkJoinDestinationInputField.text;
 			if ( current != "" && !network.localDestinations.Contains( current ) )
 				options.Add( current );
@@ -7471,7 +7471,7 @@ if ( cart )
 		{
 			if ( load )
 			{
-				List<string> files = new List<string>();
+				List<string> files = new ();
 				var directory = new DirectoryInfo( Application.persistentDataPath+"/Replays" );
 				if ( !directory.Exists )
 					return;
@@ -7512,7 +7512,7 @@ if ( cart )
 				return;
 			loadNames.ClearOptions();
 
-			List<string> files = new List<string>();
+			List<string> files = new ();
 			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 			if ( !directory.Exists )
 				return;
