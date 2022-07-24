@@ -1247,6 +1247,12 @@ public class Interface : HiveObject
 			if ( active && textGenerator != null )
 				tooltip.SetText( this, textGenerator(), image, additionalText, width:width );
 		}
+
+		void Start()
+		{
+			if ( this.Contains( Input.mousePosition ) )
+				OnPointerEnter( null );
+		}
     }
 
 	public class HotkeyControl : MonoBehaviour
@@ -6928,9 +6934,9 @@ if ( cart )
 				if ( c.outputType == selected && c.productionTime != 0 )
 				{
 					tickPerBuilding = c.productionTime / c.outputStackSize;
-					foreach ( var w in Resources.FindObjectsOfTypeAll<Workshop>() ) 
-					if ( w.team == root.mainTeam && w.type == c.type )
-						workshopCount++;
+					foreach ( var w in root.mainTeam.workshops ) 
+						if ( w.type == c.type )
+							workshopCount++;
 					break;
 				}
 			}
