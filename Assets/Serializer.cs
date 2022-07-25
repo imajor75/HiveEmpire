@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -410,6 +410,7 @@ public class Serializer
 	public void WriteFile( string fileName, object source, bool intended, bool allowUnityTypes )
 	{
 		this.fileName = fileName;
+		this.allowUnityTypes = allowUnityTypes;
 		var sw = new StreamWriter( fileName );
 		writer = new JsonTextWriter( sw );
 		if ( intended )
