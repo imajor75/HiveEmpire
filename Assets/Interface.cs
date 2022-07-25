@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2632,6 +2632,7 @@ public class Interface : HiveObject
 					Workshop.Type.stonemason => $"Rock charges left: {workshop.ResourcesLeft()}",
 					Workshop.Type.fishingHut => $"Fish left: {workshop.ResourcesLeft()}",
 					Workshop.Type.hunter => $"Wild animals left: {workshop.ResourcesLeft()}",
+					Workshop.Type.dungCollector => $"Possible sources: {workshop.ResourcesLeft( false )}",
 					_ => $"Ore left: {workshop.ResourcesLeft()}"
 				};
 				resourcesLeft.text = text;
