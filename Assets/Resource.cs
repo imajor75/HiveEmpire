@@ -192,7 +192,10 @@ public class Resource : HiveObject
 			this.infinite = true;
 		this.node = node;
 		life.Start();
-		bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
+
+		// Calling the world random number generator messes with the game state and causes problems with dung creation, so only do it for trees and rocks
+		if ( type == Type.tree || type == Type.rock )
+			bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
 
 		if ( type == Type.cornField || type == Type.wheatField )
 		{
