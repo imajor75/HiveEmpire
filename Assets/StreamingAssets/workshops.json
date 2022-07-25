@@ -35,6 +35,7 @@
       "type": "dungCollector",
       "outputType": "dung",
       "gatheredResource": "dung",
+      "gatheringRange": 4,
       "productionTime": 0,
       "approximatedProductionTime": 2500,
       "flatteningNeeded": false
