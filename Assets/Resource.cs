@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -388,6 +388,8 @@ public class Resource : HiveObject
 	public bool IsReadyToBeHarvested()
 	{
 		if ( !keepAway.done && !keepAway.empty )
+			return false;
+		if ( charges <= 0 )
 			return false;
 		if ( type == Type.tree )
 		{
