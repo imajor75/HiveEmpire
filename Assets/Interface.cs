@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7179,7 +7179,7 @@ if ( cart )
 		{
 			var c = World.Challenge.Create().Setup( world.challenge );
 			if ( randomizeSeed && !c.fixedSeed )
-				c.seed = World.NextRnd( OperationHandler.Event.CodeLocation.challengePanelRestart );
+				c.seed = new System.Random().Next();
 			root.NewGame( c );
 		}
 
