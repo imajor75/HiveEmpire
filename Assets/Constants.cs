@@ -373,6 +373,8 @@ public static class Constants
         public const int defaultImportantInBuffer = 3;
         public const int relaxAreaSize = 3;
         public const int productivityPeriod = Constants.World.normalSpeedPerSecond * 60;
+        public const int gathererSleepTimeAfterFail = Constants.World.normalSpeedPerSecond * 6;
+        public const int gathererHarvestTime = Constants.World.normalSpeedPerSecond * 6;
     }
 
     public static class Simpleton

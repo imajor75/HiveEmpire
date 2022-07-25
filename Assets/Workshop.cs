@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,6 +27,7 @@ public class Workshop : Building
 	public int statusProduction;
 	public World.Timer statusDuration = new ();
 	public bool outOfResourceReported;
+	public Resource dungPile;
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
@@ -470,7 +471,7 @@ public class Workshop : Building
 
 			Resource.Create().Setup( node, resourceType );
 			done = true;
-			wait.Start( 300 );
+			wait.Start( Constants.Workshop.gathererHarvestTime );
 			boss.animator?.SetBool( Unit.sowingID, true );
 			boss.ScheduleWalkToNode( boss.building.flag.node );
 			boss.ScheduleWalkToNeighbour( boss.building.node );
@@ -637,7 +638,17 @@ public class Workshop : Building
 			}
 		}
 
+		if ( productionConfiguration.producesDung && !blueprintOnly )
+			dungPile = Resource.Create().Setup( node, Resource.Type.dung, 0, allowBlocking:true );
+
 		return this;
+	}
+
+	public override void Materialize()
+	{
+		base.Materialize();
+		if ( productionConfiguration.producesDung && !blueprintOnly )
+			dungPile = Resource.Create().Setup( node, Resource.Type.dung, 0, allowBlocking:true );
 	}
 
 	public override void Remove()
@@ -647,6 +658,7 @@ public class Workshop : Building
 			foreach ( var nearbyNode in Ground.areas[productionConfiguration.gatheringRange] )
 				node.Add( nearbyNode ).valuable = false;
 		}
+		dungPile?.Remove();
 		team.workshops.Remove( this );
 		base.Remove();
 	}
@@ -949,25 +961,12 @@ public class Workshop : Building
 				var resourceType = type == Type.cornFarm ? Resource.Type.cornField : Resource.Type.wheatField;
 				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
-					if ( output < productionConfiguration.outputMax )
-					{
-						foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
-						{
-							Node place = node.Add( o );
-							if ( place.building || place.flag || place.road || place.fixedHeight )
-								continue;
-							foreach ( var resource in place.resources )
-							{
-								if ( resource.type != resourceType || resource.hunter || !resource.IsReadyToBeHarvested() )
-									continue;
-								CollectResourceFromNode( resource );
-								return;
-							}
-							ChangeStatus( Status.waitingForResource );
-						}
-					}
-					else
-						ChangeStatus( Status.waitingForOutputSlot );
+					if ( CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange, false ) )
+						return;
+
+					if ( !UseInput() )
+						return;
+
 					foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
 					{
 						Node place = node.Add( o );
@@ -976,7 +975,7 @@ public class Workshop : Building
 						PlantAt( place, resourceType );
 						return;
 					}
-					tinkerer.ScheduleWait( 300 );
+					tinkerer.ScheduleWait( Constants.Workshop.gathererSleepTimeAfterFail );
 				}
 				break;
 			}
@@ -1003,14 +1002,17 @@ public class Workshop : Building
 						PlantAt( place, Resource.Type.tree );
 						return;
 					}
-					tinkerer.ScheduleWait( 300 );
+					tinkerer.ScheduleWait( Constants.Workshop.gathererSleepTimeAfterFail );
 				}
 				break;
 			}
 			default:
 			{
 				if ( gatherer )
-					CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange );
+				{
+					if ( tinkerer.IsIdle() && !CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange ) )
+						tinkerer.ScheduleWait( Constants.Workshop.gathererSleepTimeAfterFail );
+				}
 				else
 					ProcessInput();
 
@@ -1110,18 +1112,8 @@ public class Workshop : Building
 			if ( progress > 1 )
 			{
 				output += productionConfiguration.outputStackSize;
-				if ( productionConfiguration.producesDung )
-				{
-					Resource dung = null;
-					foreach ( var resource in node.resources )
-					{
-						if ( resource.type == Resource.Type.dung )
-							dung = resource;
-					}
-					if ( !dung )
-						dung = Resource.Create().Setup( node, Resource.Type.dung, 0, allowBlocking:true );
-					dung.charges += productionConfiguration.outputStackSize;
-				}
+				if ( dungPile )
+					dungPile.charges += productionConfiguration.outputStackSize;
 				SetWorking( false );
 				itemsProduced += productionConfiguration.outputStackSize;
 				if ( productionConfiguration.outputType != Item.Type.unknown )
@@ -1135,17 +1127,17 @@ public class Workshop : Building
 		}
 	}
 
-	void CollectResource( Resource.Type resourceType, int range )
+	bool CollectResource( Resource.Type resourceType, int range, bool useInputs = true )
 	{
 		if ( !tinkerer || !tinkerer.IsIdle( true ) || mode == Mode.sleeping )
-			return;
+			return false;
 		if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
 		{
 			ChangeStatus( Status.waitingForOutputSlot );
-			return;
+			return false;
 		}
 		if ( resting.inProgress )
-			return;
+			return false;
 
 		resourcePlace = null;
 		assert.IsTrue( tinkerer.IsIdle() );
@@ -1162,8 +1154,9 @@ public class Workshop : Building
 					continue;
 				if ( resource.type == resourceType && resource.IsReadyToBeHarvested() )
 				{
-					CollectResourceFromNode( resource );
-					return;
+					if ( useInputs && !UseInput() )
+						return false;
+					return CollectResourceFromNode( resource );
 				}
 			}
 		}
@@ -1173,6 +1166,7 @@ public class Workshop : Building
 			team.SendMessage( "Out of resources", this );
 		}
 		ChangeStatus( Status.waitingForResource );
+		return false;
 	}
 
 	/// <summary>
@@ -1191,10 +1185,10 @@ public class Workshop : Building
 		return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime + 1;
 	}
 
-	void CollectResourceFromNode( Resource resource )
+	bool CollectResourceFromNode( Resource resource )
 	{
-		if ( !UseInput() || flag.freeSlots == 0 )
-			return;
+		if ( flag.freeSlots == 0 )
+			return false;
 
 		assert.IsTrue( tinkerer.IsIdle() );
 		tinkerer.SetActive( true );
@@ -1211,6 +1205,7 @@ public class Workshop : Building
 		tinkerer.ScheduleTask( task );
 		resource.hunter = tinkerer;
 		SetWorking( true );
+		return true;
 	}
 
 	static void FinishJob( Unit unit, Item.Type itemType )
@@ -1347,7 +1342,7 @@ public class Workshop : Building
 		}
 	}
 
-	public int ResourcesLeft()
+	public int ResourcesLeft( bool charges = true )
 	{
 		int left = 0;
 		foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
@@ -1357,7 +1352,7 @@ public class Workshop : Building
 			{
 				if ( resource == null || resource.type != productionConfiguration.gatheredResource )
 					continue;
-				if ( resource.infinite )
+				if ( resource.infinite || !charges )
 					left++;
 				else
 					left += resource.charges;
