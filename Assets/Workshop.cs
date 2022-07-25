@@ -638,17 +638,7 @@ public class Workshop : Building
 			}
 		}
 
-		if ( productionConfiguration.producesDung && !blueprintOnly )
-			dungPile = Resource.Create().Setup( node, Resource.Type.dung, 0, allowBlocking:true );
-
 		return this;
-	}
-
-	public override void Materialize()
-	{
-		base.Materialize();
-		if ( productionConfiguration.producesDung && !blueprintOnly )
-			dungPile = Resource.Create().Setup( node, Resource.Type.dung, 0, allowBlocking:true );
 	}
 
 	public override void Remove()
@@ -905,6 +895,9 @@ public class Workshop : Building
 		if ( !construction.done || blueprintOnly )
 			return;
 
+		if ( productionConfiguration.producesDung && dungPile == null )
+			dungPile = Resource.Create().Setup( node, Resource.Type.dung, allowBlocking:true );
+
 		if ( type == Type.barrack && output > 0 )
 		{
 			output--;
@@ -1112,8 +1105,6 @@ public class Workshop : Building
 			if ( progress > 1 )
 			{
 				output += productionConfiguration.outputStackSize;
-				if ( dungPile )
-					dungPile.charges += productionConfiguration.outputStackSize;
 				SetWorking( false );
 				itemsProduced += productionConfiguration.outputStackSize;
 				if ( productionConfiguration.outputType != Item.Type.unknown )

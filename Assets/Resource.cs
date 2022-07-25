@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -193,9 +193,7 @@ public class Resource : HiveObject
 		this.node = node;
 		life.Start();
 
-		// Calling the world random number generator messes with the game state and causes problems with dung creation, so only do it for trees and rocks
-		if ( type == Type.tree || type == Type.rock )
-			bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
+		bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
 
 		if ( type == Type.cornField || type == Type.wheatField )
 		{
@@ -392,7 +390,7 @@ public class Resource : HiveObject
 	{
 		if ( !keepAway.done && !keepAway.empty )
 			return false;
-		if ( charges <= 0 )
+		if ( charges <= 0 && !infinite )
 			return false;
 		if ( type == Type.tree )
 		{
