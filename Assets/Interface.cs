@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -4007,8 +4007,8 @@ public class Interface : HiveObject
 
 		static public Hotkey showNearestPossibleHotkey = new Hotkey( "Show nearest construction site", KeyCode.Tab, true );
 		static public Hotkey showNearestPossibleAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Tab );
-		static public Hotkey rotateCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.Period );
-		static public Hotkey rotateCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.Comma );
+		static public Hotkey rotateCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.JoystickButton0 );
+		static public Hotkey rotateCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.JoystickButton1 );
 
 		public enum Construct
 		{
