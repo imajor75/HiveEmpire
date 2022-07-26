@@ -270,6 +270,8 @@ public class Interface : HiveObject
 	{ 
 		if ( Event.current.type == EventType.KeyUp && ignoreKey == Event.current.keyCode )
 			ignoreKey = KeyCode.None;
+		if ( Event.current.type == EventType.MouseUp && ignoreKey == KeyCode.Mouse0 + Event.current.button )
+			ignoreKey = KeyCode.None;
 	}
 
 	public void ShowOperation( Operation operation )
