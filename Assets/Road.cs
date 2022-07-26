@@ -839,7 +839,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		oh.StartGroup( "Finishing road" );
 
 		bool flagCreated = false;
-		if ( node.road && node.road != this || Interface.GetKey( KeyCode.LeftShift ) || Interface.GetKey( KeyCode.RightShift ) )
+		if ( node.road && node.road != this || Interface.IsKeyDown( KeyCode.LeftShift ) || Interface.IsKeyDown( KeyCode.RightShift ) )
 		{
 			oh.ScheduleCreateFlag( node, root.mainTeam, false, false );
 			flagCreated = true;

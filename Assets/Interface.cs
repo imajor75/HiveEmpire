@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -154,11 +154,11 @@ public class Interface : HiveObject
 
 		public bool IsSecondaryHold()
 		{
-			if ( alt != ( GetKey( KeyCode.LeftAlt ) || GetKey( KeyCode.RightAlt ) ) )
+			if ( alt != ( IsKeyDown( KeyCode.LeftAlt ) || IsKeyDown( KeyCode.RightAlt ) ) )
 				return false;
-			if ( shift != ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) ) )
+			if ( shift != ( IsKeyDown( KeyCode.LeftShift ) || IsKeyDown( KeyCode.RightShift ) ) )
 				return false;
-			if ( ctrl != ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) ) )
+			if ( ctrl != ( IsKeyDown( KeyCode.LeftControl ) || IsKeyDown( KeyCode.RightControl ) ) )
 				return false;
 
 			return true;
@@ -166,12 +166,12 @@ public class Interface : HiveObject
 
 		public bool IsPressed()
 		{
-			return IsSecondaryHold() && GetKeyDown( key );
+			return IsSecondaryHold() && IsKeyPressed( key );
 		}
 
 		public bool IsDown()
 		{
-			return IsSecondaryHold() && GetKey( key );
+			return IsSecondaryHold() && IsKeyDown( key );
 		}
 
 		public class List
@@ -246,6 +246,10 @@ public class Interface : HiveObject
 
 	static public string GetKeyName( KeyCode k )
 	{
+		if ( k == KeyCode.JoystickButton0 )
+			return "Mouse Wheel Up";
+		if ( k == KeyCode.JoystickButton1 )
+			return "Mouse Wheel Down";
 		if ( k >= KeyCode.Alpha0 && k <= KeyCode.Alpha9 )
 			return ( k - KeyCode.Alpha0 ).ToString();
 		
@@ -301,7 +305,7 @@ public class Interface : HiveObject
 		logFile.Close();
 	}
 
-	public static bool GetKey( KeyCode key )
+	public static bool IsKeyDown( KeyCode key )
 	{
 		if ( focusOnInputField || ignoreKey == key )
 			return false;
@@ -309,10 +313,15 @@ public class Interface : HiveObject
 		return Input.GetKey( key );
 	}
 
-	public static bool GetKeyDown( KeyCode key )
+	public static bool IsKeyPressed( KeyCode key )
 	{
 		if ( focusOnInputField || ignoreKey == key )
 			return false;
+
+		if ( key == KeyCode.JoystickButton0 )
+			return Input.GetAxis( "Mouse ScrollWheel" ) > 0;
+		if ( key == KeyCode.JoystickButton1 )
+			return Input.GetAxis( "Mouse ScrollWheel" ) < 0;
 
 		return Input.GetKeyDown( key );
 	}
@@ -946,7 +955,7 @@ public class Interface : HiveObject
 
 		void StartReplay()
 		{
-			replay.StartReplay( saves.value - 1, GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) );
+			replay.StartReplay( saves.value - 1, IsKeyDown( KeyCode.LeftControl ) || IsKeyDown( KeyCode.RightControl ) );
 		}
 	}
 	public class PathVisualization : MonoBehaviour
@@ -1811,14 +1820,14 @@ public class Interface : HiveObject
 
 			public void OnClick()
 			{
-				if ( GetKey( KeyCode.LeftShift ) || GetKey( KeyCode.RightShift ) )
+				if ( IsKeyDown( KeyCode.LeftShift ) || IsKeyDown( KeyCode.RightShift ) )
 				{
 					oh.ScheduleChangeArea( building, originalArea, null, 0 );
 					if ( eye.highlight.area == area )
 						eye.highlight.TurnOff();
 					return;
 				}
-				if ( GetKey( KeyCode.LeftControl ) || GetKey( KeyCode.RightControl ) )
+				if ( IsKeyDown( KeyCode.LeftControl ) || IsKeyDown( KeyCode.RightControl ) )
 				{
 					if ( area.center )
 					{
@@ -3315,7 +3324,7 @@ public class Interface : HiveObject
 			if ( channelText != cartInput ) cartInput.text = stock.itemData[t].cartInput.ToString();
 			if ( channelText != cartOutput ) cartOutput.text = stock.itemData[t].cartOutput.ToString();
 
-			if ( GetKeyDown( KeyCode.Mouse0 ) )
+			if ( IsKeyPressed( KeyCode.Mouse0 ) )
 			{
 				lastMouseXPosition = Input.mousePosition.x;
 				var g = GetUIElementUnderCursor();
@@ -3345,7 +3354,7 @@ public class Interface : HiveObject
 
 			if ( currentValue >= 0 )
 			{
-				if ( GetKey( KeyCode.Mouse0 ) )
+				if ( IsKeyDown( KeyCode.Mouse0 ) )
 				{
 					currentValue += (int)( ( Input.mousePosition.x - lastMouseXPosition ) * 0.2f );
 					if ( currentValue < min )
@@ -3962,7 +3971,7 @@ public class Interface : HiveObject
 
 		public void BuildWorkshop( Workshop.Type type )
 		{
-			if ( GetKey( KeyCode.LeftShift ) )
+			if ( IsKeyDown( KeyCode.LeftShift ) )
 			{
 				if ( type != showType )
 					showID = 0;
@@ -4324,7 +4333,7 @@ public class Interface : HiveObject
 
 		void Hauler()
 		{
-			if ( GetKey( KeyCode.LeftShift ) )
+			if ( IsKeyDown( KeyCode.LeftShift ) )
 				road.CallNewHauler();
 			else
 				UnitPanel.Create().Open( road.haulers[0], true ); // TODO Make it possibe to view additional haulers
@@ -5436,7 +5445,7 @@ if ( cart )
 
 			void OnGUI()
 			{
-				if ( Event.current.type != EventType.KeyDown && Event.current.type != EventType.MouseDown )
+				if ( Event.current.type != EventType.KeyDown && Event.current.type != EventType.MouseDown && Event.current.type != EventType.ScrollWheel )
 					return;
 				var key = Event.current.keyCode;
 				if ( Event.current.isMouse )
@@ -5448,8 +5457,12 @@ if ( cart )
 				if ( key == KeyCode.LeftControl || key == KeyCode.RightControl )
 					return;
 
+				if ( Event.current.type == EventType.ScrollWheel )
+					key = Input.GetAxis( "Mouse ScrollWheel" ) > 0 ? KeyCode.JoystickButton0 : KeyCode.JoystickButton1;
+				else
+					Interface.ignoreKey = key;
+
 				Event.current.Use();	// does it do anything?
-				Interface.ignoreKey = key;
 
 				Hotkey newHotkey = new Hotkey { alt = Event.current.alt, ctrl = Event.current.control, shift = Event.current.shift, key = key };
 				ChangeTo( newHotkey );
@@ -6125,9 +6138,9 @@ if ( cart )
 			if ( currentNode && !inputHandler.OnMovingOverNode( currentNode ) )
 				inputHandler = this;
 #if DEBUG
-			if ( GetKeyDown( KeyCode.PageUp ) && currentNode )
+			if ( IsKeyPressed( KeyCode.PageUp ) && currentNode )
 				currentNode?.SetHeight( currentNode.height + 0.05f );
-			if ( GetKeyDown( KeyCode.PageDown ) && currentNode )
+			if ( IsKeyPressed( KeyCode.PageDown ) && currentNode )
 				currentNode?.SetHeight( currentNode.height - 0.05f );
 #endif
 		}
