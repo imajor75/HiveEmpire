@@ -50,7 +50,7 @@ public static class Constants
         public const float altitudeChangeSpeed = 5;
         public const float altitudeDirectopmChangeSpeed = 0.25f;
         public const float altitudeSmoothness = 1;
-        public const float altitudeChangeSpeedWithMouseWheel = 25;
+        public const float altitudeChangeStep = 25;
         public const float autoStorePositionAfter = 2;
         public const int maxNumberOfSavedPositions = 10;
         public const float maxDistance = 0.35f;
@@ -226,7 +226,6 @@ public static class Constants
         public const float zoomMin = 1;
         public const float zoomMax = 20;
         public const float zoomSpeed = 0.03f;
-        public const float zoomSpeedWithMouseWheel = 0.2f;
     }
 
     public static class Node

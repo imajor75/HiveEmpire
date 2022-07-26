@@ -69,8 +69,10 @@ public class Interface : HiveObject
 	static public Hotkey cameraDownHotkey = new Hotkey( "Camera move down (continuous)", KeyCode.S );
 	static public Hotkey cameraRotateCCWHotkey = new Hotkey( "Camera rotate CW (continuous)", KeyCode.E );
 	static public Hotkey cameraRotateCWHotkey = new Hotkey( "Camera rotate CCW (continuous)", KeyCode.Q );
-	static public Hotkey cameraZoomInHotkey = new Hotkey( "Camera zoom in (continuous)", KeyCode.Z );
-	static public Hotkey cameraZoomOutHotkey = new Hotkey( "Camera zoom out (continuous)", KeyCode.Y );
+	static public Hotkey cameraZoomInHotkeyHold = new Hotkey( "Camera zoom in (continuous)", KeyCode.Z );
+	static public Hotkey cameraZoomOutHotkeyHold = new Hotkey( "Camera zoom out (continuous)", KeyCode.Y );
+	static public Hotkey cameraZoomInHotkey = new Hotkey( "Camera zoom in", KeyCode.JoystickButton0 );
+	static public Hotkey cameraZoomOutHotkey = new Hotkey( "Camera zoom out", KeyCode.JoystickButton1 );
 	static public Hotkey cameraRaiseHotkey = new Hotkey( "Camera raise (continuous)", KeyCode.R );
 	static public Hotkey cameraLowerHotkey = new Hotkey( "Camera lower (continuous)", KeyCode.F );
 

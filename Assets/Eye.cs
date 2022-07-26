@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -280,9 +280,9 @@ public class Eye : HiveObject
 		if ( direction < 0 )
 			direction += (float)Math.PI * 2;
 
-		if ( Interface.cameraZoomOutHotkey.IsDown() )
+		if ( Interface.cameraZoomOutHotkeyHold.IsDown() )
 			targetAltitude += Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
-		if ( Interface.cameraZoomInHotkey.IsDown() )
+		if ( Interface.cameraZoomInHotkeyHold.IsDown() )
 			targetAltitude -= Constants.Eye.altitudeChangeSpeed * Time.unscaledDeltaTime;
 		if ( Interface.cameraRaiseHotkey.IsDown() )
 			altitudeDirectionTarget -= Constants.Eye.altitudeDirectopmChangeSpeed * Time.unscaledDeltaTime;
@@ -295,10 +295,10 @@ public class Eye : HiveObject
 		
 		if ( root.viewport.mouseOver )
 		{
-			if ( Input.GetAxis( "Mouse ScrollWheel" ) < 0 )     // TODO Use something else instead of strings here
-				targetAltitude += Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.unscaledDeltaTime;
-			if ( Input.GetAxis( "Mouse ScrollWheel" ) > 0 )
-				targetAltitude -= Constants.Eye.altitudeChangeSpeedWithMouseWheel * Time.unscaledDeltaTime;
+			if ( Interface.cameraZoomOutHotkey.IsPressed() )
+				targetAltitude += Constants.Eye.altitudeChangeStep * Time.unscaledDeltaTime;
+			if ( Interface.cameraZoomInHotkey.IsPressed() )
+				targetAltitude -= Constants.Eye.altitudeChangeStep * Time.unscaledDeltaTime;
 			moveSensitivity = targetAltitude / 6;
 		}
 		if ( targetAltitude < Constants.Eye.minAltitude )
