@@ -93,6 +93,10 @@ public class Interface : HiveObject
 		public bool core;
 		[JsonIgnore]
 		public Hotkey original;
+		[JsonIgnore]
+		public bool active = true;
+		[JsonIgnore]
+		public Hotkey disabled;
 		public static List<Hotkey> instances = new ();
 
 		public Hotkey()
@@ -106,13 +110,14 @@ public class Interface : HiveObject
 			instances.Remove( this );
 		}
 
-		public Hotkey( string action, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false )
+		public Hotkey( string action, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false, bool active = true )
 		{
 			this.action = action;
 			this.key = key;
 			this.ctrl = ctrl;
 			this.alt = alt;
 			this.shift = shift;
+			this.active = active;
 			original = new Hotkey { key = key, alt = alt, ctrl = ctrl, shift = shift };
 			core = true;
 			instances.Add( this );
@@ -136,6 +141,37 @@ public class Interface : HiveObject
 			dest.alt = alt;
 			dest.ctrl = ctrl;
 			dest.shift = shift;
+		}
+
+		public void Activate( Panel owner = null )
+		{
+			Assert.global.IsFalse( active );
+
+			foreach ( var other in instances )
+			{
+				if ( !other.active || other.key != key || other.alt != alt || other.shift != shift || other.ctrl != ctrl )
+					continue;
+
+				other.active = false;
+				disabled = other;
+				break;
+			}
+
+			if ( owner )
+				owner.activeHotkeys.Add( this );
+			active = true;
+		}
+
+		public void Deactivate( )
+		{
+			Assert.global.IsTrue( active );
+			if ( disabled != null )
+			{
+				Assert.global.IsFalse( disabled.active );
+				disabled.active = true;
+				disabled = null;
+			}
+			active = false;
 		}
 
 		[JsonIgnore]
@@ -168,12 +204,12 @@ public class Interface : HiveObject
 
 		public bool IsPressed()
 		{
-			return IsSecondaryHold() && IsKeyPressed( key );
+			return active && IsSecondaryHold() && IsKeyPressed( key );
 		}
 
 		public bool IsDown()
 		{
-			return IsSecondaryHold() && IsKeyDown( key );
+			return active && IsSecondaryHold() && IsKeyDown( key );
 		}
 
 		public class List
@@ -1303,6 +1339,7 @@ public class Interface : HiveObject
 		public Image pin;
 		public bool pinned;
 		bool dragResizes;
+		public List<Hotkey> activeHotkeys = new ();
 
 		public const int itemIconBorderSize = 2;
 
@@ -1416,6 +1453,8 @@ public class Interface : HiveObject
 			root.panels.Remove( this );
 			if ( eye )
 				eye.StopAutoChange();
+			foreach ( var hotkey in activeHotkeys )
+				hotkey.Deactivate();
 		}
 
 		public void SetSize( int x, int y )
@@ -1849,6 +1888,11 @@ public class Interface : HiveObject
 				area.radius = 2;
 				eye.highlight.HighlightArea( area, gameObject );
 				root.viewport.inputHandler = this;
+				if ( !increaseSizeHotkey.active )
+				{
+					increaseSizeHotkey.Activate();
+					decreaseSizeHotkey.Activate();
+				}
 			}
 
 			public void Show( bool show )
@@ -1867,8 +1911,8 @@ public class Interface : HiveObject
 				}
 			}
 
-			static public Hotkey increaseSizeHotkey = new Hotkey( "Area size increase", KeyCode.Period );
-			static public Hotkey decreaseSizeHotkey = new Hotkey( "Area size decrease", KeyCode.Comma );
+			static public Hotkey increaseSizeHotkey = new Hotkey( "Area size increase", KeyCode.Period, active:false );
+			static public Hotkey decreaseSizeHotkey = new Hotkey( "Area size decrease", KeyCode.Comma, active:false );
 
 			public void Update()
 			{
@@ -1890,6 +1934,8 @@ public class Interface : HiveObject
 				if ( eye.highlight.area != area )
 					return;
 				eye.highlight.TurnOff();
+				increaseSizeHotkey.Deactivate();
+				decreaseSizeHotkey.Deactivate();
 			}
 
 			public bool OnObjectClicked( HiveObject target )
@@ -4005,10 +4051,10 @@ public class Interface : HiveObject
 		public static int currentFlagDirection = 1;    // 1 is a legacy value.
 		public Text testResult;
 
-		static public Hotkey showNearestPossibleHotkey = new Hotkey( "Show nearest construction site", KeyCode.Tab, true );
-		static public Hotkey showNearestPossibleAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Tab );
-		static public Hotkey rotateCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.JoystickButton0 );
-		static public Hotkey rotateCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.JoystickButton1 );
+		static public Hotkey showNearestPossibleHotkey = new Hotkey( "Show nearest construction site", KeyCode.Tab, true, active:false );
+		static public Hotkey showNearestPossibleAnyDirectionHotkey = new Hotkey( "Show nearest construction site with any direction", KeyCode.Tab, active:false );
+		static public Hotkey rotateCWHotkey = new Hotkey( "Rotate Construction CW", KeyCode.JoystickButton0, active:false );
+		static public Hotkey rotateCCWHotkey = new Hotkey( "Rotate Construction CCW", KeyCode.JoystickButton1, active:false );
 
 		public enum Construct
 		{
@@ -4051,6 +4097,11 @@ public class Interface : HiveObject
 			testResult = Text() .PinDownwards( borderWidth, 0, 460 );
 
 			root.viewport.inputHandler = this;
+
+			showNearestPossibleAnyDirectionHotkey.Activate( this );
+			showNearestPossibleHotkey.Activate( this );
+			rotateCCWHotkey.Activate( this );
+			rotateCWHotkey.Activate( this );
 		}
 
 		public void CancelBlueprint()
