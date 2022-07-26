@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static UnityEngine.UI.Dropdown;
 
 public class Interface : HiveObject
 {
@@ -5435,9 +5434,11 @@ if ( cart )
 
 			void OnGUI()
 			{
-				if ( Event.current.type != EventType.KeyDown )
+				if ( Event.current.type != EventType.KeyDown && Event.current.type != EventType.MouseDown )
 					return;
 				var key = Event.current.keyCode;
+				if ( Event.current.isMouse )
+					key = KeyCode.Mouse0 + Event.current.button;
 				if ( key == KeyCode.LeftAlt || key == KeyCode.RightAlt )
 					return;
 				if ( key == KeyCode.LeftShift || key == KeyCode.RightShift )
