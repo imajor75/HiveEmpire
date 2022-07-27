@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -403,7 +403,7 @@ public class Ground : HiveObject
 		if ( mapGroundTexture )
 			Destroy( mapGroundTexture );
 
-		int size = 1024;
+		int size = 512;
 		float pixelPerNode = (float)size / dimension;
 
 		mapGroundTexture = new Texture2D( size, size );
