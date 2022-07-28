@@ -149,6 +149,8 @@ public class Ground : HiveObject
 	{
 		foreach ( var node in nodes )
 			node.Remove();
+		foreach ( var block in blocks )
+			block.Remove();
 		base.Remove();
 	}
 	

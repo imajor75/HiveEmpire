@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -785,9 +785,7 @@ public class World : HiveObject
 		operationHandler.recordCRC = true;
 #endif
 		ground = Ground.Create();
-		Log( "1" );
 		ground.Setup( this, heightMap, forestMap, settings.size );
-		Log( "2" );
 		GenerateResources();
 		water = Water.Create().Setup( ground );
 		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
@@ -1624,7 +1622,7 @@ public class World : HiveObject
 				nulls++;
 				continue;
 			}
-			if ( obj.location == null || obj.destroyed )
+			if ( obj.destroyed || obj.location == null )
 				continue;
 			assert.IsTrue( obj.location.real, $"Not real object {obj} in the world" );
 		}
