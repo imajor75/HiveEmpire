@@ -30,7 +30,8 @@ public class World : HiveObject
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public string fileName;
-	public LinkedList<HiveObject> hiveObjects = new (), newHiveObjects = new ();
+	public List<HiveObject> hiveObjects = new (), newHiveObjects = new ();
+	public List<int> hiveListFreeSlots = new();
 	public List<Workshop.Configuration> workshopConfigurations;
 	public List<float> itemTypeUsage;
 	public List<float> workshopTypeUsage;
@@ -673,21 +674,26 @@ public class World : HiveObject
 		foreach ( var newHiveObject in newHiveObjects )
 		{
 			Assert.global.IsFalse( hiveObjects.Contains( newHiveObject ) );
-			hiveObjects.AddLast( newHiveObject );
+			if ( hiveListFreeSlots.Count > 0 )
+			{
+				int i = hiveListFreeSlots.Last();
+				hiveListFreeSlots.RemoveAt( hiveListFreeSlots.Count - 1 );
+				assert.AreEqual( hiveObjects[i], null );
+				hiveObjects[i] = newHiveObject;
+				newHiveObject.worldIndex = i;
+			}
+			else
+			{
+				newHiveObject.worldIndex = hiveObjects.Count;
+				hiveObjects.Add( newHiveObject );
+			}
 		}
 		newHiveObjects.Clear();
-		List<HiveObject> toRemove = new ();
 		foreach ( var hiveObject in hiveObjects )
 		{
 			if ( hiveObject && !hiveObject.destroyed )
 				hiveObject.GameLogicUpdate();
-			else
-				toRemove.Add( hiveObject );
 		}
-
-		foreach ( var h in toRemove )
-			hiveObjects.Remove( h );
-		toRemove.Clear();
 
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
@@ -779,7 +785,9 @@ public class World : HiveObject
 		operationHandler.recordCRC = true;
 #endif
 		ground = Ground.Create();
+		Log( "1" );
 		ground.Setup( this, heightMap, forestMap, settings.size );
+		Log( "2" );
 		GenerateResources();
 		water = Water.Create().Setup( ground );
 		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
@@ -882,6 +890,13 @@ public class World : HiveObject
 		{
 			if ( water != world.water )
 				water.Remove();
+		}
+
+		if ( ground.worldIndex < 0 )
+		{
+			for ( int i = 0; i < hiveObjects.Count; i++ )
+				if ( hiveObjects[i] )
+					hiveObjects[i].worldIndex = i;
 		}
 
 		if ( !challenge )
@@ -1202,14 +1217,7 @@ public class World : HiveObject
 			if ( node.x == ground.dimension || node.y == ground.dimension )
 			{
 				foreach ( var resource in node.resources )
-				{
 					toRemove.Add( resource );
-					if ( resource.registered )
-					{
-						resource.registered = false;
-						hiveObjects.Remove( resource );
-					}
-				}
 			}
 		}
 		foreach ( var resource in toRemove )
@@ -1309,7 +1317,6 @@ public class World : HiveObject
 			Destroy( light.gameObject );
 		light = null;
 
-		hiveObjects.Clear();
 		newHiveObjects.Clear();
 
 		Destroy( transform.Find( "Items just created" )?.gameObject );
@@ -1609,12 +1616,22 @@ public class World : HiveObject
 
 	public override void Validate( bool chain )
 	{
+		int nulls = 0;
 		foreach ( var obj in hiveObjects )
 		{
+			if ( obj == null )
+			{
+				nulls++;
+				continue;
+			}
 			if ( obj.location == null || obj.destroyed )
 				continue;
 			assert.IsTrue( obj.location.real, $"Not real object {obj} in the world" );
 		}
+
+		assert.AreEqual( nulls, hiveListFreeSlots.Count );
+		foreach ( var freeSlot in hiveListFreeSlots )
+			assert.AreEqual( hiveObjects[freeSlot], null );
 
 		if ( !chain )
 			return;

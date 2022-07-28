@@ -61,6 +61,7 @@ public abstract class HiveObject : HiveCommon
 	public bool noAssert;
 	public bool registered;
 	public bool destroyed;
+	public int worldIndex = -1;
 	public Team team;
 	public Simpleton.Data simpletonData;
 	[JsonIgnore]
@@ -95,7 +96,7 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Register()
 	{
-		world.newHiveObjects.AddFirst( this );
+		world.newHiveObjects.Add( this );
 		registered = true;
 	}
 
@@ -110,7 +111,12 @@ public abstract class HiveObject : HiveCommon
 
 	public void OnDestroy()
 	{
-		world.hiveObjects.Remove( this );
+		if ( worldIndex >= 0 )
+		{
+			assert.AreEqual( this, world.hiveObjects[worldIndex] );
+			world.hiveObjects[worldIndex] = null;
+			world.hiveListFreeSlots.Add( worldIndex );
+		}
 		world.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
 		destroyed = true;
 		registered = false;
@@ -190,6 +196,8 @@ public abstract class HiveObject : HiveCommon
 	{
 		if ( !blueprintOnly )
 			assert.AreNotEqual( id, 0 );
+		if ( worldIndex >= 0 )
+			assert.AreEqual( this, world.hiveObjects[worldIndex] );
 	}
 
 	public class SiteTestResult
