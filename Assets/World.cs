@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -149,20 +149,17 @@ public class World : HiveObject
 	public class Ore
 	{
 		public Resource.Type resourceType;
-		public float ideal;		// Number of ores per node
+		public float weight;
 		public int resourceCount;
-		public int missing
-		{
-			get
-			{
-				int idealCount = (int)( HiveCommon.world.nodeCount * ideal );
-				return Math.Max( 0, idealCount - resourceCount );
-			}
-
-		}
+		public static int totalResourceCount;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float idealRatio { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float ideal { set {} }
+
+		public float share => (float)resourceCount / totalResourceCount;
+		public float satisfaction => share / weight;
 	}
 
 	public enum Goal
@@ -1448,7 +1445,7 @@ public class World : HiveObject
 		Validate( true );
 	}
 
-	public void GenerateResources( float oreStrength = 1 )
+	public void GenerateResources()
 	{	
 		List<Resource> toRemove = new ();
 		foreach ( var node in ground.nodes )
@@ -1460,28 +1457,9 @@ public class World : HiveObject
 			resource.Remove();
 
 		ores.Clear();
-		oreCount = 0;
 		animalSpawnerCount = 0; 
 		int treeCount = 0, rockCount = 0;
-		void AddOre( Resource.Type resourceType )
-		{
-			float weight = world.itemTypeUsage[(int)Resource.ItemType( resourceType )];
-			if ( weight == 0 )
-				return;
 
-			ores.Add( new Ore{ resourceType = resourceType, ideal = weight / oreStrength } );
-		}
-		AddOre( Resource.Type.coal );
-		AddOre( Resource.Type.iron );
-		AddOre( Resource.Type.gold );
-		AddOre( Resource.Type.salt );
-		AddOre( Resource.Type.stone );
-		AddOre( Resource.Type.copper );
-		AddOre( Resource.Type.silver );
-
-		int TotalMissing() { int total = 0; foreach ( var ore in ores ) total += ore.missing; return total; };
-
-		Log( $"Total hill spots needed: {TotalMissing()}" );
 		foreach ( var node in ground.nodes )
 		{
 			if ( !node.real )
@@ -1505,52 +1483,48 @@ public class World : HiveObject
 			}
 		}
 
-		while ( TotalMissing() > 0 ) 
+		Ore.totalResourceCount = 0;
+		void AddOre( Resource.Type resourceType )
+		{
+			float weight = world.itemTypeUsage[(int)Resource.ItemType( resourceType )];
+			if ( weight == 0 )
+				return;
+
+			ores.Add( new Ore{ resourceType = resourceType, weight = weight } );
+		}
+		AddOre( Resource.Type.coal );
+		AddOre( Resource.Type.iron );
+		AddOre( Resource.Type.gold );
+		AddOre( Resource.Type.salt );
+		AddOre( Resource.Type.stone );
+		AddOre( Resource.Type.copper );
+		AddOre( Resource.Type.silver );
+		for ( int patchCount = 0; patchCount < (int)( world.nodeCount * Constants.World.oreCountPerNode ); patchCount++ )
 		{
 			int randomX = rnd.Next( ground.dimension ), randomY = rnd.Next( ground.dimension );
-			bool created = false;
-			for ( int x = 0; x < ground.dimension; x++ )
+			if ( Ore.totalResourceCount > 0 )
+				ores.Sort( ( a, b ) => a.satisfaction.CompareTo( b.satisfaction ) );
+			var ore = ores.First();
+			bool go = true;
+			for ( int x = 0; x < ground.dimension && go; x++ )
 			{
-				for ( int y = 0; y < ground.dimension; y++ )
+				for ( int y = 0; y < ground.dimension && go; y++ )
 				{
-					created = CreateOrePatch( ground.GetNode( ( x + randomX ) % ground.dimension, (y + randomY ) % ground.dimension ), oreStrength );
+					var node = ground.GetNode( ( x + randomX) % ground.dimension, ( y + randomY ) % ground.dimension );
+					bool hasOre = false;
+					foreach ( var resource in node.resources )
+						if ( resource.underGround )
+							hasOre = true;
 
-					if ( created )
-						break;
+					if ( node.type != Node.Type.hill || hasOre )
+						continue;
+					go = false;
+
+					var resourceCount = node.AddResourcePatch( ore.resourceType, settings.size / 6, 10 );
+					ore.resourceCount += resourceCount;
+					Ore.totalResourceCount += resourceCount;
 				}
-				if ( created )
-					break;
 			}
-			if ( !created )
-			{
-				Log( $"Failed with strength {oreStrength}, trying with {1.25f * oreStrength}" );
-				GenerateResources( oreStrength * 1.25f );
-				return;
-			}
-		}
-
-		bool CreateOrePatch( Node node, float strength )
-		{
-			bool hasOre = false;
-			foreach ( var resource in node.resources )
-				if ( resource.underGround )
-					hasOre = true;
-
-			if ( node.type != Node.Type.hill || hasOre )
-				return false;
-
-			foreach ( var ore in ores )
-			{
-				if ( ore.missing == 0 )
-					continue;
-
-				var resourceCount = node.AddResourcePatch( ore.resourceType, settings.size / 6, 10, strength );
-				ore.resourceCount += resourceCount;
-				oreCount += resourceCount;
-				return resourceCount > 0;
-			}
-			Assert.global.Fail();
-			return true;
 		}
 
 		int idealAnimalSpawnerCount = (int)( settings.size * settings.size * settings.animalSpawnerChance );
@@ -1570,7 +1544,7 @@ public class World : HiveObject
 		Log( $" - rocks: {rockCount}" );
 		Log( $" - caves: {animalSpawnerCount}" );
 		foreach ( var ore in ores )
-			Log( $" - {ore.resourceType}: {ore.resourceCount} (missing: {ore.missing})" );
+			Log( $" - {ore.resourceType}: {ore.resourceCount}" );
 	}
 
 	public void SetSpeed( Speed speed )

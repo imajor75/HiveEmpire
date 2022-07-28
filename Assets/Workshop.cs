@@ -408,7 +408,7 @@ public class Workshop : Building
 				else
 				{
 					if ( resource.underGround )
-						resource.keepAway.Start( (int)( Constants.Workshop.mineOreRestTime / resource.strength ) );
+						resource.keepAway.Start( (int)( Constants.Workshop.mineOreRestTime ) );
 					if ( resource.type == Resource.Type.fish )
 						resource.keepAway.Start( Constants.Workshop.fishRestTime );
 					if ( resource.type == Resource.Type.apple )

@@ -10,7 +10,6 @@ public class Resource : HiveObject
 	public Type type;
 	public World.Timer life = new ();
 	public int charges = 1;
-	public float strength = 1;
 	public bool infinite;
 	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
 	public World.Timer gathered = new ();
@@ -61,6 +60,8 @@ public class Resource : HiveObject
 
 	[Obsolete( "Compatibility with old files", true )]
 	World.Timer exposed { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	float strength { set {} }
 
 	public enum Type
 	{
@@ -145,10 +146,9 @@ public class Resource : HiveObject
 		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt || type == Type.copper || type == Type.silver;
 	}
 
-	public Resource Setup( Node node, Type type, int charges = -1, float strength = 1, bool allowBlocking = false )
+	public Resource Setup( Node node, Type type, int charges = -1, bool allowBlocking = false )
 	{
 		this.type = type;
-		this.strength = strength;
 		if ( charges < 0 )
 		{
 			if ( underGround || type == Type.fish || type == Type.apple )

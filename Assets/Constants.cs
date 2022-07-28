@@ -15,6 +15,7 @@ public static class Constants
         public const float fastSpeedFactor = 8;
         public const int normalSpeedPerSecond = 50;
         public const int allowedAdvancePerFrame = 5;
+        public const float oreCountPerNode = 0.02f;
     }
 
     public static class Network
