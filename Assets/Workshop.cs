@@ -691,7 +691,7 @@ public class Workshop : Building
 					continue;
 
 				var newWeight = configuration.commonInputs ? workshopWeight / configuration.generatedInputs.Count : workshopWeight;
-				if ( newWeight < 0.01 )
+				if ( newWeight < 0.001 )
 				{
 					Assert.global.Fail( "Infinite cycle in workshop configurations" );
 					return;
