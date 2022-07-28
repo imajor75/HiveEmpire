@@ -129,8 +129,14 @@ public class Workshop : Building
 		}
 
 		var result = (float)itemsProduced / timeRange * Constants.World.normalSpeedPerSecond * 60;
-		if ( maximumPossible && usedTime > 0 )
-			result *= (usedTime + wastedTime) / usedTime;
+		if ( maximumPossible )
+		{
+			if ( usedTime > 0 )
+				result *= (usedTime + wastedTime) / usedTime;
+			else
+				return productionConfiguration.productivity;
+
+		}
 
 		return result;
 	}
