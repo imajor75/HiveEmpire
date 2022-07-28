@@ -33,6 +33,8 @@ public class Simpleton : Player
    	[Obsolete( "Compatibility with old files", true )]
     bool hasWoodcutter { set {} }
 
+
+    [Serializable]
     public struct ItemUsage
     {
         public Workshop.Type workshopType;
@@ -76,8 +78,11 @@ public class Simpleton : Player
                     continue;
                 foreach ( var input in workshopType.generatedInputs )
                 {
-                    if ( input == Item.Type.plank || input == Item.Type.stone || input == Item.Type.log )
-                        nonConstructionUsage.Add( new ItemUsage { workshopType = workshopType.type, itemType = input } );
+                    if ( input != Item.Type.plank && input != Item.Type.stone && input != Item.Type.log )
+                        continue;
+                    if ( workshopType.type == Workshop.Type.sawmill )
+                        continue;
+                    nonConstructionUsage.Add( new ItemUsage { workshopType = workshopType.type, itemType = input } );
                 }
             }
         }
@@ -596,54 +601,21 @@ public class Simpleton : Player
 
         void GatherDependencies()
         {
-            // TODO Dynamic
             if ( workshopType == Workshop.Type.woodcutter )
                 dependencies.Add( Workshop.Type.forester );
-            if ( workshopType == Workshop.Type.sawmill )
-                dependencies.Add( Workshop.Type.woodcutter );
-            if ( workshopType == Workshop.Type.mill )
-                dependencies.Add( Workshop.Type.wheatFarm );
-            if ( workshopType == Workshop.Type.bowMaker )
+            if ( workshopType == Workshop.Type.dungCollector )
             {
-                dependencies.Add( Workshop.Type.sawmill );
-                dependencies.Add( Workshop.Type.hunter );
+                dependencies.Add( Workshop.Type.butcher );
+                dependencies.Add( Workshop.Type.dairy );
+                dependencies.Add( Workshop.Type.poultryRun );
             }
-            if ( workshopType == Workshop.Type.bakery )
+            var configuration = Workshop.GetConfiguration( workshopType );
+            foreach ( var otherWorkshopType in world.workshopConfigurations )
             {
-                dependencies.Add( Workshop.Type.mill );
-                dependencies.Add( Workshop.Type.saltMine );
-            }
-            if ( workshopType == Workshop.Type.smelter )
-            {
-                dependencies.Add( Workshop.Type.ironMine );
-                dependencies.Add( Workshop.Type.coalMine );
-            }
-            if ( workshopType == Workshop.Type.weaponMaker )
-            {
-                dependencies.Add( Workshop.Type.smelter );
-                dependencies.Add( Workshop.Type.coalMine );
-            }
-            if ( workshopType == Workshop.Type.brewery )
-            {
-                dependencies.Add( Workshop.Type.well );
-                dependencies.Add( Workshop.Type.wheatFarm );
-            }
-            if ( workshopType == Workshop.Type.butcher )
-            {
-                dependencies.Add( Workshop.Type.brewery );
-                dependencies.Add( Workshop.Type.wheatFarm );
-            }
-            if ( workshopType == Workshop.Type.barrack )
-            {
-                dependencies.Add( Workshop.Type.bowMaker );
-                dependencies.Add( Workshop.Type.brewery );
-                dependencies.Add( Workshop.Type.jeweler );
-                dependencies.Add( Workshop.Type.weaponMaker );
-            }
-            if ( workshopType == Workshop.Type.jeweler )
-            {
-                dependencies.Add( Workshop.Type.goldMine );
-                dependencies.Add( Workshop.Type.woodcutter );
+                if ( configuration.generatedInputs == null )
+                    continue;
+                if ( configuration.generatedInputs.Contains( otherWorkshopType.outputType ) )
+                    dependencies.Add( otherWorkshopType.type );
             }
         }
 
