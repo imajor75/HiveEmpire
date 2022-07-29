@@ -140,7 +140,7 @@ public class Simpleton : Player
                 if ( best == null || task.importance > best.importance )
                     best = task;
             }
-            if ( best != null && best.importance >= confidence )
+            if ( best != null && best.importance >= confidence && best.importance > 0 )
             {
                 Log( $"Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
                 best.ApplySolution();
