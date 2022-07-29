@@ -527,19 +527,33 @@ public class Simpleton : Player
                 int currentWorkshopCount = 0;
                 var outputType = Workshop.GetConfiguration( workshopType ).outputType;
                 currentYield = 0;
-                foreach ( var workshop in boss.team.workshops )
+                if ( workshopType == Workshop.Type.forester )
                 {
-                    if ( workshop.productionConfiguration.outputType == outputType && workshop.team == boss.team )
+                    foreach ( var workshop in boss.team.workshops )
                     {
-                        if ( workshop.output > 0 )
+                        if ( workshop.type == Workshop.Type.forester )
                         {
-                            surplus = true;
-                            return finished;
+                            currentYield += workshop.productionConfiguration.productivity;
+                            currentWorkshopCount++;
                         }
-                        currentYield += workshop.CalculateProductivity( true, Constants.Simpleton.maximumProductionCalculatingPeriod );
                     }
-                    if ( workshop.type == workshopType )
-                        currentWorkshopCount++;
+                }
+                else
+                { 
+                    foreach ( var workshop in boss.team.workshops )
+                    {
+                        if ( workshop.productionConfiguration.outputType == outputType )
+                        {
+                            if ( workshop.output > 0 )
+                            {
+                                surplus = true;
+                                return finished;
+                            }
+                            currentYield += workshop.CalculateProductivity( true, Constants.Simpleton.maximumProductionCalculatingPeriod );
+                        }
+                        if ( workshop.type == workshopType )
+                            currentWorkshopCount++;
+                    }
                 }
 
                 if ( currentYield >= target )
