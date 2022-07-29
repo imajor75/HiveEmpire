@@ -116,6 +116,7 @@ public abstract class HiveObject : HiveCommon
 			assert.AreEqual( this, world.hiveObjects[worldIndex] );
 			world.hiveObjects[worldIndex] = null;
 			world.hiveListFreeSlots.Add( worldIndex );
+			worldIndex = -1;
 		}
 		world.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
 		destroyed = true;
