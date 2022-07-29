@@ -385,7 +385,10 @@ public class Simpleton : Player
             foreach ( var workshopType in world.workshopConfigurations )
             {
                 if ( workshopType.type == Workshop.Type.barrack && boss.lackingProductions.Count != 0 )
+                {
+                    boss.lackingProductions.Clear();
                     continue;
+                }
                 float targetMinimum = workshopType.type switch
                 {
                     Workshop.Type.barrack => soldierYield + 0.1f,
@@ -579,7 +582,8 @@ public class Simpleton : Player
                 if ( problemWeight > 0 )
                 {
                     GatherDependencies();
-                    boss.lackingProductions.Add( outputType );
+                    if ( outputType != Item.Type.unknown )
+                        boss.lackingProductions.Add( outputType );
                 }
                 return problemWeight > 0 ? needMoreTime : finished;
             }
