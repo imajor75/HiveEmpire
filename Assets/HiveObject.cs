@@ -160,7 +160,10 @@ public abstract class HiveObject : HiveCommon
 	{
 		gameObject.SetActive( !inactive );
 		if ( destroyed )	// If this is true, and this function is called, we are right after load. We should let unity know that this object should be treated as nonexistent
+		{
 			Destroy( gameObject );
+			Log( $"Dead object in file: {name} (type:{GetType()}, id:{id})" );
+		}
 	}
 
 	public virtual void Materialize()

@@ -36,9 +36,9 @@ public class Serializer
 
 	public struct ReferenceLink
 	{
-		public HiveObject referencer;
+		public object referencer;
 		public MemberInfo member;
-		public HiveObject reference;
+		public object reference;
 	}
 
 	public Serializer( JsonReader reader, string fileName )
@@ -198,8 +198,7 @@ public class Serializer
 			{
 				currentObjectType = type;
 				var o = FillObject( null );
-				if ( referencer is HiveObject hiveReferencer && o is HiveObject hiveReference )
-					referenceLinks.Add( new ReferenceLink{ referencer = hiveReferencer, member = m, reference = hiveReference } );
+				referenceLinks.Add( new ReferenceLink{ referencer = referencer, member = m, reference = o } );
 				return o;
 			}
 			case JsonToken.StartArray:
@@ -395,14 +394,30 @@ public class Serializer
 			if ( 
 				link.referencer is Stock.Cart ct &&
 				link.member.Name == "road" &&
-				link.reference.destroyed &&
+				link.reference is HiveObject hiveObjectReference &&
+				hiveObjectReference.destroyed &&
 				!ct.exclusiveMode )
 			{
 				ct.road = null;
 				continue;
 			}
-			if ( !link.referencer.destroyed && link.reference.destroyed )
-				link.referencer.OnDeadReference( link.member, link.reference );
+			bool referencerDestroyed = link.referencer is HiveObject ho && ho.destroyed;
+			if ( link.reference is Player.Message m && m.location.id == 1111 )
+			{
+				HiveCommon.Log( $"hopp {link.referencer} through {link.member}" );
+			}
+			bool referenceDestroyed = link.reference is HiveObject hor && hor.destroyed;
+			if ( !referencerDestroyed && referenceDestroyed )
+			{
+				if ( link.referencer is HiveObject referencerHiveObject )
+					referencerHiveObject.OnDeadReference( link.member, link.reference as HiveObject );
+				else
+				{
+					if ( link.referencer is Player.Message me )
+						HiveCommon.Log( "hoppéla");
+					Assert.global.Fail( $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member} (raw)" );
+				}
+			}
 		}
 		return result;
 	}
