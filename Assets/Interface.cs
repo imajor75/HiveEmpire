@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -584,7 +584,7 @@ public class Interface : HiveObject
 	{
 		var message = mainPlayer.messages.First();
 		MessagePanel.Create( message.text, message.location );
-		mainPlayer.messages.RemoveFirst();
+		mainPlayer.messages.Remove( message );
 	}
 
 	public void OpenMainPanel()

@@ -6,7 +6,7 @@ using UnityEngine;
 public abstract class Player : HiveObject
 {
 	public new string name;
-	public LinkedList<Message> messages = new ();
+	public List<Message> messages = new ();
 
 	[Obsolete( "Compatibility with old files", true )]
 	float totalEfficiency { set {} }
@@ -111,12 +111,22 @@ public abstract class Player : HiveObject
 
 	new void Update()
 	{
+		List<Message> obsolete = new ();
+		foreach ( var message in messages )
+		{
+			if ( message.location.destroyed )
+				obsolete.Add( message );
+		}
+		foreach ( var message in obsolete )
+			messages.Remove( message );
+
 		while ( messages.Count > Constants.Interface.maxMessages )
-			messages.RemoveLast();
+			messages.RemoveAt( messages.Count - 1 );
 
 		base.Update();
 	}
 
+	[Serializable]
 	public class Message
 	{
 		public string text;
@@ -290,7 +300,7 @@ public class Team : HiveObject
 	{
 		var message = new Player.Message{ text = text, location = location };
 		foreach ( var player in players )
-			player.messages.AddLast( message );
+			player.messages.Add( message );
 	}
 
 	public Material GetBuoyMaterial()
