@@ -691,6 +691,7 @@ public class Simpleton : Player
                     Workshop.Type.forester => nearby.type == Node.Type.forest,
                     Workshop.Type.fishingHut => nearby.HasResource( Resource.Type.fish ),
                     Workshop.Type.hunter => nearby.HasResource( Resource.Type.animalSpawner ),
+                    Workshop.Type.dungCollector => nearby.HasResource( Resource.Type.dung ),
                     _ => true
                 };
                 if ( isThisGood )
@@ -701,6 +702,7 @@ public class Simpleton : Player
             float expectedResourceCoverage = workshopType switch
             {
                 Workshop.Type.stonemason => 0.05f,
+                Workshop.Type.dungCollector => 0.05f,
                 Workshop.Type.ironMine => 0.5f,
                 Workshop.Type.goldMine => 0.5f,
                 Workshop.Type.coalMine => 0.5f,
