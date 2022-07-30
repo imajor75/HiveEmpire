@@ -312,7 +312,8 @@ public class Simpleton : Player
             }
 
             bool hasSawmill = false;
-            boss.expectedLog = 0;
+            boss.expectedLog = boss.team.Stockpile( Item.Type.log );
+            boss.expectedPlank = boss.team.Stockpile( Item.Type.plank );
             List<Resource> countedTrees = new ();
             foreach ( var workshop in boss.team.workshops )
             {
@@ -349,7 +350,7 @@ public class Simpleton : Player
             }
             foreach ( var tree in countedTrees )
                 tree.charges = 1;
-            boss.expectedPlank = hasSawmill ? boss.expectedLog : 0;
+            boss.expectedPlank += hasSawmill ? boss.expectedLog : 0;
 
             foreach ( var stock in boss.team.stocks )
                 CheckBuilding( stock );
@@ -594,7 +595,7 @@ public class Simpleton : Player
             if ( workshopType != Workshop.Type.woodcutter && workshopType != Workshop.Type.sawmill && workshopType != Workshop.Type.forester )
                 reservedPlank += 4;
 
-            currentPlank = boss.team.Stockpile( Item.Type.plank ) + boss.expectedPlank;
+            currentPlank = boss.expectedPlank;
             currentStone = boss.team.Stockpile( Item.Type.stone );
 
             if ( configuration.plankNeeded + reservedPlank > currentPlank )

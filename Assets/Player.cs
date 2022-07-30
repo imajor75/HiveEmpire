@@ -204,6 +204,9 @@ public class Team : HiveObject
 		int amount = 0;
 		foreach ( var stock in stocks )
 			amount += stock.itemData[(int)itemType].content;
+		foreach ( var workshop in workshops )
+			if ( workshop.productionConfiguration.outputType == itemType )
+				amount += workshop.output;
 		return amount;
 	}
 
