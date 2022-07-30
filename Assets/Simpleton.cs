@@ -281,10 +281,10 @@ public class Simpleton : Player
             float soldierYield = 0;
             foreach ( var workshop in boss.team.workshops )
             {
+                if ( workshop.type == Workshop.Type.barrack )
+                    soldierYield += workshop.maxOutput;
                 if ( !workshop.construction.done )
                     continue;
-                if ( workshop.type == Workshop.Type.barrack && workshop.team == boss.team )
-                    soldierYield += workshop.maxOutput;
                 boss.tasks.Add( new MaintenanceTask( boss, workshop ) );
             }
 
@@ -320,7 +320,7 @@ public class Simpleton : Player
                 {
                     bool hasForester = false;
                     int forestNodeCount = 0, treeCount = 0;
-                    foreach ( var offset in Ground.areas[Workshop.GetConfiguration( Workshop.Type.woodcutter ).gatheringRange] )
+                    foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )
                     {
                         var node = workshop.node + offset;
                         if ( node.building && node.building.type == (Building.Type)Workshop.Type.forester && node.building.team == boss.team && node.building.construction.done )
