@@ -3716,7 +3716,7 @@ public class Interface : HiveObject
 
 				DrawFlow( current, column, row );
 
-				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ), Workshop.sprites[(int)workshop.type] ).Link( scroll.content );
+				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ) ).Link( scroll.content );
 				if ( workshop.outputStackSize > 1 )
 					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
 				workshopImage.AddClickHandler( () => OnWorkshopClick( workshopImage, workshop ), UIHelpers.ClickType.right );
