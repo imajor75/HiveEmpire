@@ -28,6 +28,7 @@ public class Workshop : Building
 	public World.Timer statusDuration = new ();
 	public bool outOfResourceReported;
 	public Resource dungPile;
+	public World.Timer allowFreeStone = new ();
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
@@ -1152,7 +1153,12 @@ public class Workshop : Building
 				if ( resource.type == resourceType && resource.IsReadyToBeHarvested() )
 				{
 					if ( useInputs && !UseInput() )
-						return false;
+					{
+						if ( type != Type.stoneMine || allowFreeStone.inProgress )
+							return false;
+						Log( "Stone mine giving one stone for free due to long starvation" );
+					}
+					allowFreeStone.Start( Constants.Workshop.freeStoneTimePeriod );
 					return CollectResourceFromNode( resource );
 				}
 			}
