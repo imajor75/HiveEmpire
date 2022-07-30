@@ -147,11 +147,16 @@ public class Simpleton : Player
                 inability.Start( Constants.Simpleton.inabilityTolerance );
                 confidence = Constants.Simpleton.defaultConfidence;
             }
-            if ( inability.done && confidence > Constants.Simpleton.minimumConfidence )
+            if ( inability.done )
             {
-                confidence -= Constants.Simpleton.confidenceLevel;
-                Log( $"No good solution (best: {best.importance}), reducing confidence to {confidence}" );
-                inability.Start( Constants.Simpleton.inabilityTolerance );
+                if ( confidence > Constants.Simpleton.minimumConfidence )
+                {
+                    confidence -= Constants.Simpleton.confidenceLevel;
+                    Log( $"No good solution (best: {best.importance}), reducing confidence to {confidence}" );
+                    inability.Start( Constants.Simpleton.inabilityTolerance );
+                }
+                else
+                    Log( $"Confidence is already at minimum ({confidence}), don't know what to do" );
             }
 
             tasks = null;
