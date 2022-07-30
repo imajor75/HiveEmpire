@@ -5233,15 +5233,19 @@ if ( cart )
 			{
 				var d = Dropdown().PinSideways( 0, -borderWidth, 150, iconSize );
 				List<string> options = new ();
+				int currentValue = 0;
 				for ( int i = 0; i < (int)Item.Type.total; i++ )
 				{
 					if ( world.itemTypeUsage[i] == 0 )
 						continue;
+					if ( i == (int)itemType )
+						currentValue = options.Count;
+
 					options.Add( ((Item.Type)i).ToString().GetPrettyName() );
 					itemTypeSelectorMap.Add( i );
 				}
 				d.AddOptions( options );
-				d.value = (int)itemType;
+				d.value = currentValue;
 				d.onValueChanged.AddListener( OnItemTypeChanged );
 				d.SetTooltip( "Selected item type", null, "Only routes with the selected item type will be listed." );
 			}
