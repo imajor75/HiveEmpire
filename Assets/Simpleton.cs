@@ -410,6 +410,8 @@ public class Simpleton : Player
                 boss.tasks.Add( new YieldTask( boss, workshopType.type, Math.Max( soldierYield * world.itemTypeUsage[(int)outputType], targetMinimum ) ) );
             }
 
+            boss.tasks.Add( new ExtendBorderTask( boss ) );
+
             foreach ( var flag in boss.team.flags )
             {
                 if ( flag.team == boss.team && !flag.blueprintOnly )
