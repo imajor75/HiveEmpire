@@ -235,7 +235,7 @@ public class OperationHandler : HiveObject
             challenge = world.challenge;
         }
         else
-            root.NewGame( challenge );
+            root.NewGame( challenge, false );
 
         frameEvents = world.operationHandler.events;
         currentCRCCode = world.operationHandler.currentCRCCode;

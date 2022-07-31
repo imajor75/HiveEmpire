@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -461,7 +461,7 @@ public class Serializer
 			foreach ( var type in content )
 				types.Add( (type.Key, type.Value) );
 			types.Sort( ( a, b ) => b.Item2.CompareTo( a.Item2 ) );
-			HiveCommon.Log( "Types in file\n================" );
+			HiveCommon.Log( $"Types in file {fileName}\n================" );
 			foreach ( var type in types )
 				HiveCommon.Log( $"{type.Item1} : {type.Item2}" );
 

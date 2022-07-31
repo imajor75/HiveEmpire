@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -646,9 +647,13 @@ public class Interface : HiveObject
 			eye.FocusOn( closest, true );
 	}
 
-	public void NewGame( World.Challenge challenge )
+	public void NewGame( World.Challenge challenge, bool randomizeSeed = true )
 	{
-		world.NewGame( challenge );
+		var c = World.Challenge.Create().Setup( challenge );
+			if ( randomizeSeed && !c.fixedSeed )
+		c.seed = new System.Random().Next();
+
+		world.NewGame( c );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
 		else
@@ -7143,7 +7148,7 @@ if ( cart )
 		{
 			if ( !challenge.fixedSeed )
 				challenge.seed = int.Parse( manualSeed.text );
-			root.NewGame( challenge );
+			root.NewGame( challenge, false );
 			Close();
 		}
 	}
@@ -7241,18 +7246,10 @@ if ( cart )
 			}
 			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			var row = UIHelpers.currentRow - iconSize / 2 - 10;
-			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => Restart( false ) );
-			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => Restart( true ) );
+			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => root.NewGame( world.challenge, false ) );
+			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => root.NewGame( world.challenge, true ) );
 			
 			this.SetSize( 400, -row + 30 );
-		}
-
-		void Restart( bool randomizeSeed )
-		{
-			var c = World.Challenge.Create().Setup( world.challenge );
-			if ( randomizeSeed && !c.fixedSeed )
-				c.seed = new System.Random().Next();
-			root.NewGame( c );
 		}
 
 		new public void Update()

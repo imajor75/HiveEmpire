@@ -730,6 +730,8 @@ public class World : HiveObject
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
 	{
+		var localChallenge = Challenge.Create().Setup( challenge );
+		localChallenge.transform.SetParent( transform );
 		workshopConfigurations = Workshop.LoadConfigurations();
 		if ( resetSettings )
 			settings = ScriptableObject.CreateInstance<Settings>();
@@ -747,7 +749,6 @@ public class World : HiveObject
 		createRoadTutorialShowed = false;
 		var oldEye = eye;
 
-		this.challenge = challenge;
 		settings.size = challenge.worldSize;
 		var seed = challenge.seed;
 		Debug.Log( "Starting new game with seed " + seed );
@@ -774,10 +775,11 @@ public class World : HiveObject
 		Prepare();
 		Interface.ValidateAll( true );
 
+		this.challenge = localChallenge;
 		defeatedSimpletonCount = 0;
-		challenge.Register();
+		this.challenge.Register();
 		operationHandler = OperationHandler.Create().Setup();
-		operationHandler.challenge = challenge;
+		operationHandler.challenge = localChallenge;
 #if DEBUG
 		operationHandler.recordCRC = true;
 #endif
@@ -1308,6 +1310,9 @@ public class World : HiveObject
 		water?.Remove();
 		water = null;
 
+		challenge?.Remove();
+		challenge = null;
+
 		if ( light )
 			Destroy( light.gameObject );
 		light = null;
@@ -1623,7 +1628,7 @@ public class World : HiveObject
 	}
 
 	[System.Serializable]
-	public class Timer
+	public class Timer		// TODO This could be a struct to make load/save faster
 	{
 		public int reference = -1;
 
