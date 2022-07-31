@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -962,7 +962,7 @@ public class Workshop : Building
 				var resourceType = type == Type.cornFarm ? Resource.Type.cornField : Resource.Type.wheatField;
 				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
 				{
-					if ( CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange, false ) )
+					if ( CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange, false, currentStatus != Status.waitingForInput0 ) )
 						return;
 
 					if ( !UseInput() )
@@ -1126,13 +1126,14 @@ public class Workshop : Building
 		}
 	}
 
-	bool CollectResource( Resource.Type resourceType, int range, bool useInputs = true )
+	bool CollectResource( Resource.Type resourceType, int range, bool useInputs = true, bool adjustStatus = true )
 	{
 		if ( !tinkerer || !tinkerer.IsIdle( true ) || mode == Mode.sleeping )
 			return false;
 		if ( output + productionConfiguration.outputStackSize > productionConfiguration.outputMax )
 		{
-			ChangeStatus( Status.waitingForOutputSlot );
+			if ( adjustStatus )
+				ChangeStatus( Status.waitingForOutputSlot );
 			return false;
 		}
 		if ( resting.inProgress )
@@ -1169,7 +1170,8 @@ public class Workshop : Building
 			outOfResourceReported = true;
 			team.SendMessage( "Out of resources", this );
 		}
-		ChangeStatus( Status.waitingForResource );
+		if ( adjustStatus )
+			ChangeStatus( Status.waitingForResource );
 		return false;
 	}
 
