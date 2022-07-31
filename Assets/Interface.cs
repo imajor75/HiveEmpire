@@ -1109,6 +1109,8 @@ public class Interface : HiveObject
 			{
 				Color segmentColor = j < path.progress ? Color.green.Light() : new Color( 0, 0.5f, 1 );
 				Road road = path.roadPath[j];
+				if ( road == null )
+					return;
 				for ( int i = 0; i < road.nodes.Count - 1; i++ )
 				{
 					colors.Add( segmentColor );
