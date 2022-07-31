@@ -3601,7 +3601,6 @@ public class Interface : HiveObject
 					foreach ( var input in configuration.generatedInputs )
 					{
 						itemTypeUsage[(int)input]++;
-						Log( $"depend {input} on {itemType}, new {itemTypeUsage[(int)input]}" );
 						if ( !itemTypes.Contains( input ) )
 							itemTypes.Add( input );
 					}
@@ -3764,7 +3763,7 @@ public class Interface : HiveObject
 				tooltip += "2X ";
 			tooltip += $"{HiveCommon.Nice( workshop.outputType.ToString() )}";
 			if ( workshop.productionTime > 0 )
-				tooltip += $" in {workshop.productionTime / Constants.World.normalSpeedPerSecond} sec";
+				tooltip += $" in {workshop.productionTime / Constants.World.normalSpeedPerSecond} second";
 			if ( workshop.generatedInputs != null )
 			{
 				tooltip += "\nBase materials: ";
@@ -3781,7 +3780,7 @@ public class Interface : HiveObject
 				instanceCount++;
 				currentProduction += playerWorkshop.CalculateProductivity();
 			}
-			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/sec";
+			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/minute";
 			float demand = 0;
 			foreach ( var target in flow.targets )
 			{
@@ -3927,6 +3926,7 @@ public class Interface : HiveObject
 
 				string additionalTooltip = type switch 
 				{
+					// TODO These are outdated
 					Workshop.Type.barrack => "Final building in the production chain, produces soldiers.",
 					Workshop.Type.bowMaker => "Huge building producing one of the weapons required for soldiers.",
 					Workshop.Type.brewery => "Beer is needed by both the barracks to produce soldiers, and the butcher to produce pork.",
@@ -3945,7 +3945,6 @@ public class Interface : HiveObject
 					Workshop.Type.mill => "Can only be built on the high mountains.",
 					Workshop.Type.saltMine => "Salt is needed to produce pretzel, and important food for other mines.",
 					Workshop.Type.sawmill => "Planks are needed by constructions at the beginning, later for bows.",
-					Workshop.Type.smelter => "The slowest building in the game, probably need two for a single weapon maker.",
 					Workshop.Type.stonemason => "Gathers rock from the surface, which is needed for construction only. Should be built close to rocks.",
 					Workshop.Type.stoneMine => "As stone is not needed for soldier production yet, this building can be skipped.",
 					Workshop.Type.weaponMaker => "Weapons are needed by the barrack to produce soldiers.",

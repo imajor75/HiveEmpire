@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -129,7 +129,7 @@ public class Workshop : Building
 				break;
 		}
 
-		var result = (float)itemsProduced / timeRange * Constants.World.normalSpeedPerSecond * 60;
+		var result = (float)(itemsProduced) / timeRange * Constants.World.normalSpeedPerSecond * 60;
 		if ( maximumPossible )
 		{
 			if ( usedTime > 0 )

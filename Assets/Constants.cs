@@ -372,7 +372,7 @@ public static class Constants
         public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
         public const int relaxAreaSize = 3;
-        public const int productivityPeriod = Constants.World.normalSpeedPerSecond * 60;
+        public const int productivityPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
         public const int gathererSleepTimeAfterFail = Constants.World.normalSpeedPerSecond * 6;
         public const int gathererHarvestTime = Constants.World.normalSpeedPerSecond * 6;
         public const int freeStoneTimePeriod = Constants.World.normalSpeedPerSecond * 60 * 10;
