@@ -315,7 +315,8 @@
         "include":
         [
           { "options": [ "plank", "log" ] },
-          "hide"         ]
+          { "min": 1, "max": 2, "options": [ "hide", "copper" ] }
+        ]
       }
     },
     {
@@ -329,12 +330,12 @@
         "include":
         [
           { "options": [ "plank", "log" ] },
-          "stone"
+          { "min": 1, "max": 2, "options": [ "stone", "gold" ] }
         ]
       }
     },
     {
-      "type": "smelter",
+      "type": "steelSmelter",
       "outputType": "steel",
       "productionTimeMin": 800,
       "productionTimeMax": 4000,
@@ -344,6 +345,21 @@
         [
           { "options": [ "coal", "charcoal" ] },
           "iron"
+        ]
+      }
+    },
+    {
+      "type": "sterlingSmelter",
+      "outputType": "sterling",
+      "productionTimeMin": 800,
+      "productionTimeMax": 4000,
+      "baseMaterials":
+      {
+        "include":
+        [
+          { "options": [ "coal", "charcoal" ] },
+          "silver", 
+          "copper"
         ]
       }
     },
@@ -358,7 +374,7 @@
         "include":
         [
           { "options": [ "coal", "charcoal" ] },
-          { "options": [ "iron", "steel", "copper" ] }
+          { "options": [ "iron", "steel", "sterling" ] }
         ]
       }
     },

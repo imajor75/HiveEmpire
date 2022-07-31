@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -328,7 +328,8 @@ public class Workshop : Building
 		forester,
 		_geologistObsolete,	// Obsolete, kept here only to remain compatible with old files
 		bowMaker,
-		smelter,
+		steelSmelter,
+		sterlingSmelter,
 		weaponMaker,
 		well,
 		brewery,
@@ -556,7 +557,7 @@ public class Workshop : Building
 			"Mines/stonemine_final", 1.5f, Type.stoneMine,
 			"Forest/woodcutter_final", 1.2f, Type.woodcutter, Type.appleGatherer,
 			"Forest/forester_final", 1.33f, Type.forester, Type.dungCollector, Type.charcoalKiln,
-			"SAdK/smelter_final", 2f, Type.smelter,
+			"SAdK/smelter_final", 2f, Type.steelSmelter, Type.sterlingSmelter,
 			"prefabs/buildings/weaponmaker", 1.9f, Type.weaponMaker,
 			"prefabs/buildings/bowmaker", 2.5f, Type.bowMaker, Type.slingMaker,
 			"prefabs/buildings/brewery", 1.4f, Type.brewery,
@@ -567,7 +568,7 @@ public class Workshop : Building
 		looks.Fill( looksData );
 		object[] sounds = {
 			"handsaw", 1.0f, Type.sawmill,
-			"smelter", 1.0f, Type.smelter,
+			"smelter", 1.0f, Type.steelSmelter, Type.sterlingSmelter,
 			"windmill", 1.0f, Type.mill,
 			"brewery", 0.7f, Type.brewery,
 			"coinmaker", 0.5f, Type.jeweler,

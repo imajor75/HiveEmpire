@@ -185,7 +185,13 @@ public class Serializer
 				if ( type.IsEnum )
 				{
 					if ( reader.TokenType == JsonToken.String )
-						result = Enum.Parse( type, reader.Value as string );
+					{
+						// TODO Clean up this by adding a custom function which can convert enum strings
+						var value = reader.Value as string;
+						if ( type == typeof( Workshop.Type ) && value == "smelter" )
+							value = "steelSmelter";
+						result = Enum.Parse( type, value );
+					}
 					else
 						result = Enum.ToObject( type, reader.Value );
 				}
