@@ -5173,7 +5173,7 @@ if ( cart )
 			if ( item.flag )
 				eye.FocusOn( item.flag.node );
 			else
-				eye.FocusOn( item.hauler );
+				eye.FocusOn( item.hauler, approach:false );
 		}
 
 		public new void OnDestroy()
