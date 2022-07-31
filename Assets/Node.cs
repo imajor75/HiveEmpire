@@ -391,11 +391,12 @@ public class Node : HiveObject
 		}
 	}
 
-	public bool HasResource( Resource.Type resourceType )
+	public bool HasResource( Resource.Type resourceType, bool skipDepleted = false )
 	{
 		foreach ( var resource in resources )
 			if ( resource.type == resourceType )
-				return true;
+				if ( !skipDepleted || !resource.keepAway.inProgress )
+					return true;
 				
 		return false;
 	}
