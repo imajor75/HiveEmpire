@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -2248,7 +2248,7 @@ public class Unit : HiveObject
 				{
 					if ( g == null )
 						continue;
-					g.transform.Rotate( world.timeFactor * currentSpeed * 300, 0, 0 );
+					g.transform.Rotate( world.timeFactor * currentSpeed * 600, 0, 0 );
 				}
 				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Constants.Node.size * -50, 0, 0 );
 			}
