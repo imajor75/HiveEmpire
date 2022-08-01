@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -719,6 +719,9 @@ public class Team : HiveObject
 		foreach ( var stock in stocks )
 			Assert.global.IsNotNull( stock );
 		Assert.global.AreEqual( itemHaulPriorities.Count, (int)Item.Type.total );
+		Assert.global.AreEqual( itemProductivityHistory.Count, (int)Item.Type.total );
+		Assert.global.AreEqual( surplus.Length, (int)Item.Type.total );
+		Assert.global.AreEqual( constructionFactors.Count, (int)Building.Type.total );
 		int[] bc = new int[(int)Building.Type.total];
 		void ProcessList<Type>( List<Type> list ) where Type : Building
 		{

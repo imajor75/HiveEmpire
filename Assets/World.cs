@@ -954,6 +954,8 @@ public class World : HiveObject
 		{
 			while ( team.stocksHaveNeed.Count < (int)Item.Type.total )
 				team.stocksHaveNeed.Add( false );
+			while ( team.constructionFactors.Count < (int)Building.Type.total )
+				team.constructionFactors.Add( 1 );
 			if ( team.buildingCounts.Count < (int)Building.Type.total )
 			{
 				while ( team.buildingCounts.Count < (int)Building.Type.total )
@@ -1225,6 +1227,11 @@ public class World : HiveObject
 			while ( challenge.productivityGoals.Count < (int)Item.Type.total )
 				challenge.productivityGoals.Add( 0 );
 		}
+
+		while ( itemTypeUsage.Count < (int)Item.Type.total )
+			itemTypeUsage.Add( 0 );
+		while ( workshopTypeUsage.Count < (int)Workshop.Type.total )
+			workshopTypeUsage.Add( 0 );
 
 		Interface.ValidateAll( true );
 		bool demoMode = fileName.Contains( "demolevel" );
@@ -1607,6 +1614,7 @@ public class World : HiveObject
 		}
 
 		assert.AreEqual( nulls, hiveListFreeSlots.Count );
+		assert.AreEqual( workshopTypeUsage.Count, (int)Workshop.Type.total );
 		foreach ( var freeSlot in hiveListFreeSlots )
 			assert.AreEqual( hiveObjects[freeSlot], null );
 
