@@ -550,7 +550,7 @@ public class Simpleton : Player
                     }
                 }
                 else
-                { 
+                {
                     foreach ( var workshop in boss.team.workshops )
                     {
                         if ( workshop.productionConfiguration.outputType == outputType )
