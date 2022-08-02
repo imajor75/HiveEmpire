@@ -1324,7 +1324,15 @@ public class World : HiveObject
 			Destroy( light.gameObject );
 		light = null;
 
+		foreach ( var ho in hiveObjects )
+		{
+			if ( ho )
+				ho.worldIndex = -1;
+		}
+
+		hiveObjects.Clear();
 		newHiveObjects.Clear();
+		hiveListFreeSlots.Clear();
 
 		Destroy( transform.Find( "Items just created" )?.gameObject );
 		Destroy( transform.Find( "Players and teams" )?.gameObject );
