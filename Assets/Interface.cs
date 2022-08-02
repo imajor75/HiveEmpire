@@ -146,7 +146,8 @@ public class Interface : HiveObject
 
 		public void Activate( Panel owner = null )
 		{
-			Assert.global.IsFalse( active );
+			if ( active )
+				return;
 
 			foreach ( var other in instances )
 			{
