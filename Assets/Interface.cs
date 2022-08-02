@@ -7716,6 +7716,19 @@ public static class UIHelpers
 {
 	public static int currentRow = 0, currentColumn = 0;
 
+	public static void ClosePanel( this MonoBehaviour control )
+	{
+		for ( var parent = control.transform.parent; parent; parent = parent.parent )
+		{
+            Interface.Panel panel = null;
+			if ( parent.gameObject.TryGetComponent<Interface.Panel>( out panel ) )
+			{
+				panel.Close();
+				return;
+			}
+		}
+	}
+
 	public static Image Image( this Component panel, Sprite picture = null )
 	{
 		Image i = new GameObject().AddComponent<Image>();
@@ -7822,8 +7835,13 @@ public static class UIHelpers
         {
 			if ( eventData.button == PointerEventData.InputButton.Left && leftClickHandler != null )
 				leftClickHandler();
-			if ( eventData.button == PointerEventData.InputButton.Right && rightClickHandler != null )
-				rightClickHandler();
+			if ( eventData.button == PointerEventData.InputButton.Right )
+			{
+				if ( rightClickHandler != null )
+					rightClickHandler();
+				else
+					this.ClosePanel();
+			}
 			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
 				middleClickHandler();
         }
