@@ -129,7 +129,7 @@ public class Resource : HiveObject
 			"bird2", Constants.Resource.treeSoundTime, Type.tree,
 			"bird3", Constants.Resource.treeSoundTime, Type.tree,
 			"bird4", Constants.Resource.treeSoundTime, Type.tree };
-		ambientSounds.fileNamePrefix = "effects/";
+		ambientSounds.fileNamePrefix = "soundEffects/";
 		ambientSounds.Fill( sounds );
 
 		bark = Resources.Load<Material>( "treeBark" );

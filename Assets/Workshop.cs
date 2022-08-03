@@ -569,21 +569,19 @@ public class Workshop : Building
 		object[] sounds = {
 			"handsaw", 1.0f, Type.sawmill,
 			"smelter", 1.0f, Type.steelSmelter, Type.sterlingSmelter,
-			"windmill", 1.0f, Type.mill,
+			"windmill", 1.0f, Type.mill, Type.cornMill,
 			"brewery", 0.7f, Type.brewery,
 			"coinmaker", 0.5f, Type.jeweler,
 			"pig", 1.0f, Type.butcher,
-			"kneading", 1.0f, Type.bakery,
+			"chicken", 1.0f, Type.poultryRun,
+			"cow", 1.0f, Type.dairy,
+			"kneading", 1.0f, Type.bakery, Type.confectionery,
 			"weaponforging", 0.7f, Type.weaponMaker,
-			"rasp", 1.0f, Type.bowMaker,
+			"rasp", 1.0f, Type.bowMaker, Type.slingMaker,
 			"fight", 1.0f, Type.barrack,
-			"pickaxe_deep", 1.0f, Type.goldMine,
-			"pickaxe_deep", 1.0f, Type.saltMine,
-			"pickaxe_deep", 1.0f, Type.coalMine,
-			"pickaxe_deep", 1.0f, Type.stoneMine,
-			"pickaxe_deep", 1.0f, Type.ironMine
+			"pickaxe_deep", 1.0f, Type.goldMine, Type.saltMine, Type.coalMine, Type.stoneMine, Type.ironMine, Type.silverMine, Type.copperMine
  		};
-		processingSounds.fileNamePrefix = "effects/";
+		processingSounds.fileNamePrefix = "soundEffects/";
 		processingSounds.Fill( sounds );	// bool equals "dont loop"
 		mapIndicatorTexture = Resources.Load<Texture2D>( "icons/brick" );
 
@@ -1234,7 +1232,6 @@ public class Workshop : Building
 
 	public void PlayWorkingSound()
 	{
-		soundSource.loop = true;
 		var sound = processingSounds.GetMedia( type );
 		soundSource.clip = sound.data;
 		soundSource.volume = sound.floatData;

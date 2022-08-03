@@ -1162,7 +1162,7 @@ public class Unit : HiveObject
 		deathID = Animator.StringToHash( "death" );
 
 		object[] walk = {
-			"effects/cart", Type.cart };
+			"soundEffects/cart", Type.cart };
 		walkSounds.Fill( walk );
 
 		arrowSprite = Resources.Load<Sprite>( "icons/arrow" );
@@ -1264,7 +1264,7 @@ public class Unit : HiveObject
 		actLibrary.Add( defendingAct );
 		actLibrary.Add( stabInTheBackAct );
 
-		animationSounds.fileNamePrefix = "effects/";
+		animationSounds.fileNamePrefix = "soundEffects/";
 		object[] animationSoundData = 
 		{
 			"construction", 0.2f, AnimationSound.construction
@@ -2239,7 +2239,9 @@ public class Unit : HiveObject
 		{
 			if ( soundSource && !soundSource.isPlaying )
 			{
-				soundSource.clip = walkSounds.GetMediaData( type );
+				var sound = walkSounds.GetMedia( type );
+				soundSource.clip = sound.data;
+				soundSource.volume = sound.floatData;
 				soundSource.Play();
 			}
 			if ( type == Type.cart )

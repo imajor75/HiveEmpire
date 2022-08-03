@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -656,7 +656,7 @@ public class Stock : Attackable
 		if ( main )
 		{
 			name = "Headquarters";
-			soundSource.clip = Resources.Load<AudioClip>( "effects/gong" );
+			soundSource.clip = Resources.Load<AudioClip>( "soundEffects/gong" );
 			soundSource.loop = false;
 		}
 		else
