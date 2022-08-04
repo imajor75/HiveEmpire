@@ -1901,11 +1901,8 @@ public class Interface : HiveObject
 				area.radius = 2;
 				eye.highlight.HighlightArea( area, gameObject );
 				root.viewport.inputHandler = this;
-				if ( !increaseSizeHotkey.active )
-				{
-					increaseSizeHotkey.Activate();
-					decreaseSizeHotkey.Activate();
-				}
+				increaseSizeHotkey.Activate();
+				decreaseSizeHotkey.Activate();
 			}
 
 			public void Show( bool show )
@@ -1924,8 +1921,8 @@ public class Interface : HiveObject
 				}
 			}
 
-			static public Hotkey increaseSizeHotkey = new Hotkey( "Area size increase", KeyCode.Period, active:false );
-			static public Hotkey decreaseSizeHotkey = new Hotkey( "Area size decrease", KeyCode.Comma, active:false );
+			static public Hotkey increaseSizeHotkey = new Hotkey( "Area size increase", KeyCode.JoystickButton0, active:false );
+			static public Hotkey decreaseSizeHotkey = new Hotkey( "Area size decrease", KeyCode.JoystickButton1, active:false );
 
 			public void Update()
 			{
