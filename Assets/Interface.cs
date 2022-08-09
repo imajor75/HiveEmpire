@@ -3220,17 +3220,22 @@ public class Interface : HiveObject
 					offset += 10;
 				}
 				i.AddClickHandler( () => SelectItemType( t ) );
-				var d = Dropdown().Link( i ).Pin( 0, 0, 100, 0, 0, 0 );
-				d.ClearOptions();
-				var options = new List<String> { "Select", "Show routes", "Show input potentials", "Show output potentials" };
-#if DEBUG
-				options.Add( "Clear" );
-				options.Add( "Add one" );
-#endif
-				options.Add( "Cancel" );
-				d.AddOptions( options );
-				d.onValueChanged.AddListener( (x) => ItemTypeAction( i, t, x ) );
-				i.AddClickHandler( () => PopupForItemType( d ), UIHelpers.ClickType.right );
+
+				var controller = i.AddController();
+				controller.AddOption( Interface.iconTable.GetMediaData( Icon.yes ), 
+
+				// var d = Dropdown().Link( i ).Pin( 0, 0, 100, 0, 0, 0 );
+				// d.ClearOptions();
+// 				var options = new List<String> { "Select", "Show routes", "Show input potentials", "Show output potentials" };
+// #if DEBUG
+// 				options.Add( "Clear" );
+// 				options.Add( "Add one" );
+// #endif
+// 				options.Add( "Cancel" );
+// 				d.AddOptions( options );
+// 				d.onValueChanged.AddListener( (x) => ItemTypeAction( i, t, x ) );
+// 				i.AddClickHandler( () => PopupForItemType( d ), UIHelpers.ClickType.right );
+
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				counts[j].AddClickHandler( () => SelectItemType( t ) );
 				if ( offset >= 140 )
@@ -3324,11 +3329,11 @@ public class Interface : HiveObject
 			}
 		}
 
-		void PopupForItemType( Dropdown d )
-		{
-			d.value = d.options.Count - 1;
-			d.Show();
-		}
+		// void PopupForItemType( Dropdown d )
+		// {
+		// 	d.value = d.options.Count - 1;
+		// 	d.Show();
+		// }
 
 		void ShowCart()
 		{
@@ -7697,12 +7702,50 @@ if ( cart )
 		}
 		return -1;
 	}
+
+	public class Controller : HiveCommon
+	{
+		struct Item
+		{
+			public Sprite image;
+			public string tooltip;
+			public Action callback;
+			public float angle;
+			public Location location;
+		}
+
+		public enum Location
+		{
+			west,
+			northWest,
+			north,
+			northEast,
+			east,
+			southEast,
+			south,
+			southWest,
+			auto
+		}
+
+		List<Item> operations = new();
+
+		public void AddOption( Sprite image, string tooltip, Action callback, Location location = Location.auto )
+		{
+			operations.Add( new Item { image = image, tooltip = tooltip, callback = callback, location = location } );
+		}
+
+	}
 }
 
 
 public static class UIHelpers
 {
 	public static int currentRow = 0, currentColumn = 0;
+
+	public static Interface.Controller AddController( this MonoBehaviour control )
+	{
+		return control.gameObject.AddComponent<Interface.Controller>();
+	} 
 
 	public static void ClosePanel( this MonoBehaviour control )
 	{
