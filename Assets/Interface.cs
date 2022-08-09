@@ -7728,12 +7728,25 @@ if ( cart )
 		}
 
 		List<Item> operations = new();
+		GameObject group;
 
 		public void AddOption( Sprite image, string tooltip, Action callback, Location location = Location.auto )
 		{
 			operations.Add( new Item { image = image, tooltip = tooltip, callback = callback, location = location } );
 		}
 
+		public void AddOption( Icon icon, string tooltip, Action callback, Location location = Location.auto ) => AddOption( Interface.iconTable.GetMediaData( icon ), tooltip, callback, location );
+
+		public void OnClick()
+		{
+			if ( group )
+				return;
+
+			group = new GameObject( "Controller group" );
+			group.transform.SetParent( transform, false );
+
+			foreach ( var ope in operations )
+		}
 	}
 }
 
@@ -7744,7 +7757,9 @@ public static class UIHelpers
 
 	public static Interface.Controller AddController( this MonoBehaviour control )
 	{
-		return control.gameObject.AddComponent<Interface.Controller>();
+		var controller = control.gameObject.AddComponent<Interface.Controller>();
+		control.AddClickHandler( controller.OnClick, ClickType.right );
+		return controller;
 	} 
 
 	public static void ClosePanel( this MonoBehaviour control )
