@@ -3222,7 +3222,8 @@ public class Interface : HiveObject
 				i.AddClickHandler( () => SelectItemType( t ) );
 
 				var controller = i.AddController();
-				controller.AddOption( Interface.iconTable.GetMediaData( Icon.yes ), 
+				controller.AddOption( Icon.yes, "Select this item type", () => SelectItemType( t ) );
+				controller.AddOption( Icon.cart, "Show routes for this item type", () => ShowRoutesFor( t ) );
 
 				// var d = Dropdown().Link( i ).Pin( 0, 0, 100, 0, 0, 0 );
 				// d.ClearOptions();
@@ -3290,44 +3291,44 @@ public class Interface : HiveObject
 			currentStockCRC = StockCRC();
 		}
 
-		void ItemTypeAction( ItemImage image, Item.Type itemType, int code )
-		{
-			switch ( code )
-			{
-				case 0:
-				{
-					SelectItemType( itemType );
-					break;
-				}
-				case 1:
-				{
-					ShowRoutesFor( itemType );
-					break;
-				}
-				case 2:
-				{
-					LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.request );
-					break;
-				}
-				case 3:
-				{
-					LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.offer );
-					break;
-				}
-				case 4:
-				{
-					stock.itemData[(int)itemType].content = 0;
-					world.lastChecksum = 0;
-					break;
-				}
-				case 5:
-				{
-					stock.itemData[(int)itemType].content++;
-					world.lastChecksum = 0;
-					break;
-				}
-			}
-		}
+		// void ItemTypeAction( ItemImage image, Item.Type itemType, int code )
+		// {
+		// 	switch ( code )
+		// 	{
+		// 		case 0:
+		// 		{
+		// 			SelectItemType( itemType );
+		// 			break;
+		// 		}
+		// 		case 1:
+		// 		{
+		// 			ShowRoutesFor( itemType );
+		// 			break;
+		// 		}
+		// 		case 2:
+		// 		{
+		// 			LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.request );
+		// 			break;
+		// 		}
+		// 		case 3:
+		// 		{
+		// 			LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.offer );
+		// 			break;
+		// 		}
+		// 		case 4:
+		// 		{
+		// 			stock.itemData[(int)itemType].content = 0;
+		// 			world.lastChecksum = 0;
+		// 			break;
+		// 		}
+		// 		case 5:
+		// 		{
+		// 			stock.itemData[(int)itemType].content++;
+		// 			world.lastChecksum = 0;
+		// 			break;
+		// 		}
+		// 	}
+		// }
 
 		// void PopupForItemType( Dropdown d )
 		// {
@@ -7705,12 +7706,12 @@ if ( cart )
 
 	public class Controller : HiveCommon
 	{
-		struct Item
+		class Action
 		{
 			public Sprite image;
 			public string tooltip;
-			public Action callback;
-			public float angle;
+			public System.Action callback;
+			public double angle;
 			public Location location;
 		}
 
@@ -7727,15 +7728,37 @@ if ( cart )
 			auto
 		}
 
-		List<Item> operations = new();
+		List<Action> actions = new();
 		GameObject group;
+		public int size = 2 * iconSize;
 
-		public void AddOption( Sprite image, string tooltip, Action callback, Location location = Location.auto )
+		void RecalculateAngles()
 		{
-			operations.Add( new Item { image = image, tooltip = tooltip, callback = callback, location = location } );
+			for ( int i = 0; i < actions.Count; i++ )
+			{
+				actions[i].angle = actions[i].location switch
+				{
+					Location.north => 0,
+					Location.northEast => 1 * Math.PI / 4,
+					Location.east => 2 * Math.PI / 4,
+					Location.southEast => 3 * Math.PI / 4,
+					Location.south => 4 * Math.PI / 4,
+					Location.southWest => 5 * Math.PI / 4,
+					Location.west => 6 * Math.PI / 4,
+					Location.northWest => 7 * Math.PI / 4,
+					Location.auto => i * 2* Math.PI / actions.Count,
+					_ => 0
+				};
+			}
 		}
 
-		public void AddOption( Icon icon, string tooltip, Action callback, Location location = Location.auto ) => AddOption( Interface.iconTable.GetMediaData( icon ), tooltip, callback, location );
+		public void AddOption( Sprite image, string tooltip, System.Action callback, Location location = Location.auto )
+		{
+			actions.Add( new Action { image = image, tooltip = tooltip, callback = callback, location = location } );
+			RecalculateAngles();
+		}
+
+		public void AddOption( Icon icon, string tooltip, System.Action callback, Location location = Location.auto ) => AddOption( Interface.iconTable.GetMediaData( icon ), tooltip, callback, location );
 
 		public void OnClick()
 		{
@@ -7745,7 +7768,22 @@ if ( cart )
 			group = new GameObject( "Controller group" );
 			group.transform.SetParent( transform, false );
 
-			foreach ( var ope in operations )
+			foreach ( var action in actions )
+			{
+				var backGround = UIHelpers.Image( group.transform, Icon.frame ).
+				PinCenter( (int)( size * Math.Sin( action.angle ) ), (int)( size * Math.Cos( action.angle ) ), 30, 30 );
+
+				UIHelpers.Image( backGround, action.image ).
+				SetTooltip( action.tooltip ).
+				AddClickHandler( () => Activate( action ) ).
+				Pin( 5, -5 );
+			}
+		}
+
+		void Activate( Action action )
+		{
+			Destroy( group );
+			action.callback();
 		}
 	}
 }
