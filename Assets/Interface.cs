@@ -255,6 +255,7 @@ public class Interface : HiveObject
 		history,
 		map,
 		hive,
+		plus,
 		cup,
 		cursor,
 		grid,
@@ -276,7 +277,10 @@ public class Interface : HiveObject
 		prod,
 		happy,
 		bored,
-		angry
+		angry,
+		route,
+		input,
+		output
 	}
 
 	public Interface()
@@ -437,6 +441,8 @@ public class Interface : HiveObject
 		"greenCheck", Icon.yes,
 		"redCross", Icon.no,
 		"arrow", Icon.rightArrow,
+		"leftArrow", Icon.input,
+		"rightArrow", Icon.output,
 		"brick", Icon.progress,
 		"mainIcon", Icon.crate,
 		"cross", Icon.exit };
@@ -591,21 +597,21 @@ public class Interface : HiveObject
 
 	public void OpenMainPanel()
 	{
-		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-		if ( directory.Exists )
-		{
-			var myFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
-			if ( myFiles.Count() > 0 )
-				Load( myFiles.First().FullName );
-		}
-		if ( !world.gameInProgress )
-		{
-			var demoFile = Application.streamingAssetsPath + "/demolevel.json";
-			if ( File.Exists( demoFile ) )
-				Load( demoFile );
-			else
+		// var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+		// if ( directory.Exists )
+		// {
+		// 	var myFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
+		// 	if ( myFiles.Count() > 0 )
+		// 		Load( myFiles.First().FullName );
+		// }
+		// if ( !world.gameInProgress )
+		// {
+		// 	var demoFile = Application.streamingAssetsPath + "/demolevel.json";
+		// 	if ( File.Exists( demoFile ) )
+		// 		Load( demoFile );
+		// 	else
 				NewGame( challenges.First() );
-		}
+//		}
 
 		MainPanel.Create().Open( true );
 	}
@@ -3220,17 +3226,17 @@ public class Interface : HiveObject
 					offset += 10;
 				}
 				i.AddClickHandler( () => SelectItemType( t ) );
-				var d = Dropdown().Link( i ).Pin( 0, 0, 100, 0, 0, 0 );
-				d.ClearOptions();
-				var options = new List<String> { "Select", "Show routes", "Show input potentials", "Show output potentials" };
+
+				var controller = i.AddController();
+				controller.AddOption( Icon.yes, "Select this item type", () => SelectItemType( t ) );
+				controller.AddOption( Icon.route, "Show routes for this item type", () => ShowRoutesFor( t ) );
+				controller.AddOption( Icon.input, "Show input potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.request ) );
+				controller.AddOption( Icon.output, "Show output potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.offer ) );
 #if DEBUG
-				options.Add( "Clear" );
-				options.Add( "Add one" );
+				controller.AddOption( Icon.exit, "Clear stock content", () => { stock.itemData[(int)t].content = 0; world.lastChecksum = 0; } );
+				controller.AddOption( Icon.plus, "Add one more", () => { stock.itemData[(int)t].content++; world.lastChecksum = 0; } );
 #endif
-				options.Add( "Cancel" );
-				d.AddOptions( options );
-				d.onValueChanged.AddListener( (x) => ItemTypeAction( i, t, x ) );
-				i.AddClickHandler( () => PopupForItemType( d ), UIHelpers.ClickType.right );
+
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				counts[j].AddClickHandler( () => SelectItemType( t ) );
 				if ( offset >= 140 )
@@ -3283,51 +3289,6 @@ public class Interface : HiveObject
 			Image( Icon.buildings ).Link( controls ).Pin( 155, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( Building.Type.stock ) ).SetTooltip( "Show a list of buildings with the same type" );
 			UpdateRouteIcons();
 			currentStockCRC = StockCRC();
-		}
-
-		void ItemTypeAction( ItemImage image, Item.Type itemType, int code )
-		{
-			switch ( code )
-			{
-				case 0:
-				{
-					SelectItemType( itemType );
-					break;
-				}
-				case 1:
-				{
-					ShowRoutesFor( itemType );
-					break;
-				}
-				case 2:
-				{
-					LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.request );
-					break;
-				}
-				case 3:
-				{
-					LogisticList.Create().Open( stock, itemType, ItemDispatcher.Potential.Type.offer );
-					break;
-				}
-				case 4:
-				{
-					stock.itemData[(int)itemType].content = 0;
-					world.lastChecksum = 0;
-					break;
-				}
-				case 5:
-				{
-					stock.itemData[(int)itemType].content++;
-					world.lastChecksum = 0;
-					break;
-				}
-			}
-		}
-
-		void PopupForItemType( Dropdown d )
-		{
-			d.value = d.options.Count - 1;
-			d.Show();
 		}
 
 		void ShowCart()
@@ -7697,12 +7658,109 @@ if ( cart )
 		}
 		return -1;
 	}
+
+	public class Controller : HiveCommon
+	{
+		class Action
+		{
+			public Sprite image;
+			public string tooltip;
+			public System.Action callback;
+			public double angle;
+			public Location location;
+		}
+
+		public enum Location
+		{
+			west,
+			northWest,
+			north,
+			northEast,
+			east,
+			southEast,
+			south,
+			southWest,
+			auto
+		}
+
+		List<Action> actions = new();
+		GameObject group;
+		public int size = 2 * iconSize;
+
+		void RecalculateAngles()
+		{
+			for ( int i = 0; i < actions.Count; i++ )
+			{
+				actions[i].angle = actions[i].location switch
+				{
+					Location.north => 0,
+					Location.northEast => 1 * Math.PI / 4,
+					Location.east => 2 * Math.PI / 4,
+					Location.southEast => 3 * Math.PI / 4,
+					Location.south => 4 * Math.PI / 4,
+					Location.southWest => 5 * Math.PI / 4,
+					Location.west => 6 * Math.PI / 4,
+					Location.northWest => 7 * Math.PI / 4,
+					Location.auto => i * 2* Math.PI / actions.Count,
+					_ => 0
+				};
+			}
+		}
+
+		void Update()
+		{
+			if ( group && Interface.IsKeyPressed( KeyCode.Escape ) )
+				Destroy( group );
+		}
+
+		public void AddOption( Sprite image, string tooltip, System.Action callback, Location location = Location.auto )
+		{
+			actions.Add( new Action { image = image, tooltip = tooltip, callback = callback, location = location } );
+			RecalculateAngles();
+		}
+
+		public void AddOption( Icon icon, string tooltip, System.Action callback, Location location = Location.auto ) => AddOption( Interface.iconTable.GetMediaData( icon ), tooltip, callback, location );
+
+		public void OnClick()
+		{
+			if ( group )
+				return;
+
+			group = new GameObject( "Controller group" );
+			group.transform.SetParent( transform.parent, false );
+			group.transform.position = transform.position;
+
+			foreach ( var action in actions )
+			{
+				var backGround = UIHelpers.Image( group.transform, Icon.smallFrame ).
+				PinCenter( (int)( size * Math.Sin( action.angle ) ), (int)( size * Math.Cos( action.angle ) ), 30, 30 );
+
+				UIHelpers.Image( backGround, action.image ).
+				SetTooltip( action.tooltip ).
+				AddClickHandler( () => Activate( action ) ).
+				Pin( 5, -5 );
+			}
+		}
+
+		void Activate( Action action )
+		{
+			Destroy( group );
+			action.callback();
+		}
+	}
 }
 
 
 public static class UIHelpers
 {
 	public static int currentRow = 0, currentColumn = 0;
+
+	public static Interface.Controller AddController( this MonoBehaviour control )
+	{
+		var controller = control.gameObject.AddComponent<Interface.Controller>();
+		control.AddClickHandler( controller.OnClick, ClickType.right );
+		return controller;
+	} 
 
 	public static void ClosePanel( this MonoBehaviour control )
 	{
