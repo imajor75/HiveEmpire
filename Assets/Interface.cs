@@ -7685,7 +7685,7 @@ if ( cart )
 		}
 
 		List<Action> actions = new();
-		GameObject group;
+		static GameObject group;
 		public int size = 2 * iconSize;
 
 		void RecalculateAngles()
@@ -7724,8 +7724,7 @@ if ( cart )
 
 		public void OnClick()
 		{
-			if ( group )
-				return;
+			Destroy( group );
 
 			group = new GameObject( "Controller group" );
 			group.transform.SetParent( transform.parent, false );
