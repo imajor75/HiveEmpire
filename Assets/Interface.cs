@@ -7471,7 +7471,8 @@ if ( cart )
 			{
 				grabbedEye = eye;
 				grabbedEye.FocusOn( root.mainTeam.mainBuilding?.flag?.node, true, approach:false );
-				grabbedEye.autoMove = new Vector2( 0.8f, 0.17f );
+				if ( root.mainTeam.workshops.Count > 0 )
+					grabbedEye.autoMove = new Vector2( 0.8f, 0.17f );
 				escCloses = false;
 			}
 
