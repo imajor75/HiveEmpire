@@ -3502,7 +3502,6 @@ public class Interface : HiveObject
 	public class ProductionChainPanel : Panel
 	{
 		static Flow highlight;
-		List<Image> tmpImages = new ();
 
 		public static ProductionChainPanel Create()
 		{
@@ -3694,7 +3693,9 @@ public class Interface : HiveObject
 				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ) ).Link( scroll.content );
 				if ( workshop.outputStackSize > 1 )
 					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
-				workshopImage.AddClickHandler( () => OnWorkshopClick( workshopImage, workshop ), UIHelpers.ClickType.right );
+				workshopImage.AddController().
+				AddOption( Icon.hammer, "Build a new instance of this workshop", () => BuildNewWorkshop( workshop.type ), Controller.Location.northEast ).
+				AddOption( Icon.house, "List all instances of this workshop", () => ListCurrentWorkshops( workshop.type ), Controller.Location.southEast );
 
 				current.source = workshop;
 
@@ -3771,37 +3772,16 @@ public class Interface : HiveObject
 			return tooltip;
 		}
 
-		void OnWorkshopClick( Image workshop, Workshop.Configuration configuration )
-		{
-			foreach ( var image in tmpImages )
-				Destroy( image );
-			tmpImages.Clear();
-			tmpImages.Add( Image( Icon.hammer ).Link( workshop ).PinCenter( 3 * iconSize, -iconSize, iconSize, iconSize ).AddClickHandler( () => BuildNewWorkshop( configuration.type ) ) );
-			tmpImages.Add( Image( Icon.house ).Link( workshop ).PinCenter( 3 * iconSize, -3 * iconSize, iconSize, iconSize ).AddClickHandler( () => ListCurrentWorkshops( configuration.type ) ) );
-		}
-
 		void BuildNewWorkshop( Workshop.Type type )
 		{
-			tmpImages.Clear();
 			Close();
 			NewBuildingPanel.Create( NewBuildingPanel.Construct.workshop, type );
 		}
 
 		void ListCurrentWorkshops( Workshop.Type type )
 		{
-			tmpImages.Clear();
 			Close();
 			BuildingList.Create().Open( (Building.Type)type );
-		}
-
-		public override void Close()
-		{
-			if ( tmpImages.Count == 0 )
-				base.Close();
-
-			foreach ( var image in tmpImages )
-				Destroy( image );
-			tmpImages.Clear();
 		}
 
 		new void Update()
@@ -7719,13 +7699,14 @@ if ( cart )
 				Destroy( group );
 		}
 
-		public void AddOption( Sprite image, string tooltip, System.Action callback, Location location = Location.auto )
+		public Controller AddOption( Sprite image, string tooltip, System.Action callback, Location location = Location.auto )
 		{
 			actions.Add( new Action { image = image, tooltip = tooltip, callback = callback, location = location } );
 			RecalculateAngles();
+			return this;
 		}
 
-		public void AddOption( Icon icon, string tooltip, System.Action callback, Location location = Location.auto ) => AddOption( Interface.iconTable.GetMediaData( icon ), tooltip, callback, location );
+		public Controller AddOption( Icon icon, string tooltip, System.Action callback, Location location = Location.auto ) => AddOption( Interface.iconTable.GetMediaData( icon ), tooltip, callback, location );
 
 		public void OnClick()
 		{
