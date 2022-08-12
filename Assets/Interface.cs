@@ -18,8 +18,6 @@ public class Interface : HiveObject
 	public Component dedicatedKeyboardHandler;
 	public List<Panel> panels = new ();
 	public PostProcessResources postProcessResources;
-	public const int iconSize = 20;
-	public static float uiScale = 1.5f;
 	public static Font font;
 	public new World world;
 	Canvas canvas;
@@ -85,6 +83,9 @@ public class Interface : HiveObject
 
 	public bool playerInCharge { get { return world.operationHandler.mode == OperationHandler.Mode.recording; } }
 	public Team mainTeam { get { return mainPlayer?.team; } }
+
+	public static int iconSize { get => Constants.Interface.iconSize; }
+	public static float uiScale { get => Constants.Interface.uiScale; }
 
 	public class Hotkey
 	{
@@ -1508,7 +1509,7 @@ public class Interface : HiveObject
 			return p;
 		}
 
-		public Image Frame( int borderWidth = iconSize )
+		public Image Frame( int borderWidth = Constants.Interface.iconSize )
 		{
 			var s = iconTable.GetMediaData( Icon.frame );
 			int originalBorder = (int)( ( s.border.x + s.border.y + s.border.z + s.border.w ) * 0.25f );
@@ -7714,9 +7715,9 @@ if ( cart )
 		{
 			Destroy( group );
 
-			group = new GameObject( "Controller group" );
-			group.transform.SetParent( transform.parent, false );
-			group.transform.position = transform.position;
+			group = new GameObject( "Controller group", typeof( RectTransform ) );
+			group.transform.SetParent( root.transform, false );
+			group.transform.Pin( (int)( Input.mousePosition.x / uiScale ), (int)( ( Input.mousePosition.y - Screen.height ) / uiScale ) );
 			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Destroy( group ) ).AddClickHandler( () => Destroy( group ), UIHelpers.ClickType.right ).color = new Color( 0, 0, 0, 0 );
 
 			foreach ( var action in actions )
@@ -7806,7 +7807,7 @@ public static class UIHelpers
 		return t;
 	}
 
-	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
+	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
 		if ( center )
 		{
@@ -7821,21 +7822,23 @@ public static class UIHelpers
 			t.offsetMin = new Vector2( (int)( x * Interface.uiScale ), (int)( ( y - ys ) * Interface.uiScale ) );
 			t.offsetMax = new Vector2( (int)( ( x + xs ) * Interface.uiScale ), (int)( y * Interface.uiScale ) );
 		}
+		else
+			Assert.global.Fail( $"Object {g} without rectransform cannot be pinned" );
 		return g;
 	}
 
-	public static UIElement PinCenter<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
+	public static UIElement PinCenter<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
 	{
 		return g.Pin( x, y, xs, ys, xa, ya, true );
 	}
 
-	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
+	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
 		g.Pin( x, y + currentRow - (center ? ys / 2 : 0), xs, ys, xa, ya, center );
 		return g;
 	}
 
-	public static UIElement PinSideways<UIElement>( this UIElement g, int x, int y, int xs = Interface.iconSize, int ys = Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
+	public static UIElement PinSideways<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
 		g.Pin( x + currentColumn + (center ? xs / 2 : 0), y, xs, ys, xa, ya, center );
 		return g;

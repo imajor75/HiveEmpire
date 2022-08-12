@@ -8,6 +8,8 @@ public static class Constants
         public const int showNextActionDuringReplay = Constants.World.normalSpeedPerSecond * 2;
     	public const float autoSaveIntervalInSecond = 60 * 5;
         public const int maxMessages = 50;
+        public const int iconSize = 20;
+        public const float uiScale = 1.5f;
     }
 
     public static class World
