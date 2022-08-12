@@ -15,6 +15,7 @@ using UnityEngine.UI;
 public class Interface : HiveObject
 {
 	public StreamWriter logFile;
+	public Component dedicatedKeyboardHandler;
 	public List<Panel> panels = new ();
 	public PostProcessResources postProcessResources;
 	public const int iconSize = 20;
@@ -206,11 +207,15 @@ public class Interface : HiveObject
 
 		public bool IsPressed()
 		{
+			if ( root.dedicatedKeyboardHandler )
+				return false;
 			return active && IsSecondaryHold() && IsKeyPressed( key );
 		}
 
 		public bool IsDown()
 		{
+			if ( root.dedicatedKeyboardHandler )
+				return false;
 			return active && IsSecondaryHold() && IsKeyDown( key );
 		}
 
@@ -7740,6 +7745,7 @@ if ( cart )
 				AddClickHandler( () => Activate( action ) ).
 				Pin( 5, -5 );
 			}
+			root.dedicatedKeyboardHandler = group.transform;
 		}
 
 		void Activate( Action action )
