@@ -1855,12 +1855,14 @@ public class Interface : HiveObject
 				this.area.radius = area.radius;
 				this.building = building;
 				image = gameObject.GetComponent<Image>();
-				this.SetTooltip( "LMB Set new area\nShift+LMB Clear current area\nCtrl+LMB Focus camera on center", null, 
-				"You can specify the area where this building is sending items or getting " +
+				this.SetTooltip( "You can specify the area where this building is sending items or getting " +
 				"items from. By default no area is specified, so items can arrive and go to " +
 				"any place in the world. Note that the other side also has an option to " +
-				"specify an area, if there is no union of these areas, items will not travel there.", Show );
-				this.AddClickHandler( OnClick );
+				"specify an area, if there is no union of these areas, items will not travel there.", null, "", Show );
+				this.AddController().
+				AddOption( Icon.exc, "Assign new area", AssignNew ).
+				AddOption( Icon.exit, "Clear", Clear ).
+				AddOption( Icon.play, "Show current center", ShowCenter );
 			}
 
 			public bool pickGroundOnly { get { return true; } }
@@ -1883,31 +1885,31 @@ public class Interface : HiveObject
 				return false;
 			}
 
-			public void OnClick()
+			void Clear()
 			{
-				if ( IsKeyDown( KeyCode.LeftShift ) || IsKeyDown( KeyCode.RightShift ) )
-				{
-					oh.ScheduleChangeArea( building, originalArea, null, 0 );
-					if ( eye.highlight.area == area )
-						eye.highlight.TurnOff();
+				oh.ScheduleChangeArea( building, originalArea, null, 0 );
+				if ( eye.highlight.area == area )
+					eye.highlight.TurnOff();
+			}
+
+			void ShowCenter()
+			{
+				if ( !area.center )
 					return;
-				}
-				if ( IsKeyDown( KeyCode.LeftControl ) || IsKeyDown( KeyCode.RightControl ) )
+				
+				Transform panel = transform.parent;
+				while ( panel )
 				{
-					if ( area.center )
-					{
-						Transform panel = transform.parent;
-						while ( panel )
-						{
-							var po = panel.GetComponent<Panel>();
-							if ( po )
-								po.followTarget = false;
-							panel = panel.parent;
-						}
-						eye.FocusOn( area.center );
-					}
-					return;
+					var po = panel.GetComponent<Panel>();
+					if ( po )
+						po.followTarget = false;
+					panel = panel.parent;
 				}
+				eye.FocusOn( area.center );
+			}
+
+			void AssignNew()
+			{
 				area.center = ground.nodes[0];
 				area.radius = 2;
 				eye.highlight.HighlightArea( area, gameObject );
