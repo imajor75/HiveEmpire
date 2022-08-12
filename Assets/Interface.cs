@@ -7734,6 +7734,7 @@ if ( cart )
 			group = new GameObject( "Controller group" );
 			group.transform.SetParent( transform.parent, false );
 			group.transform.position = transform.position;
+			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Destroy( group ) ).AddClickHandler( () => Destroy( group ), UIHelpers.ClickType.right ).color = new Color( 0, 0, 0, 0 );
 
 			foreach ( var action in actions )
 			{
