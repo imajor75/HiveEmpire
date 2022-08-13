@@ -888,7 +888,8 @@ public class Road : HiveObject, Interface.IInputHandler
 	public override void OnClicked( bool show = false )
 	{
 		base.OnClicked( show );
-		Interface.RoadPanel.Create().Open( this, centerNode );
+		if ( !root.viewport.rightButton )
+			Interface.RoadPanel.Create().Open( this, centerNode );
 	}
 
 	public void ReassignHaulersTo( Road another, Road second = null )

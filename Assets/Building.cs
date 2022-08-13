@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -709,8 +709,32 @@ abstract public class Building : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
+		if ( root.viewport.rightButton )
+		{
+			if ( type == Type.headquarters )
+				return;
+
+			var controller = Interface.Controller.Create();
+			controller.transform.SetParent( root.transform, false );
+			controller.AddOption( Interface.Icon.hammer, "Build another instance", Clone );
+			controller.AddOption( Interface.Icon.destroy, "Delete this building", () => oh.ScheduleRemoveBuilding( this ) );
+			controller.Open();
+			return;
+		}
 		if ( !construction.done && team == root.mainTeam )
 			Interface.ConstructionPanel.Create().Open( construction, show );
+	}
+
+	void Clone()
+	{
+		if ( type == Type.headquarters )
+			return;
+		if ( type == Type.stock )
+			Interface.NewBuildingPanel.Create( Interface.NewBuildingPanel.Construct.stock );
+		if ( type == Type.guardHouse )
+			Interface.NewBuildingPanel.Create( Interface.NewBuildingPanel.Construct.guardHouse );
+		if ( type < Type.stock )
+			Interface.NewBuildingPanel.Create( Interface.NewBuildingPanel.Construct.workshop, (Workshop.Type)type );
 	}
 
 	public void UpdateLook()

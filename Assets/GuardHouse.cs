@@ -304,7 +304,7 @@ public class GuardHouse : Attackable
 	public override void OnClicked( bool show = false )
 	{
 		base.OnClicked( show );
-		if ( construction.done )
+		if ( !root.viewport.rightButton && construction.done )
 			Interface.GuardHousePanel.Create().Open( this, show );
 	}
 

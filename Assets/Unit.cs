@@ -2294,6 +2294,8 @@ public class Unit : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
+		if ( root.viewport.rightButton )
+			return;
 		Interface.UnitPanel.Create().Open( this, show );
 	}
 

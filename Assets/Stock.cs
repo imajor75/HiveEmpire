@@ -809,6 +809,9 @@ public class Stock : Attackable
 	public override void OnClicked( bool show = false )
 	{
 		base.OnClicked( show );
+		if ( root.viewport.rightButton )
+			return;
+
 		if ( construction.done )
 		{
 			if ( team == root.mainTeam )

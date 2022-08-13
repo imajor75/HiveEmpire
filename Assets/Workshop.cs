@@ -1285,6 +1285,8 @@ public class Workshop : Building
 	public override void OnClicked( bool show = false )
 	{
 		base.OnClicked( show );
+		if ( root.viewport.rightButton )
+			return;
 		if ( construction.done )
 			Interface.WorkshopPanel.Create().Open( this, Interface.WorkshopPanel.Content.everything, show );
 	}

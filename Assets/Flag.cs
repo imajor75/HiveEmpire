@@ -385,7 +385,8 @@ public class Flag : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
-		Interface.FlagPanel.Create().Open( this, show );
+		if ( !root.viewport.rightButton )
+			Interface.FlagPanel.Create().Open( this, show );
 	}
 
 	public override void Remove()

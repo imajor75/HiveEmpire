@@ -2764,6 +2764,7 @@ public class Interface : HiveObject
 
 		void ChangeMode()
 		{
+			// TODO This should go through operation handler	
 			if ( workshop.mode == Workshop.Mode.sleeping )
 				workshop.mode = Workshop.Mode.whenNeeded;
 			else if ( workshop.mode == Workshop.Mode.whenNeeded )
@@ -6273,9 +6274,6 @@ if ( cart )
 
 		public bool OnNodeClicked( Node node )
 		{
-			if ( rightButton )
-				return true;
-
 			if ( node.building )
 			{
 				node.building.OnClicked();
@@ -6301,8 +6299,7 @@ if ( cart )
 
 		public bool OnObjectClicked( HiveObject target )
 		{
-			if ( !rightButton )
-				target.OnClicked();
+			target.OnClicked();
 			return true;
 		}
 	}
@@ -7678,6 +7675,11 @@ if ( cart )
 		static float groupTime;
 		public int size = 2 * iconSize;
 
+		public static Controller Create()
+		{
+			return new GameObject( "Dynamic controller" ).AddComponent<Controller>();
+		}
+
 		void RecalculateAngles()
 		{
 			for ( int i = 0; i < actions.Count; i++ )
@@ -7724,7 +7726,7 @@ if ( cart )
 
 		public Controller AddOption( Icon icon, string tooltip, System.Action callback, Location location = Location.auto ) => AddOption( Interface.iconTable.GetMediaData( icon ), tooltip, callback, location );
 
-		public void OnClick()
+		public void Open()
 		{
 			Destroy( group );
 
@@ -7763,7 +7765,7 @@ public static class UIHelpers
 	public static Interface.Controller AddController( this MonoBehaviour control )
 	{
 		var controller = control.gameObject.AddComponent<Interface.Controller>();
-		control.AddClickHandler( controller.OnClick, ClickType.right );
+		control.AddClickHandler( controller.Open, ClickType.right );
 		return controller;
 	} 
 
