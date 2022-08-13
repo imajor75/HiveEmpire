@@ -7674,6 +7674,7 @@ if ( cart )
 
 		List<Action> actions = new();
 		static GameObject group;
+		static float groupTime;
 		public int size = 2 * iconSize;
 
 		void RecalculateAngles()
@@ -7700,6 +7701,17 @@ if ( cart )
 		{
 			if ( group && Interface.IsKeyPressed( KeyCode.Escape ) )
 				Destroy( group );
+				
+			const float fadeTime = 0.5f;
+			if ( group )
+			{
+				float groupAge = Time.unscaledTime - groupTime;
+				float scale = 1;
+				if ( groupAge < fadeTime )
+					scale = (float)Math.Sin( groupAge * Math.PI / 2 / fadeTime );
+
+				group.transform.localScale = new Vector3( scale, scale, scale );
+			}
 		}
 
 		public Controller AddOption( Sprite image, string tooltip, System.Action callback, Location location = Location.auto )
@@ -7731,6 +7743,7 @@ if ( cart )
 				Pin( 5, -5 );
 			}
 			root.dedicatedKeyboardHandler = group.transform;
+			groupTime = Time.unscaledTime;
 		}
 
 		void Activate( Action action )
