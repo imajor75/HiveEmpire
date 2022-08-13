@@ -1864,6 +1864,7 @@ public class Interface : HiveObject
 				AddOption( Icon.exc, "Assign new area", AssignNew ).
 				AddOption( Icon.exit, "Clear", Clear ).
 				AddOption( Icon.play, "Show current center", ShowCenter );
+				this.AddClickHandler( AssignNew );
 			}
 
 			public bool pickGroundOnly { get { return true; } }
