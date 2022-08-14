@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -718,6 +718,12 @@ abstract public class Building : HiveObject
 			controller.transform.SetParent( root.transform, false );
 			controller.AddOption( Interface.Icon.hammer, "Build another instance", Clone );
 			controller.AddOption( Interface.Icon.destroy, "Delete this building", () => oh.ScheduleRemoveBuilding( this ) );
+			if ( this is Workshop workshop )
+			{
+				controller.AddOption( Interface.Icon.clock, "Change working mode to normal (work when needed)", () => oh.ScheduleChangeWorkshopRunningMode( workshop, Workshop.Mode.whenNeeded ) );
+				controller.AddOption( Interface.Icon.alarm, "Change working mode to always work", () => oh.ScheduleChangeWorkshopRunningMode( workshop, Workshop.Mode.always ) );
+				controller.AddOption( Interface.Icon.sleeping, "Change working mode to sleep", () => oh.ScheduleChangeWorkshopRunningMode( workshop, Workshop.Mode.sleeping ) );
+			}
 			controller.Open();
 			return;
 		}

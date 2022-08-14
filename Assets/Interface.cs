@@ -2621,7 +2621,6 @@ public class Interface : HiveObject
 				"Alarm - Work even if not needed\n" +
 				"Bed - Don't work at all" );
 				Image( Icon.buildings ).Pin( 130, row ).AddClickHandler( () => BuildingList.Create().Open( building.type ) ).SetTooltip( "Show a list of buildings with the same type" );
-				changeModeImage.color = Color.black;
 				row -= 25;
 			}
 
