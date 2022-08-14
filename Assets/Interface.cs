@@ -4564,17 +4564,7 @@ public class Interface : HiveObject
 
 		void StartRoad()
 		{
-			if ( flag && root.playerInCharge )
-			{
-				Road road = Road.Create().Setup( flag );
-				root.viewport.inputHandler = road;
-				root.viewport.showGridAtMouse = true;
-				if ( !root.world.createRoadTutorialShowed )
-				{
-					root.world.createRoadTutorialShowed = true;
-					tooltip.SetText( road, "Connect to another junction or middle of another road, or press Shift+LMB on an open spot to create a new junction" );
-				}
-			}
+			Road.StartInteractive( flag );
 			Close();
 		}
 

@@ -225,16 +225,13 @@ public class Flag : HiveObject
 		return false;
 	}
 
-	public bool ConvertToCrossing( bool checkConditions = true )
+	public void ConvertToCrossing()
 	{
 		assert.IsFalse( crossing );
 
-		if ( checkConditions )
-		{
-			foreach ( var building in Buildings() )
-				if ( !(building is Stock) )
-					return false;
-		}
+		foreach ( var building in Buildings() )
+			if ( building.type != Building.Type.headquarters )
+				return;
 
 		if ( user )
 		{
@@ -246,7 +243,6 @@ public class Flag : HiveObject
 		crossing = true;
 		requestFlattening = true;
 		pole = Instantiate( template, transform );
-		return true;
 	}
 
 	public void ConvertToNormal()
@@ -385,7 +381,23 @@ public class Flag : HiveObject
 
 	public override void OnClicked( bool show = false )
 	{
-		if ( !root.viewport.rightButton )
+		if ( root.viewport.rightButton )
+		{
+			var controller = Interface.Controller.Create();
+			controller.transform.SetParent( root.transform, false );
+			controller.AddOption( Interface.Icon.newRoad, "Start new road from here", () => Road.StartInteractive( this ) );
+			if ( CaptureRoads( true ) )
+				controller.AddOption( Interface.Icon.magnet, "Capture roads running by", () => oh.ScheduleCaptureRoad( this ) );
+			if ( Buildings().Count == 0 )
+			{
+				if ( crossing )
+					controller.AddOption( Interface.Icon.crossing, "Convert to plain junction", () => oh.ScheduleChangeFlagType( this ) );
+				else
+					controller.AddOption( Interface.Icon.crossing, "Convert to crossing", () => oh.ScheduleChangeFlagType( this ) );
+			}
+			controller.Open();
+		}
+		else
 			Interface.FlagPanel.Create().Open( this, show );
 	}
 

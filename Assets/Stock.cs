@@ -612,7 +612,7 @@ public class Stock : Attackable
 		itemData[(int)Item.Type.soldier].content = Constants.Stock.startSoldierCount;
 		dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
 		team.RegisterInfluence( this );
-		flag.ConvertToCrossing( false );
+		flag.ConvertToCrossing();
 		return this;
 	}
 

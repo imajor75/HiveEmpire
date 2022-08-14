@@ -1141,6 +1141,21 @@ public class Road : HiveObject, Interface.IInputHandler
 		base.Validate( chain );
 	}
 
+	static public void StartInteractive( Flag startFlag )
+	{
+		if ( !startFlag || !root.playerInCharge )
+			return;
+
+		Road road = Road.Create().Setup( startFlag );
+		root.viewport.inputHandler = road;
+		root.viewport.showGridAtMouse = true;
+		if ( !root.world.createRoadTutorialShowed )
+		{
+			root.world.createRoadTutorialShowed = true;
+			Interface.tooltip.SetText( road, "Connect to another junction or middle of another road, or press Shift+LMB on an open spot to create a new junction" );
+		}
+	}
+
 	public void OnLostInput()
 	{
 		if ( !ready )
