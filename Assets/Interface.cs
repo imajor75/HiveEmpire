@@ -2766,11 +2766,11 @@ public class Interface : HiveObject
 		{
 			// TODO This should go through operation handler	
 			if ( workshop.mode == Workshop.Mode.sleeping )
-				workshop.mode = Workshop.Mode.whenNeeded;
+				oh.ScheduleChangeWorkshopRunningMode( workshop, Workshop.Mode.whenNeeded );
 			else if ( workshop.mode == Workshop.Mode.whenNeeded )
-				workshop.mode = Workshop.Mode.always;
+				oh.ScheduleChangeWorkshopRunningMode( workshop, Workshop.Mode.always );
 			else
-				workshop.mode = Workshop.Mode.sleeping;
+				oh.ScheduleChangeWorkshopRunningMode( workshop, Workshop.Mode.sleeping );
 		}
 
 		public class Buffer

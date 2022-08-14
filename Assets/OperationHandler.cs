@@ -429,6 +429,11 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsChangePriority( route, direction ), standalone, source );
     }
 
+    public void ScheduleChangeWorkshopRunningMode( Workshop workshop, Workshop.Mode mode, bool standalone = true, Operation.Source source = Operation.Source.manual )
+    {
+        ScheduleOperation( Operation.Create().SetupAsChangeWorkshopRunningMode( workshop, mode ), standalone, source );
+    }
+
     public void ScheduleMoveRoad( Road road, int index, int direction, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
         ScheduleOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ), standalone, source );
@@ -668,15 +673,8 @@ public class Operation
 
     public Node location
     {
-        get
-        {
-            return HiveCommon.ground.GetNode( locationX, locationY );
-        }
-        set
-        {
-            locationX = value.x;
-            locationY = value.y;
-        }
+        get => HiveCommon.ground.GetNode( locationX, locationY );
+        set { locationX = value.x; locationY = value.y; }
     }
     public Team initiator
     {
@@ -688,74 +686,16 @@ public class Operation
             return location.team;
         }
     }
-    public Building building
-    {
-        get
-        {
-            return location.building;
-        }
-        set
-        {
-            location = value.node;
-        }
-    }
-    public Road road
-    {
-        get
-        {
-            return location.road;
-        }
-        set
-        {
-            location = value.nodes[1];
-        }
-    }
-    public Flag flag
-    {
-        get
-        {
-            return location.flag;
-        }
-        set
-        {
-            location = value.location;
-        }
-    }
-    public Stock start
-    {
-        get
-        {
-            return location.building as Stock;
-        }
-        set
-        {
-            location = value.node;
-        }
-    }
-    public Stock end
-    {
-        get
-        {
-            return HiveCommon.ground.GetNode( endLocationX, endLocationY ).building as Stock;
-        }
-        set
-        {
-            endLocationX = value.node.x;
-            endLocationY = value.node.y;
-        }
-    }
+    public Building building { get => location.building; set => location = value.node; }        
+    public Workshop workshop { get => building as Workshop; set => building = value; }
+    public Road road { get => location.road; set => location = value.nodes[1]; }
+    public Flag flag { get => location.flag; set => location = value.location; }
+    public Stock start { get => location.building as Stock; set => location = value.node; }
+    public Stock end { get => HiveCommon.ground.GetNode( endLocationX, endLocationY ).building as Stock; set { endLocationX = value.node.x; endLocationY = value.node.y; } }
     public Stock.Route route
     {
-        get
-        {
-            return start.itemData[(int)itemType].GetRouteForDestination( end );
-        }
-        set
-        {
-            start = value.start;
-            end = value.end;
-            itemType = value.itemType;
-        }
+        get => start.itemData[(int)itemType].GetRouteForDestination( end );
+        set { start = value.start; end = value.end; itemType = value.itemType; }
     }
     public List<Node> roadPath
     {
@@ -778,18 +718,7 @@ public class Operation
             }
         }
     }
-    public Team team
-    {
-        get
-        {
-            return HiveCommon.world.teams[bufferIndex];
-        }
-        set
-        {
-            bufferIndex = HiveCommon.world.teams.IndexOf( value );
-        }
-    }
-
+    public Team team { get => HiveCommon.world.teams[bufferIndex]; set => bufferIndex = HiveCommon.world.teams.IndexOf( value ); }
     public Node place
     {
         get
@@ -799,6 +728,7 @@ public class Operation
             return location;
         }
     }
+    public Workshop.Mode workshopMode { get => (Workshop.Mode)direction; set => direction = (int)value; }
 
 	[Obsolete( "Compatibility for old files", true )]
     bool merge { set {} }
@@ -822,6 +752,7 @@ public class Operation
         changeArea,
         moveFlag,
         changeRoutePriority,
+        changeWorkshopRunningMode,
         moveRoad,
         stockAdjustment,
         attack,
@@ -992,6 +923,15 @@ public class Operation
         this.route = route;
         this.direction = direction;
         name = "Change Route Priority";
+        return this;
+    }
+
+    public Operation SetupAsChangeWorkshopRunningMode( Workshop workshop, Workshop.Mode mode )
+    {
+        type = Type.changeWorkshopRunningMode;
+        this.workshop = workshop;
+        this.workshopMode = mode;
+        name = "Change Workshop Running Mode";
         return this;
     }
 
@@ -1199,6 +1139,14 @@ public class Operation
                 route.priority += direction;
                 route.start.team.UpdateStockRoutes( route.itemType );
                 return Create().SetupAsChangePriority( route, direction * -1 );
+            }
+            case Type.changeWorkshopRunningMode:
+            {
+                if ( workshop == null )
+                    return null;
+                var prev = workshop.mode;
+                workshop.mode = workshopMode;
+                return Create().SetupAsChangeWorkshopRunningMode( workshop, prev );
             }
             case Type.moveRoad:
             {
