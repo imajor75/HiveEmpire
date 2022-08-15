@@ -5731,6 +5731,7 @@ if ( cart )
 		public bool markEyePosition;
 		public bool rightButton;
 		public bool rightDrag;
+		public float rightDragDistance;
 		public static bool showGround = true;
 		public Vector3 rightOffset, downOffset;
 		public Vector3 lastMouse;
@@ -6034,6 +6035,8 @@ if ( cart )
 		public void OnPointerClick( PointerEventData eventData )
 		{
 			rightButton = eventData.button == PointerEventData.InputButton.Right;
+			if ( rightButton && rightDragDistance > 0.01 )
+				return;
 			if ( inputHandler == null )
 				inputHandler = this;
 			var hiveObject = FindObjectAt( Input.mousePosition );
@@ -6063,6 +6066,7 @@ if ( cart )
 				return;
 
 			rightDrag = true;
+			rightDragDistance = 0;
 			foreach ( var camera in eye.cameraGrid.cameras )
 			{
 				Ray ray = camera.ScreenPointToRay( eventData.position );
@@ -6107,6 +6111,7 @@ if ( cart )
 				eye.Move( 0, 0 );	// TODO Feels like a brutal hack
 				eye.x += offset.x;
 				eye.y += offset.z;
+				rightDragDistance += Math.Abs( offset.x ) + Math.Abs( offset.y );
 			}
 			lastMouse = Input.mousePosition;
 
