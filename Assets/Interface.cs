@@ -7739,6 +7739,7 @@ if ( cart )
 				AddClickHandler( () => Activate( action ) ).
 				Pin( 5, -5 );
 			}
+			group.transform.localScale = Vector3.zero;
 			root.dedicatedKeyboardHandler = group.transform;
 			groupTime = Time.unscaledTime;
 		}
