@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -188,8 +188,19 @@ public class Serializer
 					{
 						// TODO Clean up this by adding a custom function which can convert enum strings
 						var value = reader.Value as string;
-						if ( type == typeof( Workshop.Type ) && value == "smelter" )
-							value = "steelSmelter";
+						if ( type == typeof( Workshop.Type ) )
+						{
+							if ( value == "smelter" )
+								value = "steelSmelter";
+							if ( value == "goldBarMaker" )
+								value = "jeweler";
+							if ( value == "farm" )
+								value = "wheatFarm";
+						}
+						if ( type == typeof( Resource.Type ) && value == "cornfield" )
+							value = "cornField";
+						if ( type == typeof( Item.Type ) && value == "goldBar" )
+							value = "jewelry";
 						result = Enum.Parse( type, value );
 					}
 					else

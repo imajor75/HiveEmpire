@@ -79,6 +79,24 @@ public class Workshop : Building
 	World.Timer[] productivityCalculationTimer { set{} }
 	[Obsolete( "Compatibility with old files", true )]
 	int[] lastProductivityCalculationTimeRange { set{} }
+	[Obsolete( "Compatibility with old files", true )]
+	Productivity productivity { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	float lastCalculatedMaxOutput { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	World.Timer maxOutputCalculationTimer { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	int itemsProducedAtLastCheck { set {} }
+
+	[Obsolete( "Compatibility with old files", true )]
+	struct Productivity
+	{
+		public float current;
+		public World.Timer timer;
+		public int workCounter;
+		public float weight;
+		public int timinglength;
+	}
 
 	class Configurations
 	{
@@ -189,6 +207,8 @@ public class Workshop : Building
 
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }
+		[Obsolete( "Compatibility with old files", true )]
+		Input[] inputs { set {} }
 
 		public bool commonInputs = false;	// If true, the workshop will work with the input buffers separately, if any has any item it will work (f.e. mines). Otherwise each input is needed.
 		public List<Item.Type> generatedInputs;

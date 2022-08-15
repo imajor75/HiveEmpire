@@ -31,10 +31,10 @@ public class World : HiveObject
 	public bool createRoadTutorialShowed;
 	public string fileName;
 	public List<HiveObject> hiveObjects = new (), newHiveObjects = new ();
-	public List<int> hiveListFreeSlots = new();
+	public List<int> hiveListFreeSlots = new ();
 	public List<Workshop.Configuration> workshopConfigurations;
-	public List<float> itemTypeUsage;
-	public List<float> workshopTypeUsage;
+	public List<float> itemTypeUsage = new ();
+	public List<float> workshopTypeUsage = new ();
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Speed speed;
@@ -528,6 +528,16 @@ public class World : HiveObject
 		float saltRatio { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		float stoneRatio { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float idealIron { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float idealCoal { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float idealGold { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float idealStone { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float idealSalt { set {} }
 
 		[JsonIgnore]
 		public bool apply;  // For debug purposes only
@@ -839,6 +849,9 @@ public class World : HiveObject
 	{
 		var originalWorkshopConfigurations = Workshop.LoadConfigurations();
 
+		if ( workshopConfigurations == null )
+			return;
+
 		foreach ( var configuration in workshopConfigurations )
 		{
 			foreach ( var originalConfiguration in originalWorkshopConfigurations )
@@ -1101,11 +1114,8 @@ public class World : HiveObject
 						t.itemData.Add( new Stock.ItemTypeData( t, (Item.Type)t.itemData.Count ) );
 					for ( int j = 0; j < t.itemData.Count; j++ )
 					{
-						if ( t.itemData[j].boss == null )
-						{
-							t.itemData[j].boss = t;
-							t.itemData[j].itemType = (Item.Type)j;
-						}
+						t.itemData[j].boss = t;
+						t.itemData[j].itemType = (Item.Type)j;
 					}
 #pragma warning disable 0618
 					if ( t.content != null )

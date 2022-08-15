@@ -603,21 +603,21 @@ public class Interface : HiveObject
 
 	public void OpenMainPanel()
 	{
-		// var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-		// if ( directory.Exists )
-		// {
-		// 	var myFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
-		// 	if ( myFiles.Count() > 0 )
-		// 		Load( myFiles.First().FullName );
-		// }
-		// if ( !world.gameInProgress )
-		// {
-		// 	var demoFile = Application.streamingAssetsPath + "/demolevel.json";
-		// 	if ( File.Exists( demoFile ) )
-		// 		Load( demoFile );
-		// 	else
+		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
+		if ( directory.Exists )
+		{
+			var myFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
+			if ( myFiles.Count() > 0 )
+				Load( myFiles.First().FullName );
+		}
+		if ( !world.gameInProgress )
+		{
+			var demoFile = Application.streamingAssetsPath + "/demolevel.json";
+			if ( File.Exists( demoFile ) )
+				Load( demoFile );
+			else
 				NewGame( challenges.First() );
-//		}
+		}
 
 		MainPanel.Create().Open( true );
 	}
