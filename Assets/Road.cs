@@ -571,6 +571,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		{
 			var controller = Interface.Controller.Create();
 			controller.transform.SetParent( root.transform, false );
+			controller.AddOption( Interface.Icon.destroy, "Remove road", () => oh.ScheduleRemoveRoad( this ) );
 			if ( Flag.IsNodeSuitable( node, team ) )
 				controller.AddOption( Interface.Icon.junction, "Create a junction here", () => oh.ScheduleCreateFlag( node, team ) );
 			controller.Open();
