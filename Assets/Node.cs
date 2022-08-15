@@ -463,7 +463,15 @@ public class Node : HiveObject
 	public override void OnClicked( bool show = false )
 	{
 		if ( root.viewport.rightButton )
+		{
+			var controller = Interface.Controller.Create();
+			controller.transform.SetParent( root.transform, false );
+			controller.AddOption( Interface.Icon.exc, $"Type: {type}\nOwner: {team}", null );
+			if ( Flag.IsNodeSuitable( this, team ) )
+				controller.AddOption( Interface.Icon.junction, "Create a junction here", () => oh.ScheduleCreateFlag( this, team ) );
+			controller.Open();
 			return;
+		}
 
 	#if DEBUG
 		root.viewport.nodeInfoToShow = Interface.Viewport.OverlayInfoType.none;

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -567,6 +567,15 @@ public class Road : HiveObject, Interface.IInputHandler
 	public void OnClicked( Node node )
 	{
 		assert.AreEqual( node.road, this );
+		if ( root.viewport.rightButton )
+		{
+			var controller = Interface.Controller.Create();
+			controller.transform.SetParent( root.transform, false );
+			if ( Flag.IsNodeSuitable( node, team ) )
+				controller.AddOption( Interface.Icon.junction, "Create a junction here", () => oh.ScheduleCreateFlag( node, team ) );
+			controller.Open();
+			return;
+		}
 		Interface.RoadPanel.Create().Open( this, node );
 	}
 
