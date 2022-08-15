@@ -792,7 +792,7 @@ public class Workshop : Building
 		if ( destroyed )
 			return;
 		assert.IsNotNull( body );
-		if ( type == Type.mill )
+		if ( type == Type.mill || type == Type.cornMill )
 			millWheel = body.transform.Find( "SM_Bld_Preset_House_Windmill_01_Blades_Optimized" );
 		string name = type.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 ) + $" {node.x}:{node.y}";
@@ -1039,7 +1039,7 @@ public class Workshop : Building
 
 				if ( millWheel )
 				{
-					if ( type == Type.mill && working )
+					if ( ( type == Type.mill || type == Type.cornMill ) && working )
 						millWheelSpeed += 0.01f;
 					else
 						millWheelSpeed -= 0.01f;
