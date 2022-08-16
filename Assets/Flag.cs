@@ -386,6 +386,7 @@ public class Flag : HiveObject
 			var controller = Interface.Controller.Create();
 			controller.transform.SetParent( root.transform, false );
 			controller.AddOption( Interface.Icon.newRoad, "Start new road from here", () => Road.StartInteractive( this ) );
+			controller.AddOption( Interface.Icon.destroy, "Delete this junction", () => oh.ScheduleRemoveFlag( this ) );
 			if ( CaptureRoads( true ) )
 				controller.AddOption( Interface.Icon.magnet, "Capture roads running by", () => oh.ScheduleCaptureRoad( this ) );
 			if ( Buildings().Count == 0 )
