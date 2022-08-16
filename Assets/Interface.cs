@@ -3229,22 +3229,25 @@ public class Interface : HiveObject
 				if ( stock.itemData[j].cartInput > 0 )
 					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f ).color = new Color( 1, 0.75f, 0.15f );
 
-				if ( stock.itemData[j].cartOutput >= Constants.Stock.cartCapacity )
+				if ( stock.itemData[j].cartOutput > 0 )
 				{
 					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f ).color = new Color( 1, 0.75f, 0.15f );
 					offset += 10;
 				}
 				i.AddClickHandler( () => SelectItemType( t ) );
 
+				var data = stock.itemData[(int)t];
 				var controller = i.AddController();
 				controller.AddOption( Icon.yes, "Select this item type", () => SelectItemType( t ) );
 				controller.AddOption( Icon.route, "Show routes for this item type", () => ShowRoutesFor( t ) );
 				controller.AddOption( Icon.input, "Show input potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.request ) );
 				controller.AddOption( Icon.output, "Show output potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.offer ) );
 #if DEBUG
-				controller.AddOption( Icon.exit, "Clear stock content", () => { stock.itemData[(int)t].content = 0; world.lastChecksum = 0; } );
-				controller.AddOption( Icon.plus, "Add one more", () => { stock.itemData[(int)t].content++; world.lastChecksum = 0; } );
+				controller.AddOption( Icon.exit, "Clear stock content", () => { data.content = 0; world.lastChecksum = 0; } );
+				controller.AddOption( Icon.plus, "Add one more", () => { data.content++; world.lastChecksum = 0; } );
 #endif
+				if ( data.content < data.cartOutput )
+					controller.AddOption( Icon.cart, "Start cart delivery as soon as possible", () => oh.ScheduleStockAdjustment( stock, t, Stock.Channel.cartOutputTemporary, 1 ) );
 
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				counts[j].AddClickHandler( () => SelectItemType( t ) );
@@ -3340,7 +3343,7 @@ public class Interface : HiveObject
 				if ( stock.itemData[i].content > stock.itemData[i].inputMax )
 					c = Color.green.Dark();
 				counts[i].color = c;
-				counts[i].text = stock.itemData[i].content + " (+" + stock.itemData[i].onWay + ")";
+				counts[i].text = $"{stock.itemData[i].content} ({stock.itemData[i].onWay + stock.itemData[i].onWayByCart})";
 			}
 			total.text = stock.total + " => " + stock.totalTarget;
 			selected?.SetType( selectedItemType, false );

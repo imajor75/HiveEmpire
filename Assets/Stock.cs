@@ -125,10 +125,10 @@ public class Stock : Attackable
 			this.itemType = itemType;
 		}
 		public int content;
-		public int onWay;
+		public int onWay, onWayByCart;
 		public int inputMax = Constants.Stock.defaultInputMax, inputMin = Constants.Stock.defaultInputMin;
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
-		public int cartOutput = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
+		public int cartOutput = Constants.Stock.defaultCartOutput, cartOutputTemporary = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
 		public List<Route> outputRoutes = new ();
 		public Stock boss;
 		public Item.Type itemType;
@@ -171,7 +171,7 @@ public class Stock : Attackable
 			{
 				if ( stock == boss )
 					continue;
-				if ( cartOutput >= Constants.Stock.cartCapacity && stock.itemData[typeIndex].cartInput > 0 )
+				if ( cartOutput > 0 && stock.itemData[typeIndex].cartInput > 0 )
 					AddNewRoute( stock );
 			}	
 
@@ -222,7 +222,8 @@ public class Stock : Attackable
 				case Channel.outputMin: return ref outputMin;
 				case Channel.outputMax: return ref outputMax;
 				case Channel.cartInput: return ref cartInput;
-				case Channel.cartOutput: return ref cartOutput;		
+				case Channel.cartOutput: return ref cartOutput;
+				case Channel.cartOutputTemporary: return ref cartOutputTemporary;
 			}
 			throw new Exception();
 		}
@@ -235,7 +236,8 @@ public class Stock : Attackable
 		outputMin,
 		outputMax,
 		cartInput,
-		cartOutput
+		cartOutput,
+		cartOutputTemporary,
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
@@ -295,7 +297,8 @@ public class Stock : Attackable
 			}
 
 			int itemIndex = (int)itemType;
-			if ( start.itemData[itemIndex].content < Constants.Stock.cartCapacity )
+			int minimalQuantity = start.itemData[itemIndex].cartOutputTemporary > 0 ? start.itemData[itemIndex].cartOutputTemporary : start.itemData[itemIndex].cartOutput;
+			if ( start.itemData[itemIndex].content < minimalQuantity )
 			{
 				state = State.noSourceItems;
 				return false;
@@ -360,7 +363,7 @@ public class Stock : Attackable
 		{
 			this.destination = destination;
 
-			destination.itemData[(int)itemType].onWay += itemQuantity;
+			destination.itemData[(int)itemType].onWayByCart += itemQuantity;
 			ScheduleWalkToFlag( destination.flag, true );
 			ScheduleWalkToNeighbour( destination.node );
 
@@ -373,9 +376,10 @@ public class Stock : Attackable
 		{
 			assert.AreEqual( route.start, boss );
 			int typeIndex = (int)route.itemType;
-			boss.itemData[typeIndex].content -= Constants.Stock.cartCapacity;
+			itemQuantity = Math.Min( Constants.Stock.cartCapacity, boss.itemData[typeIndex].content );
+			boss.itemData[typeIndex].content -= itemQuantity;
+			boss.itemData[typeIndex].cartOutputTemporary = 0;
 			boss.contentChange.Trigger();
-			itemQuantity = Constants.Stock.cartCapacity;
 			this.itemType = route.itemType;
 			currentRoute = route;
 			route.state = Route.State.inProgress;
@@ -511,7 +515,7 @@ public class Stock : Attackable
 		{
 			Cart cart = boss as Cart;
 			if ( stock )
-				stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
+				stock.itemData[(int)cart.itemType].onWayByCart -= cart.itemQuantity;
 			base.Cancel();
 		}
 
@@ -544,7 +548,7 @@ public class Stock : Attackable
 				stock.itemData[(int)cart.itemType].content += cart.itemQuantity;
 				stock.contentChange.Trigger();
 				if ( stock != cartStock )
-					stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
+					stock.itemData[(int)cart.itemType].onWayByCart -= cart.itemQuantity;
 				cart.itemQuantity = 0;
 				cart.UpdateLook();
 			}
@@ -893,7 +897,15 @@ public class Stock : Attackable
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.AreEqual( ( itemData[i].onWay - onWayCounted[i] ) % Constants.Stock.cartCapacity, 0 );
+			assert.AreEqual( itemData[i].onWay, onWayCounted[i] );
+		foreach ( var data in itemData )
+		{
+			int countedOnWayByCart = 0;
+			foreach ( var stock in team.stocks )
+				if ( stock.cart.destination == this && stock.cart.itemType == data.itemType )
+					countedOnWayByCart += stock.cart.itemQuantity;
+			assert.AreEqual( data.onWayByCart, countedOnWayByCart );
+		}
 		for ( int j = 0; j < itemData.Count; j++ )
 		{
 			assert.AreEqual( this, itemData[j].boss );
