@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3343,7 +3343,7 @@ public class Interface : HiveObject
 				if ( stock.itemData[i].content > stock.itemData[i].inputMax )
 					c = Color.green.Dark();
 				counts[i].color = c;
-				counts[i].text = $"{stock.itemData[i].content} ({stock.itemData[i].onWay + stock.itemData[i].onWayByCart})";
+				counts[i].text = $"{stock.itemData[i].content} ({stock.itemData[i].onWay})";
 			}
 			total.text = stock.total + " => " + stock.totalTarget;
 			selected?.SetType( selectedItemType, false );

@@ -125,7 +125,7 @@ public class Stock : Attackable
 			this.itemType = itemType;
 		}
 		public int content;
-		public int onWay, onWayByCart;
+		public int onWay;
 		public int inputMax = Constants.Stock.defaultInputMax, inputMin = Constants.Stock.defaultInputMin;
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
 		public int cartOutput = Constants.Stock.defaultCartOutput, cartOutputTemporary = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
@@ -363,7 +363,7 @@ public class Stock : Attackable
 		{
 			this.destination = destination;
 
-			destination.itemData[(int)itemType].onWayByCart += itemQuantity;
+			destination.itemData[(int)itemType].onWay += itemQuantity;
 			ScheduleWalkToFlag( destination.flag, true );
 			ScheduleWalkToNeighbour( destination.node );
 
@@ -515,7 +515,7 @@ public class Stock : Attackable
 		{
 			Cart cart = boss as Cart;
 			if ( stock )
-				stock.itemData[(int)cart.itemType].onWayByCart -= cart.itemQuantity;
+				stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
 			base.Cancel();
 		}
 
@@ -548,7 +548,7 @@ public class Stock : Attackable
 				stock.itemData[(int)cart.itemType].content += cart.itemQuantity;
 				stock.contentChange.Trigger();
 				if ( stock != cartStock )
-					stock.itemData[(int)cart.itemType].onWayByCart -= cart.itemQuantity;
+					stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
 				cart.itemQuantity = 0;
 				cart.UpdateLook();
 			}
@@ -896,15 +896,13 @@ public class Stock : Attackable
 		int[] onWayCounted = new int[(int)Item.Type.total];
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
-		for ( int i = 0; i < onWayCounted.Length; i++ )
-			assert.AreEqual( itemData[i].onWay, onWayCounted[i] );
 		foreach ( var data in itemData )
 		{
 			int countedOnWayByCart = 0;
 			foreach ( var stock in team.stocks )
 				if ( stock.cart.destination == this && stock.cart.itemType == data.itemType )
 					countedOnWayByCart += stock.cart.itemQuantity;
-			assert.AreEqual( data.onWayByCart, countedOnWayByCart );
+			assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType]);
 		}
 		for ( int j = 0; j < itemData.Count; j++ )
 		{
