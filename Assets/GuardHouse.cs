@@ -301,10 +301,10 @@ public class GuardHouse : Attackable
 		return new Vector3( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
 	}
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		base.OnClicked( show );
-		if ( !root.viewport.rightButton && construction.done )
+		base.OnClicked( button, show );
+		if ( button == Interface.MouseButton.left && construction.done )
 			Interface.GuardHousePanel.Create().Open( this, show );
 	}
 

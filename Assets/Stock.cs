@@ -810,10 +810,10 @@ public class Stock : Attackable
 		return Constants.Stock.influenceRange - node.DistanceFrom( this.node );
 	}
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		base.OnClicked( show );
-		if ( root.viewport.rightButton )
+		base.OnClicked( button, show );
+		if ( button != Interface.MouseButton.left )
 			return;
 
 		if ( construction.done )

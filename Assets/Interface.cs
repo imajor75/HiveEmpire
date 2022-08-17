@@ -813,7 +813,7 @@ public class Interface : HiveObject
 		// }
 
 		if ( headquartersHotkey.IsPressed() && mainTeam?.mainBuilding )
-			mainTeam.mainBuilding.OnClicked( true );
+			mainTeam.mainBuilding.OnClicked( MouseButton.left, true );
 		if ( changePlayerHotkey.IsPressed() )
 			PlayerSelectorPanel.Create( false );
 		if ( closeWindowHotkey.IsPressed() )
@@ -1638,7 +1638,7 @@ public class Interface : HiveObject
 
 		public static void SelectBuilding( Building building )
 		{
-			building?.OnClicked( true );
+			building?.OnClicked( MouseButton.left, true );
 		}
 
 		public Image Button( string text )
@@ -1876,9 +1876,9 @@ public class Interface : HiveObject
 				return true;
 			}
 
-			public bool OnNodeClicked( Node node )
+			public bool OnNodeClicked( Interface.MouseButton button, Node node )
 			{
-				if ( root.viewport.rightButton )
+				if ( button != MouseButton.left )
 					return true;
 					
 				if ( eye.highlight.area == area )
@@ -1963,9 +1963,9 @@ public class Interface : HiveObject
 				decreaseSizeHotkey.Deactivate();
 			}
 
-			public bool OnObjectClicked( HiveObject target )
+			public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
 			{
-				return OnNodeClicked( target.location );
+				return OnNodeClicked( button, target.location );
 			}
 		}
 
@@ -2200,7 +2200,14 @@ public class Interface : HiveObject
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			hiveObject.OnClicked( true );
+			Interface.MouseButton button = eventData.button switch
+			{
+				PointerEventData.InputButton.Left => MouseButton.left,
+				PointerEventData.InputButton.Right => MouseButton.right,
+				PointerEventData.InputButton.Middle => MouseButton.middle,
+				_ => MouseButton.left
+			};
+			hiveObject.OnClicked( button, true );
 		}
 
 		public void Update()
@@ -3279,11 +3286,11 @@ public class Interface : HiveObject
 			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks", null, "LMB+drag left/right to change" );
 			outputMax.alignment = TextAnchor.MiddleCenter;
 			Image( Icon.cart ).Link( selectedItemArea ).PinCenter( 20, 0, iconSize * 2, iconSize * 2, 1, 0.5f );
-			cartInput = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 1, 1 ).AddClickHandler( () => StartCart( true ), UIHelpers.ClickType.right ).
+			cartInput = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 1, 1 ).AddClickHandler( () => StartCart( true ), MouseButton.right ).
 			SetTooltip( "The stock will try to order items from other stocks by cart, if the number of items in this stock is less than this number", null, "LMB+drag left/right to change\nRMB to set a value which start the route" );
 			cartInput.alignment = TextAnchor.MiddleCenter;
 			cartInput.AddOutline().color = Color.white;
-			cartOutput = Text().Link( selectedItemArea ).Pin( 0, 20, 40, iconSize, 1, 0 ).AddClickHandler( () => StartCart( false ), UIHelpers.ClickType.right ).
+			cartOutput = Text().Link( selectedItemArea ).Pin( 0, 20, 40, iconSize, 1, 0 ).AddClickHandler( () => StartCart( false ), MouseButton.right ).
 			SetTooltip( "If the stock has more items than this number, then the cart will distribute it to other stocks if needed", null, "LMB+drag left/right to change\nRMB to set a value which start the route" );
 			cartOutput.alignment = TextAnchor.MiddleCenter;
 			cartOutput.AddOutline().color = Color.white;
@@ -4151,9 +4158,9 @@ public class Interface : HiveObject
 			return true;
         }
 
-        public bool OnNodeClicked( Node node )
+        public bool OnNodeClicked( Interface.MouseButton button, Node node )
         {
-			if ( !currentBlueprint || root.viewport.rightButton )
+			if ( !currentBlueprint || button != MouseButton.left )
 				return true;
 
 			if ( !root.world.roadTutorialShowed )
@@ -4174,7 +4181,7 @@ public class Interface : HiveObject
 			return false;
         }
 
-        public bool OnObjectClicked(HiveObject target)
+        public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
         {
 			return true;
         }
@@ -4477,27 +4484,27 @@ public class Interface : HiveObject
 			return keepGoing;
         }
 
-        public bool OnNodeClicked( Node node )
+        public bool OnNodeClicked( Interface.MouseButton button, Node node )
         {
 			if ( road )
 			{
 				var index = road.nodes.IndexOf( this.node );
 				var dir = this.node.DirectionTo( node );
-				if ( !root.viewport.rightButton && road.Move( index, dir, true ) )
+				if ( button == MouseButton.left && road.Move( index, dir, true ) )
 				{
 					oh.ScheduleMoveRoad( road, index, dir );
 					target = this.node = node;
 				}
 			}
 
-			if ( root.viewport.rightButton && node.road == road )
+			if ( button == MouseButton.right && node.road == road )
 				target = this.node = node;
 			return keepGoing;
         }
 
-        public bool OnObjectClicked( HiveObject target )
+        public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
         {
-			return root.viewport.OnObjectClicked( target );
+			return root.viewport.OnObjectClicked( button, target );
         }
 
         public void OnLostInput()
@@ -4624,19 +4631,19 @@ public class Interface : HiveObject
 			return keepGoing;
         }
 
-        public bool OnNodeClicked( Node node )
+        public bool OnNodeClicked( Interface.MouseButton button, Node node )
         {
 			int i = flag.node.DirectionTo( node );
-			if ( i >= 0 && !root.viewport.rightButton && flag.Move( i, true ) )
+			if ( i >= 0 && button == MouseButton.left && flag.Move( i, true ) )
 				oh.ScheduleMoveFlag( flag, i );
 			else
-				root.viewport.OnNodeClicked( node );
+				root.viewport.OnNodeClicked( button, node );
 			return keepGoing;
         }
 
-        public bool OnObjectClicked(HiveObject target)
+        public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
         {
-			return root.viewport.OnObjectClicked( target );
+			return root.viewport.OnObjectClicked( button, target );
         }
 
         public void OnLostInput()
@@ -4696,19 +4703,19 @@ public class Interface : HiveObject
 		void ShowHome()
 		{
 			if ( unit.type == Unit.Type.tinkerer )
-				unit.building.OnClicked( true );
+				unit.building.OnClicked( MouseButton.left, true );
 
 			if ( unit.type == Unit.Type.cart )
-				unit.building.OnClicked( true );
+				unit.building.OnClicked( MouseButton.left, true );
 
 			if ( unit.type == Unit.Type.hauler )
-				unit.road.OnClicked( true );
+				unit.road.OnClicked( MouseButton.left, true );
 
 			if ( unit.type == Unit.Type.constructor )
-				unit.team.mainBuilding.OnClicked( true );
+				unit.team.mainBuilding.OnClicked( MouseButton.left, true );
 
 			if ( unit.type == Unit.Type.soldier && unit.building )
-				unit.building.OnClicked( true );
+				unit.building.OnClicked( MouseButton.left, true );
 		}
 
 		public override CompareResult IsTheSame( Panel other )
@@ -5732,7 +5739,6 @@ if ( cart )
 		public Node currentNode;  // Node currently under the cursor
 		static GameObject marker;
 		public bool markEyePosition;
-		public bool rightButton;
 		public bool rightDrag;
 		public float rightDragDistance;
 		public static bool showGround = true;
@@ -6037,8 +6043,7 @@ if ( cart )
 
 		public void OnPointerClick( PointerEventData eventData )
 		{
-			rightButton = eventData.button == PointerEventData.InputButton.Right;
-			if ( rightButton && rightDragDistance > 0.01 )
+			if ( eventData.button == PointerEventData.InputButton.Right && rightDragDistance > 0.01 )
 				return;
 			if ( inputHandler == null )
 				inputHandler = this;
@@ -6053,13 +6058,20 @@ if ( cart )
 				return;
 				
 			var node = hiveObject as Node;
+			Interface.MouseButton button = eventData.button switch
+			{
+				PointerEventData.InputButton.Left => MouseButton.left,
+				PointerEventData.InputButton.Right => MouseButton.right,
+				PointerEventData.InputButton.Middle => MouseButton.middle,
+				_ => MouseButton.left
+			};
 			if ( node )
 			{
-				if ( !inputHandler.OnNodeClicked( node ) )
+				if ( !inputHandler.OnNodeClicked( button, node ) )
 					inputHandler = this;
 			}
 			else
-				if ( !inputHandler.OnObjectClicked( hiveObject ) )
+				if ( !inputHandler.OnObjectClicked( button, hiveObject ) )
 					inputHandler = this;
 		}
 
@@ -6269,24 +6281,24 @@ if ( cart )
 				cursorTypes[(int)CursorType.direction0 + roadDirection].SetActive( true );
 		}
 
-		public bool OnNodeClicked( Node node )
+		public bool OnNodeClicked( Interface.MouseButton button, Node node )
 		{
 			if ( node.building )
 			{
-				node.building.OnClicked();
+				node.building.OnClicked( button );
 				return true;
 			}
 			if ( node.flag )
 			{
-				node.flag.OnClicked();
+				node.flag.OnClicked( button );
 				return true;
 			}
 			if ( node.road && node.road.ready )
 			{
-				node.road.OnClicked( node );
+				node.road.OnClicked( button, node );
 				return true;
 			}
-			node.OnClicked();
+			node.OnClicked( button );
 			return true;
 		}
 
@@ -6294,9 +6306,9 @@ if ( cart )
 		{
 		}
 
-		public bool OnObjectClicked( HiveObject target )
+		public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
 		{
-			target.OnClicked();
+			target.OnClicked( button );
 			return true;
 		}
 	}
@@ -7620,8 +7632,8 @@ if ( cart )
 	public interface IInputHandler
 	{
 		bool OnMovingOverNode( Node node );
-		bool OnNodeClicked( Node node );
-		bool OnObjectClicked( HiveObject target );
+		bool OnNodeClicked( Interface.MouseButton button, Node node );
+		bool OnObjectClicked( Interface.MouseButton button, HiveObject target );
 		void OnLostInput();
 		bool pickGroundOnly { get { return false; } }
 	}
@@ -7730,7 +7742,7 @@ if ( cart )
 			group = new GameObject( "Controller group", typeof( RectTransform ) );
 			group.transform.SetParent( root.transform, false );
 			group.transform.Pin( (int)( Input.mousePosition.x / uiScale ), (int)( ( Input.mousePosition.y - Screen.height ) / uiScale ) );
-			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Destroy( group ) ).AddClickHandler( () => Destroy( group ), UIHelpers.ClickType.right ).color = new Color( 0, 0, 0, 0 );
+			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Destroy( group ) ).AddClickHandler( () => Destroy( group ), MouseButton.right ).color = new Color( 0, 0, 0, 0 );
 
 			foreach ( var action in actions )
 			{
@@ -7753,6 +7765,13 @@ if ( cart )
 			action.callback();
 		}
 	}
+
+	public enum MouseButton
+	{
+		left,
+		right,
+		middle
+	}
 }
 
 
@@ -7763,7 +7782,7 @@ public static class UIHelpers
 	public static Interface.Controller AddController( this MonoBehaviour control )
 	{
 		var controller = control.gameObject.AddComponent<Interface.Controller>();
-		control.AddClickHandler( controller.Open, ClickType.right );
+		control.AddClickHandler( controller.Open, Interface.MouseButton.right );
 		return controller;
 	} 
 
@@ -7924,13 +7943,6 @@ public static class UIHelpers
 		}
     }
 
-	public enum ClickType
-	{
-		left,
-		right,
-		middle
-	}
-
 	public static UIElement AddHiveObjectHandler<UIElement>( this UIElement g, HiveObject hiveObject ) where UIElement : Component
 	{
 		var hoh = g.gameObject.AddComponent<Interface.HiveObjectHandler>();
@@ -7938,16 +7950,16 @@ public static class UIHelpers
 		return g;
 	}
 
-	public static UIElement AddClickHandler<UIElement>( this UIElement g, Action callBack, ClickType type = ClickType.left ) where UIElement : Component
+	public static UIElement AddClickHandler<UIElement>( this UIElement g, Action callBack, Interface.MouseButton type = Interface.MouseButton.left ) where UIElement : Component
 	{
 		var b = g.gameObject.GetComponent<Button>();
 		if ( b == null )
 			b = g.gameObject.AddComponent<Button>();
-		if ( type == ClickType.left )
+		if ( type == Interface.MouseButton.left )
 			b.leftClickHandler = callBack;
-		if ( type == ClickType.right )
+		if ( type == Interface.MouseButton.right )
 			b.rightClickHandler = callBack;
-		if ( type == ClickType.middle )
+		if ( type == Interface.MouseButton.middle )
 			b.middleClickHandler = callBack;
 		return g;
 	}

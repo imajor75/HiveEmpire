@@ -460,15 +460,17 @@ public class Node : HiveObject
 			type = Type.grass;
 	}
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		if ( root.viewport.rightButton )
+		if ( button == Interface.MouseButton.right )
 		{
 			var controller = Interface.Controller.Create();
 			controller.transform.SetParent( root.transform, false );
 			controller.AddOption( Interface.Icon.exc, $"Type: {type}\nOwner: {team}", null );
 			if ( Flag.IsNodeSuitable( this, team ) )
 				controller.AddOption( Interface.Icon.junction, "Create a junction here", () => oh.ScheduleCreateFlag( this, team ) );
+			if ( HasResource( Resource.Type.tree ) || HasResource( Resource.Type.rock ) || HasResource( Resource.Type.cornField ) || HasResource( Resource.Type.wheatField ) )
+				controller.AddOption( Interface.Icon.destroy, "Remove rocks and vegetation", ClearVisibleResources );
 			controller.Open();
 			return;
 		}
@@ -477,6 +479,15 @@ public class Node : HiveObject
 		root.viewport.nodeInfoToShow = Interface.Viewport.OverlayInfoType.none;
 		Interface.NodePanel.Create().Open( this, show );
 	#endif
+	}
+
+	void ClearVisibleResources()
+	{
+		foreach ( var resource in resources )
+		{
+			if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.cornField || resource.type == Resource.Type.wheatField || resource.type == Resource.Type.rock )
+				oh.ScheduleRemoveResource( resource );
+		}
 	}
 
 	public bool CheckType( Type type )

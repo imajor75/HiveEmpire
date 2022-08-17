@@ -128,7 +128,7 @@ public abstract class HiveObject : HiveCommon
 		if ( selectThis )
 		{
 			selectThis = false;
-			OnClicked( true );
+			OnClicked( Interface.MouseButton.left, true );
 		}
 	}
 
@@ -174,7 +174,7 @@ public abstract class HiveObject : HiveCommon
 		id = world.nextID++;
 	}
 
-	public virtual void OnClicked( bool show = false )
+	public virtual void OnClicked( Interface.MouseButton button, bool show = false )
 	{
 	}
 

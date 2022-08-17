@@ -564,10 +564,10 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public void OnClicked( Node node )
+	public void OnClicked( Interface.MouseButton button, Node node )
 	{
 		assert.AreEqual( node.road, this );
-		if ( root.viewport.rightButton )
+		if ( button == Interface.MouseButton.right )
 		{
 			var controller = Interface.Controller.Create();
 			controller.transform.SetParent( root.transform, false );
@@ -575,9 +575,9 @@ public class Road : HiveObject, Interface.IInputHandler
 			if ( Flag.IsNodeSuitable( node, team ) )
 				controller.AddOption( Interface.Icon.junction, "Create a junction here", () => oh.ScheduleCreateFlag( node, team ) );
 			controller.Open();
-			return;
 		}
-		Interface.RoadPanel.Create().Open( this, node );
+		if ( button == Interface.MouseButton.left )
+			Interface.RoadPanel.Create().Open( this, node );
 	}
 
 	public void Split( Flag flag )
@@ -839,12 +839,12 @@ public class Road : HiveObject, Interface.IInputHandler
 		return true;
 	}
 
-	public bool OnNodeClicked( Node node )
+	public bool OnNodeClicked( Interface.MouseButton button, Node node )
 	{
 		if ( node != lastNode )
 			return true;
 
-		if ( root.viewport.rightButton )
+		if (button != Interface.MouseButton.left )
 			return true;
 		oh.StartGroup( "Finishing road" );
 
@@ -888,17 +888,17 @@ public class Road : HiveObject, Interface.IInputHandler
 			return true;
 	}
 
-	public bool OnObjectClicked( HiveObject target )
+	public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
 	{
 		return false;
 	}
 
 	public bool pickGroundOnly { get { return true; } }
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		base.OnClicked( show );
-		if ( !root.viewport.rightButton )
+		base.OnClicked( button, show );
+		if ( button == Interface.MouseButton.left )
 			Interface.RoadPanel.Create().Open( this, centerNode );
 	}
 

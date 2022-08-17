@@ -1302,12 +1302,10 @@ public class Workshop : Building
 		SetWorking( true );
 	}
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		base.OnClicked( show );
-		if ( root.viewport.rightButton )
-			return;
-		if ( construction.done )
+		base.OnClicked( button, show );
+		if ( construction.done && button == Interface.MouseButton.left )
 			Interface.WorkshopPanel.Create().Open( this, Interface.WorkshopPanel.Content.everything, show );
 	}
 

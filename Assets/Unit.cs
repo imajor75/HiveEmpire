@@ -2292,11 +2292,10 @@ public class Unit : HiveObject
 		return true;
 	}
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		if ( root.viewport.rightButton )
-			return;
-		Interface.UnitPanel.Create().Open( this, show );
+		if ( button == Interface.MouseButton.left )
+			Interface.UnitPanel.Create().Open( this, show );
 	}
 
 	public T FindTaskInQueue<T>() where T : class

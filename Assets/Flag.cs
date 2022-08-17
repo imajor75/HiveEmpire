@@ -379,9 +379,9 @@ public class Flag : HiveObject
 		t.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)item.type], 0, 0 );
 	}
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		if ( root.viewport.rightButton )
+		if ( button == Interface.MouseButton.right )
 		{
 			var controller = Interface.Controller.Create();
 			controller.transform.SetParent( root.transform, false );
@@ -398,7 +398,7 @@ public class Flag : HiveObject
 			}
 			controller.Open();
 		}
-		else
+		if ( button == Interface.MouseButton.left )
 			Interface.FlagPanel.Create().Open( this, show );
 	}
 

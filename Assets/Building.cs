@@ -707,9 +707,9 @@ abstract public class Building : HiveObject
 		construction.ItemArrived( item );
 	}
 
-	public override void OnClicked( bool show = false )
+	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
-		if ( root.viewport.rightButton )
+		if ( button == Interface.MouseButton.right)
 		{
 			if ( type == Type.headquarters )
 				return;
@@ -727,7 +727,7 @@ abstract public class Building : HiveObject
 			controller.Open();
 			return;
 		}
-		if ( !construction.done && team == root.mainTeam )
+		if ( button == Interface.MouseButton.left && !construction.done && team == root.mainTeam )
 			Interface.ConstructionPanel.Create().Open( construction, show );
 	}
 

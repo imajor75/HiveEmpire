@@ -393,6 +393,16 @@ public class OperationHandler : HiveObject
 		ScheduleOperation( Operation.Create().SetupAsCreateFlag( location, team, crossing ), standalone, source );
 	}
 
+	public void ScheduleCreateResource( Node location, Resource.Type type, bool standalone = true, Operation.Source source = Operation.Source.manual )
+	{
+		ScheduleOperation( Operation.Create().SetupAsCreateResource( location, type ), standalone, source );
+	}
+
+	public void ScheduleRemoveResource( Resource resource, bool standalone = true, Operation.Source source = Operation.Source.manual )
+	{
+		ScheduleOperation( Operation.Create().SetupAsRemoveResource( resource ), standalone, source );
+	}
+
 	public void ScheduleFlattenFlag( Flag flag, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
 		ScheduleOperation( Operation.Create().SetupAsFlattenFlag( flag ), standalone, source );
@@ -692,6 +702,8 @@ public class Operation
     public Flag flag { get => location.flag; set => location = value.location; }
     public Stock start { get => location.building as Stock; set => location = value.node; }
     public Stock end { get => HiveCommon.ground.GetNode( endLocationX, endLocationY ).building as Stock; set { endLocationX = value.node.x; endLocationY = value.node.y; } }
+    public Resource resource { get => location.resources[direction]; set { location = value.node; direction = resource.node.resources.IndexOf( value ); } }
+    public Resource.Type resourceType { get => (Resource.Type)direction; set => direction = (int)value; }
     public Stock.Route route
     {
         get => start.itemData[(int)itemType].GetRouteForDestination( end );
@@ -762,7 +774,9 @@ public class Operation
         flattenFlag,
         changeFlagType,
         toggleEmergencyConstruction,
-        inputWeightChange
+        inputWeightChange,
+        createResource,
+        removeResource
     }
 
     public static Operation Create()
@@ -884,6 +898,23 @@ public class Operation
         this.flag = flag;
         this.direction = direction;
         name = "Move Flag";
+        return this;
+    }
+
+    public Operation SetupAsCreateResource( Node location, Resource.Type type )
+    {
+        this.type = Type.createResource;
+        this.location = location;
+        this.resourceType = type;
+        name = "Create Resource";
+        return this;
+    }
+
+    public Operation SetupAsRemoveResource( Resource resource )
+    {
+        type = Type.removeResource;
+        this.resource = resource;
+        name = "Remove Resource";
         return this;
     }
 
@@ -1112,6 +1143,22 @@ public class Operation
                 if ( newFlag == null )
                     return null;
                 return Create().SetupAsRemoveFlag( newFlag );
+            }
+            case Type.removeResource:
+            {
+                var resource = this.resource;
+                if ( resource )
+                    resource.Remove();
+
+                return Create().SetupAsCreateResource( resource.node, resource.type );
+            }
+            case Type.createResource:
+            {
+                var newResource = Resource.Create().Setup( location, resourceType );
+                    
+                if ( newResource == null )
+                    return null;
+                return Create().SetupAsRemoveResource( newResource );
             }
             case Type.moveFlag:
             {
