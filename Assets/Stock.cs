@@ -900,8 +900,12 @@ public class Stock : Attackable
 		{
 			int countedOnWayByCart = 0;
 			foreach ( var stock in team.stocks )
+			{
+				if ( stock.cart == null )
+					continue;
 				if ( stock.cart.destination == this && stock.cart.itemType == data.itemType )
 					countedOnWayByCart += stock.cart.itemQuantity;
+			}			
 			assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType]);
 		}
 		for ( int j = 0; j < itemData.Count; j++ )
