@@ -1538,6 +1538,7 @@ public class Interface : HiveObject
 				scrollBar.name = "Horizontal scroll bar";
 				scrollBar.direction = Scrollbar.Direction.LeftToRight;
 				scroll.horizontalScrollbar = scrollBar;
+				scroll.horizontalScrollbarVisibility = UnityEngine.UI.ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
 				scrollBar.Link( scroll );
 				var t = scrollBar.transform as RectTransform;
 				t.anchorMin = new Vector2( 1, 0 );
@@ -1545,6 +1546,8 @@ public class Interface : HiveObject
 				t.offsetMin = new Vector2( (int)( -20 * uiScale ) , 0 );
 				t.offsetMax = new Vector2( 0, vertical ? (int)( -20 * uiScale ) : 0 );
 			}
+			else
+				scroll.horizontal = false;
 
 			if ( vertical )
 			{
@@ -1553,6 +1556,7 @@ public class Interface : HiveObject
 				scrollBar.name = "Vertical scroll bar";
 				scrollBar.direction = Scrollbar.Direction.BottomToTop;
 				scroll.verticalScrollbar = scrollBar;
+				scroll.verticalScrollbarVisibility = UnityEngine.UI.ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
 				scrollBar.Link( scroll );
 				var t = scrollBar.transform as RectTransform;
 				t.anchorMin = new Vector2( 1, 0 );
@@ -1560,6 +1564,8 @@ public class Interface : HiveObject
 				t.offsetMin = new Vector2( (int)(-20 * uiScale ), 0 );
 				t.offsetMax = new Vector2( 0, horizontal ? (int)( -20 * uiScale ) : 0 );
 			}
+			else
+				scroll.vertical = false;
 			var content = new GameObject().AddComponent<Image>();
 			content.name = "Content";
 			content.transform.SetParent( scroll.transform, false );
@@ -1568,6 +1574,7 @@ public class Interface : HiveObject
 			content.rectTransform.anchorMin = Vector2.zero;
 			content.rectTransform.anchorMax = new Vector2( 1, 0 );
 			content.rectTransform.offsetMax = new Vector2( vertical ? (int)( uiScale * -20 ) : 0, horizontal ? (int)( uiScale * -20 ) : 0 );
+			content.rectTransform.pivot = new Vector2( 0, 1 );
 
 			scroll.Clear();	// Just to create the background image
 
@@ -7389,13 +7396,85 @@ if ( cart )
 		}
 	}
 
+	public class BrowseFilePanel : Panel
+	{
+		public string path, extension;
+		FileSystemWatcher watcher;
+		ScrollRect list;
+		bool needListRefresh = true;
+		Text selectedFile;
+
+		public static BrowseFilePanel Create( string path, string buttonText, Action<string> action, string extension = "json" )
+		{
+			var panel = new GameObject( "Browse File" ).AddComponent<BrowseFilePanel>();
+			panel.Open( path, buttonText, action, extension );
+			return panel;
+		}
+
+		public void Open( string path, string buttonText, Action<string> action, string extension )
+		{
+			this.path = path;
+			this.extension = extension;
+
+			base.Open( 300, 400 );
+
+			list = ScrollRect().Stretch( borderWidth, borderWidth + iconSize, -borderWidth, -borderWidth );
+			Button( buttonText ).Pin( -100, iconSize + borderWidth, 80, iconSize, 1, 0 ).AddClickHandler( () => action( path + "/" + selectedFile.text ) );
+			Button( "Cancel" ).PinSideways( -180, iconSize + borderWidth, 80, iconSize, 1, 0 ).AddClickHandler( Close );
+
+			watcher = new FileSystemWatcher( path );
+			watcher.Created += FolderChanged;
+			watcher.Deleted += FolderChanged;
+			watcher.EnableRaisingEvents = true;
+		}
+
+		new void Update()
+		{
+			if ( needListRefresh )
+			{
+				list.Clear();
+				UIHelpers.currentRow = 0;
+				needListRefresh = false;
+
+				var directory = new DirectoryInfo( path );
+				if ( !directory.Exists )
+					return;
+
+				var files = directory.GetFiles( "*." + extension ).OrderByDescending( f => f.LastWriteTime );
+				foreach ( var f in files )
+				{
+					var text = Text( f.Name ).Link( list.content ).PinDownwards( 0, 0, 200, iconSize );
+					text.AddClickHandler( () => Select( text ) );
+					if ( selectedFile == null )
+					{
+						selectedFile = text;
+						text.color = Color.red;
+					}
+				}
+				list.SetContentSize( -1, -UIHelpers.currentRow );
+			}	
+
+			base.Update();
+		}
+
+		void Select( Text text )
+		{
+			if ( selectedFile )
+				selectedFile.color = Color.black;
+			selectedFile = text;
+			text.color = Color.red;
+		}
+
+		void FolderChanged( object sender, FileSystemEventArgs args )
+		{
+			needListRefresh = true;
+		}
+	}
+
 	public class MainPanel : Panel
 	{
 		InputField seed;
 		InputField saveName;
-		Dropdown loadNames;
-		FileSystemWatcher watcher;
-		bool loadNamesRefreshNeeded = true;
 		Eye grabbedEye;
 		Dropdown networkJoinDestinationDropdown;
 		InputField networkJoinDestinationInputField;
@@ -7428,11 +7507,7 @@ if ( cart )
 
 			if ( !demoMode )
 			{
-				var loadRow = UIHelpers.currentRow;
-				Button( "Load" ).PinDownwards( 20, 0, 60, 25 ).AddClickHandler( Load );
-				UIHelpers.currentRow = loadRow;
-				loadNames = Dropdown().PinDownwards( 80, 0, 200, 25 );
-				Image().PinDownwards( 20, 0, 260, 1 ).color = Color.black;
+				Button( "Load" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Load );
 
 				var saveRow = UIHelpers.currentRow;
 				Button( "Save" ).PinDownwards( 20, 0, 60, 25 ).AddClickHandler( Save );
@@ -7440,11 +7515,6 @@ if ( cart )
 				saveName = InputField().PinDownwards( 80, 0, 200, 25 );
 				saveName.text = world.nextSaveFileName;
 			}
-
-			watcher = new FileSystemWatcher( Application.persistentDataPath + "/Saves" );
-			watcher.Created += SaveFolderChanged;
-			watcher.Deleted += SaveFolderChanged;
-			watcher.EnableRaisingEvents = true;
 
 			var replayRow = UIHelpers.currentRow;
 			Button( "Load replay" ).PinDownwards( 0, 0, 100, 25, 0.25f, 1, true ).AddClickHandler( () => Replay( true ) );
@@ -7511,8 +7581,6 @@ if ( cart )
 		public new void Update()
 		{
 			base.Update();
-			if ( loadNamesRefreshNeeded )
-				UpdateLoadNames();
 			if ( networkJoinDestinationInputField.text == "" && network.localDestinations.Count > 0 )
 				networkJoinDestinationInputField.text = network.localDestinations[0];
 		}
@@ -7538,9 +7606,7 @@ if ( cart )
 
 		void Load()
 		{
-			if ( loadNames.options.Count <= loadNames.value )
-				return;
-			root.Load( Application.persistentDataPath + "/Saves/" + loadNames.options[loadNames.value].text );
+			BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load );
 			Close();
 		}
 
@@ -7548,30 +7614,6 @@ if ( cart )
 		{
 			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json", true );
 			saveName.text = world.nextSaveFileName;
-		}
-
-		void SaveFolderChanged( object sender, FileSystemEventArgs args )
-		{
-			loadNamesRefreshNeeded = true;
-		}
-
-		void UpdateLoadNames()
-		{
-			loadNamesRefreshNeeded = false;
-			if ( loadNames == null )
-				return;
-			loadNames.ClearOptions();
-
-			List<string> files = new ();
-			var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
-			if ( !directory.Exists )
-				return;
-
-			var saveGameFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
-			foreach ( var f in saveGameFiles )
-				files.Add( f.Name );
-
-			loadNames.AddOptions( files );
 		}
 	}
 
