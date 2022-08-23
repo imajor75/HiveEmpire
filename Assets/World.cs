@@ -7,7 +7,7 @@ using UnityEngine.Rendering.PostProcessing;
 using System.Linq;
 using System.Globalization;
 using UnityEditor;
-using System.IO;
+using System.Text.RegularExpressions;
 #pragma warning disable 0618
 
 public class World : HiveObject
@@ -1250,6 +1250,9 @@ public class World : HiveObject
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
+		var match = Regex.Match( fileName, @".*/(.*) \(\d+\)\.json" );
+		if ( match.Success )
+			name = match.Groups.Last().Value;
 		controllingPlayer = root.mainPlayer;
 		Assert.global.IsFalse( gameAdvancingInProgress, "Trying to save while advancing world" );
 		Log( $"Saving game {fileName} (checksum: {checksum})", true );

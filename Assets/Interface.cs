@@ -7403,23 +7403,33 @@ if ( cart )
 		ScrollRect list;
 		bool needListRefresh = true;
 		Text selectedFile;
+		string selectedText;
+		InputField input;
+		Action<string> action;
 
-		public static BrowseFilePanel Create( string path, string buttonText, Action<string> action, string extension = "json" )
+		public static BrowseFilePanel Create( string path, string buttonText, Action<string> action, string extension = "json", string defaultText = null, bool allowEdit = false )
 		{
 			var panel = new GameObject( "Browse File" ).AddComponent<BrowseFilePanel>();
-			panel.Open( path, buttonText, action, extension );
+			panel.Open( path, buttonText, action, extension, defaultText, allowEdit );
 			return panel;
 		}
 
-		public void Open( string path, string buttonText, Action<string> action, string extension )
+		public void Open( string path, string buttonText, Action<string> action, string extension, string defaultText, bool allowEdit )
 		{
 			this.path = path;
 			this.extension = extension;
+			this.action = action;
 
 			base.Open( 300, 400 );
 
-			list = ScrollRect().Stretch( borderWidth, borderWidth + iconSize, -borderWidth, -borderWidth );
-			Button( buttonText ).Pin( -100, iconSize + borderWidth, 80, iconSize, 1, 0 ).AddClickHandler( () => action( path + "/" + selectedFile.text ) );
+			list = ScrollRect().Stretch( borderWidth, borderWidth + iconSize + ( allowEdit ? iconSize : 0 ), -borderWidth, -borderWidth );
+			if ( allowEdit )
+			{
+				input = InputField( defaultText ).Pin( borderWidth, borderWidth + iconSize * 2, 300 - 2 * borderWidth, iconSize, 0, 0 );
+				input.onValueChanged.AddListener( ( string text ) => selectedText = text );
+				selectedText = defaultText;
+			}
+			Button( buttonText ).Pin( -100, iconSize + borderWidth, 80, iconSize, 1, 0 ).AddClickHandler( ExecuteAction );
 			Button( "Cancel" ).PinSideways( -180, iconSize + borderWidth, 80, iconSize, 1, 0 ).AddClickHandler( Close );
 
 			watcher = new FileSystemWatcher( path );
@@ -7445,9 +7455,11 @@ if ( cart )
 				{
 					var text = Text( f.Name ).Link( list.content ).PinDownwards( 0, 0, 200, iconSize );
 					text.AddClickHandler( () => Select( text ) );
-					if ( selectedFile == null )
+					if ( selectedFile == null && input == null )
 					{
 						selectedFile = text;
+						if ( input == null )
+							selectedText = text.text;
 						text.color = Color.red;
 					}
 				}
@@ -7463,6 +7475,17 @@ if ( cart )
 				selectedFile.color = Color.black;
 			selectedFile = text;
 			text.color = Color.red;
+			if ( input )
+				input.text = text.text;
+		}
+
+		void ExecuteAction( )
+		{
+			Close();
+			string fileName = path + "/" + selectedText;
+			if ( !System.IO.Path.HasExtension( fileName ) )
+				fileName += "." + extension;
+			action( fileName );
 		}
 
 		void FolderChanged( object sender, FileSystemEventArgs args )
@@ -7474,7 +7497,6 @@ if ( cart )
 	public class MainPanel : Panel
 	{
 		InputField seed;
-		InputField saveName;
 		Eye grabbedEye;
 		Dropdown networkJoinDestinationDropdown;
 		InputField networkJoinDestinationInputField;
@@ -7508,12 +7530,7 @@ if ( cart )
 			if ( !demoMode )
 			{
 				Button( "Load" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Load );
-
-				var saveRow = UIHelpers.currentRow;
-				Button( "Save" ).PinDownwards( 20, 0, 60, 25 ).AddClickHandler( Save );
-				UIHelpers.currentRow = saveRow;
-				saveName = InputField().PinDownwards( 80, 0, 200, 25 );
-				saveName.text = world.nextSaveFileName;
+				Button( "Save" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Save );
 			}
 
 			var replayRow = UIHelpers.currentRow;
@@ -7612,8 +7629,8 @@ if ( cart )
 
 		void Save()
 		{
-			root.Save( Application.persistentDataPath + "/Saves/" + saveName.text + ".json", true );
-			saveName.text = world.nextSaveFileName;
+			BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", world.nextSaveFileName, true );
+			Close();
 		}
 	}
 
