@@ -619,7 +619,7 @@ public class Interface : HiveObject
 				NewGame( challenges.First() );
 		}
 
-		MainPanel.Create().Open( true );
+		MainPanel.Create().Open( true, false );
 	}
 
 	string ReplayTooltipGenerator()
@@ -7506,7 +7506,7 @@ if ( cart )
 			return new GameObject( "Main Panel", typeof( RectTransform ) ).AddComponent<MainPanel>();
 		}
 
-		public void Open( bool focusOnMainBuilding = false )
+		public void Open( bool focusOnMainBuilding = false, bool allowSave = true )
 		{
 			noCloseButton = true;
 			noResize = true;
@@ -7530,7 +7530,8 @@ if ( cart )
 			if ( !demoMode )
 			{
 				Button( "Load" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Load );
-				Button( "Save" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Save );
+				if ( allowSave )
+					Button( "Save" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Save );
 			}
 
 			var replayRow = UIHelpers.currentRow;
