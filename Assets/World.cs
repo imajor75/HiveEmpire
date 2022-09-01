@@ -41,7 +41,6 @@ public class World : HiveObject
 	public OperationHandler operationHandler;
 	public Water water;
 	public bool autoValidate = true;
-	[JsonIgnore]
 	public new Network network;
 	[JsonIgnore]
 	public int advanceCharges;
@@ -730,12 +729,12 @@ public class World : HiveObject
 		base.Update();
 	}
 
-	public void Join( string address, int port )
+	public bool Join( string address, int port )
 	{
 		Log( $"Joining to server {address} port {port}", true );
 		Clear();
 		Prepare();
-		network.Join( address, port );
+		return network.Join( address, port );
 	}
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
@@ -1326,6 +1325,9 @@ public class World : HiveObject
 
 		ground?.Remove();
 		ground = null;
+
+		network?.Remove();
+		network = null;
 
 		water?.Remove();
 		water = null;

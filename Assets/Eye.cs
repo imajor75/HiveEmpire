@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -475,6 +475,13 @@ public class Eye : HiveObject
 
 		void LateUpdate()
 		{
+			if ( ground == null )
+			{
+				first.clearFlags = CameraClearFlags.SolidColor;
+				first.backgroundColor = Color.black;
+				return;
+			}
+
 			float closest = float.MaxValue, furthest = float.MinValue;
 			var forward = center.transform.forward;
 			for ( int i = 0; i < cameras.Count; i++ )

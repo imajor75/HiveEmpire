@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UnityEngine;
@@ -102,49 +103,94 @@ public class Network : HiveCommon
 
 	public State state { get; private set; }
 
+	public string ownAddress
+	{
+		get
+		{
+			var host = Dns.GetHostEntry( Dns.GetHostName() );
+			foreach ( var ip in host.AddressList )
+				if ( ip.AddressFamily == AddressFamily.InterNetwork )
+					return ip.ToString();
+
+			return "Unknown";
+		}
+	}
+
+	public void Remove()
+	{
+		if ( broadcasting )
+			NetworkTransport.StopBroadcastDiscovery();
+		if ( host > -1 )
+			NetworkTransport.RemoveHost( host );
+		if ( broadcastHost > -1 )
+			NetworkTransport.RemoveHost( broadcastHost );
+		Destroy( gameObject );
+	}
+
 	public void SetState( State state )
 	{
 		if ( state == this.state )
 			return;
 
-		byte error;
 		this.state = state;
-		if ( host < 0 )
-			return;
+	}
+
+	void StartBroadcast()
+	{
+		if ( broadcasting )
+		{
+			Log( "Stopper network broadcast" );
+			NetworkTransport.StopBroadcastDiscovery();
+		}
+
 		if ( state == State.server )
 		{
-			string message = System.Diagnostics.Process.GetCurrentProcess().Id.ToString();
+			byte error;
+			string message = $"{System.Diagnostics.Process.GetCurrentProcess().Id}${serverName}";
 			var buffer = Encoding.ASCII.GetBytes( message );
-			NetworkTransport.StartBroadcastDiscovery( host, broadcastPort, 33, 44, 55, buffer, buffer.Length, 1000, out error );
-			Assert.global.AreEqual( error, 0 );
-			Log( $"Started network discovery on port {broadcastPort}" );
-		}
-		else
-		{
-			NetworkTransport.StopBroadcastDiscovery();
-			Log( "Stopped network discovery" );
+			if ( !NetworkTransport.StartBroadcastDiscovery( host, broadcastPort, 33, 44, 55, buffer, buffer.Length, 1000, out error ) )
+				Log( $"Broadcasting on port {broadcastPort} failed to start (error code: {error}" );
+			else
+			{
+				Assert.global.AreEqual( error, 0 );
+				Log( $"Started network broadcasting on port {broadcastPort}" );
+				broadcasting = true;
+			}
 		}
 	}
 
-	public long gameStateSize, gameStateWritten;
-	public string gameStateFile;
-	public string gameStateFileReady;
-	public int gameStateFileReadyDelayer;
-	public BinaryWriter gameState;
-	public static int reliableChannel;
-	public static HostTopology hostTopology;
+	long gameStateSize, gameStateWritten;
+	string gameStateFile;
+	string gameStateFileReady;
+	int gameStateFileReadyDelayer;
+	BinaryWriter gameState;
+	static int reliableChannel;
+	static HostTopology hostTopology;
+	public bool broadcasting;
+	public static Network active;
 
-	public int port;
-	public int host = -1;
+	int port;
+	int host = -1;
 	public int id = 0, nextClientId = 1;
-	public int broadcastPort;
-	public int broadcastHost;
-	public int clientConnection;
-	public List<Client> serverConnections = new ();
+	int broadcastPort;
+	int broadcastHost = -1;
+	int clientConnection;
+	List<Client> serverConnections = new ();
 	byte[] buffer = new byte[Constants.Network.bufferSize];
-	public List<String> localDestinations = new ();
+	public List<AvailableHost> localDestinations = new ();
+	public bool allowIncomingConnections;
+	public string serverName;
+	public string password;
 
 	public float lag;
+
+	[Serializable]
+	public class AvailableHost
+	{
+		public string address;
+		public string name;
+		public int port;
+	}
 	
     public static Network Create()
     {
@@ -161,8 +207,13 @@ public class Network : HiveCommon
 		hostTopology = new HostTopology( config, 10 );
     }
 
-    void Awake()
+    void Start()
     {
+		if ( active )
+		{
+			Assert.global.AreNotEqual( active, this );
+			active.Remove();
+		}
 		port = GetAvailablePort( Constants.Network.defaultPort );
 		host = NetworkTransport.AddHost( hostTopology, port );
 		Assert.global.IsTrue( host >= 0 );
@@ -180,6 +231,7 @@ public class Network : HiveCommon
 		byte error;
 		NetworkTransport.SetBroadcastCredentials( broadcastHost, 33, 44, 55, out error );
 		Assert.global.AreEqual( error, 0 );
+		active = this;
     }
 
     void Update()
@@ -197,6 +249,9 @@ public class Network : HiveCommon
 			}
 		}
 
+		if ( !broadcasting && state == State.server && serverName != null )
+			StartBroadcast();
+
 		if ( gameStateFileReady != null && gameStateFileReadyDelayer-- < 0 )
 		{
 			root.Load( gameStateFile );
@@ -206,6 +261,17 @@ public class Network : HiveCommon
 			gameStateFileReady = null;
 		}
     }
+
+	public bool StartServer( string name )
+	{
+		if ( state != State.server )
+			return false;
+
+		serverName = name;
+		allowIncomingConnections = true;
+		StartBroadcast();
+		return true;
+	}
 
     NetworkEventType Receive()
     {
@@ -224,18 +290,25 @@ public class Network : HiveCommon
 				int port;
 				string address;
 				byte[] buffer = new byte[100];
-				NetworkTransport.GetBroadcastConnectionInfo( broadcastHost, out address, out port, out error );
-				NetworkTransport.GetBroadcastConnectionMessage( broadcastHost, buffer, buffer.Length, out receivedSize, out error );
+				NetworkTransport.GetBroadcastConnectionInfo( host, out address, out port, out error );
+				NetworkTransport.GetBroadcastConnectionMessage( host, buffer, buffer.Length, out receivedSize, out error );
 				string message = Encoding.ASCII.GetString( buffer, 0, receivedSize );
-				if ( port == this.port && System.Diagnostics.Process.GetCurrentProcess().Id.ToString() == message )
+				int processId = int.Parse( message.Split( '$' ).First() );
+				if ( port == this.port && System.Diagnostics.Process.GetCurrentProcess().Id == processId )
 					break;
+				string name = message.Split( '$' ).Last();
 				string ipV4Address = address.Split( ':' ).Last();
-				string destination = ipV4Address + ":" + port.ToString();
-				if ( !localDestinations.Contains( destination ) )
+				foreach ( var h in localDestinations )
 				{
-					Log( $"Discovered {destination}" );
-					localDestinations.Add( destination );
+					if ( h.address == ipV4Address )
+					{
+						h.name = name;
+						h.port = port;
+						break;
+					}
 				}
+				localDestinations.Add( new AvailableHost { address = ipV4Address, name = name, port = port } );
+				Log( $"Discovered {ipV4Address}:{port}" );
 			}
 			break;
 			case NetworkEventType.ConnectEvent:
@@ -252,6 +325,12 @@ public class Network : HiveCommon
 					NodeID dstNode;
 					string clientAddress;
 					NetworkTransport.GetConnectionInfo( host, connection, out clientAddress, out port, out network, out dstNode, out error );
+					if ( !allowIncomingConnections )
+					{
+						Log( $"Denying incoming connection from {clientAddress}" );
+						NetworkTransport.Disconnect( host, connection, out error );
+						break;
+					}
 					Log( $"Incoming connection from {clientAddress}" );
 					var client = new Network.Client( connection );
 					string fileName = System.IO.Path.GetTempFileName();
@@ -284,7 +363,8 @@ public class Network : HiveCommon
 					break;
 
 					case State.receivingGameState:
-					root.OpenMainPanel();
+					Interface.MainPanel.Create().Open( false, false );
+					Interface.MessagePanel.Create( "Failed to connect to server", autoclose:3 );
 					break;
 				
 					case State.client:
@@ -424,16 +504,19 @@ public class Network : HiveCommon
 		}
 	}			
 
-    public void Join( string address, int port )
+    public bool Join( string address, int port )
     {
 		byte error;	
 		clientConnection = NetworkTransport.Connect( host, address, port, 0, out error );
+		if ( clientConnection == 0 )
+			return false;
 		SetState( State.receivingGameState );
 		id = -1;
 		gameStateSize = -1;
 		gameStateWritten = 0;
 		gameStateFile = System.IO.Path.GetTempFileName();
 		gameState = new BinaryWriter( File.Create( gameStateFile ) );
+		return true;
     }
     
 	public static int GetAvailablePort( int startingPort = Constants.Network.defaultPort )

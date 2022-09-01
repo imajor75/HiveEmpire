@@ -7494,12 +7494,91 @@ if ( cart )
 		}
 	}
 
+	public class Menu : Panel
+	{
+		public string title;
+		public int itemCount;
+
+		public static Menu Create( string title )
+		{
+			var newMenu = new GameObject( "Menu" ).AddComponent<Menu>();
+			newMenu.Open( title );
+			return newMenu;
+		}
+
+		public void Open( string title )
+		{
+			base.Open( 200, 200 );
+			var titleText = Text( title );
+			titleText.PinCenter( 0, -borderWidth-iconSize, (int)( titleText.preferredWidth / uiScale + 1 ), (int)( iconSize * 1.5f ), 0.5f, 1 );
+			itemCount = 0;
+		}
+
+		public void AddItem( string text, Action action )
+		{
+			Button( text ).PinDownwards( 0, 0, 150, (int)( iconSize * 1.2f ), 0.5f, 1, true ).AddClickHandler( action );
+			itemCount++;
+			SetSize( 200, 2 * borderWidth + iconSize + itemCount * ( iconSize * 2 ) );
+		}
+	}
+
+	public class OpenToLANPanel : Panel
+	{
+		InputField serverName;
+		public static OpenToLANPanel Create()
+		{
+			if ( network.state != Network.State.server )
+				return null;
+				
+			var panel = new GameObject( "Open To LAN Panel" ).AddComponent<OpenToLANPanel>();
+			panel.Open();
+			return panel;
+		}
+
+		void Open()
+		{
+			base.Open( 350, 120 );
+			Text( "Server name:" ).Pin( borderWidth, -borderWidth, 200, iconSize );
+			serverName = InputField( world.name ).PinDownwards( borderWidth, 0, 160, iconSize );
+			Button( "Host current game" ).Pin( -130, borderWidth + iconSize + iconSize / 5, 110, iconSize + iconSize / 5, 1, 0 ).AddClickHandler( () => OpenToLAN( serverName.text ) );
+			Button( "Cancel" ).Pin( -210, borderWidth + iconSize + iconSize / 5, 60, iconSize + iconSize / 5, 1, 0 ).AddClickHandler( Close );
+		}
+
+		void OpenToLAN( string serverName )
+		{
+			network.StartServer( serverName );
+			MessagePanel.Create( $"Current game can be joined at {network.ownAddress}" );
+			Close();
+		}
+	}
+
+	public class JoinPanel : Panel
+	{
+		public static JoinPanel Create()
+		{
+			var panel = new GameObject( "Join Panel" ).AddComponent<JoinPanel>();
+			panel.Open();
+			return panel;
+		}
+
+		void Open()
+		{
+			base.Open( 300, 200 );
+			UIHelpers.currentRow = -borderWidth;
+			foreach ( var option in network.localDestinations )
+				Button( $"Connect to {option.name}" ).PinDownwards( borderWidth, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => world.Join( option.address, option.port ) );
+
+			int row = UIHelpers.currentRow;
+			var direct = Button( "Connect to " ).PinDownwards( borderWidth, 0, 80, iconSize + iconSize / 5 );
+			var target = InputField( $"192.168.0.100:{Constants.Network.defaultPort}" ).PinSideways( 0, row, 150, iconSize );
+			direct.AddClickHandler( () => world.Join( target.text.Split( ':' ).First(), int.Parse( target.text.Split( ':' ).Last() ) ) );
+		}
+	}
+
 	public class MainPanel : Panel
 	{
 		InputField seed;
 		Eye grabbedEye;
-		Dropdown networkJoinDestinationDropdown;
-		InputField networkJoinDestinationInputField;
 
 		public static MainPanel Create()
 		{
@@ -7539,14 +7618,7 @@ if ( cart )
 			UIHelpers.currentRow = replayRow;
 			Button( "Save replay" ).PinDownwards( 0, 0, 100, 25, 0.75f, 1, true ).AddClickHandler( () => Replay( false ) );
 
-			var joinRow = UIHelpers.currentRow;
-			Button( "Join" ).Pin( borderWidth, joinRow, 50, 25 ).AddClickHandler( Join );
-			networkJoinDestinationDropdown = Dropdown().Pin( borderWidth, joinRow - 50, 250, 0 );
-			networkJoinDestinationDropdown.onValueChanged.AddListener( JoinDropFinished );
-			networkJoinDestinationDropdown.AddClickHandler( JoinDrop );
-			Button( "Browse LAN" ).Pin( -100 - borderWidth, joinRow, 100, 25, 1 ).AddClickHandler( JoinDrop );
-			networkJoinDestinationInputField = InputField().Pin( borderWidth, joinRow -25, 250, 25 );
-			networkJoinDestinationInputField.onSubmit.AddListener( (string address) => Join() );
+			Button( "Multiplayer" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Multiplayer );
 
 			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
 
@@ -7562,31 +7634,13 @@ if ( cart )
 			SetSize( 300, -UIHelpers.currentRow + 20 );
 		}
 
-		public void Join()
+		public void Multiplayer()
 		{
-			var s = networkJoinDestinationInputField.text.Split( ':' );
-			world.Join( s[0], int.Parse( s[1] ) );
-			MessagePanel.Create( "Requesting game state from server" );
+			var menu = Menu.Create( "Multiplayer" );
+			menu.AddItem( "Host current game", () => { menu.Close(); OpenToLANPanel.Create(); } );
+			menu.AddItem( "Host saved game", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load & Host", ( string fileName ) => { root.Load( fileName ); OpenToLANPanel.Create(); } ); } );
+			menu.AddItem( "Join server", () => JoinPanel.Create() );
 			Close();
-		}
-
-		void JoinDrop()
-		{
-			networkJoinDestinationDropdown.ClearOptions();
-			List<string> options = new ();
-			var current = networkJoinDestinationInputField.text;
-			if ( current != "" && !network.localDestinations.Contains( current ) )
-				options.Add( current );
-			foreach ( var destination in network.localDestinations )
-				options.Add( destination );
-			networkJoinDestinationDropdown.AddOptions( options );
-			networkJoinDestinationDropdown.Show();
-		}
-
-		void JoinDropFinished( int value )
-		{
-			if ( value != -1 ) 
-				networkJoinDestinationInputField.text = networkJoinDestinationDropdown.options[value].text; 
 		}
 
 		public new void OnDestroy()
@@ -7594,13 +7648,6 @@ if ( cart )
 			base.OnDestroy();
 			if ( grabbedEye == eye )
 				root?.world?.eye?.ReleaseFocus( null, true );
-		}
-
-		public new void Update()
-		{
-			base.Update();
-			if ( networkJoinDestinationInputField.text == "" && network.localDestinations.Count > 0 )
-				networkJoinDestinationInputField.text = network.localDestinations[0];
 		}
 
 		void Replay( bool load )
