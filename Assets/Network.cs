@@ -107,10 +107,14 @@ public class Network : HiveCommon
 	{
 		get
 		{
-			var host = Dns.GetHostEntry( Dns.GetHostName() );
-			foreach ( var ip in host.AddressList )
-				if ( ip.AddressFamily == AddressFamily.InterNetwork )
-					return ip.ToString();
+			try
+			{
+				var host = Dns.GetHostEntry( Dns.GetHostName() );
+				foreach ( var ip in host.AddressList )
+					if ( ip.AddressFamily == AddressFamily.InterNetwork )
+						return ip.ToString();
+			}
+			catch {}
 
 			return "Unknown";
 		}
