@@ -8,6 +8,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
@@ -170,6 +171,7 @@ public class Network : HiveCommon
 	BinaryWriter gameState;
 	static int reliableChannel;
 	static HostTopology hostTopology;
+	[JsonIgnore]
 	public bool broadcasting;
 	public static Network active;
 
