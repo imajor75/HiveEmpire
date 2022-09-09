@@ -7566,7 +7566,7 @@ if ( cart )
 			base.Open( 300, 200 );
 			UIHelpers.currentRow = -borderWidth;
 			foreach ( var option in network.localDestinations )
-				Button( $"Connect to {option.name}" ).PinDownwards( borderWidth, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => world.Join( option.address, option.port ) );
+				Button( $"Connect to {option.name}" ).PinDownwards( borderWidth, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => world.Join( option.address, option.port ) ).SetTooltip( $"{option.address}:{option.port}" );
 
 			int row = UIHelpers.currentRow;
 			var direct = Button( "Connect to " ).PinDownwards( borderWidth, 0, 80, iconSize + iconSize / 5 );
