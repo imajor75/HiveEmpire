@@ -183,6 +183,7 @@ public class Network : HiveCommon
 	int clientConnection;
 	List<Client> serverConnections = new ();
 	byte[] buffer = new byte[Constants.Network.bufferSize];
+	[JsonIgnore]
 	public List<AvailableHost> localDestinations = new ();
 	public bool allowIncomingConnections;
 	public string serverName;
