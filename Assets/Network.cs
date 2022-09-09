@@ -140,13 +140,19 @@ public class Network : HiveCommon
 		this.state = state;
 	}
 
-	void StartBroadcast()
+	void StopBroadcast()
 	{
 		if ( broadcasting )
 		{
-			Log( "Stopper network broadcast" );
+			Log( "Stopped network broadcast" );
 			NetworkTransport.StopBroadcastDiscovery();
+			broadcasting = false;
 		}
+	}
+
+	void StartBroadcast()
+	{
+		StopBroadcast();
 
 		if ( state == State.server )
 		{
@@ -154,11 +160,11 @@ public class Network : HiveCommon
 			string message = $"{System.Diagnostics.Process.GetCurrentProcess().Id}${serverName}";
 			var buffer = Encoding.ASCII.GetBytes( message );
 			if ( !NetworkTransport.StartBroadcastDiscovery( host, broadcastPort, 33, 44, 55, buffer, buffer.Length, 1000, out error ) )
-				Log( $"Broadcasting on port {broadcastPort} failed to start (error code: {error}" );
+				Log( $"Broadcasting on port {broadcastPort} failed to start (error code: {(NetworkError)error})" );
 			else
 			{
 				Assert.global.AreEqual( error, 0 );
-				Log( $"Started network broadcasting on port {broadcastPort}" );
+				Log( $"Started network broadcasting on port {broadcastPort} (name: {serverName})" );
 				broadcasting = true;
 			}
 		}
@@ -276,7 +282,7 @@ public class Network : HiveCommon
 
 		serverName = name;
 		allowIncomingConnections = true;
-		StartBroadcast();
+		StopBroadcast();
 		return true;
 	}
 
@@ -311,7 +317,7 @@ public class Network : HiveCommon
 					{
 						h.name = name;
 						h.port = port;
-						break;
+						return NetworkEventType.BroadcastEvent;
 					}
 				}
 				localDestinations.Add( new AvailableHost { address = ipV4Address, name = name, port = port } );
