@@ -104,22 +104,7 @@ public class Network : HiveCommon
 
 	public State state { get; private set; }
 
-	public string ownAddress
-	{
-		get
-		{
-			try
-			{
-				var host = Dns.GetHostEntry( Dns.GetHostName() );
-				foreach ( var ip in host.AddressList )
-					if ( ip.AddressFamily == AddressFamily.InterNetwork )
-						return ip.ToString();
-			}
-			catch {}
-
-			return "Unknown";
-		}
-	}
+	public string ownAddress = "127.0.0.1";
 
 	public void Remove()
 	{
@@ -310,10 +295,13 @@ public class Network : HiveCommon
 				NetworkTransport.GetBroadcastConnectionMessage( host, buffer, buffer.Length, out receivedSize, out error );
 				string message = Encoding.ASCII.GetString( buffer, 0, receivedSize );
 				int processId = int.Parse( message.Split( '$' ).First() );
-				if ( port == this.port && System.Diagnostics.Process.GetCurrentProcess().Id == processId )
-					break;
-				string name = message.Split( '$' ).Last();
 				string ipV4Address = address.Split( ':' ).Last();
+				if ( port == this.port && System.Diagnostics.Process.GetCurrentProcess().Id == processId )
+				{
+					ownAddress = ipV4Address;
+					break;
+				}
+				string name = message.Split( '$' ).Last();
 				foreach ( var h in localDestinations )
 				{
 					if ( h.address == ipV4Address )
