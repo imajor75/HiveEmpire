@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -892,6 +892,9 @@ public class World : HiveObject
 		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
 		if ( lastChecksum != 0 )
 			Assert.global.AreEqual( checksum, lastChecksum, "Checksum mismatch in world" );
+
+		if ( network == null )
+			network = Network.Create();
 
 		UpdateWorkshopConfigurations();
 
