@@ -130,6 +130,8 @@ public class Network : HiveCommon
 		if ( broadcastHost > -1 )
 			NetworkTransport.RemoveHost( broadcastHost );
 		Destroy( gameObject );
+		if ( active == this )
+			active = null;
 	}
 
 	public void SetState( State state )
@@ -220,7 +222,7 @@ public class Network : HiveCommon
 		hostTopology = new HostTopology( config, 10 );
     }
 
-    void Start()
+    void Awake()
     {
 		if ( active )
 		{
@@ -243,6 +245,7 @@ public class Network : HiveCommon
 		Assert.global.IsTrue( broadcastHost >= 0 );
 		byte error;
 		NetworkTransport.SetBroadcastCredentials( broadcastHost, 33, 44, 55, out error );
+		Log( $"Listening on network port {broadcastPort} for broadcast messages" );
 		Assert.global.AreEqual( error, 0 );
 		active = this;
     }

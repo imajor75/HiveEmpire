@@ -734,6 +734,7 @@ public class World : HiveObject
 		Log( $"Joining to server {address} port {port}", true );
 		Clear();
 		Prepare();
+		network = Network.Create();
 		return network.Join( address, port );
 	}
 
