@@ -7332,7 +7332,7 @@ if ( cart )
 			selector.onValueChanged.AddListener( Selected );
 
 			if ( createNewPlayer )
-				Button( "Create" ).PinDownwards( 100, 0, 80 ).AddClickHandler( CreatePlayer );
+				Button( "Create Player" ).PinDownwards( 100, 0, 80 ).AddClickHandler( CreatePlayer );
 			
 			var line = UIHelpers.currentRow;
 			Text( "Control:" ).Pin( borderWidth, line, 100 );
@@ -7547,7 +7547,8 @@ if ( cart )
 		void OpenToLAN( string serverName )
 		{
 			network.StartServer( serverName );
-			MessagePanel.Create( $"Current game can be joined at {network.ownAddress}" );
+			world.nameOnNetwork = serverName;
+			MessagePanel.Create( $"Current game can be joined at {network.ownAddress}:{network.port}" );
 			Close();
 		}
 	}

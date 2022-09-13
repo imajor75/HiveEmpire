@@ -102,7 +102,7 @@ public class Network : HiveCommon
 		public List<byte> packet;
 	}
 
-	public State state { get; private set; }
+	public State state;
 
 	public string ownAddress = "127.0.0.1";
 
@@ -146,38 +146,36 @@ public class Network : HiveCommon
 			byte error;
 			string message = $"{System.Diagnostics.Process.GetCurrentProcess().Id}${serverName}";
 			var buffer = Encoding.ASCII.GetBytes( message );
+			Log( $"Ready for connections at port {port}", true );
 			if ( !NetworkTransport.StartBroadcastDiscovery( host, broadcastPort, 33, 44, 55, buffer, buffer.Length, 1000, out error ) )
 				Log( $"Broadcasting on port {broadcastPort} failed to start (error code: {(NetworkError)error})" );
 			else
 			{
 				Assert.global.AreEqual( error, 0 );
-				Log( $"Started network broadcasting on port {broadcastPort} (name: {serverName})" );
+				Log( $"Started network broadcasting on port {broadcastPort} (server name: {serverName})" );
 				broadcasting = true;
 			}
 		}
 	}
 
-	long gameStateSize, gameStateWritten;
-	string gameStateFile;
-	string gameStateFileReady;
-	int gameStateFileReadyDelayer;
-	BinaryWriter gameState;
+	public long gameStateSize, gameStateWritten;
+	public string gameStateFile;
+	public string gameStateFileReady;
+	public int gameStateFileReadyDelayer;
+	public BinaryWriter gameState;
 	static int reliableChannel;
 	static HostTopology hostTopology;
-	[JsonIgnore]
 	public bool broadcasting;
 	public static Network active;
 
-	[JsonIgnore]
 	public int port;
-	int host = -1;
+	public int host = -1;
 	public int id = 0, nextClientId = 1;
-	int broadcastPort;
-	int broadcastHost = -1;
-	int clientConnection;
-	List<Client> serverConnections = new ();
-	byte[] buffer = new byte[Constants.Network.bufferSize];
-	[JsonIgnore]
+	public int broadcastPort;
+	public int broadcastHost = -1;
+	public int clientConnection;
+	public List<Client> serverConnections = new ();
+	public byte[] buffer = new byte[Constants.Network.bufferSize];
 	public List<AvailableHost> localDestinations = new ();
 	public bool allowIncomingConnections;
 	public string serverName;
@@ -218,7 +216,6 @@ public class Network : HiveCommon
 		port = GetAvailablePort( Constants.Network.defaultPort );
 		host = NetworkTransport.AddHost( hostTopology, port );
 		Assert.global.IsTrue( host >= 0 );
-		Log( $"Ready for connections at port {port}", true );
 
 		broadcastPort = Constants.Network.broadcastPort;
 		if ( broadcastPort != GetAvailablePort( broadcastPort ) )
@@ -233,6 +230,7 @@ public class Network : HiveCommon
 		NetworkTransport.SetBroadcastCredentials( broadcastHost, 33, 44, 55, out error );
 		Log( $"Listening on network port {broadcastPort} for broadcast messages" );
 		Assert.global.AreEqual( error, 0 );
+	
 		active = this;
     }
 

@@ -41,7 +41,9 @@ public class World : HiveObject
 	public OperationHandler operationHandler;
 	public Water water;
 	public bool autoValidate = true;
+	[JsonIgnore]
 	public new Network network;
+	public string nameOnNetwork;
 	[JsonIgnore]
 	public int advanceCharges;
 	[JsonIgnore]
@@ -734,7 +736,6 @@ public class World : HiveObject
 		Log( $"Joining to server {address} port {port}", true );
 		Clear();
 		Prepare();
-		network = Network.Create();
 		return network.Join( address, port );
 	}
 
@@ -893,9 +894,6 @@ public class World : HiveObject
 		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
 		if ( lastChecksum != 0 )
 			Assert.global.AreEqual( checksum, lastChecksum, "Checksum mismatch in world" );
-
-		if ( network == null )
-			network = Network.Create();
 
 		UpdateWorkshopConfigurations();
 
@@ -1249,6 +1247,8 @@ public class World : HiveObject
 		Interface.ValidateAll( true );
 		bool demoMode = fileName.Contains( "demolevel" );
 		network.SetState( demoMode ? Network.State.idle : Network.State.server );
+		if ( nameOnNetwork != null && nameOnNetwork != "" )
+			network.StartServer( nameOnNetwork );
 	}
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
@@ -1330,9 +1330,6 @@ public class World : HiveObject
 		ground?.Remove();
 		ground = null;
 
-		network?.Remove();
-		network = null;
-
 		water?.Remove();
 		water = null;
 
@@ -1352,6 +1349,8 @@ public class World : HiveObject
 		hiveObjects.Clear();
 		newHiveObjects.Clear();
 		hiveListFreeSlots.Clear();
+
+		nameOnNetwork = null;
 
 		Destroy( transform.Find( "Items just created" )?.gameObject );
 		Destroy( transform.Find( "Players and teams" )?.gameObject );
