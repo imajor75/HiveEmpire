@@ -7571,7 +7571,7 @@ if ( cart )
 
 			int row = UIHelpers.currentRow;
 			var direct = Button( "Connect to " ).PinDownwards( borderWidth, 0, 80, iconSize + iconSize / 5 );
-			var target = InputField( $"192.168.0.100:{Constants.Network.defaultPort}" ).PinSideways( 0, row, 150, iconSize );
+			var target = InputField( $"127.0.0.1:{Constants.Network.defaultPort}" ).PinSideways( 0, row, 150, iconSize );
 			direct.AddClickHandler( () => world.Join( target.text.Split( ':' ).First(), int.Parse( target.text.Split( ':' ).Last() ) ) );
 		}
 	}

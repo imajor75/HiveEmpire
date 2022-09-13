@@ -718,9 +718,9 @@ public class World : HiveObject
 	new void Update()
 	{
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
-        if ( oh && oh.orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond && network.state == Network.State.client )
+        if ( oh && oh.orders.Count > 0 && network.state == Network.State.client )
         {
-            if ( speed == Speed.normal )
+            if ( speed == Speed.normal && oh.orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
             {
                 Interface.MessagePanel.Create( "Catching up server", autoclose:3 );
                 SetSpeed( Speed.fast );
@@ -1216,7 +1216,7 @@ public class World : HiveObject
 				node.AlignType();
 		}
 		gameInProgress = true;
-		SetSpeed( speed );    // Just for the animators and sound
+		SetSpeed( speed, true );    // Just for the animators and sound
 
 		HiveObject.Log( $"Time: {time}, Next ID: {nextID}" );
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
@@ -1585,8 +1585,11 @@ public class World : HiveObject
 			Log( $" - {ore.resourceType}: {ore.resourceCount}" );
 	}
 
-	public void SetSpeed( Speed speed )
+	public void SetSpeed( Speed speed, bool force = false )
 	{
+		if ( this.speed == speed && !force )
+			return;
+
 		// Ideally this function would simply change Time.timeScale, but setting that to 0 leads to some problems, for example Physics.Raycast works on a frozen scene 
 		// (transformation changes made to objects while timeScale==0 are ignored), which ruins mouse clicks on some objects.
 		this.speed = speed;
