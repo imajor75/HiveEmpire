@@ -168,7 +168,8 @@ public class Network : HiveCommon
 	public bool broadcasting;
 	public static Network active;
 
-	int port;
+	[JsonIgnore]
+	public int port;
 	int host = -1;
 	public int id = 0, nextClientId = 1;
 	int broadcastPort;
