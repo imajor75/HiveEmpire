@@ -365,7 +365,8 @@ public class Eye : HiveObject
 			return;
 
 		this.director = null;
-		RestoreOldPosition();
+		if ( restore )
+			RestoreOldPosition();
 		StopAutoChange();
 	}
 

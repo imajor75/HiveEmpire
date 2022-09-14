@@ -523,7 +523,7 @@ public class Interface : HiveObject
 		iconFolder.rectTransform.anchorMin = Vector2.zero;
 		iconFolder.rectTransform.anchorMax = Vector2.one;
 
-		this.Image( Icon.hive ).AddClickHandler( () => MainPanel.Create().Open() ).Link( iconFolder.transform ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
+		this.Image( Icon.hive ).AddClickHandler( () => OpenMainMenu() ).Link( iconFolder.transform ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
 		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
 		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
 		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
@@ -580,7 +580,7 @@ public class Interface : HiveObject
 		#if DEBUG
 			StartCoroutine( ValidateCoroutine() );
 		#endif
-		OpenMainPanel();
+		StartInterface();
 	}
 
 	void SetWorldSpeed( World.Speed speed )
@@ -601,7 +601,7 @@ public class Interface : HiveObject
 		mainPlayer.messages.Remove( message );
 	}
 
-	public void OpenMainPanel()
+	public void StartInterface()
 	{
 		var directory = new DirectoryInfo( Application.persistentDataPath+"/Saves" );
 		if ( directory.Exists )
@@ -619,7 +619,11 @@ public class Interface : HiveObject
 				NewGame( challenges.First() );
 		}
 
-		MainPanel.Create().Open( true, false );
+		eye.FocusOn( mainTeam.mainBuilding, true, useLogicalPosition:true, approach:false );
+		if ( mainTeam.workshops.Count > 0 )
+			eye.autoMove = new Vector2( 0.8f, 0.17f );
+
+		OpenMainMenu( true );
 	}
 
 	string ReplayTooltipGenerator()
@@ -820,19 +824,16 @@ public class Interface : HiveObject
 		{
 			if ( !viewport.ResetInputHandler() )
 			{
-				bool isMainOpen = false;
 				Panel toClose = null;
 				for ( int i = panels.Count - 1; i >= 0; i-- )
 				{
-					if ( panels[i] as MainPanel )
-						isMainOpen = true;
 					if ( !panels[i].escCloses )
 						continue;
 					if ( toClose == null || toClose.transform.GetSiblingIndex() < panels[i].transform.GetSiblingIndex() )
 						toClose = panels[i];
 				}
-				if ( toClose == null && !isMainOpen )
-					MainPanel.Create().Open();
+				if ( toClose == null && panels.Count < 2 )
+					OpenMainMenu();
 				toClose?.Close();
 			}
 		}
@@ -1401,6 +1402,8 @@ public class Interface : HiveObject
 			{
 				x = (int)( Screen.width - xs * uiScale ) / 2;
 				y = -(int)( Screen.height - ys * uiScale ) / 2;
+				x = (int)( x / uiScale );
+				y = (int)( y / uiScale );
 			}
 			root.panels.Add( this );
 			transform.SetParent( root.transform, false );
@@ -7499,7 +7502,7 @@ if ( cart )
 		public string title;
 		public int itemCount;
 
-		public static Menu Create( string title )
+		public static Menu Create( string title = null )
 		{
 			var newMenu = new GameObject( "Menu" ).AddComponent<Menu>();
 			newMenu.Open( title );
@@ -7508,9 +7511,15 @@ if ( cart )
 
 		public void Open( string title )
 		{
+			reopen = true;
 			base.Open( 200, 200 );
-			var titleText = Text( title );
-			titleText.PinCenter( 0, -borderWidth-iconSize, (int)( titleText.preferredWidth / uiScale + 1 ), (int)( iconSize * 1.5f ), 0.5f, 1 );
+			if ( title != null )
+			{
+				var titleText = Text( title );
+				titleText.PinCenter( 0, -borderWidth-iconSize, (int)( titleText.preferredWidth / uiScale + 1 ), (int)( iconSize * 1.5f ), 0.5f, 1 );
+			}
+			else
+				UIHelpers.currentRow = -borderWidth - iconSize;
 			itemCount = 0;
 		}
 
@@ -7518,7 +7527,7 @@ if ( cart )
 		{
 			Button( text ).PinDownwards( 0, 0, 150, (int)( iconSize * 1.2f ), 0.5f, 1, true ).AddClickHandler( action );
 			itemCount++;
-			SetSize( 200, 2 * borderWidth + iconSize + itemCount * ( iconSize * 2 ) );
+			SetSize( 200, -UIHelpers.currentRow + borderWidth );
 		}
 	}
 
@@ -7576,111 +7585,27 @@ if ( cart )
 		}
 	}
 
-	public class MainPanel : Panel
+	public Menu OpenMainMenu( bool initial = false )
 	{
-		InputField seed;
-		Eye grabbedEye;
+		var menu = Menu.Create();
+		menu.AddItem( "Continue", () => { if ( initial ) eye.RestoreOldPosition(); menu.Close(); } );
+		menu.AddItem( "New Game", () => { menu.Close(); ChallengeList.Create(); } );
+		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
+		if ( !initial )
+			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", world.nextSaveFileName, true ); } );
+		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );
+		menu.AddItem( "Exit", Application.Quit );
+		menu.escCloses = !initial;
+		return menu;
+	}
 
-		public static MainPanel Create()
-		{
-			return new GameObject( "Main Panel", typeof( RectTransform ) ).AddComponent<MainPanel>();
-		}
-
-		public void Open( bool focusOnMainBuilding = false, bool allowSave = true )
-		{
-			noCloseButton = true;
-			noResize = true;
-			noPin = true;
-			allowInSpectateMode = true;
-			bool demoMode = world.fileName.Contains( "demolevel" );
-			Open( null, 0, 0, 300, 250 );
-			this.PinCenter( 0, 0, 300, 250, 0.5f, 0.3f );
-
-			UIHelpers.currentRow = -borderWidth;
-
-			if ( !demoMode )
-			{
-				Button( "Continue" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Close );
-				Image().PinDownwards( 0, 0, 260, 1, 0.5f, 1, true ).color = Color.black;
-			}
-
-			Button( "View Challenges" ).PinDownwards( 0, 0, 120, 25, 0.5f, 1, true ).AddClickHandler( () => { ChallengeList.Create(); Close(); } );
-			Image().PinDownwards( 0, 0, 260, 1, 0.5f, 1, true ).color = Color.black;
-
-			if ( !demoMode )
-			{
-				Button( "Load" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Load );
-				if ( allowSave )
-					Button( "Save" ).PinDownwards( 0, 0, 60, 25, 0.5f, 1, true ).AddClickHandler( Save );
-			}
-
-			var replayRow = UIHelpers.currentRow;
-			Button( "Load replay" ).PinDownwards( 0, 0, 100, 25, 0.25f, 1, true ).AddClickHandler( () => Replay( true ) );
-			UIHelpers.currentRow = replayRow;
-			Button( "Save replay" ).PinDownwards( 0, 0, 100, 25, 0.75f, 1, true ).AddClickHandler( () => Replay( false ) );
-
-			Button( "Multiplayer" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Multiplayer );
-
-			Button( "Exit" ).PinDownwards( 0, 0, 100, 25, 0.5f, 1, true ).AddClickHandler( Application.Quit );
-
-			if ( focusOnMainBuilding && root.mainPlayer )
-			{
-				grabbedEye = eye;
-				grabbedEye.FocusOn( root.mainTeam.mainBuilding?.flag?.node, true, approach:false );
-				if ( root.mainTeam.workshops.Count > 0 )
-					grabbedEye.autoMove = new Vector2( 0.8f, 0.17f );
-				escCloses = false;
-			}
-
-			SetSize( 300, -UIHelpers.currentRow + 20 );
-		}
-
-		public void Multiplayer()
-		{
-			var menu = Menu.Create( "Multiplayer" );
-			menu.AddItem( "Host current game", () => { menu.Close(); OpenToLANPanel.Create(); } );
-			menu.AddItem( "Host saved game", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load & Host", ( string fileName ) => { root.Load( fileName ); OpenToLANPanel.Create(); } ); } );
-			menu.AddItem( "Join server", () => JoinPanel.Create() );
-			Close();
-		}
-
-		public new void OnDestroy()
-		{
-			base.OnDestroy();
-			if ( grabbedEye == eye )
-				root?.world?.eye?.ReleaseFocus( null, true );
-		}
-
-		void Replay( bool load )
-		{
-			if ( load )
-			{
-				List<string> files = new ();
-				var directory = new DirectoryInfo( Application.persistentDataPath+"/Replays" );
-				if ( !directory.Exists )
-					return;
-
-				var replayFiles = directory.GetFiles( "*.json" ).OrderByDescending( f => f.LastWriteTime );
-
-				root.LoadReplay( replayFiles.First().FullName );
-			}
-			else
-			{
-				root.SaveReplay( Application.persistentDataPath + $"/Replays/{new System.Random().Next()}.json" );
-			}
-		}
-
-		void Load()
-		{
-			BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load );
-			Close();
-		}
-
-		void Save()
-		{
-			BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", world.nextSaveFileName, true );
-			Close();
-		}
+	public Menu OpenMultiplayerMenu()
+	{
+		var menu = Menu.Create( "Multiplayer" );
+		menu.AddItem( "Host current game", () => { menu.Close(); OpenToLANPanel.Create(); } );
+		menu.AddItem( "Host saved game", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load & Host", ( string fileName ) => { root.Load( fileName ); OpenToLANPanel.Create(); } ); } );
+		menu.AddItem( "Join server", () => JoinPanel.Create() );
+		return menu;
 	}
 
 	public class WelcomePanel : Panel	// These two panels (WelcomePanel and RoadTutorialPanel) should simply be MessagePanel

@@ -366,7 +366,7 @@ public class Network : HiveCommon
 					break;
 
 					case State.receivingGameState:
-					Interface.MainPanel.Create().Open( false, false );
+					root.OpenMainMenu();
 					Interface.MessagePanel.Create( "Failed to connect to server", autoclose:3 );
 					break;
 				
