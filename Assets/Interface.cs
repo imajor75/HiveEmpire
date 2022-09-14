@@ -350,7 +350,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		oh?.SaveReplay();
+		world.Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 		world.Clear();
 		logFile.Close();
 	}
@@ -706,12 +706,6 @@ public class Interface : HiveObject
 		Log( $"Loading replay {name}", true );
 		var o = OperationHandler.LoadReplay( name );
 		ReplayLoader.Create( o );
-	}
-
-	public void SaveReplay( string name )
-	{
-		Log( $"Saving replay {name}", true );
-		oh.SaveReplay( name );
 	}
 
 	public void SaveHotkeys()
