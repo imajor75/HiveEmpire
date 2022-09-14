@@ -1273,6 +1273,7 @@ public class World : HiveObject
 				operationHandler.PurgeCRCTable();
 			Serializer.Write( fileName, this, false );
 		}
+		oh.SaveReplay( fileName.Replace( "/Saves/", "/Replays/" ) );
 	}
 
 	public void Prepare()
