@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1346,6 +1346,9 @@ public class World : HiveObject
 			if ( ho )
 				ho.worldIndex = -1;
 		}
+
+		for ( int i = 0; i < hiveObjects.Count; i++ )
+			assert.IsTrue( hiveObjects[i] == null || hiveObjects[i].destroyed );
 
 		hiveObjects.Clear();
 		newHiveObjects.Clear();

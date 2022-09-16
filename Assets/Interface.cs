@@ -666,11 +666,10 @@ public class Interface : HiveObject
 
 	public void NewGame( World.Challenge challenge, bool randomizeSeed = true )
 	{
-		var c = World.Challenge.Create().Setup( challenge );
-			if ( randomizeSeed && !c.fixedSeed )
-		c.seed = new System.Random().Next();
+		if ( randomizeSeed && !challenge.fixedSeed )
+			challenge.seed = new System.Random().Next();
 
-		world.NewGame( c );
+		world.NewGame( challenge );
 		if ( world.players.Count > 0 )
 			mainPlayer = world.players[0];
 		else
@@ -7587,10 +7586,20 @@ if ( cart )
 		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
 		if ( !initial )
 			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", world.nextSaveFileName, true ); } );
+		menu.AddItem( "Replay", () => { menu.Close(); OpenReplay(); } );
 		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );
 		menu.AddItem( "Exit", Application.Quit );
 		menu.escCloses = !initial;
 		return menu;
+	}
+
+	void OpenReplay()
+	{
+		BrowseFilePanel.Create( Application.persistentDataPath + "/Replays", "Replay", ( string fileName ) =>
+		{
+			var o = OperationHandler.LoadReplay( fileName );
+			ReplayLoader.Create( o );
+		} );
 	}
 
 	public Menu OpenMultiplayerMenu()

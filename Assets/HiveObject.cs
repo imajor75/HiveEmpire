@@ -111,9 +111,8 @@ public abstract class HiveObject : HiveCommon
 
 	public void OnDestroy()
 	{
-		if ( worldIndex >= 0 )
+		if ( worldIndex >= 0 && world.hiveObjects.Count > worldIndex && this == world.hiveObjects[worldIndex] )
 		{
-			assert.AreEqual( this, world.hiveObjects[worldIndex] );
 			world.hiveObjects[worldIndex] = null;
 			world.hiveListFreeSlots.Add( worldIndex );
 			worldIndex = -1;

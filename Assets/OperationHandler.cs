@@ -232,10 +232,11 @@ public class OperationHandler : HiveObject
         {
             root.Load( Application.persistentDataPath + "/Saves/" + saveFileNames[saveFileIndex] );  // TODO This should call World.Load and World.NewGame
             executeIndex = oh.executeIndex;
-            challenge = world.challenge;
         }
         else
             root.NewGame( challenge, false );
+
+        challenge = world.challenge;
 
         frameEvents = world.operationHandler.events;
         currentCRCCode = world.operationHandler.currentCRCCode;
@@ -325,6 +326,7 @@ public class OperationHandler : HiveObject
     public static OperationHandler LoadReplay( string name )
     {
         var t = Serializer.Read<OperationHandler>( name );
+        t.challenge.worldIndex = -1;
         t.LoadEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
         return t;
     }
@@ -502,7 +504,7 @@ public class OperationHandler : HiveObject
             CRCCodes.Add( currentCRCCode );
             RegisterEvent( Event.Type.frameEnd, Event.CodeLocation.operationHandlerFixedUpdate );
         }
-        if ( mode == Mode.repeating && recordCRC )      // TODO Probably wrong condition here
+        if ( mode == Mode.repeating && recordCRC && time >= CRCCodesSkipped )      // TODO Probably wrong condition here
         {
             assert.IsTrue( CRCCodesSkipped + CRCCodes.Count > time );
             if ( !recalculateCRC )
