@@ -16,6 +16,7 @@ public class HiveCommon : MonoBehaviour
 	public static Eye eye { get { return world.eye; } }
 	public static Interface root { get { return Interface.root; } }
 	public static Network network { get { return world.network; } }
+	public static Settings settings { get { return root.globalSettings; } }
 
 	public static void Log( string text, bool important = false )
 	{

@@ -253,17 +253,17 @@ public class Ground : HiveObject
 		foreach ( var n in nodes )
 		{
 			float d = heightMap.data[(int)Math.Round( xf * n.x ), (int)Math.Round( yf * n.y )];
-			n.height = d * world.settings.maxHeight;
+			n.height = d * world.generatorSettings.maxHeight;
 			n.type = Node.Type.grass;
 			float forestData = forestMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
 			forestData = forestData - forestMap.averageValue + 0.5f;
-			if ( forestData < world.settings.forestGroundChance )
+			if ( forestData < world.generatorSettings.forestGroundChance )
 				n.type = Node.Type.forest;
-			if ( d > world.settings.hillLevel )
+			if ( d > world.generatorSettings.hillLevel )
 				n.type = Node.Type.hill;
-			if ( d > world.settings.mountainLevel )
+			if ( d > world.generatorSettings.mountainLevel )
 				n.type = Node.Type.mountain;
-			if ( d < world.settings.waterLevel )
+			if ( d < world.generatorSettings.waterLevel )
 				n.type = Node.Type.underWater;
 			n.transform.localPosition = n.position;
 		}
@@ -527,6 +527,8 @@ public class Ground : HiveObject
 
 		public void LateUpdate()
 		{
+			if ( !settings.grass )
+				return;
 			Shader.SetGlobalInt( gameTimeID, time );
 			
 			foreach ( var grass in blocks )

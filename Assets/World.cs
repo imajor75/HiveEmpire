@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -144,7 +144,9 @@ public class World : HiveObject
 	int replayIndex { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int overseas;
-	public Settings settings;
+	[Obsolete( "Compatibility with old files", true )]
+	new Settings settings { set { generatorSettings = value; } }
+	public Settings generatorSettings;
 
 	[System.Serializable]
 	public class Ore
@@ -588,7 +590,7 @@ public class World : HiveObject
 
 	public void Awake()
 	{
-		settings = ScriptableObject.CreateInstance<Settings>();
+		generatorSettings = ScriptableObject.CreateInstance<Settings>();
 		network = Network.Create();
 	}
 
@@ -632,9 +634,9 @@ public class World : HiveObject
 
 	void FixedUpdate()
 	{
-		if ( settings.apply )
+		if ( generatorSettings.apply )
 		{
-			settings.apply = false;
+			generatorSettings.apply = false;
 			var c = instance.challenge;
 			c.fixedSeed = true;
 			c.seed = instance.currentSeed;
@@ -745,7 +747,7 @@ public class World : HiveObject
 		localChallenge.transform.SetParent( transform );
 		workshopConfigurations = Workshop.LoadConfigurations();
 		if ( resetSettings )
-			settings = ScriptableObject.CreateInstance<Settings>();
+			generatorSettings = ScriptableObject.CreateInstance<Settings>();
 		nextID = 1;
 		time = 0;
 		lastChecksum = 0;
@@ -760,7 +762,7 @@ public class World : HiveObject
 		createRoadTutorialShowed = false;
 		var oldEye = eye;
 
-		settings.size = challenge.worldSize;
+		generatorSettings.size = challenge.worldSize;
 		var seed = challenge.seed;
 		Debug.Log( "Starting new game with seed " + seed );
 		HiveObject.Log( $"\n\nStarting new game with seed {seed}\n\n" );
@@ -770,11 +772,11 @@ public class World : HiveObject
 		Workshop.GenerateInputs();
 
 		var heightMap = HeightMap.Create();
-		heightMap.Setup( settings, rnd.Next() );
+		heightMap.Setup( generatorSettings, rnd.Next() );
 		heightMap.Fill();
 
 		var forestMap = HeightMap.Create();
-		forestMap.Setup( settings, rnd.Next() );
+		forestMap.Setup( generatorSettings, rnd.Next() );
 		forestMap.Fill();
 
 #if DEBUG
@@ -795,7 +797,7 @@ public class World : HiveObject
 		operationHandler.recordCRC = true;
 #endif
 		ground = Ground.Create();
-		ground.Setup( this, heightMap, forestMap, settings.size );
+		ground.Setup( this, heightMap, forestMap, generatorSettings.size );
 		GenerateResources();
 		water = Water.Create().Setup( ground );
 		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
@@ -1507,9 +1509,9 @@ public class World : HiveObject
 			if ( !node.real )
 				continue;
 			var r = new System.Random( rnd.Next() );
-			if ( r.NextDouble() < settings.forestChance )
+			if ( r.NextDouble() < generatorSettings.forestChance )
 				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
-			if ( r.NextDouble() < settings.rocksChance )
+			if ( r.NextDouble() < generatorSettings.rocksChance )
 				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
 
 			if ( node.CheckType( Node.Type.land ) )
@@ -1562,21 +1564,21 @@ public class World : HiveObject
 						continue;
 					go = false;
 
-					var resourceCount = node.AddResourcePatch( ore.resourceType, settings.size / 6, 10 );
+					var resourceCount = node.AddResourcePatch( ore.resourceType, generatorSettings.size / 6, 10 );
 					ore.resourceCount += resourceCount;
 					Ore.totalResourceCount += resourceCount;
 				}
 			}
 		}
 
-		int idealAnimalSpawnerCount = (int)( settings.size * settings.size * settings.animalSpawnerChance );
+		int idealAnimalSpawnerCount = (int)( generatorSettings.size * generatorSettings.size * generatorSettings.animalSpawnerChance );
 		if ( idealAnimalSpawnerCount == 0 )
 			idealAnimalSpawnerCount = 1;
 		if ( itemTypeUsage[(int)Item.Type.hide] == 0 )
 			idealAnimalSpawnerCount = 0;
 		while ( animalSpawnerCount != idealAnimalSpawnerCount )
 		{
-			var location = ground.GetNode( rnd.Next( settings.size ), rnd.Next( settings.size ) );
+			var location = ground.GetNode( rnd.Next( generatorSettings.size ), rnd.Next( generatorSettings.size ) );
 			if ( Resource.Create().Setup( location, Resource.Type.animalSpawner ) != null )
 				animalSpawnerCount++;
 		}
@@ -1620,14 +1622,14 @@ public class World : HiveObject
 	{
 		get
 		{	
-			return settings.waterLevel * settings.maxHeight;
+			return generatorSettings.waterLevel * generatorSettings.maxHeight;
 		}
 
 		[Obsolete( "Compatibility with old files", true )]
 		set
 		{
 			// Compatibility with old files
-			settings.waterLevel = value;
+			generatorSettings.waterLevel = value;
 		}
 	}
 

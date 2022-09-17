@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
@@ -380,7 +380,7 @@ public class Serializer
 		this.fileName = fileName;
 		if ( !File.Exists( fileName ) )
 			return null;
-		var sw = new StreamReader( fileName );
+		using var sw = new StreamReader( fileName );
 		reader = new JsonTextReader( sw );
 		reader.Read();
 		objects.Add( CreateObject( rootType ) );

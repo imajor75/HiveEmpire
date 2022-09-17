@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +15,7 @@ using UnityEngine.UI;
 public class Interface : HiveObject
 {
 	public StreamWriter logFile;
+	public Settings globalSettings;
 	public Component dedicatedKeyboardHandler;
 	public List<Panel> panels = new ();
 	public PostProcessResources postProcessResources;
@@ -575,6 +576,10 @@ public class Interface : HiveObject
 
 		LoadHotkeys();
 		LoadChallenges();
+		globalSettings = Serializer.Read<Settings>( Application.persistentDataPath + "/Settings/options.json" );
+		if ( globalSettings == null )
+			globalSettings = new Settings();
+		globalSettings.Apply();
 
 		world = World.Create().Setup();
 		#if DEBUG
