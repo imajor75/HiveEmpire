@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7499,6 +7499,7 @@ if ( cart )
 	{
 		public string title;
 		public int itemCount;
+		public int row;
 
 		public static Menu Create( string title = null )
 		{
@@ -7511,21 +7512,27 @@ if ( cart )
 		{
 			reopen = true;
 			base.Open( 200, 200 );
+			row = -borderWidth;
 			if ( title != null )
 			{
 				var titleText = Text( title );
 				titleText.PinCenter( 0, -borderWidth-iconSize, (int)( titleText.preferredWidth / uiScale + 1 ), (int)( iconSize * 1.5f ), 0.5f, 1 );
+				row -= iconSize + iconSize / 2;
 			}
-			else
-				UIHelpers.currentRow = -borderWidth - iconSize;
 			itemCount = 0;
 		}
 
 		public void AddItem( string text, Action action )
 		{
-			Button( text ).PinDownwards( 0, 0, 150, (int)( iconSize * 1.2f ), 0.5f, 1, true ).AddClickHandler( action );
+			AddWidget( Button( text ).AddClickHandler( action ) );
+		}
+
+		public void AddWidget( Component widget )
+		{
+			widget.Link( this ).PinCenter( 0, row - (int)( iconSize * 0.6f ), 150, (int)( iconSize * 1.2f ), 0.5f, 1 );
 			itemCount++;
-			SetSize( 200, -UIHelpers.currentRow + borderWidth );
+			row -= (int)( iconSize * 1.2f );
+			SetSize( 200, -row + borderWidth );
 		}
 	}
 
@@ -7593,6 +7600,7 @@ if ( cart )
 			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", world.nextSaveFileName, true ); } );
 		menu.AddItem( "Replay", () => { menu.Close(); OpenReplay(); } );
 		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );
+		menu.AddItem( "Options", () => OpenOptionsMenu() );
 		menu.AddItem( "Exit", Application.Quit );
 		menu.escCloses = !initial;
 		return menu;
@@ -7613,6 +7621,13 @@ if ( cart )
 		menu.AddItem( "Host current game", () => { menu.Close(); OpenToLANPanel.Create(); } );
 		menu.AddItem( "Host saved game", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load & Host", ( string fileName ) => { root.Load( fileName ); OpenToLANPanel.Create(); } ); } );
 		menu.AddItem( "Join server", () => JoinPanel.Create() );
+		return menu;
+	}
+
+	public Menu OpenOptionsMenu()
+	{
+		var menu = Menu.Create( "Options" );
+		menu.AddWidget( this.CheckBox( "Grass" ).AddToggleHandler( ( bool state ) => { settings.grass = state; settings.Apply(); }, settings.grass ) );
 		return menu;
 	}
 
@@ -7865,7 +7880,8 @@ public static class UIHelpers
 			i.sprite = Interface.iconTable.GetMediaData( on ? Interface.Icon.yes : Interface.Icon.no );
 		}
 		b.visualizer = UpdateCheckboxLook;
-		Text( b, text ).Link( b ).Pin( Interface.iconSize, 0, 200, Interface.iconSize ).alignment = TextAnchor.MiddleLeft;
+		b.leftClickHandler = b.Toggle;
+		Text( b, text ).Link( b ).Pin( Interface.iconSize + 5, 0, 200, Interface.iconSize ).alignment = TextAnchor.MiddleLeft;
 		return b;
 	}
 

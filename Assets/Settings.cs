@@ -6,7 +6,7 @@ using UnityEngine;
 [Serializable]
 public class Settings
 {
-    public bool grass;
+    public bool grass = true;
 
     public void Apply()
     {

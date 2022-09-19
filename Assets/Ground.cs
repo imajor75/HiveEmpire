@@ -527,9 +527,10 @@ public class Ground : HiveObject
 
 		public void LateUpdate()
 		{
+			Shader.SetGlobalInt( gameTimeID, time );
+			
 			if ( !settings.grass )
 				return;
-			Shader.SetGlobalInt( gameTimeID, time );
 			
 			foreach ( var grass in blocks )
 			{
