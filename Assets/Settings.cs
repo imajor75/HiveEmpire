@@ -9,6 +9,7 @@ public class Settings
     public bool grass = true;
     public int fullscreenWidth = -1;
     public int fullscreenHeight = -1;
+    public bool fullscreen = true;
     public bool enableSideCameras = true;
 
     public void Apply()
@@ -20,6 +21,7 @@ public class Settings
             fullscreenWidth = Screen.currentResolution.width;
             fullscreenHeight = Screen.currentResolution.height;
         }
+        Screen.fullScreen = fullscreen;
 		Serializer.Write( Application.persistentDataPath + "/Settings/options.json", this, true, true );
     }
 }
