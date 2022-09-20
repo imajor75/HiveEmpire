@@ -436,7 +436,6 @@ public class Eye : HiveObject
 		public Camera center { get { return cameras[4]; } }
 		public Camera first;
 		public Camera last;
-		public bool enableSideCameras = true;
 
 		public void Setup( float depth = 0 )
 		{
@@ -494,7 +493,7 @@ public class Eye : HiveObject
 				var newPosition = transform.position + x * right + y * up;
 				cameras[i].transform.position = newPosition;
 				if ( x != 0 || y != 0 )
-					cameras[i].enabled = enableSideCameras;
+					cameras[i].enabled = settings.enableSideCameras;
 				float depth = -Math.Abs( newPosition.z ) - Math.Abs( newPosition.x - newPosition.z / 2 );
 				if ( depth < closest )
 					closest = depth;

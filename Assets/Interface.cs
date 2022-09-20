@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7648,6 +7648,7 @@ if ( cart )
 		resolutionDropdown.onValueChanged.AddListener( ChangeResolution );
 
 		menu.AddWidget( resolutionDropdown );
+		menu.AddWidget( this.CheckBox( "Side cameras" ).AddToggleHandler( ( bool state ) => { settings.enableSideCameras = state; settings.Apply(); }, settings.enableSideCameras ) );
 		menu.AddWidget( this.CheckBox( "Grass" ).AddToggleHandler( ( bool state ) => { settings.grass = state; settings.Apply(); }, settings.grass ) );
 		return menu;
 	}

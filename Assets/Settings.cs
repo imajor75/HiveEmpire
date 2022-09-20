@@ -9,6 +9,7 @@ public class Settings
     public bool grass = true;
     public int fullscreenWidth = -1;
     public int fullscreenHeight = -1;
+    public bool enableSideCameras = true;
 
     public void Apply()
     {
