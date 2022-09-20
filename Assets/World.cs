@@ -710,6 +710,8 @@ public class World : HiveObject
 		oh.OnEndGameStep();
 		#if DEBUG
 		lastChecksum = checksum;
+		#else
+		lastChecksum = 0;
 		#endif
 		time++;
 		gameAdvancingInProgress = false;
