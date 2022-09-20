@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -380,7 +380,7 @@ public class Interface : HiveObject
 	public void FixedUpdate()
 	{
 #if DEBUG
-		if ( --fullValidate < 0 && world.autoValidate )
+		if ( --fullValidate < 0 && settings.timedValidate )
 		{
 			ValidateAll();
 			fullValidate = fullValidateInterval;
@@ -951,7 +951,7 @@ public class Interface : HiveObject
 		{
 			yield return new WaitForEndOfFrame();
 			#if DEBUG
-			if ( !EditorApplication.isPaused && world.autoValidate )
+			if ( !EditorApplication.isPaused && settings.frameValidate )
 				Validate( true );
 			#endif
 		}
@@ -7651,6 +7651,8 @@ if ( cart )
 		menu.AddWidget( this.CheckBox( "Fullscreen" ).AddToggleHandler( ( bool state ) => { settings.fullscreen = state; settings.Apply(); }, settings.fullscreen ) );
 		menu.AddWidget( this.CheckBox( "Side cameras" ).AddToggleHandler( ( bool state ) => { settings.enableSideCameras = state; settings.Apply(); }, settings.enableSideCameras ) );
 		menu.AddWidget( this.CheckBox( "Grass" ).AddToggleHandler( ( bool state ) => { settings.grass = state; settings.Apply(); }, settings.grass ) );
+		menu.AddWidget( this.CheckBox( "Timed validate" ).AddToggleHandler( ( bool state ) => { settings.timedValidate = state; settings.Apply(); }, settings.timedValidate ) );
+		menu.AddWidget( this.CheckBox( "Frame validate" ).AddToggleHandler( ( bool state ) => { settings.frameValidate = state; settings.Apply(); }, settings.frameValidate ) );
 		return menu;
 	}
 

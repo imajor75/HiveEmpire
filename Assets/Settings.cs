@@ -11,6 +11,8 @@ public class Settings
     public int fullscreenHeight = -1;
     public bool fullscreen = true;
     public bool enableSideCameras = true;
+	public bool timedValidate = true;
+	public bool frameValidate = true;
 
     public void Apply()
     {

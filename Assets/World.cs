@@ -40,7 +40,6 @@ public class World : HiveObject
 	public Speed speed;
 	public OperationHandler operationHandler;
 	public Water water;
-	public bool autoValidate = true;
 	[JsonIgnore]
 	public new Network network;
 	public string nameOnNetwork;
@@ -144,6 +143,8 @@ public class World : HiveObject
 	int replayIndex { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int overseas;
+	[Obsolete( "Compatibility with old files", true )]
+	bool autoValidate { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	new Settings settings { set { generatorSettings = value; } }
 	public Settings generatorSettings;
