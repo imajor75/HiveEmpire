@@ -1692,13 +1692,7 @@ public class Interface : HiveObject
 
 		public Dropdown Dropdown()
 		{
-			var o = Instantiate( Resources.Load<GameObject>( "Dropdown" ) );
-			var d = o.GetComponent<Dropdown>();
-			d.ClearOptions();
-			var image = d.GetComponent<Image>();
-			d.transform.SetParent( transform );
-			d.name = "InputField";
-			return d;
+			return UIHelpers.Dropdown( this );
 		}
 
 		public virtual void Close()
@@ -7627,6 +7621,33 @@ if ( cart )
 	public Menu OpenOptionsMenu()
 	{
 		var menu = Menu.Create( "Options" );
+		var resolutionDropdown = this.Dropdown();
+		List<string> resolutions = new ();
+		string last = null;
+		int selection = 0;
+		foreach ( var resolution in Screen.resolutions )
+		{
+			string  asText = $"{resolution.width}x{resolution.height}";
+			if ( asText != last )
+			{
+				last = asText;
+				resolutions.Add( asText );
+			}
+			if ( resolution.width == settings.fullscreenWidth && resolution.height == settings.fullscreenHeight )
+				selection = resolutions.Count;
+		}
+		resolutionDropdown.AddOptions( resolutions );
+		resolutionDropdown.value = selection;
+		void ChangeResolution( int value )
+		{
+			string asText = resolutions[value];
+			settings.fullscreenWidth = int.Parse( asText.Split( 'x' ).First() );
+			settings.fullscreenHeight = int.Parse( asText.Split( 'x' ).Last() );
+			settings.Apply();
+		}
+		resolutionDropdown.onValueChanged.AddListener( ChangeResolution );
+
+		menu.AddWidget( resolutionDropdown );
 		menu.AddWidget( this.CheckBox( "Grass" ).AddToggleHandler( ( bool state ) => { settings.grass = state; settings.Apply(); }, settings.grass ) );
 		return menu;
 	}
@@ -7895,6 +7916,17 @@ public static class UIHelpers
 		t.color = Color.black;
 		t.text = text;
 		return t;
+	}
+
+	public static Dropdown Dropdown( this Component panel )
+	{
+		var o = GameObject.Instantiate( Resources.Load<GameObject>( "Dropdown" ) );
+		var d = o.GetComponent<Dropdown>();
+		d.ClearOptions();
+		var image = d.GetComponent<Image>();
+		d.transform.SetParent( panel.transform );
+		d.name = "InputField";
+		return d;
 	}
 
 	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
