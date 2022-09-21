@@ -52,6 +52,8 @@ public class Unit : HiveObject
 
 	public Animator animator;
 	public AudioSource soundSource;
+	[JsonIgnore]
+	public MediaTable<AudioClip, Type>.Media walkSound;
 	public GameObject mapObject;
 	Material mapMaterial;
 	GameObject arrowObject;
@@ -1461,6 +1463,7 @@ public class Unit : HiveObject
 			wheels[3] = World.FindChildRecursive( body.transform, "SM_Veh_Cart_02_Wheel_rr" )?.gameObject;
 		}
 
+		walkSound = walkSounds.GetMedia( type );
 		UpdateBody();
 		name = type switch
 		{
@@ -2237,11 +2240,10 @@ public class Unit : HiveObject
 
 		if ( walkTo )
 		{
-			if ( soundSource && !soundSource.isPlaying )
+			if ( soundSource && !soundSource.isPlaying && walkSound != null )
 			{
-				var sound = walkSounds.GetMedia( type );
-				soundSource.clip = sound.data;
-				soundSource.volume = sound.floatData;
+				soundSource.clip = walkSound.data;
+				soundSource.volume = walkSound.floatData;
 				soundSource.Play();
 			}
 			if ( type == Type.cart )
