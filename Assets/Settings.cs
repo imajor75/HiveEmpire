@@ -16,6 +16,7 @@ public class Settings
     public float masterVolume = 1;
     public bool autoSave = true;
     public float autoSaveInterval = Constants.Interface.autoSaveIntervalInSecond;
+    public bool saveOnExit = true;
 
     public void Apply()
     {

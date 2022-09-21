@@ -351,7 +351,8 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		world.Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
+		if ( settings.saveOnExit && !Assert.error )
+			world.Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 		world.Clear();
 		logFile.Close();
 	}
@@ -7658,6 +7659,7 @@ if ( cart )
 		var autoSaveIntervalWidget = this.InputField( ( settings.autoSaveInterval / 60 ).ToString( "n2" ) );
 		autoSaveIntervalWidget.onValueChanged.AddListener( ( string value ) => { settings.autoSaveInterval = 60 * float.Parse( value ); settings.Apply(); } );
 		menu.AddWidget( autoSaveIntervalWidget );
+		menu.AddWidget( this.CheckBox( "Save on exit" ).AddToggleHandler( ( bool state ) => { settings.saveOnExit = state; settings.Apply(); }, settings.saveOnExit ) );
 
 		return menu;
 	}
