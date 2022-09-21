@@ -319,6 +319,7 @@ public static class Constants
         public const int animalSpawnTime = 1000;
         public const int treeSoundTime = 60000;
         public const int rockCharges = 6;
+        public const int scaleUpdatePeriod = Constants.World.normalSpeedPerSecond * 5;
     }
 
     public static class Road

@@ -9,6 +9,7 @@ public class Resource : HiveObject
 	public Node node;
 	public Type type;
 	public World.Timer life = new ();
+	public World.Timer scaleUpdate = new ();
 	public int charges = 1;
 	public bool infinite;
 	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
@@ -266,6 +267,13 @@ public class Resource : HiveObject
 
 	new public void Update()
 	{
+		if ( scaleUpdate.inProgress )
+		{
+			base.Update();
+			return;
+		}
+
+		// TODO Adjusting the local scale as the plant grows is slow, we could update that only once a second or so
 		if ( type == Type.cornField || type == Type.wheatField )
 		{
 			float growth = (float)life.age;
@@ -288,6 +296,7 @@ public class Resource : HiveObject
 			size = Math.Min( size, 1 );
 			transform.localScale = Vector3.one * size;
 		}
+		scaleUpdate.Start( Constants.Resource.scaleUpdatePeriod );
 		base.Update();
 	}
 
