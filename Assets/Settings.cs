@@ -18,6 +18,8 @@ public class Settings
     public float autoSaveInterval = Constants.Interface.autoSaveIntervalInSecond;
     public bool saveOnExit = true;
     public bool showFPS = false;
+    public bool shadows = true;
+    public bool softShadows = true;
 
     public void Apply()
     {

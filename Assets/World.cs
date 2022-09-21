@@ -733,6 +733,9 @@ public class World : HiveObject
             if ( speed == Speed.pause )
                 SetSpeed( Speed.normal );
         }
+
+		light.shadows = HiveCommon.settings.shadows ? ( HiveCommon.settings.softShadows ? LightShadows.Soft : LightShadows.Hard ) : LightShadows.None;
+
 		base.Update();
 	}
 
