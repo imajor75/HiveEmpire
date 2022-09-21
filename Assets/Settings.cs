@@ -13,6 +13,7 @@ public class Settings
     public bool enableSideCameras = true;
 	public bool timedValidate = true;
 	public bool frameValidate = true;
+    public float masterVolume = 1;
 
     public void Apply()
     {
@@ -24,6 +25,7 @@ public class Settings
             fullscreenHeight = Screen.currentResolution.height;
         }
         Screen.fullScreen = fullscreen;
+        AudioListener.volume = masterVolume;
 		Serializer.Write( Application.persistentDataPath + "/Settings/options.json", this, true, true );
     }
 }

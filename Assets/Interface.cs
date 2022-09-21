@@ -7648,11 +7648,17 @@ if ( cart )
 		resolutionDropdown.onValueChanged.AddListener( ChangeResolution );
 
 		menu.AddWidget( resolutionDropdown );
+
 		menu.AddWidget( this.CheckBox( "Fullscreen" ).AddToggleHandler( ( bool state ) => { settings.fullscreen = state; settings.Apply(); }, settings.fullscreen ) );
 		menu.AddWidget( this.CheckBox( "Side cameras" ).AddToggleHandler( ( bool state ) => { settings.enableSideCameras = state; settings.Apply(); }, settings.enableSideCameras ) );
 		menu.AddWidget( this.CheckBox( "Grass" ).AddToggleHandler( ( bool state ) => { settings.grass = state; settings.Apply(); }, settings.grass ) );
 		menu.AddWidget( this.CheckBox( "Timed validate" ).AddToggleHandler( ( bool state ) => { settings.timedValidate = state; settings.Apply(); }, settings.timedValidate ) );
 		menu.AddWidget( this.CheckBox( "Frame validate" ).AddToggleHandler( ( bool state ) => { settings.frameValidate = state; settings.Apply(); }, settings.frameValidate ) );
+
+		var volumeSlider = this.Slider();
+		volumeSlider.onValueChanged.AddListener( ( float value ) => { settings.masterVolume = value; settings.Apply(); } );
+		volumeSlider.value = settings.masterVolume;
+		menu.AddWidget( volumeSlider );
 		return menu;
 	}
 
@@ -7931,6 +7937,14 @@ public static class UIHelpers
 		d.transform.SetParent( panel.transform );
 		d.name = "InputField";
 		return d;
+	}
+
+	public static Slider Slider( this Component panel )
+	{
+		var o = GameObject.Instantiate( Resources.Load<GameObject>( "Slider" ) );
+		var s = o.GetComponent<Slider>();
+		s.transform.SetParent( panel.transform );
+		return s;
 	}
 
 	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
