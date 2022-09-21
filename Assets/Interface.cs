@@ -770,7 +770,7 @@ public class Interface : HiveObject
 	new public void Update()
 	{
 		requestUpdate = false;
-		if ( Time.unscaledTime - lastSave > Constants.Interface.autoSaveIntervalInSecond )
+		if ( settings.autoSave && Time.unscaledTime - lastSave > settings.autoSaveInterval )
 			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
 		if ( mainPlayer && messageButton )
 		{
@@ -1681,13 +1681,7 @@ public class Interface : HiveObject
 
 		public InputField InputField( string text = "" )
 		{
-			var o = Instantiate( Resources.Load<GameObject>( "InputField" ) );
-			var i = o.GetComponent<InputField>();
-			var image = i.GetComponent<Image>();
-			i.transform.SetParent( transform );
-			i.name = "InputField";
-			i.text = text;
-			return i;
+			return UIHelpers.InputField( this, text );
 		}
 
 		public Dropdown Dropdown()
@@ -7659,6 +7653,12 @@ if ( cart )
 		volumeSlider.onValueChanged.AddListener( ( float value ) => { settings.masterVolume = value; settings.Apply(); } );
 		volumeSlider.value = settings.masterVolume;
 		menu.AddWidget( volumeSlider );
+
+		menu.AddWidget( this.CheckBox( "Autosave" ).AddToggleHandler( ( bool state ) => { settings.autoSave = state; settings.Apply(); }, settings.autoSave ) );
+		var autoSaveIntervalWidget = this.InputField( ( settings.autoSaveInterval / 60 ).ToString( "n2" ) );
+		autoSaveIntervalWidget.onValueChanged.AddListener( ( string value ) => { settings.autoSaveInterval = 60 * float.Parse( value ); settings.Apply(); } );
+		menu.AddWidget( autoSaveIntervalWidget );
+
 		return menu;
 	}
 
@@ -7926,6 +7926,17 @@ public static class UIHelpers
 		t.color = Color.black;
 		t.text = text;
 		return t;
+	}
+
+	public static InputField InputField( this Component panel, string text = null )
+	{
+		var o = GameObject.Instantiate( Resources.Load<GameObject>( "InputField" ) );
+		var i = o.GetComponent<InputField>();
+		var image = i.GetComponent<Image>();
+		i.transform.SetParent( panel.transform );
+		i.name = "InputField";
+		i.text = text;
+		return i;
 	}
 
 	public static Dropdown Dropdown( this Component panel )
