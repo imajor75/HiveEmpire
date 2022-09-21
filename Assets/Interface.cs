@@ -906,8 +906,10 @@ public class Interface : HiveObject
 
 		FPS = 0.9f * FPS + 0.1f * ( 1 / Time.unscaledDeltaTime );
 		FPSDisplay.text = FPS.ToString( "F1" ) + " FPS";
+		FPSDisplay.enabled = settings.showFPS;
+
 		if ( showFPSHotkey.IsPressed() )
-			FPSDisplay.enabled = !FPSDisplay.enabled;
+			settings.showFPS = !settings.showFPS;
 
 		if ( openFlagPanel?.flag )
 		{
@@ -7660,6 +7662,8 @@ if ( cart )
 		autoSaveIntervalWidget.onValueChanged.AddListener( ( string value ) => { settings.autoSaveInterval = 60 * float.Parse( value ); settings.Apply(); } );
 		menu.AddWidget( autoSaveIntervalWidget );
 		menu.AddWidget( this.CheckBox( "Save on exit" ).AddToggleHandler( ( bool state ) => { settings.saveOnExit = state; settings.Apply(); }, settings.saveOnExit ) );
+
+		menu.AddWidget( this.CheckBox( "Show FPS" ).AddToggleHandler( ( bool state ) => { settings.showFPS = state; settings.Apply(); }, settings.showFPS ) );
 
 		return menu;
 	}
