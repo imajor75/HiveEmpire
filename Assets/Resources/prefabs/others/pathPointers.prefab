@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5338984113545629731}
   - component: {fileID: 6385981292410140389}
   - component: {fileID: 6415803540949173785}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: pathPointers
   m_TagString: Untagged
   m_Icon: {fileID: 0}

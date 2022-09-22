@@ -7651,6 +7651,15 @@ if ( cart )
 		menu.AddWidget( this.CheckBox( "Grass" ).AddToggleHandler( ( bool state ) => { settings.grass = state; settings.Apply(); }, settings.grass ) );
 		menu.AddWidget( this.CheckBox( "Shadows" ).AddToggleHandler( ( bool state ) => { settings.shadows = state; settings.Apply(); }, settings.shadows ) );
 		menu.AddWidget( this.CheckBox( "Soft shadows" ).AddToggleHandler( ( bool state ) => { settings.softShadows = state; settings.Apply(); }, settings.softShadows ) );
+		menu.AddWidget( this.CheckBox( "Render buildings" ).AddToggleHandler( ( bool state ) => { settings.renderBuildings = state; settings.Apply(); }, settings.renderBuildings ) );
+		menu.AddWidget( this.CheckBox( "Render roads" ).AddToggleHandler( ( bool state ) => { settings.renderRoads = state; settings.Apply(); }, settings.renderRoads ) );
+		menu.AddWidget( this.CheckBox( "Render resources" ).AddToggleHandler( ( bool state ) => { settings.renderResources = state; settings.Apply(); }, settings.renderResources ) );
+		menu.AddWidget( this.CheckBox( "Render ground" ).AddToggleHandler( ( bool state ) => { settings.renderGround = state; settings.Apply(); }, settings.renderGround ) );
+		menu.AddWidget( this.CheckBox( "Render units" ).AddToggleHandler( ( bool state ) => { settings.renderUnits = state; settings.Apply(); }, settings.renderUnits ) );
+		menu.AddWidget( this.CheckBox( "Render items" ).AddToggleHandler( ( bool state ) => { settings.renderItems= state; settings.Apply(); }, settings.renderItems ) );
+		menu.AddWidget( this.CheckBox( "Render decorations" ).AddToggleHandler( ( bool state ) => { settings.renderDecorations = state; settings.Apply(); }, settings.renderDecorations ) );
+		menu.AddWidget( this.CheckBox( "Render water" ).AddToggleHandler( ( bool state ) => { settings.renderWater = state; settings.Apply(); }, settings.renderWater ) );
+		
 		menu.AddWidget( this.CheckBox( "Timed validate" ).AddToggleHandler( ( bool state ) => { settings.timedValidate = state; settings.Apply(); }, settings.timedValidate ) );
 		menu.AddWidget( this.CheckBox( "Frame validate" ).AddToggleHandler( ( bool state ) => { settings.frameValidate = state; settings.Apply(); }, settings.frameValidate ) );
 

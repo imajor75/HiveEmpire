@@ -205,6 +205,8 @@ public class Item : HiveObject
 		if ( transform.parent == null )
 			transform.SetParent( World.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
 		body = Instantiate( looks.GetMediaData( type ) );
+		body.layer = World.layerIndexItems;
+
 		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )
 			Constants.Item.bottomHeights[(int)type] = body.GetComponent<MeshRenderer>().bounds.min.y;
 		body.transform.SetParent( transform, false );

@@ -447,7 +447,6 @@ public class Eye : HiveObject
 			foreach ( var camera in cameras )
 			{
 				camera.clearFlags = CameraClearFlags.Nothing;
-				camera.cullingMask = ~( 1 << World.layerIndexMapOnly );
 				camera.transform.SetParent( transform, false );
 				camera.nearClipPlane = 0.03f;
 				camera.farClipPlane = 100;
@@ -501,8 +500,28 @@ public class Eye : HiveObject
 					furthest = depth;
 				cameras[i].depth = depth;
 			}
+
+			int effectiveMask = cullingMask;
+			if ( !settings.renderBuildings )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexBuildings );
+			if ( !settings.renderRoads )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexRoads );
+			if ( !settings.renderGround )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexGround );
+			if ( !settings.renderResources )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexResources );
+			if ( !settings.renderUnits )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexUnits );
+			if ( !settings.renderItems )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexItems );
+			if ( !settings.renderDecorations )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexDecorations );
+			if ( !settings.renderWater )
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexWater );
+
 			foreach ( var camera in cameras )
 			{
+				camera.cullingMask = effectiveMask;
 				if ( camera.depth == furthest )
 				{
 					if ( last != camera )
@@ -526,11 +545,7 @@ public class Eye : HiveObject
 			}
 		}
 
-		public int cullingMask
-		{
-			get { return center.cullingMask; }
-			set { foreach ( var camera in cameras ) camera.cullingMask = value; }
-		}
+		public int cullingMask = ~( 1 << World.layerIndexMapOnly );
 
 		public bool orthographic
 		{

@@ -14,8 +14,8 @@ TagManager:
   - HighlightVolume
   - Ground
   - Map only
-  - Water
-  - Pickable
+  - Items
+  - Decorations
   - PPVolume
   - Grass
   - Buildings

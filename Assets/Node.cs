@@ -176,6 +176,7 @@ public class Node : HiveObject
 				d.SetParent( ground.transform );
 				var o = Neighbour( decorationDirection );
 				d.position = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
+				d.gameObject.layer = World.layerIndexDecorations;
 			}
 		}
 		base.Start();

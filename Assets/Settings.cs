@@ -20,6 +20,14 @@ public class Settings
     public bool showFPS = false;
     public bool shadows = true;
     public bool softShadows = true;
+    public bool renderBuildings = true;
+    public bool renderRoads = true;
+    public bool renderResources = true;
+    public bool renderGround = true;
+    public bool renderUnits = true;
+    public bool renderItems = true;
+    public bool renderDecorations = true;
+    public bool renderWater = true;
 
     public void Apply()
     {
