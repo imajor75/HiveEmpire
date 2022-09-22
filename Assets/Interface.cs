@@ -1550,8 +1550,6 @@ public class Interface : HiveObject
 				t.offsetMin = new Vector2( (int)( -20 * uiScale ) , 0 );
 				t.offsetMax = new Vector2( 0, vertical ? (int)( -20 * uiScale ) : 0 );
 			}
-			else
-				scroll.horizontal = false;
 
 			if ( vertical )
 			{
@@ -1568,8 +1566,7 @@ public class Interface : HiveObject
 				t.offsetMin = new Vector2( (int)(-20 * uiScale ), 0 );
 				t.offsetMax = new Vector2( 0, horizontal ? (int)( -20 * uiScale ) : 0 );
 			}
-			else
-				scroll.vertical = false;
+
 			var content = new GameObject().AddComponent<Image>();
 			content.name = "Content";
 			content.transform.SetParent( scroll.transform, false );
@@ -1579,6 +1576,7 @@ public class Interface : HiveObject
 			content.rectTransform.anchorMax = new Vector2( 1, 0 );
 			content.rectTransform.offsetMax = new Vector2( vertical ? (int)( uiScale * -20 ) : 0, horizontal ? (int)( uiScale * -20 ) : 0 );
 			content.rectTransform.pivot = new Vector2( 0, 1 );
+			scroll.viewport = content.rectTransform;
 
 			scroll.Clear();	// Just to create the background image
 
@@ -7491,6 +7489,7 @@ if ( cart )
 		public string title;
 		public int itemCount;
 		public int row;
+		public ScrollRect scrollRect;
 
 		public static Menu Create( string title = null )
 		{
@@ -7503,11 +7502,12 @@ if ( cart )
 		{
 			reopen = true;
 			base.Open( 200, 200 );
-			row = -borderWidth;
+			row = 0;
+			scrollRect = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
 			if ( title != null )
 			{
 				var titleText = Text( title );
-				titleText.PinCenter( 0, -borderWidth-iconSize, (int)( titleText.preferredWidth / uiScale + 1 ), (int)( iconSize * 1.5f ), 0.5f, 1 );
+				titleText.PinCenter( 0, -iconSize, (int)( titleText.preferredWidth / uiScale + 1 ), (int)( iconSize * 1.5f ), 0.5f, 1 ).Link( scrollRect.content );
 				row -= iconSize + iconSize / 2;
 			}
 			itemCount = 0;
@@ -7520,10 +7520,10 @@ if ( cart )
 
 		public void AddWidget( Component widget )
 		{
-			widget.Link( this ).PinCenter( 0, row - (int)( iconSize * 0.6f ), 150, (int)( iconSize * 1.2f ), 0.5f, 1 );
+			widget.Link( scrollRect.content ).PinCenter( 0, row - (int)( iconSize * 0.6f ), 150, (int)( iconSize * 1.2f ), 0.5f, 1 );
 			itemCount++;
 			row -= (int)( iconSize * 1.2f );
-			SetSize( 200, -row + borderWidth );
+			SetSize( 200, Math.Min( -row + borderWidth * 2, (int)( Screen.height / 2 ) ) );
 		}
 	}
 
