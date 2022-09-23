@@ -455,7 +455,7 @@ public class Stock : Attackable
 
 			if ( itemQuantity > 0 )
 			{
-				for ( int i = 0; i < frameCount; i++ )
+				for ( int i = 0; i < Math.Min( frameCount, itemQuantity ); i++ )
 				{
 					var itemBody = Instantiate( Item.looks.GetMediaData( itemType ) );
 					itemBody.transform.rotation *= Quaternion.Euler( -Constants.Item.yawAtFlag[(int)itemType], 0, 0 );
