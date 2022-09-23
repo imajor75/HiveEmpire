@@ -228,7 +228,10 @@ public class Resource : HiveObject
 		if ( prefab )
 		{
 			body = Instantiate( prefab );
-			World.SetLayerRecursive( body, World.layerIndexResources );
+			if ( type == Type.tree )
+				World.SetLayerRecursive( body, LayerMask.NameToLayer( "Trees" ) );
+			else
+				World.SetLayerRecursive( body, World.layerIndexResources );
 			Tree treeCreator;
 			if ( body.TryGetComponent<Tree>( out treeCreator ) )
 			{
@@ -261,6 +264,18 @@ public class Resource : HiveObject
 		}
 
 		soundSource = World.CreateSoundSource( this );
+
+		if ( type == Type.tree )
+		{
+			var mapObject = GameObject.CreatePrimitive( PrimitiveType.Plane );
+			mapObject.name = "Map widget";
+			mapObject.transform.SetParent( transform, false );
+			mapObject.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "treeFromAbove" );
+			mapObject.transform.localScale = Vector3.one * 0.15f;
+			mapObject.transform.localPosition = new Vector3( 0, 3, 0 );
+			mapObject.layer = World.layerIndexMapOnly;
+		}
+
 		base.Start();
 	}
 

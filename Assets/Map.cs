@@ -86,7 +86,7 @@ public class Map : Interface.Panel
 			}
 			camera.transform.SetParent( ground.transform );
 			camera.targetTexture = renderTexture;
-			camera.cullingMask = int.MaxValue - ( 1 << Ground.Grass.layerIndex ) - ( 1 << World.layerIndexBuildings ) - ( 1 << World.layerIndexUnits ) - ( 1 << World.layerIndexRoads );
+			camera.cullingMask = int.MaxValue - ( 1 << Ground.Grass.layerIndex ) - ( 1 << World.layerIndexBuildings ) - ( 1 << World.layerIndexUnits ) - ( 1 << World.layerIndexRoads ) - ( 1 << LayerMask.NameToLayer( "Trees" ) );
 			if ( !Interface.Viewport.showGround )
 				camera.cullingMask -= ( 1 << World.layerIndexGround ) + ( 1 << World.layerIndexWater );
 				
