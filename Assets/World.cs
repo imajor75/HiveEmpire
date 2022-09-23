@@ -223,6 +223,7 @@ public class World : HiveObject
 		public float progress;
 		public Timer life = new ();
 		public List<float> productivityGoals;
+		public List<int> productivityGoalsByBuildingCount;
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
 		public int timeLimit;
@@ -255,6 +256,7 @@ public class World : HiveObject
 			fixedSeed = prototype.fixedSeed;
 			seed = prototype.seed;
 			productivityGoals = prototype.productivityGoals;
+			productivityGoalsByBuildingCount = prototype.productivityGoalsByBuildingCount;
 			mainBuildingContent = prototype.mainBuildingContent;
 			buildingMax = prototype.buildingMax;
 			timeLimit = prototype.timeLimit;
@@ -285,6 +287,21 @@ public class World : HiveObject
 			maintainBronze.Reset();
 			maintainSilver.Reset();
 			maintainGold.Reset();
+			if ( productivityGoalsByBuildingCount != null )
+			{
+				if ( productivityGoals == null )
+					productivityGoals = new ();
+				while ( productivityGoals.Count < (int)Item.Type.total )
+					productivityGoals.Add( -1 );
+				for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+				{
+					if ( productivityGoalsByBuildingCount[i] <= 0 )
+						continue;
+
+					var config = Workshop.GetConfiguration( (Workshop.Type)i );
+					productivityGoals[(int)config.outputType] = config.productivity * productivityGoalsByBuildingCount[i] * Constants.Player.challengeProductivityPerBuilding;
+				}
+			}
 			reachedLevel = Goal.none;
 		}
 
@@ -441,6 +458,21 @@ public class World : HiveObject
 						while ( productivityGoals.Count < (int)Item.Type.total )
 							productivityGoals.Add( -1 );
 						productivityGoals[(int)itemType] = float.Parse( p[2], CultureInfo.InvariantCulture );
+						break;
+					}
+					case "productionByBuilding":
+					{
+						if ( productivityGoalsByBuildingCount == null )
+							productivityGoalsByBuildingCount = new ();
+						Workshop.Type workshopType;
+						if ( !Enum.TryParse( p[1], out workshopType ) )
+						{
+							print( $"Unknown workshop: {p[1]}" );
+							break;
+						}
+						while ( productivityGoalsByBuildingCount.Count < (int)Workshop.Type.total )
+							productivityGoalsByBuildingCount.Add( 0 );
+						productivityGoalsByBuildingCount[(int)workshopType] = int.Parse( p[2], CultureInfo.InvariantCulture );
 						break;
 					}
 					case "buildingMax":
@@ -803,6 +835,7 @@ public class World : HiveObject
 		this.challenge.Register();
 		operationHandler = OperationHandler.Create().Setup();
 		operationHandler.challenge = localChallenge;
+		operationHandler.challenge.Begin();
 #if DEBUG
 		operationHandler.recordCRC = true;
 #endif
@@ -1176,6 +1209,7 @@ public class World : HiveObject
 				}
 			}
 		}
+
 		{
 			var list = Resources.FindObjectsOfTypeAll<Workshop.GetResource>();
 			foreach ( var o in list )

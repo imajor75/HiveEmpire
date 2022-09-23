@@ -39,7 +39,7 @@
       "description": "Maximize soldier production with a single barrack supplying it with materials continuously",
       "maintain": 30000,
       "conditions": [
-        "production soldier 1.5",
+        "productionByBuilding barrack 1",
         "buildingMax barrack 1"
       ]
     },
