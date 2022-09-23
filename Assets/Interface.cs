@@ -4868,8 +4868,8 @@ public class Interface : HiveObject
 						var massDeliver = unit.FindTaskInQueue<Stock.DeliverStackTask>();
 						if ( massDeliver )
 						{
-							status.text = $"Transporting {Constants.Stock.cartCapacity}";
-							statusImage1.SetType( (unit as Stock.Cart).itemType );
+							status.text = $"Transporting {cart.itemQuantity}";
+							statusImage1.SetType( cart.itemType );
 							statusImage1.gameObject.SetActive( true );
 							targetObject = massDeliver.stock;
 							break;
