@@ -9,6 +9,7 @@ public class Resource : HiveObject
 	public Node node;
 	public Type type;
 	public World.Timer life = new ();
+	public World.Timer apple = new ();
 	public World.Timer scaleUpdate = new ();
 	public int charges = 1;
 	public bool infinite;
@@ -152,7 +153,7 @@ public class Resource : HiveObject
 		this.type = type;
 		if ( charges < 0 )
 		{
-			if ( underGround || type == Type.fish || type == Type.apple )
+			if ( underGround || type == Type.fish )
 				charges = int.MaxValue;
 			else
 			{
@@ -201,8 +202,6 @@ public class Resource : HiveObject
 			node.avoidGrass = true;
 			ground.SetDirty( node );
 		}
-		if ( type == Type.tree )
-			Create().Setup( node, Type.apple, allowBlocking:true );
 
 		base.Setup();
 
@@ -341,6 +340,16 @@ public class Resource : HiveObject
 				soundSource.loop = false;
 			}
 		}
+		if ( type == Type.tree && life.age > Constants.Resource.treeGrowthTime && !apple.inProgress )
+		{
+			bool hasApple = false;
+			foreach ( var resource in node.resources )
+				if ( resource.type == Type.apple )
+					hasApple = true;
+			if ( !hasApple )
+				Create().Setup( node, Type.apple, allowBlocking:true );
+			apple.Start( Constants.Workshop.appleGrowTime );
+		}
 	}
 
 	static public Item.Type ItemType( Type type )
@@ -372,17 +381,6 @@ public class Resource : HiveObject
 			return;
 		destroyed = true;
 		
-		if ( type == Type.tree )
-		{
-			foreach ( var r in node.resources )
-			{
-				if ( r.type == Type.apple )
-				{
-					r.Remove();
-					break;
-				}
-			}
-		}
 		RemoveElements( animals );
 		if ( origin )
 			origin.Remove();

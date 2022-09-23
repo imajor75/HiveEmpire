@@ -366,8 +366,8 @@ public static class Constants
     public static class Workshop
     {
 	    public const int mineOreRestTime = Constants.World.normalSpeedPerSecond * 400;
-	    public const int fishRestTime = Constants.World.normalSpeedPerSecond * 320;
-	    public const int appleRestTime = Constants.World.normalSpeedPerSecond * 320;
+	    public const int fishRestTime = Constants.World.normalSpeedPerSecond * 600;
+	    public const int appleGrowTime = Constants.World.normalSpeedPerSecond * 600;
 	    public const int dungRestTime = Constants.World.normalSpeedPerSecond * 30;
 	    public const int pasturingTime = Constants.World.normalSpeedPerSecond * 2;
 	    public const float pasturingPrayChance = 0.2f;  

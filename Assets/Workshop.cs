@@ -439,8 +439,6 @@ public class Workshop : Building
 						resource.keepAway.Start( (int)( Constants.Workshop.mineOreRestTime ) );
 					if ( resource.type == Resource.Type.fish )
 						resource.keepAway.Start( Constants.Workshop.fishRestTime );
-					if ( resource.type == Resource.Type.apple )
-						resource.keepAway.Start( Constants.Workshop.appleRestTime );
 					if ( resource.type == Resource.Type.dung )
 						resource.keepAway.Start( Constants.Workshop.dungRestTime );
 				}
