@@ -2739,12 +2739,18 @@ public class Interface : HiveObject
 
 				var productionSec = workshop.productionConfiguration.productionTime * Time.fixedDeltaTime;
 				var restSec = workshop.restTime * Time.fixedDeltaTime;
-				progressBar.SetTooltip( 
-					$"Maximum output: {workshop.CalculateProductivity( true ).ToString( "n2" )}/min\n" +
-					$"Time needed to produce a new item: {productionSec.ToString( "F2" )}s\n" +
-					$"Resting needed between item productions: {restSec.ToString( "F2" )}s\n" +
-					$"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%", null,
-					$"Resting time depends on the number of relaxing spots around the building. The more relaxing spots, the less resting time the building needs (ideally zero). ", ShowProgressBarTooltip );
+				var maxOutput = 60 / ( productionSec + restSec ) * workshop.productionConfiguration.outputStackSize;
+				string tooltip = "";
+				if ( !workshop.gatherer )
+				{
+					tooltip += $"Maximum output: {maxOutput.ToString( "n2" )}/min\n" +
+					$"Time needed to produce a new item: {productionSec.ToString( "F2" )}s\n";
+
+				}
+				tooltip += $"Resting needed between item productions: {restSec.ToString( "F2" )}s\n" +
+					$"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%";
+
+				progressBar.SetTooltip( tooltip, null, $"Resting time depends on the number of relaxing spots around the building. The more relaxing spots, the less resting time the building needs (ideally zero). ", ShowProgressBarTooltip );
 			
 				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodeRelaxSites;
 				root.viewport.relaxCenter = workshop;
