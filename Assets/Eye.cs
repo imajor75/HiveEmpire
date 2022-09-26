@@ -368,6 +368,7 @@ public class Eye : HiveObject
 		if ( restore )
 			RestoreOldPosition();
 		StopAutoChange();
+		target = null;
 	}
 
 	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false, bool useLogicalPosition = false, bool approach = true )
