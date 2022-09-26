@@ -287,22 +287,27 @@ public class World : HiveObject
 			maintainBronze.Reset();
 			maintainSilver.Reset();
 			maintainGold.Reset();
-			if ( productivityGoalsByBuildingCount != null )
-			{
-				if ( productivityGoals == null )
-					productivityGoals = new ();
-				while ( productivityGoals.Count < (int)Item.Type.total )
-					productivityGoals.Add( -1 );
-				for ( int i = 0; i < (int)Workshop.Type.total; i++ )
-				{
-					if ( productivityGoalsByBuildingCount[i] <= 0 )
-						continue;
-
-					var config = Workshop.GetConfiguration( (Workshop.Type)i );
-					productivityGoals[(int)config.outputType] = config.productivity * productivityGoalsByBuildingCount[i] * Constants.Player.challengeProductivityPerBuilding;
-				}
-			}
+			UpdateProductivityGoals();
 			reachedLevel = Goal.none;
+		}
+
+		public void UpdateProductivityGoals()
+		{
+			if ( productivityGoalsByBuildingCount == null )
+				return;
+
+			if ( productivityGoals == null )
+				productivityGoals = new ();
+			while ( productivityGoals.Count < (int)Item.Type.total )
+				productivityGoals.Add( -1 );
+			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			{
+				if ( productivityGoalsByBuildingCount[i] <= 0 )
+					continue;
+
+				var config = Workshop.GetConfiguration( (Workshop.Type)i );
+				productivityGoals[(int)config.outputType] = config.productivity * productivityGoalsByBuildingCount[i] * Constants.Player.challengeProductivityPerBuilding;
+			}
 		}
 
 		override public void GameLogicUpdate()
@@ -1284,6 +1289,7 @@ public class World : HiveObject
 			while ( challenge.productivityGoals.Count < (int)Item.Type.total )
 				challenge.productivityGoals.Add( 0 );
 		}
+		challenge?.UpdateProductivityGoals();
 
 		while ( itemTypeUsage.Count < (int)Item.Type.total )
 			itemTypeUsage.Add( 0 );

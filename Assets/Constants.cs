@@ -250,7 +250,7 @@ public static class Constants
 		public static float productionUpdateFactor = (float)Math.Pow( 0.9, 1.0/60 );
 		public const float defaultInputWeight = 0.5f;
         public const int attackPeriod = 200;
-        public const float challengeProductivityPerBuilding = 0.95f;
+        public const float challengeProductivityPerBuilding = 0.9f;
         public static string[] names = 
         {
             "Ahmose",
