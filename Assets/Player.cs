@@ -11,7 +11,7 @@ public abstract class Player : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	float totalEfficiency { set {} }
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer efficiencyTimer { set { chartAdvanceTimer = value; } }
+	Game.Timer efficiencyTimer { set { chartAdvanceTimer = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	Team.Chart averageEfficiencyHistory { set {} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -27,7 +27,7 @@ public abstract class Player : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	int coinsProduced { set {} }
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer productivityTimer { set { chartAdvanceTimer = value; } }
+	Game.Timer productivityTimer { set { chartAdvanceTimer = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	Stock mainBuilding { set { safeTeam.mainBuilding = value; } }
 	[Obsolete( "Compatibility with old files", true )]
@@ -43,9 +43,9 @@ public abstract class Player : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	List<Building> influencers { set { safeTeam.influencers = value; } }
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer chartAdvanceTimer { set { safeTeam.chartAdvanceTimer = value; } }
+	Game.Timer chartAdvanceTimer { set { safeTeam.chartAdvanceTimer = value; } }
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer productivityUpdateTimer { set { safeTeam.productivityUpdateTimer = value; } }
+	Game.Timer productivityUpdateTimer { set { safeTeam.productivityUpdateTimer = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	List<Team.Chart> itemProductivityHistory { set { safeTeam.itemProductivityHistory = value; } }
 	[Obsolete( "Compatibility with old files", true )]
@@ -148,7 +148,7 @@ public class Team : HiveObject
 	public Versioned versionedRoadNetworkChanged = new ();
 	public Versioned versionedBuildingDelete = new ();
 	public List<Building> influencers = new ();
-	public World.Timer chartAdvanceTimer = new (), productivityUpdateTimer = new ();
+	public Game.Timer chartAdvanceTimer = new (), productivityUpdateTimer = new ();
 	public List<Chart> itemProductivityHistory = new ();
 	public List<Stock> stocks = new ();
 	public List<Flag> flags = new ();

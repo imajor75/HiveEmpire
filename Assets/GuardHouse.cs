@@ -15,7 +15,7 @@ public abstract class Attackable : Building
 
 	List<GameObject> trash = new ();
 	List<Material> trashMaterials = new ();
-	World.Timer trashTimer = new ();
+	Game.Timer trashTimer = new ();
 
 	public Team attackerTeam
 	{

@@ -21,14 +21,14 @@ public class Workshop : Building
 	public Node resourcePlace;
 	public Mode mode = Mode.whenNeeded;
 	public int itemsProduced;
-	public World.Timer resting = new ();
+	public Game.Timer resting = new ();
 	public LinkedList<PastStatus> statuses = new ();
 	public Status currentStatus = Status.unknown;
 	public int statusProduction;
-	public World.Timer statusDuration = new ();
+	public Game.Timer statusDuration = new ();
 	public bool outOfResourceReported;
 	public Resource dungPile;
-	public World.Timer allowFreeStone = new ();
+	public Game.Timer allowFreeStone = new ();
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
@@ -76,7 +76,7 @@ public class Workshop : Building
 	[Obsolete( "Compatibility with old files", true )]
 	float[] lastCalculatedProductivity { set {} }
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer[] productivityCalculationTimer { set{} }
+	Game.Timer[] productivityCalculationTimer { set{} }
 	[Obsolete( "Compatibility with old files", true )]
 	int[] lastProductivityCalculationTimeRange { set{} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -84,7 +84,7 @@ public class Workshop : Building
 	[Obsolete( "Compatibility with old files", true )]
 	float lastCalculatedMaxOutput { set {} }
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer maxOutputCalculationTimer { set {} }
+	Game.Timer maxOutputCalculationTimer { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int itemsProducedAtLastCheck { set {} }
 
@@ -92,7 +92,7 @@ public class Workshop : Building
 	struct Productivity
 	{
 		public float current;
-		public World.Timer timer;
+		public Game.Timer timer;
 		public int workCounter;
 		public float weight;
 		public int timinglength;
@@ -377,7 +377,7 @@ public class Workshop : Building
 		public Node node;
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public Resource.Type resourceType;
-		public World.Timer timer = new ();
+		public Game.Timer timer = new ();
 		[Obsolete( "Compatibility with old files", true )]
 		Item item
 		{
@@ -460,7 +460,7 @@ public class Workshop : Building
 	public class Plant : Unit.Task
 	{
 		public Node node;
-		public World.Timer wait = new ();
+		public Game.Timer wait = new ();
 		public bool done;
 		public Resource.Type resourceType;
 
@@ -513,7 +513,7 @@ public class Workshop : Building
 		public Resource resource;
 		[Obsolete( "Compatibility with old files", true )]
 		int timer;
-		public World.Timer pasturingTimer = new ();
+		public Game.Timer pasturingTimer = new ();
 		public override bool ExecuteFrame()
 		{
 			if ( pasturingTimer.empty )

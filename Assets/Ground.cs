@@ -31,7 +31,6 @@ public class Ground : HiveObject
 	int layoutVersion, meshVersion;
 	World world 
 	{ 
-		get { return HiveCommon.game; } 
 		[Obsolete( "Compatibility with old files", true )]
 		set {} 
 	}
@@ -89,7 +88,7 @@ public class Ground : HiveObject
 	new public void Start()
 	{
 		gameObject.name = "Ground";
-		transform.SetParent( world.transform );
+		transform.SetParent( game.transform );
 		material = Resources.Load<Material>( "GroundMaterial" );
 
 		if ( blocks.Count == 0 )
@@ -253,17 +252,17 @@ public class Ground : HiveObject
 		foreach ( var n in nodes )
 		{
 			float d = heightMap.data[(int)Math.Round( xf * n.x ), (int)Math.Round( yf * n.y )];
-			n.height = d * world.generatorSettings.maxHeight;
+			n.height = d * game.generatorSettings.maxHeight;
 			n.type = Node.Type.grass;
 			float forestData = forestMap.data[(int)( xf * n.x ), (int)( yf * n.y )];
 			forestData = forestData - forestMap.averageValue + 0.5f;
-			if ( forestData < world.generatorSettings.forestGroundChance )
+			if ( forestData < game.generatorSettings.forestGroundChance )
 				n.type = Node.Type.forest;
-			if ( d > world.generatorSettings.hillLevel )
+			if ( d > game.generatorSettings.hillLevel )
 				n.type = Node.Type.hill;
-			if ( d > world.generatorSettings.mountainLevel )
+			if ( d > game.generatorSettings.mountainLevel )
 				n.type = Node.Type.mountain;
-			if ( d < world.generatorSettings.waterLevel )
+			if ( d < game.generatorSettings.waterLevel )
 				n.type = Node.Type.underWater;
 			n.transform.localPosition = n.position;
 		}
@@ -324,6 +323,8 @@ public class Ground : HiveObject
 
 	public void RecalculateOwnership()
 	{
+		assert.AreEqual( this, game.ground );
+
 		int previousPlayerNodeCount = 0, newPlayerNodeCount = 0;
 		foreach ( var n in nodes )
 		{
@@ -333,7 +334,7 @@ public class Ground : HiveObject
 			n.influence = 0;
 		}
 
-		foreach ( var team in world.teams )
+		foreach ( var team in game.teams )
 		{
 			foreach ( var building in team.influencers )
 			{
@@ -393,8 +394,8 @@ public class Ground : HiveObject
 				node.road.Remove();
 		}
 
-		if ( newPlayerNodeCount < previousPlayerNodeCount && !world.lastAreaInfluencer.changedSide )
-			root.mainTeam?.SendMessage( "You lost area due to this enemy building", world.lastAreaInfluencer );
+		if ( newPlayerNodeCount < previousPlayerNodeCount && !game.lastAreaInfluencer.changedSide )
+			root.mainTeam?.SendMessage( "You lost area due to this enemy building", game.lastAreaInfluencer );
 
 		RecreateMapGroundTexture();
 		dirtyOwnership = false;

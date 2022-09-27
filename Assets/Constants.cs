@@ -18,6 +18,7 @@ public static class Constants
         public const int normalSpeedPerSecond = 50;
         public const int allowedAdvancePerFrame = 5;
         public const float oreCountPerNode = 0.02f;
+        public const int soundMaxDistance = 7;
     }
 
     public static class Network

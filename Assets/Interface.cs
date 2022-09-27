@@ -33,7 +33,7 @@ public class Interface : HiveObject
 	public int fullValidate = fullValidateInterval;
 	const int fullValidateInterval = 500;
 	Image[] speedButtons = new Image[3];
-	public List<World.Challenge> challenges;
+	public List<Game.Challenge> challenges;
 	public MonoBehaviour replayIcon;
 	Operation lastShownOperation;
 	public int selectByID;
@@ -558,11 +558,11 @@ public class Interface : HiveObject
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
 		replayIcon = this.Image( Icon.replay ).Link( iconFolder.transform ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
-		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetWorldSpeed( World.Speed.pause ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetGameSpeed( Game.Speed.pause ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
-		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetWorldSpeed( World.Speed.normal ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
+		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetGameSpeed( Game.Speed.normal ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
-		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetWorldSpeed( World.Speed.fast ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
+		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetGameSpeed( Game.Speed.fast ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
 		FPSDisplay = this.Text().Link( iconFolder.transform ).Pin( 20, 20, 200, 20, 0, 0 ).AddOutline();
@@ -588,7 +588,7 @@ public class Interface : HiveObject
 		StartInterface();
 	}
 
-	void SetWorldSpeed( World.Speed speed )
+	void SetGameSpeed( Game.Speed speed )
 	{
 		if ( network.state == Network.State.client )
 		{
@@ -669,7 +669,7 @@ public class Interface : HiveObject
 			eye.FocusOn( closest, true );
 	}
 
-	public void NewGame( World.Challenge challenge, bool randomizeSeed = true )
+	public void NewGame( Game.Challenge challenge, bool randomizeSeed = true )
 	{
 		if ( randomizeSeed && !challenge.fixedSeed )
 			challenge.seed = new System.Random().Next();
@@ -742,7 +742,7 @@ public class Interface : HiveObject
 		string file = Application.persistentDataPath + "/challenges.json";
 		if ( !File.Exists( file ) )
 			file = Application.streamingAssetsPath + "/challenges.json";
-		challenges = Serializer.Read<World.Challenge.List>( file ).list;
+		challenges = Serializer.Read<Game.Challenge.List>( file ).list;
 		var challengeContainer = new GameObject( "Challenges" );
 		challengeContainer.transform.SetParent( transform );
 		foreach ( var challenge in challenges )
@@ -752,7 +752,7 @@ public class Interface : HiveObject
 		}
 	}
 
-	public void OnGoalReached( World.Goal goal )
+	public void OnGoalReached( Game.Goal goal )
 	{
 		foreach ( var challenge in challenges )
 		{
@@ -760,7 +760,7 @@ public class Interface : HiveObject
 			{
 				challenge.bestSolutionLevel = goal;
 				challenge.bestSolutionReplayFileName = oh.SaveReplay();
-				Serializer.Write( Application.persistentDataPath + "/challenges.json", new World.Challenge.List { list = challenges }, true, false );
+				Serializer.Write( Application.persistentDataPath + "/challenges.json", new Game.Challenge.List { list = challenges }, true, false );
 			}
 		}
 
@@ -1167,7 +1167,7 @@ public class Interface : HiveObject
 		Image image;
 		public new bool pinned;
 		int width, height;
-		public World.Timer life = new ();
+		public Game.Timer life = new ();
 
 		public static Tooltip Create()
 		{
@@ -2905,7 +2905,7 @@ public class Interface : HiveObject
 			public Color[] statusColors;
 			public List<Workshop.Status> statusList;
 			public Workshop workshop;
-			public World.Timer autoRefresh = new ();
+			public Game.Timer autoRefresh = new ();
 			public Image circle;
 			const int autoRefreshInterval = Constants.World.normalSpeedPerSecond * 60;
 			public List<Text> intervalTexts = new ();
@@ -6407,7 +6407,7 @@ if ( cart )
 	{
 		ScrollRect scroll;
 		Team team;
-		World.Speed speedToRestore;
+		Game.Speed speedToRestore;
 		static Comparison<Item> comparison = CompareByAge;
 		static bool reversed;
 
@@ -6423,7 +6423,7 @@ if ( cart )
 			name = "Item list panel";
 			this.team = team;
 			speedToRestore = game.speed;
-			game.SetSpeed( World.Speed.pause );
+			game.SetSpeed( Game.Speed.pause );
 
 			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
 			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
@@ -6603,7 +6603,7 @@ if ( cart )
 		Building building;
 		Item.Type itemType;
 		ItemDispatcher.Potential.Type direction;
-		World.Speed speedToRestore;
+		Game.Speed speedToRestore;
 		bool filled;
 
 		public static LogisticList Create()
@@ -6619,8 +6619,8 @@ if ( cart )
 			root.mainTeam.itemDispatcher.queryType = this.direction = direction;
 			root.mainTeam.itemDispatcher.fullTracking = true;
 			speedToRestore = game.speed;
-			if ( game.speed == World.Speed.pause )
-				game.SetSpeed( World.Speed.normal );
+			if ( game.speed == Game.Speed.pause )
+				game.SetSpeed( Game.Speed.normal );
 
 			if ( base.Open( null, 0, 0, 540, 320 ) )
 				return;
@@ -6659,7 +6659,7 @@ if ( cart )
 				root.mainTeam.itemDispatcher.fullTracking = false;
 				root.mainTeam.itemDispatcher.queryBuilding = this.building = null;
 				root.mainTeam.itemDispatcher.queryItemType = this.itemType = Item.Type.unknown;
-				game.SetSpeed( World.Speed.pause );
+				game.SetSpeed( Game.Speed.pause );
 			}
 		}
 
@@ -7091,14 +7091,14 @@ if ( cart )
 				Text( challenge.worldSize switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Button( "Begin" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
 				Text( challenge.bestSolutionLevel.ToString() ).Link( view ).PinSideways( 10, row, 60, iconSize );
-				if ( challenge.bestSolutionLevel != World.Goal.none )
+				if ( challenge.bestSolutionLevel != Game.Goal.none )
 					Button( "Replay" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => root.LoadReplay( challenge.bestSolutionReplayFileName ) );
 				row -= iconSize;
 			}
 			scroll.SetContentSize( 0, -row );
 		}
 
-		void StartChallenge( World.Challenge challenge )
+		void StartChallenge( Game.Challenge challenge )
 		{
 			if ( !challenge.fixedSeed )
 				challenge.seed = int.Parse( manualSeed.text );
@@ -7136,7 +7136,7 @@ if ( cart )
 		Text worldTime, maintain, timeLeft, conditions, currentChallenge;
 
 		ProgressBar progress;
-		World.Speed originalSpeed = (World.Speed)(-1);
+		Game.Speed originalSpeed = (Game.Speed)(-1);
 		bool worldStopped;
 
 		public static ChallengePanel Create()
@@ -7144,13 +7144,13 @@ if ( cart )
 			return new GameObject( "Challenge Progress Panel" ).AddComponent<ChallengePanel>();
 		}
 
-		public void Open( World.Goal reached = World.Goal.none )
+		public void Open( Game.Goal reached = Game.Goal.none )
 		{
 			var challenge = game.challenge;
-			worldStopped = reached != World.Goal.none;
+			worldStopped = reached != Game.Goal.none;
 			noResize = true;
 			noPin = true;
-			if ( reached != World.Goal.none )
+			if ( reached != Game.Goal.none )
 				reopen = true;
 			if ( base.Open( 400, 220 ) )
 				return;
@@ -7162,25 +7162,25 @@ if ( cart )
 				var t = Text();
 				t.PinDownwards( -100, 0, 200, 30, 0.5f ).AddOutline();
 				t.alignment = TextAnchor.MiddleCenter;
-				if ( reached == World.Goal.gold )
+				if ( reached == Game.Goal.gold )
 				{
 					t.color = Color.yellow;
 					t.text = "VICTORY!";
 				}
-				else if (reached == World.Goal.silver )
+				else if (reached == Game.Goal.silver )
 				{
 					t.color = Color.grey;
 					t.text = "Silver level reached";
 				}
 				else
 				{
-					Assert.global.AreEqual( reached, World.Goal.bronze );
+					Assert.global.AreEqual( reached, Game.Goal.bronze );
 					t.color = Color.yellow.Dark();
 					t.text = "Bronze level reached";
 				}
 				originalSpeed = HiveCommon.game.speed;
 				eye.FocusOn( root.mainTeam.mainBuilding.flag.node, true );
-				HiveCommon.game.SetSpeed( World.Speed.pause );
+				HiveCommon.game.SetSpeed( Game.Speed.pause );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
@@ -7188,12 +7188,12 @@ if ( cart )
 			currentChallenge = Text().PinDownwards( borderWidth, 0, 400, iconSize );
 			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
 			conditions = Text( "", 10 ).PinDownwards( borderWidth, 0, 300, 3 * iconSize );
-			if ( game.challenge.maintain > 0 && game.challenge.reachedLevel < World.Goal.gold )
+			if ( game.challenge.maintain > 0 && game.challenge.reachedLevel < Game.Goal.gold )
 			{
 				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				maintain.alignment = TextAnchor.MiddleCenter;
 			}
-			if ( game.challenge.timeLimit > 0 && game.challenge.reachedLevel < World.Goal.gold )
+			if ( game.challenge.timeLimit > 0 && game.challenge.reachedLevel < Game.Goal.gold )
 			{
 				timeLeft = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				timeLeft.alignment = TextAnchor.MiddleCenter;
@@ -7214,9 +7214,9 @@ if ( cart )
 			conditions.text = challenge.conditionsText;
 			if ( maintain )
 			{
-				World.Goal level = World.Goal.none;
+				Game.Goal level = Game.Goal.none;
 				int time = 0;
-				void CheckLevel( World.Goal levelToCheck, World.Timer timer )
+				void CheckLevel( Game.Goal levelToCheck, Game.Timer timer )
 				{
 					if ( timer.inProgress )
 					{
@@ -7224,10 +7224,10 @@ if ( cart )
 						time = -timer.age;
 					}
 				}
-				CheckLevel( World.Goal.bronze, challenge.maintainBronze );
-				CheckLevel( World.Goal.silver, challenge.maintainSilver );
-				CheckLevel( World.Goal.gold, challenge.maintainGold );
-				if ( level != World.Goal.none )
+				CheckLevel( Game.Goal.bronze, challenge.maintainBronze );
+				CheckLevel( Game.Goal.silver, challenge.maintainSilver );
+				CheckLevel( Game.Goal.gold, challenge.maintainGold );
+				if ( level != Game.Goal.none )
 					maintain.text = $"Maintain {level} level for {UIHelpers.TimeToString( time )} more!";
 				else
 					maintain.text = "No appraisable level reached yet";
@@ -7236,16 +7236,16 @@ if ( cart )
 			{
 				if ( challenge.allowTimeLeftLevels )
 				{
-					void GoalLeft( World.Goal goal, float multiplier )
+					void GoalLeft( Game.Goal goal, float multiplier )
 					{
 						var left = (int)(challenge.timeLimit * multiplier - challenge.life.age);
 						if ( left >= 0 )
 							timeLeft.text = $"Time left: {UIHelpers.TimeToString( left )} ({goal})";
 					}
 					timeLeft.text = "Out of time";
-					GoalLeft( World.Goal.bronze, 2 );
-					GoalLeft( World.Goal.silver, 4f/3 );
-					GoalLeft( World.Goal.gold, 1 );
+					GoalLeft( Game.Goal.bronze, 2 );
+					GoalLeft( Game.Goal.silver, 4f/3 );
+					GoalLeft( Game.Goal.gold, 1 );
 				}
 				else
 				{

@@ -8,19 +8,19 @@ public class Resource : HiveObject
 {
 	public Node node;
 	public Type type;
-	public World.Timer life = new ();
-	public World.Timer apple = new ();
-	public World.Timer scaleUpdate = new ();
+	public Game.Timer life = new ();
+	public Game.Timer apple = new ();
+	public Game.Timer scaleUpdate = new ();
 	public int charges = 1;
 	public bool infinite;
 	public int bodyRandom;	// Just a random number. We cannot generate a random number in Start otherwise CRC would break
-	public World.Timer gathered = new ();
-	public World.Timer keepAway = new ();
-	public World.Timer spawn = new ();
+	public Game.Timer gathered = new ();
+	public Game.Timer keepAway = new ();
+	public Game.Timer spawn = new ();
 	public Unit hunter;
 	public List<Unit> animals = new ();
 	public Unit origin;		// Only valid for a prey, references the bunny
-	public World.Timer silence = new ();
+	public Game.Timer silence = new ();
 
 	static Material bark, leaves;
 	GameObject body;
@@ -61,7 +61,7 @@ public class Resource : HiveObject
 	}
 
 	[Obsolete( "Compatibility with old files", true )]
-	World.Timer exposed { set {} }
+	Game.Timer exposed { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	float strength { set {} }
 

@@ -14,8 +14,8 @@ public class Stock : Attackable
 	public int total;
 	public int totalTarget;
 	public int maxItems = Constants.Stock.defaultmaxItems;
-	public World.Timer offersSuspended = new ();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
-	public World.Timer resupplyTimer = new ();
+	public Game.Timer offersSuspended = new ();     // When this timer is in progress, the stock is not offering items. This is done only for cosmetic reasons, it won't slow the rate at which the stock is providing items.
+	public Game.Timer resupplyTimer = new ();
 	public bool fullReported, fullReportedCart;
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }

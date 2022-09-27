@@ -29,7 +29,7 @@ public class Unit : HiveObject
 	public Flag exclusiveFlag;
 	public bool recalled;
 	public int itemsDelivered;
-	public World.Timer bored = new ();
+	public Game.Timer bored = new ();
 	public BodyState bodyState = BodyState.unknown;
 	public Color currentColor;
 	public List<Task> taskQueue = new ();
@@ -270,7 +270,7 @@ public class Unit : HiveObject
 	{
 		[JsonIgnore]
 		public Act act;
-		public World.Timer timer = new (), timeSinceStarted = new ();
+		public Game.Timer timer = new (), timeSinceStarted = new ();
 		public bool started = false;
 		public BodyState preState;
 		GameObject tool;
@@ -504,7 +504,7 @@ public class Unit : HiveObject
 		public HiveObject ignoreObject;
 		public Node avoid;
 
-		public World.Timer interruptionTimer = new ();
+		public Game.Timer interruptionTimer = new ();
 		[JsonIgnore]
 		public Act lastStepInterruption;
 		[JsonProperty]
@@ -565,7 +565,7 @@ public class Unit : HiveObject
 		public int targetPoint;
 		public int wishedPoint = -1;
 		public bool exclusive;
-		public World.Timer stuck = new ();
+		public Game.Timer stuck = new ();
 
 		public void Setup( Unit boss, Road road, int point, bool exclusive )
 		{
@@ -776,7 +776,7 @@ public class Unit : HiveObject
 		public Item[] items = new Item[2];
 		public Path path;  // Save the path just to be able to test if it has been changed
 		public bool[] reparented = new bool[2];	// See PickupItem.Cancel. Originally I wanted to save the Transformation reference, but that cannot be serialized
-		public World.Timer timer = new ();
+		public Game.Timer timer = new ();
 		public bool expectingSecondary;
 
 		[Obsolete( "Compatibility with old files", true )]
@@ -948,7 +948,7 @@ public class Unit : HiveObject
 		static public int putdownTimeStart = 120;
 		static public int putdownRelinkTime = 80;
 		public Item[] items = new Item[2];
-		public World.Timer timer = new ();
+		public Game.Timer timer = new ();
 
 		[Obsolete( "Compatibility with old files", true )]
 		Item item { set { items[0] = value; } }
@@ -1070,7 +1070,7 @@ public class Unit : HiveObject
 	public class Wait : Task
 	{
 		public int time;
-		public World.Timer timer = new ();
+		public Game.Timer timer = new ();
 
 		public void Setup( Unit boss, int time )
 		{

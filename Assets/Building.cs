@@ -161,7 +161,7 @@ abstract public class Building : HiveObject
 		public bool permanent;
 		public bool flattened = false;	// I would rather call this 'done', but unity gives an error message then
 		public HiveObject ignoreDuringWalking;
-		public World.Timer suspend = new ();
+		public Game.Timer suspend = new ();
 		public float level;
 		public Unit builder;
 		public List<Node> area;

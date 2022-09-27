@@ -10,7 +10,7 @@ public class Simpleton : Player
     [JsonIgnore]
     public List<Task> tasks;
     public int currentProblem;
-    public World.Timer inability = new ();
+    public Game.Timer inability = new ();
     public float confidence = Constants.Simpleton.defaultConfidence;
     public List<Node> blockedNodes = new ();
     public List<Item.Type> lackingProductions = new ();
@@ -167,11 +167,11 @@ public class Simpleton : Player
     public class Data
     {
         public bool isolated;
-        public World.Timer lastCleanup = new ();
+        public Game.Timer lastCleanup = new ();
         public List<Deal> deals = new ();
         public List<Item.Type> managedItemTypes = new ();
-        public World.Timer lastDealCheck = new ();
-        public World.Timer lastTimeHadResources = new ();
+        public Game.Timer lastDealCheck = new ();
+        public Game.Timer lastTimeHadResources = new ();
         public HiveObject hiveObject;
         public Building possiblePartner;
         public Item.Type possiblePartnerItemType;

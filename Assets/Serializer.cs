@@ -119,8 +119,13 @@ public class Serializer
 				}
 				case "$create":
 				{
-					var newType = Type.GetType( reader.Value as string );
-					Assert.global.IsNotNull( newType, $"Type {reader.Value} not found in {fileName}" );
+					var typeName = reader.Value as string;
+					if ( typeName == "World+Challenge" )
+						typeName = "Game+Challenge";
+					if ( typeName == "World+Timer" )
+						typeName = "Game+Timer";
+					var newType = Type.GetType( typeName );
+					Assert.global.IsNotNull( newType, $"Type {typeName} not found in {fileName}" );
 					objects.Add( owner = CreateObject( newType ) );
 					break;
 				}
@@ -401,7 +406,7 @@ public class Serializer
 		{
 			if ( link.referencer is Stock stock && link.reference is Stock.Cart cart && stock.destroyed && !cart.destroyed )
 				cart.destroyed = true;
-			if ( link.referencer is OperationHandler oh && link.reference is World.Challenge challenge && challenge.destroyed && !oh.destroyed )
+			if ( link.referencer is OperationHandler oh && link.reference is Game.Challenge challenge && challenge.destroyed && !oh.destroyed )
 				challenge.destroyed = false;
 			if ( link.referencer is GuardHouse gh && link.reference is Unit soldier && !gh.destroyed && soldier.destroyed && gh.assassin == soldier )
 			{

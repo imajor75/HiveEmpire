@@ -17,7 +17,7 @@ public class OperationHandler : HiveObject
     public int CRCCodesSkipped;
     public int currentCRCCode;
     public Mode mode;
-    public World.Challenge challenge;
+    public Game.Challenge challenge;
     public int executeIndex = 0;
     public int replayLength = -1;
     public int currentGroup = 0;

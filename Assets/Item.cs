@@ -33,8 +33,8 @@ public class Item : HiveObject
 	public Watch watchRoadDelete = new ();
 	public Watch watchBuildingDelete = new ();
 	public bool tripCancelled;		// If this boolean is true, the items destination was lost, so the current value of the destination member is zero. It will be tudned back to false once a new destination for the item is found.
-	public World.Timer life = new ();
-	public World.Timer atFlag = new ();
+	public Game.Timer life = new ();
+	public Game.Timer atFlag = new ();
 	const int timeoutAtFlag = 9000;
 	public Item buddy;  // This reference is used when two items at the different end of a road are swapping space, one goes to one direction, while the other one is going the opposite. 
 						// Otherwise this member is null. Without this feature a deadlock at a road can very easily occur. When a hauler notices that there is a possibility to swap two items, 
