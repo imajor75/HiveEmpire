@@ -682,10 +682,10 @@ public class Workshop : Building
 	static public void GenerateInputs()
 	{
 		System.Random rnd = new System.Random( World.rnd.Next() );
-		foreach ( var configuration in world.workshopConfigurations )
+		foreach ( var configuration in game.workshopConfigurations )
 			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
 
-		foreach ( var configuration in world.workshopConfigurations )
+		foreach ( var configuration in game.workshopConfigurations )
 		{
 			if ( configuration.productionTimeMax >= 0 )
 			{
@@ -697,22 +697,22 @@ public class Workshop : Building
 				configuration.outputStackSize = (int)Math.Floor( configuration.outputCount + rnd.NextDouble() );
 		}
 
-		world.itemTypeUsage = new ();
+		game.itemTypeUsage = new ();
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
-			world.itemTypeUsage.Add( 0 );
-		world.workshopTypeUsage = new ();
+			game.itemTypeUsage.Add( 0 );
+		game.workshopTypeUsage = new ();
 		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
-			world.workshopTypeUsage.Add( 0 );
+			game.workshopTypeUsage.Add( 0 );
 
 		void AddWeight( Item.Type itemType, float weight )
 		{
-			world.itemTypeUsage[(int)itemType] += weight;
-			foreach ( var configuration in world.workshopConfigurations )
+			game.itemTypeUsage[(int)itemType] += weight;
+			foreach ( var configuration in game.workshopConfigurations )
 			{
 				if ( configuration.outputType != itemType )
 					continue;
 				var workshopWeight = weight / configuration.outputStackSize;
-				world.workshopTypeUsage[(int)configuration.type] += workshopWeight;
+				game.workshopTypeUsage[(int)configuration.type] += workshopWeight;
 				if ( configuration.generatedInputs == null )
 					continue;
 
@@ -730,12 +730,12 @@ public class Workshop : Building
 		AddWeight( Item.Type.plank, 1 );
 		AddWeight( Item.Type.stone, 1 );
 		AddWeight( Item.Type.soldier, 1 );
-		world.workshopTypeUsage[(int)Workshop.Type.forester] = world.workshopTypeUsage[(int)Workshop.Type.woodcutter];
+		game.workshopTypeUsage[(int)Workshop.Type.forester] = game.workshopTypeUsage[(int)Workshop.Type.woodcutter];
 	}
 
 	static public Configuration GetConfiguration( Type type )
 	{
-		foreach ( var c in world.workshopConfigurations )
+		foreach ( var c in game.workshopConfigurations )
 		{
 			if ( c.type == type )
 				return c;
@@ -806,7 +806,7 @@ public class Workshop : Building
 				a.simulationSpeed = 1;
 				smoke.Simulate( 10 );
 				smoke.Play();
-				a.simulationSpeed = world.timeFactor;
+				a.simulationSpeed = game.timeFactor;
 			}
 			PlayWorkingSound();
 		}

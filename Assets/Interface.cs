@@ -20,7 +20,6 @@ public class Interface : HiveObject
 	public List<Panel> panels = new ();
 	public PostProcessResources postProcessResources;
 	public static Font font;
-	public new World world;
 	Canvas canvas;
 	public Workshop.Type selectedWorkshopType = Workshop.Type.unknown;
 	public Viewport viewport;
@@ -82,7 +81,7 @@ public class Interface : HiveObject
 
 	static public Hotkey showFPSHotkey = new Hotkey( "Show FPS", KeyCode.UpArrow, true, true );
 
-	public bool playerInCharge { get { return world.operationHandler.mode == OperationHandler.Mode.recording; } }
+	public bool playerInCharge { get { return game.operationHandler.mode == OperationHandler.Mode.recording; } }
 	public Team mainTeam { get { return mainPlayer?.team; } }
 
 	public static int iconSize { get => Constants.Interface.iconSize; }
@@ -352,8 +351,8 @@ public class Interface : HiveObject
 	public void OnApplicationQuit()
 	{
 		if ( settings.saveOnExit && !Assert.error )
-			world.Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
-		world.Clear();
+			game.Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + ".json", false );
+		game.Clear();
 		logFile.Close();
 	}
 
@@ -582,7 +581,7 @@ public class Interface : HiveObject
 			globalSettings = new Settings();
 		globalSettings.Apply();
 
-		world = World.Create().Setup();
+		Game.Create().Setup();
 		#if DEBUG
 			StartCoroutine( ValidateCoroutine() );
 		#endif
@@ -597,7 +596,7 @@ public class Interface : HiveObject
 			return;
 		}
 
-		world.SetSpeed( speed );
+		game.SetSpeed( speed );
 	}
 
 	public void OnMessagesClicked()
@@ -616,7 +615,7 @@ public class Interface : HiveObject
 			if ( myFiles.Count() > 0 )
 				Load( myFiles.First().FullName );
 		}
-		if ( !world.gameInProgress )
+		if ( !game.gameInProgress )
 		{
 			var demoFile = Application.streamingAssetsPath + "/demolevel.json";
 			if ( File.Exists( demoFile ) )
@@ -675,9 +674,9 @@ public class Interface : HiveObject
 		if ( randomizeSeed && !challenge.fixedSeed )
 			challenge.seed = new System.Random().Next();
 
-		world.NewGame( challenge );
-		if ( world.players.Count > 0 )
-			mainPlayer = world.players[0];
+		game.NewGame( challenge );
+		if ( game.players.Count > 0 )
+			mainPlayer = game.players[0];
 		else
 			mainPlayer = null;
 		eye.FocusOn( mainTeam.mainBuilding, approach:false );
@@ -688,17 +687,17 @@ public class Interface : HiveObject
 
 	public void Load( string fileName )
 	{
-		world.Load( fileName );
-		mainPlayer = world.controllingPlayer;
-		if ( mainPlayer == null && world.players.Count > 0 )
-			mainPlayer = world.players[0];
+		game.Load( fileName );
+		mainPlayer = game.controllingPlayer;
+		if ( mainPlayer == null && game.players.Count > 0 )
+			mainPlayer = game.players[0];
 		lastSave = Time.unscaledTime;
 	}
 
 	public void Save( string fileName = "", bool manualSave = false )
 	{
 		if ( fileName == "" )
-			fileName = Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json";
+			fileName = Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + ".json";
 		delayedSaveName = fileName;
 		delayedManualSave = manualSave;
 		delayedSaveValid = false;
@@ -757,7 +756,7 @@ public class Interface : HiveObject
 	{
 		foreach ( var challenge in challenges )
 		{
-			if ( challenge.title == world.challenge.title && challenge.bestSolutionLevel < goal )
+			if ( challenge.title == game.challenge.title && challenge.bestSolutionLevel < goal )
 			{
 				challenge.bestSolutionLevel = goal;
 				challenge.bestSolutionReplayFileName = oh.SaveReplay();
@@ -772,7 +771,7 @@ public class Interface : HiveObject
 	{
 		requestUpdate = false;
 		if ( settings.autoSave && Time.unscaledTime - lastSave > settings.autoSaveInterval )
-			Save( Application.persistentDataPath + "/Saves/" + world.nextSaveFileName + ".json", false );
+			Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + ".json", false );
 		if ( mainPlayer && messageButton )
 		{
 			if ( mainPlayer.messages.Count != 0 )
@@ -872,20 +871,20 @@ public class Interface : HiveObject
 			if ( building != mainTeam?.mainBuilding )
 			{
 				eye.FocusOn( building );
-				world.operationHandler.ScheduleRemoveBuilding( building );
+				game.operationHandler.ScheduleRemoveBuilding( building );
 			}
 		}
 #endif
 
-		if ( speedButtons[0] && world ) { speedButtons[0].color = world.timeFactor == 0 ? Color.white : Color.grey; };
-		if ( speedButtons[1] && world ) { speedButtons[1].color = world.timeFactor == 1 ? Color.white : Color.grey; };
-		if ( speedButtons[2] && world ) { speedButtons[2].color = world.timeFactor == 8 ? Color.white : Color.grey; };
- 		if ( world?.operationHandler )	// This can be null during join
+		if ( speedButtons[0] && game ) { speedButtons[0].color = game.timeFactor == 0 ? Color.white : Color.grey; };
+		if ( speedButtons[1] && game ) { speedButtons[1].color = game.timeFactor == 1 ? Color.white : Color.grey; };
+		if ( speedButtons[2] && game ) { speedButtons[2].color = game.timeFactor == 8 ? Color.white : Color.grey; };
+ 		if ( game?.operationHandler )	// This can be null during join
 		{
 			replayIcon.gameObject.SetActive( !playerInCharge );
 			if ( !playerInCharge )
 			{
-				var next = world.operationHandler.NextToExecute( mainTeam );
+				var next = game.operationHandler.NextToExecute( mainTeam );
 				if ( showReplayAction && !playerInCharge && next != null && next.scheduleAt - time < Constants.Interface.showNextActionDuringReplay && next.location?.team == mainTeam )
 					ShowOperation( next );
 			}
@@ -893,7 +892,7 @@ public class Interface : HiveObject
 
 		if ( delayedSaveName != null && delayedSaveName != "" && delayedSaveValid )
 		{
-			world.Save( delayedSaveName, delayedManualSave );
+			game.Save( delayedSaveName, delayedManualSave );
 			delayedSaveName = null;
 		}
 		delayedSaveValid = true;
@@ -964,7 +963,7 @@ public class Interface : HiveObject
 	{
 #if DEBUG
 		if ( chain )
-			world.Validate( true );
+			game.Validate( true );
 
 		if ( !chain )	// This function is caller after load, before the Start functions would be called, so in that case skip checking the number of objects in the root
 			return;
@@ -1141,7 +1140,7 @@ public class Interface : HiveObject
 
 		public void Start()
 		{
-			transform.SetParent( HiveCommon.world.transform );
+			transform.SetParent( HiveCommon.game.transform );
 		}
 
 		public void Update()
@@ -3229,7 +3228,7 @@ public class Interface : HiveObject
 			int offset = 0;
 			for ( int j = 0; j < (int)Item.Type.total; j++ )
 			{
-				if ( world.itemTypeUsage[j] == 0 )
+				if ( game.itemTypeUsage[j] == 0 )
 					continue;
 				var t = (Item.Type)j;
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
@@ -3253,8 +3252,8 @@ public class Interface : HiveObject
 				controller.AddOption( Icon.input, "Show input potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.request ) );
 				controller.AddOption( Icon.output, "Show output potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.offer ) );
 #if DEBUG
-				controller.AddOption( Icon.exit, "Clear stock content", () => { data.content = 0; world.lastChecksum = 0; } );
-				controller.AddOption( Icon.plus, "Add one more", () => { data.content++; world.lastChecksum = 0; } );
+				controller.AddOption( Icon.exit, "Clear stock content", () => { data.content = 0; game.lastChecksum = 0; } );
+				controller.AddOption( Icon.plus, "Add one more", () => { data.content++; game.lastChecksum = 0; } );
 #endif
 				if ( data.content < data.cartOutput )
 					controller.AddOption( Icon.cart, "Start cart delivery as soon as possible", () => oh.ScheduleStockAdjustment( stock, t, Stock.Channel.cartOutputTemporary, 1 ) );
@@ -3583,7 +3582,7 @@ public class Interface : HiveObject
 			while ( itemTypes.Count != itemTypeIndex )
 			{
 				var itemType = itemTypes[itemTypeIndex++];
-				foreach ( var configuration in world.workshopConfigurations )
+				foreach ( var configuration in game.workshopConfigurations )
 				{
 					if ( configuration.outputType != itemType || configuration.generatedInputs == null )
 						continue;
@@ -3700,7 +3699,7 @@ public class Interface : HiveObject
 				}
 				int column = AllocColumn( iconSize * 2, width / expectedWorkshopCountInRow / 2 * ( workshopIndexInRow * 2 + 1 ) );
 				Workshop.Configuration workshop = null;
-				foreach ( var configuration in world.workshopConfigurations )
+				foreach ( var configuration in game.workshopConfigurations )
 					if ( configuration.outputType == current.itemType && configuration.type != Workshop.Type.stonemason )
 						workshop = configuration;
 				Assert.global.IsNotNull( workshop );
@@ -3830,7 +3829,7 @@ public class Interface : HiveObject
 
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
-				if ( world.workshopTypeUsage[i] == 0 )
+				if ( game.workshopTypeUsage[i] == 0 )
 					continue;
 					
 				var type = (Workshop.Type)i;
@@ -3870,9 +3869,9 @@ public class Interface : HiveObject
 				if ( o.productionTime != 0 )
 					tooltip += $"Production time {(o.productionTime * Time.fixedDeltaTime).ToString( "F0" )}s\n";
 				List<Workshop.Type> consumers = new ();
-				foreach ( var configuration in world.workshopConfigurations )
+				foreach ( var configuration in game.workshopConfigurations )
 				{
-					if ( configuration.generatedInputs == null || world.workshopTypeUsage[(int)configuration.type] == 0 )
+					if ( configuration.generatedInputs == null || game.workshopTypeUsage[(int)configuration.type] == 0 )
 						continue;
 					foreach ( var input in configuration.generatedInputs )
 					{
@@ -4166,7 +4165,7 @@ public class Interface : HiveObject
 			if ( !currentBlueprint || button != MouseButton.left )
 				return true;
 
-			if ( !root.world.roadTutorialShowed )
+			if ( !HiveCommon.game.roadTutorialShowed )
 				RoadTutorialPanel.Create();
 			if ( currentBlueprint is Building building )
 			{
@@ -5189,7 +5188,7 @@ if ( cart )
 				int currentValue = 0;
 				for ( int i = 0; i < (int)Item.Type.total; i++ )
 				{
-					if ( world.itemTypeUsage[i] == 0 )
+					if ( game.itemTypeUsage[i] == 0 )
 						continue;
 					if ( i == (int)itemType )
 						currentValue = options.Count;
@@ -5560,7 +5559,7 @@ if ( cart )
 			List<string> options = new ();
 			for ( int j = 0; j < (int)Building.Type.total; j++ )
 			{
-				if ( j < world.workshopTypeUsage.Count && world.workshopTypeUsage[j] == 0 )
+				if ( j < game.workshopTypeUsage.Count && game.workshopTypeUsage[j] == 0 )
 					continue;
 				string typeName = BuildingTypeToString( (Building.Type)j );
 				if ( typeName != null )
@@ -6147,7 +6146,7 @@ if ( cart )
 
 			RenderOverlayInfo();
 
-			if ( !mouseOver || world == null || eye == null )
+			if ( !mouseOver || game == null || eye == null )
 				return;
 			currentNode = FindNodeAt( Input.mousePosition );
 			if ( cursor && currentNode )
@@ -6423,8 +6422,8 @@ if ( cart )
 				return;
 			name = "Item list panel";
 			this.team = team;
-			speedToRestore = world.speed;
-			world.SetSpeed( World.Speed.pause );
+			speedToRestore = game.speed;
+			game.SetSpeed( World.Speed.pause );
 
 			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
 			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
@@ -6438,7 +6437,7 @@ if ( cart )
 		public override void Close()
 		{
 			base.Close();
-			world.SetSpeed( speedToRestore );
+			game.SetSpeed( speedToRestore );
 		}
 
 		void ChangeComparison( Comparison<Item> newComparison )
@@ -6619,9 +6618,9 @@ if ( cart )
 			root.mainTeam.itemDispatcher.queryItemType = this.itemType = itemType;
 			root.mainTeam.itemDispatcher.queryType = this.direction = direction;
 			root.mainTeam.itemDispatcher.fullTracking = true;
-			speedToRestore = world.speed;
-			if ( world.speed == World.Speed.pause )
-				world.SetSpeed( World.Speed.normal );
+			speedToRestore = game.speed;
+			if ( game.speed == World.Speed.pause )
+				game.SetSpeed( World.Speed.normal );
 
 			if ( base.Open( null, 0, 0, 540, 320 ) )
 				return;
@@ -6647,7 +6646,7 @@ if ( cart )
 			root.mainTeam.itemDispatcher.queryItemType = Item.Type.unknown;
 			root.mainTeam.itemDispatcher.queryBuilding = null;
 			root.mainTeam.itemDispatcher.fullTracking = false;
-			world.SetSpeed( speedToRestore );
+			game.SetSpeed( speedToRestore );
 		}
 
 		new public void Update()
@@ -6660,7 +6659,7 @@ if ( cart )
 				root.mainTeam.itemDispatcher.fullTracking = false;
 				root.mainTeam.itemDispatcher.queryBuilding = this.building = null;
 				root.mainTeam.itemDispatcher.queryItemType = this.itemType = Item.Type.unknown;
-				world.SetSpeed( World.Speed.pause );
+				game.SetSpeed( World.Speed.pause );
 			}
 		}
 
@@ -6768,7 +6767,7 @@ if ( cart )
 			int row = 0;
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
-				if ( world.itemTypeUsage[i] == 0 )
+				if ( game.itemTypeUsage[i] == 0 )
 					continue;
 				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
 				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 40, iconSize );
@@ -6898,7 +6897,7 @@ if ( cart )
 			selected = Item.Type.soldier;
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
-				if ( world.itemTypeUsage[i] == 0 )
+				if ( game.itemTypeUsage[i] == 0 )
 					continue;
 				var t = (Item.Type)i;
 				int column = UIHelpers.currentColumn;
@@ -6976,7 +6975,7 @@ if ( cart )
 			}
 			max = Math.Max( max, 0.0001f );
 			int tickPerBuilding = 2000, workshopCount = 0;
-			foreach ( var c in world.workshopConfigurations )
+			foreach ( var c in game.workshopConfigurations )
 			{
 				if ( c.outputType == selected && c.productionTime != 0 )
 				{
@@ -7147,7 +7146,7 @@ if ( cart )
 
 		public void Open( World.Goal reached = World.Goal.none )
 		{
-			var challenge = world.challenge;
+			var challenge = game.challenge;
 			worldStopped = reached != World.Goal.none;
 			noResize = true;
 			noPin = true;
@@ -7179,9 +7178,9 @@ if ( cart )
 					t.color = Color.yellow.Dark();
 					t.text = "Bronze level reached";
 				}
-				originalSpeed = root.world.speed;
+				originalSpeed = HiveCommon.game.speed;
 				eye.FocusOn( root.mainTeam.mainBuilding.flag.node, true );
-				root.world.SetSpeed( World.Speed.pause );
+				HiveCommon.game.SetSpeed( World.Speed.pause );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
@@ -7189,20 +7188,20 @@ if ( cart )
 			currentChallenge = Text().PinDownwards( borderWidth, 0, 400, iconSize );
 			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
 			conditions = Text( "", 10 ).PinDownwards( borderWidth, 0, 300, 3 * iconSize );
-			if ( world.challenge.maintain > 0 && world.challenge.reachedLevel < World.Goal.gold )
+			if ( game.challenge.maintain > 0 && game.challenge.reachedLevel < World.Goal.gold )
 			{
 				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				maintain.alignment = TextAnchor.MiddleCenter;
 			}
-			if ( world.challenge.timeLimit > 0 && world.challenge.reachedLevel < World.Goal.gold )
+			if ( game.challenge.timeLimit > 0 && game.challenge.reachedLevel < World.Goal.gold )
 			{
 				timeLeft = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
 				timeLeft.alignment = TextAnchor.MiddleCenter;
 			}
 			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			var row = UIHelpers.currentRow - iconSize / 2 - 10;
-			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => root.NewGame( world.challenge, false ) );
-			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => root.NewGame( world.challenge, true ) );
+			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => root.NewGame( game.challenge, false ) );
+			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => root.NewGame( game.challenge, true ) );
 			
 			this.SetSize( 400, -row + 30 );
 		}
@@ -7210,7 +7209,7 @@ if ( cart )
 		new public void Update()
 		{
 			var m = root.mainTeam.itemProductivityHistory[(int)Item.Type.soldier];
-			var challenge = world.challenge;
+			var challenge = game.challenge;
 			worldTime.text = $"World time: {UIHelpers.TimeToString( time )}";
 			conditions.text = challenge.conditionsText;
 			if ( maintain )
@@ -7265,7 +7264,7 @@ if ( cart )
 		new public void OnDestroy()
 		{
 			if ( originalSpeed > 0 )
-				root.world.SetSpeed( originalSpeed );
+				HiveCommon.game.SetSpeed( originalSpeed );
 			if ( worldStopped )
 				eye?.ReleaseFocus( null, true );
 			base.OnDestroy();
@@ -7310,12 +7309,12 @@ if ( cart )
 			int currentPlayer = 0;
 			if ( createNewPlayer )
 			{
-				foreach( var team in world.teams )
+				foreach( var team in game.teams )
 					items.Add( team.name );
 			}
 			else
 			{
-				foreach ( var player in world.players )
+				foreach ( var player in game.players )
 				{
 					if ( player == root.mainPlayer )
 						currentPlayer = items.Count;
@@ -7359,10 +7358,10 @@ if ( cart )
 			if ( createNewPlayer )
 				return;
 
-			if ( index >= world.players.Count )
+			if ( index >= game.players.Count )
 				Create( true );
 			else
-				root.mainPlayer = world.players[index];
+				root.mainPlayer = game.players[index];
 
 			Close();
 		}
@@ -7370,8 +7369,8 @@ if ( cart )
 		void CreatePlayer()
 		{
 			string team = Constants.Player.teamNames.Random();	// TODO No control over the team name?
-			if ( selector.value < world.teams.Count )
-				team = world.teams[selector.value].name;
+			if ( selector.value < game.teams.Count )
+				team = game.teams[selector.value].name;
 			oh.ScheduleCreatePlayer( newName.text, team );
 			Close();
 		}
@@ -7550,7 +7549,7 @@ if ( cart )
 		{
 			base.Open( 350, 120 );
 			Text( "Server name:" ).Pin( borderWidth, -borderWidth, 200, iconSize );
-			serverName = InputField( world.name ).PinDownwards( borderWidth, 0, 160, iconSize );
+			serverName = InputField( game.name ).PinDownwards( borderWidth, 0, 160, iconSize );
 			Button( "Host current game" ).Pin( -130, borderWidth + iconSize + iconSize / 5, 110, iconSize + iconSize / 5, 1, 0 ).AddClickHandler( () => OpenToLAN( serverName.text ) );
 			Button( "Cancel" ).Pin( -210, borderWidth + iconSize + iconSize / 5, 60, iconSize + iconSize / 5, 1, 0 ).AddClickHandler( Close );
 		}
@@ -7558,7 +7557,7 @@ if ( cart )
 		void OpenToLAN( string serverName )
 		{
 			network.StartServer( serverName );
-			world.nameOnNetwork = serverName;
+			game.nameOnNetwork = serverName;
 			MessagePanel.Create( $"Current game can be joined at {network.ownAddress}:{network.port}" );
 			Close();
 		}
@@ -7578,12 +7577,12 @@ if ( cart )
 			base.Open( 300, 200 );
 			UIHelpers.currentRow = -borderWidth;
 			foreach ( var option in network.localDestinations )
-				Button( $"Connect to {option.name}" ).PinDownwards( borderWidth, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => world.Join( option.address, option.port ) ).SetTooltip( $"{option.address}:{option.port}" );
+				Button( $"Connect to {option.name}" ).PinDownwards( borderWidth, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => game.Join( option.address, option.port ) ).SetTooltip( $"{option.address}:{option.port}" );
 
 			int row = UIHelpers.currentRow;
 			var direct = Button( "Connect to " ).PinDownwards( borderWidth, 0, 80, iconSize + iconSize / 5 );
 			var target = InputField( $"127.0.0.1:{Constants.Network.defaultPort}" ).PinSideways( 0, row, 150, iconSize );
-			direct.AddClickHandler( () => world.Join( target.text.Split( ':' ).First(), int.Parse( target.text.Split( ':' ).Last() ) ) );
+			direct.AddClickHandler( () => game.Join( target.text.Split( ':' ).First(), int.Parse( target.text.Split( ':' ).Last() ) ) );
 		}
 	}
 
@@ -7594,7 +7593,7 @@ if ( cart )
 		menu.AddItem( "New Game", () => { menu.Close(); ChallengeList.Create(); } );
 		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
 		if ( !initial )
-			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", world.nextSaveFileName, true ); } );
+			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.nextSaveFileName, true ); } );
 		menu.AddItem( "Replay", () => { menu.Close(); OpenReplay(); } );
 		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );
 		menu.AddItem( "Options", () => OpenOptionsMenu() );
@@ -7728,7 +7727,7 @@ if ( cart )
 			noResize = noPin = true;
 			base.Open( 350, 250 );
 			this.PinCenter( 0, 0, 350, 250, 0.5f, 0.5f );
-			root.world.roadTutorialShowed = true;
+			HiveCommon.game.roadTutorialShowed = true;
 
 			Text( "Every building has a junction in front of it, that is where the building is connected to the economy. On the other hand a junction might have zero " +
 				"buildings using it as an exit, but can also have multiple ones, if the buildings are facing different directions. " +

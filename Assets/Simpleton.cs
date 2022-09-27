@@ -63,16 +63,16 @@ public class Simpleton : Player
     public override void Defeat()
     {
         if ( active )
-            world.defeatedSimpletonCount++;
+            game.defeatedSimpletonCount++;
         base.Defeat();
     }
 
     public override void GameLogicUpdate()
     {
-        if ( nonConstructionUsage == null && world.workshopConfigurations != null )
+        if ( nonConstructionUsage == null && game.workshopConfigurations != null )
         {
             nonConstructionUsage = new ();
-            foreach ( var workshopType in world.workshopConfigurations )
+            foreach ( var workshopType in game.workshopConfigurations )
             {
                 if ( workshopType.generatedInputs == null )
                     continue;
@@ -388,7 +388,7 @@ public class Simpleton : Player
             }
             boss.noRoom = false;
 
-            foreach ( var workshopType in world.workshopConfigurations )
+            foreach ( var workshopType in game.workshopConfigurations )
             {
                 if ( workshopType.type == Workshop.Type.barrack && boss.lackingProductions.Count != 0 )
                 {
@@ -407,7 +407,7 @@ public class Simpleton : Player
                 var outputType = workshopType.outputType;
                 if ( workshopType.type == Workshop.Type.forester )
                     outputType = Item.Type.log;
-                boss.tasks.Add( new YieldTask( boss, workshopType.type, Math.Max( soldierYield * world.itemTypeUsage[(int)outputType], targetMinimum ) ) );
+                boss.tasks.Add( new YieldTask( boss, workshopType.type, Math.Max( soldierYield * game.itemTypeUsage[(int)outputType], targetMinimum ) ) );
             }
 
             boss.tasks.Add( new ExtendBorderTask( boss ) );
@@ -426,7 +426,7 @@ public class Simpleton : Player
 
             if ( !boss.peaceful )
             {
-                foreach ( var enemy in world.teams )
+                foreach ( var enemy in game.teams )
                 {
                     if ( enemy == boss.team )
                         continue;
@@ -583,7 +583,7 @@ public class Simpleton : Player
                         _ => 1
                     };
                 };
-                if ( HiveCommon.world.challenge.buildingMax != null && currentWorkshopCount >= HiveCommon.world.challenge.buildingMax[(int)workshopType] )
+                if ( HiveCommon.game.challenge.buildingMax != null && currentWorkshopCount >= HiveCommon.game.challenge.buildingMax[(int)workshopType] )
                     return finished;
 
                 nodeRow = -1;
@@ -636,7 +636,7 @@ public class Simpleton : Player
                 dependencies.Add( Workshop.Type.poultryRun );
             }
             var configuration = Workshop.GetConfiguration( workshopType );
-            foreach ( var otherWorkshopType in world.workshopConfigurations )
+            foreach ( var otherWorkshopType in game.workshopConfigurations )
             {
                 if ( configuration.generatedInputs == null )
                     continue;

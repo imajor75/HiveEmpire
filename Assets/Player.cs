@@ -100,7 +100,7 @@ public abstract class Player : HiveObject
 	public override void Remove()
 	{
 		destroyed = true;
-		world.players.Remove( this );
+		game.players.Remove( this );
 		if ( root.mainPlayer == this )
 			root.mainPlayer = null;
 		Destroy( gameObject );
@@ -344,7 +344,7 @@ public class Team : HiveObject
 			itemType = Item.Type.stone,
 			weight = 1
 		} );
-		foreach ( var c in world.workshopConfigurations )
+		foreach ( var c in game.workshopConfigurations )
 		{
 			if ( c.generatedInputs == null )
 				continue;
@@ -443,9 +443,9 @@ public class Team : HiveObject
 		for ( int i = 0; i < attackerCount; i++ )
 		{
 			var attacker = Unit.Create().SetupAsAttacker( this, target );
-			int attackTime = Math.Max( world.time, lastTimeAttack+Constants.Player.attackPeriod );
+			int attackTime = Math.Max( game.time, lastTimeAttack+Constants.Player.attackPeriod );
 			lastTimeAttack = attackTime;
-			attacker.ScheduleWait( attackTime - world.time );
+			attacker.ScheduleWait( attackTime - game.time );
 			attacker.ScheduleWalkToNeighbour( mainBuilding.flag.node );
 			attacker.ScheduleWalkToNode( gather[(i+target.lastSpot)%gather.Count] );
 			attacker.building = target;
@@ -571,7 +571,7 @@ public class Team : HiveObject
 					max = height;
 			}
 			int localClosestEnemy = int.MaxValue;
-			foreach ( var team in world.teams )
+			foreach ( var team in game.teams )
 			{
 				int distance = node.DistanceFrom( team.mainBuilding.node );
 				if ( distance < localClosestEnemy )
@@ -630,12 +630,12 @@ public class Team : HiveObject
 	public override void Remove()
 	{
 		destroyed = true;
-		world.teams.Remove( this );
+		game.teams.Remove( this );
 		RemoveElements( players );
 
 		RemoveObjects();
 		itemDispatcher?.Remove();
-		world.ground.dirtyOwnership = true;
+		game.ground.dirtyOwnership = true;
 		Destroy( gameObject );
 	}
 
@@ -649,13 +649,13 @@ public class Team : HiveObject
 			player.Defeat();
 		itemDispatcher.Remove();
 		itemDispatcher = null;
-		world.ground.dirtyOwnership = true;
+		game.ground.dirtyOwnership = true;
 	}
 
 	public void RegisterInfluence( Building building )
 	{
 		influencers.Add( building );
-		world.lastAreaInfluencer = building;
+		game.lastAreaInfluencer = building;
 		HiveCommon.ground.dirtyOwnership = true;
 	}
 

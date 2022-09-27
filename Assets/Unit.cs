@@ -1451,7 +1451,7 @@ public class Unit : HiveObject
 			animator.applyRootMotion = false;
 			if ( itemsInHands[0] )
 				animator.Play( "idle light" );
-			animator.speed = world.timeFactor;
+			animator.speed = game.timeFactor;
 		}
 		else
 			animator = null;
@@ -2252,7 +2252,7 @@ public class Unit : HiveObject
 				{
 					if ( g == null )
 						continue;
-					g.transform.Rotate( world.timeFactor * currentSpeed * 600, 0, 0 );
+					g.transform.Rotate( game.timeFactor * currentSpeed * 600, 0, 0 );
 				}
 				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Constants.Node.size * -50, 0, 0 );
 			}
@@ -2585,7 +2585,7 @@ public class Unit : HiveObject
 				assert.IsFalse( IsIdle() );
 		}
 		
-		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );
+		assert.IsTrue( team == null || team.destroyed || game.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		assert.IsTrue( node.real, "Standing on an invalid node" );
 		base.Validate( chain );

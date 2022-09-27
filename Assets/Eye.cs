@@ -52,9 +52,9 @@ public class Eye : HiveObject
 	[JsonIgnore]
 	public IDirector director;
 	
-	new World world 
+	World world 
 	{ 
-		get { return HiveCommon.world; } 
+		get { return HiveCommon.game; } 
 		[Obsolete( "Compatibility with old files", true )]
 		set {} 
 	}

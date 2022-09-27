@@ -35,7 +35,7 @@ public class Water : HiveObject
     {
         name = "Water";
         transform.SetParent( ground.transform.parent );
-		transform.localPosition = Vector3.up * world.waterLevel;
+		transform.localPosition = Vector3.up * game.waterLevel;
         mesh = GetComponent<MeshFilter>().mesh = new ();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
         gameObject.layer = World.layerIndexWater;
@@ -44,7 +44,7 @@ public class Water : HiveObject
 
     new void Update()
     {
-        Assert.global.AreEqual( this, world.water );
+        Assert.global.AreEqual( this, game.water );
         if ( mesh.triangles.Length != ground.dimension * ground.dimension * 3 * 2 )
         {
             var vertices = new List<Vector3>();
@@ -58,7 +58,7 @@ public class Water : HiveObject
                     position.y = 0;
                     position.z = ground.n00y + ( ground.n10y - ground.n00y ) * x + ( ground.n01y - ground.n00y ) * y;
                     vertices.Add( position );
-                    heights.Add( new Vector2( world.waterLevel - ground.GetNode( x, y ).height, 0 ) );
+                    heights.Add( new Vector2( game.waterLevel - ground.GetNode( x, y ).height, 0 ) );
                 }
             }
             Assert.global.AreEqual( vertices.Count, heights.Count );

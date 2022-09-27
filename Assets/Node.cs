@@ -444,7 +444,7 @@ public class Node : HiveObject
 
 	public void AlignType()
 	{
-		var settings = world.generatorSettings;
+		var settings = game.generatorSettings;
 		float relativeHeight = height / settings.maxHeight;
 		if ( relativeHeight < settings.waterLevel )
 			type = Type.underWater;

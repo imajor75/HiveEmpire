@@ -583,7 +583,7 @@ public class Item : HiveObject
 		}
 		assert.AreNotEqual( index, -1 );
 		assert.AreEqual( team.items[index], this );
-		assert.IsTrue( team.destroyed || world.teams.Contains( team ), $"Owner team {team} not valid for {this}" );	// TODO Fires when capturing the main building of a team
+		assert.IsTrue( team.destroyed || game.teams.Contains( team ), $"Owner team {team} not valid for {this}" );	// TODO Fires when capturing the main building of a team
 		base.Validate( chain );
 	}
 }

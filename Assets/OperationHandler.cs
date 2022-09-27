@@ -162,7 +162,7 @@ public class OperationHandler : HiveObject
     }
 
     public int fileIndex;
-	public string nextFileName { get { return $"{world.name} ({fileIndex})"; } }
+	public string nextFileName { get { return $"{game.name} ({fileIndex})"; } }
 
 	[Obsolete( "Compatibility with old files", true )]
     string lastSave { set {} }
@@ -236,15 +236,15 @@ public class OperationHandler : HiveObject
         else
             root.NewGame( challenge, false );
 
-        challenge = world.challenge;
+        challenge = game.challenge;
 
-        frameEvents = world.operationHandler.events;
-        currentCRCCode = world.operationHandler.currentCRCCode;
-        if ( world.operationHandler )
-            world.operationHandler.Remove();
-        world.operationHandler = this;
+        frameEvents = game.operationHandler.events;
+        currentCRCCode = game.operationHandler.currentCRCCode;
+        if ( game.operationHandler )
+            game.operationHandler.Remove();
+        game.operationHandler = this;
 
-        world.roadTutorialShowed = world.createRoadTutorialShowed = true;
+        game.roadTutorialShowed = game.createRoadTutorialShowed = true;
         mode = Mode.repeating;
         this.recalculateCRC = recalculateCRC;
     }
@@ -290,7 +290,7 @@ public class OperationHandler : HiveObject
             return;
     
         operation.scheduleAt = time;
-        if ( world.gameAdvancingInProgress )
+        if ( game.gameAdvancingInProgress )
             operation.scheduleAt++;
         executeBuffer.Add( operation );
 	}
@@ -586,7 +586,7 @@ public class OperationHandler : HiveObject
 
         while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
         {
-            world.lastChecksum = 0;
+            game.lastChecksum = 0;
             ExecuteOperation( executeBuffer[executeIndex++] );
         }
         
@@ -732,7 +732,7 @@ public class Operation
             }
         }
     }
-    public Team team { get => HiveCommon.world.teams[bufferIndex]; set => bufferIndex = HiveCommon.world.teams.IndexOf( value ); }
+    public Team team { get => HiveCommon.game.teams[bufferIndex]; set => bufferIndex = HiveCommon.game.teams.IndexOf( value ); }
     public Node place
     {
         get
@@ -1234,23 +1234,23 @@ public class Operation
             case Type.createPlayer:
             {
                 Team team = null;
-                foreach ( var existingTeam in HiveCommon.world.teams )
+                foreach ( var existingTeam in HiveCommon.game.teams )
                 {
                     if ( existingTeam.name == teamName )
                         team = existingTeam;
                 }
                 if ( team == null )
                 {
-                    team = Team.Create().Setup( teamName, Constants.Player.teamColors[HiveCommon.world.teams.Count%Constants.Player.teamColors.Length] );
+                    team = Team.Create().Setup( teamName, Constants.Player.teamColors[HiveCommon.game.teams.Count%Constants.Player.teamColors.Length] );
                     if ( team == null )
                     {
                         Interface.MessagePanel.Create( "No room for a new headquarters" );
                         return null;
                     }
-                    HiveCommon.world.teams.Add( team );
+                    HiveCommon.game.teams.Add( team );
                 }
                 var newPlayer = Simpleton.Create().Setup( playerName, team );
-                HiveCommon.world.players.Add( newPlayer );
+                HiveCommon.game.players.Add( newPlayer );
                 if ( networkId == HiveCommon.network.id )
                     HiveCommon.root.mainPlayer = newPlayer;
                 return null;

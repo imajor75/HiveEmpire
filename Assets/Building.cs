@@ -192,7 +192,7 @@ abstract public class Building : HiveObject
 				}
 				level += o.height / area.Count;
 			}
-			float minLevel = world.generatorSettings.waterLevel * world.generatorSettings.maxHeight + 0.1f;
+			float minLevel = game.generatorSettings.waterLevel * game.generatorSettings.maxHeight + 0.1f;
 			if ( level < minLevel )
 				level = minLevel;
 			if ( permanent )
@@ -618,7 +618,7 @@ abstract public class Building : HiveObject
 		if ( smoke )
 		{
 			var mainModule = smoke.main;
-			mainModule.simulationSpeed = world.timeFactor;
+			mainModule.simulationSpeed = game.timeFactor;
 		}
 
 		World.CollectRenderersRecursive( body, renderers );
@@ -879,7 +879,7 @@ abstract public class Building : HiveObject
 		exit?.Validate( true );
 		construction?.Validate( true );
 		if ( team && !team.destroyed )
-			assert.IsTrue( world.teams.Contains( team ) );
+			assert.IsTrue( game.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		base.Validate( chain );
 	}

@@ -9,13 +9,13 @@ using UnityEngine;
 
 public class HiveCommon : MonoBehaviour
 {
-	public static World world { get { return World.instance; } }
-	public static Ground ground { get { return world.ground; } }
-	public static int time { get { return world.time; } }
-	public static OperationHandler oh { get { return world.operationHandler; } }
-	public static Eye eye { get { return world.eye; } }
+	public static Game game { get { return Game.instance; } }
+	public static Ground ground { get { return game.ground; } }
+	public static int time { get { return game.time; } }
+	public static OperationHandler oh { get { return game.operationHandler; } }
+	public static Eye eye { get { return game.eye; } }
 	public static Interface root { get { return Interface.root; } }
-	public static Network network { get { return world.network; } }
+	public static Network network { get { return game.network; } }
 	public static Settings settings { get { return root.globalSettings; } }
 
 	public static void Log( string text, bool important = false )
@@ -97,28 +97,28 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Register()
 	{
-		world.newHiveObjects.Add( this );
+		game.newHiveObjects.Add( this );
 		registered = true;
 	}
 
 	public void Setup()
 	{
-		assert.IsFalse( world.hiveObjects.Contains( this ) );
-		assert.IsFalse( world.newHiveObjects.Contains( this ) );
+		assert.IsFalse( game.hiveObjects.Contains( this ) );
+		assert.IsFalse( game.newHiveObjects.Contains( this ) );
 		Register();
 		if ( !blueprintOnly )
-			id = world.nextID++;
+			id = game.nextID++;
 	}
 
 	public void OnDestroy()
 	{
-		if ( worldIndex >= 0 && world.hiveObjects.Count > worldIndex && this == world.hiveObjects[worldIndex] )
+		if ( worldIndex >= 0 && game.hiveObjects.Count > worldIndex && this == game.hiveObjects[worldIndex] )
 		{
-			world.hiveObjects[worldIndex] = null;
-			world.hiveListFreeSlots.Add( worldIndex );
+			game.hiveObjects[worldIndex] = null;
+			game.hiveListFreeSlots.Add( worldIndex );
 			worldIndex = -1;
 		}
-		world.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
+		game.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
 		destroyed = true;
 		registered = false;
 	}
@@ -171,7 +171,7 @@ public abstract class HiveObject : HiveCommon
 	{
 		assert.IsTrue( blueprintOnly );
 		blueprintOnly = false;
-		id = world.nextID++;
+		id = game.nextID++;
 	}
 
 	public virtual void OnClicked( Interface.MouseButton button, bool show = false )
@@ -201,7 +201,7 @@ public abstract class HiveObject : HiveCommon
 		if ( !blueprintOnly )
 			assert.AreNotEqual( id, 0 );
 		if ( worldIndex >= 0 )
-			assert.AreEqual( this, world.hiveObjects[worldIndex] );
+			assert.AreEqual( this, game.hiveObjects[worldIndex] );
 	}
 
 	public class SiteTestResult

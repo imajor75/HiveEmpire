@@ -62,8 +62,8 @@ public class Serializer
 
 	static object CreateObject( Type type )
 	{
-		if ( type == typeof( World ) )
-			return HiveCommon.world;
+		if ( type == typeof( World ) || type == typeof( Game ) )
+			return HiveCommon.game;
 		if ( typeof( MonoBehaviour ).IsAssignableFrom( type ) )
 			return CreateSceneObject( type ) as MonoBehaviour;
 		if ( typeof( ScriptableObject ).IsAssignableFrom( type ) )

@@ -337,7 +337,7 @@ public class Network : HiveCommon
 					Log( $"Incoming connection from {clientAddress}" );
 					var client = new Network.Client( connection );
 					string fileName = System.IO.Path.GetTempFileName();
-					world.Save( fileName, false, true );
+					game.Save( fileName, false, true );
 					FileInfo fi = new FileInfo( fileName );
 					byte[] id = BitConverter.GetBytes( nextClientId++ );
 					NetworkTransport.Send( host, connection, reliableChannel, id, id.Length, out error );

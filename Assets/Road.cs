@@ -1141,7 +1141,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		if ( !ready )
 			assert.AreEqual( root.viewport.inputHandler, this );
-		assert.IsTrue( team == null || team.destroyed || world.teams.Contains( team ) );
+		assert.IsTrue( team == null || team.destroyed || game.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		int j = 0;
 		foreach ( var r in team.roads )
@@ -1159,9 +1159,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		Road road = Road.Create().Setup( startFlag );
 		root.viewport.inputHandler = road;
 		root.viewport.showGridAtMouse = true;
-		if ( !root.world.createRoadTutorialShowed )
+		if ( !HiveCommon.game.createRoadTutorialShowed )
 		{
-			root.world.createRoadTutorialShowed = true;
+			HiveCommon.game.createRoadTutorialShowed = true;
 			Interface.tooltip.SetText( road, "Connect to another junction or middle of another road, or press Shift+LMB on an open spot to create a new junction" );
 		}
 	}

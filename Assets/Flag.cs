@@ -507,7 +507,7 @@ public class Flag : HiveObject
 		if ( crossing )
 			assert.IsNull( user );
 		if ( team && !team.destroyed )
-			assert.IsTrue( world.teams.Contains( team ) );
+			assert.IsTrue( game.teams.Contains( team ) );
 		assert.IsTrue( registered );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.units ) );

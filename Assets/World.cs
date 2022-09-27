@@ -51,7 +51,6 @@ public class World : HiveObject
 
 	static public bool massDestroy;
 	static public System.Random rnd;
-	static public World instance;
 	static public int soundMaxDistance = 7;
 	static public int layerIndexMapOnly;
 	static public int layerIndexGround;
@@ -101,8 +100,8 @@ public class World : HiveObject
 		if ( oh == null )
 			return;
 
-		instance.operationHandler.RegisterEvent( OperationHandler.Event.Type.CRC, caller, code );
-		instance.operationHandler.currentCRCCode += code;
+		game.operationHandler.RegisterEvent( OperationHandler.Event.Type.CRC, caller, code );
+		game.operationHandler.currentCRCCode += code;
 	}
 
 	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
@@ -277,7 +276,7 @@ public class World : HiveObject
 		new void Start()
 		{
 			if ( transform.parent == null )
-				transform.SetParent( HiveCommon.world.transform );
+				transform.SetParent( HiveCommon.game.transform );
 			base.Start();
 		}
 
@@ -312,7 +311,7 @@ public class World : HiveObject
 
 		override public void GameLogicUpdate()
 		{
-			if ( world.challenge != this )
+			if ( game.challenge != this )
 				return;
 
 			var team = root.mainTeam;
@@ -399,7 +398,7 @@ public class World : HiveObject
 				CheckCondition( life.age, timeLimit, allowTimeLeftLevels, null, true );
 
 			if ( simpletonCountToEliminate > 0 )
-				CheckCondition( world.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
+				CheckCondition( game.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
 
 			void CheckGoal( Goal goal, Timer timer )
 			{
@@ -619,12 +618,6 @@ public class World : HiveObject
 		defaultMapShader = Resources.Load<Shader>( "shaders/Map" );
 	}
 
-	World()
-	{
-		Assert.global.IsNull( instance );
-		instance = this;
-	}
-
 	public static World Create()
 	{
 		return new GameObject( "World" ).AddComponent<World>();
@@ -647,15 +640,15 @@ public class World : HiveObject
 		var soundSource = component.gameObject.AddComponent<AudioSource>();
 		soundSource.spatialBlend = 1;
 		soundSource.minDistance = 1;
-		soundSource.pitch = instance.timeFactor;
+		soundSource.pitch = game.timeFactor;
 		soundSource.maxDistance = Constants.Node.size * World.soundMaxDistance;
 		return soundSource;
 	}
 
 	static public int NextRnd( OperationHandler.Event.CodeLocation caller, int limit = 0 )
 	{
-		if ( world.gameInProgress )
-			Assert.global.IsTrue( instance.gameAdvancingInProgress );
+		if ( game.gameInProgress )
+			Assert.global.IsTrue( game.gameAdvancingInProgress );
 		int r = 0;
 		if ( limit != 0 )
 			r = rnd.Next( limit );
@@ -667,8 +660,8 @@ public class World : HiveObject
 
 	static public float NextFloatRnd( OperationHandler.Event.CodeLocation caller )
 	{
-		if ( world.gameInProgress )
-			Assert.global.IsTrue( instance.gameAdvancingInProgress );
+		if ( game.gameInProgress )
+			Assert.global.IsTrue( game.gameAdvancingInProgress );
 		var r = (float)rnd.NextDouble();
 		oh.RegisterEvent( OperationHandler.Event.Type.rndRequestFloat, caller );
 		return r;
@@ -679,11 +672,11 @@ public class World : HiveObject
 		if ( generatorSettings.apply )
 		{
 			generatorSettings.apply = false;
-			var c = instance.challenge;
+			var c = game.challenge;
 			c.fixedSeed = true;
-			c.seed = instance.currentSeed;
-			instance.NewGame( instance.challenge, true, false );
-			root.mainPlayer = instance.players[0];
+			c.seed = game.currentSeed;
+			game.NewGame( game.challenge, true, false );
+			root.mainPlayer = game.players[0];
 		}
 		massDestroy = false;
 		for ( int i = 0; i < timeFactor; i++ )
@@ -1205,7 +1198,7 @@ public class World : HiveObject
 				if ( o.charges > 1000 )
 					o.infinite = true;
 				if ( o.life.empty )
-					o.life.reference = instance.time - 15000;
+					o.life.reference = game.time - 15000;
 				if ( o.type == Resource.Type.pasturingAnimal && o.animals.Count == 1 )
 				{
 					Assert.global.IsNull( o.origin );
@@ -1580,7 +1573,7 @@ public class World : HiveObject
 		Ore.totalResourceCount = 0;
 		void AddOre( Resource.Type resourceType )
 		{
-			float weight = world.itemTypeUsage[(int)Resource.ItemType( resourceType )];
+			float weight = game.itemTypeUsage[(int)Resource.ItemType( resourceType )];
 			if ( weight == 0 )
 				return;
 
@@ -1593,7 +1586,7 @@ public class World : HiveObject
 		AddOre( Resource.Type.stone );
 		AddOre( Resource.Type.copper );
 		AddOre( Resource.Type.silver );
-		for ( int patchCount = 0; patchCount < (int)( world.nodeCount * Constants.World.oreCountPerNode ); patchCount++ )
+		for ( int patchCount = 0; patchCount < (int)( game.nodeCount * Constants.World.oreCountPerNode ); patchCount++ )
 		{
 			int randomX = rnd.Next( ground.dimension ), randomY = rnd.Next( ground.dimension );
 			if ( Ore.totalResourceCount > 0 )
@@ -1727,7 +1720,7 @@ public class World : HiveObject
 
 		public void Start( int delta = 0 )
 		{
-			reference = instance.time + delta;
+			reference = game.time + delta;
 		}
 		public void Reset()
 		{
@@ -1740,7 +1733,7 @@ public class World : HiveObject
 			{
 				if ( empty )
 					return 0;
-				return instance.time - reference;
+				return game.time - reference;
 			}
 		}
 		public int ageinf
@@ -1749,12 +1742,28 @@ public class World : HiveObject
 			{
 				if ( empty )
 					return int.MaxValue;
-				return instance.time - reference;
+				return game.time - reference;
 			}
 		}
 		public bool done { get { return !empty && age >= 0; } }
 		[SerializeField]
 		public bool empty { get { return reference == -1; } }
 		public bool inProgress { get { return !empty && !done; } }
+	}
+}
+
+public class Game : World
+{
+	static public Game instance;
+
+	public new static Game Create()
+	{
+		return new GameObject( "Game" ).AddComponent<Game>();
+	}
+
+	Game()
+	{
+		Assert.global.IsNull( instance );
+		instance = this;
 	}
 }

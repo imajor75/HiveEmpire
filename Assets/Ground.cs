@@ -29,9 +29,9 @@ public class Ground : HiveObject
 	int overseas { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int layoutVersion, meshVersion;
-	new World world 
+	World world 
 	{ 
-		get { return HiveCommon.world; } 
+		get { return HiveCommon.game; } 
 		[Obsolete( "Compatibility with old files", true )]
 		set {} 
 	}
@@ -819,7 +819,7 @@ public class Ground : HiveObject
 
 			// Disable grass unter water and at cornfields
 			for ( int i = 0; i < positions.Count; i++ )
-				if ( positions[i].y < world.waterLevel || nodes[i].avoidGrass )
+				if ( positions[i].y < game.waterLevel || nodes[i].avoidGrass )
 					uv[i] = noGrass;
 
 			mesh.vertices = positions.ToArray();
