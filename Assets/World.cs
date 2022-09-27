@@ -314,6 +314,33 @@ public class World : HiveObject
 		}
 	}
 
+	public void Generate( int seed )
+	{
+		var rnd = new System.Random( seed );
+		Workshop.GenerateInputs( rnd.Next() );
+
+		var heightMap = HeightMap.Create();
+		heightMap.Setup( generatorSettings, rnd.Next() );
+		heightMap.Fill();
+
+		var forestMap = HeightMap.Create();
+		forestMap.Setup( generatorSettings, rnd.Next() );
+		forestMap.Fill();
+
+#if DEBUG
+		heightMap.SavePNG( "height.png" );
+		forestMap.SavePNG( "forest.png" );
+#endif
+
+		Clear();
+		Prepare();
+
+		ground = Ground.Create();
+		ground.Setup( this, heightMap, forestMap, generatorSettings.size );
+		GenerateResources( rnd.Next() );
+		water = Water.Create().Setup( ground );
+	}
+
     public void Load( string fileName )
 	{
 		ValueType GetValue<ValueType>( object from, string field ) where ValueType : class
@@ -815,8 +842,9 @@ public class World : HiveObject
 		Validate( true );
 	}
 
-	public void GenerateResources()
+	public void GenerateResources( int seed )
 	{	
+		var rnd = new System.Random( seed );
 		List<Resource> toRemove = new ();
 		foreach ( var node in ground.nodes )
 		{
@@ -1148,23 +1176,7 @@ public class Game : World
 
 		rnd = new System.Random( seed );
 		currentSeed = seed;
-		Workshop.GenerateInputs();
-
-		var heightMap = HeightMap.Create();
-		heightMap.Setup( generatorSettings, rnd.Next() );
-		heightMap.Fill();
-
-		var forestMap = HeightMap.Create();
-		forestMap.Setup( generatorSettings, rnd.Next() );
-		forestMap.Fill();
-
-#if DEBUG
-		heightMap.SavePNG( "height.png" );
-		forestMap.SavePNG( "forest.png" );
-#endif
-
-		Clear();
-		Prepare();
+		Generate( rnd.Next() );
 		Interface.ValidateAll( true );
 
 		this.challenge = localChallenge;
@@ -1176,10 +1188,6 @@ public class Game : World
 #if DEBUG
 		operationHandler.recordCRC = true;
 #endif
-		ground = Ground.Create();
-		ground.Setup( this, heightMap, forestMap, generatorSettings.size );
-		GenerateResources();
-		water = Water.Create().Setup( ground );
 		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
 		if ( mainTeam )
 		{
@@ -1294,7 +1302,7 @@ public class Game : World
 		challenge = null;
 
 		base.Clear();
-		
+
 		nameOnNetwork = null;
 
 		Destroy( transform.Find( "Items just created" )?.gameObject );

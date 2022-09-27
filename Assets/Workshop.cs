@@ -679,9 +679,9 @@ public class Workshop : Building
 		base.Remove();
 	}
 
-	static public void GenerateInputs()
+	static public void GenerateInputs( int seed )
 	{
-		System.Random rnd = new System.Random( World.rnd.Next() );
+		System.Random rnd = new System.Random( seed );
 		foreach ( var configuration in game.workshopConfigurations )
 			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
 
