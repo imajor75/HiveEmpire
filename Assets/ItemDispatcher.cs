@@ -92,7 +92,7 @@ public class ItemDispatcher : HiveObject
 			markets.Add( ScriptableObject.CreateInstance<Market>() );
 			markets[i].Setup( this, (Item.Type)i );
 		}
-		base.Setup();
+		base.Setup( team.world );
 	}
 
 	new public void Start()

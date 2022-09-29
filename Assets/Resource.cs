@@ -195,7 +195,7 @@ public class Resource : HiveObject
 		this.node = node;
 		life.Start();
 
-		bodyRandom = World.NextRnd( OperationHandler.Event.CodeLocation.resourceSetup );
+		bodyRandom = Interface.rnd.Next();
 
 		if ( type == Type.cornField || type == Type.wheatField )
 		{
@@ -203,7 +203,7 @@ public class Resource : HiveObject
 			ground.SetDirty( node );
 		}
 
-		base.Setup();
+		base.Setup( node.world );
 
 		return this;
 	}
@@ -340,7 +340,7 @@ public class Resource : HiveObject
 		}
 		if ( silence.done || silence.empty )
 		{
-			var m = ambientSounds.GetMedia( type, World.NextRnd( OperationHandler.Event.CodeLocation.resourceSound ) );
+			var m = ambientSounds.GetMedia( type, game.NextRnd( OperationHandler.Event.CodeLocation.resourceSound ) );
 			if ( m == null || m.data == null )
 			{
 				silence.Start( 1500 );
@@ -350,7 +350,7 @@ public class Resource : HiveObject
 			{
 				if ( !silence.empty )
 					soundSource.Play();
-				silence.Start( (int)( World.NextFloatRnd( OperationHandler.Event.CodeLocation.resourceSilence ) * m.intData ) );
+				silence.Start( (int)( game.NextFloatRnd( OperationHandler.Event.CodeLocation.resourceSilence ) * m.intData ) );
 				soundSource.clip = m.data;
 				soundSource.loop = false;
 			}

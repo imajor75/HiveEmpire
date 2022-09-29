@@ -605,7 +605,7 @@ public class Workshop : Building
 		processingSounds.Fill( sounds );	// bool equals "dont loop"
 		mapIndicatorTexture = Resources.Load<Texture2D>( "icons/brick" );
 
-		var dl = new GameObject( "Temporary directional light" );
+		var dl = new GameObject( "Temporary Directional Light" );
 		var l = dl.AddComponent<Light>();
 		l.type = LightType.Directional;
 		l.color = new Color( .7f, .7f, .7f );
@@ -617,7 +617,7 @@ public class Workshop : Building
 			var look = looks.GetMediaData( (Type)i );
 			if ( look == null )
 				continue;
-			var handle = new GameObject( "Temporary for workshop thumbnail" ).transform;
+			var handle = new GameObject( "Temporary For Workshop Thumbnail" ).transform;
 			Instantiate( look ).transform.SetParent( handle );
 			var smoke = World.FindChildRecursive( handle, "smoke" );
 			if ( smoke )
@@ -679,63 +679,9 @@ public class Workshop : Building
 		base.Remove();
 	}
 
-	static public void GenerateInputs( int seed )
+	static public Configuration GetConfiguration( World world, Type type )
 	{
-		System.Random rnd = new System.Random( seed );
-		foreach ( var configuration in game.workshopConfigurations )
-			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
-
-		foreach ( var configuration in game.workshopConfigurations )
-		{
-			if ( configuration.productionTimeMax >= 0 )
-			{
-				configuration.productionTime = configuration.productionTimeMin + (int)( (configuration.productionTimeMax - configuration.productionTimeMin) * Math.Pow( rnd.NextDouble(), 2 ) );
-				configuration.productionTime -= configuration.productionTime % Constants.World.normalSpeedPerSecond;
-			}
-
-			if ( configuration.outputCount > 0 )
-				configuration.outputStackSize = (int)Math.Floor( configuration.outputCount + rnd.NextDouble() );
-		}
-
-		game.itemTypeUsage = new ();
-		for ( int i = 0; i < (int)Item.Type.total; i++ )
-			game.itemTypeUsage.Add( 0 );
-		game.workshopTypeUsage = new ();
-		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
-			game.workshopTypeUsage.Add( 0 );
-
-		void AddWeight( Item.Type itemType, float weight )
-		{
-			game.itemTypeUsage[(int)itemType] += weight;
-			foreach ( var configuration in game.workshopConfigurations )
-			{
-				if ( configuration.outputType != itemType )
-					continue;
-				var workshopWeight = weight / configuration.outputStackSize;
-				game.workshopTypeUsage[(int)configuration.type] += workshopWeight;
-				if ( configuration.generatedInputs == null )
-					continue;
-
-				var newWeight = configuration.commonInputs ? workshopWeight / configuration.generatedInputs.Count : workshopWeight;
-				if ( newWeight < 0.001 )
-				{
-					Assert.global.Fail( "Infinite cycle in workshop configurations" );
-					return;
-				}
-				foreach ( var input in configuration.generatedInputs )
-					AddWeight( input, newWeight );
-			}
-		}
-
-		AddWeight( Item.Type.plank, 1 );
-		AddWeight( Item.Type.stone, 1 );
-		AddWeight( Item.Type.soldier, 1 );
-		game.workshopTypeUsage[(int)Workshop.Type.forester] = game.workshopTypeUsage[(int)Workshop.Type.woodcutter];
-	}
-
-	static public Configuration GetConfiguration( Type type )
-	{
-		foreach ( var c in game.workshopConfigurations )
+		foreach ( var c in world.workshopConfigurations )
 		{
 			if ( c.type == type )
 				return c;
@@ -745,7 +691,7 @@ public class Workshop : Building
 
 	void RefreshConfiguration()
 	{
-		configuration = GetConfiguration( type );
+		configuration = GetConfiguration( game, type );
 		assert.IsNotNull( configuration );
 
 		if ( productionConfiguration.generatedInputs == null )
@@ -1082,7 +1028,7 @@ public class Workshop : Building
 			return false;
 		}
 
-		int o = World.NextRnd( OperationHandler.Event.CodeLocation.workshopBufferSelection );
+		int o = game.NextRnd( OperationHandler.Event.CodeLocation.workshopBufferSelection );
 		for ( int i = 0; i < buffers.Count; i++ )
 		{
 			var b = buffers[(i + o) % buffers.Count];

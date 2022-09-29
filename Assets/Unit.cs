@@ -1302,7 +1302,7 @@ public class Unit : HiveObject
 		ScheduleStartWorkingOnRoad( road );
 		haulerRoadBegin.Attach( road.ends[0].itemsStored, false );
 		haulerRoadEnd.Attach( road.ends[1].itemsStored, false );
-		base.Setup();
+		base.Setup( road.world );
 		return this;
 	}
 
@@ -1339,7 +1339,7 @@ public class Unit : HiveObject
 		node = main.node;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( flag );
-		base.Setup();
+		base.Setup( flag.world );
 		return this;
 	}
 
@@ -1355,7 +1355,7 @@ public class Unit : HiveObject
 		team = building.team;
 		this.building = building;
 		node = building.node;
-		base.Setup();
+		base.Setup( building.world );
 		return this;
 	}
 
@@ -1369,7 +1369,7 @@ public class Unit : HiveObject
 		this.team = team;
 		this.building = target;
 		node = team.mainBuilding.node;
-		base.Setup();
+		base.Setup( team.world );
 		return this;
 	}
 
@@ -1387,7 +1387,7 @@ public class Unit : HiveObject
 		}
 		else
 			node = building.node;
-		base.Setup();
+		base.Setup( building.world );
 		return this;
 	}
 
@@ -1397,7 +1397,7 @@ public class Unit : HiveObject
 		look = type = Type.wildAnimal;
 		this.node = node;
 		this.origin = origin;
-		base.Setup();
+		base.Setup( node.world );
 		return this;
 	}
 
@@ -1410,7 +1410,7 @@ public class Unit : HiveObject
 		speed = Constants.Stock.cartSpeed;
 		team = stock.team;
 		currentColor = Color.white;
-		base.Setup();
+		base.Setup( stock.world );
 		return this;
 	}
 
@@ -1715,7 +1715,7 @@ public class Unit : HiveObject
 
 		if ( type == Type.wildAnimal )
 		{
-			int r = World.NextRnd( OperationHandler.Event.CodeLocation.animalDirection, 6 );
+			int r = game.NextRnd( OperationHandler.Event.CodeLocation.animalDirection, 6 );
 			var d = Ground.areas[1];
 			for ( int i = 1; i < d.Count; i++ )
 			{
@@ -1725,7 +1725,7 @@ public class Unit : HiveObject
 				if ( t.DistanceFrom( origin.node ) > 8 )
 					continue;
 				ScheduleWalkToNeighbour( t );
-				if ( World.NextFloatRnd( OperationHandler.Event.CodeLocation.animalPasturing ) < Constants.Workshop.pasturingPrayChance )
+				if ( game.NextFloatRnd( OperationHandler.Event.CodeLocation.animalPasturing ) < Constants.Workshop.pasturingPrayChance )
 					ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
 				return;
 			}

@@ -27,9 +27,9 @@ public class World : HiveObject
 	public List<float> itemTypeUsage = new ();
 	public List<float> workshopTypeUsage = new ();
 	public Water water;
+	public bool main;
 
 	static public bool massDestroy;
-	static public System.Random rnd;
 	static public int layerIndexMapOnly;
 	static public int layerIndexGround;
 	static public int layerIndexPPVolume;
@@ -212,12 +212,6 @@ public class World : HiveObject
 		generatorSettings = ScriptableObject.CreateInstance<Settings>();
 	}
 
-	public new World Setup()
-	{
-		rnd = new ();
-		return this;
-	}
-
 	static public AudioSource CreateSoundSource( Component component )
 	{
 		var soundSource = component.gameObject.AddComponent<AudioSource>();
@@ -226,28 +220,6 @@ public class World : HiveObject
 		soundSource.pitch = game.timeFactor;
 		soundSource.maxDistance = Constants.Node.size * Constants.World.soundMaxDistance;
 		return soundSource;
-	}
-
-	static public int NextRnd( OperationHandler.Event.CodeLocation caller, int limit = 0 )
-	{
-		if ( game.gameInProgress )
-			Assert.global.IsTrue( game.gameAdvancingInProgress );
-		int r = 0;
-		if ( limit != 0 )
-			r = rnd.Next( limit );
-		else
-			r = rnd.Next();
-		oh.RegisterEvent( OperationHandler.Event.Type.rndRequest, caller );
-		return r;
-	}
-
-	static public float NextFloatRnd( OperationHandler.Event.CodeLocation caller )
-	{
-		if ( game.gameInProgress )
-			Assert.global.IsTrue( game.gameAdvancingInProgress );
-		var r = (float)rnd.NextDouble();
-		oh.RegisterEvent( OperationHandler.Event.Type.rndRequestFloat, caller );
-		return r;
 	}
 
 	public void FixedUpdate()
@@ -269,7 +241,8 @@ public class World : HiveObject
 
 	new void Update()
 	{
-		light.shadows = HiveCommon.settings.shadows ? ( HiveCommon.settings.softShadows ? LightShadows.Soft : LightShadows.Hard ) : LightShadows.None;
+		if ( light )
+			light.shadows = HiveCommon.settings.shadows ? ( HiveCommon.settings.softShadows ? LightShadows.Soft : LightShadows.Hard ) : LightShadows.None;
 
 		base.Update();
 	}
@@ -317,7 +290,8 @@ public class World : HiveObject
 	public void Generate( int seed )
 	{
 		var rnd = new System.Random( seed );
-		Workshop.GenerateInputs( rnd.Next() );
+		workshopConfigurations = Workshop.LoadConfigurations();
+		GenerateWorkshopInputs( rnd.Next() );
 
 		var heightMap = HeightMap.Create();
 		heightMap.Setup( generatorSettings, rnd.Next() );
@@ -336,10 +310,65 @@ public class World : HiveObject
 		Prepare();
 
 		ground = Ground.Create();
-		ground.Setup( this, heightMap, forestMap, generatorSettings.size );
+		ground.Setup( this, heightMap, forestMap, rnd, generatorSettings.size );
 		GenerateResources( rnd.Next() );
 		water = Water.Create().Setup( ground );
 	}
+
+	public void GenerateWorkshopInputs( int seed )
+	{
+		System.Random rnd = new System.Random( seed );
+		foreach ( var configuration in workshopConfigurations )
+			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
+
+		foreach ( var configuration in workshopConfigurations )
+		{
+			if ( configuration.productionTimeMax >= 0 )
+			{
+				configuration.productionTime = configuration.productionTimeMin + (int)( (configuration.productionTimeMax - configuration.productionTimeMin) * Math.Pow( rnd.NextDouble(), 2 ) );
+				configuration.productionTime -= configuration.productionTime % Constants.World.normalSpeedPerSecond;
+			}
+
+			if ( configuration.outputCount > 0 )
+				configuration.outputStackSize = (int)Math.Floor( configuration.outputCount + rnd.NextDouble() );
+		}
+
+		itemTypeUsage = new ();
+		for ( int i = 0; i < (int)Item.Type.total; i++ )
+			itemTypeUsage.Add( 0 );
+		workshopTypeUsage = new ();
+		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			workshopTypeUsage.Add( 0 );
+
+		void AddWeight( Item.Type itemType, float weight )
+		{
+			itemTypeUsage[(int)itemType] += weight;
+			foreach ( var configuration in workshopConfigurations )
+			{
+				if ( configuration.outputType != itemType )
+					continue;
+				var workshopWeight = weight / configuration.outputStackSize;
+				workshopTypeUsage[(int)configuration.type] += workshopWeight;
+				if ( configuration.generatedInputs == null )
+					continue;
+
+				var newWeight = configuration.commonInputs ? workshopWeight / configuration.generatedInputs.Count : workshopWeight;
+				if ( newWeight < 0.001 )
+				{
+					Assert.global.Fail( "Infinite cycle in workshop configurations" );
+					return;
+				}
+				foreach ( var input in configuration.generatedInputs )
+					AddWeight( input, newWeight );
+			}
+		}
+
+		AddWeight( Item.Type.plank, 1 );
+		AddWeight( Item.Type.stone, 1 );
+		AddWeight( Item.Type.soldier, 1 );
+		workshopTypeUsage[(int)Workshop.Type.forester] = workshopTypeUsage[(int)Workshop.Type.woodcutter];
+	}
+
 
     public void Load( string fileName )
 	{
@@ -394,6 +423,8 @@ public class World : HiveObject
 
 		if ( water == null )	// Fix old files
 			water = Water.Create().Setup( ground );
+		if ( water.ground == null )
+			water.ground = ground;
 
 		{
 			foreach ( var ho in Resources.FindObjectsOfTypeAll<HiveObject>() )
@@ -408,6 +439,8 @@ public class World : HiveObject
 				}
 			}
 		}
+		if ( eye.world == null )
+			eye.world = this;
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
@@ -625,6 +658,7 @@ public class World : HiveObject
 				foreach ( var resource in node.resources )
 					toRemove.Add( resource );
 			}
+			node.world = this;
 		}
 		foreach ( var resource in toRemove )
 			resource.Remove();
@@ -633,6 +667,8 @@ public class World : HiveObject
 			itemTypeUsage.Add( 0 );
 		while ( workshopTypeUsage.Count < (int)Workshop.Type.total )
 			workshopTypeUsage.Add( 0 );
+		foreach ( var hiveObject in hiveObjects )
+			hiveObject.world = this;
 
 		Interface.ValidateAll( true );
 		bool demoMode = fileName.Contains( "demolevel" );
@@ -653,21 +689,24 @@ public class World : HiveObject
 
 	public void Prepare()
 	{
-		var lightObject = new GameObject { layer = World.layerIndexPPVolume };
-		light = lightObject.AddComponent<Light>();
-		light.type = UnityEngine.LightType.Directional;
-		lightObject.name = "Sun";
-		light.transform.Rotate( new Vector3( 60, 0, 0 ) );
-		light.shadows = LightShadows.Soft;
-		light.color = new Color( 1, 1, 1 );
-		light.transform.SetParent( transform );
-		bool depthOfField = Constants.Eye.depthOfField;
-		if ( depthOfField )
+		if ( main )
 		{
-			var ppv = lightObject.AddComponent<PostProcessVolume>();
-			ppv.isGlobal = true;
-			ppv.profile = Instantiate( Resources.Load<PostProcessProfile>( "Post-processing Profile" ) );
-			Assert.global.IsNotNull( ppv.profile );
+			var lightObject = new GameObject { layer = World.layerIndexPPVolume };
+			light = lightObject.AddComponent<Light>();
+			light.type = UnityEngine.LightType.Directional;
+			lightObject.name = "Sun";
+			light.transform.Rotate( new Vector3( 60, 0, 0 ) );
+			light.shadows = LightShadows.Soft;
+			light.color = new Color( 1, 1, 1 );
+			light.transform.SetParent( transform );
+			bool depthOfField = Constants.Eye.depthOfField;
+			if ( depthOfField )
+			{
+				var ppv = lightObject.AddComponent<PostProcessVolume>();
+				ppv.isGlobal = true;
+				ppv.profile = Instantiate( Resources.Load<PostProcessProfile>( "Post-processing Profile" ) );
+				Assert.global.IsNotNull( ppv.profile );
+			}
 		}
 
 		{
@@ -682,14 +721,15 @@ public class World : HiveObject
 		nodes = new GameObject( "Nodes" );
 		nodes.transform.SetParent( transform );
 
-		itemsJustCreated = new GameObject( "Items just created" );		// Temporary parent for items until they enter the logistic network. If they are just root in the scene, World.Clear would not destroy them.
+		itemsJustCreated = new GameObject( "Items Just Created" );		// Temporary parent for items until they enter the logistic network. If they are just root in the scene, World.Clear would not destroy them.
 		itemsJustCreated.transform.SetParent( transform );
-		playersAndTeams = new GameObject( "Players and teams" );
+		playersAndTeams = new GameObject( "Players And Teams" );
 		playersAndTeams.transform.SetParent( transform );
-		eye = Eye.Create().Setup( this );
+		eye = Eye.Create();
+		eye.Setup( this );
 	}
 
-	public void Clear()
+	public virtual void Clear()
 	{
 		eye?.Remove();
 		eye = null;
@@ -711,7 +751,7 @@ public class World : HiveObject
 		}
 
 		for ( int i = 0; i < hiveObjects.Count; i++ )
-			assert.IsTrue( hiveObjects[i] == null || hiveObjects[i].destroyed );
+			assert.IsTrue( hiveObjects[i] == null || hiveObjects[i].destroyed, $"Object not correctly removed: {hiveObjects[i]}" );
 
 		hiveObjects.Clear();
 		newHiveObjects.Clear();
@@ -864,9 +904,9 @@ public class World : HiveObject
 				continue;
 			var r = new System.Random( rnd.Next() );
 			if ( r.NextDouble() < generatorSettings.forestChance )
-				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f );
+				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd );
 			if ( r.NextDouble() < generatorSettings.rocksChance )
-				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f );
+				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f, rnd );
 
 			if ( node.CheckType( Node.Type.land ) )
 			{
@@ -918,7 +958,7 @@ public class World : HiveObject
 						continue;
 					go = false;
 
-					var resourceCount = node.AddResourcePatch( ore.resourceType, generatorSettings.size / 6, 10 );
+					var resourceCount = node.AddResourcePatch( ore.resourceType, generatorSettings.size / 6, 10, rnd );
 					ore.resourceCount += resourceCount;
 					Ore.totalResourceCount += resourceCount;
 				}
@@ -1012,6 +1052,7 @@ public class Game : World
 	public OperationHandler operationHandler;
 	public new int time;
 	public Speed speed;
+	public System.Random rnd;
 
 	static public Game instance;
 
@@ -1023,7 +1064,9 @@ public class Game : World
 	Game()
 	{
 		Assert.global.IsNull( instance );
+		rnd = new ();
 		instance = this;
+		main = true;
 	}
 
 	public override int checksum 
@@ -1152,7 +1195,6 @@ public class Game : World
 	{
 		var localChallenge = Challenge.Create().Setup( challenge );
 		localChallenge.transform.SetParent( transform );
-		workshopConfigurations = Workshop.LoadConfigurations();
 		if ( resetSettings )
 			generatorSettings = ScriptableObject.CreateInstance<Settings>();
 		nextID = 1;
@@ -1182,13 +1224,14 @@ public class Game : World
 		this.challenge = localChallenge;
 		defeatedSimpletonCount = 0;
 		this.challenge.Register();
-		operationHandler = OperationHandler.Create().Setup();
+		operationHandler = OperationHandler.Create();
+		operationHandler.Setup( this );
 		operationHandler.challenge = localChallenge;
 		operationHandler.challenge.Begin();
 #if DEBUG
 		operationHandler.recordCRC = true;
 #endif
-		var mainTeam = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
+		var mainTeam = Team.Create().Setup( this, Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
 		if ( mainTeam )
 		{
 			teams.Add( mainTeam );
@@ -1198,7 +1241,7 @@ public class Game : World
 		}
 		for ( int i = 0; i < challenge.simpletonCount; i++ )
 		{
-			var team = Team.Create().Setup( Constants.Player.teamNames.Random(), Constants.Player.teamColors[(i+1)%Constants.Player.teamColors.Length] );
+			var team = Team.Create().Setup( this, Constants.Player.teamNames.Random(), Constants.Player.teamColors[(i+1)%Constants.Player.teamColors.Length] );
 			teams.Add( team );
 			var player = Simpleton.Create().Setup( Constants.Player.names.Random(), team );	// TODO Avoid using the same name again
 			player.active = true;
@@ -1287,7 +1330,7 @@ public class Game : World
 			team.Validate();
 	}
 
-	public new void Clear()
+	public override void Clear()
 	{
 		gameInProgress = false;
 
@@ -1535,7 +1578,7 @@ public class Game : World
 				if ( productivityGoalsByBuildingCount[i] <= 0 )
 					continue;
 
-				var config = Workshop.GetConfiguration( (Workshop.Type)i );
+				var config = Workshop.GetConfiguration( game, (Workshop.Type)i );
 				productivityGoals[(int)config.outputType] = config.productivity * productivityGoalsByBuildingCount[i] * Constants.Player.challengeProductivityPerBuilding;
 			}
 		}
@@ -1745,6 +1788,28 @@ public class Game : World
 		{
 			public List<Challenge> list;
 		}
+	}
+
+	public int NextRnd( OperationHandler.Event.CodeLocation caller, int limit = 0 )
+	{
+		if ( gameInProgress )
+			Assert.global.IsTrue( gameAdvancingInProgress );
+		int r = 0;
+		if ( limit != 0 )
+			r = rnd.Next( limit );
+		else
+			r = rnd.Next();
+		oh?.RegisterEvent( OperationHandler.Event.Type.rndRequest, caller );
+		return r;
+	}
+
+	public float NextFloatRnd( OperationHandler.Event.CodeLocation caller )
+	{
+		if ( gameInProgress )
+			Assert.global.IsTrue( gameAdvancingInProgress );
+		var r = (float)rnd.NextDouble();
+		oh?.RegisterEvent( OperationHandler.Event.Type.rndRequestFloat, caller );
+		return r;
 	}
 
 	[Obsolete( "Compatibility with old files", true )]

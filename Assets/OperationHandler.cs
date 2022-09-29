@@ -213,12 +213,6 @@ public class OperationHandler : HiveObject
         return new GameObject( "Operation handler").AddComponent<OperationHandler>();
     }
 
-    public new OperationHandler Setup()
-    {
-        base.Setup();
-        return this;
-    }
-
     new void Start()
     {
         transform.SetParent( root.transform );
@@ -1241,7 +1235,7 @@ public class Operation
                 }
                 if ( team == null )
                 {
-                    team = Team.Create().Setup( teamName, Constants.Player.teamColors[HiveCommon.game.teams.Count%Constants.Player.teamColors.Length] );
+                    team = Team.Create().Setup( HiveCommon.game, teamName, Constants.Player.teamColors[HiveCommon.game.teams.Count%Constants.Player.teamColors.Length] );
                     if ( team == null )
                     {
                         Interface.MessagePanel.Create( "No room for a new headquarters" );

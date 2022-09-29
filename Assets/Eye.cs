@@ -7,7 +7,6 @@ using UnityEngine.UI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.Rendering;
 
-[RequireComponent( typeof( AudioListener ) )]
 public class Eye : HiveObject
 {
 	public float altitude = Constants.Eye.defaultAltitude;
@@ -51,13 +50,6 @@ public class Eye : HiveObject
 
 	[JsonIgnore]
 	public IDirector director;
-	
-	World world 
-	{ 
-		get { return HiveCommon.game; } 
-		[Obsolete( "Compatibility with old files", true )]
-		set {} 
-	}
 
 	[Obsolete( "Compatibility with old files", true )]
 	float forwardForGroundBlocks { set {} }
@@ -84,13 +76,7 @@ public class Eye : HiveObject
 
 	public static Eye Create()
 	{
-		return new GameObject( "eye" ).AddComponent<Eye>();
-	}
-
-	public Eye Setup( World world )
-	{
-		base.Setup();
-		return this;
+		return new GameObject( "Eye" ).AddComponent<Eye>();
 	}
 
 	public void StopAutoChange()
@@ -99,19 +85,14 @@ public class Eye : HiveObject
 		autoMove = Vector2.zero;
 	}
 
-
-	public void Awake()
-	{
-		transform.SetParent( world.transform );
-	}
-
 	new public void Start()
 	{
-		cameraGrid = new GameObject( "Camera grid" ).AddComponent<CameraGrid>();
+		transform.SetParent( world.transform );
+		cameraGrid = new GameObject( "Camera Grid" ).AddComponent<CameraGrid>();
 		cameraGrid.transform.SetParent( transform, false );
 		cameraGrid.Setup();
 		bool depthOfField = Constants.Eye.depthOfField;
-		if ( depthOfField )
+		if ( depthOfField && world.main )
 		{
 			var ppv = world.light.GetComponent<PostProcessVolume>();
 			if ( ppv && ppv.profile )
@@ -121,6 +102,10 @@ public class Eye : HiveObject
 
 		highlight = new GameObject( "Highlight" ).AddComponent<Highlight>();
 		highlight.transform.SetParent( transform );
+		cameraGrid.enabled = world.main;
+
+		if ( world.main )
+			gameObject.AddComponent<AudioListener>();
 
 		base.Start();
 	}

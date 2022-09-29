@@ -121,7 +121,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		this.team = team;
 		team.roads.Add( this );
-		base.Setup();
+		base.Setup( team.world );
 		lastUsed.Start();
 		return this;
 	}
@@ -622,7 +622,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	{
 		var newRoad = Road.Create();
 		newRoad.team = team;
-		newRoad.Setup();
+		newRoad.Setup( world );
 		team.roads.Add( newRoad );
 
   		if ( ends[1] == middle )

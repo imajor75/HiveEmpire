@@ -536,7 +536,7 @@ public class Simpleton : Player
             if ( currentYield < 0 )
             {
                 int currentWorkshopCount = 0;
-                var outputType = Workshop.GetConfiguration( workshopType ).outputType;
+                var outputType = Workshop.GetConfiguration( game, workshopType ).outputType;
                 currentYield = 0;
                 if ( workshopType == Workshop.Type.forester )
                 {
@@ -596,7 +596,7 @@ public class Simpleton : Player
                 return problemWeight > 0 ? needMoreTime : finished;
             }
 
-            configuration = Workshop.GetConfiguration( workshopType );
+            configuration = Workshop.GetConfiguration( game, workshopType );
             reservedPlank = boss.reservedPlank;
             reservedStone = boss.reservedStone;
             if ( workshopType != Workshop.Type.woodcutter && workshopType != Workshop.Type.sawmill && workshopType != Workshop.Type.forester )
@@ -635,7 +635,7 @@ public class Simpleton : Player
                 dependencies.Add( Workshop.Type.dairy );
                 dependencies.Add( Workshop.Type.poultryRun );
             }
-            var configuration = Workshop.GetConfiguration( workshopType );
+            var configuration = Workshop.GetConfiguration( game, workshopType );
             foreach ( var otherWorkshopType in game.workshopConfigurations )
             {
                 if ( configuration.generatedInputs == null )

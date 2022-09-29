@@ -29,12 +29,6 @@ public class Ground : HiveObject
 	int overseas { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int layoutVersion, meshVersion;
-	World world 
-	{ 
-		[Obsolete( "Compatibility with old files", true )]
-		set {} 
-	}
-
 	public static Ground Create()
 	{
 		return new GameObject().AddComponent<Ground>();
@@ -90,9 +84,6 @@ public class Ground : HiveObject
 		gameObject.name = "Ground";
 		transform.SetParent( game.transform );
 		material = Resources.Load<Material>( "GroundMaterial" );
-
-		if ( blocks.Count == 0 )
-			CreateBlocks();		// Compatibility with old files
 
 		grassLayerCount = Constants.Ground.grassLevels;
 
@@ -174,16 +165,17 @@ public class Ground : HiveObject
 
 	public float n00x, n00y, n10x, n10y, n01x, n01y;
 
-	public Ground Setup( World world, HeightMap heightMap, HeightMap forestMap, int dimension = 64 )
+	public Ground Setup( World world, HeightMap heightMap, HeightMap forestMap, System.Random rnd, int dimension = 64 )
 	{
 		gameObject.name = "Ground";
+		this.world = world;
 		this.dimension = dimension;
 
 		if ( nodes == null )
 			nodes = new ();
 		for ( int y = 0; y < dimension; y++ )
 			for ( int x = 0; x < dimension; x++ )
-				nodes.Add( Node.Create().Setup( this, x, y ) );
+				nodes.Add( Node.Create().Setup( this, x, y, rnd ) );
 		ScanHeights( heightMap, forestMap );
 
 		n00x = GetNode( 0, 0 ).position.x;
@@ -195,7 +187,7 @@ public class Ground : HiveObject
 
 		CreateBlocks();
 		grass = Grass.Create().Setup();
-		base.Setup();
+		base.Setup( world );
 
 		return this;
     }
@@ -656,7 +648,7 @@ public class Ground : HiveObject
 			this.boss = boss;
 			this.center = center;
 			this.dimension = dimension;
-			base.Setup();
+			base.Setup( boss.world );
 			return this;
 		}
 

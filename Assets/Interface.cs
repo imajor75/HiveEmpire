@@ -53,6 +53,7 @@ public class Interface : HiveObject
 	public static Material materialUIPath;
 	static bool focusOnInputField, focusOnDropdown;
 	static KeyCode ignoreKey = KeyCode.None;
+	static public System.Random rnd = new ();
 
 	public Image buildButton, worldProgressButton;
 
@@ -581,7 +582,8 @@ public class Interface : HiveObject
 			globalSettings = new Settings();
 		globalSettings.Apply();
 
-		Game.Create().Setup();
+		var game = Game.Create();
+		game.Setup( game );
 		#if DEBUG
 			StartCoroutine( ValidateCoroutine() );
 		#endif
@@ -994,7 +996,7 @@ public class Interface : HiveObject
 
 		public static ReplayLoader Create( OperationHandler o )
 		{
-			var h = new GameObject( "Replay loader" ).AddComponent<ReplayLoader>();
+			var h = new GameObject( "Replay Loader" ).AddComponent<ReplayLoader>();
 			h.Open( o );
 			return h;
 		}
@@ -1023,7 +1025,7 @@ public class Interface : HiveObject
 
 		public static PathVisualization Create()
 		{
-			return new GameObject( "Path visualization" ).AddComponent<PathVisualization>();
+			return new GameObject( "Path Visualization" ).AddComponent<PathVisualization>();
 		}
 
 		public PathVisualization Setup( Path path )
@@ -2030,7 +2032,7 @@ public class Interface : HiveObject
 				if ( itemType != Item.Type.unknown )
 					picture.sprite = Item.sprites[(int)itemType];
 
-				inTransit = new GameObject( "Logistic indicator" ).AddComponent<Image>().Link( this );
+				inTransit = new GameObject( "Logistic Indicator" ).AddComponent<Image>().Link( this );
 				inTransit.sprite = Unit.arrowSprite;
 				inTransit.rectTransform.anchorMin = new Vector2( 0.5f, 0.0f );
 				inTransit.rectTransform.anchorMax = new Vector2( 1.0f, 0.5f );
@@ -2130,7 +2132,7 @@ public class Interface : HiveObject
 		{
 			if ( latestText != text )
 				root.requestUpdate = true;
-			var result = new GameObject( "Message panel" ).AddComponent<MessagePanel>();
+			var result = new GameObject( "Message Panel" ).AddComponent<MessagePanel>();
 			result.Open( text, location, autoclose );
 			return result;
 		}
@@ -2843,7 +2845,7 @@ public class Interface : HiveObject
 			{
 				for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 				{
-					var config = Workshop.GetConfiguration( (Workshop.Type)i );
+					var config = Workshop.GetConfiguration( game, (Workshop.Type)i );
 					if ( config != null && config.outputType == itemType )
 						BuildingList.Create().Open( (Building.Type)i );
 				}
@@ -3168,7 +3170,7 @@ public class Interface : HiveObject
 
 		public static StockPanel Create()
 		{
-			return new GameObject( "Stock panel").AddComponent<StockPanel>();
+			return new GameObject( "Stock Panel").AddComponent<StockPanel>();
 		}
 
 		public void Open( Stock stock, bool show = false )
@@ -3208,7 +3210,7 @@ public class Interface : HiveObject
 		{
 			if ( controls )
 				Destroy( controls.gameObject );
-			controls = new GameObject( "Stock controls" ).AddComponent<RectTransform>();
+			controls = new GameObject( "Stock Controls" ).AddComponent<RectTransform>();
 			controls.Link( this ).Stretch();
 
 			AreaIcon( stock, stock.inputArea ).Link( controls ).Pin( 30, -25, 30, 30 ).name = "Input area";
@@ -3490,7 +3492,7 @@ public class Interface : HiveObject
 
 		void AddResourcePatch( Resource.Type resourceType )
 		{
-			node.AddResourcePatch( resourceType, 3, 10, overwrite:true );
+			node.AddResourcePatch( resourceType, 3, 10, new (), overwrite:true );
 		}
 
 		void AddTree()
@@ -3521,7 +3523,7 @@ public class Interface : HiveObject
 
 		public static ProductionChainPanel Create()
 		{
-			var panel = new GameObject( "Production chain panel" ).AddComponent<ProductionChainPanel>();
+			var panel = new GameObject( "Production Chain Panel" ).AddComponent<ProductionChainPanel>();
 			panel.Open();
 			return panel;
 		}
@@ -3841,7 +3843,7 @@ public class Interface : HiveObject
 						c++;
 				var b = BuildButton( column, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
 				string tooltip = "";
-				var o = Workshop.GetConfiguration( type );
+				var o = Workshop.GetConfiguration( game, type );
 				var l = o.generatedInputs;
 				if ( l != null && l.Count > 0 )
 				{
@@ -4039,7 +4041,7 @@ public class Interface : HiveObject
 				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodeUndergroundResources;
 			else
 				root.viewport.nodeInfoToShow = Viewport.OverlayInfoType.nodePossibleBuildings;
-			var p = new GameObject( "New building panel" ).AddComponent<NewBuildingPanel>();
+			var p = new GameObject( "New Building Panel" ).AddComponent<NewBuildingPanel>();
 			p.Open( type, workshopType );
 			return p;
 		}
@@ -4121,7 +4123,7 @@ public class Interface : HiveObject
 			{
 				case Construct.workshop:
 				{
-					ShowTestResult( Workshop.IsNodeSuitable( node, root.mainTeam, Workshop.GetConfiguration( workshopType ), currentFlagDirection ) );
+					ShowTestResult( Workshop.IsNodeSuitable( node, root.mainTeam, Workshop.GetConfiguration( game, workshopType ), currentFlagDirection ) );
 					var workshop = Workshop.Create().Setup( node, root.mainTeam, workshopType, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					if ( workshop && workshop.gatherer )
 					{
@@ -4240,7 +4242,7 @@ public class Interface : HiveObject
 					{
 						case Construct.workshop:
 						{
-							suitable = Workshop.IsNodeSuitable( node, root.mainTeam, Workshop.GetConfiguration( workshopType ), flagDirection, true );
+							suitable = Workshop.IsNodeSuitable( node, root.mainTeam, Workshop.GetConfiguration( game, workshopType ), flagDirection, true );
 							break;
 						}
 						case Construct.stock:
@@ -4927,7 +4929,7 @@ if ( cart )
 
 		public static ConstructionPanel Create()
 		{
-			return new GameObject( "Contruction panel" ).AddComponent<ConstructionPanel>();
+			return new GameObject( "Contruction Panel" ).AddComponent<ConstructionPanel>();
 		}
 
 		public void Open( Building.Construction construction, bool show = false )
@@ -5058,7 +5060,7 @@ if ( cart )
 				BuildingIcon( item.origin ).Pin( 100, -55, 120 );
 			Text( "Destination:" ).Pin( 15, -75, 170 );
 
-			mapIcon = new GameObject( "Map icon" );
+			mapIcon = new GameObject( "Map Icon" );
 			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
 			mapIcon.AddComponent<SpriteRenderer>().sprite = Item.sprites[(int)item.type];
 			mapIcon.transform.SetParent( transform );
@@ -5148,7 +5150,7 @@ if ( cart )
 
 		static public RouteList Create()
 		{
-			return new GameObject( "Route list" ).AddComponent<RouteList>();
+			return new GameObject( "Route List" ).AddComponent<RouteList>();
 		}
 
 		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
@@ -5434,7 +5436,7 @@ if ( cart )
 
 			public static Editor Create()
 			{
-				return new GameObject( "Press new hotkey panel" ).AddComponent<Editor>();
+				return new GameObject( "Press New Hotkey Panel" ).AddComponent<Editor>();
 			}
 
 			public void Open( Hotkey hotkey, HotkeyList boss )
@@ -5544,7 +5546,7 @@ if ( cart )
 
 		static public BuildingList Create()
 		{
-			return new GameObject( "Building list" ).AddComponent<BuildingList>();
+			return new GameObject( "Building List" ).AddComponent<BuildingList>();
 		}
 
 		public void Open( Building.Type buildingType = Building.Type.unknown ) 
@@ -6324,7 +6326,7 @@ if ( cart )
 
 		public static RoadList Create( Team team )
 		{
-			var list = new GameObject( "Road list panel" ).AddComponent<RoadList>();
+			var list = new GameObject( "Road List Panel" ).AddComponent<RoadList>();
 			list.Open( team );
 			return list;
 		}
@@ -7052,13 +7054,35 @@ if ( cart )
 		}
 	}
 
+	public class GeneratorPanel : Panel
+	{
+		public World preview;
+		public int seed;
+
+		public static GeneratorPanel Create()
+		{
+			var panel = new GameObject( "Generator Panel" ).AddComponent<GeneratorPanel>();
+			panel.Open();
+			return panel;
+		}
+
+		void Open()
+		{
+			base.Open( 300, 200 );
+			preview = World.Create();
+			preview.Prepare();
+			preview.transform.SetParent( transform );
+			preview.Generate( seed );
+		}
+	}
+
 	public class ChallengeList : Panel
 	{
 		public InputField manualSeed;
 
 		public static ChallengeList Create( bool defeat = false )
 		{
-			var p = new GameObject( "Challenge list" ).AddComponent<ChallengeList>();
+			var p = new GameObject( "Challenge List" ).AddComponent<ChallengeList>();
 			p.Open( defeat );
 			return p;
 		}
@@ -7590,7 +7614,7 @@ if ( cart )
 	{
 		var menu = Menu.Create();
 		menu.AddItem( "Continue", () => { if ( initial ) eye.RestoreOldPosition(); menu.Close(); } );
-		menu.AddItem( "New Game", () => { menu.Close(); ChallengeList.Create(); } );
+		menu.AddItem( "New Game", () => { menu.Close(); OpenNewGameMenu(); } );
 		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
 		if ( !initial )
 			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.nextSaveFileName, true ); } );
@@ -7609,6 +7633,14 @@ if ( cart )
 			var o = OperationHandler.LoadReplay( fileName );
 			ReplayLoader.Create( o );
 		} );
+	}
+
+	public Menu OpenNewGameMenu()
+	{
+		var menu = Menu.Create( "Start New Game" );
+		menu.AddItem( "Start challenge", () => { menu.Close(); ChallengeList.Create(); } );
+		menu.AddItem( "Free game", () => { menu.Close(); GeneratorPanel.Create(); } );
+		return menu;
 	}
 
 	public Menu OpenMultiplayerMenu()
@@ -7688,7 +7720,7 @@ if ( cart )
 	{
 		public static WelcomePanel Create()
 		{
-			var p = new GameObject( "Welcome panel" ).AddComponent<WelcomePanel>();
+			var p = new GameObject( "Welcome Panel" ).AddComponent<WelcomePanel>();
 			p.Open();
 			return p;
 		}
@@ -7717,7 +7749,7 @@ if ( cart )
 	{
 		public static RoadTutorialPanel Create()
 		{
-			var p = new GameObject( "Road tutorial" ).AddComponent<RoadTutorialPanel>();
+			var p = new GameObject( "Road Tutorial" ).AddComponent<RoadTutorialPanel>();
 			p.Open();
 			return p;
 		}
@@ -7795,7 +7827,7 @@ if ( cart )
 
 		public static Controller Create()
 		{
-			return new GameObject( "Dynamic controller" ).AddComponent<Controller>();
+			return new GameObject( "Dynamic Controller" ).AddComponent<Controller>();
 		}
 
 		void RecalculateAngles()
@@ -7848,7 +7880,7 @@ if ( cart )
 		{
 			Destroy( group );
 
-			group = new GameObject( "Controller group", typeof( RectTransform ) );
+			group = new GameObject( "Controller Group", typeof( RectTransform ) );
 			group.transform.SetParent( root.transform, false );
 			group.transform.Pin( (int)( Input.mousePosition.x / uiScale ), (int)( ( Input.mousePosition.y - Screen.height ) / uiScale ) );
 			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Destroy( group ) ).AddClickHandler( () => Destroy( group ), MouseButton.right ).color = new Color( 0, 0, 0, 0 );
@@ -7926,7 +7958,7 @@ public static class UIHelpers
 	{
 		Button b = new GameObject( "Checkbox" ).AddComponent<Button>();
 		b.transform.SetParent( panel.transform );
-		var i = new GameObject( "Checkbox image" ).AddComponent<Image>();
+		var i = new GameObject( "Checkbox Image" ).AddComponent<Image>();
 		i.Link( b ).Pin( 0, 0, Interface.iconSize, Interface.iconSize ).AddOutline();
 		void UpdateCheckboxLook( bool on )
 		{

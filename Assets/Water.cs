@@ -6,6 +6,7 @@ using UnityEngine;
 public class Water : HiveObject
 {
     public Mesh mesh;
+    public new Ground ground;
     public Material material;
     static int offset0ID, offset1ID, iterID;
 
@@ -23,7 +24,8 @@ public class Water : HiveObject
 
     public Water Setup( Ground ground )
     {
-        base.Setup();
+        this.ground = ground;
+        base.Setup( ground.world );
         return this;
     }
 
@@ -44,7 +46,6 @@ public class Water : HiveObject
 
     new void Update()
     {
-        Assert.global.AreEqual( this, game.water );
         if ( mesh.triangles.Length != ground.dimension * ground.dimension * 3 * 2 )
         {
             var vertices = new List<Vector3>();

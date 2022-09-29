@@ -78,7 +78,7 @@ public class Flag : HiveObject
 			this.team = team;
 			this.blueprintOnly = blueprintOnly;
 			this.crossing = crossing;
-			base.Setup();
+			base.Setup( node.world );
 			team.flags.Add( this );
 			if ( node.road && !blueprintOnly )
 			{

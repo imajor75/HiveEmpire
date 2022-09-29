@@ -93,7 +93,7 @@ public abstract class Player : HiveObject
 		this.name = name;
 		this.team = team;
 		team.players.Add( this );
-		base.Setup();
+		base.Setup( team.world );
 		return this;
 	}
 
@@ -267,7 +267,7 @@ public class Team : HiveObject
 		return new GameObject( "Team" ).AddComponent<Team>();
 	}
 
-	public Team Setup( string name, Color color )
+	public Team Setup( Game game, string name, Color color )
 	{
 		this.name = name;
 		this.color = color;
@@ -295,7 +295,7 @@ public class Team : HiveObject
 		chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );
 		productivityUpdateTimer.Start( Constants.Player.productivityUpdateTime );
 		CreateInputWeights();
-		base.Setup();
+		base.Setup( game );
 
 		return this;
 	}

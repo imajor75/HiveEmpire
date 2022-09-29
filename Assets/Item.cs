@@ -154,7 +154,7 @@ public class Item : HiveObject
 		};
 		looks.Fill( looksData );
 
-		var dl = new GameObject( "Temporary directional light" );
+		var dl = new GameObject( "Temporary Directional Light" );
 		var l = dl.AddComponent<Light>();
 		l.type = LightType.Directional;
 		l.color = new Color( .7f, .7f, .7f );
@@ -196,7 +196,7 @@ public class Item : HiveObject
 			}
 		}
 		team.RegisterItem( this );
-		base.Setup();
+		base.Setup( origin.world );
 		return this;
 	}
 

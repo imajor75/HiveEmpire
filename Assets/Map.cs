@@ -67,7 +67,7 @@ public class Map : Interface.Panel
 
 		public static MapImage Create()
 		{
-			return new GameObject( "Map image" ).AddComponent<MapImage>();
+			return new GameObject( "Map Image" ).AddComponent<MapImage>();
 		}
 
 		public void Setup()
@@ -81,7 +81,7 @@ public class Map : Interface.Panel
 
 			if ( !camera )
 			{
-				camera = new GameObject( "Map camera").AddComponent<Eye.CameraGrid>();
+				camera = new GameObject( "Map Camera").AddComponent<Eye.CameraGrid>();
 				camera.Setup( 10 );
 			}
 			camera.transform.SetParent( ground.transform );

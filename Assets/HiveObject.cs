@@ -63,6 +63,7 @@ public abstract class HiveObject : HiveCommon
 	public bool registered;
 	public bool destroyed;
 	public int worldIndex = -1;
+	public World world;
 	public Team team;
 	public Simpleton.Data simpletonData;
 	[JsonIgnore]
@@ -97,28 +98,29 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Register()
 	{
-		game.newHiveObjects.Add( this );
+		world.newHiveObjects.Add( this );
 		registered = true;
 	}
 
-	public void Setup()
+	public void Setup( World world )
 	{
-		assert.IsFalse( game.hiveObjects.Contains( this ) );
-		assert.IsFalse( game.newHiveObjects.Contains( this ) );
+		this.world = world;
+		assert.IsFalse( world.hiveObjects.Contains( this ) );
+		assert.IsFalse( world.newHiveObjects.Contains( this ) );
 		Register();
 		if ( !blueprintOnly )
-			id = game.nextID++;
+			id = world.nextID++;
 	}
 
 	public void OnDestroy()
 	{
-		if ( worldIndex >= 0 && game.hiveObjects.Count > worldIndex && this == game.hiveObjects[worldIndex] )
+		if ( worldIndex >= 0 && world.hiveObjects.Count > worldIndex && this == world.hiveObjects[worldIndex] )
 		{
-			game.hiveObjects[worldIndex] = null;
-			game.hiveListFreeSlots.Add( worldIndex );
+			world.hiveObjects[worldIndex] = null;
+			world.hiveListFreeSlots.Add( worldIndex );
 			worldIndex = -1;
 		}
-		game.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
+		world?.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
 		destroyed = true;
 		registered = false;
 	}
@@ -171,7 +173,7 @@ public abstract class HiveObject : HiveCommon
 	{
 		assert.IsTrue( blueprintOnly );
 		blueprintOnly = false;
-		id = game.nextID++;
+		id = world.nextID++;
 	}
 
 	public virtual void OnClicked( Interface.MouseButton button, bool show = false )
@@ -201,7 +203,7 @@ public abstract class HiveObject : HiveCommon
 		if ( !blueprintOnly )
 			assert.AreNotEqual( id, 0 );
 		if ( worldIndex >= 0 )
-			assert.AreEqual( this, game.hiveObjects[worldIndex] );
+			assert.AreEqual( this, world.hiveObjects[worldIndex] );
 	}
 
 	public class SiteTestResult

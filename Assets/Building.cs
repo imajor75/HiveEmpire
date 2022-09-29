@@ -580,7 +580,7 @@ abstract public class Building : HiveObject
 
 		if ( !blueprintOnly )
 			team.buildingCounts[(int)type]++;
-		base.Setup();
+		base.Setup( node.world );
 		return this;
 	}
 
