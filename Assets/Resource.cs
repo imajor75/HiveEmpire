@@ -249,7 +249,7 @@ public class Resource : HiveObject
 		{
 			if ( type == Type.tree || type == Type.rock )
 				body.transform.Rotate( Vector3.up * ( bodyRandom % 360 ) );
-			body.transform.SetParent( transform );
+			body.transform.SetParent( transform, false );
 			body.transform.localPosition = Vector3.zero;
 
 			// Align field to ground

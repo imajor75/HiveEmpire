@@ -441,6 +441,11 @@ public class World : HiveObject
 		}
 		if ( eye.world == null )
 			eye.world = this;
+		if ( eye.cameraGrid == null )
+		{
+			eye.cameraGrid = Eye.CameraGrid.Create();
+			eye.cameraGrid.Setup( eye );
+		}
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )
@@ -668,7 +673,8 @@ public class World : HiveObject
 		while ( workshopTypeUsage.Count < (int)Workshop.Type.total )
 			workshopTypeUsage.Add( 0 );
 		foreach ( var hiveObject in hiveObjects )
-			hiveObject.world = this;
+			if ( hiveObject )
+				hiveObject.world = this;
 
 		Interface.ValidateAll( true );
 		bool demoMode = fileName.Contains( "demolevel" );
@@ -698,7 +704,7 @@ public class World : HiveObject
 			light.transform.Rotate( new Vector3( 60, 0, 0 ) );
 			light.shadows = LightShadows.Soft;
 			light.color = new Color( 1, 1, 1 );
-			light.transform.SetParent( transform );
+			light.transform.SetParent( transform, false );
 			bool depthOfField = Constants.Eye.depthOfField;
 			if ( depthOfField )
 			{

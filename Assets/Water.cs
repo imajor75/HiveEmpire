@@ -36,7 +36,7 @@ public class Water : HiveObject
     new void Start()
     {
         name = "Water";
-        transform.SetParent( ground.transform.parent );
+        transform.SetParent( ground.transform.parent, false );
 		transform.localPosition = Vector3.up * game.waterLevel;
         mesh = GetComponent<MeshFilter>().mesh = new ();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );

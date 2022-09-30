@@ -82,9 +82,9 @@ public class Map : Interface.Panel
 			if ( !camera )
 			{
 				camera = new GameObject( "Map Camera").AddComponent<Eye.CameraGrid>();
-				camera.Setup( 10 );
+				camera.CreateCameras( 10 );
 			}
-			camera.transform.SetParent( ground.transform );
+			camera.transform.SetParent( ground.transform, false );
 			camera.targetTexture = renderTexture;
 			camera.cullingMask = int.MaxValue - ( 1 << Ground.Grass.layerIndex ) - ( 1 << World.layerIndexBuildings ) - ( 1 << World.layerIndexUnits ) - ( 1 << World.layerIndexRoads ) - ( 1 << LayerMask.NameToLayer( "Trees" ) );
 			if ( !Interface.Viewport.showGround )

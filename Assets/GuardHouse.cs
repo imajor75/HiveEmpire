@@ -132,7 +132,7 @@ public abstract class Attackable : Building
 		void Trash( Unit soldier )
 		{
 			var m = Instantiate( soldier.team.Get01AMaterial() );
-			soldier.body.transform.SetParent( transform );
+			soldier.body.transform.SetParent( transform, false );
 			trash.Add( soldier.body );
 			trashMaterials.Add( m );
 			World.SetMaterialRecursive( soldier.body, m );

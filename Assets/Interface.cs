@@ -746,11 +746,11 @@ public class Interface : HiveObject
 			file = Application.streamingAssetsPath + "/challenges.json";
 		challenges = Serializer.Read<Game.Challenge.List>( file ).list;
 		var challengeContainer = new GameObject( "Challenges" );
-		challengeContainer.transform.SetParent( transform );
+		challengeContainer.transform.SetParent( transform, false );
 		foreach ( var challenge in challenges )
 		{
 			challenge.ParseConditions();
-			challenge.transform.SetParent( challengeContainer.transform );
+			challenge.transform.SetParent( challengeContainer.transform, false );
 		}
 	}
 
@@ -1142,7 +1142,7 @@ public class Interface : HiveObject
 
 		public void Start()
 		{
-			transform.SetParent( HiveCommon.game.transform );
+			transform.SetParent( HiveCommon.game.transform, false );
 		}
 
 		public void Update()
@@ -6270,7 +6270,7 @@ if ( cart )
 			if ( cursor == null )
 			{
 				cursor = Instantiate( Resources.Load<GameObject>( "prefabs/others/cursor" ) );
-				cursor.transform.SetParent( ground.transform );
+				cursor.transform.SetParent( ground.transform, false );
 				for ( int i = 0; i < cursorTypes.Length; i++ )
 				{
 					cursorTypes[i] = World.FindChildRecursive( cursor.transform, ( (CursorType)i ).ToString() )?.gameObject;
@@ -7057,7 +7057,10 @@ if ( cart )
 	public class GeneratorPanel : Panel
 	{
 		public World preview;
-		public int seed;
+		public int seed = 2000;
+		public RenderTexture view;
+		public bool needGenerate;
+		public int needRender;
 
 		public static GeneratorPanel Create()
 		{
@@ -7069,10 +7072,34 @@ if ( cart )
 		void Open()
 		{
 			base.Open( 300, 200 );
+
 			preview = World.Create();
+			preview.transform.localPosition = new Vector3( 1000, 0, 0 );
 			preview.Prepare();
-			preview.transform.SetParent( transform );
-			preview.Generate( seed );
+
+			view = new ( 256, 256, 0 );
+			needGenerate = true;
+
+			var window = new GameObject( "Preview Image" ).AddComponent<RawImage>().Link( this ).Stretch( borderWidth, borderWidth, borderWidth, borderWidth );
+			window.texture = view;
+		}
+
+		new void Update()
+		{
+			if ( --needRender == 0 )
+			{
+				preview.eye.cameraGrid.Render();
+			}
+			if ( needGenerate )
+			{
+				preview.Generate( seed );
+				preview.eye.SetMapMode( true );
+				preview.eye.cameraGrid.targetTexture = view;
+				needGenerate = false;
+				needRender = 2;
+			}
+
+			base.Update();
 		}
 	}
 

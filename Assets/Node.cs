@@ -147,6 +147,7 @@ public class Node : HiveObject
 	{
 		this.x = x;
 		this.y = y;
+		this.world = ground.world;
 
 		if ( rnd.NextDouble() <= Constants.Node.decorationDensity )
 		{
@@ -163,7 +164,7 @@ public class Node : HiveObject
 	new public void Start()
 	{
 		name = $"Node {x}:{y}";
-		transform.SetParent( World.nodes.transform );
+		transform.SetParent( World.nodes.transform, false );
 		transform.localPosition = position;
 
 		// Decoration
@@ -173,7 +174,7 @@ public class Node : HiveObject
 			if ( decoration )
 			{
 				var d = Instantiate( decoration ).transform;
-				d.SetParent( ground.transform );
+				d.SetParent( ground.transform, false );
 				var o = Neighbour( decorationDirection );
 				d.position = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
 				d.gameObject.layer = World.layerIndexDecorations;

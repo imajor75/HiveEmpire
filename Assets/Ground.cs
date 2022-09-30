@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -82,7 +82,7 @@ public class Ground : HiveObject
 	new public void Start()
 	{
 		gameObject.name = "Ground";
-		transform.SetParent( game.transform );
+		transform.SetParent( world.transform, false );
 		material = Resources.Load<Material>( "GroundMaterial" );
 
 		grassLayerCount = Constants.Ground.grassLevels;
@@ -117,7 +117,7 @@ public class Ground : HiveObject
 		mesh.uv = tcs;
 
 		mapGround.gameObject.layer = World.layerIndexMapOnly;
-		mapGround.transform.SetParent( transform );
+		mapGround.transform.SetParent( transform, false );
 		mapGround.material = new Material( World.defaultTextureShader );
 		RecreateMapGroundTexture();
 
@@ -663,7 +663,7 @@ public class Ground : HiveObject
 			renderer.material = boss.material;
 			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
-			transform.SetParent( boss.transform );
+			transform.SetParent( boss.transform, false );
 			name = $"Ground block {center.x}:{center.y}";
 			base.Start();
 		}

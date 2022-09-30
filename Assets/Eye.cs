@@ -28,13 +28,15 @@ public class Eye : HiveObject
 	PostProcessLayer ppl;
 	public Node target;
 	public float targetApproachSpeed;
-	[JsonIgnore]
 	public CameraGrid cameraGrid;
 	[JsonIgnore]
 	public Highlight highlight;
 
 	public void SetMapMode( bool mapMode )
 	{
+		if ( this.mapMode == mapMode )
+			return;
+			
 		this.mapMode = mapMode;
 		cameraGrid.orthographic = mapMode;
 		if ( mapMode )
@@ -46,6 +48,7 @@ public class Eye : HiveObject
 		else
 			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly);
 		RenderSettings.fog = !mapMode;
+		UpdateTransformation();
 	}
 
 	[JsonIgnore]
@@ -79,6 +82,21 @@ public class Eye : HiveObject
 		return new GameObject( "Eye" ).AddComponent<Eye>();
 	}
 
+	public new void Setup( World world )
+	{
+		transform.SetParent( world.transform, false );
+		cameraGrid = CameraGrid.Create();
+		cameraGrid.Setup( this );
+		cameraGrid.CreateCameras();
+		base.Setup( world );
+	}
+
+	override public void Remove()
+	{
+		Destroy( cameraGrid.gameObject );
+		base.Remove();
+	}
+
 	public void StopAutoChange()
 	{
 		autoRotate = 0;
@@ -87,10 +105,7 @@ public class Eye : HiveObject
 
 	new public void Start()
 	{
-		transform.SetParent( world.transform );
-		cameraGrid = new GameObject( "Camera Grid" ).AddComponent<CameraGrid>();
-		cameraGrid.transform.SetParent( transform, false );
-		cameraGrid.Setup();
+		transform.SetParent( world.transform, false );
 		bool depthOfField = Constants.Eye.depthOfField;
 		if ( depthOfField && world.main )
 		{
@@ -101,7 +116,7 @@ public class Eye : HiveObject
 		}
 
 		highlight = new GameObject( "Highlight" ).AddComponent<Highlight>();
-		highlight.transform.SetParent( transform );
+		highlight.transform.SetParent( transform, false );
 		cameraGrid.enabled = world.main;
 
 		if ( world.main )
@@ -331,8 +346,8 @@ public class Eye : HiveObject
 		var position = new Vector3( x, height, y );
 		if ( mapMode )
 		{
-			transform.position = position + Vector3.up * 50;
-			transform.LookAt( position, new Vector3( (float)Math.Sin(direction), 0, (float)Math.Cos(direction) ) );
+			transform.localPosition = position + Vector3.up * 50;
+			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( (float)Math.Sin(direction), 0, (float)Math.Cos(direction) ) );
 			if ( cameraGrid )
 				cameraGrid.orthographicSize = altitude;
 			return;
@@ -340,8 +355,8 @@ public class Eye : HiveObject
 		float horizontal = (float)Math.Sin(altitudeDirection) * altitude;
 		float vertical = (float)Math.Cos(altitudeDirection) * altitude;
 		Vector3 viewer = new Vector3( (float)( horizontal*Math.Sin(direction) ), -vertical, (float)( horizontal*Math.Cos(direction) ) );
-		transform.position = position - viewer;
-		transform.LookAt( position );
+		transform.localPosition = position - viewer;
+		transform.LookAt( world.transform.TransformPoint( position ) );
 	}
 
 	public void ReleaseFocus( IDirector director, bool restore = false )
@@ -418,12 +433,25 @@ public class Eye : HiveObject
 
 	public class CameraGrid : HiveCommon
 	{
+		[JsonIgnore]
 		public List<Camera> cameras = new ();
 		public Camera center { get { return cameras[4]; } }
 		public Camera first;
 		public Camera last;
+		public new Eye eye;
 
-		public void Setup( float depth = 0 )
+		public static CameraGrid Create()
+		{
+			return new GameObject( "Camera Grid" ).AddComponent<CameraGrid>();
+		}
+
+		public void Setup( Eye eye )
+		{
+			this.eye = eye;
+			transform.SetParent( eye.transform, false );
+		}
+
+		public CameraGrid CreateCameras( float depth = 0 )
 		{
 			for ( int y = -1; y <= 1; y++ )
 				for ( int x = -1; x <= 1; x++ )
@@ -444,6 +472,14 @@ public class Eye : HiveObject
 			first.clearFlags = CameraClearFlags.Skybox;
 			last.gameObject.GetComponent<Highlight.Applier>().enabled = true;
 			last.depth = depth+1;
+			return this;
+		}
+
+		void Start()
+		{
+			transform.SetParent( eye.transform, false );
+			if ( cameras.Count == 0 )
+				CreateCameras();
 		}
 
 		void OnEnable()
@@ -460,6 +496,13 @@ public class Eye : HiveObject
 
 		void LateUpdate()
 		{
+			UpdateGrid();
+		}
+
+		void UpdateGrid()
+		{
+			var ground = eye.world.ground;
+
 			if ( ground == null )
 			{
 				first.clearFlags = CameraClearFlags.SolidColor;
@@ -548,6 +591,13 @@ public class Eye : HiveObject
 		public RenderTexture targetTexture
 		{
 			set { foreach ( var camera in cameras ) camera.targetTexture = value; }
+		}
+
+		public void Render()
+		{
+			UpdateGrid();
+			foreach ( var camera in cameras )
+				camera.Render();
 		}
 	}
 

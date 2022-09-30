@@ -1416,7 +1416,7 @@ public class Unit : HiveObject
 
 	new public void Start()
 	{
-		transform.SetParent( ground.transform );
+		transform.SetParent( ground.transform, false );
 		Vector3 pos = node.position;
 		if ( building && node == building.node )
 			pos += standingOffsetInsideBuilding;
@@ -1480,7 +1480,7 @@ public class Unit : HiveObject
 
 		mapObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
-		mapObject.transform.SetParent( transform );
+		mapObject.transform.SetParent( transform, false );
 		mapObject.transform.localPosition = Vector3.up * 2;
 		mapObject.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
 		var r = mapObject.GetComponent<MeshRenderer>();
