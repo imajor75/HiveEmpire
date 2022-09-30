@@ -46,8 +46,8 @@ public class World : HiveObject
 	static public Shader defaultMapShader;
 	static public Shader defaultTextureShader;
 	static public Shader defaultCutoutTextureShader;
-	static public GameObject nodes;
-	static public GameObject itemsJustCreated, playersAndTeams;
+	public GameObject nodes;
+	public GameObject itemsJustCreated, playersAndTeams;
 
 	public static void CRC( int code, OperationHandler.Event.CodeLocation caller )
 	{
@@ -725,12 +725,12 @@ public class World : HiveObject
 		}
 
 		nodes = new GameObject( "Nodes" );
-		nodes.transform.SetParent( transform );
+		nodes.transform.SetParent( transform, false );
 
 		itemsJustCreated = new GameObject( "Items Just Created" );		// Temporary parent for items until they enter the logistic network. If they are just root in the scene, World.Clear would not destroy them.
-		itemsJustCreated.transform.SetParent( transform );
+		itemsJustCreated.transform.SetParent( transform, false );
 		playersAndTeams = new GameObject( "Players And Teams" );
-		playersAndTeams.transform.SetParent( transform );
+		playersAndTeams.transform.SetParent( transform, false );
 		eye = Eye.Create();
 		eye.Setup( this );
 	}

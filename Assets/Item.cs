@@ -183,7 +183,7 @@ public class Item : HiveObject
 		life.Start();
 		team = origin.team;
 		justCreated = true;
-		transform.SetParent( World.itemsJustCreated.transform, false );
+		transform.SetParent( world.itemsJustCreated.transform, false );
 		watchRoadDelete.Attach( team.versionedRoadDelete );
 		watchBuildingDelete.Attach( team.versionedBuildingDelete );
 		this.type = type;
@@ -203,7 +203,7 @@ public class Item : HiveObject
 	new public void Start()
 	{
 		if ( transform.parent == null )
-			transform.SetParent( World.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
+			transform.SetParent( world.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
 		body = Instantiate( looks.GetMediaData( type ) );
 		body.layer = World.layerIndexItems;
 

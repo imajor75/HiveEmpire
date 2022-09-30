@@ -2369,7 +2369,7 @@ public class Unit : HiveObject
 			{
 				Item item = child.GetComponent<Item>();
 				if ( item )
-					item.transform.SetParent( World.itemsJustCreated.transform );
+					item.transform.SetParent( world.itemsJustCreated.transform );
 			}
 		}
 		if ( noAssert == false )

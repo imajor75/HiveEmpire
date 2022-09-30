@@ -84,7 +84,7 @@ public abstract class Player : HiveObject
 	new void Start()
 	{
 		base.name = "Player " + name;
-		transform.SetParent( World.playersAndTeams.transform );
+		transform.SetParent( world.playersAndTeams.transform );
 		base.Start();
 	}
 
@@ -486,7 +486,7 @@ public class Team : HiveObject
 
 	public new void Start()
 	{
-		transform.SetParent( World.playersAndTeams.transform );
+		transform.SetParent( world.playersAndTeams.transform );
 		while ( itemHaulPriorities.Count < (int)Item.Type.total )
 			itemHaulPriorities.Add( 1 );
 		while ( itemProductivityHistory.Count < (int)Item.Type.total )

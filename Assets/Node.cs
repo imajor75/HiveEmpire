@@ -164,7 +164,7 @@ public class Node : HiveObject
 	new public void Start()
 	{
 		name = $"Node {x}:{y}";
-		transform.SetParent( World.nodes.transform, false );
+		transform.SetParent( world.nodes.transform, false );
 		transform.localPosition = position;
 
 		// Decoration
@@ -198,6 +198,7 @@ public class Node : HiveObject
 	public void OnDrawGizmos()
 	{
 #if DEBUG
+		var position = transform.position;
 		if ( ( position - SceneView.lastActiveSceneView.camera.transform.position ).magnitude > 10 )
 			return;
 
@@ -248,14 +249,14 @@ public class Node : HiveObject
 
 	public Vector3 GetPosition( int x, int y )
 	{
-		int rx = x-ground.dimension/2;
-		int ry = y-ground.dimension/2;
+		int rx = x-world.ground.dimension/2;
+		int ry = y-world.ground.dimension/2;
 		Vector3 position = new Vector3( rx*Constants.Node.size+ry*Constants.Node.size/2, height, ry*Constants.Node.size );
 		return position;
 	}
 
 	public Vector3 position { get { return GetPosition( x, y );	} }
-	public Vector3 positionInViewport { get { return GetPositionRelativeTo( eye.position ); } }
+	public Vector3 positionInViewport { get { return GetPositionRelativeTo( world.eye.position ); } }
 
 	public static Node FromPosition( Vector3 position, Ground ground )
 	{
