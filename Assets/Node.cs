@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -279,12 +279,12 @@ public class Node : HiveObject
 		assert.IsTrue( i >= 0 && i < 6 );
 		return i switch
 		{
-			0 => ground.GetNode( x + 0, y - 1 ),
-			1 => ground.GetNode( x + 1, y - 1 ),
-			2 => ground.GetNode( x + 1, y + 0 ),
-			3 => ground.GetNode( x + 0, y + 1 ),
-			4 => ground.GetNode( x - 1, y + 1 ),
-			5 => ground.GetNode( x - 1, y + 0 ),
+			0 => world.ground.GetNode( x + 0, y - 1 ),
+			1 => world.ground.GetNode( x + 1, y - 1 ),
+			2 => world.ground.GetNode( x + 1, y + 0 ),
+			3 => world.ground.GetNode( x + 0, y + 1 ),
+			4 => world.ground.GetNode( x - 1, y + 1 ),
+			5 => world.ground.GetNode( x - 1, y + 0 ),
 			_ => null,
 		};
 	}
