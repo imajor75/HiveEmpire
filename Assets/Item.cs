@@ -183,7 +183,7 @@ public class Item : HiveObject
 		life.Start();
 		team = origin.team;
 		justCreated = true;
-		transform.SetParent( world.itemsJustCreated.transform, false );
+		transform.SetParent( origin.world.itemsJustCreated.transform, false );
 		watchRoadDelete.Attach( team.versionedRoadDelete );
 		watchBuildingDelete.Attach( team.versionedBuildingDelete );
 		this.type = type;
