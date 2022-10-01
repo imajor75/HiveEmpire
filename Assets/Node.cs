@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -174,9 +174,9 @@ public class Node : HiveObject
 			if ( decoration )
 			{
 				var d = Instantiate( decoration ).transform;
-				d.SetParent( ground.transform, false );
+				d.SetParent( world.ground.transform, false );
 				var o = Neighbour( decorationDirection );
-				d.position = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
+				d.localPosition = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
 				d.gameObject.layer = World.layerIndexDecorations;
 			}
 		}
