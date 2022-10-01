@@ -467,6 +467,7 @@ public class Eye : HiveObject
 				camera.allowMSAA = false;
 				camera.depth = depth;
 				camera.gameObject.AddComponent<Highlight.Applier>().enabled = false;
+				camera.enabled = enabled;
 			}
 			first.depth = depth-1;
 			first.clearFlags = CameraClearFlags.Skybox;
@@ -521,7 +522,7 @@ public class Eye : HiveObject
 				var newPosition = transform.position + x * right + y * up;
 				cameras[i].transform.position = newPosition;
 				if ( x != 0 || y != 0 )
-					cameras[i].enabled = settings.enableSideCameras;
+					cameras[i].enabled = settings.enableSideCameras && enabled;
 				float depth = -Math.Abs( newPosition.z ) - Math.Abs( newPosition.x - newPosition.z / 2 );
 				if ( depth < closest )
 					closest = depth;
