@@ -983,7 +983,7 @@ public class Interface : HiveObject
 				activeObjectsAtRootLevel++;
 			}
 		}
-		Assert.global.AreEqual( activeObjectsAtRootLevel, 4, "Interface, World, Network and the Event System should be the four active objects at root level" );
+		Assert.global.AreEqual( activeObjectsAtRootLevel, 4, "Interface, Game, Network and the Event System should be the four active objects at root level" );
 #endif
 	}
 
@@ -7074,6 +7074,7 @@ if ( cart )
 			base.Open( 300, 200 );
 
 			preview = World.Create();
+			preview.transform.SetParent( transform );
 			preview.transform.localPosition = new Vector3( 1000, 0, 0 );
 			preview.Prepare();
 
