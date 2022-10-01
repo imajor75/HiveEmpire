@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -239,7 +239,7 @@ public class World : HiveObject
 	public int lastChecksum = 0;
 
 
-	new void Update()
+	public new void Update()
 	{
 		if ( light )
 			light.shadows = HiveCommon.settings.shadows ? ( HiveCommon.settings.softShadows ? LightShadows.Soft : LightShadows.Hard ) : LightShadows.None;
