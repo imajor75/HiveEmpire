@@ -597,8 +597,13 @@ public class Eye : HiveObject
 		public void Render()
 		{
 			UpdateGrid();
+			first.Render();
 			foreach ( var camera in cameras )
-				camera.Render();
+			{
+				if ( camera != first && camera != last )
+					camera.Render();
+			}
+			last.Render();
 		}
 	}
 
