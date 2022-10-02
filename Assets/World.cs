@@ -96,10 +96,6 @@ public class World : HiveObject
 	int replayIndex { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int overseas;
-	[Obsolete( "Compatibility with old files", true )]
-	bool autoValidate { set {} }
-	[Obsolete( "Compatibility with old files", true )]
-	new Settings settings { set { generatorSettings = value; } }
 	public Settings generatorSettings;
 
 	[System.Serializable]
@@ -513,6 +509,10 @@ public class World : HiveObject
 			}
 		}
 		{
+			foreach ( var node in ground.nodes )
+				node.world = this;
+		}
+		{
 			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
@@ -663,7 +663,6 @@ public class World : HiveObject
 				foreach ( var resource in node.resources )
 					toRemove.Add( resource );
 			}
-			node.world = this;
 		}
 		foreach ( var resource in toRemove )
 			resource.Remove();
@@ -1061,6 +1060,11 @@ public class Game : World
 	public System.Random rnd;
 
 	static public Game instance;
+
+	[Obsolete( "Compatibility with old files", true )]
+	bool autoValidate { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	new Settings settings { set { generatorSettings = value; } }
 
 	public new static Game Create()
 	{
