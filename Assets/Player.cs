@@ -271,6 +271,7 @@ public class Team : HiveObject
 	{
 		this.name = name;
 		this.color = color;
+		this.world = game;
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
 		{
 			if ( i == (int)Item.Type.plank || i == (int)Item.Type.stone )

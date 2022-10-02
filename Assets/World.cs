@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1229,6 +1229,7 @@ public class Game : World
 
 		this.challenge = localChallenge;
 		defeatedSimpletonCount = 0;
+		this.challenge.world = this;
 		this.challenge.Register();
 		operationHandler = OperationHandler.Create();
 		operationHandler.Setup( this );
