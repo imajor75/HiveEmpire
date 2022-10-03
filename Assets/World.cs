@@ -15,7 +15,6 @@ public class World : HiveObject
 	public new Ground ground;
 	public new string name;
 	public int saveIndex;
-	public int currentSeed;
 	public new Eye eye;
 	public new Light light;
 	public int nextID = 1;
@@ -60,6 +59,8 @@ public class World : HiveObject
 
 	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
 
+	[Obsolete( "Compatibility with old files", true )]
+	int currentSeed { set { generatorSettings.seed = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	float lastAutoSave { set {} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -137,6 +138,8 @@ public class World : HiveObject
 		public float forestChance = 0.006f;
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
+
+		public int seed;
 
 		[Obsolete( "Compatibility with old files", true )]
 		float ironChance;
@@ -225,7 +228,7 @@ public class World : HiveObject
 			generatorSettings.apply = false;
 			var c = game.challenge;
 			c.fixedSeed = true;
-			c.seed = game.currentSeed;
+			c.seed = game.generatorSettings.seed;
 			game.NewGame( game.challenge, true, false );
 			root.mainPlayer = game.players[0];
 		}
@@ -283,9 +286,9 @@ public class World : HiveObject
 		}
 	}
 
-	public void Generate( int seed )
+	public void Generate()
 	{
-		var rnd = new System.Random( seed );
+		var rnd = new System.Random( generatorSettings.seed );
 		workshopConfigurations = Workshop.LoadConfigurations();
 		GenerateWorkshopInputs( rnd.Next() );
 
@@ -1222,13 +1225,12 @@ public class Game : World
 		var oldEye = eye;
 
 		generatorSettings.size = challenge.worldSize;
-		var seed = challenge.seed;
-		Debug.Log( "Starting new game with seed " + seed );
-		HiveObject.Log( $"\n\nStarting new game with seed {seed}\n\n" );
+		generatorSettings.seed = challenge.seed;
+		Debug.Log( "Starting new game with seed " + challenge.seed );
+		HiveObject.Log( $"\n\nStarting new game with seed {challenge.seed}\n\n" );
 
-		rnd = new System.Random( seed );
-		currentSeed = seed;
-		Generate( rnd.Next() );
+		rnd = new System.Random( generatorSettings.seed );
+		Generate();
 		Interface.ValidateAll( true );
 
 		this.challenge = localChallenge;

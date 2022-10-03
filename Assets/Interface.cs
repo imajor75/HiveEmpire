@@ -7057,7 +7057,6 @@ if ( cart )
 	public class GeneratorPanel : Panel
 	{
 		public World preview;
-		public int seed = 2000;
 		public RenderTexture view;
 		public bool needGenerate;
 
@@ -7088,7 +7087,7 @@ if ( cart )
 		{
 			if ( needGenerate )
 			{
-				preview.Generate( seed );
+				preview.Generate();
 				preview.eye.SetMapMode( true );
 				preview.eye.cameraGrid.targetTexture = view;
 				needGenerate = false;
