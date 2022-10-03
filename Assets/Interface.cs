@@ -7060,7 +7060,6 @@ if ( cart )
 		public int seed = 2000;
 		public RenderTexture view;
 		public bool needGenerate;
-		public int needRender;
 
 		public static GeneratorPanel Create()
 		{
@@ -7071,7 +7070,7 @@ if ( cart )
 
 		void Open()
 		{
-			base.Open( 300, 200 );
+			base.Open( 350, 200 );
 
 			preview = World.Create();
 			preview.transform.SetParent( transform );
@@ -7081,23 +7080,18 @@ if ( cart )
 			view = new ( 256, 256, 0 );
 			needGenerate = true;
 
-			var window = new GameObject( "Preview Image" ).AddComponent<RawImage>().Link( this ).Stretch( borderWidth, borderWidth, borderWidth, borderWidth );
+			var window = new GameObject( "Preview Image" ).AddComponent<RawImage>().Link( this ).Stretch( borderWidth + 150, borderWidth, -borderWidth, -borderWidth );
 			window.texture = view;
 		}
 
 		new void Update()
 		{
-			if ( --needRender == 0 )
-			{
-				preview.eye.cameraGrid.Render();
-			}
 			if ( needGenerate )
 			{
 				preview.Generate( seed );
 				preview.eye.SetMapMode( true );
 				preview.eye.cameraGrid.targetTexture = view;
 				needGenerate = false;
-				needRender = 2;
 			}
 
 			base.Update();

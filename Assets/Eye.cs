@@ -117,7 +117,6 @@ public class Eye : HiveObject
 
 		highlight = new GameObject( "Highlight" ).AddComponent<Highlight>();
 		highlight.transform.SetParent( transform, false );
-		cameraGrid.enabled = world.main;
 
 		if ( world.main )
 			gameObject.AddComponent<AudioListener>();
@@ -596,6 +595,7 @@ public class Eye : HiveObject
 
 		public void Render()
 		{
+			// This function doesn't work due to a bug in unity (https://unity3d.atlassian.net/servicedesk/customer/portal/2/IN-18488)
 			UpdateGrid();
 			first.Render();
 			foreach ( var camera in cameras )
