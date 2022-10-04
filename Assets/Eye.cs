@@ -551,6 +551,8 @@ public class Eye : HiveObject
 			if ( !settings.renderWater )
 				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexWater );
 
+			first = null;
+
 			foreach ( var camera in cameras )
 			{
 				camera.cullingMask = effectiveMask;
@@ -564,13 +566,10 @@ public class Eye : HiveObject
 						last = camera;
 					}
 				}
-				else if ( camera.depth == closest )
+				else if ( camera.depth == closest && first == null )
 				{
-					if ( first != camera )
-					{
-						camera.clearFlags = CameraClearFlags.Skybox;
-						first = camera;
-					}
+					camera.clearFlags = CameraClearFlags.Skybox;
+					first = camera;
 				}
 				else
 					camera.clearFlags = CameraClearFlags.Nothing;
