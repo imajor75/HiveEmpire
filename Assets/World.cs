@@ -60,8 +60,6 @@ public class World : HiveObject
 	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
 
 	[Obsolete( "Compatibility with old files", true )]
-	int currentSeed { set { generatorSettings.seed = value; } }
-	[Obsolete( "Compatibility with old files", true )]
 	float lastAutoSave { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	bool victory { set {} }
@@ -97,7 +95,7 @@ public class World : HiveObject
 	int replayIndex { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int overseas;
-	public Settings generatorSettings;
+	public Settings generatorSettings = new ();
 
 	[System.Serializable]
 	public class Ore
@@ -120,7 +118,8 @@ public class World : HiveObject
 	public List<Ore> ores = new ();
 	public int animalSpawnerCount;
 
-	public class Settings : HeightMap.Settings
+	[Serializable]
+	public class Settings
 	{
 		[Range(16, 128)]
 		public int size = 48;
@@ -138,8 +137,12 @@ public class World : HiveObject
 		public float forestChance = 0.006f;
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
+		public HeightMap.Settings reliefSettings = new (), forestSettings = new ();
 
 		public int seed;
+		[JsonIgnore]
+		public bool apply;  // For debug purposes only
+
 
 		[Obsolete( "Compatibility with old files", true )]
 		float ironChance;
@@ -173,9 +176,26 @@ public class World : HiveObject
 		float idealStone { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		float idealSalt { set {} }
-
-		[JsonIgnore]
-		public bool apply;  // For debug purposes only
+		[Obsolete( "Compatibility with old files", true )]
+		int mapSize { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		bool tileable { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		bool island { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float borderLevel { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float randomness { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float noise { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float randomnessDistribution { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		bool normalize { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float adjustment { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float squareDiamondRatio { set {} }
 	}
 
 	public int nodeCount { get { return ground.dimension * ground.dimension; } }
@@ -204,11 +224,6 @@ public class World : HiveObject
 	public static World Create()
 	{
 		return new GameObject( "World" ).AddComponent<World>();
-	}
-
-	public void Awake()
-	{
-		generatorSettings = ScriptableObject.CreateInstance<Settings>();
 	}
 
 	static public AudioSource CreateSoundSource( Component component )
@@ -293,11 +308,11 @@ public class World : HiveObject
 		GenerateWorkshopInputs( rnd.Next() );
 
 		var heightMap = HeightMap.Create();
-		heightMap.Setup( generatorSettings, rnd.Next() );
+		heightMap.Setup( generatorSettings.reliefSettings, rnd.Next() );
 		heightMap.Fill();
 
 		var forestMap = HeightMap.Create();
-		forestMap.Setup( generatorSettings, rnd.Next() );
+		forestMap.Setup( generatorSettings.forestSettings, rnd.Next() );
 		forestMap.Fill();
 
 #if DEBUG
@@ -1068,6 +1083,8 @@ public class Game : World
 	bool autoValidate { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	new Settings settings { set { generatorSettings = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	int currentSeed { set { generatorSettings.seed = value; } }
 
 	public new static Game Create()
 	{
@@ -1093,10 +1110,9 @@ public class Game : World
 		}
 	}
 
-	public new void Awake()
+	public void Awake()
 	{
 		network = Network.Create();
-		base.Awake();
 	}
 
 	new void Update()
@@ -1209,7 +1225,7 @@ public class Game : World
 		var localChallenge = Challenge.Create().Setup( challenge );
 		localChallenge.transform.SetParent( transform );
 		if ( resetSettings )
-			generatorSettings = ScriptableObject.CreateInstance<Settings>();
+			generatorSettings = new ();
 		nextID = 1;
 		time = 0;
 		lastChecksum = 0;

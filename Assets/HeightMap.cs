@@ -13,7 +13,8 @@ public class HeightMap
 	public float averageValue;
 	public CubicCurve randomCurve;
 
-	public class Settings : ScriptableObject
+	[Serializable]
+	public class Settings
 	{
 		public int mapSize = Constants.HeightMap.defaultSize;
 		public bool tileable = Constants.HeightMap.defaultTileable;
