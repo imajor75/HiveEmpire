@@ -7076,6 +7076,10 @@ if ( cart )
 			preview.transform.localPosition = new Vector3( 1000, 0, 0 );
 			preview.Prepare();
 
+			var seedField = InputField( preview.generatorSettings.seed.ToString() ).Pin( borderWidth, -borderWidth, 130, iconSize );
+			seedField.onValueChanged.AddListener( ( string value ) => { preview.generatorSettings.seed = int.Parse( value ); needGenerate = true; } );
+			Button( "Randomize" ).PinDownwards( borderWidth, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
+
 			view = new ( 256, 256, 0 );
 			needGenerate = true;
 
