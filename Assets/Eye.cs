@@ -10,6 +10,8 @@ using UnityEngine.Rendering;
 public class Eye : HiveObject
 {
 	public float altitude = Constants.Eye.defaultAltitude;
+	public bool animateAltitude = true;
+	public float fixedAltitude { set { altitude = value; animateAltitude = false; } }
 	public float targetAltitude = Constants.Eye.defaultAltitude;
 	public float altitudeDirection = Constants.Eye.defaultAltitudeDirection, altitudeDirectionTarget = Constants.Eye.defaultAltitudeDirection;
 	public float x, y, height;
@@ -306,7 +308,8 @@ public class Eye : HiveObject
 			targetAltitude = Constants.Eye.maxAltitude;
 
 		var f = Constants.Eye.altitudeSmoothness * deltaTime;
-		altitude = altitude * ( 1 - f ) + targetAltitude * f;
+		if ( animateAltitude )
+			altitude = altitude * ( 1 - f ) + targetAltitude * f;
 		altitudeDirection = altitudeDirection * ( 1 - f ) + altitudeDirectionTarget * f;
 
 		UpdateTransformation();

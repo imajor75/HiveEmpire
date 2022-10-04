@@ -7089,6 +7089,7 @@ if ( cart )
 			{
 				preview.Generate();
 				preview.eye.SetMapMode( true );
+				preview.eye.fixedAltitude = 30;
 				preview.eye.cameraGrid.targetTexture = view;
 				needGenerate = false;
 			}
