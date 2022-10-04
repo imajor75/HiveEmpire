@@ -90,6 +90,7 @@ public class Eye : HiveObject
 		cameraGrid = CameraGrid.Create();
 		cameraGrid.Setup( this );
 		cameraGrid.CreateCameras();
+		cameraGrid.enabled = world.main;
 		base.Setup( world );
 	}
 
@@ -592,7 +593,7 @@ public class Eye : HiveObject
 
 		public RenderTexture targetTexture
 		{
-			set { foreach ( var camera in cameras ) camera.targetTexture = value; }
+			set { foreach ( var camera in cameras ) camera.targetTexture = value; enabled = true; }
 		}
 
 		public void Render()
