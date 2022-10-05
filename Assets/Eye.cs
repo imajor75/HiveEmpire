@@ -481,7 +481,8 @@ public class Eye : HiveObject
 
 		void Start()
 		{
-			transform.SetParent( eye.transform, false );
+			if ( eye )
+				transform.SetParent( eye.transform, false );
 			if ( cameras.Count == 0 )
 				CreateCameras();
 		}
@@ -505,7 +506,9 @@ public class Eye : HiveObject
 
 		void UpdateGrid()
 		{
-			var ground = eye.world.ground;
+			var ground = game.ground;
+			if ( eye )
+				ground = eye.world.ground;
 
 			if ( ground == null )
 			{
