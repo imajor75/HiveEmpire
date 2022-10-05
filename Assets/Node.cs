@@ -220,7 +220,7 @@ public class Node : HiveObject
 
 	public Vector3 GetPositionRelativeTo( Vector3 reference )
 	{
-		float limit = ground.dimension * Constants.Node.size / 2;
+		float limit = world.ground.dimension * Constants.Node.size / 2;
 		var position = this.position;	
 		var difference = position - reference;
 		float dv0 = difference.z, dv1 = -dv0, dh0 = difference.x - difference.z / 2, dh1 = -dh0;
@@ -291,7 +291,7 @@ public class Node : HiveObject
 
 	public int DistanceFrom( Node o )
 	{
-		int a = ground.dimension / 2;
+		int a = world.ground.dimension / 2;
 		int h = Mathf.Abs( x - o.x );
 		if ( h >= a )
 			h = a * 2 - h;
@@ -301,8 +301,8 @@ public class Node : HiveObject
 			v = a * 2 - v;
 
 		int d = Mathf.Abs( ( x - o.x ) + ( y - o.y ) );
-		if ( d >= ground.dimension )
-			d -= ground.dimension;
+		if ( d >= world.ground.dimension )
+			d -= world.ground.dimension;
 		if ( d >= a )
 			d = a * 2 - d;
 
@@ -338,7 +338,7 @@ public class Node : HiveObject
 		{
 			for ( int y = -size; y < size; y++ )
 			{
-				Node n = ground.GetNode( this.x + x, this.y + y );
+				Node n = world.ground.GetNode( this.x + x, this.y + y );
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > rnd.Next( 100 ) )
@@ -378,7 +378,7 @@ public class Node : HiveObject
 
 	public Node Add( Ground.Offset o )
 	{
-		return ground.GetNode( x + o.x, y + o.y );
+		return world.ground.GetNode( x + o.x, y + o.y );
 	}
 
 	public Block block
@@ -410,7 +410,7 @@ public class Node : HiveObject
 
 		AlignType();
 
-		ground.SetDirty( this );
+		world.ground.SetDirty( this );
 		if ( flag )
 		{
 			flag.UpdateBody();
@@ -535,7 +535,7 @@ public class Node : HiveObject
 		// Triggered again, o == 2 there is a tree and an animalspawner has a valid flag, and a road, this is 7, 14
 		// road crossing here 14,10, ... 6, 13 contains 7, 14, flag has no roads starting here, no items, but one of the items is a unity null item, flag name correct
 
-		if ( x != ground.dimension && y != ground.dimension )
+		if ( x != world.ground.dimension && y != world.ground.dimension )
 			for ( int i = 0; i < 6; i++ )
 				assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
 		if ( flag )
