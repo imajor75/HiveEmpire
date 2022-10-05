@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7070,7 +7070,7 @@ if ( cart )
 
 		void Open()
 		{
-			base.Open( 350, 200 );
+			base.Open( 550, 380 );
 
 			preview = World.Create();
 			preview.transform.SetParent( transform );
@@ -7083,9 +7083,16 @@ if ( cart )
 			var seedField = InputField( preview.generatorSettings.seed.ToString() ).Pin( borderWidth, -borderWidth, 130, iconSize );
 			seedField.onValueChanged.AddListener( ( string value ) => { preview.generatorSettings.seed = int.Parse( value ); needGenerate = true; } );
 			Button( "Randomize" ).PinDownwards( borderWidth, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
-			Button( "Start" ).PinDownwards( borderWidth + 30, 0, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge, false ); } );
 
-			view = new ( 256, 256, 0 );
+			Text( "Trees:" ).PinDownwards( borderWidth, 0, 50, iconSize );
+			var trees = Dropdown().PinDownwards( borderWidth + 50, iconSize, 70, iconSize );
+			trees.AddOptions( new List<string>{ "rare", "normal", "frequent" } );
+			trees.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.forestChance = value switch { 0 => 0.001f, 2 => 0.02f, 1 or _ => 0.006f }; needGenerate = true; } );
+			trees.value = preview.generatorSettings.forestChance switch { < 0.0045f => 0, > 0.0075f => 2, _ => 1 };
+
+			Button( "Start" ).PinDownwards( borderWidth + 30, -10, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge, false ); } );
+
+			view = new ( 512, 512, 0 );
 			needGenerate = true;
 
 			var window = new GameObject( "Preview Image" ).AddComponent<RawImage>().Link( this ).Stretch( borderWidth + 150, borderWidth, -borderWidth, -borderWidth );
