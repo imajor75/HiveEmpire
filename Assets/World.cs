@@ -1620,6 +1620,7 @@ public class Game : World
 			if ( team == null )
 				return;
 			var currentLevel = Goal.gold;
+			int conditionCount = 0;
 			conditionsText = "";
 			progress = 1;
 
@@ -1631,6 +1632,7 @@ public class Game : World
 				if ( limit < 0 )
 					return;
 
+				conditionCount++;
 				if ( text != null )
 					conditionsText += String.Format( text, current.ToString( "n2" ), limit.ToString( "n2" ) );	// TODO don't display fractions when number is integer
 				if ( current < limit * 0.01f )
@@ -1701,6 +1703,9 @@ public class Game : World
 
 			if ( simpletonCountToEliminate > 0 )
 				CheckCondition( game.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
+
+			if ( conditionCount == 0 )
+				return;
 
 			void CheckGoal( Goal goal, Timer timer )
 			{
