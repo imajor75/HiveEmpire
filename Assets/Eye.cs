@@ -442,6 +442,8 @@ public class Eye : HiveObject
 		public Camera first;
 		public Camera last;
 		public new Eye eye;
+		[JsonIgnore]
+		public int cullingMask = ~( 1 << World.layerIndexMapOnly );
 
 		public static CameraGrid Create()
 		{
@@ -579,8 +581,6 @@ public class Eye : HiveObject
 					camera.clearFlags = CameraClearFlags.Nothing;
 			}
 		}
-
-		public int cullingMask = ~( 1 << World.layerIndexMapOnly );
 
 		public bool orthographic
 		{
