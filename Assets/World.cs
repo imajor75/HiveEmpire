@@ -243,8 +243,8 @@ public class World : HiveObject
 			generatorSettings.apply = false;
 			var c = game.challenge;
 			c.fixedSeed = true;
-			c.seed = game.generatorSettings.seed;
-			game.NewGame( game.challenge, true, false );
+			c.worldGenerationSettings = game.generatorSettings;
+			game.NewGame( game.challenge, true );
 			root.mainPlayer = game.players[0];
 		}
 		massDestroy = false;
@@ -1220,12 +1220,11 @@ public class Game : World
 			Advance();
 	}
 
-	public void NewGame( Challenge challenge, bool keepCameraLocation = false, bool resetSettings = true )
+	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
 		var localChallenge = Challenge.Create().Setup( challenge );
 		localChallenge.transform.SetParent( transform );
-		if ( resetSettings )
-			generatorSettings = new ();
+		generatorSettings = localChallenge.worldGenerationSettings;
 		nextID = 1;
 		time = 0;
 		lastChecksum = 0;
@@ -1240,10 +1239,8 @@ public class Game : World
 		createRoadTutorialShowed = false;
 		var oldEye = eye;
 
-		generatorSettings.size = challenge.worldSize;
-		generatorSettings.seed = challenge.seed;
-		Debug.Log( "Starting new game with seed " + challenge.seed );
-		HiveObject.Log( $"\n\nStarting new game with seed {challenge.seed}\n\n" );
+		Debug.Log( "Starting new game with seed " + challenge.worldGenerationSettings.seed );
+		HiveObject.Log( $"\n\nStarting new game with seed {challenge.worldGenerationSettings.seed}\n\n" );
 
 		rnd = new System.Random( generatorSettings.seed );
 		Generate();
@@ -1517,10 +1514,10 @@ public class Game : World
 	public class Challenge : HiveObject
 	{
 		public string title, description;
+		public World.Settings worldGenerationSettings = new ();
 		public Goal reachedLevel = Goal.none;
 		public int maintain;
 		public bool fixedSeed;
-		public int seed;
 		public Timer maintainBronze = new (), maintainSilver = new (), maintainGold = new ();
 		public float progress;
 		public Timer life = new ();
@@ -1530,7 +1527,6 @@ public class Game : World
 		public List<int> buildingMax;
 		public int timeLimit;
 		public int playerCount;
-		public int worldSize = 32;
 		public int simpletonCount;
 		public int simpletonCountToEliminate;
 		public List<string> conditions;
@@ -1543,6 +1539,10 @@ public class Game : World
 		float soldierProductivityGoal { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		bool randomSeed { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		int seed { set { worldGenerationSettings.seed = value; } }
+		[Obsolete( "Compatibility with old files", true )]
+		int worldSize { set { worldGenerationSettings.size = value; } }
 
         public static Challenge Create()
 		{
@@ -1556,14 +1556,13 @@ public class Game : World
 			reachedLevel = prototype.reachedLevel;
 			maintain = prototype.maintain;
 			fixedSeed = prototype.fixedSeed;
-			seed = prototype.seed;
+			worldGenerationSettings= prototype.worldGenerationSettings;
 			productivityGoals = prototype.productivityGoals;
 			productivityGoalsByBuildingCount = prototype.productivityGoalsByBuildingCount;
 			mainBuildingContent = prototype.mainBuildingContent;
 			buildingMax = prototype.buildingMax;
 			timeLimit = prototype.timeLimit;
 			playerCount = prototype.playerCount;
-			worldSize = prototype.worldSize;
 			simpletonCount = prototype.simpletonCount;
 			allowTimeLeftLevels = prototype.allowTimeLeftLevels;
 

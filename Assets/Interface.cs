@@ -674,7 +674,7 @@ public class Interface : HiveObject
 	public void NewGame( Game.Challenge challenge, bool randomizeSeed = true )
 	{
 		if ( randomizeSeed && !challenge.fixedSeed )
-			challenge.seed = new System.Random().Next();
+			challenge.worldGenerationSettings.seed = new System.Random().Next();
 
 		game.NewGame( challenge );
 		if ( game.players.Count > 0 )
@@ -7059,6 +7059,7 @@ if ( cart )
 		public World preview;
 		public RenderTexture view;
 		public bool needGenerate;
+		public Game.Challenge challenge;
 
 		public static GeneratorPanel Create()
 		{
@@ -7076,9 +7077,12 @@ if ( cart )
 			preview.transform.localPosition = new Vector3( 1000, 0, 0 );
 			preview.Prepare();
 
+			challenge = Game.Challenge.Create();
+
 			var seedField = InputField( preview.generatorSettings.seed.ToString() ).Pin( borderWidth, -borderWidth, 130, iconSize );
 			seedField.onValueChanged.AddListener( ( string value ) => { preview.generatorSettings.seed = int.Parse( value ); needGenerate = true; } );
 			Button( "Randomize" ).PinDownwards( borderWidth, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
+			Button( "Start" ).PinDownwards( borderWidth + 30, 0, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; game.NewGame( challenge ); } );
 
 			view = new ( 256, 256, 0 );
 			needGenerate = true;
@@ -7138,7 +7142,7 @@ if ( cart )
 			{
 				Text( challenge.title ).Pin( 0, row, 140, iconSize ).Link( view ).SetTooltip( challenge.description );
 				Text( challenge.timeLimit > 0 ? UIHelpers.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
-				Text( challenge.worldSize switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
+				Text( challenge.worldGenerationSettings.size switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Button( "Begin" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
 				Text( challenge.bestSolutionLevel.ToString() ).Link( view ).PinSideways( 10, row, 60, iconSize );
 				if ( challenge.bestSolutionLevel != Game.Goal.none )
@@ -7151,7 +7155,7 @@ if ( cart )
 		void StartChallenge( Game.Challenge challenge )
 		{
 			if ( !challenge.fixedSeed )
-				challenge.seed = int.Parse( manualSeed.text );
+				challenge.worldGenerationSettings.seed = int.Parse( manualSeed.text );
 			root.NewGame( challenge, false );
 			Close();
 		}
