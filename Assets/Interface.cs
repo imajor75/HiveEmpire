@@ -7078,6 +7078,7 @@ if ( cart )
 			preview.Prepare();
 
 			challenge = Game.Challenge.Create();
+			challenge.title = "Free game";
 
 			var seedField = InputField( preview.generatorSettings.seed.ToString() ).Pin( borderWidth, -borderWidth, 130, iconSize );
 			seedField.onValueChanged.AddListener( ( string value ) => { preview.generatorSettings.seed = int.Parse( value ); needGenerate = true; } );
