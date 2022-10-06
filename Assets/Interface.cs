@@ -3520,10 +3520,14 @@ public class Interface : HiveObject
 	public class ProductionChainPanel : Panel
 	{
 		static Flow highlight;
+		public World world;
 
-		public static ProductionChainPanel Create()
+		public static ProductionChainPanel Create( World world = null )
 		{
 			var panel = new GameObject( "Production Chain Panel" ).AddComponent<ProductionChainPanel>();
+			if ( world == null )
+				world = game;
+			panel.world = world;
 			panel.Open();
 			return panel;
 		}
@@ -3584,7 +3588,7 @@ public class Interface : HiveObject
 			while ( itemTypes.Count != itemTypeIndex )
 			{
 				var itemType = itemTypes[itemTypeIndex++];
-				foreach ( var configuration in game.workshopConfigurations )
+				foreach ( var configuration in world.workshopConfigurations )
 				{
 					if ( configuration.outputType != itemType || configuration.generatedInputs == null )
 						continue;
@@ -3701,7 +3705,7 @@ public class Interface : HiveObject
 				}
 				int column = AllocColumn( iconSize * 2, width / expectedWorkshopCountInRow / 2 * ( workshopIndexInRow * 2 + 1 ) );
 				Workshop.Configuration workshop = null;
-				foreach ( var configuration in game.workshopConfigurations )
+				foreach ( var configuration in world.workshopConfigurations )
 					if ( configuration.outputType == current.itemType && configuration.type != Workshop.Type.stonemason )
 						workshop = configuration;
 				Assert.global.IsNotNull( workshop );
@@ -7104,6 +7108,8 @@ if ( cart )
 			trees.value = preview.generatorSettings.forestChance switch { < 0.0045f => 0, > 0.0075f => 2, _ => 1 };
 			AddTitle( "Trees:", trees );
 
+			CheckBox( "Random production chain" ).PinDownwards( borderWidth, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.randomizeProductionChain = value; needGenerate = true; }, true );
+
 			Button( "Start" ).PinDownwards( borderWidth + 30, -10, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge, false ); } );
 
 			view = new ( 512, 512, 0 );
@@ -7111,6 +7117,8 @@ if ( cart )
 
 			var window = new GameObject( "Preview Image" ).AddComponent<RawImage>().Link( this ).Stretch( borderWidth + 150, borderWidth, -borderWidth, -borderWidth );
 			window.texture = view;
+
+			Image( Icon.prod ).Link( window ).Pin( -iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( () => ProductionChainPanel.Create( preview ) );
 		}
 
 		new void Update()
@@ -8008,6 +8016,7 @@ public static class UIHelpers
 
 	public static Button CheckBox( this Component panel, string text )
 	{
+		var save = UIHelpers.currentRow;
 		Button b = new GameObject( "Checkbox" ).AddComponent<Button>();
 		b.transform.SetParent( panel.transform );
 		var i = new GameObject( "Checkbox Image" ).AddComponent<Image>();
@@ -8019,6 +8028,7 @@ public static class UIHelpers
 		b.visualizer = UpdateCheckboxLook;
 		b.leftClickHandler = b.Toggle;
 		Text( b, text ).Link( b ).Pin( Interface.iconSize + 5, 0, 200, Interface.iconSize ).alignment = TextAnchor.MiddleLeft;
+		UIHelpers.currentRow = save;
 		return b;
 	}
 

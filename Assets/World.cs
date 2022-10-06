@@ -134,6 +134,7 @@ public class World : HiveObject
 		[Range(0.0f, 1.0f)]
 		public float forestGroundChance = 0.45f;
 
+		public bool randomizeProductionChain = true;
 		public float forestChance = 0.006f;
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
@@ -331,6 +332,8 @@ public class World : HiveObject
 
 	public void GenerateWorkshopInputs( int seed )
 	{
+		if ( !generatorSettings.randomizeProductionChain )
+			seed = 0;
 		System.Random rnd = new System.Random( seed );
 		foreach ( var configuration in workshopConfigurations )
 			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
