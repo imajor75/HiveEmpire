@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -543,8 +544,9 @@ public class Team : HiveObject
 			}
 		}
 
-		foreach ( var node in HiveCommon.ground.nodes )
+		foreach ( var nodeOffset in Ground.areas.Last() )
 		{
+			var node = ground.centerNode + nodeOffset;
 			bool invalidNode = false;
 			foreach ( var n in area )
 			{
