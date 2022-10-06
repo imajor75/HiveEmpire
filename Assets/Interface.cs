@@ -7080,15 +7080,29 @@ if ( cart )
 			challenge = Game.Challenge.Create();
 			challenge.title = "Free game";
 
-			var seedField = InputField( preview.generatorSettings.seed.ToString() ).Pin( borderWidth, -borderWidth, 130, iconSize );
+			void AddTitle( string name, Component element )
+			{
+				Text( name ).PinDownwards( borderWidth, 0, 50, iconSize );
+				element.PinDownwards( borderWidth + 50, iconSize, 70, iconSize );
+			}
+
+			UIHelpers.currentRow = -borderWidth;
+			var size = Dropdown();
+			size.AddOptions( new List<string>{ "small", "medium", "big", "huge" } );
+			size.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.size = value switch { 0 => 16, 2 => 48, 3 => 64, 1 or _ => 32 }; needGenerate = true; } );
+			size.value = 2;
+			AddTitle( "Size:", size );
+
+			var seedField = InputField( preview.generatorSettings.seed.ToString() );
 			seedField.onValueChanged.AddListener( ( string value ) => { preview.generatorSettings.seed = int.Parse( value ); needGenerate = true; } );
+			AddTitle( "Seed:", seedField );
 			Button( "Randomize" ).PinDownwards( borderWidth, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
 
-			Text( "Trees:" ).PinDownwards( borderWidth, 0, 50, iconSize );
-			var trees = Dropdown().PinDownwards( borderWidth + 50, iconSize, 70, iconSize );
+			var trees = Dropdown();
 			trees.AddOptions( new List<string>{ "rare", "normal", "frequent" } );
 			trees.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.forestChance = value switch { 0 => 0.001f, 2 => 0.02f, 1 or _ => 0.006f }; needGenerate = true; } );
 			trees.value = preview.generatorSettings.forestChance switch { < 0.0045f => 0, > 0.0075f => 2, _ => 1 };
+			AddTitle( "Trees:", trees );
 
 			Button( "Start" ).PinDownwards( borderWidth + 30, -10, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge, false ); } );
 
