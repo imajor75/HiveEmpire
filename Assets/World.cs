@@ -116,7 +116,7 @@ public class World : HiveObject
 
 	public int oreCount;
 	public List<Ore> ores = new ();
-	public int animalSpawnerCount;
+	public int animalSpawnerCount, treeCount, rockCount;
 
 	[Serializable]
 	public class Settings
@@ -922,7 +922,8 @@ public class World : HiveObject
 
 		ores.Clear();
 		animalSpawnerCount = 0; 
-		int treeCount = 0, rockCount = 0;
+		treeCount = 0;
+		rockCount = 0;
 
 		foreach ( var node in ground.nodes )
 		{

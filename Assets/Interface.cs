@@ -7064,6 +7064,7 @@ if ( cart )
 		public RenderTexture view;
 		public bool needGenerate;
 		public Game.Challenge challenge;
+		public Text resourcesText;
 
 		public static GeneratorPanel Create()
 		{
@@ -7119,6 +7120,8 @@ if ( cart )
 			window.texture = view;
 
 			Image( Icon.prod ).Link( window ).Pin( -iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( () => ProductionChainPanel.Create( preview ) );
+
+			resourcesText = Text( "", 8 ).Pin( borderWidth, 100, 140, 80, 0, 0 );
 		}
 
 		new void Update()
@@ -7129,6 +7132,15 @@ if ( cart )
 				preview.eye.SetMapMode( true );
 				preview.eye.fixedAltitude = 30;
 				preview.eye.cameraGrid.targetTexture = view;
+				string resources = $"tree: {preview.treeCount}\nrock: {preview.rockCount}";
+				if ( preview.animalSpawnerCount > 0 )
+					resources += $"\ncave: {preview.animalSpawnerCount}";
+				foreach ( var ore in preview.ores )
+				{
+					if ( ore.resourceCount > 0 )
+						resources += $"\n{ore.resourceType}: {ore.resourceCount}";
+				}
+				resourcesText.text = resources;
 				needGenerate = false;
 			}
 
