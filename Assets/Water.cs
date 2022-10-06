@@ -26,6 +26,7 @@ public class Water : HiveObject
     {
         this.ground = ground;
         base.Setup( ground.world );
+        PrepareRendering();
         return this;
     }
 
@@ -35,16 +36,35 @@ public class Water : HiveObject
 
     new void Start()
     {
+        PrepareRendering();
+        base.Start();
+    }
+
+    void PrepareRendering()
+    {
+        if ( transform.parent )
+            return;
+
         name = "Water";
         transform.SetParent( ground.transform.parent, false );
 		transform.localPosition = Vector3.up * game.waterLevel;
         mesh = GetComponent<MeshFilter>().mesh = new ();
         material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
         gameObject.layer = World.layerIndexWater;
-        base.Start();
+        UpdateMesh();
     }
 
     new void Update()
+    {
+        UpdateMesh();
+        var t = ( time % 800 ) * 0.005f;
+        material.SetFloat( offset0ID, (float)Math.Sin( t * Math.PI / 2 )    );
+        material.SetFloat( offset1ID, (float)Math.Cos( t * Math.PI / 2 ) );
+        material.SetFloat( iterID, (float)( t - Math.Floor( t ) ) );
+        base.Update();
+    }
+
+    void UpdateMesh()
     {
         if ( mesh.triangles.Length != ground.dimension * ground.dimension * 3 * 2 )
         {
@@ -81,11 +101,5 @@ public class Water : HiveObject
             }
             mesh.triangles = indices.ToArray();
         }
-        var t = ( time % 800 ) * 0.005f;
-        material.SetFloat( offset0ID, (float)Math.Sin( t * Math.PI / 2 )    );
-        material.SetFloat( offset1ID, (float)Math.Cos( t * Math.PI / 2 ) );
-        material.SetFloat( iterID, (float)( t - Math.Floor( t ) ) );
-        
-        base.Update();
     }
 }

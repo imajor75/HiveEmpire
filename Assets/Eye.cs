@@ -11,7 +11,7 @@ public class Eye : HiveObject
 {
 	public float altitude = Constants.Eye.defaultAltitude;
 	public bool animateAltitude = true;
-	public float fixedAltitude { set { altitude = value; animateAltitude = false; } }
+	public float fixedAltitude { set { altitude = value; animateAltitude = false; UpdateTransformation(); } }
 	public float targetAltitude = Constants.Eye.defaultAltitude;
 	public float altitudeDirection = Constants.Eye.defaultAltitudeDirection, altitudeDirectionTarget = Constants.Eye.defaultAltitudeDirection;
 	public float x, y, height;

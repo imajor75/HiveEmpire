@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -81,6 +81,15 @@ public class Ground : HiveObject
 
 	new public void Start()
 	{
+		PrepareRendering();
+		base.Start();
+	}
+
+	void PrepareRendering()
+	{
+		if ( transform.parent )
+			return;
+
 		gameObject.name = "Ground";
 		transform.SetParent( world.transform, false );
 		material = Resources.Load<Material>( "GroundMaterial" );
@@ -131,8 +140,6 @@ public class Ground : HiveObject
 
 		if ( grass == null )
 			grass = Grass.Create().Setup();
-		
-		base.Start();
 	}
 
 	override public void Remove()
@@ -185,6 +192,7 @@ public class Ground : HiveObject
 		n10x = GetNode( 1, 0 ).position.x;
 		n10y = GetNode( 1, 0 ).position.z;
 
+		PrepareRendering();
 		CreateBlocks();
 		grass = Grass.Create().Setup();
 		base.Setup( world );
@@ -649,11 +657,21 @@ public class Ground : HiveObject
 			this.center = center;
 			this.dimension = dimension;
 			base.Setup( boss.world );
+			BuildMesh();
 			return this;
 		}
 
 		new public void Start()
 		{
+			BuildMesh();
+			base.Start();
+		}
+
+		public void BuildMesh()
+		{
+			if ( gameObject.layer == World.layerIndexGround )
+				return;
+
 			gameObject.layer = World.layerIndexGround;
 			MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 			collider = gameObject.GetComponent<MeshCollider>();
@@ -665,7 +683,7 @@ public class Ground : HiveObject
 
 			transform.SetParent( boss.transform, false );
 			name = $"Ground block {center.x}:{center.y}";
-			base.Start();
+			UpdateMesh();
 		}
 
 		new void Update()
