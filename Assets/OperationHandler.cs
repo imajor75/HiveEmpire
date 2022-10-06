@@ -228,7 +228,7 @@ public class OperationHandler : HiveObject
             executeIndex = oh.executeIndex;
         }
         else
-            root.NewGame( challenge, false );
+            root.NewGame( challenge );
 
         challenge = game.challenge;
 

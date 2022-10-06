@@ -49,18 +49,38 @@ public class Water : HiveObject
         transform.SetParent( ground.transform.parent, false );
 		transform.localPosition = Vector3.up * game.waterLevel;
         mesh = GetComponent<MeshFilter>().mesh = new ();
-        material = GetComponent<MeshRenderer>().material = Resources.Load<Material>( "Water" );
+        material = GetComponent<MeshRenderer>().material = Instantiate( Resources.Load<Material>( "Water" ) );
+        material.SetInt( "Waves", 1 );
         gameObject.layer = World.layerIndexWater;
         UpdateMesh();
+
+        if ( world.generatorSettings.reliefSettings.island )
+        {
+            var cloneMaterial = Instantiate( Resources.Load<Material>( "Water" ) );
+            float worldSize = world.ground.dimension * Constants.Node.size;
+            for ( int i = 0; i < 9; i++ )
+            {
+                if ( i == 4 )
+                    continue;
+
+                var mf = new GameObject( "Water clone" ).AddComponent<MeshFilter>();
+                mf.mesh = mesh;
+                mf.gameObject.AddComponent<MeshRenderer>().material = cloneMaterial;
+                mf.transform.SetParent( transform );
+                int x = ( i % 3 ) - 1;
+                int y = ( i / 3 ) - 1;
+                mf.transform.localPosition = new Vector3( x * worldSize + ( y * worldSize / 2 ), 0, y * worldSize );
+            }
+        }
     }
 
     new void Update()
     {
         UpdateMesh();
         var t = ( time % 800 ) * 0.005f;
-        material.SetFloat( offset0ID, (float)Math.Sin( t * Math.PI / 2 )    );
-        material.SetFloat( offset1ID, (float)Math.Cos( t * Math.PI / 2 ) );
-        material.SetFloat( iterID, (float)( t - Math.Floor( t ) ) );
+        Shader.SetGlobalFloat( offset0ID, (float)Math.Sin( t * Math.PI / 2 ) );
+        Shader.SetGlobalFloat( offset1ID, (float)Math.Cos( t * Math.PI / 2 ) );
+        Shader.SetGlobalFloat( iterID, (float)( t - Math.Floor( t ) ) );
         base.Update();
     }
 

@@ -218,7 +218,7 @@ public static class Constants
         public const int defaultSize = 9;
         public const bool defaultTileable = true;
         public const bool defaultIsland = false;
-    	public const float defaultBorderLevel = 0.5f;
+    	public const float defaultBorderLevel = 0.0f;
     	public const float defaultRandomness = 1.2f;
     	public const float defaultNoise = -0.15f;
     	public const float defaultRandomnessDistribution = -0.3f;

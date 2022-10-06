@@ -44,6 +44,7 @@ Shader "Unlit/Water"
             sampler2D _FoamTex;
             float Offset0, Offset1;
             float Iter;
+            bool Waves;
 
             v2f vert (appdata v)
             {
@@ -61,7 +62,9 @@ Shader "Unlit/Water"
                 fixed3 col0 = tex2D( _MainTex, i.uv0 );
                 fixed3 col1 = tex2D( _MainTex, i.uv1 );
                 fixed innerAlpha = saturate( i.depth * 2 );
-                fixed4 inner = fixed4( lerp( col0, col1, 0.5), innerAlpha );
+                if ( !Waves )
+                    return fixed4( lerp( col0, col1, 0.5 ), 1 );
+                fixed4 inner = fixed4( lerp( col0, col1, 0.5 ), innerAlpha );
                 fixed4 outer = tex2D( _FoamTex, i.localPos / 20 );
                 fixed foamWeight = frac( 1 - Iter - i.depth * 8 ) * saturate( 1 - i.depth * 8 );
                 return lerp( inner, outer, foamWeight );

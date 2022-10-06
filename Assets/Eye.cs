@@ -241,26 +241,27 @@ public class Eye : HiveObject
 		x += movement.x + autoMove.x * Time.unscaledDeltaTime;
 		y += movement.z + autoMove.y * Time.unscaledDeltaTime;
 
-		while ( y < -ground.dimension * Constants.Node.size / 2 )
+		bool allowJump = !world.generatorSettings.reliefSettings.island;
+		while ( allowJump && y < -ground.dimension * Constants.Node.size / 2 )
 		{
 			y += ground.dimension * Constants.Node.size;
 			x += ground.dimension * Constants.Node.size / 2;
 			absoluteY -= ground.dimension * Constants.Node.size;
 			absoluteX -= ground.dimension * Constants.Node.size / 2;
 		}
-		while ( y > ground.dimension * Constants.Node.size / 2 )
+		while ( allowJump && y > ground.dimension * Constants.Node.size / 2 )
 		{
 			y -= ground.dimension * Constants.Node.size;
 			x -= ground.dimension * Constants.Node.size / 2;
 			absoluteY += ground.dimension * Constants.Node.size;
 			absoluteX += ground.dimension * Constants.Node.size / 2;
 		}
-		while ( x < -ground.dimension * Constants.Node.size / 2 + y / 2 )
+		while ( allowJump && x < -ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
 			x += ground.dimension * Constants.Node.size;
 			absoluteX -= ground.dimension * Constants.Node.size;
 		}
-		while ( x > ground.dimension * Constants.Node.size / 2 + y / 2 )
+		while ( allowJump && x > ground.dimension * Constants.Node.size / 2 + y / 2 )
 		{
 			x -= ground.dimension * Constants.Node.size;
 			absoluteX += ground.dimension * Constants.Node.size;
@@ -521,6 +522,7 @@ public class Eye : HiveObject
 
 			float closest = float.MaxValue, furthest = float.MinValue;
 			var forward = center.transform.forward;
+			bool sideCamerasAllowed = settings.enableSideCameras && enabled && !eye.world.generatorSettings.reliefSettings.island;
 			for ( int i = 0; i < cameras.Count; i++ )
 			{
 				int x = ( i % 3 ) - 1;
@@ -530,12 +532,15 @@ public class Eye : HiveObject
 				var newPosition = transform.position + x * right + y * up;
 				cameras[i].transform.position = newPosition;
 				if ( x != 0 || y != 0 )
-					cameras[i].enabled = settings.enableSideCameras && enabled;
+					cameras[i].enabled = sideCamerasAllowed;
 				float depth = -Math.Abs( newPosition.z ) - Math.Abs( newPosition.x - newPosition.z / 2 );
-				if ( depth < closest )
-					closest = depth;
-				if ( depth > furthest )
-					furthest = depth;
+				if ( i == 4 || sideCamerasAllowed )
+				{
+					if ( depth < closest )
+						closest = depth;
+					if ( depth > furthest )
+						furthest = depth;
+				}
 				cameras[i].depth = depth;
 			}
 
@@ -562,6 +567,7 @@ public class Eye : HiveObject
 			foreach ( var camera in cameras )
 			{
 				camera.cullingMask = effectiveMask;
+				camera.clearFlags = CameraClearFlags.Nothing;
 				if ( camera.depth == furthest )
 				{
 					if ( last != camera )
@@ -572,13 +578,11 @@ public class Eye : HiveObject
 						last = camera;
 					}
 				}
-				else if ( camera.depth == closest && first == null )
+				if ( camera.depth == closest && first == null )
 				{
 					camera.clearFlags = CameraClearFlags.Skybox;
 					first = camera;
 				}
-				else
-					camera.clearFlags = CameraClearFlags.Nothing;
 			}
 		}
 

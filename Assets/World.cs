@@ -243,7 +243,6 @@ public class World : HiveObject
 		{
 			generatorSettings.apply = false;
 			var c = game.challenge;
-			c.fixedSeed = true;
 			c.worldGenerationSettings = game.generatorSettings;
 			game.NewGame( game.challenge, true );
 			root.mainPlayer = game.players[0];
@@ -1519,9 +1518,9 @@ public class Game : World
 	{
 		public string title, description;
 		public World.Settings worldGenerationSettings = new ();
+		public bool randomizeIslands = true;
 		public Goal reachedLevel = Goal.none;
 		public int maintain;
-		public bool fixedSeed;
 		public Timer maintainBronze = new (), maintainSilver = new (), maintainGold = new ();
 		public float progress;
 		public Timer life = new ();
@@ -1547,6 +1546,8 @@ public class Game : World
 		int seed { set { worldGenerationSettings.seed = value; } }
 		[Obsolete( "Compatibility with old files", true )]
 		int worldSize { set { worldGenerationSettings.size = value; } }
+		[Obsolete( "Compatibility with old files", true )]
+		bool fixedSeed { set {} }
 
         public static Challenge Create()
 		{
@@ -1559,7 +1560,6 @@ public class Game : World
 			description = prototype.description;
 			reachedLevel = prototype.reachedLevel;
 			maintain = prototype.maintain;
-			fixedSeed = prototype.fixedSeed;
 			worldGenerationSettings= prototype.worldGenerationSettings;
 			productivityGoals = prototype.productivityGoals;
 			productivityGoalsByBuildingCount = prototype.productivityGoalsByBuildingCount;
@@ -1594,6 +1594,13 @@ public class Game : World
 			maintainGold.Reset();
 			UpdateProductivityGoals();
 			reachedLevel = Goal.none;
+		}
+
+		public void Randomize()
+		{
+			worldGenerationSettings.seed = Interface.rnd.Next();
+			if ( randomizeIslands )
+				worldGenerationSettings.reliefSettings.island = Interface.rnd.NextDouble() > 0.5;
 		}
 
 		public void UpdateProductivityGoals()

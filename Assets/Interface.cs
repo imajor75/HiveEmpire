@@ -671,11 +671,8 @@ public class Interface : HiveObject
 			eye.FocusOn( closest, true );
 	}
 
-	public void NewGame( Game.Challenge challenge, bool randomizeSeed = true )
+	public void NewGame( Game.Challenge challenge )
 	{
-		if ( randomizeSeed && !challenge.fixedSeed )
-			challenge.worldGenerationSettings.seed = new System.Random().Next();
-
 		game.NewGame( challenge );
 		if ( game.players.Count > 0 )
 			mainPlayer = game.players[0];
@@ -7103,15 +7100,17 @@ if ( cart )
 			AddTitle( "Seed:", seedField );
 			Button( "Randomize" ).PinDownwards( borderWidth, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
 
+			CheckBox( "Island" ).PinDownwards( borderWidth, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.reliefSettings.island = value; needGenerate = true; } );
+
 			var trees = Dropdown();
 			trees.AddOptions( new List<string>{ "rare", "normal", "frequent" } );
-			trees.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.forestChance = value switch { 0 => 0.001f, 2 => 0.02f, 1 or _ => 0.006f }; needGenerate = true; } );
+			trees.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.forestChance = value switch { 0 => 0.002f, 2 => 0.02f, 1 or _ => 0.006f }; needGenerate = true; } );
 			trees.value = preview.generatorSettings.forestChance switch { < 0.0045f => 0, > 0.0075f => 2, _ => 1 };
 			AddTitle( "Trees:", trees );
 
 			CheckBox( "Random production chain" ).PinDownwards( borderWidth, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.randomizeProductionChain = value; needGenerate = true; }, true );
 
-			Button( "Start" ).PinDownwards( borderWidth + 30, -10, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge, false ); } );
+			Button( "Start" ).PinDownwards( borderWidth + 30, -10, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge ); } );
 
 			view = new ( 512, 512, 0 );
 			needGenerate = true;
@@ -7196,9 +7195,9 @@ if ( cart )
 
 		void StartChallenge( Game.Challenge challenge )
 		{
-			if ( !challenge.fixedSeed )
-				challenge.worldGenerationSettings.seed = int.Parse( manualSeed.text );
-			root.NewGame( challenge, false );
+			challenge.Randomize();
+			challenge.worldGenerationSettings.seed = int.Parse( manualSeed.text );
+			root.NewGame( challenge );
 			Close();
 		}
 	}
@@ -7296,8 +7295,8 @@ if ( cart )
 			}
 			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
 			var row = UIHelpers.currentRow - iconSize / 2 - 10;
-			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => root.NewGame( game.challenge, false ) );
-			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => root.NewGame( game.challenge, true ) );
+			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => root.NewGame( game.challenge ) );
+			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => { game.challenge.Randomize(); root.NewGame( game.challenge ); } );
 			
 			this.SetSize( 400, -row + 30 );
 		}
