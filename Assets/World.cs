@@ -139,6 +139,7 @@ public class World : HiveObject
 		public float rocksChance = 0.002f;
 		public float animalSpawnerChance = 0.001f;
 		public HeightMap.Settings reliefSettings = new (), forestSettings = new ();
+		public int oreChargesPerNode = Constants.Resource.oreChargePerNodeDefault;
 
 		public int seed;
 		[JsonIgnore]
@@ -930,9 +931,9 @@ public class World : HiveObject
 				continue;
 			var r = new System.Random( rnd.Next() );
 			if ( r.NextDouble() < generatorSettings.forestChance )
-				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd );
+				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd, 1 );
 			if ( r.NextDouble() < generatorSettings.rocksChance )
-				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f, rnd );
+				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f, rnd, Constants.Resource.rockCharges );
 
 			if ( node.CheckType( Node.Type.land ) )
 			{
@@ -940,7 +941,7 @@ public class World : HiveObject
 				{
 					if ( o && node.Add( o ).type == Node.Type.underWater )
 					{
-						node.AddResource( Resource.Type.fish );
+						node.AddResource( Resource.Type.fish, int.MaxValue );
 						break;
 					}
 				}
@@ -984,7 +985,7 @@ public class World : HiveObject
 						continue;
 					go = false;
 
-					var resourceCount = node.AddResourcePatch( ore.resourceType, generatorSettings.size / 6, 10, rnd );
+					var resourceCount = node.AddResourcePatch( ore.resourceType, generatorSettings.size / 6, 10, rnd, generatorSettings.oreChargesPerNode );
 					ore.resourceCount += resourceCount;
 					Ore.totalResourceCount += resourceCount;
 				}

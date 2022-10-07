@@ -148,21 +148,9 @@ public class Resource : HiveObject
 		return type == Type.coal || type == Type.iron || type == Type.stone || type == Type.gold || type == Type.salt || type == Type.copper || type == Type.silver;
 	}
 
-	public Resource Setup( Node node, Type type, int charges = -1, bool allowBlocking = false )
+	public Resource Setup( Node node, Type type, int charges = 1, bool allowBlocking = false )
 	{
 		this.type = type;
-		if ( charges < 0 )
-		{
-			if ( underGround || type == Type.fish )
-				charges = int.MaxValue;
-			else
-			{
-				if ( type == Type.rock )
-					charges = Constants.Resource.rockCharges;
-				else
-					charges = 1;
-			}
-		}
 
 		Node.Type needed = Node.Type.aboveWater;
 		if ( underGround )

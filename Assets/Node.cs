@@ -331,7 +331,7 @@ public class Node : HiveObject
 		return another.GetPositionRelativeTo( this ) - position;
 	}
 
-	public int AddResourcePatch( Resource.Type type, int size, float density, System.Random rnd, bool overwrite = false )
+	public int AddResourcePatch( Resource.Type type, int size, float density, System.Random rnd, int charges, bool overwrite = false )
 	{
 		int count = 0;
 		for ( int x = -size; x < size; x++ )
@@ -342,14 +342,20 @@ public class Node : HiveObject
 				int distance = DistanceFrom( n );
 				float chance = density * (size-distance) / size;
 				if ( chance * 100 > rnd.Next( 100 ) )
-					if ( n.AddResource( type, overwrite ) )
-						count++;
+				{
+					var factor = (size*1.5-distance) / size;
+					int localCharges = charges;
+					if ( localCharges != int.MaxValue && factor < 1 )
+						localCharges = (int)( factor * localCharges );
+					if ( n.AddResource( type, localCharges, overwrite ) )
+						count += localCharges == int.MaxValue ? 1 : localCharges;
+				}
 			}
 		}
 		return count;
 	}
 
-	public bool AddResource( Resource.Type type, bool overwrite = false )
+	public bool AddResource( Resource.Type type, int charges, bool overwrite = false )
 	{
 		if ( resources.Count > 0  )
 		{
@@ -370,7 +376,7 @@ public class Node : HiveObject
 			if ( building || flag || road )
 				return false;
 		}
-		Resource resource = Resource.Create().Setup( this, type );
+		Resource resource = Resource.Create().Setup( this, type, charges );
 		if ( resource && type == Resource.Type.tree )
 			resource.life.Start( -2 * Constants.Resource.treeGrowthTime );
 		return resource != null;

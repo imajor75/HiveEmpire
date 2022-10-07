@@ -3489,7 +3489,7 @@ public class Interface : HiveObject
 
 		void AddResourcePatch( Resource.Type resourceType )
 		{
-			node.AddResourcePatch( resourceType, 3, 10, new (), overwrite:true );
+			node.AddResourcePatch( resourceType, 3, 10, new (), 5, overwrite:true );
 		}
 
 		void AddTree()
@@ -6208,7 +6208,10 @@ if ( cart )
 							var body = Item.looks.GetMediaData( itemType );
 							var renderer = body.GetComponent<MeshRenderer>();
 							var meshFilter = body.GetComponent<MeshFilter>();
-							World.DrawObject( body, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.3f ) );
+							float scale = 0.3f;
+							if ( !resource.infinite )
+								scale *= ((float)resource.charges) / Constants.Resource.oreChargePerNodeDefault;
+							World.DrawObject( body, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * scale ) );
 							break;
 						}
 					}
@@ -7101,6 +7104,12 @@ if ( cart )
 			Button( "Randomize" ).PinDownwards( borderWidth, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
 
 			CheckBox( "Island" ).PinDownwards( borderWidth, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.reliefSettings.island = value; needGenerate = true; } );
+
+			var ores = Dropdown();
+			ores.AddOptions( new List<string>{ "weak", "normal", "rich", "infinite" } );
+			ores.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.oreChargesPerNode = value switch { 0 => Constants.Resource.oreChargePerNodeDefault / 2, 2 => (int)( Constants.Resource.oreChargePerNodeDefault * 1.5 ), 3 => int.MaxValue, 1 or _ => Constants.Resource.oreChargePerNodeDefault }; needGenerate = true; } );
+			ores.value = 1;
+			AddTitle( "Ores:", ores );
 
 			var trees = Dropdown();
 			trees.AddOptions( new List<string>{ "rare", "normal", "frequent" } );
