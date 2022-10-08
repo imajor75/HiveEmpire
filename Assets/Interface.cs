@@ -627,7 +627,7 @@ public class Interface : HiveObject
 		}
 
 		eye.FocusOn( mainTeam.mainBuilding, true, useLogicalPosition:true, approach:false );
-		if ( mainTeam.workshops.Count > 0 )
+		if ( mainTeam.workshops.Count > 0 && !game.generatorSettings.reliefSettings.island )
 			eye.autoMove = new Vector2( 0.8f, 0.17f );
 
 		OpenMainMenu( true );
