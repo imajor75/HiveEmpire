@@ -897,7 +897,10 @@ public class World : HiveObject
 		MeshRenderer renderer = prefab.GetComponent<MeshRenderer>();
 		var local = Matrix4x4.TRS( prefab.transform.localPosition, prefab.transform.localRotation, prefab.transform.localScale );
 		if ( filter && renderer )
-			Graphics.DrawMesh( filter.sharedMesh, transform * local, renderer.sharedMaterial, 0 );
+		{
+			for ( int s = 0; s < filter.sharedMesh.subMeshCount; s++ )
+				Graphics.DrawMesh( filter.sharedMesh, transform * local, renderer.sharedMaterial, 0, null, s );
+		}
 		foreach ( Transform c in prefab.transform )
 			DrawObject( c.gameObject, transform * local );
 	}
