@@ -12,6 +12,7 @@
       "title": "Soldier production",
       "description": "Reach soldiers production 2/minute, and maintain it for 30 minutes on a medium map",
       "maintain": 90000,
+      "infiniteResources": true,
       "conditions": [
         "production soldier 2"
       ]
@@ -20,6 +21,8 @@
       "title": "Soldier production small",
       "description": "Reach soldiers production 1/minute, and maintain it for 30 minutes on a small map",
       "maintain": 90000,
+      "infiniteResources": true,
+      "landOnly": true,
       "worldSize": 24,
       "conditions": [
         "production soldier 1"
@@ -29,6 +32,8 @@
       "title": "Soldier production big",
       "description": "Reach soldier production 4.5/minute, and maintain it for 30 minutes on a big map",
       "maintain": 90000,
+      "infiniteResources": true,
+      "landOnly": true,
       "worldSize": 48,
       "conditions": [
         "production soldier 4.5"
@@ -38,6 +43,7 @@
       "title": "One barrack",
       "description": "Maximize soldier production with a single barrack supplying it with materials continuously",
       "maintain": 30000,
+      "infiniteResources": true,
       "conditions": [
         "productionByBuilding barrack 1",
         "buildingMax barrack 1"
@@ -47,6 +53,7 @@
       "title": "Limited area",
       "description": "Reach soldier production 1/minute, and maintain it for 10 minutes with only three guardhouses",
       "maintain": 30000,
+      "infiniteResources": true,
       "worldSize": 48,
       "conditions": [
         "production soldier 1.2",
@@ -60,6 +67,16 @@
       "simpletonCount": 1,
       "simpletonCountToEliminate": 1,
       "playerCount": 1
+    },
+    {
+      "title": "Small island",
+      "description": "Start soldier production on a small island",
+      "timeLimit": 180000,
+      "worldSize": 24,
+      "islandOnly": true,
+      "conditions": [
+        "production soldier 0.0001"
+      ]
     }
   ]
 }

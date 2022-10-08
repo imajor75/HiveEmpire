@@ -1539,14 +1539,17 @@ public class Game : World
 		public string bestSolutionReplayFileName;
 		public Goal bestSolutionLevel;
 
+		int worldSize { set { worldGenerationSettings.size = value; } }
+		bool islandOnly { set { if ( value ) { randomizeIslands = false; worldGenerationSettings.reliefSettings.island = true; } } }
+		bool landOnly { set { if ( value ) { randomizeIslands = false; worldGenerationSettings.reliefSettings.island = false; } } }
+		bool infiniteResources { set { if ( value ) worldGenerationSettings.oreChargesPerNode = int.MaxValue; } }
+
 		[Obsolete( "Compatibility with old files", true )]
 		float soldierProductivityGoal { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		bool randomSeed { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		int seed { set { worldGenerationSettings.seed = value; } }
-		[Obsolete( "Compatibility with old files", true )]
-		int worldSize { set { worldGenerationSettings.size = value; } }
 		[Obsolete( "Compatibility with old files", true )]
 		bool fixedSeed { set {} }
 
