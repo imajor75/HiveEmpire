@@ -14,7 +14,7 @@
       "dependencies": {}
     },
     "com.unity.burst": {
-      "version": "1.7.3",
+      "version": "1.7.4",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -23,7 +23,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.collab-proxy": {
-      "version": "1.17.1",
+      "version": "1.17.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -112,7 +112,7 @@
       "source": "builtin",
       "dependencies": {
         "com.unity.mathematics": "1.2.1",
-        "com.unity.burst": "1.5.0",
+        "com.unity.burst": "1.7.3",
         "com.unity.render-pipelines.core": "13.1.8",
         "com.unity.shadergraph": "13.1.8"
       }
@@ -161,7 +161,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
-      "version": "1.1.31",
+      "version": "1.1.33",
       "depth": 0,
       "source": "registry",
       "dependencies": {
