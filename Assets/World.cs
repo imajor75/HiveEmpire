@@ -456,6 +456,9 @@ public class World : HiveObject
 				}
 			}
 		}
+		if ( water.world == null )
+			water.world = this;
+			
 		if ( eye.world == null )
 			eye.world = this;
 		if ( eye.cameraGrid == null )
