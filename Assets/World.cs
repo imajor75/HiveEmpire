@@ -617,6 +617,8 @@ public class World : HiveObject
 			{
 				if ( o.charges > 1000 )
 					o.infinite = true;
+				if ( o.charges == 0 && !o.infinite )
+					o.Remove();
 				if ( o.life.empty )
 					o.life.reference = game.time - 15000;
 				if ( o.type == Resource.Type.pasturingAnimal && o.animals.Count == 1 )

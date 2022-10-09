@@ -445,5 +445,6 @@ public class Resource : HiveObject
 		}
 		if ( node )
 			assert.IsTrue( node.resources.Contains( this ) );
+		assert.IsTrue( charges > 0 || infinite );
 	}
 }
