@@ -58,17 +58,17 @@ public class Water : HiveObject
         {
             var cloneMaterial = Instantiate( Resources.Load<Material>( "Water" ) );
             float worldSize = world.ground.dimension * Constants.Node.size;
-            for ( int i = 0; i < 9; i++ )
+            for ( int i = 0; i < 25; i++ )
             {
-                if ( i == 4 )
+                if ( i == 12 )
                     continue;
 
                 var mf = new GameObject( "Water clone" ).AddComponent<MeshFilter>();
                 mf.mesh = mesh;
                 mf.gameObject.AddComponent<MeshRenderer>().material = cloneMaterial;
                 mf.transform.SetParent( transform );
-                int x = ( i % 3 ) - 1;
-                int y = ( i / 3 ) - 1;
+                int x = ( i % 5 ) - 2;
+                int y = ( i / 5 ) - 2;
                 mf.transform.localPosition = new Vector3( x * worldSize + ( y * worldSize / 2 ), 0, y * worldSize );
             }
         }
