@@ -339,10 +339,7 @@ public class Ground : HiveObject
 		{
 			foreach ( var building in team.influencers )
 			{
-				List<Node> touched = new List<Node>
-				{
-					building.node
-				};
+				List<Node> touched = new List<Node>	{ building.node	};
 				for ( int i = 0; i < touched.Count; i++ )
 				{
 					int influence = building.Influence( touched[i] );

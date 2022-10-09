@@ -96,6 +96,7 @@ public class World : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	int overseas;
 	public Settings generatorSettings = new ();
+	public bool repeating { get { return !generatorSettings.reliefSettings.island; } }
 
 	[System.Serializable]
 	public class Ore

@@ -301,9 +301,9 @@ public class Node : HiveObject
 			v = a * 2 - v;
 
 		int d = Mathf.Abs( ( x - o.x ) + ( y - o.y ) );
-		if ( d >= world.ground.dimension )
+		if ( world.repeating && d >= world.ground.dimension )
 			d -= world.ground.dimension;
-		if ( d >= a )
+		if ( world.repeating && d >= a )
 			d = a * 2 - d;
 
 		return Mathf.Max( h, Mathf.Max( v, d ) );
