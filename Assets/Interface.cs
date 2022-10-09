@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -738,7 +738,7 @@ public class Interface : HiveObject
 
 	public void LoadChallenges()
 	{
-		string file = Application.persistentDataPath + "/challenges.json";
+		string file = Application.persistentDataPath + "/Settings/challenges.json";
 		if ( !File.Exists( file ) )
 			file = Application.streamingAssetsPath + "/challenges.json";
 		challenges = Serializer.Read<Game.Challenge.List>( file ).list;
@@ -759,7 +759,7 @@ public class Interface : HiveObject
 			{
 				challenge.bestSolutionLevel = goal;
 				challenge.bestSolutionReplayFileName = oh.SaveReplay();
-				Serializer.Write( Application.persistentDataPath + "/challenges.json", new Game.Challenge.List { list = challenges }, true, false );
+				Serializer.Write( Application.persistentDataPath + "/Settings/challenges.json", new Game.Challenge.List { list = challenges }, true, false );
 			}
 		}
 
