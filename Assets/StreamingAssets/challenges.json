@@ -75,7 +75,7 @@
       "worldSize": 24,
       "islandOnly": true,
       "conditions": [
-        "production soldier 0.0001"
+        "production soldier 0.01"
       ]
     }
   ]
