@@ -1283,7 +1283,7 @@ public class Game : World
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
 
 		if ( challenge.life.empty )
-			challenge.Begin();
+			challenge.Begin( world );
 
 		foreach ( var newHiveObject in newHiveObjects )
 		{
@@ -1364,7 +1364,7 @@ public class Game : World
 		operationHandler = OperationHandler.Create();
 		operationHandler.Setup( this );
 		operationHandler.challenge = localChallenge;
-		operationHandler.challenge.Begin();
+		operationHandler.challenge.Begin( this );
 #if DEBUG
 		operationHandler.recordCRC = true;
 #endif
@@ -1422,7 +1422,7 @@ public class Game : World
 			while ( challenge.productivityGoals.Count < (int)Item.Type.total )
 				challenge.productivityGoals.Add( 0 );
 		}
-		challenge?.UpdateProductivityGoals();
+		challenge?.AlignToWorld( this );
 
 		SetSpeed( speed, true );    // Just for the animators and sound
 
@@ -1637,6 +1637,7 @@ public class Game : World
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
 		public int timeLimit;
+		public bool craftAllSoldiers;
 		public int playerCount;
 		public int simpletonCount;
 		public int simpletonCountToEliminate;
@@ -1680,6 +1681,8 @@ public class Game : World
 			playerCount = prototype.playerCount;
 			simpletonCount = prototype.simpletonCount;
 			allowTimeLeftLevels = prototype.allowTimeLeftLevels;
+			randomizeIslands = prototype.randomizeIslands;
+			craftAllSoldiers = prototype.craftAllSoldiers;
 
 			// HiveObject.Setup() would be nice to call, but at the moment I don't want to risk it
 			return this;
@@ -1697,13 +1700,13 @@ public class Game : World
 			base.Start();
 		}
 
-		public void Begin()
+		public void Begin( World world )
 		{
 			life.Start();
 			maintainBronze.Reset();
 			maintainSilver.Reset();
 			maintainGold.Reset();
-			UpdateProductivityGoals();
+			AlignToWorld( world );
 			reachedLevel = Goal.none;
 		}
 
@@ -1714,21 +1717,25 @@ public class Game : World
 				worldGenerationSettings.reliefSettings.island = Interface.rnd.NextDouble() > 0.5;
 		}
 
-		public void UpdateProductivityGoals()
+		public void AlignToWorld( World world )
 		{
-			if ( productivityGoalsByBuildingCount == null )
-				return;
-
 			if ( productivityGoals == null )
 				productivityGoals = new ();
 			while ( productivityGoals.Count < (int)Item.Type.total )
 				productivityGoals.Add( -1 );
+
+			if ( craftAllSoldiers )
+				productivityGoals[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount + world.MaximumPossible( Item.Type.soldier );
+				
+			if ( productivityGoalsByBuildingCount == null )
+				return;
+
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				if ( productivityGoalsByBuildingCount[i] <= 0 )
 					continue;
 
-				var config = Workshop.GetConfiguration( game, (Workshop.Type)i );
+				var config = Workshop.GetConfiguration( world, (Workshop.Type)i );
 				productivityGoals[(int)config.outputType] = config.productivity * productivityGoalsByBuildingCount[i] * Constants.Player.challengeProductivityPerBuilding;
 			}
 		}
@@ -1806,7 +1813,15 @@ public class Game : World
 			if ( mainBuildingContent != null )
 			{
 				for ( int i = 0; i < mainBuildingContent.Count; i++ )
-					CheckCondition( team.mainBuilding.itemData[i].content, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
+				{
+					int stock = team.mainBuilding.itemData[i].content;
+					if ( i == (int)Item.Type.soldier )
+					{
+						foreach ( var post in team.guardHouses )
+							stock += post.soldiers.Count;
+					}
+					CheckCondition( stock, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
+				}
 			}
 
 			if ( buildingMax != null )
@@ -1863,6 +1878,9 @@ public class Game : World
 				var p = condition.Split( ' ' );
 				switch ( p[0] )
 				{
+					case "craftAllSoldiers":
+						craftAllSoldiers = true;
+						break;
 					case "headquarters":
 					{
 						if ( mainBuildingContent == null )
@@ -1930,7 +1948,7 @@ public class Game : World
 					}
 					default:
 					{
-						print( $"Unknown condition type: {p[0]}" );
+						Log( $"Unknown condition type: {p[0]}" );
 						break;
 					}
 				}

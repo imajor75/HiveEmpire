@@ -77,6 +77,15 @@
       "conditions": [
         "production soldier 0.01"
       ]
+    },
+    {
+      "title": "Full mobilization",
+      "description": "Produce as many soldiers as possible on a big island",
+      "worldSize": 48,
+      "islandOnly": true,
+      "conditions": [
+        "craftAllSoldiers"
+      ]
     }
   ]
 }
