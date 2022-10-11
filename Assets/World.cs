@@ -243,8 +243,49 @@ public class World : HiveObject
 
 	public int MaximumPossible( Item.Type itemType )
 	{
+		List<(float, Item.Type)> CollectCost( Item.Type itemType )
+		{
+			List<(float, Item.Type)> result = new ();
+			if ( itemType == Item.Type.coal || itemType == Item.Type.iron || itemType == Item.Type.gold || itemType == Item.Type.silver || itemType == Item.Type.copper || itemType == Item.Type.stone )
+			{
+				result.Add( (1, itemType) );
+				return result;
+			}
+			foreach ( var workshopConfiguration in workshopConfigurations )
+			{
+				if ( workshopConfiguration.outputType != itemType || workshopConfiguration.generatedInputs == null )
+					continue;
+				var factor = 1f / workshopConfiguration.outputStackSize;
+				foreach ( var input in workshopConfiguration.generatedInputs )
+				{
+					foreach ( var raw in CollectCost( input ) )
+					{
+						float weight = raw.Item1;
+						for ( int i = 0; i < result.Count; i++ )
+						{
+							if ( result[i].Item2 == raw.Item2 )
+							{
+								weight += result[i].Item1;
+								result.RemoveAt( i );
+								break;
+							}
+						}
+					 	result.Add( ( factor * weight, raw.Item2 ) );
+					}
+				}
+				return result;
+
+			}
+			result.Add( (1, itemType) );
+			return result;
+		}
+
 		switch ( itemType )
 		{
+			case Item.Type.unknown or Item.Type.total:
+				return -1;
+			case Item.Type.hide:
+				return animalSpawnerCount > 0 ? int.MaxValue : 0;
 			case Item.Type.log or Item.Type.fish or Item.Type.grain or Item.Type.apple or Item.Type.water or Item.Type.corn or Item.Type.dung:
 				return int.MaxValue;
 			case Item.Type.stone or Item.Type.iron or Item.Type.copper or Item.Type.coal or Item.Type.silver or Item.Type.gold or Item.Type.salt:
@@ -272,18 +313,15 @@ public class World : HiveObject
 			default:
 			{
 				int possible = 0;
-				foreach ( var workshopConfiguration in workshopConfigurations )
+				int source = int.MaxValue;
+				foreach ( var raw in CollectCost( itemType ) )
 				{
-					if ( workshopConfiguration.outputType != itemType || workshopConfiguration.generatedInputs == null )
-						continue;
-
-					int source = int.MaxValue;
-					foreach ( var material in workshopConfiguration.generatedInputs )
-						source = Math.Min( MaximumPossible( material ), source );
-					if ( source != int.MaxValue )
-						source *= workshopConfiguration.outputStackSize;
-					possible += source;
+					var max = MaximumPossible( raw.Item2 );
+					if ( max != int.MaxValue )
+						max = (int)( max / raw.Item1 );
+					source = Math.Min( max, source );
 				}
+				possible += source;
 				return possible;
 			}
 		}
