@@ -1017,7 +1017,7 @@ public class World : HiveObject
 		Ore.totalResourceCount = 0;
 		void AddOre( Resource.Type resourceType )
 		{
-			float weight = game.itemTypeUsage[(int)Resource.ItemType( resourceType )];
+			float weight = itemTypeUsage[(int)Resource.ItemType( resourceType )];
 			if ( weight == 0 )
 				return;
 
