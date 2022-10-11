@@ -1359,8 +1359,6 @@ public class Game : World
 
 		this.challenge = localChallenge;
 		defeatedSimpletonCount = 0;
-		this.challenge.world = this;
-		this.challenge.Register();
 		operationHandler = OperationHandler.Create();
 		operationHandler.Setup( this );
 		operationHandler.challenge = localChallenge;
@@ -1740,11 +1738,10 @@ public class Game : World
 			}
 		}
 
-		override public void GameLogicUpdate()
+		// This used to be GameLogicUpdate, but it seems to be better for the challenge not being part of the world, otherwise
+		// saving a replay file involves the whole world
+		public void CheckStatus()
 		{
-			if ( game.challenge != this )
-				return;
-
 			var team = root.mainTeam;
 			if ( team == null )
 				return;

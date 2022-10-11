@@ -529,6 +529,8 @@ public class OperationHandler : HiveObject
             Assert.global.AreEqual( mode, Mode.repeating );
             mode = Mode.recording;
         }
+
+        challenge?.CheckStatus();
     }
 
     static void DumpEvents( List<Event> events, string file, int frame = -1 )
