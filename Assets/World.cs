@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1678,6 +1678,7 @@ public class Game : World
 			timeLimit = prototype.timeLimit;
 			playerCount = prototype.playerCount;
 			simpletonCount = prototype.simpletonCount;
+			simpletonCountToEliminate = prototype.simpletonCountToEliminate;
 			allowTimeLeftLevels = prototype.allowTimeLeftLevels;
 			randomizeIslands = prototype.randomizeIslands;
 			craftAllSoldiers = prototype.craftAllSoldiers;
