@@ -346,7 +346,11 @@ public class Node : HiveObject
 					var factor = (size*1.5-distance) / size;
 					int localCharges = charges;
 					if ( localCharges != int.MaxValue && factor < 1 )
+					{
 						localCharges = (int)( factor * localCharges );
+						if ( localCharges == 0 )
+							localCharges = 1;
+					}
 					if ( n.AddResource( type, localCharges, overwrite ) )
 						count += localCharges == int.MaxValue ? 1 : localCharges;
 				}
