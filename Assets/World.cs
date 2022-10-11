@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,6 +27,8 @@ public class World : HiveObject
 	public List<float> workshopTypeUsage = new ();
 	public Water water;
 	public bool main;
+	[JsonIgnore]
+	public bool dumpPossibleProductions, dumpTypeCountOnSave;
 
 	static public bool massDestroy;
 	static public int layerIndexMapOnly;
@@ -239,6 +241,54 @@ public class World : HiveObject
 		return soundSource;
 	}
 
+	public int MaximumPossible( Item.Type itemType )
+	{
+		switch ( itemType )
+		{
+			case Item.Type.log or Item.Type.fish or Item.Type.grain or Item.Type.apple or Item.Type.water or Item.Type.corn or Item.Type.dung:
+				return int.MaxValue;
+			case Item.Type.stone or Item.Type.iron or Item.Type.copper or Item.Type.coal or Item.Type.silver or Item.Type.gold or Item.Type.salt:
+			{
+				int charges = 0;
+				foreach ( var resourceType in (Resource.Type[])Enum.GetValues( typeof( Resource.Type ) ) )
+				{
+					if ( Resource.ItemType( resourceType ) == itemType )
+					{
+						foreach ( var node in ground.nodes )
+						{
+							foreach ( var resource in node.resources )
+							{
+								if ( resource.type != resourceType )
+									continue;
+								if ( resource.infinite )
+									return int.MaxValue;
+								charges += resource.charges;
+							}
+						}
+					}
+				}
+				return charges;
+			}
+			default:
+			{
+				int possible = 0;
+				foreach ( var workshopConfiguration in workshopConfigurations )
+				{
+					if ( workshopConfiguration.outputType != itemType || workshopConfiguration.generatedInputs == null )
+						continue;
+
+					int source = int.MaxValue;
+					foreach ( var material in workshopConfiguration.generatedInputs )
+						source = Math.Min( MaximumPossible( material ), source );
+					if ( source != int.MaxValue )
+						source *= workshopConfiguration.outputStackSize;
+					possible += source;
+				}
+				return possible;
+			}
+		}
+	}
+
 	public void FixedUpdate()
 	{
 		if ( generatorSettings.apply )
@@ -259,6 +309,13 @@ public class World : HiveObject
 	{
 		if ( light )
 			light.shadows = HiveCommon.settings.shadows ? ( HiveCommon.settings.softShadows ? LightShadows.Soft : LightShadows.Hard ) : LightShadows.None;
+
+		if ( dumpPossibleProductions )
+		{
+			foreach ( var itemType in (Item.Type[])Enum.GetValues(typeof(Item.Type)) )
+				Log( $"{itemType}: {MaximumPossible( itemType )}" );
+			dumpPossibleProductions = false;
+		}
 
 		base.Update();
 	}

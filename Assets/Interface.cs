@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7064,7 +7064,7 @@ if ( cart )
 		public RenderTexture view;
 		public bool needGenerate;
 		public Game.Challenge challenge;
-		public Text resourcesText;
+		public Text resourcesText, possibleSoldiersText;
 
 		public static GeneratorPanel Create()
 		{
@@ -7130,6 +7130,7 @@ if ( cart )
 			Image( Icon.prod ).Link( window ).Pin( -iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( () => ProductionChainPanel.Create( preview ) );
 
 			resourcesText = Text( "", 8 ).Pin( borderWidth, 100, 140, 80, 0, 0 );
+			possibleSoldiersText = Text( "", 10 ).Pin( borderWidth, 120, 140, 80, 0, 0 );
 		}
 
 		new void Update()
@@ -7149,6 +7150,9 @@ if ( cart )
 						resources += $"\n{ore.resourceType}: {ore.resourceCount}";
 				}
 				resourcesText.text = resources;
+				possibleSoldiersText.text = $"Maximum soldiers: {preview.MaximumPossible( Item.Type.soldier )}";
+				foreach ( var itemType in (Item.Type[])Enum.GetValues(typeof(Item.Type)) )
+					Log( $"{itemType}: {preview.MaximumPossible( itemType )}" );
 				needGenerate = false;
 			}
 
