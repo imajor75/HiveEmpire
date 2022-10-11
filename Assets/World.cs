@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -773,7 +773,10 @@ public class World : HiveObject
 			saveIndex++;
 		this.fileName = fileName;
 		if ( root.playerInCharge || manualSave )
-			Serializer.Write( fileName, this, false );
+		{
+			Serializer.Write( fileName, this, false, logTypeCount:dumpTypeCountOnSave );
+			dumpTypeCountOnSave = false;
+		}
 	}
 
 	public void Prepare()

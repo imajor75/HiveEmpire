@@ -444,7 +444,7 @@ public class Serializer
 		return result;
 	}
 
-	public void WriteFile( string fileName, object source, bool intended, bool allowUnityTypes )
+	public void WriteFile( string fileName, object source, bool intended, bool allowUnityTypes, bool logTypeCount = false )
 	{
 		this.fileName = fileName;
 		this.allowUnityTypes = allowUnityTypes;
@@ -463,6 +463,7 @@ public class Serializer
 		}
 		writer.WriteEndArray();
 	#if UNITY_EDITOR
+		if ( logTypeCount )
 		{
 			Dictionary<Type, int> content = new ();
 			foreach ( var processedObject in objects )
@@ -487,9 +488,9 @@ public class Serializer
 		sw.Close();
 	}
 
-	static public void Write( string fileName, object source, bool intended = true, bool allowUnityTypes = false )
+	static public void Write( string fileName, object source, bool intended = true, bool allowUnityTypes = false, bool logTypeCount = false )
 	{
 		var serializer = new Serializer();
-		serializer.WriteFile( fileName, source, intended, allowUnityTypes );
+		serializer.WriteFile( fileName, source, intended, allowUnityTypes, logTypeCount );
 	}
 }
