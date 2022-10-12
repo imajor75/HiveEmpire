@@ -152,7 +152,14 @@
       "productionTimeMax": 4000,
       "flatteningNeeded": true,
       "outputType": "cheese",
-      "baseMaterials": "milk"
+      "baseMaterials": 
+      {
+        "include":
+        [
+          "milk",
+          { "options": [ "salt", "charcoal", "apple" ] }
+        ]
+      }
     },
     {
       "type": "confectionery",
