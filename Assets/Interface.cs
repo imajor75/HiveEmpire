@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -1527,11 +1527,14 @@ public class Interface : HiveObject
 		{
 			var scroll = new GameObject().AddComponent<ScrollRect>();
 			scroll.name = "Scroll view";
-			var mask = scroll.gameObject.AddComponent<RectMask2D>();
 			scroll.transform.SetParent( transform );
 			scroll.vertical = vertical;
 			scroll.horizontal = horizontal;
 			scroll.scrollSensitivity = 50;
+
+			var view = new GameObject( "Scroll view mask" ).AddComponent<RectMask2D>();
+			view.transform.SetParent( scroll.transform, false );
+			view.rectTransform.pivot = Vector2.zero;
 
 			if ( horizontal )
 			{
@@ -1567,14 +1570,13 @@ public class Interface : HiveObject
 
 			var content = new GameObject().AddComponent<Image>();
 			content.name = "Content";
-			content.transform.SetParent( scroll.transform, false );
+			content.transform.SetParent( view.transform, false );
 			scroll.content = content.rectTransform;
 			content.enabled = false;
 			content.rectTransform.anchorMin = Vector2.zero;
 			content.rectTransform.anchorMax = new Vector2( 1, 0 );
-			content.rectTransform.offsetMax = new Vector2( vertical ? (int)( uiScale * -20 ) : 0, horizontal ? (int)( uiScale * -20 ) : 0 );
-			content.rectTransform.pivot = new Vector2( 0, 1 );
-			scroll.viewport = content.rectTransform;
+			content.rectTransform.offsetMax = Vector2.zero;
+			scroll.viewport = view.rectTransform;
 
 			scroll.Clear();	// Just to create the background image
 
@@ -7636,7 +7638,8 @@ if ( cart )
 			widget.Link( scrollRect.content ).PinCenter( 0, row - (int)( iconSize * 0.6f ), 150, (int)( iconSize * 1.2f ), 0.5f, 1 );
 			itemCount++;
 			row -= (int)( iconSize * 1.2f );
-			SetSize( 200, Math.Min( -row + borderWidth * 2, (int)( Screen.height / 2 ) ) );
+			SetSize( 220, Math.Min( -row + borderWidth * 2, (int)( Screen.height / 2 ) ) );
+			scrollRect.SetContentSize( -1, -row );
 		}
 	}
 
@@ -8499,6 +8502,32 @@ public static class UIHelpers
 	public static Type Random<Type>( this Type[] array )
 	{
 		return array[new System.Random().Next( array.Length )];
+	}
+
+	public class RectTransformDebugger : MonoBehaviour
+	{
+		public Vector2 anchorMin, anchorMax, offsetMin, offsetMax;
+		public bool write;
+
+		void Update()
+		{
+			RectTransform t = gameObject.GetComponent<RectTransform>();
+			if ( write )
+			{
+				t.anchorMin = anchorMin;
+				t.anchorMax = anchorMax;
+				t.offsetMin = offsetMin;
+				t.offsetMax = offsetMax;
+
+			}
+			else
+			{
+				anchorMin = t.anchorMin;
+				anchorMax = t.anchorMax;
+				offsetMin = t.offsetMin;
+				offsetMax = t.offsetMax;
+			}
+		}
 	}
 }
 
