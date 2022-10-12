@@ -531,7 +531,6 @@ public class Team : HiveObject
 		const int flagDirection = 1;
 		Node best = null;
 		int closestEnemy = 0;
-		float heightdDif = float.MaxValue;
 		var area = Building.GetFoundation( true, flagDirection );
 		List<Ground.Offset> extendedArea = new ();
 		foreach ( var p in area )
@@ -557,22 +556,12 @@ public class Team : HiveObject
 			if ( invalidNode || node.Neighbour( flagDirection ).block )
 				continue;
 
-			float min, max;
-			min = max = node.height;
+			float heightChange = 0;
 			foreach ( var e in extendedArea )
-			{
-				var localNode = node + e;
-				if ( !localNode.CheckType( Node.Type.land ) )
-				{
-					max = float.MaxValue;
-					break;
-				}
-				float height = localNode.height;
-				if ( height < min )
-					min = height;
-				if ( height > max )
-					max = height;
-			}
+				heightChange += node.Add( e ).height - node.height;
+			if ( Math.Abs( heightChange ) > 5 )
+				continue;
+
 			int localClosestEnemy = int.MaxValue;
 			foreach ( var team in game.teams )
 			{
@@ -584,7 +573,6 @@ public class Team : HiveObject
 			if ( localClosestEnemy > closestEnemy )
 			{
 				best = node;
-				heightdDif = max - min;
 				closestEnemy = localClosestEnemy;
 			}
 		}
