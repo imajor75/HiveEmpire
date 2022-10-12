@@ -20,8 +20,8 @@ public class HiveCommon : MonoBehaviour
 
 	public static void Log( string text, bool important = false )
 	{
-		root.logFile.Write( text + "\n" );
-		root.logFile.Flush();
+		root.logFile?.Write( text + "\n" );
+		root.logFile?.Flush();
 		if ( important )
 			print( text );
 	}
