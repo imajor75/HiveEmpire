@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +8,7 @@ using System.Linq;
 using System.Globalization;
 using UnityEditor;
 using System.Text.RegularExpressions;
+using System.Reflection;
 #pragma warning disable 0618
 
 public class World : HiveObject
@@ -1666,22 +1667,11 @@ public class Game : World
 
 		public Challenge Setup( Challenge prototype )
 		{
-			title = prototype.title;
-			description = prototype.description;
-			reachedLevel = prototype.reachedLevel;
-			maintain = prototype.maintain;
-			worldGenerationSettings= prototype.worldGenerationSettings;
-			productivityGoals = prototype.productivityGoals;
-			productivityGoalsByBuildingCount = prototype.productivityGoalsByBuildingCount;
-			mainBuildingContent = prototype.mainBuildingContent;
-			buildingMax = prototype.buildingMax;
-			timeLimit = prototype.timeLimit;
-			playerCount = prototype.playerCount;
-			simpletonCount = prototype.simpletonCount;
-			simpletonCountToEliminate = prototype.simpletonCountToEliminate;
-			allowTimeLeftLevels = prototype.allowTimeLeftLevels;
-			randomizeIslands = prototype.randomizeIslands;
-			craftAllSoldiers = prototype.craftAllSoldiers;
+			foreach ( var member in GetType().GetMembers() )
+			{
+				if ( member is FieldInfo field && field.DeclaringType == GetType() )
+					field.SetValue( this, field.GetValue( prototype ) );
+			}
 
 			// HiveObject.Setup() would be nice to call, but at the moment I don't want to risk it
 			return this;
