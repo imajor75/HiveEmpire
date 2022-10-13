@@ -57,7 +57,6 @@ public class Unit : HiveObject
 	public GameObject mapObject;
 	Material mapMaterial;
 	GameObject arrowObject;
-	SpriteRenderer itemOnMap;
 	static public Sprite arrowSprite;
 	Material shirtMaterial;
 	public GameObject body;
@@ -913,6 +912,7 @@ public class Unit : HiveObject
 			{
 				reparented[0] = true;
 				items[0].transform.SetParent( attachAt?.transform, false );
+				items[0].SetActive( true );
 				attachAt?.SetActive( true );
 			}
 
@@ -1496,16 +1496,6 @@ public class Unit : HiveObject
 		sr.color = new Color( 1, 0.75f, 0.15f );
 		arrowObject.transform.localScale = Vector3.one * 0.4f;
 
-		itemOnMap = new GameObject().AddComponent<SpriteRenderer>();
-		itemOnMap.name = "Item on map";
-		itemOnMap.transform.SetParent( transform, false );
-		itemOnMap.transform.localScale = Vector3.one * 0.15f;
-		itemOnMap.transform.localPosition = Vector3.up * 3;
-		itemOnMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
-		itemOnMap.gameObject.layer = World.layerIndexMapOnly;
-		itemOnMap.material = Instantiate( itemOnMap.material );
-		itemOnMap.material.renderQueue = 4003;
-
 		Color = currentColor;
 
 		if ( itemsInHands[1] )
@@ -1590,7 +1580,7 @@ public class Unit : HiveObject
 			FindTask();
 	}
 
-	new void Update()
+	new public void Update()
 	{
 		UpdateBody();
 		UpdateOnMap();
@@ -1616,22 +1606,12 @@ public class Unit : HiveObject
 			}
 		}
 
-		{
-			var t = Item.Type.unknown;
-			if ( itemsInHands[0] )
-				t = itemsInHands[0].type;
-			var c = this as Stock.Cart;
-			if ( c && c.itemQuantity > 0 )
-				t = c.itemType;
-			if ( t != Item.Type.unknown )
-			{
-				itemOnMap.sprite = Item.sprites[(int)t];
-				itemOnMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
-				itemOnMap.enabled = true;
-			}
-			else
-				itemOnMap.enabled = false;
-		}
+		if ( itemsInHands[0] )
+			itemsInHands[0].mapPosition = transform.position;
+		if ( itemsInHands[1] )
+			itemsInHands[1].mapPosition = transform.position;
+			
+
 	}
 
 	public override void Remove()

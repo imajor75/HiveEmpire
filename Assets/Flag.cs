@@ -374,9 +374,9 @@ public class Flag : HiveObject
 		framePos.y = ground.GetHeightAt( framePos.x, framePos.z ) - t.localScale.y * item.bottomHeight + Constants.Flag.tilesHeight;
 		assert.IsTrue( framePos.y < 10000 && framePos.y > -10000 );
 		t.position = framePos;
-		
 		t.LookAt( transform );
 		t.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)item.type], 0, 0 );
+		item.mapPosition = t.position;
 	}
 
 	public override void OnClicked( Interface.MouseButton button, bool show = false )

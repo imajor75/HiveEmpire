@@ -354,6 +354,7 @@ public class Stock : Attackable
 		public const int frameCount = 8;
 		public Stock boss { get { return building as Stock; } }
 		readonly GameObject[] frames = new GameObject[frameCount];
+		public SpriteRenderer onMap;
 		new public static Cart Create()
 		{
 			return new GameObject().AddComponent<Cart>();
@@ -411,6 +412,13 @@ public class Stock : Attackable
 				frames[i] = World.FindChildRecursive( body.transform, $"frame{i}" )?.gameObject;
 				assert.IsNotNull( frames[i] );
 			}
+
+			onMap = new GameObject( "Cart content on map" ).AddComponent<SpriteRenderer>();
+			onMap.transform.SetParent( transform, false );
+			onMap.transform.localPosition = Vector3.up * 6;
+			onMap.transform.localRotation = Quaternion.Euler( 90, 0, 0 );
+			onMap.transform.localScale = Vector3.one * 0.3f;
+			onMap.material.renderQueue = 4003;
 
 			UpdateLook();
 		}
@@ -470,6 +478,10 @@ public class Stock : Attackable
 			}
 			if ( taskQueue.Count == 0 && walkTo == null )
 				SetActive( false );
+			if ( itemQuantity > 0 )
+				onMap.sprite = Item.sprites[(int)itemType];
+			else
+				onMap.sprite = null;
 		}
 
 		public override Node LeaveExclusivity()
@@ -498,6 +510,12 @@ public class Stock : Attackable
 				assert.AreEqual( boss, currentRoute.start );	// TODO Triggered, currentRoute.start was null, currentRoute.end is also null, but destination is null as well. It seems currentRounte is some illegal object
 				assert.AreEqual( itemType, currentRoute.itemType );
 			}
+		}
+
+		new void Update()
+		{
+			onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+			base.Update();
 		}
 	}
 

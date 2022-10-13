@@ -63,6 +63,8 @@ public class Item : HiveObject
 	}
 
 	public GameObject body;
+	public SpriteRenderer onMap;
+	public Vector3 mapPosition { set { onMap.transform.position = value + Vector3.up * 6; } }
 
 	[JsonIgnore]
 	public bool debugCancelTrip;
@@ -207,12 +209,27 @@ public class Item : HiveObject
 		body = Instantiate( looks.GetMediaData( type ) );
 		body.layer = World.layerIndexItems;
 
+		onMap = new GameObject().AddComponent<SpriteRenderer>();
+		onMap.name = "Item on map";
+		onMap.transform.SetParent( transform, false );
+		onMap.transform.localPosition = Vector3.up * 6;
+		onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+		onMap.gameObject.layer = World.layerIndexMapOnly;
+		onMap.material.renderQueue = 4003;
+		onMap.sprite = sprites[(int)type];
+
 		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )
 			Constants.Item.bottomHeights[(int)type] = body.GetComponent<MeshRenderer>().bounds.min.y;
 		body.transform.SetParent( transform, false );
 		assert.IsNotNull( body );
 		name = type.ToString();
 		base.Start();
+	}
+
+	new void Update()
+	{
+		onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+		base.Update();
 	}
 
 	public override void GameLogicUpdate()
