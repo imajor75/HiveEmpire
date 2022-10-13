@@ -29,6 +29,7 @@ public class Workshop : Building
 	public bool outOfResourceReported;
 	public Resource dungPile;
 	public Game.Timer allowFreeStone = new ();
+	public Game.Timer suspendGathering = new ();
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
@@ -924,7 +925,7 @@ public class Workshop : Building
 			case Type.cornFarm:
 			{
 				var resourceType = type == Type.cornFarm ? Resource.Type.cornField : Resource.Type.wheatField;
-				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
+				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress && !suspendGathering.inProgress )
 				{
 					if ( CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange, false, currentStatus != Status.waitingForInput0 ) )
 						return;
@@ -940,13 +941,13 @@ public class Workshop : Building
 						PlantAt( place, resourceType );
 						return;
 					}
-					tinkerer.ScheduleWait( Constants.Workshop.gathererSleepTimeAfterFail );
+					suspendGathering.Start( Constants.Workshop.gathererSleepTimeAfterFail );
 				}
 				break;
 			}
 			case Type.forester:
 			{
-				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress )
+				if ( tinkerer.IsIdle( true ) && !suspendGathering.inProgress && mode != Mode.sleeping && !resting.inProgress )
 				{
 					ChangeStatus( Status.waitingForResource );
 					foreach ( var offset in Ground.areas[productionConfiguration.gatheringRange] )
@@ -967,7 +968,7 @@ public class Workshop : Building
 						PlantAt( place, Resource.Type.tree );
 						return;
 					}
-					tinkerer.ScheduleWait( Constants.Workshop.gathererSleepTimeAfterFail );
+					suspendGathering.Start( Constants.Workshop.gathererSleepTimeAfterFail );
 				}
 				break;
 			}
@@ -975,8 +976,8 @@ public class Workshop : Building
 			{
 				if ( gatherer )
 				{
-					if ( tinkerer.IsIdle() && !CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange ) )
-						tinkerer.ScheduleWait( Constants.Workshop.gathererSleepTimeAfterFail );
+					if ( tinkerer.IsIdle() && !suspendGathering.inProgress && !CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange ) )
+						suspendGathering.Start( Constants.Workshop.gathererSleepTimeAfterFail );
 				}
 				else
 					ProcessInput();

@@ -2259,9 +2259,12 @@ public class Unit : HiveObject
 		}
 	}
 
-	public bool IsIdle( bool inBuilding = false )
+	public bool IsIdle( bool inBuilding = false, bool waitConsideredAsIdle = false )
 	{
-		if ( taskQueue.Count != 0 || walkTo != null )
+		int taskCount = taskQueue.Count;
+		if ( taskCount == 1 && waitConsideredAsIdle && taskQueue.First() is Unit.Wait )
+			taskCount = 0;
+		if ( taskCount != 0 || walkTo != null )
 			return false;
 		if ( !inBuilding )
 			return true;
