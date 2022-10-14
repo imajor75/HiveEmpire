@@ -178,6 +178,20 @@ public class Workshop : Building
 		always
 	}
 
+	public void SetMode( Mode mode )
+	{
+		if ( mode == Mode.sleeping && this.mode != Mode.sleeping )
+			CancelOrders();
+		this.mode = mode;
+	}
+
+	public void SetBufferEnabled( Buffer buffer, bool enabled )
+	{
+		if ( !enabled )
+			CancelOrders( buffer.itemType );
+		buffer.disabled = !enabled;
+	}
+
 	[System.Serializable]
 	public new class Configuration : Building.Configuration
 	{
@@ -893,7 +907,7 @@ public class Workshop : Building
 			int freeSpaceAtFlag = flag.freeSlots;
 			foreach ( Buffer b in buffers )
 			{
-				if ( b.disabled )
+				if ( b.disabled || mode == Mode.sleeping )
 					continue;
 				int missing = b.size-b.stored-b.onTheWay;
 				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;

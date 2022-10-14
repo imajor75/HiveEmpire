@@ -227,6 +227,16 @@ public class Stock : Attackable
 			}
 			throw new Exception();
 		}
+
+		public int ChangeChannelValue( Channel channel, int newValue )
+		{
+			var old = ChannelValue( channel );
+			ChannelValue( channel ) = newValue;
+			if ( channel == Channel.inputMax && old != 0 && newValue == 0 )
+				boss.CancelOrders( itemType );
+			boss.team.UpdateStockRoutes( itemType );
+			return old;
+		}
 	}
 
 	public enum Channel

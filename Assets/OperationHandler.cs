@@ -1190,7 +1190,7 @@ public class Operation
                 if ( workshop == null )
                     return null;
                 var prev = workshop.mode;
-                workshop.mode = workshopMode;
+                workshop.SetMode( workshopMode );
                 return Create().SetupAsChangeWorkshopRunningMode( workshop, prev );
             }
             case Type.moveRoad:
@@ -1208,11 +1208,12 @@ public class Operation
             }
             case Type.stockAdjustment:
             {
-                var i = (building as Stock).itemData[(int)itemType];
-                var oldValue = i.ChannelValue( stockChannel );
-                i.ChannelValue( stockChannel ) = itemCount;
-				building.team.UpdateStockRoutes( itemType );
-                return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
+                if ( building is Stock stock )
+                {
+                    var oldValue = stock.itemData[(int)itemType].ChangeChannelValue( stockChannel, itemCount );
+                    return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
+                }
+                return null;
             }
             case Type.inputWeightChange:
             {
@@ -1259,7 +1260,7 @@ public class Operation
             case Type.changeBufferUsage:
             {
                 var workshop = building as Workshop;
-                workshop.buffers[bufferIndex].disabled = !useBuffer;
+                workshop.SetBufferEnabled( workshop.buffers[bufferIndex], useBuffer );
                 return Create().SetupAsChangeBufferUsage( workshop, workshop.buffers[bufferIndex], !useBuffer );
             }
             case Type.flattenFlag:

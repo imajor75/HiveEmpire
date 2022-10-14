@@ -707,6 +707,17 @@ abstract public class Building : HiveObject
 		construction.ItemArrived( item );
 	}
 
+	public void CancelOrders( Item.Type itemType = Item.Type.unknown )
+	{
+		List<Item> toCancel = new ();
+		foreach ( var item in itemsOnTheWay )
+			if ( itemType == Item.Type.unknown || itemType == item.type )
+				toCancel.Add( item );
+
+		foreach ( var item in toCancel )
+			item.CancelTrip();
+	}
+
 	public override void OnClicked( Interface.MouseButton button, bool show = false )
 	{
 		if ( button == Interface.MouseButton.right)
