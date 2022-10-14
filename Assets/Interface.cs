@@ -286,8 +286,12 @@ public class Interface : HiveObject
 		bored,
 		angry,
 		route,
-		input,
-		output
+		makeSource,
+		makeDestination,
+		cancelSource,
+		cancelDestination,
+		inputPotentials,
+		outputPotentials
 	}
 
 	public Interface()
@@ -449,8 +453,6 @@ public class Interface : HiveObject
 		"greenCheck", Icon.yes,
 		"redCross", Icon.no,
 		"arrow", Icon.rightArrow,
-		"leftArrow", Icon.input,
-		"rightArrow", Icon.output,
 		"brick", Icon.progress,
 		"mainIcon", Icon.crate,
 		"cross", Icon.exit };
@@ -3228,11 +3230,15 @@ public class Interface : HiveObject
 				i.additionalTooltip = tooltip;
 
 				if ( stock.itemData[j].cartInput > 0 )
-					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 0, 0.5f ).color = new Color( 1, 0.75f, 0.15f );
+				{
+					var k = Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.75f );
+					k.color = new Color( 1, 0.75f, 0.15f );
+					k.transform.rotation = Quaternion.Euler( 0, 0, 180 );
+				}
 
 				if ( stock.itemData[j].cartOutput > 0 )
 				{
-					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.5f ).color = new Color( 1, 0.75f, 0.15f );
+					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.25f ).color = new Color( 1, 0.75f, 0.15f );
 					offset += 10;
 				}
 				i.AddClickHandler( () => SelectItemType( t ) );
@@ -3241,8 +3247,17 @@ public class Interface : HiveObject
 				var controller = i.AddController();
 				controller.AddOption( Icon.yes, "Select this item type", () => SelectItemType( t ) );
 				controller.AddOption( Icon.route, "Show routes for this item type", () => ShowRoutesFor( t ) );
-				controller.AddOption( Icon.input, "Show input potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.request ) );
-				controller.AddOption( Icon.output, "Show output potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.offer ) );
+				controller.AddOption( Icon.inputPotentials, "Show input potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.request ) );
+				controller.AddOption( Icon.outputPotentials, "Show output potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.offer ) );
+
+				if ( stock.itemData[j].cartOutput < Constants.Stock.cartCapacity )
+					controller.AddOption( Icon.makeSource, "Make this stock a source for cart transport for this item type", () => StartCart( false, t, true ) );
+				else
+					controller.AddOption( Icon.cancelSource, "Stop this stock to be the source for cart transport for this item type", () => StartCart( false, t, false ) );
+				if ( stock.itemData[j].cartInput < 5 )
+					controller.AddOption( Icon.makeDestination, "Make this stock a destination for cart transport for this item type", () => StartCart( true, t, true ) );
+				else
+					controller.AddOption( Icon.cancelDestination, "Stop this stock to be the destination for cart transport for this item type", () => StartCart( true, t, false ) );
 #if DEBUG
 				controller.AddOption( Icon.exit, "Clear stock content", () => { data.content = 0; game.lastChecksum = 0; } );
 				controller.AddOption( Icon.plus, "Add one more", () => { data.content++; game.lastChecksum = 0; } );
@@ -3288,9 +3303,10 @@ public class Interface : HiveObject
 			SetTooltip( "If the stock has more items than this number, then the cart will distribute it to other stocks if needed", null, "LMB+drag left/right to change\nRMB to set a value which start the route" );
 			cartOutput.alignment = TextAnchor.MiddleCenter;
 			cartOutput.AddOutline().color = Color.white;
-			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 0, 0.7f );
+			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.75f );
 			selectedInput.color = new Color( 1, 0.75f, 0.15f );
-			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.7f );
+			selectedInput.transform.rotation = Quaternion.Euler( 0, 0, 180 );
+			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.25f );
 			selectedOutput.color = new Color( 1, 0.75f, 0.15f );
 
 			Image( Icon.reset ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).SetTooltip( "Reset all values to default" ).name = "Reset";
@@ -3406,24 +3422,30 @@ public class Interface : HiveObject
 			}
 		}
 
-		void StartCart( bool input )
+		void StartCart( bool input, Item.Type itemType = Item.Type.unknown, bool enable = true )
 		{
-			var t = stock.itemData[(int)selectedItemType];
+			if ( itemType == Item.Type.unknown ) 
+				itemType = selectedItemType;
+			var t = stock.itemData[(int)itemType];
 			var l = (int)( Constants.Stock.cartCapacity * 1.5 );
 			oh.StartGroup( "Start a new cart route" );
 			if ( input )
 			{
-				if ( t.cartInput < 5 )
-					oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.cartInput, 5, false );
+				if ( enable )
+					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartInput, 5, false );
+				else
+					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartInput, 0, false );
 			}
 			else
 			{
-				if ( t.cartOutput < Constants.Stock.cartCapacity )
-					oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
+				if ( enable )
+					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
+				else
+					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartOutput, 0, false );
 			}
 
 			if ( t.inputMax < l )
-				oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l, false );
+				oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMax, l, false );
 		}
 	}
 
