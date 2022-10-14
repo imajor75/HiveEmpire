@@ -12,7 +12,7 @@ public class Workshop : Building
 	public int output;
 	public Ground.Area outputArea = new ();
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
-	public float progress;
+	public float craftingProgress;
 	public bool working;
 	new public Type type = Type.unknown;
 	public List<Buffer> buffers = new ();
@@ -58,7 +58,7 @@ public class Workshop : Building
 		get
 		{
 			int checksum = base.checksum;
-			return checksum + (int)( progress * 1000 );
+			return checksum + (int)( craftingProgress * 1000 );
 		}
 	}
 
@@ -842,7 +842,7 @@ public class Workshop : Building
 		SetWorking( false );
 	}
 
-	public bool gatherer { get { return productionConfiguration.gatheredResource != Resource.Type.unknown; } }
+	public bool gatherer { get { return productionConfiguration != null && productionConfiguration.gatheredResource != Resource.Type.unknown; } }
 
 	public void ChangeStatus( Status status )
 	{
@@ -1066,16 +1066,13 @@ public class Workshop : Building
 				return;
 			}
 			if ( UseInput() )
-			{
 				SetWorking( true );
-				progress = 0;
-			}
 		}
 		if ( working )
 		{
-			progress += 1f / productionConfiguration.productionTime;
-			World.CRC( (int)( 10000 * progress ), OperationHandler.Event.CodeLocation.workshopWorkProgress );
-			if ( progress > 1 )
+			craftingProgress += 1f / productionConfiguration.productionTime;
+			World.CRC( (int)( 10000 * craftingProgress ), OperationHandler.Event.CodeLocation.workshopWorkProgress );
+			if ( craftingProgress > 1 )
 			{
 				output += productionConfiguration.outputStackSize;
 				SetWorking( false );
@@ -1144,16 +1141,21 @@ public class Workshop : Building
 	/// 
 	/// </summary>
 	/// <returns>A number between zero and one, zero means the work just started, one means it is ready.</returns>
-	public float GetProgress()
+	public float progress
 	{
-		if ( !gatherer )
-			return progress;
+		get
+		{
+			if ( !gatherer || tinkerer == null )
+				return craftingProgress;
 
-		var getResourceTask = tinkerer.FindTaskInQueue<GetResource>();
-		if ( getResourceTask == null )
-			return 0;
+			var getResourceTask = tinkerer.FindTaskInQueue<GetResource>();
+			if ( getResourceTask == null )
+				return 0;
 
-		return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime + 1;
+			return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime + 1;
+		}
+		[Obsolete( "Compatibility with old files", true )]
+		set {}
 	}
 
 	bool CollectResourceFromNode( Resource resource )
@@ -1212,6 +1214,7 @@ public class Workshop : Building
 		if ( this.working == working )
 			return;
 
+		craftingProgress = 0;
 		this.working = working;
 		if ( working && soundSource )
 		{
@@ -1273,7 +1276,6 @@ public class Workshop : Building
 			b.stored = 0;
 		output = 0;
 		SetWorking( false );
-		progress = 0;
 	}
 
 	public int relaxSpotCount 

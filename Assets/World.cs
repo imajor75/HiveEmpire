@@ -1719,7 +1719,7 @@ public class Game : World
 			if ( productivityGoalsByBuildingCount == null )
 				return;
 
-			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			for ( int i = 0; i < productivityGoalsByBuildingCount.Count; i++ )
 			{
 				if ( productivityGoalsByBuildingCount[i] <= 0 )
 					continue;

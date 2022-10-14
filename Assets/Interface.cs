@@ -2425,6 +2425,7 @@ public class Interface : HiveObject
 			bar.transform.localPosition = new Vector3( 0, 0.65f, 0.1f );
 			bar.transform.localScale = new Vector3( 1.5f, 1.5f, 1 );
 			barMaterial = bar.material;
+			barMaterial.color = Color.green;
 		}
 
 		void SetupForStock( Stock stock )
@@ -2442,18 +2443,8 @@ public class Interface : HiveObject
 			if ( ( eye.cameraGrid.center.cullingMask & ( 1 << gameObject.layer ) ) == 0 )
 				return;
 			transform.rotation = Quaternion.Euler( -90, (float)( eye.direction / Math.PI * 180 ), 0 );
-			if ( barMaterial )
-			{
-				var workshop = building as Workshop;
-				float progress = workshop.CalculateProductivity() / workshop.productionConfiguration.productivity;
-				barMaterial.SetFloat( progressShaderID, progress );
-				Color color;
-				if ( progress < 0.5f )
-					color = Color.Lerp( new Color( 1, 0.1f, 0 ), new Color( 1, 0.9f, 0.1f ), progress * 2 );
-				else
-					color = Color.Lerp( new Color( 1, 0.9f, 0.1f ), new Color( 0, 1, 0 ), progress * 2 - 1 );
-				barMaterial.SetColor( colorShaderID, color );
-			}
+			if ( barMaterial && building is Workshop workshop )
+				barMaterial.SetFloat( progressShaderID, workshop.progress );
 			if ( contentWatch.status )
 			{
 				if ( building is Stock stock )
@@ -2688,7 +2679,7 @@ public class Interface : HiveObject
 				{
 					if ( workshop.working )
 					{
-						progressBar.progress = workshop.GetProgress();
+						progressBar.progress = workshop.progress;
 						progressBar.color = Color.yellow;
 					}
 					else
