@@ -19,6 +19,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public bool decorationOnly;
 	public float cachedCost = 0;
 	public int targetHaulerCount;   // Zero means automatic
+	[JsonIgnore]	// to reduce file size
 	public List<CubicCurve>[] curves = new List<CubicCurve>[3];
 	public Watch watchStartFlag = new (), watchEndFlag = new ();
 	public Node referenceLocation;
@@ -409,6 +410,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			block -= 1;
 			fraction = 1;
 		}
+		if ( curves[0] == null )
+			CreateCurves();
 		return new Vector3(
 			curves[0][block].PositionAt( fraction ),
 			curves[1][block].PositionAt( fraction ),
@@ -422,6 +425,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			block -= 1;
 			fraction = 1;
 		}
+		if ( curves[0] == null )
+			CreateCurves();
 		return new Vector3(
 			curves[0][block].DirectionAt( fraction ),
 			curves[1][block].DirectionAt( fraction ),
