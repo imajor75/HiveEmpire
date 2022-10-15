@@ -390,6 +390,8 @@ abstract public class Building : HiveObject
 				return;
 
 			done = true;
+			Destroy( boss.mapIndicator?.gameObject );
+			boss.mapIndicator = null;
 			builder.ScheduleWalkToNeighbour( boss.flag.node );
 			builder.type = Unit.Type.unemployed;
 			builder.RegisterAsReturning();
@@ -636,8 +638,6 @@ abstract public class Building : HiveObject
 			}
 		}
 
-		mapIndicator = Interface.BuildingMapWidget.Create( this );
-
 		assert.IsNull( exit, "Building already has an exit road" );
 		exit = Road.Create();
 		exit.SetupAsBuildingExit( this, blueprintOnly );
@@ -656,6 +656,9 @@ abstract public class Building : HiveObject
 	{
 		if ( destroyed )
 			return;
+
+		if ( mapIndicator == null )
+			mapIndicator = Interface.BuildingMapWidget.Create( this );
 			
 		UpdateLook();
 		base.Update();

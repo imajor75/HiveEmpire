@@ -54,7 +54,6 @@ Shader "Unlit/Sprite"
             fixed4 frag (v2f i) : SV_Target
             {
                 // sample the texture
-                i.uv.y = 1-i.uv.y;
                 fixed4 col = tex2D(_MainTex, i.uv);
                 clip( _Progress - i.uv.x );
                 // apply fog

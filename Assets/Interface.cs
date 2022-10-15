@@ -2290,7 +2290,7 @@ public class Interface : HiveObject
 	{
 		public Building building;
 		public Watch contentWatch = new ();
-		public Sprite utilization;
+		public Sprite progress;
 		public Material barMaterial, bgMaterial;
 		static int progressShaderID, colorShaderID;
 		static Shader spriteShader;
@@ -2343,12 +2343,18 @@ public class Interface : HiveObject
 			transform.SetParent( building.transform, false );
 			transform.localPosition = new Vector3( 0, 3, 0 );
 			transform.localScale = new Vector3( 0.7f, 0.5f, 1 );
-			if ( building is Workshop workshop )
-				SetupForWorkshop( workshop );
-			if ( building is Stock stock )
-				SetupForStock( stock );
-			if ( building is GuardHouse guardHouse )
-				SetupForGuardHouse( guardHouse );
+
+			if ( !building.construction.done )
+				SetupForConstruction( building.construction );
+			else
+			{
+				if ( building is Workshop workshop )
+					SetupForWorkshop( workshop );
+				if ( building is Stock stock )
+					SetupForStock( stock );
+				if ( building is GuardHouse guardHouse )
+					SetupForGuardHouse( guardHouse );
+			}
 				
 			World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
 		}
@@ -2359,6 +2365,7 @@ public class Interface : HiveObject
 			renderer.sprite = sprite;
 			renderer.transform.SetParent( transform, false );
 			renderer.material = new Material( spriteShader );
+			renderer.material.SetFloat( progressShaderID, 2 );
 			renderer.material.renderQueue = 4004;
 			return renderer;
 		}
@@ -2372,7 +2379,7 @@ public class Interface : HiveObject
 			if ( workshop.productionConfiguration.outputType < Item.Type.total && workshop.productionConfiguration.outputType >= 0 )
 			{
 				var output = NewSprite( workshop.productionConfiguration.outputType, "Output icon" );
-				output.transform.localPosition = new Vector3( 0.6f, -0.4f, 0.1f );
+				output.transform.localPosition = new Vector3( 0.6f, 0.4f, -0.1f );
 				output.transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
 			}
 
@@ -2386,28 +2393,28 @@ public class Interface : HiveObject
 			{
 				case 1:
 				{
-					inputs[0].transform.localPosition = new Vector3( -0.6f, -0.4f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.6f, 0.4f, -0.1f );
 					break;
 				}
 				case 2:
 				{
-					inputs[0].transform.localPosition = new Vector3( -0.6f, -0.7f, 0.1f );
-					inputs[1].transform.localPosition = new Vector3( -0.6f, -0.1f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.6f, 0.7f, -0.1f );
+					inputs[1].transform.localPosition = new Vector3( -0.6f, 0.1f, -0.1f );
 					break;
 				}
 				case 3:
 				{
-					inputs[0].transform.localPosition = new Vector3( -0.9f, -0.7f, 0.1f );
-					inputs[1].transform.localPosition = new Vector3( -0.9f, -0.1f, 0.1f );
-					inputs[2].transform.localPosition = new Vector3( -0.3f, -0.7f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.9f, 0.7f, -0.1f );
+					inputs[1].transform.localPosition = new Vector3( -0.9f, 0.1f, -0.1f );
+					inputs[2].transform.localPosition = new Vector3( -0.3f, 0.7f, -0.1f );
 					break;
 				}
 				case 4:
 				{
-					inputs[0].transform.localPosition = new Vector3( -0.9f, -0.7f, 0.1f );
-					inputs[1].transform.localPosition = new Vector3( -0.9f, -0.1f, 0.1f );
-					inputs[2].transform.localPosition = new Vector3( -0.3f, -0.7f, 0.1f );
-					inputs[3].transform.localPosition = new Vector3( -0.3f, -0.1f, 0.1f );
+					inputs[0].transform.localPosition = new Vector3( -0.9f, 0.7f, -0.1f );
+					inputs[1].transform.localPosition = new Vector3( -0.9f, 0.1f, -0.1f );
+					inputs[2].transform.localPosition = new Vector3( -0.3f, 0.7f, -0.1f );
+					inputs[3].transform.localPosition = new Vector3( -0.3f, 0.1f, -0.1f );
 					break;
 				}
 			}
@@ -2420,11 +2427,11 @@ public class Interface : HiveObject
 			}
 
 			var arrow = NewSprite( Icon.rightArrow, "Arrow" );
-			arrow.transform.localPosition = new Vector3( 0, -0.4f, 0.1f );
+			arrow.transform.localPosition = new Vector3( 0, 0.4f, -0.1f );
 			arrow.transform.localScale = new Vector3( 0.4f, 0.45f, 1 );
 
-			var bar = NewSprite( Icon.bar, "Utilization" );
-			bar.transform.localPosition = new Vector3( 0, 0.65f, 0.1f );
+			var bar = NewSprite( Icon.bar, "Progress" );
+			bar.transform.localPosition = new Vector3( 0, -0.65f, -0.1f );
 			bar.transform.localScale = new Vector3( 1.5f, 1.5f, 1 );
 			barMaterial = bar.material;
 			barMaterial.color = Color.green;
@@ -2440,13 +2447,33 @@ public class Interface : HiveObject
 			bgMaterial.SetColor( "_Color", new Color( 1, 0.2f, 0.2f ) );
 		}
 
+		void SetupForConstruction( Building.Construction construction )
+		{
+			bgMaterial.SetColor( "_Color", Color.yellow.Dark() );
+
+			var hammer = NewSprite( Icon.hammer, "Hammer" );
+			hammer.transform.localPosition = new Vector3( 0, 0, -0.2f );
+			hammer.transform.localScale = Vector3.one * 0.7f;
+
+			var bar = NewSprite( Icon.bar, "Construction progress" );
+			bar.transform.localPosition = new Vector3( 0, -0.65f, -0.1f );
+			bar.transform.localScale = new Vector3( 1.5f, 1.5f, 1 );
+			barMaterial = bar.material;
+			barMaterial.color = Color.black;
+		}
+
 		void Update()
 		{
 			if ( ( eye.cameraGrid.center.cullingMask & ( 1 << gameObject.layer ) ) == 0 )
 				return;
-			transform.rotation = Quaternion.Euler( -90, (float)( eye.direction / Math.PI * 180 ), 0 );
-			if ( barMaterial && building is Workshop workshop )
-				barMaterial.SetFloat( progressShaderID, workshop.progress );
+			transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
+			if ( barMaterial )
+			{
+				if ( !building.construction.done )
+					barMaterial.SetFloat( progressShaderID, building.construction.progress );
+				else if ( building is Workshop workshop )
+					barMaterial.SetFloat( progressShaderID, workshop.progress );
+			}
 			if ( contentWatch.status )
 			{
 				if ( building is Stock stock )
@@ -2461,7 +2488,7 @@ public class Interface : HiveObject
 							continue;
 
 						var t = NewSprite( (Item.Type)i, $"Item {(Item.Type)i}" );
-						t.transform.localPosition = new Vector3( -0.8f + 0.4f * (slot % 5), -0.7f + 0.5f * (slot / 5), 0.1f );
+						t.transform.localPosition = new Vector3( -0.8f + 0.4f * (slot % 5), 0.7f - 0.5f * (slot / 5), -0.1f );
 						t.transform.localScale = new Vector3( 0.25f, 0.28f, 1 );
 						slot++;
 					}
@@ -2476,7 +2503,7 @@ public class Interface : HiveObject
 					for ( int i = 0; i < gh.soldiers.Count; i++ )
 					{
 						var t = NewSprite( Item.Type.soldier, "Soldier" );
-						t.transform.localPosition = new Vector3( -0.8f + 0.4f * (i % 5), -0.7f + 0.5f * (i / 5), 0.1f );
+						t.transform.localPosition = new Vector3( -0.8f + 0.4f * (i % 5), 0.7f - 0.5f * (i / 5), -0.1f );
 						t.transform.localScale = new Vector3( 0.25f, 0.28f, 1 );
 					}
 					World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
