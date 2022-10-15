@@ -504,8 +504,11 @@ public class World : HiveObject
 		this.fileName = fileName;
 		if ( name == null || name == "" )
 			name = "Incredible";
-		if ( lastChecksum != 0 )
-			Assert.global.AreEqual( checksum, lastChecksum, "Checksum mismatch in world" );
+		if ( lastChecksum != 0 && checksum != lastChecksum )
+		{
+			Log( $"Checksum mismatch in world {name} after load (calculated: {checksum}, stored: {lastChecksum})" );
+			lastChecksum = 0;
+		}
 
 		UpdateWorkshopConfigurations();
 
@@ -660,6 +663,7 @@ public class World : HiveObject
 					foreach ( var b in s.buffers )
 						if ( b.stored > b.size )
 							b.stored = b.size;
+					s.configuration = Workshop.GetConfiguration( this, s.type );
 					if ( !s.team.workshops.Contains( s ) && !s.destroyed )
 					{
 						s.team.workshops.Add( s );
