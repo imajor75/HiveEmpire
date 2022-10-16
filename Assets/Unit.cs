@@ -267,7 +267,7 @@ public class Unit : HiveObject
 
 	public class DoAct : Task
 	{
-		[JsonIgnore]
+		[JsonIgnore]	// This deference is not stored in the file, because acts are existing outside of the world. Instead the name of the act is serialized with the actName property
 		public Act act;
 		public Game.Timer timer = new (), timeSinceStarted = new ();
 		public bool started = false;

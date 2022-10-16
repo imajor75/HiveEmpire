@@ -92,8 +92,6 @@ public class Serializer
 		string name = (string)reader.Value;
 		if ( name[0] == '$' )
 		{
-			if ( name != "$id" )
-				Assert.global.IsNull( owner, $"Object {owner} already got an instance before ref attributes in file {fileName}" );
 			reader.Read();
 			int index = 0;
 			switch ( name )
@@ -114,6 +112,7 @@ public class Serializer
 					if ( reader.Value is string str )
 						index = int.Parse( str );
 					Assert.global.IsTrue( index >= 0 && index < objects.Count, $"Invalid ID {index} (max: {objects.Count}) referenced in file {fileName}" );
+					Assert.global.IsTrue( owner == null || owner == objects[index], $"New instance of object has unexpected reference ID {index} in {fileName}" );
 					owner = objects[index];
 					break;
 				}
@@ -304,6 +303,8 @@ public class Serializer
 			{
 				writer.WritePropertyName( "$create" );
 				writer.WriteValue( value.GetType().FullName );
+				writer.WritePropertyName( "$ref" );	// Reference index is only written to the file for debug purposes, it is not needed
+				writer.WriteValue( objects.Count );
 				objectIndices[value] = objects.Count;
 				objects.Add( value );
 			}
