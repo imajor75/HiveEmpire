@@ -7646,9 +7646,11 @@ if ( cart )
 		public int row;
 		public ScrollRect scrollRect;
 
-		public static Menu Create( string title = null )
+		public static Menu Create( string title = null, bool canBeClosed = true )
 		{
 			var newMenu = new GameObject( "Menu" ).AddComponent<Menu>();
+			newMenu.escCloses = canBeClosed;
+			newMenu.noCloseButton = !canBeClosed;
 			newMenu.Open( title );
 			return newMenu;
 		}
@@ -7739,17 +7741,18 @@ if ( cart )
 
 	public Menu OpenMainMenu( bool initial = false )
 	{
-		var menu = Menu.Create();
-		menu.AddItem( "Continue", () => { if ( initial ) eye.RestoreOldPosition(); menu.Close(); } );
+		bool demoMode = game.fileName.Contains( "demolevel" );
+		var menu = Menu.Create( canBeClosed:!demoMode );
+		if ( !demoMode )
+			menu.AddItem( "Continue", () => { if ( initial ) eye.RestoreOldPosition(); menu.Close(); } );
 		menu.AddItem( "New Game", () => { menu.Close(); OpenNewGameMenu(); } );
 		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
-		if ( !initial )
+		if ( !initial && !demoMode )
 			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.nextSaveFileName, true ); } );
 		menu.AddItem( "Replay", () => { menu.Close(); OpenReplay(); } );
 		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );
 		menu.AddItem( "Options", () => OpenOptionsMenu() );
 		menu.AddItem( "Exit", Application.Quit );
-		menu.escCloses = !initial;
 		return menu;
 	}
 
