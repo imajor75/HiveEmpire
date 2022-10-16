@@ -492,6 +492,7 @@ public class Flag : HiveObject
 				usedSlots++;
 			}
 		}
+		assert.AreEqual( itemsStored, freeSlotsWatch.source, $"FreeSlotsWatch not correctly connected in {this}" );
 		assert.AreEqual( freeSlots, Constants.Flag.maxItems - usedSlots );
 		for ( int j = 0; j < Constants.Node.neighbourCount; j++ )
 			if ( roadsStartingHere[j] && roadsStartingHere[j].nodes[0] == node && chain )

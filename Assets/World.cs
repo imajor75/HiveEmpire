@@ -750,8 +750,11 @@ public class World : HiveObject
 			{
 				if ( f.flattening == null )
 					f.flattening = new ();
-				if ( !f.freeSlotsWatch.isAttached )
+				if ( f.freeSlotsWatch.source != f.itemsStored )
+				{
+					Log( $"Fixing freeSlotsWatch in flag" );
 					f.freeSlotsWatch.Attach( f.itemsStored );
+				}
 				if ( GetValue<Player>( f, "owner" ) )
 					f.team = GetValue<Player>( f, "owner" ).team;
 				if ( !f.team.flags.Contains( f ) && !f.destroyed )
