@@ -8422,7 +8422,7 @@ public static class UIHelpers
 		return scroll;
 	}
 
-	public static string TimeToString( int time, bool text = false, bool ignodeSeconds = false )
+	public static string TimeToString( int time, bool text = false, bool ignoreSeconds = false, char separator = ':' )
 	{
 		string result = "";
 		bool hasHours = false, hasDays = false;
@@ -8438,7 +8438,7 @@ public static class UIHelpers
 					result += " day and ";
 			}
 			else
-				result += ":";
+				result += separator;
 			hasDays = true;
 		}
 		int hours = time/Constants.World.normalSpeedPerSecond/60/60;
@@ -8453,7 +8453,7 @@ public static class UIHelpers
 					result += " hour and ";
 			}
 			else
-				result += ":";
+				result += separator;
 			hasHours = true;
 		}
 		var minutes = time/Constants.World.normalSpeedPerSecond/60;
@@ -8464,12 +8464,12 @@ public static class UIHelpers
 			if ( minutes % 60 > 1 )
 				result += "s";
 		}
-		if ( !hasDays &&!ignodeSeconds )
+		if ( !hasDays &&!ignoreSeconds )
 		{
 			if ( text )
 				result += " and ";
 			else
-				result += ":";
+				result += separator;
 			result += $"{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
 		}
 		return result;

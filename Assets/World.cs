@@ -60,7 +60,7 @@ public class World : HiveObject
 		game.operationHandler.currentCRCCode += code;
 	}
 
-	public string nextSaveFileName { get { return $"{name} ({saveIndex})"; } }
+	public string nextSaveFileName { get { return $"{name} {UIHelpers.TimeToString( time, ignoreSeconds:true, separator:'-' )} ({saveIndex})"; } }
 
 	[Obsolete( "Compatibility with old files", true )]
 	float lastAutoSave { set {} }
@@ -812,11 +812,16 @@ public class World : HiveObject
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
-		var match = Regex.Match( fileName, @".*/(.*) \(\d+\)\.json" );
+		var match = Regex.Match( fileName, @".*/(.*) [\d-]+ \(\d+\)\.json" );
 		if ( match.Success )
 			name = match.Groups.Last().Value;
-		if ( fileName.Contains( nextSaveFileName ) )
-			saveIndex++;
+		else
+		{
+			var freeMatch = Regex.Match( fileName, @".*/(.*)\.json" );
+			if ( freeMatch.Success )
+				name = freeMatch.Groups.Last().Value;
+		}
+		saveIndex++;
 		this.fileName = fileName;
 		if ( root.playerInCharge || manualSave )
 		{
