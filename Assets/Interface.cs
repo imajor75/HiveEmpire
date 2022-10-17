@@ -6015,7 +6015,8 @@ if ( cart )
 			layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
 			layers |= 1 << World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
-				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources);
+				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources) - (1 << World.layerIndexMapOnly);
+			
 			RaycastHit hit = new ();
 			foreach ( var camera in eye.cameraGrid.cameras )
 			{
