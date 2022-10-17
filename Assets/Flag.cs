@@ -80,6 +80,7 @@ public class Flag : HiveObject
 			this.crossing = crossing;
 			base.Setup( node.world );
 			team.flags.Add( this );
+			freeSlotsWatch.Attach( itemsStored );
 			if ( node.road && !blueprintOnly )
 			{
 				if ( node.road.ready )
@@ -94,7 +95,6 @@ public class Flag : HiveObject
 				requestFlattening = true;
 			if ( block == Resource.BlockHandling.remove )
 				Resource.RemoveFromGround( node );
-			freeSlotsWatch.Attach( itemsStored );
 			ground.SetDirty( node );	// Remove grass
 			return this;
 		}
