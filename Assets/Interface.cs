@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -8033,7 +8033,7 @@ if ( cart )
 		void Activate( Action action )
 		{
 			Destroy( group );
-			action.callback();
+			action?.callback();
 		}
 	}
 
