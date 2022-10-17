@@ -497,6 +497,8 @@ public class Workshop : Building
 				boss.animator?.SetBool( Unit.sowingID, false );
 				return true;
 			}
+			if ( boss.node != node )
+				node.suspendPlanting.Start( Constants.Workshop.keepAwayOnNoPath );
 			if ( boss.node != node || node.building || node.flag || node.road || !node.CheckType( Node.Type.land ) )
 			{
 				int id = 0;
@@ -952,7 +954,7 @@ public class Workshop : Building
 					foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
 					{
 						Node place = node.Add( o );
-						if ( place.block || !place.CheckType( Node.Type.grass ) )
+						if ( place.block || !place.CheckType( Node.Type.grass ) || place.suspendPlanting.inProgress )
 							continue;
 						PlantAt( place, resourceType );
 						return;
@@ -970,7 +972,7 @@ public class Workshop : Building
 					{
 						Node place = node.Add( offset );
 						{
-							if ( place.block || !place.CheckType( Node.Type.forest ) || place.fixedHeight )
+							if ( place.block || !place.CheckType( Node.Type.forest ) || place.fixedHeight || place.suspendPlanting.inProgress )
 								continue;
 							int blockedAdjacentNodes = 0;
 							foreach ( var j in Ground.areas[1] )
