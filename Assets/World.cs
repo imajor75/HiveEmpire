@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -823,6 +823,12 @@ public class World : HiveObject
 		foreach ( var hiveObject in hiveObjects )
 			if ( hiveObject )
 				hiveObject.world = this;
+
+		if ( ground.grass.blocks.Count == 0 )
+		{
+			Log( "Fixing grass", Severity.error );
+			ground.grass.Setup();
+		}
 
 		Interface.ValidateAll( true );
 		bool demoMode = fileName.Contains( "demolevel" );
