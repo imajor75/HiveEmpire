@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -656,6 +656,15 @@ public class World : HiveObject
 					o.dispenser = o.tinkererMate ?? o.tinkerer;
 				if ( o.construction.done )
 					o.construction.builder = null;
+				else
+				{
+					if ( o.construction?.hammering != null && o.construction.hammering.act == null )
+					{
+						o.construction.hammering.act = Unit.actLibrary.First();
+						Log( $"Fixing missing construction hammering act at {o.type} ({o.node.x}:{o.node.y})", Severity.error );
+					}
+
+				}
 				o.flagDirection = o.node.DirectionTo( o.flag.node );
 				if ( o is Workshop s )
 				{

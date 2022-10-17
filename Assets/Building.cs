@@ -465,8 +465,12 @@ abstract public class Building : HiveObject
 		{
 			if ( chain )
 				builder?.Validate( true );
-			if ( !done )
-				boss.assert.AreEqual( plankOnTheWay + stoneOnTheWay, boss.itemsOnTheWay.Count );
+			if ( done )
+				return;
+
+			boss.assert.AreEqual( plankOnTheWay + stoneOnTheWay, boss.itemsOnTheWay.Count );
+			if ( hammering != null )
+				boss.assert.IsNotNull( hammering.act );
 		}
 	}
 
