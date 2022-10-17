@@ -386,6 +386,7 @@ public static class Constants
         public const int gathererSleepTimeAfterFail = Constants.World.normalSpeedPerSecond * 6;
         public const int gathererHarvestTime = Constants.World.normalSpeedPerSecond * 6;
         public const int freeStoneTimePeriod = Constants.World.normalSpeedPerSecond * 60 * 10;
+        public const int keepAwayOnNoPath = Constants.World.normalSpeedPerSecond * 60 * 3;
     }
 
     public static class Simpleton

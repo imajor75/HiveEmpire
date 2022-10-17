@@ -424,7 +424,9 @@ public class Workshop : Building
 		{
 			if ( boss.node != resource.node && !resource.underGround )
 			{
+				// Probably no path to resource
 				Cancel();
+				resource.keepAway.Start( Constants.Workshop.keepAwayOnNoPath );
 				return finished;
 			}
 			if ( resource == null )
