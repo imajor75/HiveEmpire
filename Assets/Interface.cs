@@ -2474,7 +2474,7 @@ public class Interface : HiveObject
 				else if ( building is Workshop workshop )
 					barMaterial.SetFloat( progressShaderID, workshop.progress );
 			}
-			if ( contentWatch.status )
+			if ( contentWatch.status && building.construction.done )
 			{
 				if ( building is Stock stock )
 				{
