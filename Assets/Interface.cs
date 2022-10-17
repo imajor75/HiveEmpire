@@ -708,7 +708,7 @@ public class Interface : HiveObject
 
 	public void LoadReplay( string name )
 	{
-		Log( $"Loading replay {name}", true );
+		Log( $"Loading replay {name}", Severity.important );
 		var o = OperationHandler.LoadReplay( name );
 		ReplayLoader.Create( o );
 	}

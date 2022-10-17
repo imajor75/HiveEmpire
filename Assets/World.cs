@@ -361,7 +361,7 @@ public class World : HiveObject
 
 	public bool Join( string address, int port )
 	{
-		Log( $"Joining to server {address} port {port}", true );
+		Log( $"Joining to server {address} port {port}", Severity.important );
 		Clear();
 		Prepare();
 		return network.Join( address, port );
@@ -584,6 +584,16 @@ public class World : HiveObject
 					o.team.roads.Add( o );
 					Assert.global.Fail();
 				}
+				if ( o.watchStartFlag.source != o.ends[0].itemsStored )
+				{
+					o.watchStartFlag.Attach( o.ends[0].itemsStored );
+					Log( $"Fixing watchStartFlag in road at {o.nodes[0].x}:{o.nodes[0].y}", Severity.error );
+				}
+				if ( o.watchEndFlag.source != o.ends[1].itemsStored )
+				{
+					o.watchEndFlag.Attach( o.ends[1].itemsStored );
+					Log( $"Fixing watchEndFlag in road at {o.nodes[0].x}:{o.nodes[0].y}", Severity.error );
+				}
 			}
 		}
 
@@ -752,7 +762,7 @@ public class World : HiveObject
 					f.flattening = new ();
 				if ( f.freeSlotsWatch.source != f.itemsStored )
 				{
-					Log( $"Fixing freeSlotsWatch in flag" );
+					Log( $"Fixing freeSlotsWatch in flag at {f.node.x}:{f.node.y}", Severity.error );
 					f.freeSlotsWatch.Attach( f.itemsStored );
 				}
 				if ( GetValue<Player>( f, "owner" ) )
@@ -1448,7 +1458,7 @@ public class Game : World
 	{
 		controllingPlayer = root.mainPlayer;
 		Assert.global.IsFalse( gameAdvancingInProgress, "Trying to save while advancing world" );
-		Log( $"Saving game {fileName} (checksum: {checksum})", true );
+		Log( $"Saving game {fileName} (checksum: {checksum})", Severity.important );
 		if ( root.playerInCharge || manualSave )
 		{
 			if ( !compact )

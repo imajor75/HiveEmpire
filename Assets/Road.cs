@@ -1079,6 +1079,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			assert.AreEqual( nodes[1].flag, nodes[0].building.flag );
 			return;
 		}
+		assert.AreEqual( watchStartFlag.source, ends[0].itemsStored );
+		assert.AreEqual( watchEndFlag.source, ends[1].itemsStored );
 		assert.IsNotNull( ends[0] );
 		assert.IsNotNull( ends[1] );
 		assert.AreEqual( ends[0].node, nodes[0] );

@@ -18,12 +18,26 @@ public class HiveCommon : MonoBehaviour
 	public static Network network { get { return game.network; } }
 	public static Settings settings { get { return root.globalSettings; } }
 
-	public static void Log( string text, bool important = false )
+	public enum Severity
+	{
+		normal,
+		important,
+		warning,
+		error,
+		critical
+	}
+
+	public static void Log( string text, Severity severity = Severity.normal )
 	{
 		root.logFile?.Write( text + "\n" );
 		root.logFile?.Flush();
-		if ( important )
-			print( text );
+		switch ( severity )
+		{ 	
+			case Severity.important: print( text ); return;
+			case Severity.warning: Debug.LogWarning( text ); return;
+			case Severity.error: Debug.LogError( text ); return;
+			default: return;
+		}
 	}
 
 	public static void RemoveElements<Something>( List<Something> array ) where Something : HiveObject

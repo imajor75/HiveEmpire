@@ -146,7 +146,7 @@ public class Network : HiveCommon
 			byte error;
 			string message = $"{System.Diagnostics.Process.GetCurrentProcess().Id}${serverName}";
 			var buffer = Encoding.ASCII.GetBytes( message );
-			Log( $"Ready for connections at port {port}", true );
+			Log( $"Ready for connections at port {port}", Severity.important );
 			if ( !NetworkTransport.StartBroadcastDiscovery( host, broadcastPort, 33, 44, 55, buffer, buffer.Length, 1000, out error ) )
 				Log( $"Broadcasting on port {broadcastPort} failed to start (error code: {(NetworkError)error})" );
 			else
@@ -220,7 +220,7 @@ public class Network : HiveCommon
 		broadcastPort = Constants.Network.broadcastPort;
 		if ( broadcastPort != GetAvailablePort( broadcastPort ) )
 		{
-			Log( $"Network broadcast port {broadcastPort} is not free, cannot do LAN discovery", true );
+			Log( $"Network broadcast port {broadcastPort} is not free, cannot do LAN discovery", Severity.important );
 			return;
 		}
 
@@ -371,7 +371,7 @@ public class Network : HiveCommon
 					break;
 				
 					case State.client:
-					Log( $"Server disconnected, switching to server mode and waiting for incoming connections", true );
+					Log( $"Server disconnected, switching to server mode and waiting for incoming connections", Severity.important );
 					SetState( State.server );
 					break;
 				}
@@ -464,7 +464,7 @@ public class Network : HiveCommon
 				break;
 			}
 			default:
-			Log( $"Network event occured: {recData}", true );
+			Log( $"Network event occured: {recData}", Severity.warning );
 			break;
 		}
         return recData;
