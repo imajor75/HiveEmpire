@@ -656,15 +656,6 @@ public class World : HiveObject
 					o.dispenser = o.tinkererMate ?? o.tinkerer;
 				if ( o.construction.done )
 					o.construction.builder = null;
-				else
-				{
-					if ( o.construction?.hammering != null && o.construction.hammering.act == null )
-					{
-						o.construction.hammering.act = Unit.actLibrary.First();
-						Log( $"Fixing missing construction hammering act at {o.type} ({o.node.x}:{o.node.y})", Severity.error );
-					}
-
-				}
 				o.flagDirection = o.node.DirectionTo( o.flag.node );
 				if ( o is Workshop s )
 				{
@@ -750,6 +741,18 @@ public class World : HiveObject
 		}
 
 		{
+			var list = Resources.FindObjectsOfTypeAll<Unit.DoAct>();
+			foreach ( var d in list )
+			{
+				if ( d.act == null )
+				{
+					d.act = Unit.actLibrary.First();
+					Log( $"Working around missing act in DoAct (boss id: {d.boss.id})", Severity.error );
+				}
+			}
+		}
+
+		{
 			var list = Resources.FindObjectsOfTypeAll<Workshop.GetResource>();
 			foreach ( var o in list )
 			{
@@ -771,7 +774,7 @@ public class World : HiveObject
 					f.flattening = new ();
 				if ( f.freeSlotsWatch.source != f.itemsStored )
 				{
-					Log( $"Fixing freeSlotsWatch in flag at {f.node.x}:{f.node.y}", Severity.error );
+					Log( $"Fixing freeSlotsWatch in flag at {f.node.x}:{f.node.y} (ID: {f.id})", Severity.error );
 					f.freeSlotsWatch.Attach( f.itemsStored );
 				}
 				if ( GetValue<Player>( f, "owner" ) )
@@ -1321,7 +1324,7 @@ public class Game : World
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
 
 		if ( challenge.life.empty )
-			challenge.Begin( world );
+			challenge.Begin( this );
 
 		foreach ( var newHiveObject in newHiveObjects )
 		{
@@ -1726,7 +1729,7 @@ public class Game : World
 			base.Start();
 		}
 
-		public void Begin( World world )
+		public void Begin( Game world )
 		{
 			life.Start();
 			maintainBronze.Reset();
@@ -1743,15 +1746,19 @@ public class Game : World
 				worldGenerationSettings.reliefSettings.island = Interface.rnd.NextDouble() > 0.5;
 		}
 
-		public void AlignToWorld( World world )
+		public void AlignToWorld( Game world )
 		{
 			if ( productivityGoals == null )
 				productivityGoals = new ();
 			while ( productivityGoals.Count < (int)Item.Type.total )
 				productivityGoals.Add( -1 );
 
-			if ( craftAllSoldiers )
-				productivityGoals[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount + world.MaximumPossible( Item.Type.soldier );
+			if ( craftAllSoldiers && world.time == 0 )
+			{
+				while ( mainBuildingContent.Count < (int)Item.Type.total )
+					mainBuildingContent.Add( -1 );
+				mainBuildingContent[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount + world.MaximumPossible( Item.Type.soldier );
+			}
 				
 			if ( productivityGoalsByBuildingCount == null )
 				return;
