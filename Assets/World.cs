@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1459,7 +1459,7 @@ public class Game : World
 		if ( challenge?.productivityGoals != null )
 		{
 			while ( challenge.productivityGoals.Count < (int)Item.Type.total )
-				challenge.productivityGoals.Add( 0 );
+				challenge.productivityGoals.Add( -1 );
 		}
 		challenge?.AlignToWorld( this );
 
@@ -1748,11 +1748,6 @@ public class Game : World
 
 		public void AlignToWorld( Game world )
 		{
-			if ( productivityGoals == null )
-				productivityGoals = new ();
-			while ( productivityGoals.Count < (int)Item.Type.total )
-				productivityGoals.Add( -1 );
-
 			if ( craftAllSoldiers && world.time == 0 )
 			{
 				while ( mainBuildingContent.Count < (int)Item.Type.total )
@@ -1762,6 +1757,11 @@ public class Game : World
 				
 			if ( productivityGoalsByBuildingCount == null )
 				return;
+
+			if ( productivityGoals == null )
+				productivityGoals = new ();
+			while ( productivityGoals.Count < (int)Item.Type.total )
+				productivityGoals.Add( -1 );
 
 			for ( int i = 0; i < productivityGoalsByBuildingCount.Count; i++ )
 			{
