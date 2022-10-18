@@ -1788,14 +1788,14 @@ public class Game : World
 			if ( !team )
 				return;		// Right after load this happens sometimes
 
-			void CheckCondition( float current, float limit, bool allowLevels, string text = null, bool reversed = false )
+			void CheckCondition( float current, float limit, bool allowLevels, string text = null, bool reversed = false, bool integer = false )
 			{
 				if ( limit < 0 )
 					return;
 
 				conditionCount++;
 				if ( text != null )
-					conditionsText += String.Format( text, current.ToString( "n2" ), limit.ToString( "n2" ) );	// TODO don't display fractions when number is integer
+					conditionsText += String.Format( text, current.ToString( integer ? "n0" : "n2" ), limit.ToString( integer ? "n0" : "n2" ) );	// TODO don't display fractions when number is integer
 				if ( current < limit * 0.01f )
 				{
 					currentLevel = Goal.none;
@@ -1852,7 +1852,7 @@ public class Game : World
 						foreach ( var post in team.guardHouses )
 							stock += post.soldiers.Count;
 					}
-					CheckCondition( stock, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}" );
+					CheckCondition( stock, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}", integer:true );
 				}
 			}
 
@@ -1863,7 +1863,7 @@ public class Game : World
 					if ( buildingMax[i] == int.MaxValue )
 						continue;
 					string buildingName = i < (int)Building.Type.stock ? ((Workshop.Type)i).ToString() : ((Building.Type)i).ToString();
-					CheckCondition( team.buildingCounts[i], buildingMax[i], false, $"number of {buildingName}s {{0}}/{{1}}", true );
+					CheckCondition( team.buildingCounts[i], buildingMax[i], false, $"number of {buildingName}s {{0}}/{{1}}", true, integer:true );
 				}
 			}
 
@@ -1871,7 +1871,7 @@ public class Game : World
 				CheckCondition( life.age, timeLimit, allowTimeLeftLevels, null, true );
 
 			if ( simpletonCountToEliminate > 0 )
-				CheckCondition( game.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}" );
+				CheckCondition( game.defeatedSimpletonCount, simpletonCountToEliminate, false, $"Defeated computer players {{0}}/{{1}}", integer:true );
 
 			if ( conditionCount == 0 )
 				return;
