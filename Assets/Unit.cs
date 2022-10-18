@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -912,7 +912,7 @@ public class Unit : HiveObject
 			{
 				reparented[0] = true;
 				items[0].transform.SetParent( attachAt?.transform, false );
-				items[0].SetActive( true );
+				items[0].transform.localPosition = Vector3.zero;
 				attachAt?.SetActive( true );
 			}
 

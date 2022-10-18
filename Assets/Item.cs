@@ -186,6 +186,7 @@ public class Item : HiveObject
 		team = origin.team;
 		justCreated = true;
 		transform.SetParent( origin.world.itemsJustCreated.transform, false );
+		transform.localPosition = Vector3.down * 100;
 		watchRoadDelete.Attach( team.versionedRoadDelete );
 		watchBuildingDelete.Attach( team.versionedBuildingDelete );
 		this.type = type;

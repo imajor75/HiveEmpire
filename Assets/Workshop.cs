@@ -1209,7 +1209,6 @@ public class Workshop : Building
 			item.SetRawTarget( unit.building );
 			item.hauler = unit;
 			unit.SchedulePickupItem( item );
-			item.SetActive( false );
 		}
 		unit.ScheduleWalkToNode( unit.building.flag.node );
 		unit.ScheduleWalkToNeighbour( unit.building.node );
