@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -840,7 +840,7 @@ public class World : HiveObject
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
-		var match = Regex.Match( fileName, @".*/(.*) [\d-]+ \(\d+\)\.json" );
+		var match = Regex.Match( fileName, @".*/(.*) [\d-]+ \(\d+\)(?: manual| auto| exit)?\.json" );
 		if ( match.Success )
 			name = match.Groups.Last().Value;
 		else

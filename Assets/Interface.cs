@@ -356,7 +356,7 @@ public class Interface : HiveObject
 	public void OnApplicationQuit()
 	{
 		if ( settings.saveOnExit && !Assert.error )
-			game.Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + ".json", false );
+			game.Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + " exit.json", false );
 		game.Clear();
 		logFile.Close();
 	}
@@ -772,7 +772,7 @@ public class Interface : HiveObject
 	{
 		requestUpdate = false;
 		if ( settings.autoSave && Time.unscaledTime - lastSave > settings.autoSaveInterval )
-			Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + ".json", false );
+			Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + " auto.json", false );
 		if ( mainPlayer && messageButton )
 		{
 			if ( mainPlayer.messages.Count != 0 )
@@ -7749,7 +7749,7 @@ if ( cart )
 		menu.AddItem( "New Game", () => { menu.Close(); OpenNewGameMenu(); } );
 		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
 		if ( !initial && !demoMode )
-			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.nextSaveFileName, true ); } );
+			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.nextSaveFileName + " manual", true ); } );
 		menu.AddItem( "Replay", () => { menu.Close(); OpenReplay(); } );
 		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );
 		menu.AddItem( "Options", () => OpenOptionsMenu() );
