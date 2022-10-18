@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -703,6 +703,8 @@ public class Interface : HiveObject
 		delayedManualSave = manualSave;
 		delayedSaveValid = false;
 		lastSave = Time.unscaledTime;
+		if ( !manualSave )
+			viewport.inputHandler = viewport;
 		MessagePanel.Create( $"Saving {fileName}", autoclose:1 );
 	}
 
