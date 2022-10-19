@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -8573,6 +8573,39 @@ public static class UIHelpers
 				offsetMin = t.offsetMin;
 				offsetMax = t.offsetMax;
 			}
+		}
+	}
+
+	[CustomPropertyDrawer(typeof(Game.Timer))]
+	public class TimerDrawer : PropertyDrawer
+	{
+		// Draw the property inside the given rect
+		public override void OnGUI( Rect position, SerializedProperty property, GUIContent label )
+		{
+			var timer = property.boxedValue as Game.Timer;
+			// Using BeginProperty / EndProperty on the parent property means that
+			// prefab override logic works on the entire property.
+			EditorGUI.BeginProperty( position, label, property );
+
+			// Draw label
+			position = EditorGUI.PrefixLabel( position, GUIUtility.GetControlID( FocusType.Passive ), label );
+
+			// Don't make child fields be indented
+			var indent = EditorGUI.indentLevel;
+			EditorGUI.indentLevel = 0;
+
+			// Calculate rects
+			var labelRect = new Rect( position.x, position.y, 100, position.height );
+			var referenceRect = new Rect( position.x + 110, position.y, 100, position.height );
+
+			// Draw fields - pass GUIContent.none to each so they are drawn without labels
+			EditorGUI.LabelField( labelRect, ( timer.age < 0 ? "-" : "" ) + TimeToString( Math.Abs( timer.age ) ) );
+			EditorGUI.PropertyField( referenceRect, property.FindPropertyRelative( "reference" ), GUIContent.none );
+
+			// Set indent back to what it was
+			EditorGUI.indentLevel = indent;
+
+			EditorGUI.EndProperty();
 		}
 	}
 }
