@@ -24,6 +24,7 @@ public class Flag : HiveObject
 	static GameObject baseTemplate;
 	GameObject tiles;
 	GameObject pole;
+	public SpriteRenderer onMap;
 
 	public int roadsStartingHereCount
 	{
@@ -165,6 +166,16 @@ public class Flag : HiveObject
 			if ( items[i] != null )
 				items[i].transform.SetParent( frames[i].transform, false );
 		}
+
+		onMap = new GameObject().AddComponent<SpriteRenderer>();
+		onMap.name = "Flag on map";
+		onMap.transform.SetParent( transform, false );
+		onMap.transform.localPosition = Vector3.up * 3;
+		onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+		onMap.transform.localScale = Vector3.one * 0.3f;
+		onMap.gameObject.layer = World.layerIndexMapOnly;
+		onMap.material.renderQueue = 4003;
+		onMap.sprite = Resources.Load<Sprite>( "icons/ring" );
 	}
 
 	public override void GameLogicUpdate()
