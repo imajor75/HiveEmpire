@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1580,7 +1580,7 @@ public class Game : World
 	}
 
 	[System.Serializable]
-	public class Timer		// TODO This could be a struct to make load/save faster
+	public class Timer : Serializer.ICustomJson
 	{
 		public int reference = -1;
 
@@ -1592,6 +1592,20 @@ public class Game : World
 		{
 			reference = -1;
 		}
+
+        public void Serialize( JsonWriter writer )
+        {
+			writer.WriteValue( reference );
+        }
+
+        public void Deserialize( JsonReader reader )
+        {
+			Assert.global.AreEqual( reader.TokenType, JsonToken.Integer );
+			if ( reader.Value is Int64 i )
+				reference = (int)i;
+			reader.Read();
+        }
+
 		[SerializeField]
 		public int age
 		{

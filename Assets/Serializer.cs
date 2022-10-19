@@ -173,6 +173,12 @@ public class Serializer
 
 	object ProcessFieldValue( Type type, MemberInfo m, object referencer )
 	{
+		if ( typeof( ICustomJson ).IsAssignableFrom( type ) )
+		{
+			var created = CreateObject( type );
+			(created as ICustomJson).Deserialize( reader );
+			return created;
+		}
 		switch ( reader.TokenType )
 		{
 			case JsonToken.Null:
@@ -291,6 +297,11 @@ public class Serializer
 		}
 		if ( type.IsClass )
 		{
+			if ( value is ICustomJson custom )
+			{
+				custom.Serialize( writer );
+				return;
+			}
 			writer.WriteStartObject();
 			int index;
 			if ( objectIndices.TryGetValue( value, out index ) )
@@ -493,5 +504,11 @@ public class Serializer
 	{
 		var serializer = new Serializer();
 		serializer.WriteFile( fileName, source, intended, allowUnityTypes, logTypeCount );
+	}
+
+	public interface ICustomJson
+	{
+		void Serialize( JsonWriter writer );
+		void Deserialize( JsonReader reader );
 	}
 }
