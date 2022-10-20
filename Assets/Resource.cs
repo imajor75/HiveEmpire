@@ -120,6 +120,8 @@ public class Resource : HiveObject
 		"prefabs/rocks/rock03", Type.rock,
 		"prefabs/rocks/rock04", Type.rock,
 
+		"prefabs/others/apples", Type.apple,
+
 		"prefabs/others/cave", Type.animalSpawner,
 		"prefabs/others/field", Type.cornField,
 		"prefabs/others/wheatField", Type.wheatField,
@@ -246,7 +248,17 @@ public class Resource : HiveObject
 				foreach ( Transform c in body.transform )
 				{
 					float h = ground.GetHeightAt( c.position.x, c.position.z ) - node.height;
-					c.position = c.position + Vector3.up * h;
+					c.position += Vector3.up * h;
+				}
+			}
+			if ( type == Type.apple )
+			{
+				// Change the height of the individual apples to nicely lay on the ground
+				foreach ( Transform apple in body.transform )
+				{
+					var positionInGround = world.ground.transform.InverseTransformPoint( apple.position );
+					positionInGround.y = world.ground.GetHeightAt( positionInGround.x, positionInGround.z );
+					apple.position = world.ground.transform.TransformPoint( positionInGround );
 				}
 			}
 		}
