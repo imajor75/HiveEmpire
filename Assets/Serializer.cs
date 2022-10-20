@@ -134,6 +134,8 @@ public class Serializer
 					Assert.global.IsNotNull( currentObjectType, $"Unknown type {reader.Value}" );
 					break;
 				}
+				case "$comment":
+					break;
 				default:
 				{
 					Assert.global.Fail( $"Unknown command {name} in file {fileName}" );
@@ -309,6 +311,8 @@ public class Serializer
 				Assert.global.AreEqual( objects[index], value );
 				writer.WritePropertyName( "$ref" );
 				writer.WriteValue( index );
+				writer.WritePropertyName( "$comment" );
+				writer.WriteValue( $"objectIndices:{objectIndices.Count}" );
 			}
 			else
 			{
@@ -316,6 +320,8 @@ public class Serializer
 				writer.WriteValue( value.GetType().FullName );
 				writer.WritePropertyName( "$ref" );	// Reference index is only written to the file for debug purposes, it is not needed
 				writer.WriteValue( objects.Count );
+				writer.WritePropertyName( "$comment" );
+				writer.WriteValue( $"objectIndices:{objectIndices.Count}" );
 				objectIndices[value] = objects.Count;
 				objects.Add( value );
 			}
@@ -475,7 +481,7 @@ public class Serializer
 		}
 		writer.WriteEndArray();
 	#if UNITY_EDITOR
-		if ( logTypeCount )
+//		if ( logTypeCount )
 		{
 			Dictionary<Type, int> content = new ();
 			foreach ( var processedObject in objects )
