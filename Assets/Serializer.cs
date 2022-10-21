@@ -175,7 +175,7 @@ public class Serializer
 
 	object ProcessFieldValue( Type type, MemberInfo m, object referencer )
 	{
-		if ( typeof( ICustomJson ).IsAssignableFrom( type ) )
+		if ( typeof( ICustomJson ).IsAssignableFrom( type ) && reader.TokenType != JsonToken.StartObject )
 		{
 			var created = CreateObject( type );
 			(created as ICustomJson).Deserialize( reader );
