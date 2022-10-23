@@ -1004,6 +1004,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		var node = nodes[nodeIndex];
 		var newNode = node.Neighbour( direction );
+		Resource.RemoveFromGround( newNode );
 
 		if ( newNode.block.IsBlocking( Node.Block.Type.roads ) && newNode.road != this )
 			return null;

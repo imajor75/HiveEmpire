@@ -587,6 +587,7 @@ public class Flag : HiveObject
 
 		if ( checkOnly )
 			return true;
+		Resource.RemoveFromGround( target );
 
 		void CloneRoad( Road road, Node remove, Node addition = null )
 		{
