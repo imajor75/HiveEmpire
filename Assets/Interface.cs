@@ -15,6 +15,7 @@ using UnityEngine.UI;
 public class Interface : HiveObject
 {
 	public StreamWriter logFile;
+	public bool errorOccured;
 	public Settings globalSettings;
 	public Component dedicatedKeyboardHandler;
 	public List<Panel> panels = new ();
@@ -355,7 +356,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		if ( settings.saveOnExit && !Assert.error )
+		if ( settings.saveOnExit && !errorOccured )
 			game.Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + " exit.json", false );
 		game.Clear();
 		logFile.Close();

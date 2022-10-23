@@ -8,7 +8,6 @@ public class Assert
 	readonly Component boss;
 	public static Assert global = new Assert( null );
 	public static bool problemSelected = false;
-	public static bool error;
 
 	public Assert() { }
 
@@ -174,6 +173,10 @@ public class Assert
 	static void LogCallback( string condition, string stackTrace, LogType type )
 	{
 		if ( type == LogType.Exception || type == LogType.Assert || type == LogType.Error )
-			error = true;
+		{
+			if ( !HiveCommon.root.errorOccured )
+				HiveCommon.Log( $"Disabling exit save due to: {condition}" );
+			HiveCommon.root.errorOccured = true;
+		}
 	}
 }
