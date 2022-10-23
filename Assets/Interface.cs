@@ -4182,13 +4182,13 @@ public class Interface : HiveObject
 				case Construct.flag:
 				{
 					ShowTestResult( Flag.IsNodeSuitable( node, root.mainTeam ) );
-					currentBlueprint = Flag.Create().Setup( node, root.mainTeam, true );
+					currentBlueprint = Flag.Create().Setup( node, root.mainTeam, true, false, Resource.BlockHandling.ignore );
 					break;
 				};
 				case Construct.crossing:
 				{
 					ShowTestResult( Flag.IsNodeSuitable( node, root.mainTeam ) );
-					currentBlueprint = Flag.Create().Setup( node, root.mainTeam, true, true );
+					currentBlueprint = Flag.Create().Setup( node, root.mainTeam, true, true, Resource.BlockHandling.ignore );
 					break;
 				};
 				case Construct.stock:
