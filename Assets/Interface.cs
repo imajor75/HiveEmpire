@@ -8577,6 +8577,7 @@ public static class UIHelpers
 		}
 	}
 
+#if UNITY_EDITOR
 	[CustomPropertyDrawer(typeof(Game.Timer))]
 	public class TimerDrawer : PropertyDrawer
 	{
@@ -8609,6 +8610,7 @@ public static class UIHelpers
 			EditorGUI.EndProperty();
 		}
 	}
+#endif
 }
 
 
