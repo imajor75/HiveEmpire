@@ -356,7 +356,7 @@ public class Interface : HiveObject
 
 	public void OnApplicationQuit()
 	{
-		if ( settings.saveOnExit && !errorOccured )
+		if ( settings.saveOnExit && !errorOccured && !game.demo )
 			game.Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + " exit.json", false );
 		game.Clear();
 		logFile.Close();
@@ -7745,13 +7745,12 @@ if ( cart )
 
 	public Menu OpenMainMenu( bool initial = false )
 	{
-		bool demoMode = game.fileName.Contains( "demolevel" );
-		var menu = Menu.Create( canBeClosed:!demoMode );
-		if ( !demoMode )
+		var menu = Menu.Create( canBeClosed:!game.demo );
+		if ( !game.demo )
 			menu.AddItem( "Continue", () => { if ( initial ) eye.RestoreOldPosition(); menu.Close(); } );
 		menu.AddItem( "New Game", () => { menu.Close(); OpenNewGameMenu(); } );
 		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
-		if ( !initial && !demoMode )
+		if ( !initial && !game.demo )
 			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.nextSaveFileName + " manual", true ); } );
 		menu.AddItem( "Replay", () => { menu.Close(); OpenReplay(); } );
 		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );

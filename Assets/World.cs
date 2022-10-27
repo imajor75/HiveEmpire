@@ -834,8 +834,7 @@ public class World : HiveObject
 		}
 
 		Interface.ValidateAll( true );
-		bool demoMode = fileName.Contains( "demolevel" );
-		network.SetState( demoMode ? Network.State.idle : Network.State.server );
+		network.SetState( game.demo ? Network.State.idle : Network.State.server );
 	}
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
@@ -1228,6 +1227,7 @@ public class Game : World
 	public new int time;
 	public Speed speed;
 	public System.Random rnd;
+	public bool demo;
 
 	static public Game instance;
 
