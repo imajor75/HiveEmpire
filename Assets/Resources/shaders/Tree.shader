@@ -20,7 +20,7 @@ Shader "Custom/Tree"
         // Physically based Standard lighting model, and enable shadows on all light types
         #pragma vertex vert
         #pragma surface surf Standard addshadow
-        #include "wind.cginc"
+        #include "Wind.cginc"
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0

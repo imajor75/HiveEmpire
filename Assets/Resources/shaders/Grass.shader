@@ -14,7 +14,7 @@ Shader "Custom/Grass"
         CGPROGRAM
         #pragma surface surf Standard keepalpha
         #pragma target 3.0
-        #include "wind.cginc"
+        #include "Wind.cginc"
         
         sampler2D _Mask;
         sampler2D _Color;
