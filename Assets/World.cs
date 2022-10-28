@@ -1765,6 +1765,7 @@ public class Game : World
 		{
 			if ( craftAllSoldiers && world.time == 0 )
 			{
+				mainBuildingContent = new ();
 				while ( mainBuildingContent.Count < (int)Item.Type.total )
 					mainBuildingContent.Add( -1 );
 				mainBuildingContent[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount + world.MaximumPossible( Item.Type.soldier );
