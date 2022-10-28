@@ -1441,6 +1441,7 @@ public class Game : World
 
 		network.SetState( Network.State.server );
 		gameInProgress = true;
+		demo = false;
 	}
 
     public new void Load( string fileName )
