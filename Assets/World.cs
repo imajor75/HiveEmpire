@@ -454,8 +454,12 @@ public class World : HiveObject
 		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			workshopTypeUsage.Add( 0 );
 
-		void AddWeight( Item.Type itemType, float weight )
+		void AddWeight( Item.Type itemType, float weight, int level = 0 )
 		{
+			string indentation = "";
+			for ( int i = 0; i < level; i++ )
+				indentation += " ";
+			Log( indentation + $"{itemType} {weight}" );
 			itemTypeUsage[(int)itemType] += weight;
 			foreach ( var configuration in workshopConfigurations )
 			{
@@ -468,12 +472,9 @@ public class World : HiveObject
 
 				var newWeight = configuration.commonInputs ? workshopWeight / configuration.generatedInputs.Count : workshopWeight;
 				if ( newWeight < 0.001 )
-				{
-					Assert.global.Fail( "Infinite cycle in workshop configurations" );
-					return;
-				}
+					continue;
 				foreach ( var input in configuration.generatedInputs )
-					AddWeight( input, newWeight );
+					AddWeight( input, newWeight, level + 1 );
 			}
 		}
 
