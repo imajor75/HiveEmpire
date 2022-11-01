@@ -10,6 +10,8 @@ public static class Constants
         public const int maxMessages = 50;
         public const int iconSize = 20;
         public const float uiScale = 1.5f;
+        public const float highightedMenuItemScale = 1.2f;
+        public const float menuHighlightChangeSpeed = 0.1f;
     }
 
     public static class World

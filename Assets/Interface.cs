@@ -101,6 +101,8 @@ public class Interface : HiveObject
 		[JsonIgnore]
 		public bool active = true;
 		[JsonIgnore]
+		public Panel owner;
+		[JsonIgnore]
 		public Hotkey disabled;
 		public static List<Hotkey> instances = new ();
 
@@ -150,6 +152,10 @@ public class Interface : HiveObject
 
 		public void Activate( Panel owner = null )
 		{
+			if ( owner )
+				owner.activeHotkeys.Add( this );
+			this.owner = owner;
+
 			if ( active )
 				return;
 
@@ -163,8 +169,6 @@ public class Interface : HiveObject
 				break;
 			}
 
-			if ( owner )
-				owner.activeHotkeys.Add( this );
 			active = true;
 		}
 
@@ -1481,7 +1485,8 @@ public class Interface : HiveObject
 			if ( eye )
 				eye.StopAutoChange();
 			foreach ( var hotkey in activeHotkeys )
-				hotkey.Deactivate();
+				if ( hotkey.owner == this )
+					hotkey.Deactivate();
 		}
 
 		public void SetSize( int x, int y )
@@ -7646,9 +7651,14 @@ if ( cart )
 	public class Menu : Panel
 	{
 		public string title;
-		public int itemCount;
+		List<MonoBehaviour> items = new ();
+		public int highlight = 0;
 		public int row;
 		public ScrollRect scrollRect;
+
+		static public Hotkey nextItemHotkey = new Hotkey( "Next Menu Item", KeyCode.DownArrow, active:false );
+		static public Hotkey previousItemHotkey = new Hotkey( "Previous Menu Item", KeyCode.UpArrow, active:false );
+		static public Hotkey activateItemHotkey = new Hotkey( "Activate Menu Item", KeyCode.Return, active:false );
 
 		public static Menu Create( string title = null, bool canBeClosed = true )
 		{
@@ -7671,7 +7681,10 @@ if ( cart )
 				titleText.PinCenter( 0, -iconSize, (int)( titleText.preferredWidth / uiScale + 1 ), (int)( iconSize * 1.5f ), 0.5f, 1 ).Link( scrollRect.content );
 				row -= iconSize + iconSize / 2;
 			}
-			itemCount = 0;
+
+			nextItemHotkey.Activate( this );
+			previousItemHotkey.Activate( this );
+			activateItemHotkey.Activate( this );
 		}
 
 		public void AddItem( string text, Action action )
@@ -7679,13 +7692,67 @@ if ( cart )
 			AddWidget( Button( text ).AddClickHandler( action ) );
 		}
 
-		public void AddWidget( Component widget )
+		public void AddWidget( MonoBehaviour widget )
 		{
 			widget.Link( scrollRect.content ).PinCenter( 0, row - (int)( iconSize * 0.6f ), 150, (int)( iconSize * 1.2f ), 0.5f, 1 );
-			itemCount++;
 			row -= (int)( iconSize * 1.2f );
 			SetSize( 220, Math.Min( -row + borderWidth * 2, (int)( Screen.height / 2 ) ) );
 			scrollRect.SetContentSize( -1, -row );
+			if ( items.Count == highlight )
+				ScaleAnimator.StartAnimation( widget, Constants.Interface.highightedMenuItemScale );
+			items.Add( widget );
+		}
+
+		new void Update()
+		{
+			if ( nextItemHotkey.IsPressed() && highlight != items.Count - 1 )
+			{
+				ScaleAnimator.StartAnimation( items[highlight], 1 );
+				ScaleAnimator.StartAnimation( items[++highlight], Constants.Interface.highightedMenuItemScale );
+			}
+			if ( previousItemHotkey.IsPressed() && highlight != 0 )
+			{
+				ScaleAnimator.StartAnimation( items[highlight], 1 );
+				ScaleAnimator.StartAnimation( items[--highlight], Constants.Interface.highightedMenuItemScale );
+			}
+			if ( activateItemHotkey.IsPressed() )
+			{
+				UIHelpers.Button button;
+				if ( items[highlight].gameObject.TryGetComponent( out button ) && button.leftClickHandler != null )
+					button.leftClickHandler();
+			}
+			base.Update();
+		}
+
+		public class ScaleAnimator : MonoBehaviour
+		{
+			public float startScale, endScale, startTime;
+
+			public static void StartAnimation( MonoBehaviour widget, float targetScale )
+			{
+				ScaleAnimator animator;
+				if ( !widget.gameObject.TryGetComponent( out animator ) )
+					animator = widget.gameObject.AddComponent<ScaleAnimator>();
+				animator.endScale = targetScale;
+				animator.startScale = widget.transform.localScale.x;
+				animator.startTime = Time.unscaledTime;
+			}
+
+
+			void Update()
+			{
+				float progress = ( Time.unscaledTime - startTime ) / Constants.Interface.menuHighlightChangeSpeed;
+				if ( progress > Math.PI )
+				{
+					transform.localScale = Vector3.one * endScale;
+					Destroy( this );
+					return;
+				}
+
+				double weight = Math.Cos( progress ) * 0.5 + 0.5;
+				double newScale = startScale * weight + endScale * ( 1 - weight );
+				transform.localScale = Vector3.one * (float)newScale;
+			}
 		}
 	}
 
