@@ -1769,7 +1769,7 @@ public class Game : World
 				mainBuildingContent = new ();
 				while ( mainBuildingContent.Count < (int)Item.Type.total )
 					mainBuildingContent.Add( -1 );
-				mainBuildingContent[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount + world.MaximumPossible( Item.Type.soldier );
+				mainBuildingContent[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount + world.MaximumPossible( Item.Type.soldier ) - Constants.Player.challengePossibleSoldierCountTolerance;
 			}
 				
 			if ( productivityGoalsByBuildingCount == null )

@@ -254,6 +254,7 @@ public static class Constants
 		public const float defaultInputWeight = 0.5f;
         public const int attackPeriod = 200;
         public const float challengeProductivityPerBuilding = 0.9f;
+        public const int challengePossibleSoldierCountTolerance = 10;
         public static string[] names = 
         {
             "Ahmose",
