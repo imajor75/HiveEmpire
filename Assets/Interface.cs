@@ -7709,11 +7709,13 @@ if ( cart )
 			{
 				ScaleAnimator.StartAnimation( items[highlight], 1 );
 				ScaleAnimator.StartAnimation( items[++highlight], Constants.Interface.highightedMenuItemScale );
+				scrollRect.ShowChild( items[highlight] );
 			}
 			if ( previousItemHotkey.IsPressed() && highlight != 0 )
 			{
 				ScaleAnimator.StartAnimation( items[highlight], 1 );
 				ScaleAnimator.StartAnimation( items[--highlight], Constants.Interface.highightedMenuItemScale );
+				scrollRect.ShowChild( items[highlight] );
 			}
 			if ( activateItemHotkey.IsPressed() )
 			{
@@ -8489,6 +8491,34 @@ public static class UIHelpers
 		t.offsetMax = m;
 		t.offsetMin = Vector2.zero;
 		scroll.verticalNormalizedPosition = 1;
+		return scroll;
+	}
+
+	public static ScrollRect ShowChild( this ScrollRect scroll, Component child, bool horizontal = false, bool vertical = true )
+	{
+		if ( child.transform is RectTransform rect )
+		{
+			var c = new Vector3[4];
+			var v = new Vector3[4];
+			rect.GetWorldCorners( c );
+			scroll.viewport.GetWorldCorners( v );
+			var contentPosition = scroll.content.localPosition;
+			if ( vertical )
+			{
+				if ( c[0].y < v[0].y )
+					contentPosition.y += v[0].y - c[0].y;
+				if ( c[2].y > v[2].y )
+					contentPosition.y -= c[2].y - v[2].y;
+			}
+			if ( horizontal )
+			{
+				if ( c[0].x < v[0].x )
+					contentPosition.x += v[0].x - c[0].x;
+				if ( c[2].x > v[2].x )
+					contentPosition.x -= c[2].x - v[2].x;
+			}
+			scroll.content.localPosition = contentPosition;
+		}
 		return scroll;
 	}
 
