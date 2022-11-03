@@ -887,7 +887,7 @@ public class Workshop : Building
 			return;
 
 		if ( productionConfiguration.producesDung && dungPile == null )
-			dungPile = Resource.Create().Setup( node, Resource.Type.dung, allowBlocking:true );
+			dungPile = Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true );
 
 		if ( type == Type.barrack && output > 0 )
 		{
