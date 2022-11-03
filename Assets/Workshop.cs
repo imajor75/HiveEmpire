@@ -948,7 +948,7 @@ public class Workshop : Building
 					if ( CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange, false, currentStatus != Status.waitingForInput0 ) )
 						return;
 
-					if ( !UseInput() )
+					if ( !UseInput( 1, true ) )
 						return;
 
 					foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
@@ -956,6 +956,7 @@ public class Workshop : Building
 						Node place = node.Add( o );
 						if ( place.block || !place.CheckType( Node.Type.grass ) || place.suspendPlanting.inProgress )
 							continue;
+						UseInput();
 						PlantAt( place, resourceType );
 						return;
 					}
@@ -1017,7 +1018,7 @@ public class Workshop : Building
 		}
 	}
 
-	bool UseInput( int count = 1 )
+	bool UseInput( int count = 1, bool checkOnly = false )
 	{
 		bool common = productionConfiguration.commonInputs;
 		if ( count == 0 || buffers.Count == 0 )
@@ -1046,6 +1047,9 @@ public class Workshop : Building
 			ChangeStatus( Status.waitingForInput0 + minIndex );
 			return false;
 		}
+
+		if ( checkOnly )
+			return true;
 
 		int o = game.NextRnd( OperationHandler.Event.CodeLocation.workshopBufferSelection );
 		for ( int i = 0; i < buffers.Count; i++ )
