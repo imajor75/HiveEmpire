@@ -481,7 +481,7 @@ public class Serializer
 		}
 		writer.WriteEndArray();
 	#if UNITY_EDITOR
-//		if ( logTypeCount )
+		if ( logTypeCount )
 		{
 			Dictionary<Type, int> content = new ();
 			foreach ( var processedObject in objects )

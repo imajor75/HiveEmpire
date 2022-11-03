@@ -121,6 +121,7 @@ public class World : HiveObject
 	public int oreCount;
 	public List<Ore> ores = new ();
 	public int animalSpawnerCount, treeCount, rockCount;
+	public List<int> maximumPossibleCraft;
 
 	[Serializable]
 	public class Settings
@@ -1152,6 +1153,10 @@ public class World : HiveObject
 				animalSpawnerCount++;
 		}
 
+		maximumPossibleCraft = new ();
+		while ( maximumPossibleCraft.Count < (int)Item.Type.total )
+			maximumPossibleCraft.Add( MaximumPossible( (Item.Type)maximumPossibleCraft.Count ) );
+
 		Log( "Generated resources:" );
 		Log( $" - trees: {treeCount}" );
 		Log( $" - rocks: {rockCount}" );
@@ -1463,7 +1468,7 @@ public class Game : World
 			while ( challenge.productivityGoals.Count < (int)Item.Type.total )
 				challenge.productivityGoals.Add( -1 );
 		}
-		challenge?.AlignToWorld( this );
+		challenge?.ParseConditions( this );
 
 		SetSpeed( speed, true );    // Just for the animators and sound
 
@@ -1688,11 +1693,9 @@ public class Game : World
 		public float progress;
 		public Timer life = new ();
 		public List<float> productivityGoals;
-		public List<int> productivityGoalsByBuildingCount;
 		public List<int> mainBuildingContent;
 		public List<int> buildingMax;
 		public int timeLimit;
-		public bool craftAllSoldiers;
 		public int playerCount;
 		public int simpletonCount;
 		public int simpletonCountToEliminate;
@@ -1715,6 +1718,10 @@ public class Game : World
 		int seed { set { worldGenerationSettings.seed = value; } }
 		[Obsolete( "Compatibility with old files", true )]
 		bool fixedSeed { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		bool craftAllSoldiers { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		List<int> productivityGoalsByBuildingCount { set {} }
 
         public static Challenge Create()
 		{
@@ -1745,13 +1752,13 @@ public class Game : World
 			base.Start();
 		}
 
-		public void Begin( Game world )
+		public void Begin( World world )
 		{
 			life.Start();
 			maintainBronze.Reset();
 			maintainSilver.Reset();
 			maintainGold.Reset();
-			AlignToWorld( world );
+			ParseConditions( world );
 			reachedLevel = Goal.none;
 		}
 
@@ -1760,34 +1767,6 @@ public class Game : World
 			worldGenerationSettings.seed = Interface.rnd.Next();
 			if ( randomizeIslands )
 				worldGenerationSettings.reliefSettings.island = Interface.rnd.NextDouble() > 0.5;
-		}
-
-		public void AlignToWorld( Game world )
-		{
-			if ( craftAllSoldiers && world.time == 0 )
-			{
-				mainBuildingContent = new ();
-				while ( mainBuildingContent.Count < (int)Item.Type.total )
-					mainBuildingContent.Add( -1 );
-				mainBuildingContent[(int)Item.Type.soldier] = Constants.Stock.startSoldierCount + world.MaximumPossible( Item.Type.soldier ) - Constants.Player.challengePossibleSoldierCountTolerance;
-			}
-				
-			if ( productivityGoalsByBuildingCount == null )
-				return;
-
-			if ( productivityGoals == null )
-				productivityGoals = new ();
-			while ( productivityGoals.Count < (int)Item.Type.total )
-				productivityGoals.Add( -1 );
-
-			for ( int i = 0; i < productivityGoalsByBuildingCount.Count; i++ )
-			{
-				if ( productivityGoalsByBuildingCount[i] <= 0 )
-					continue;
-
-				var config = Workshop.GetConfiguration( world, (Workshop.Type)i );
-				productivityGoals[(int)config.outputType] = config.productivity * productivityGoalsByBuildingCount[i] * Constants.Player.challengeProductivityPerBuilding;
-			}
 		}
 
 		// This used to be GameLogicUpdate, but it seems to be better for the challenge not being part of the world, otherwise
@@ -1917,7 +1896,7 @@ public class Game : World
 			CheckGoal( Goal.bronze, maintainBronze );
 		}
 
-		public void ParseConditions()
+		public void ParseConditions( World world )
 		{
 			if ( conditions == null )
 				return;
@@ -1927,9 +1906,6 @@ public class Game : World
 				var p = condition.Split( ' ' );
 				switch ( p[0] )
 				{
-					case "craftAllSoldiers":
-						craftAllSoldiers = true;
-						break;
 					case "headquarters":
 					{
 						if ( mainBuildingContent == null )
@@ -1943,6 +1919,8 @@ public class Game : World
 						while ( mainBuildingContent.Count < (int)Item.Type.total )
 							mainBuildingContent.Add( -1 );
 						mainBuildingContent[(int)itemType] = int.Parse( p[2], CultureInfo.InvariantCulture );
+						if ( p.Length > 3 && p[3] == "allPossible" && world.maximumPossibleCraft != null )
+							mainBuildingContent[(int)itemType] += world.maximumPossibleCraft[(int)itemType];
 						break;
 					}
 					case "production":
@@ -1958,21 +1936,14 @@ public class Game : World
 						while ( productivityGoals.Count < (int)Item.Type.total )
 							productivityGoals.Add( -1 );
 						productivityGoals[(int)itemType] = float.Parse( p[2], CultureInfo.InvariantCulture );
-						break;
-					}
-					case "productionByBuilding":
-					{
-						if ( productivityGoalsByBuildingCount == null )
-							productivityGoalsByBuildingCount = new ();
-						Workshop.Type workshopType;
-						if ( !Enum.TryParse( p[1], out workshopType ) )
-						{
-							print( $"Unknown workshop: {p[1]}" );
+						if ( p.Length < 4 )
 							break;
+						float productivityByBuildingWeight = float.Parse( p[3] );
+						foreach ( var configuration in world.workshopConfigurations )
+						{
+							if ( configuration.outputType == itemType )
+								productivityGoals[(int)itemType] += productivityByBuildingWeight * configuration.productivity;
 						}
-						while ( productivityGoalsByBuildingCount.Count < (int)Workshop.Type.total )
-							productivityGoalsByBuildingCount.Add( 0 );
-						productivityGoalsByBuildingCount[(int)workshopType] = int.Parse( p[2], CultureInfo.InvariantCulture );
 						break;
 					}
 					case "buildingMax":
@@ -2002,8 +1973,6 @@ public class Game : World
 					}
 				}
 			}
-
-			conditions.Clear();
 		}
 
 		public class List

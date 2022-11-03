@@ -45,8 +45,7 @@
       "maintain": 30000,
       "infiniteResources": true,
       "conditions": [
-        "productionByBuilding barrack 1",
-        "buildingMax barrack 1"
+        "production soldier 0 0.9"
       ]
     },
     {
@@ -84,7 +83,7 @@
       "worldSize": 48,
       "islandOnly": true,
       "conditions": [
-        "craftAllSoldiers"
+        "headquarters soldier -10 allPossible"
       ]
     }
   ]

@@ -754,10 +754,7 @@ public class Interface : HiveObject
 		var challengeContainer = new GameObject( "Challenges" );
 		challengeContainer.transform.SetParent( transform, false );
 		foreach ( var challenge in challenges )
-		{
-			challenge.ParseConditions();
 			challenge.transform.SetParent( challengeContainer.transform, false );
-		}
 	}
 
 	public void OnGoalReached( Game.Goal goal )
