@@ -1829,7 +1829,8 @@ public class Interface : HiveObject
 				}
 				set
 				{
-					bar.rectTransform.anchorMax = new Vector2( Math.Min( value, 1 ), 1 );
+					if ( value >= 0 && value <= 1 )
+						bar.rectTransform.anchorMax = new Vector2( Math.Min( value, 1 ), 1 );
 				}
 			}
 			public Color color
