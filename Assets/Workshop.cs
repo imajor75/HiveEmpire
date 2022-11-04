@@ -1077,6 +1077,8 @@ public class Workshop : Building
 			var b = buffers[(i + o) % buffers.Count];
 			if ( b.usagePriority == Buffer.Priority.low && i < buffers.Count )
 				continue;
+			if ( b.bored )
+				continue;
 			int used = Math.Min( b.stored, count );
 			if ( used > 0 )
 			{
