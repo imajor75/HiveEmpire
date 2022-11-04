@@ -1361,7 +1361,7 @@ public class Simpleton : Player
                 foreach ( var input in workshop.buffers )
                 {
                     if ( input.itemType == Item.Type.fish )
-                        HiveCommon.oh.ScheduleChangeBufferUsage( workshop, input, false, true, Operation.Source.computer );
+                        HiveCommon.oh.ScheduleChangeBufferUsage( workshop, input, Workshop.Buffer.Priority.disabled, true, Operation.Source.computer );
                 }
                 break;
 

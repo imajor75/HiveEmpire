@@ -2811,6 +2811,7 @@ public class Interface : HiveObject
 		public class Buffer
 		{
 			public ItemImage[] items;
+			public Sprite[] usageSprites;
 			public BuildingPanel boss;
 			public Item.Type itemType;
 			Workshop.Buffer buffer;
@@ -2860,10 +2861,13 @@ public class Interface : HiveObject
 				boss.Image( Icon.buildings ).PinSideways( 0, y ).AddClickHandler( () => ShowProducers( itemType ) ).SetTooltip( "Show a list of buildings which produce this" );
 				if ( buffer != null && buffer.optional )
 				{
-					disableIcon = boss.Image( Icon.exit ).PinSideways( 0, y ).AddToggleHandler( SetDisabled, buffer.disabled );
+					disableIcon = boss.Image( Icon.exit ).PinSideways( 0, y ).AddClickHandler( CycleBufferUsage );
+					disableIcon.SetTooltip( "green check: use the input normally\nred cross: do not use the input at all\nexclamation mark: use the input only if there is nothing else" );
 					disableIndicator = boss.Image( Icon.emptyFrame ).Pin( itemsStartX, y - iconSize / 2 + 2, itemsEndX - itemsStartX + 4, 4 );
 					disableIndicator.color = Color.Lerp( Color.red, Color.black, 0.5f );
 				}
+
+				usageSprites = new Sprite[3] { Interface.iconTable.GetMediaData( Icon.exit ), Interface.iconTable.GetMediaData( Icon.exc ), Interface.iconTable.GetMediaData( Icon.yes ) };
 			}
 
 			void ShowProducers( Item.Type itemType )
@@ -2876,9 +2880,15 @@ public class Interface : HiveObject
 				}
 			}
 
-			void SetDisabled( bool disabled )
+			void CycleBufferUsage()
 			{
-				oh.ScheduleChangeBufferUsage( boss.building as Workshop, buffer, !disabled );
+				var newValue = buffer.usagePriority switch 
+				{ 
+					Workshop.Buffer.Priority.disabled => Workshop.Buffer.Priority.low,
+					Workshop.Buffer.Priority.low => Workshop.Buffer.Priority.normal,
+					Workshop.Buffer.Priority.normal or _ => Workshop.Buffer.Priority.disabled
+				};
+				oh.ScheduleChangeBufferUsage( boss.building as Workshop, buffer, newValue );
 			}
 
 			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int x, int y, int xi )
@@ -2915,7 +2925,7 @@ public class Interface : HiveObject
 				}
 				if ( buffer != null && disableIndicator )
 				{
-					disableIcon.SetToggleState( buffer.disabled );
+					disableIcon.sprite = usageSprites[(int)buffer.usagePriority];
 					disableIndicator.gameObject.SetActive( buffer.disabled );
 				}
 			}

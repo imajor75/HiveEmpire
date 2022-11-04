@@ -185,11 +185,11 @@ public class Workshop : Building
 		this.mode = mode;
 	}
 
-	public void SetBufferEnabled( Buffer buffer, bool enabled )
+	public void ChangeBufferPriority( Buffer buffer, Buffer.Priority priority )
 	{
-		if ( !enabled )
+		if ( priority == Buffer.Priority.disabled )
 			CancelOrders( buffer.itemType );
-		buffer.disabled = !enabled;
+		buffer.usagePriority = priority;
 	}
 
 	[System.Serializable]
@@ -336,9 +336,22 @@ public class Workshop : Building
 		public int important = Constants.Workshop.defaultImportantInBuffer;
 		public Ground.Area area = new ();
 		public Team.InputWeight weight;
-		public bool disabled;
+		public Priority usagePriority = Priority.normal;
 		public bool optional;
 		public bool bored;
+		public enum Priority
+		{
+			disabled,
+			low,
+			normal
+		}
+
+		public bool disabled
+		{
+			get	{ return usagePriority == Priority.disabled; }
+			[Obsolete( "Compatibility with old files", true )]
+			set { usagePriority = value ? Priority.disabled : Priority.normal; }
+		}
 	}
 
 	new public enum Type
@@ -1050,30 +1063,34 @@ public class Workshop : Building
 
 		if ( checkOnly )
 			return true;
+		
+		if ( !common )
+		{
+			foreach ( var buffer in buffers )
+				buffer.stored -= count;
+			return true;
+		}
 
 		int o = game.NextRnd( OperationHandler.Event.CodeLocation.workshopBufferSelection );
-		for ( int i = 0; i < buffers.Count; i++ )
+		for ( int i = 0; i < buffers.Count * 2; i++ )
 		{
 			var b = buffers[(i + o) % buffers.Count];
-			if ( common )
+			if ( b.usagePriority == Buffer.Priority.low && i < buffers.Count )
+				continue;
+			int used = Math.Min( b.stored, count );
+			if ( used > 0 )
 			{
-				int used = Math.Min( b.stored, count );
-				if ( used > 0 )
-				{
-					if ( lastUsedInput == b.itemType )
-						b.bored = true;
-					else
-						lastUsedInput = b.itemType;
+				if ( lastUsedInput == b.itemType )
+					b.bored = true;
+				else
+					lastUsedInput = b.itemType;
 
-					foreach ( var otherBuffer in buffers )
-						if ( otherBuffer != b )
-							otherBuffer.bored = false;
-				}
-				count -= used;
-				b.stored -= used;
+				foreach ( var otherBuffer in buffers )
+					if ( otherBuffer != b )
+						otherBuffer.bored = false;
 			}
-			else
-				b.stored -= count;
+			count -= used;
+			b.stored -= used;
 		}
 		return true;
 	}

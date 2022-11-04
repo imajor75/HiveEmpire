@@ -420,9 +420,9 @@ public class OperationHandler : HiveObject
 		    ScheduleOperation( Operation.Create().SetupAsChangeArea( building, area, center, radius ), standalone, source );
 	}
 
-	public void ScheduleChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, bool enabled, bool standalone = true, Operation.Source source = Operation.Source.manual )
+	public void ScheduleChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, Workshop.Buffer.Priority usage, bool standalone = true, Operation.Source source = Operation.Source.manual )
 	{
-	    ScheduleOperation( Operation.Create().SetupAsChangeBufferUsage( workshop, buffer, enabled ), standalone, source );
+	    ScheduleOperation( Operation.Create().SetupAsChangeBufferUsage( workshop, buffer, usage ), standalone, source );
 	}
 
     public void ScheduleMoveFlag( Flag flag, int direction, bool standalone = true, Operation.Source source = Operation.Source.manual )
@@ -664,7 +664,6 @@ public class Operation
     public Source source;
     public int bufferIndex;
     public int networkId;
-    public bool useBuffer;
     public string playerName, teamName;
     public float weight;
 
@@ -739,6 +738,7 @@ public class Operation
         }
     }
     public Workshop.Mode workshopMode { get => (Workshop.Mode)direction; set => direction = (int)value; }
+    public Workshop.Buffer.Priority useBuffer { get => (Workshop.Buffer.Priority)direction; set => direction = (int)value; }
 
 	[Obsolete( "Compatibility for old files", true )]
     bool merge { set {} }
@@ -933,7 +933,7 @@ public class Operation
         return this;
     }
 
-    public Operation SetupAsChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, bool use )
+    public Operation SetupAsChangeBufferUsage( Workshop workshop, Workshop.Buffer buffer, Workshop.Buffer.Priority usage )
     {
         int index = workshop.buffers.IndexOf( buffer );
         if ( index < 0 )
@@ -941,7 +941,7 @@ public class Operation
         type = Type.changeBufferUsage;
         this.building = workshop;
         this.bufferIndex = index;
-        this.useBuffer = use;
+        this.useBuffer = usage;
         name = "Change Buffer Usage";
         return this;
     }
@@ -1260,8 +1260,9 @@ public class Operation
             case Type.changeBufferUsage:
             {
                 var workshop = building as Workshop;
-                workshop.SetBufferEnabled( workshop.buffers[bufferIndex], useBuffer );
-                return Create().SetupAsChangeBufferUsage( workshop, workshop.buffers[bufferIndex], !useBuffer );
+                var previous = workshop.buffers[bufferIndex].usagePriority;
+                workshop.ChangeBufferPriority( workshop.buffers[bufferIndex], useBuffer );
+                return Create().SetupAsChangeBufferUsage( workshop, workshop.buffers[bufferIndex], previous );
             }
             case Type.flattenFlag:
             {
