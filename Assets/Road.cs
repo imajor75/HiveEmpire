@@ -776,7 +776,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public int ActiveHaulerCount
+	public int activeHaulerCount
 	{
 		get
 		{
@@ -787,6 +787,8 @@ public class Road : HiveObject, Interface.IInputHandler
 			return activeHaulers;
 		}
 	}
+
+	public int maxHaulerCount { get => nodes.Count - 2; }
 
 	public Node lastNode { get { return nodes[nodes.Count - 1]; } }
 

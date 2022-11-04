@@ -580,7 +580,7 @@ public class Unit : HiveObject
 			if ( road == null )
 				return ResetBossTasks();
 
-			if ( stuck.done && boss.type == Type.hauler && road.ActiveHaulerCount > 1 )
+			if ( stuck.done && boss.type == Type.hauler && road.activeHaulerCount > 1 )
 			{
 				boss.Retire();
 				return true;
@@ -626,7 +626,7 @@ public class Unit : HiveObject
 				if ( other && !other.Call( road, currentPoint ) )
 				{
 					// As a last resort to make space is to simply remove the other hauler
-					if ( other.exclusiveMode && other.type == Type.hauler && other.road != road && other.road.ActiveHaulerCount > 1 && other.IsIdle() )
+					if ( other.exclusiveMode && other.type == Type.hauler && other.road != road && other.road.activeHaulerCount > 1 && other.IsIdle() )
 						other.Retire();
 					else
 					{
@@ -1808,7 +1808,13 @@ public class Unit : HiveObject
 	{
 		if ( road.haulers.Count > 1 )	// This check here is a performance optimisation, for roads with a single haluer dont chek anything further
 		{
-			if ( ( bored.done && road.ActiveHaulerCount > 1 ) || ( road.ActiveHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
+			var activeHaulerCount = road.activeHaulerCount;
+			if ( ( bored.done && activeHaulerCount > 1 ) || ( activeHaulerCount > road.targetHaulerCount && road.targetHaulerCount != 0 ) )
+			{
+				Retire();
+				return;
+			}
+			if ( activeHaulerCount > road.maxHaulerCount )
 			{
 				Retire();
 				return;
