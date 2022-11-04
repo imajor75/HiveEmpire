@@ -3306,7 +3306,7 @@ public class Interface : HiveObject
 				controller.AddOption( Icon.plus, "Add one more", () => { data.content++; game.lastChecksum = 0; } );
 #endif
 				if ( data.content < data.cartOutput )
-					controller.AddOption( Icon.cart, "Start cart delivery as soon as possible", () => oh.ScheduleStockAdjustment( stock, t, Stock.Channel.cartOutputTemporary, 1 ) );
+					controller.AddOption( Icon.cart, "Start cart delivery as soon as possible\n(otherwise it would wait until enough items collected to fill a cart completely)", () => oh.ScheduleStockAdjustment( stock, t, Stock.Channel.cartOutputTemporary, 1 ) );
 
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				counts[j].AddClickHandler( () => SelectItemType( t ) );
