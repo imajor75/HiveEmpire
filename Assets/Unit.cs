@@ -1063,7 +1063,20 @@ public class Unit : HiveObject
 			}
 			if ( boss.road.NodeIndex( boss.node ) == -1 )
 				return finished;
-			return boss.EnterExclusivity( boss.road, boss.node );
+			if ( boss.EnterExclusivity( boss.road, boss.node ) )
+				return finished;
+
+			for ( int i = 1; i < boss.road.nodes.Count - 1; i++ )
+			{
+				if ( boss.road.haulerAtNodes[i] != null )
+					continue;
+
+				boss.ScheduleWalkToRoadNode( boss.road, boss.road.nodes[i], false, true );
+				return needMoreCalls;
+			}
+
+			boss.Retire();
+			return finished;
 		}
 	}
 
