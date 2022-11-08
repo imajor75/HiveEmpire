@@ -6855,13 +6855,13 @@ if ( cart )
 				if ( game.itemTypeUsage[i] == 0 )
 					continue;
 				itemIcon[j] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
-				inResources[j] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 60, iconSize );
-				inStock[j] = Text( "0" ).Link( scroll.content ).Pin( 100, row, 40, iconSize );
+				inResources[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 30, row, 70, iconSize );
+				inStock[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 100, row, 40, iconSize );
 				stockButtons[j] = inStock[j].gameObject.AddComponent<Button>();
-				onWay[j] = Text( "0" ).Link( scroll.content ).Pin( 150, row, 40 );
-				alreadyProcessed[j] = Text( "0" ).Link( scroll.content ).Pin( 200, row, 40 );
-				production[j] = Text( "0" ).Link( scroll.content ).Pin( 250, row, 40 );
-				total[j++] = Text( "0" ).Link( scroll.content ).Pin( 300, row, 40 );
+				onWay[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 150, row, 40 );
+				alreadyProcessed[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 200, row, 50 );
+				production[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 250, row, 40 );
+				total[j++] = Text( "0", 10 ).Link( scroll.content ).Pin( 300, row, 40 );
 				row -= iconSize + 5;
 			}
 
@@ -6972,6 +6972,11 @@ if ( cart )
 				onWay[i].text = onWayCount[order[i]].ToString();
 				total[i].text = totalCount[order[i]] == -1 ? "" : totalCount[order[i]].ToString();
 				alreadyProcessed[i].text = team.processed[order[i]].ToString();
+				if ( resources != 0 && resources != int.MaxValue )
+				{
+					inResources[i].text += $" ({resources*100/totalCount[order[i]]}%)";
+					alreadyProcessed[i].text += $" ({team.processed[order[i]]*100/totalCount[order[i]]}%)";
+				}
 
 				var itemData = team.itemProductivityHistory[order[i]];
 				production[i].text = itemData.current.ToString( "n2" );
