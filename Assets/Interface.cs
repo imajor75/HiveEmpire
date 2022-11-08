@@ -6792,12 +6792,14 @@ if ( cart )
 		readonly Text[] alreadyProcessed = new Text[(int)Item.Type.total];
 		readonly Text[] inResources = new Text[(int)Item.Type.total];
 		readonly Text[] production = new Text[(int)Item.Type.total];
+		readonly Text[] total = new Text[(int)Item.Type.total];
 		readonly Button[] stockButtons = new Button[(int)Item.Type.total];
 		readonly ItemImage[] itemIcon = new ItemImage[(int)Item.Type.total];
 
 		int[] inStockCount = new int[(int)Item.Type.total];
 		int[] onWayCount = new int[(int)Item.Type.total];
 		int[] inResourceCount = new int[(int)Item.Type.total];
+		int[] totalCount = new int[(int)Item.Type.total];
 
 		public static ItemTypeList Create()
 		{
@@ -6806,7 +6808,7 @@ if ( cart )
 
 		public void Open( Team team )
 		{
-			if ( base.Open( null, 0, 0, 390, 400 ) )
+			if ( base.Open( null, 0, 0, 440, 400 ) )
 				return;
 
 			name = "Item stats panel";
@@ -6837,6 +6839,10 @@ if ( cart )
 			PinSideways( 0, -20, 70, 20 ).
 			AddClickHandler( delegate { SetOrder( ComparePerMinute ); } );
 
+			Text( "Total", 10 ).
+			PinSideways( 0, -20, 50, 20 ).
+			AddClickHandler( delegate { SetOrder( CompareTotal ); } );
+
 			Image( Icon.replay ).
 			PinSideways( 0, -20 ).
 			AddClickHandler( UpdateList );
@@ -6855,6 +6861,7 @@ if ( cart )
 				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 150, row, 40 );
 				alreadyProcessed[i] = Text( "0" ).Link( scroll.content ).Pin( 200, row, 40 );
 				production[i] = Text( "0" ).Link( scroll.content ).Pin( 250, row, 40 );
+				total[i] = Text( "0" ).Link( scroll.content ).Pin( 300, row, 40 );
 				row -= iconSize + 5;
 			}
 
@@ -6885,6 +6892,11 @@ if ( cart )
 		int ComparePerMinute( int a, int b )
 		{
 			return team.itemProductivityHistory[a].production.CompareTo( team.itemProductivityHistory[b].production );
+		}
+
+		int CompareTotal( int a, int b )
+		{
+			return totalCount[a].CompareTo( totalCount[b] );
 		}
 
 		void SetOrder( Comparison<int> comparison )
@@ -6931,6 +6943,14 @@ if ( cart )
 				onWayCount[(int)item.type]++;
 			}
 
+			for ( int i = 0; i < totalCount.Length; i++ )
+			{
+				if ( inResourceCount[i] == 0 || inResourceCount[i] == int.MaxValue )
+					totalCount[i] = -1;
+				else
+					totalCount[i] = inResourceCount[i] + inStockCount[i] + onWayCount[i] + team.processed[i];
+			}
+
 			List<int> order = new ();
 			for ( int i = 0; i < inStock.Length; i++ )
 				order.Add( i );
@@ -6952,6 +6972,7 @@ if ( cart )
 				int resources = inResourceCount[order[i]];
 				inResources[i].text = resources switch { 0 => "-", int.MaxValue => "infinite", _ => resources.ToString() };
 				onWay[i].text = onWayCount[order[i]].ToString();
+				total[i].text = totalCount[order[i]] == -1 ? "" : totalCount[order[i]].ToString();
 				alreadyProcessed[i].text = team.processed[order[i]].ToString();
 
 				var itemData = team.itemProductivityHistory[order[i]];
