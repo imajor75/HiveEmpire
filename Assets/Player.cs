@@ -159,6 +159,7 @@ public class Team : HiveObject
 
 	public List<bool> stocksHaveNeed = new ();
 	public List<int> buildingCounts = new ();
+	public List<int> processed = new ();
 	public List<Item> items = new ();
 	public int firstPossibleEmptyItemSlot = 0;
 	public int[] surplus = new int[(int)Item.Type.total];
@@ -220,6 +221,7 @@ public class Team : HiveObject
 		public int recordIndex;
 		public Item.Type itemType;
 		public int production;
+		public int total = 0;
 		
 		[Obsolete( "Compatibility with old files", true )]
 		float factor { set {} }
@@ -245,6 +247,7 @@ public class Team : HiveObject
 		public void UpdateCurrent()
 		{
 			current = current * ( Constants.Player.productionUpdateFactor ) + production * ( Constants.World.normalSpeedPerSecond * 60 / Constants.Player.productivityUpdateTime ) * ( 1 - Constants.Player.productionUpdateFactor );
+			total += production;
 			production = 0;
 		}
 
@@ -695,6 +698,14 @@ public class Team : HiveObject
 		if ( item.index < firstPossibleEmptyItemSlot )
 			firstPossibleEmptyItemSlot = item.index;
 		item.index = -2;
+	}
+
+	public void ItemProcessed( Item.Type itemType, int count = 1 )
+	{
+		int index = (int)itemType;
+		while ( processed.Count <= index )
+			processed.Add( 0 );
+		processed[index] += count;
 	}
 
 	public void ItemProduced( Item.Type itemType, int quantity = 1 )

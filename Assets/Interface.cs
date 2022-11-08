@@ -541,7 +541,7 @@ public class Interface : HiveObject
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
 		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
-		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemTypeList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
 		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
 		resourceListButton.SetTooltip( () => $"Show resource statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
@@ -6781,7 +6781,7 @@ if ( cart )
 		}
 	}
 
-	public class ItemStats : Panel
+	public class ItemTypeList : Panel
 	{
 		ScrollRect scroll;
 		Team team;
@@ -6789,7 +6789,8 @@ if ( cart )
 		static bool reverse = false;
 		readonly Text[] inStock = new Text[(int)Item.Type.total];
 		readonly Text[] onWay = new Text[(int)Item.Type.total];
-		readonly Text[] surplus = new Text[(int)Item.Type.total];
+		readonly Text[] alreadyProcessed = new Text[(int)Item.Type.total];
+		readonly Text[] inResources = new Text[(int)Item.Type.total];
 		readonly Text[] production = new Text[(int)Item.Type.total];
 		readonly Button[] stockButtons = new Button[(int)Item.Type.total];
 		readonly ItemImage[] itemIcon = new ItemImage[(int)Item.Type.total];
@@ -6797,35 +6798,47 @@ if ( cart )
 		int[] inStockCount = new int[(int)Item.Type.total];
 		int[] onWayCount = new int[(int)Item.Type.total];
 
-		public static ItemStats Create()
+		public static ItemTypeList Create()
 		{
-			return new GameObject().AddComponent<ItemStats>();
+			return new GameObject().AddComponent<ItemTypeList>();
 		}
 
 		public void Open( Team team )
 		{
-			if ( base.Open( null, 0, 0, 320, 300 ) )
+			if ( base.Open( null, 0, 0, 390, 400 ) )
 				return;
 
 			name = "Item stats panel";
 			this.team = team;
 			UIHelpers.currentColumn = 50;
 
+			Text( "In resources", 10 ).
+			PinSideways( 0, -20, 70, 20 ).
+			SetTooltip( "Amount still available from natural resources" ).
+			AddClickHandler( delegate { SetOrder( CompareInResources ); } );
+
 			Text( "In stock", 10 ).
 			PinSideways( 0, -20, 50, 20 ).
+			SetTooltip( "Amount currently stored in stocks" ).
 			AddClickHandler( delegate { SetOrder( CompareInStock ); } );
 
-			Text( "On Road", 10 ).
+			Text( "On road", 10 ).
 			PinSideways( 0, -20, 50, 20 ).
+			SetTooltip( "Number of items currently on their way to some place where they are required" ).
 			AddClickHandler( delegate { SetOrder( CompareOnRoad ); } );
 
-			Text( "Surplus", 10 ).
+			Text( "Processed", 10 ).
 			PinSideways( 0, -20, 50, 20 ).
-			AddClickHandler( delegate { SetOrder( CompareSurplus ); } );
+			SetTooltip( "Amount already processed by your team" ).
+			AddClickHandler( delegate { SetOrder( CompareProcessed ); } );
 
 			Text( "Per minute", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
+			PinSideways( 0, -20, 70, 20 ).
 			AddClickHandler( delegate { SetOrder( ComparePerMinute ); } );
+
+			Image( Icon.replay ).
+			PinSideways( 0, -20 ).
+			AddClickHandler( UpdateList );
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
 
@@ -6835,18 +6848,25 @@ if ( cart )
 				if ( game.itemTypeUsage[i] == 0 )
 					continue;
 				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
-				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 40, iconSize );
+				inResources[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 60, iconSize );
+				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 100, row, 40, iconSize );
 				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
-				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 80, row, 40 );
-				surplus[i] = Text( "0" ).Link( scroll.content ).Pin( 130, row, 40 );
-				production[i] = Text( "0" ).Link( scroll.content ).Pin( 180, row, 40 );
+				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 150, row, 40 );
+				alreadyProcessed[i] = Text( "0" ).Link( scroll.content ).Pin( 200, row, 40 );
+				production[i] = Text( "0" ).Link( scroll.content ).Pin( 250, row, 40 );
 				row -= iconSize + 5;
 			}
 
 			scroll.SetContentSize( -1, -row );
+			UpdateList();
 		}
 
 		int CompareInStock( int a, int b )
+		{
+			return inStockCount[a].CompareTo( inStockCount[b] );
+		}
+
+		int CompareInResources( int a, int b )
 		{
 			return inStockCount[a].CompareTo( inStockCount[b] );
 		}
@@ -6856,9 +6876,9 @@ if ( cart )
 			return onWayCount[a].CompareTo( onWayCount[b] );
 		}
 
-		int CompareSurplus( int a, int b )
+		int CompareProcessed( int a, int b )
 		{
-			return team.surplus[a].CompareTo( team.surplus[b] );
+			return team.processed[a].CompareTo( team.processed[b] );
 		}
 
 		int ComparePerMinute( int a, int b )
@@ -6875,11 +6895,11 @@ if ( cart )
 				currentComparison = comparison;
 				reverse = false;
 			}
+			UpdateList();
 		}
 
-		public new void Update()
+		public void UpdateList()
 		{
-			base.Update();
 			for ( int i = 0; i < inStockCount.Length; i++ )
 			{
 				inStockCount[i] = 0;
@@ -6887,6 +6907,7 @@ if ( cart )
 			}
 			Stock[] richestStock = new Stock[(int)Item.Type.total];
 			int[] maxStockCount = new int[(int)Item.Type.total];
+			int[] leftInResources = new int[(int)Item.Type.total];
 			foreach ( var stock in team.stocks )
 			{
 				for ( int i = 0; i < inStock.Length; i++ )
@@ -6899,6 +6920,9 @@ if ( cart )
 					inStockCount[i] += stock.itemData[i].content;
 				}
 			}
+
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+				leftInResources[i] = team.world.MaximumPossible( (Item.Type)i, true );
 
 			foreach ( var item in team.items )
 			{
@@ -6925,8 +6949,10 @@ if ( cart )
 				stockButtons[i].onClick.RemoveAllListeners();
 				Stock stock = richestStock[order[i]];
 				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
+				int resources = leftInResources[order[i]];
+				inResources[i].text = resources switch { 0 => "-", int.MaxValue => "infinite", _ => resources.ToString() };
 				onWay[i].text = onWayCount[order[i]].ToString();
-				surplus[i].text = team.surplus[order[i]].ToString();
+				alreadyProcessed[i].text = team.processed[order[i]].ToString();
 
 				var itemData = team.itemProductivityHistory[order[i]];
 				production[i].text = itemData.current.ToString( "n2" );

@@ -243,7 +243,7 @@ public class World : HiveObject
 		return soundSource;
 	}
 
-	public int MaximumPossible( Item.Type itemType )
+	public int MaximumPossible( Item.Type itemType, bool rawOnly = false )
 	{
 		List<(float, Item.Type)> CollectCost( Item.Type itemType )
 		{
@@ -314,6 +314,8 @@ public class World : HiveObject
 			}
 			default:
 			{
+				if ( rawOnly )
+					return 0;
 				int possible = 0;
 				int source = int.MaxValue;
 				foreach ( var raw in CollectCost( itemType ) )

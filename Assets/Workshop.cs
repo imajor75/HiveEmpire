@@ -1067,7 +1067,10 @@ public class Workshop : Building
 		if ( !common )
 		{
 			foreach ( var buffer in buffers )
+			{
 				buffer.stored -= count;
+				team.ItemProcessed( buffer.itemType, count );
+			}
 			return true;
 		}
 
@@ -1093,6 +1096,7 @@ public class Workshop : Building
 			}
 			count -= used;
 			b.stored -= used;
+			team.ItemProcessed( b.itemType, used );
 		}
 		return true;
 	}
