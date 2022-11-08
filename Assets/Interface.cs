@@ -6797,6 +6797,7 @@ if ( cart )
 
 		int[] inStockCount = new int[(int)Item.Type.total];
 		int[] onWayCount = new int[(int)Item.Type.total];
+		int[] inResourceCount = new int[(int)Item.Type.total];
 
 		public static ItemTypeList Create()
 		{
@@ -6868,7 +6869,7 @@ if ( cart )
 
 		int CompareInResources( int a, int b )
 		{
-			return inStockCount[a].CompareTo( inStockCount[b] );
+			return inResourceCount[a].CompareTo( inResourceCount[b] );
 		}
 
 		int CompareOnRoad( int a, int b )
@@ -6907,7 +6908,6 @@ if ( cart )
 			}
 			Stock[] richestStock = new Stock[(int)Item.Type.total];
 			int[] maxStockCount = new int[(int)Item.Type.total];
-			int[] leftInResources = new int[(int)Item.Type.total];
 			foreach ( var stock in team.stocks )
 			{
 				for ( int i = 0; i < inStock.Length; i++ )
@@ -6922,7 +6922,7 @@ if ( cart )
 			}
 
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
-				leftInResources[i] = team.world.MaximumPossible( (Item.Type)i, true );
+				inResourceCount[i] = team.world.MaximumPossible( (Item.Type)i, true );
 
 			foreach ( var item in team.items )
 			{
@@ -6949,7 +6949,7 @@ if ( cart )
 				stockButtons[i].onClick.RemoveAllListeners();
 				Stock stock = richestStock[order[i]];
 				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
-				int resources = leftInResources[order[i]];
+				int resources = inResourceCount[order[i]];
 				inResources[i].text = resources switch { 0 => "-", int.MaxValue => "infinite", _ => resources.ToString() };
 				onWay[i].text = onWayCount[order[i]].ToString();
 				alreadyProcessed[i].text = team.processed[order[i]].ToString();
