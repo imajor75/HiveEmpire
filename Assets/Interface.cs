@@ -6849,19 +6849,19 @@ if ( cart )
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
 
-			int row = 0;
+			int row = 0, j = 0;
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				if ( game.itemTypeUsage[i] == 0 )
 					continue;
-				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
-				inResources[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 60, iconSize );
-				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 100, row, 40, iconSize );
-				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
-				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 150, row, 40 );
-				alreadyProcessed[i] = Text( "0" ).Link( scroll.content ).Pin( 200, row, 40 );
-				production[i] = Text( "0" ).Link( scroll.content ).Pin( 250, row, 40 );
-				total[i] = Text( "0" ).Link( scroll.content ).Pin( 300, row, 40 );
+				itemIcon[j] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
+				inResources[j] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 60, iconSize );
+				inStock[j] = Text( "0" ).Link( scroll.content ).Pin( 100, row, 40, iconSize );
+				stockButtons[j] = inStock[j].gameObject.AddComponent<Button>();
+				onWay[j] = Text( "0" ).Link( scroll.content ).Pin( 150, row, 40 );
+				alreadyProcessed[j] = Text( "0" ).Link( scroll.content ).Pin( 200, row, 40 );
+				production[j] = Text( "0" ).Link( scroll.content ).Pin( 250, row, 40 );
+				total[j++] = Text( "0" ).Link( scroll.content ).Pin( 300, row, 40 );
 				row -= iconSize + 5;
 			}
 
@@ -6953,17 +6953,15 @@ if ( cart )
 
 			List<int> order = new ();
 			for ( int i = 0; i < inStock.Length; i++ )
-				order.Add( i );
+				if ( game.itemTypeUsage[i] != 0 )
+					order.Add( i );
 			if ( currentComparison != null )
 				order.Sort( currentComparison );
 			if ( reverse )
 				order.Reverse();
 
-			for ( int i = 0; i < inStock.Length; i++ )
+			for ( int i = 0; i < order.Count; i++ )
 			{
-				if ( itemIcon[i] == null )
-					continue;
-
 				itemIcon[i].SetType( (Item.Type)order[i] );
 				inStock[i].text = inStockCount[order[i]].ToString();
 				stockButtons[i].onClick.RemoveAllListeners();
