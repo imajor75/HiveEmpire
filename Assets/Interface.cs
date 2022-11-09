@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6481,8 +6481,10 @@ if ( cart )
 		ScrollRect scroll;
 		Team team;
 		Game.Speed speedToRestore;
-		static Comparison<Item> comparison = CompareByAge;
+		static Comparison<Item> comparison = CompareByDistance;
 		static bool reversed;
+		static bool fullTripDistance;
+		static Item.DistanceType distanceType;
 
 		public static ItemList Create()
 		{
@@ -6491,7 +6493,7 @@ if ( cart )
 
 		public void Open( Team team )
 		{
-			if ( base.Open( null, 0, 0, 480, 320 ) )
+			if ( base.Open( null, 0, 0, 420, 320 ) )
 				return;
 			name = "Item list panel";
 			this.team = team;
@@ -6500,11 +6502,21 @@ if ( cart )
 
 			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
 			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
-			Text( "Age (sec)" ).Pin( 250, -20, 120 ).AddClickHandler( delegate { ChangeComparison( CompareByAge ); } );
-			Text( "Path" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByPathLength ); } ).SetTooltip( "Number of roads for the whole travel from the original building to the current destination" );
-			Text( "Distance" ).Pin( 380, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDistance ); } ).SetTooltip( "Distance to the current destination as the crow flies" );
+			Text( "Age (sec)" ).Pin( 250, -20, 120 ).AddClickHandler( () => ChangeComparison( ( a, b ) => a.life.age.CompareTo( b.life.age ) ) );
+			Text( "Distance" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDistance ); } ).SetTooltip( "Distance to the current destination (see the \"Distance mode\" dropdown below)" );
 
-			scroll = ScrollRect().Stretch( 20, 20, -20, -40 );
+			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
+			Text( "Distance mode:" ).Pin( borderWidth, borderWidth + iconSize - 5, 150, iconSize, 0, 0 );
+			var distanceMode = Dropdown().Pin( 120, borderWidth + iconSize, 150, iconSize, 0, 0 ).SetTooltip( "Controls how distance is calculated from the destination" );
+			distanceMode.AddOptions( new List<string> {
+				"Road count of the whole trip",
+				"Remaining road count",
+				"Length of the full path",
+				"Length of the remaining path",
+				"Length as the crow flies",
+				"Length left as the crow flies" } );
+			distanceMode.value = ((int)distanceType) * 2 + ( fullTripDistance ? 0 : 1 );
+			distanceMode.onValueChanged.AddListener( OnDistanceModeChange );
 			Fill();
 		}
 
@@ -6514,6 +6526,12 @@ if ( cart )
 			game.SetSpeed( speedToRestore );
 		}
 
+		void OnDistanceModeChange( int mode )
+		{
+			fullTripDistance = mode % 2 == 0;
+			distanceType = (Item.DistanceType)( mode / 2 );
+			Fill();
+		}
 		void ChangeComparison( Comparison<Item> newComparison )
 		{
 			if ( comparison == newComparison )
@@ -6547,13 +6565,10 @@ if ( cart )
 				if ( item.origin )
 					BuildingIcon( item.origin ).Link( scroll.content ).Pin( 30, row, 80 );
 				if ( item.destination )
-				{
 					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
-					Text( item.location.DistanceFrom( item.destination.location ).ToString() ).Link( scroll.content ).Pin( 360, row, 50 );
-				}
 				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
 				if ( item.path != null )
-					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 300, row, 30 );
+					Text( item.DistanceFromDestination( distanceType, fullTripDistance ).ToString() ).Link( scroll.content ).Pin( 300, row, 30 );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( -1, sortedItems.Count * ( iconSize + 5 ) );
@@ -6561,33 +6576,7 @@ if ( cart )
 
 		static public int CompareByDistance( Item itemA, Item itemB )
 		{
-			if ( itemA.destination == null || itemB.destination == null )
-				return -1;
-			int distanceA = itemA.location.DistanceFrom( itemA.destination.location );
-			int distanceB = itemB.location.DistanceFrom( itemB.destination.location );
-			return distanceA.CompareTo( distanceB );
-		}
-		static public int CompareByAge( Item itemA, Item itemB )
-		{
-			if ( itemA.life.age == itemB.life.age )
-				return 0;
-			if ( itemA.life.age < itemB.life.age )
-				return -1;
-			return 1;
-		}
-		static public int CompareByPathLength( Item itemA, Item itemB )
-		{
-			int lA = 0, lB = 0;
-			if ( itemA.path != null )
-				lA = itemA.path.roadPath.Count;
-			if ( itemB.path != null )
-				lB = itemB.path.roadPath.Count;
-
-			if ( lA == lB )
-				return 0;
-			if ( lA > lB )
-				return -1;
-			return 1;
+			return itemA.DistanceFromDestination( distanceType, fullTripDistance ).CompareTo( itemB.DistanceFromDestination( distanceType, fullTripDistance ) );
 		}
 		static public int CompareByOrigin( Item itemA, Item itemB )
 		{

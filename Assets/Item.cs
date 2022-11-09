@@ -236,7 +236,7 @@ public class Item : HiveObject
 
 	public int DistanceFromDestination( DistanceType type, bool full = false )
 	{
-		if ( destination == null )
+		if ( destination == null || path == null )
 			return -1;
 
 		if ( type == DistanceType.roadCount )
