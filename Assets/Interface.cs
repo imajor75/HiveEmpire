@@ -6483,7 +6483,7 @@ if ( cart )
 
 		public void Open( Team team )
 		{
-			if ( base.Open( null, 0, 0, 420, 320 ) )
+			if ( base.Open( null, 0, 0, 480, 320 ) )
 				return;
 			name = "Item list panel";
 			this.team = team;
@@ -6493,7 +6493,8 @@ if ( cart )
 			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
 			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
 			Text( "Age (sec)" ).Pin( 250, -20, 120 ).AddClickHandler( delegate { ChangeComparison( CompareByAge ); } );
-			Text( "Distance" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByPathLength ); } ).SetTooltip( "Number of roads for the whole travel from the original building to the current destination" );
+			Text( "Path" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByPathLength ); } ).SetTooltip( "Number of roads for the whole travel from the original building to the current destination" );
+			Text( "Distance" ).Pin( 380, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDistance ); } ).SetTooltip( "Distance to the current destination as the crow flies" );
 
 			scroll = ScrollRect().Stretch( 20, 20, -20, -40 );
 			Fill();
@@ -6538,15 +6539,26 @@ if ( cart )
 				if ( item.origin )
 					BuildingIcon( item.origin ).Link( scroll.content ).Pin( 30, row, 80 );
 				if ( item.destination )
+				{
 					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
+					Text( item.location.DistanceFrom( item.destination.location ).ToString() ).Link( scroll.content ).Pin( 360, row, 50 );
+				}
 				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
 				if ( item.path != null )
-					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 300, row, 30 );				
+					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 300, row, 30 );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( -1, sortedItems.Count * ( iconSize + 5 ) );
 		}
 
+		static public int CompareByDistance( Item itemA, Item itemB )
+		{
+			if ( itemA.destination == null || itemB.destination == null )
+				return -1;
+			int distanceA = itemA.location.DistanceFrom( itemA.destination.location );
+			int distanceB = itemB.location.DistanceFrom( itemB.destination.location );
+			return distanceA.CompareTo( distanceB );
+		}
 		static public int CompareByAge( Item itemA, Item itemB )
 		{
 			if ( itemA.life.age == itemB.life.age )
