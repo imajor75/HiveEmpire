@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -5093,9 +5093,9 @@ if ( cart )
 		public Item item;
 		public PathVisualization route;
 		public Text stats;
-		GameObject mapIcon;
 		Building destination;
 		Text destinationText;
+		Text[] distances = new Text[6];
 
 		static public ItemPanel Create()
 		{
@@ -5107,7 +5107,7 @@ if ( cart )
 			this.item = item;
 
 			noResize = true;
-			if ( base.Open( null, 0, 0, 250, 150 ) )
+			if ( base.Open( null, 0, 0, 250, 210 ) )
 				return;
 
 			name = "Item panel";
@@ -5118,14 +5118,22 @@ if ( cart )
 			if ( item.origin )
 				BuildingIcon( item.origin ).Pin( 100, -55, 120 );
 			Text( "Destination:" ).Pin( 15, -75, 170 );
+			Text( "Distance to destination:" ).Pin( 15, -95, 170 );
 
-			mapIcon = new GameObject( "Map Icon" );
-			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
-			mapIcon.AddComponent<SpriteRenderer>().sprite = Item.sprites[(int)item.type];
-			mapIcon.transform.SetParent( transform );
-			mapIcon.name = "Map icon";
-			mapIcon.transform.Rotate( 90, 0, 0 );
-			mapIcon.transform.localScale = Vector3.one * 0.5f;
+			Text( "Full" ).Pin( 120, -115, 40 );
+			Text( "Remaining" ).Pin( 170, -115, 70 );
+
+			Text( "Road count:" ).Pin( 15, -135, 100 );
+			Text( "Step count:" ).Pin( 15, -155, 100 );
+			Text( "As the crow fly:" ).Pin( 15, -175, 100 );
+
+			distances[0] = Text( "?" ).Pin( 120, -135, 50 ).SetTooltip( "Count of roads on the full trip" );
+			distances[1] = Text( "?" ).Pin( 170, -135, 50 ).SetTooltip( "Count of roads left to the destinaion" );
+			distances[2] = Text( "?" ).Pin( 120, -155, 50 ).SetTooltip( "Units the haulers have to walk on the whole trip" );
+			distances[3] = Text( "?" ).Pin( 170, -155, 50 ).SetTooltip( "Units left the haulers  to walk to the destination" );
+			distances[4] = Text( "?" ).Pin( 120, -175, 50 ).SetTooltip( "Length of the whole trip as the crow flies" );
+			distances[5] = Text( "?" ).Pin( 170, -175, 50 ).SetTooltip( "Units left to the destination as the crow flies" );
+
 #if DEBUG
 			Selection.activeGameObject = item.gameObject;
 #endif
@@ -5145,6 +5153,13 @@ if ( cart )
 				return;
 			}
 
+			distances[0].text = item.DistanceFromDestination( Item.DistanceType.roadCount, true ).ToString();
+			distances[1].text = item.DistanceFromDestination( Item.DistanceType.roadCount, false ).ToString();
+			distances[2].text = item.DistanceFromDestination( Item.DistanceType.stepCount, true ).ToString();
+			distances[3].text = item.DistanceFromDestination( Item.DistanceType.stepCount, false ).ToString();
+			distances[4].text = item.DistanceFromDestination( Item.DistanceType.stepsAsCrowFly, true ).ToString();
+			distances[5].text = item.DistanceFromDestination( Item.DistanceType.stepsAsCrowFly, false ).ToString();
+
 			if ( item.destination != destination )
 			{
 				if ( destinationText )
@@ -5160,13 +5175,6 @@ if ( cart )
 
 			if ( item.destination && route == null )
 				route = PathVisualization.Create().Setup( item.path );
-			if ( item.flag )
-				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
-			else
-			{
-				item.assert.IsNotNull( item.hauler );
-				mapIcon.transform.position = item.hauler.transform.position + Vector3.up * 4;
-			}
 		}
 
 		public override void Close()
