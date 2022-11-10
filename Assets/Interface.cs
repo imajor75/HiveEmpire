@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -1646,8 +1646,7 @@ public class Interface : HiveObject
 				if ( text == null )
 					text = gameObject.GetComponent<Text>();
 				text.text = building.nick;
-				if ( !building.construction.done )
-					text.color = Color.grey;
+				text.color = building.construction.done ? Color.black : Color.grey;
 				base.Update();
 			}
 		}
