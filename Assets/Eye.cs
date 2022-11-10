@@ -445,6 +445,7 @@ public class Eye : HiveObject
 		public Camera first;
 		public Camera last;
 		public new Eye eye;
+		public World world => eye?.world ?? game;
 		[JsonIgnore]
 		public int cullingMask = ~( 1 << World.layerIndexMapOnly );
 
@@ -524,7 +525,7 @@ public class Eye : HiveObject
 
 			float closest = float.MaxValue, furthest = float.MinValue;
 			var forward = center.transform.forward;
-			bool sideCamerasAllowed = settings.enableSideCameras && enabled && !eye.world.generatorSettings.reliefSettings.island;
+			bool sideCamerasAllowed = settings.enableSideCameras && enabled && !world.generatorSettings.reliefSettings.island;
 			for ( int i = 0; i < cameras.Count; i++ )
 			{
 				int x = ( i % 3 ) - 1;
