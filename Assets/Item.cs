@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -300,7 +300,8 @@ public class Item : HiveObject
 
 	new void Update()
 	{
-		onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+		if ( eye.isMapModeUsed )
+			onMap.transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
 		base.Update();
 	}
 

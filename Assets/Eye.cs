@@ -34,6 +34,8 @@ public class Eye : HiveObject
 	[JsonIgnore]
 	public Highlight highlight;
 
+	public bool isMapModeUsed { get => mapMode || Map.MapImage.instance != null; }
+
 	public void SetMapMode( bool mapMode )
 	{
 		if ( this.mapMode == mapMode )
