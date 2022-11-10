@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -502,6 +502,7 @@ public class Item : HiveObject
 		destination.ItemArrived( this );
 
 		team.UnregisterItem( this );
+		Destroy( onMap );
 		base.Remove();
 	}
 
@@ -534,6 +535,7 @@ public class Item : HiveObject
 			hauler.ResetTasks();	// TODO What if the hauler has a second item in hand?
 		};
 		CancelTrip();
+		Destroy( onMap );
 		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )
 		{
