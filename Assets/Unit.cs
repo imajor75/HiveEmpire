@@ -877,12 +877,10 @@ public class Unit : HiveObject
 					secondary.hauler = boss;
 					items[1] = secondary;
 					deliverTask.items[1] = secondary;
-					var box = boss.links[(int)LinkType.haulingBoxSecondary]?.transform;
+
+					var box = secondary.Link( boss, LinkType.haulingBoxSecondary );
 					if ( box )
-					{
-						secondary.transform.SetParent( box, false );
 						box.localPosition = Constants.Item.secondItemOffset[(int)secondary.type];
-					}
 				}
 				return true;
 			}
@@ -907,13 +905,10 @@ public class Unit : HiveObject
 				boss.animator?.SetTrigger( expectingSecondary ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
 			}
 
-			var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
-			if ( items[0].transform.parent != attachAt && timer.age > -pickupReparentTime )
+			if ( !reparented[0] && timer.age > -pickupReparentTime )
 			{
 				reparented[0] = true;
-				items[0].transform.SetParent( attachAt?.transform, false );
-				items[0].transform.localPosition = Vector3.zero;
-				attachAt?.SetActive( true );
+				items[0].Link( boss, expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight );
 			}
 
 			if ( !timer.done )
@@ -988,7 +983,7 @@ public class Unit : HiveObject
 
 					if ( item.buddy )
 					{
-						item.buddy.transform.SetParent( boss.links[(int)LinkType.haulingBoxLight]?.transform, false );
+						item.buddy.Link( boss, LinkType.haulingBoxLight );
 						timer.reference -= 30;
 					}
 					else
@@ -1513,18 +1508,14 @@ public class Unit : HiveObject
 
 		if ( itemsInHands[1] )
 		{
-			if ( itemsInHands[0] )
-				itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
+			itemsInHands[0]?.Link( this, LinkType.haulingBoxHeavy );
 	
-			var secondaryBox = links[(int)LinkType.haulingBoxSecondary].transform;
+			var secondaryBox = itemsInHands[1].Link( this, LinkType.haulingBoxSecondary );
 			if ( secondaryBox )
-			{
-				itemsInHands[1].transform.SetParent( secondaryBox, false );
 				secondaryBox.localPosition = Constants.Item.secondItemOffset[(int)itemsInHands[1].type];
-			}
 		}
-		else if ( itemsInHands[0] )
-			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxLight].transform, false );
+		else 
+			itemsInHands[0]?.Link( this, LinkType.haulingBoxLight );
 
 		foreach ( var task in taskQueue )
 			task.Start();

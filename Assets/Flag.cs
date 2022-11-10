@@ -373,12 +373,12 @@ public class Flag : HiveObject
 		if ( frames[frameIndex] == null )
 		{
 			// This only happens rarely, when after load flag.Start is not called before this point is reached
-			item.transform.SetParent( transform, false );	
+			item.Link( transform );	
 			return;
 		}
 
 		var t = frames[frameIndex].transform;
-		item.transform.SetParent( t, false );
+		item.Link( t );
 
 		// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
 		Vector3 framePos = t.position;

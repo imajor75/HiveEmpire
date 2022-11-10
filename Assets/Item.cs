@@ -66,6 +66,33 @@ public class Item : HiveObject
 	public SpriteRenderer onMap;
 	public Vector3 mapPosition { set { onMap.transform.position = value + Vector3.up * 6; } }
 
+	public Transform Link( Unit hauler, Unit.LinkType linkType )
+	{
+		var slot = hauler.links[(int)linkType];
+		if ( slot )
+		{
+			transform.SetParent( slot.transform, false );
+			slot.SetActive( true );
+		}
+		if ( onMap )
+		{
+			onMap.transform.SetParent( hauler.transform, false );
+			onMap.transform.localScale = Vector3.one * 0.15f / hauler.transform.lossyScale.x;
+		}
+		transform.localPosition = Vector3.zero;
+		return slot?.transform;
+	}
+
+	public void Link( Transform parent )
+	{
+		transform.SetParent( parent, false );
+		if ( onMap )
+		{
+			onMap.transform.SetParent( transform, false );
+			onMap.transform.localScale = Vector3.one * 0.15f / transform.lossyScale.x;
+		}
+	}
+
 	[JsonIgnore]
 	public bool debugCancelTrip;
 
