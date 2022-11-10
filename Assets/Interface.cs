@@ -6865,7 +6865,7 @@ if ( cart )
 					continue;
 				itemIcon[j] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
 				inResources[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 30, row, 70, iconSize );
-				inStock[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 100, row, 40, iconSize );
+				inStock[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 100, row, 60, iconSize );
 				stockButtons[j] = inStock[j].gameObject.AddComponent<Button>();
 				onWay[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 150, row, 40 );
 				alreadyProcessed[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 200, row, 50 );
@@ -6983,6 +6983,8 @@ if ( cart )
 				alreadyProcessed[i].text = team.processed[order[i]].ToString();
 				if ( resources != 0 && resources != int.MaxValue )
 				{
+					inStock[i].text += $" ({inStockCount[order[i]]*100/totalCount[order[i]]}%)";
+					onWay[i].text += $" ({onWayCount[order[i]]*100/totalCount[order[i]]}%)";
 					inResources[i].text += $" ({resources*100/totalCount[order[i]]}%)";
 					alreadyProcessed[i].text += $" ({team.processed[order[i]]*100/totalCount[order[i]]}%)";
 				}
