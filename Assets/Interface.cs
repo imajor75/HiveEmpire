@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -2224,6 +2224,11 @@ public class Interface : HiveObject
 			if ( c == null || hiveObject == null || hiveObject.location == null )
 				return;
 			var p = c.WorldToScreenPoint( hiveObject.location.positionInViewport );
+			if ( p.z < 0 )
+			{
+				p.x *= -1;
+				p.y *= -1;
+			}
 
 			ring.transform.position = p;
 			float scale;
