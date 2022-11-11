@@ -6821,7 +6821,7 @@ if ( cart )
 
 		public void Open( Team team )
 		{
-			if ( base.Open( null, 0, 0, 440, 400 ) )
+			if ( base.Open( null, 0, 0, 460, 400 ) )
 				return;
 
 			name = "Item stats panel";
@@ -6844,7 +6844,7 @@ if ( cart )
 			AddClickHandler( delegate { SetOrder( CompareOnRoad ); } );
 
 			Text( "Processed", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
+			PinSideways( 0, -20, 70, 20 ).
 			SetTooltip( "Amount already processed by your team" ).
 			AddClickHandler( delegate { SetOrder( CompareProcessed ); } );
 
@@ -6872,9 +6872,9 @@ if ( cart )
 				inStock[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 100, row, 60, iconSize );
 				stockButtons[j] = inStock[j].gameObject.AddComponent<Button>();
 				onWay[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 150, row, 40 );
-				alreadyProcessed[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 200, row, 50 );
-				production[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 250, row, 40 );
-				total[j++] = Text( "0", 10 ).Link( scroll.content ).Pin( 300, row, 40 );
+				alreadyProcessed[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 200, row, 70 );
+				production[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 270, row, 40 );
+				total[j++] = Text( "0", 10 ).Link( scroll.content ).Pin( 320, row, 40 );
 				row -= iconSize + 5;
 			}
 
