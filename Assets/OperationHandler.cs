@@ -490,6 +490,7 @@ public class OperationHandler : HiveObject
     public void OnEndGameStep()
     {
         assert.AreEqual( this, oh );
+        challenge?.CheckStatus();
 
 #if DEBUG
         if ( recordCRC && mode == Mode.recording )
@@ -529,9 +530,7 @@ public class OperationHandler : HiveObject
             Assert.global.AreEqual( mode, Mode.repeating );
             mode = Mode.recording;
         }
-
-        challenge?.CheckStatus();
-    }
+   }
 
     static void DumpEvents( List<Event> events, string file, int frame = -1 )
     {
