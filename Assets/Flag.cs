@@ -10,6 +10,8 @@ public class Flag : HiveObject
 	public Node node;
 	public Item[] items = new Item[Constants.Flag.maxItems];
 	public Unit user;
+	public Game.Timer freedom = new ();	// This timer is used to prevent units allocating a flag on the same frame as it was released.
+										// This is important because units should try to allocate the flag in the order how units lie in the world.hiveObjects array
 	public bool crossing;
 	public bool recentlyLeftCrossing;	// Only for validaion, debug purposes
 	public Road[] roadsStartingHere = new Road[Constants.Node.neighbourCount];

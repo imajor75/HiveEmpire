@@ -1350,6 +1350,21 @@ public class Game : World
 				newHiveObject.worldIndex = hiveObjects.Count;
 				hiveObjects.Add( newHiveObject );
 			}
+
+			if ( newHiveObject.priority )
+			{
+				int i = newHiveObject.worldIndex;
+				while ( i > 0 && ( hiveObjects[i-1] == null || !hiveObjects[i-1].priority ) )
+					i--;
+				if ( i != newHiveObject.worldIndex && hiveObjects[i] )
+				{
+					var old = hiveObjects[i];
+					hiveObjects[newHiveObject.worldIndex] = old;
+					old.worldIndex = newHiveObject.worldIndex;
+					hiveObjects[i] = newHiveObject;
+					newHiveObject.worldIndex = i;
+				}
+			}
 		}
 		newHiveObjects.Clear();
 		foreach ( var hiveObject in hiveObjects )

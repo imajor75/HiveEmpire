@@ -2417,6 +2417,7 @@ public class Unit : HiveObject
 		{
 			assert.AreEqual( exclusiveFlag.user, this );
 			exclusiveFlag.user = null;
+			exclusiveFlag.freedom.Start();
 			exclusiveFlag = null;
 		}
 
@@ -2428,8 +2429,9 @@ public class Unit : HiveObject
 	{
 		if ( node == null )
 			return false;
-		if ( node.flag && !node.flag.crossing && node.flag.user )
-			return false;
+		if ( node.flag && !node.flag.crossing )
+			if ( node.flag.user || node.flag.freedom.reference == game.time )
+				return false;
 		if ( road )
 		{
 			int index = road.nodes.IndexOf( node );	// This could be Road.NodeIndex, which is faster, but that depends on RegisterOnRoad, which is not always called at this moment
