@@ -834,11 +834,14 @@ public class Eye : HiveObject
 
 					void DrawMeshRepeatedly( Mesh mesh, Matrix4x4 location, Material material )
 					{
+						maskCreator.DrawMesh( mesh, location, material );
+						if ( !game.repeating )
+							return;
+
 						var rightShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size, 0, 0 ) );
 						var leftShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size, 0, 0 ) );
 						var upShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size / 2, 0, ground.dimension * Constants.Node.size ) );
 						var downShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size / 2, 0, -ground.dimension * Constants.Node.size ) );
-						maskCreator.DrawMesh( mesh, location, material );
 						maskCreator.DrawMesh( mesh, rightShift * location, material );
 						maskCreator.DrawMesh( mesh, leftShift * location, material );
 						maskCreator.DrawMesh( mesh, upShift * location, material );
