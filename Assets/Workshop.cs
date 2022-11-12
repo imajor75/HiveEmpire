@@ -27,7 +27,7 @@ public class Workshop : Building
 	public int statusProduction;
 	public Game.Timer statusDuration = new ();
 	public bool outOfResourceReported;
-	public Resource dungPile;
+	public List<Resource> dungPiles = new ();
 	public Game.Timer allowFreeStone = new ();
 	public Game.Timer suspendGathering = new ();
 	
@@ -74,6 +74,8 @@ public class Workshop : Building
 		}
 	}
 
+	[Obsolete( "Compatibility with old files", true )]
+	Resource dungPile { set { dungPiles.Add( value ); } }
 	[Obsolete( "Compatibility with old files", true )]
 	float[] lastCalculatedProductivity { set {} }
 	[Obsolete( "Compatibility with old files", true )]
@@ -706,7 +708,7 @@ public class Workshop : Building
 			foreach ( var nearbyNode in Ground.areas[productionConfiguration.gatheringRange] )
 				node.Add( nearbyNode ).valuable = false;
 		}
-		dungPile?.Remove();
+		RemoveElements( dungPiles );
 		team.workshops.Remove( this );
 		base.Remove();
 	}
@@ -899,8 +901,11 @@ public class Workshop : Building
 		if ( !construction.done || blueprintOnly )
 			return;
 
-		if ( productionConfiguration.producesDung && dungPile == null )
-			dungPile = Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true );
+		if ( productionConfiguration.producesDung && dungPiles.Count == 0 )
+		{
+			dungPiles.Add( Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true ) );
+			dungPiles.Add( Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true ) );
+		}
 
 		if ( type == Type.barrack && output > 0 )
 		{
@@ -1165,7 +1170,7 @@ public class Workshop : Building
 					{
 						if ( type != Type.stoneMine || allowFreeStone.inProgress )
 							return false;
-						Log( "Stone mine giving one stone for free due to long starvation" );
+						Log( $"Stone mine {this} giving one stone for free due to long starvation" );
 					}
 					allowFreeStone.Start( Constants.Workshop.freeStoneTimePeriod );
 					return CollectResourceFromNode( resource );

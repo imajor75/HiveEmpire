@@ -683,6 +683,8 @@ public class World : HiveObject
 						s.team.workshops.Add( s );
 						Assert.global.Fail();
 					}
+					if ( s.dungPiles.Count == 1 )
+						s.dungPiles.Add( Resource.Create().Setup( s.node, Resource.Type.dung, int.MaxValue, true ) );
 				}
 
 				var t = o as Stock;

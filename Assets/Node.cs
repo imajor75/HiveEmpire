@@ -551,7 +551,7 @@ public class Node : HiveObject
 
 		if ( x != world.ground.dimension && y != world.ground.dimension )
 			for ( int i = 0; i < 6; i++ )
-				assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );
+				assert.AreEqual( this, Neighbour( i ).Neighbour( ( i + 3 ) % 6 ) );	// TODO Triggered on an island
 		if ( flag )
 		{
 			assert.AreEqual( this, flag.node );
