@@ -108,6 +108,16 @@ public class Resource : HiveObject
 			resource.Remove();
 	}
 
+	public void StartRest()
+	{
+		if ( underGround )
+			keepAway.Start( (int)( Constants.Workshop.mineOreRestTime ) );
+		if ( type == Type.fish )
+			keepAway.Start( Constants.Workshop.fishRestTime );
+		if ( type == Type.dung )
+			keepAway.Start( Constants.Workshop.dungRestTime );
+	}
+
 	public static void Initialize()
 	{
 		object[] meshes = {
