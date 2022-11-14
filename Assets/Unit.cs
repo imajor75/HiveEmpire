@@ -469,7 +469,7 @@ public class Unit : HiveObject
 				point = nextRoad.nodes.Count - 1;
 			if ( exclusive )
 			{
-				if ( !boss.EnterExclusivity( nextRoad, boss.node ) )
+				if ( !boss.EnterExclusivity( nextRoad, boss.node, true ) )
 				{
 					// Boss is trying to move to the next road. This is always possible when the flag is not a crossing, since no units 
 					// can use the same entry as the cart. But when the flag is a crossing, it is possible that the cart cannot jump to the 
@@ -477,8 +477,8 @@ public class Unit : HiveObject
 					// of the previous road.
 					if ( wasExclusive )
 					{
-						var s = boss.EnterExclusivity( null, boss.node );
-						boss.assert.IsTrue( s );
+						var s = boss.EnterExclusivity( null, boss.node, true );
+						boss.assert.IsTrue( s );	// TODO Triggered for a cart
 					}
 					path.progress--;    // cancel advancement
 					boss.assert.IsTrue( boss.node.flag.crossing || path.progress == 0 );	// TODO Triggered when a cart full of fish just started to deliver stuff, there was a normal hauler in the way
@@ -2425,12 +2425,12 @@ public class Unit : HiveObject
 		return road.nodes[index];
 	}
 
-	public bool EnterExclusivity( Road road, Node node )
+	public bool EnterExclusivity( Road road, Node node, bool ignoreFreedom = false )
 	{
 		if ( node == null )
 			return false;
 		if ( node.flag && !node.flag.crossing )
-			if ( node.flag.user || node.flag.freedom.reference == game.time )
+			if ( node.flag.user || ( node.flag.freedom.reference == game.time && !ignoreFreedom ) )
 				return false;
 		if ( road )
 		{
