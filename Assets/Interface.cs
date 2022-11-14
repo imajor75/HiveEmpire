@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -3284,10 +3284,7 @@ public class Interface : HiveObject
 				}
 
 				if ( stock.itemData[j].cartOutput > 0 )
-				{
 					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.25f ).color = new Color( 1, 0.75f, 0.15f );
-					offset += 10;
-				}
 				i.AddClickHandler( () => SelectItemType( t ) );
 
 				var data = stock.itemData[(int)t];
@@ -3409,7 +3406,7 @@ public class Interface : HiveObject
 				counts[i].color = c;
 				counts[i].text = $"{stock.itemData[i].content} ({stock.itemData[i].onWay})";
 			}
-			total.text = stock.total + " => " + stock.totalTarget;
+			total.text = $"{stock.total} ({stock.totalTarget-stock.total})";
 			selected?.SetType( selectedItemType, false );
 			int t = (int)selectedItemType;
 			if ( channelText != inputMin ) inputMin.text = stock.itemData[t].inputMin + "<";
