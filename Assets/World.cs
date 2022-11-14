@@ -1106,6 +1106,10 @@ public class World : HiveObject
 			if ( weight == 0 )
 				return;
 
+			foreach ( var mine in workshopConfigurations )
+				if ( mine.outputType == Resource.ItemType( resourceType ) )
+					weight /= mine.outputStackSize;
+
 			ores.Add( new Ore{ resourceType = resourceType, weight = weight } );
 		}
 		AddOre( Resource.Type.coal );
