@@ -271,6 +271,8 @@ public class Item : HiveObject
 
 		if ( type == DistanceType.stepsAsCrowFly )
 		{
+			if ( full && origin == null )
+				return 0;
 			var start = full ? origin.location : location;
 			return start.DistanceFrom( destination.location );
 		}
