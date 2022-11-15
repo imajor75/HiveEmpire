@@ -302,6 +302,9 @@ public class OperationHandler : HiveObject
 
     public string SaveReplay( string name = null )
     {
+        var worldRef = world;
+        world = null;
+
         if ( name == null )
             name = Application.persistentDataPath + $"/Replays/{nextFileName}.json";
         if ( name.Contains( nextFileName ) ) 
@@ -314,6 +317,8 @@ public class OperationHandler : HiveObject
             assert.AreEqual( replayLength, CRCCodesSkipped + CRCCodes.Count );
 		Serializer.Write( name, this, true );
         SaveEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
+
+        world = worldRef;
         return name;
     }
 
@@ -490,6 +495,7 @@ public class OperationHandler : HiveObject
     public void OnEndGameStep()
     {
         assert.AreEqual( this, oh );
+        challenge?.CheckStatus();
 
 #if DEBUG
         if ( recordCRC && mode == Mode.recording )
@@ -529,9 +535,7 @@ public class OperationHandler : HiveObject
             Assert.global.AreEqual( mode, Mode.repeating );
             mode = Mode.recording;
         }
-
-        challenge?.CheckStatus();
-    }
+   }
 
     static void DumpEvents( List<Event> events, string file, int frame = -1 )
     {

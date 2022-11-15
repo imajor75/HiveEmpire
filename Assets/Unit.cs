@@ -469,7 +469,7 @@ public class Unit : HiveObject
 				point = nextRoad.nodes.Count - 1;
 			if ( exclusive )
 			{
-				if ( !boss.EnterExclusivity( nextRoad, boss.node ) )
+				if ( !boss.EnterExclusivity( nextRoad, boss.node, true ) )
 				{
 					// Boss is trying to move to the next road. This is always possible when the flag is not a crossing, since no units 
 					// can use the same entry as the cart. But when the flag is a crossing, it is possible that the cart cannot jump to the 
@@ -477,8 +477,8 @@ public class Unit : HiveObject
 					// of the previous road.
 					if ( wasExclusive )
 					{
-						var s = boss.EnterExclusivity( null, boss.node );
-						boss.assert.IsTrue( s );
+						var s = boss.EnterExclusivity( null, boss.node, true );
+						boss.assert.IsTrue( s );	// TODO Triggered for a cart
 					}
 					path.progress--;    // cancel advancement
 					boss.assert.IsTrue( boss.node.flag.crossing || path.progress == 0 );	// TODO Triggered when a cart full of fish just started to deliver stuff, there was a normal hauler in the way
@@ -877,12 +877,10 @@ public class Unit : HiveObject
 					secondary.hauler = boss;
 					items[1] = secondary;
 					deliverTask.items[1] = secondary;
-					var box = boss.links[(int)LinkType.haulingBoxSecondary]?.transform;
+
+					var box = secondary.Link( boss, LinkType.haulingBoxSecondary );
 					if ( box )
-					{
-						secondary.transform.SetParent( box, false );
 						box.localPosition = Constants.Item.secondItemOffset[(int)secondary.type];
-					}
 				}
 				return true;
 			}
@@ -907,13 +905,10 @@ public class Unit : HiveObject
 				boss.animator?.SetTrigger( expectingSecondary ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
 			}
 
-			var attachAt = boss.links[(int)( expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight )];
-			if ( items[0].transform.parent != attachAt && timer.age > -pickupReparentTime )
+			if ( !reparented[0] && timer.age > -pickupReparentTime )
 			{
 				reparented[0] = true;
-				items[0].transform.SetParent( attachAt?.transform, false );
-				items[0].transform.localPosition = Vector3.zero;
-				attachAt?.SetActive( true );
+				items[0].Link( boss, expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight );
 			}
 
 			if ( !timer.done )
@@ -988,7 +983,7 @@ public class Unit : HiveObject
 
 					if ( item.buddy )
 					{
-						item.buddy.transform.SetParent( boss.links[(int)LinkType.haulingBoxLight]?.transform, false );
+						item.buddy.Link( boss, LinkType.haulingBoxLight );
 						timer.reference -= 30;
 					}
 					else
@@ -1063,7 +1058,20 @@ public class Unit : HiveObject
 			}
 			if ( boss.road.NodeIndex( boss.node ) == -1 )
 				return finished;
-			return boss.EnterExclusivity( boss.road, boss.node );
+			if ( boss.EnterExclusivity( boss.road, boss.node ) )
+				return finished;
+
+			for ( int i = 1; i < boss.road.nodes.Count - 1; i++ )
+			{
+				if ( boss.road.haulerAtNodes[i] != null )
+					continue;
+
+				boss.ScheduleWalkToRoadNode( boss.road, boss.road.nodes[i], false, true );
+				return needMoreCalls;
+			}
+
+			boss.Retire();
+			return finished;
 		}
 	}
 
@@ -1500,18 +1508,14 @@ public class Unit : HiveObject
 
 		if ( itemsInHands[1] )
 		{
-			if ( itemsInHands[0] )
-				itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxHeavy].transform, false );
+			itemsInHands[0]?.Link( this, LinkType.haulingBoxHeavy );
 	
-			var secondaryBox = links[(int)LinkType.haulingBoxSecondary].transform;
+			var secondaryBox = itemsInHands[1].Link( this, LinkType.haulingBoxSecondary );
 			if ( secondaryBox )
-			{
-				itemsInHands[1].transform.SetParent( secondaryBox, false );
 				secondaryBox.localPosition = Constants.Item.secondItemOffset[(int)itemsInHands[1].type];
-			}
 		}
-		else if ( itemsInHands[0] )
-			itemsInHands[0].transform.SetParent( links[(int)LinkType.haulingBoxLight].transform, false );
+		else 
+			itemsInHands[0]?.Link( this, LinkType.haulingBoxLight );
 
 		foreach ( var task in taskQueue )
 			task.Start();
@@ -2413,6 +2417,7 @@ public class Unit : HiveObject
 		{
 			assert.AreEqual( exclusiveFlag.user, this );
 			exclusiveFlag.user = null;
+			exclusiveFlag.freedom.Start();
 			exclusiveFlag = null;
 		}
 
@@ -2420,12 +2425,13 @@ public class Unit : HiveObject
 		return road.nodes[index];
 	}
 
-	public bool EnterExclusivity( Road road, Node node )
+	public bool EnterExclusivity( Road road, Node node, bool ignoreFreedom = false )
 	{
 		if ( node == null )
 			return false;
-		if ( node.flag && !node.flag.crossing && node.flag.user )
-			return false;
+		if ( node.flag && !node.flag.crossing )
+			if ( node.flag.user || ( node.flag.freedom.reference == game.time && !ignoreFreedom ) )
+				return false;
 		if ( road )
 		{
 			int index = road.nodes.IndexOf( node );	// This could be Road.NodeIndex, which is faster, but that depends on RegisterOnRoad, which is not always called at this moment

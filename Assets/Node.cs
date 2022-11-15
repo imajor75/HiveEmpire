@@ -221,18 +221,21 @@ public class Node : HiveObject
 
 	public Vector3 GetPositionRelativeTo( Vector3 reference )
 	{
-		float limit = world.ground.dimension * Constants.Node.size / 2;
 		var position = this.position;	
-		var difference = position - reference;
-		float dv0 = difference.z, dv1 = -dv0, dh0 = difference.x - difference.z / 2, dh1 = -dh0;
-		if ( difference.x - difference.z / 2 > limit )
-			position -= new Vector3( limit * 2, 0, 0 );
-		if ( difference.z / 2 - difference.x > limit )
-			position += new Vector3( limit * 2, 0, 0 );
-		if ( difference.z > limit )
-			position -= new Vector3( limit, 0, limit * 2 );
-		if ( -difference.z > limit )
-			position += new Vector3( limit, 0, limit * 2 );
+		if ( world.repeating )
+		{
+			float limit = world.ground.dimension * Constants.Node.size / 2;
+			var difference = position - reference;
+			float dv0 = difference.z, dv1 = -dv0, dh0 = difference.x - difference.z / 2, dh1 = -dh0;
+			if ( difference.x - difference.z / 2 > limit )
+				position -= new Vector3( limit * 2, 0, 0 );
+			if ( difference.z / 2 - difference.x > limit )
+				position += new Vector3( limit * 2, 0, 0 );
+			if ( difference.z > limit )
+				position -= new Vector3( limit, 0, limit * 2 );
+			if ( -difference.z > limit )
+				position += new Vector3( limit, 0, limit * 2 );
+		}
 		return position;
 	}
 

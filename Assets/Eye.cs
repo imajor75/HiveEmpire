@@ -34,6 +34,8 @@ public class Eye : HiveObject
 	[JsonIgnore]
 	public Highlight highlight;
 
+	public bool isMapModeUsed { get => mapMode || Map.MapImage.instance != null; }
+
 	public void SetMapMode( bool mapMode )
 	{
 		if ( this.mapMode == mapMode )
@@ -443,6 +445,7 @@ public class Eye : HiveObject
 		public Camera first;
 		public Camera last;
 		public new Eye eye;
+		public World world => eye?.world ?? game;
 		[JsonIgnore]
 		public int cullingMask = ~( 1 << World.layerIndexMapOnly );
 
@@ -522,7 +525,7 @@ public class Eye : HiveObject
 
 			float closest = float.MaxValue, furthest = float.MinValue;
 			var forward = center.transform.forward;
-			bool sideCamerasAllowed = settings.enableSideCameras && enabled && !eye.world.generatorSettings.reliefSettings.island;
+			bool sideCamerasAllowed = settings.enableSideCameras && enabled && !world.generatorSettings.reliefSettings.island;
 			for ( int i = 0; i < cameras.Count; i++ )
 			{
 				int x = ( i % 3 ) - 1;
@@ -831,11 +834,14 @@ public class Eye : HiveObject
 
 					void DrawMeshRepeatedly( Mesh mesh, Matrix4x4 location, Material material )
 					{
+						maskCreator.DrawMesh( mesh, location, material );
+						if ( !game.repeating )
+							return;
+
 						var rightShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size, 0, 0 ) );
 						var leftShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size, 0, 0 ) );
 						var upShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size / 2, 0, ground.dimension * Constants.Node.size ) );
 						var downShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size / 2, 0, -ground.dimension * Constants.Node.size ) );
-						maskCreator.DrawMesh( mesh, location, material );
 						maskCreator.DrawMesh( mesh, rightShift * location, material );
 						maskCreator.DrawMesh( mesh, leftShift * location, material );
 						maskCreator.DrawMesh( mesh, upShift * location, material );

@@ -463,15 +463,6 @@ public class Workshop : Building
 				resource.gathered.Start();
 				if ( !resource.infinite && --resource.charges == 0 )
 					resource.Remove();
-				else
-				{
-					if ( resource.underGround )
-						resource.keepAway.Start( (int)( Constants.Workshop.mineOreRestTime ) );
-					if ( resource.type == Resource.Type.fish )
-						resource.keepAway.Start( Constants.Workshop.fishRestTime );
-					if ( resource.type == Resource.Type.dung )
-						resource.keepAway.Start( Constants.Workshop.dungRestTime );
-				}
 			}
 			else
 			{
@@ -1067,7 +1058,10 @@ public class Workshop : Building
 		if ( !common )
 		{
 			foreach ( var buffer in buffers )
+			{
 				buffer.stored -= count;
+				team.ItemProcessed( buffer.itemType, count );
+			}
 			return true;
 		}
 
@@ -1093,6 +1087,7 @@ public class Workshop : Building
 			}
 			count -= used;
 			b.stored -= used;
+			team.ItemProcessed( b.itemType, used );
 		}
 		return true;
 	}
@@ -1218,6 +1213,7 @@ public class Workshop : Building
 		task.Setup( tinkerer, resource );
 		tinkerer.ScheduleTask( task );
 		resource.hunter = tinkerer;
+		resource.StartRest();
 		SetWorking( true );
 		return true;
 	}

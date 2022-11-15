@@ -44,6 +44,8 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
+	public int length { get => nodes.Count - 1; }
+
 	override public int checksum
 	{
 		get
@@ -1006,7 +1008,6 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		var node = nodes[nodeIndex];
 		var newNode = node.Neighbour( direction );
-		Resource.RemoveFromGround( newNode );
 
 		if ( newNode.block.IsBlocking( Node.Block.Type.roads ) && newNode.road != this )
 			return null;
@@ -1028,6 +1029,8 @@ public class Road : HiveObject, Interface.IInputHandler
 
 		if ( checkOnly )
 			return this;
+			
+		Resource.RemoveFromGround( newNode );
 
 		if ( deleteBefore && insertBefore )
 			insertBefore = false;

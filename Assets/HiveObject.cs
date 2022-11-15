@@ -96,6 +96,7 @@ public abstract class HiveObject : HiveCommon
 	public virtual bool wantFoeClicks { get { return false; } }
 
 	public virtual int checksum { get { return id; } }
+	public virtual bool priority { get => false; }
 	
 	[JsonIgnore]
 	public Assert assert;

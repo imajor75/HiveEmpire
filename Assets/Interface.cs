@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -541,7 +541,7 @@ public class Interface : HiveObject
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
 		var itemListButton = this.Image( Icon.crate ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
-		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemStats.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemTypeList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
 		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
 		resourceListButton.SetTooltip( () => $"Show resource statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
@@ -1646,8 +1646,7 @@ public class Interface : HiveObject
 				if ( text == null )
 					text = gameObject.GetComponent<Text>();
 				text.text = building.nick;
-				if ( !building.construction.done )
-					text.color = Color.grey;
+				text.color = building.construction.done ? Color.black : Color.grey;
 				base.Update();
 			}
 		}
@@ -2225,6 +2224,11 @@ public class Interface : HiveObject
 			if ( c == null || hiveObject == null || hiveObject.location == null )
 				return;
 			var p = c.WorldToScreenPoint( hiveObject.location.positionInViewport );
+			if ( p.z < 0 )
+			{
+				p.x *= -1;
+				p.y *= -1;
+			}
 
 			ring.transform.position = p;
 			float scale;
@@ -3280,10 +3284,7 @@ public class Interface : HiveObject
 				}
 
 				if ( stock.itemData[j].cartOutput > 0 )
-				{
 					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.25f ).color = new Color( 1, 0.75f, 0.15f );
-					offset += 10;
-				}
 				i.AddClickHandler( () => SelectItemType( t ) );
 
 				var data = stock.itemData[(int)t];
@@ -3405,7 +3406,7 @@ public class Interface : HiveObject
 				counts[i].color = c;
 				counts[i].text = $"{stock.itemData[i].content} ({stock.itemData[i].onWay})";
 			}
-			total.text = stock.total + " => " + stock.totalTarget;
+			total.text = $"{stock.total} ({stock.totalTarget-stock.total})";
 			selected?.SetType( selectedItemType, false );
 			int t = (int)selectedItemType;
 			if ( channelText != inputMin ) inputMin.text = stock.itemData[t].inputMin + "<";
@@ -5093,9 +5094,9 @@ if ( cart )
 		public Item item;
 		public PathVisualization route;
 		public Text stats;
-		GameObject mapIcon;
 		Building destination;
 		Text destinationText;
+		Text[] distances = new Text[6];
 
 		static public ItemPanel Create()
 		{
@@ -5107,7 +5108,7 @@ if ( cart )
 			this.item = item;
 
 			noResize = true;
-			if ( base.Open( null, 0, 0, 250, 150 ) )
+			if ( base.Open( null, 0, 0, 250, 210 ) )
 				return;
 
 			name = "Item panel";
@@ -5118,14 +5119,22 @@ if ( cart )
 			if ( item.origin )
 				BuildingIcon( item.origin ).Pin( 100, -55, 120 );
 			Text( "Destination:" ).Pin( 15, -75, 170 );
+			Text( "Distance to destination:" ).Pin( 15, -95, 170 );
 
-			mapIcon = new GameObject( "Map Icon" );
-			World.SetLayerRecursive( mapIcon, World.layerIndexMapOnly );
-			mapIcon.AddComponent<SpriteRenderer>().sprite = Item.sprites[(int)item.type];
-			mapIcon.transform.SetParent( transform );
-			mapIcon.name = "Map icon";
-			mapIcon.transform.Rotate( 90, 0, 0 );
-			mapIcon.transform.localScale = Vector3.one * 0.5f;
+			Text( "Full" ).Pin( 120, -115, 40 );
+			Text( "Remaining" ).Pin( 170, -115, 70 );
+
+			Text( "Road count:" ).Pin( 15, -135, 100 );
+			Text( "Step count:" ).Pin( 15, -155, 100 );
+			Text( "As the crow fly:" ).Pin( 15, -175, 100 );
+
+			distances[0] = Text( "?" ).Pin( 120, -135, 50 ).SetTooltip( "Count of roads on the full trip" );
+			distances[1] = Text( "?" ).Pin( 170, -135, 50 ).SetTooltip( "Count of roads left to the destinaion" );
+			distances[2] = Text( "?" ).Pin( 120, -155, 50 ).SetTooltip( "Units the haulers have to walk on the whole trip" );
+			distances[3] = Text( "?" ).Pin( 170, -155, 50 ).SetTooltip( "Units left the haulers  to walk to the destination" );
+			distances[4] = Text( "?" ).Pin( 120, -175, 50 ).SetTooltip( "Length of the whole trip as the crow flies" );
+			distances[5] = Text( "?" ).Pin( 170, -175, 50 ).SetTooltip( "Units left to the destination as the crow flies" );
+
 #if DEBUG
 			Selection.activeGameObject = item.gameObject;
 #endif
@@ -5145,6 +5154,13 @@ if ( cart )
 				return;
 			}
 
+			distances[0].text = item.DistanceFromDestination( Item.DistanceType.roadCount, true ).ToString();
+			distances[1].text = item.DistanceFromDestination( Item.DistanceType.roadCount, false ).ToString();
+			distances[2].text = item.DistanceFromDestination( Item.DistanceType.stepCount, true ).ToString();
+			distances[3].text = item.DistanceFromDestination( Item.DistanceType.stepCount, false ).ToString();
+			distances[4].text = item.DistanceFromDestination( Item.DistanceType.stepsAsCrowFly, true ).ToString();
+			distances[5].text = item.DistanceFromDestination( Item.DistanceType.stepsAsCrowFly, false ).ToString();
+
 			if ( item.destination != destination )
 			{
 				if ( destinationText )
@@ -5160,13 +5176,6 @@ if ( cart )
 
 			if ( item.destination && route == null )
 				route = PathVisualization.Create().Setup( item.path );
-			if ( item.flag )
-				mapIcon.transform.position = item.flag.node.position + Vector3.up * 4;
-			else
-			{
-				item.assert.IsNotNull( item.hauler );
-				mapIcon.transform.position = item.hauler.transform.position + Vector3.up * 4;
-			}
 		}
 
 		public override void Close()
@@ -6473,8 +6482,10 @@ if ( cart )
 		ScrollRect scroll;
 		Team team;
 		Game.Speed speedToRestore;
-		static Comparison<Item> comparison = CompareByAge;
+		static Comparison<Item> comparison = CompareByDistance;
 		static bool reversed;
+		static bool fullTripDistance;
+		static Item.DistanceType distanceType;
 
 		public static ItemList Create()
 		{
@@ -6492,10 +6503,21 @@ if ( cart )
 
 			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
 			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
-			Text( "Age (sec)" ).Pin( 250, -20, 120 ).AddClickHandler( delegate { ChangeComparison( CompareByAge ); } );
-			Text( "Distance" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByPathLength ); } ).SetTooltip( "Number of roads for the whole travel from the original building to the current destination" );
+			Text( "Age (sec)" ).Pin( 250, -20, 120 ).AddClickHandler( () => ChangeComparison( ( a, b ) => a.life.age.CompareTo( b.life.age ) ) );
+			Text( "Distance" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDistance ); } ).SetTooltip( "Distance to the current destination (see the \"Distance mode\" dropdown below)" );
 
-			scroll = ScrollRect().Stretch( 20, 20, -20, -40 );
+			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
+			Text( "Distance mode:" ).Pin( borderWidth, borderWidth + iconSize - 5, 150, iconSize, 0, 0 );
+			var distanceMode = Dropdown().Pin( 120, borderWidth + iconSize, 150, iconSize, 0, 0 ).SetTooltip( "Controls how distance is calculated from the destination" );
+			distanceMode.AddOptions( new List<string> {
+				"Road count of the whole trip",
+				"Remaining road count",
+				"Length of the full path",
+				"Length of the remaining path",
+				"Length as the crow flies",
+				"Length left as the crow flies" } );
+			distanceMode.value = ((int)distanceType) * 2 + ( fullTripDistance ? 0 : 1 );
+			distanceMode.onValueChanged.AddListener( OnDistanceModeChange );
 			Fill();
 		}
 
@@ -6505,6 +6527,12 @@ if ( cart )
 			game.SetSpeed( speedToRestore );
 		}
 
+		void OnDistanceModeChange( int mode )
+		{
+			fullTripDistance = mode % 2 == 0;
+			distanceType = (Item.DistanceType)( mode / 2 );
+			Fill();
+		}
 		void ChangeComparison( Comparison<Item> newComparison )
 		{
 			if ( comparison == newComparison )
@@ -6541,33 +6569,15 @@ if ( cart )
 					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
 				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
 				if ( item.path != null )
-					Text( item.path.roadPath.Count.ToString() ).Link( scroll.content ).Pin( 300, row, 30 );				
+					Text( item.DistanceFromDestination( distanceType, fullTripDistance ).ToString() ).Link( scroll.content ).Pin( 300, row, 30 );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( -1, sortedItems.Count * ( iconSize + 5 ) );
 		}
 
-		static public int CompareByAge( Item itemA, Item itemB )
+		static public int CompareByDistance( Item itemA, Item itemB )
 		{
-			if ( itemA.life.age == itemB.life.age )
-				return 0;
-			if ( itemA.life.age < itemB.life.age )
-				return -1;
-			return 1;
-		}
-		static public int CompareByPathLength( Item itemA, Item itemB )
-		{
-			int lA = 0, lB = 0;
-			if ( itemA.path != null )
-				lA = itemA.path.roadPath.Count;
-			if ( itemB.path != null )
-				lB = itemB.path.roadPath.Count;
-
-			if ( lA == lB )
-				return 0;
-			if ( lA > lB )
-				return -1;
-			return 1;
+			return itemA.DistanceFromDestination( distanceType, fullTripDistance ).CompareTo( itemB.DistanceFromDestination( distanceType, fullTripDistance ) );
 		}
 		static public int CompareByOrigin( Item itemA, Item itemB )
 		{
@@ -6781,7 +6791,7 @@ if ( cart )
 		}
 	}
 
-	public class ItemStats : Panel
+	public class ItemTypeList : Panel
 	{
 		ScrollRect scroll;
 		Team team;
@@ -6789,61 +6799,84 @@ if ( cart )
 		static bool reverse = false;
 		readonly Text[] inStock = new Text[(int)Item.Type.total];
 		readonly Text[] onWay = new Text[(int)Item.Type.total];
-		readonly Text[] surplus = new Text[(int)Item.Type.total];
+		readonly Text[] alreadyProcessed = new Text[(int)Item.Type.total];
+		readonly Text[] inResources = new Text[(int)Item.Type.total];
 		readonly Text[] production = new Text[(int)Item.Type.total];
+		readonly Text[] total = new Text[(int)Item.Type.total];
 		readonly Button[] stockButtons = new Button[(int)Item.Type.total];
 		readonly ItemImage[] itemIcon = new ItemImage[(int)Item.Type.total];
 
 		int[] inStockCount = new int[(int)Item.Type.total];
 		int[] onWayCount = new int[(int)Item.Type.total];
+		int[] inResourceCount = new int[(int)Item.Type.total];
+		int[] totalCount = new int[(int)Item.Type.total];
 
-		public static ItemStats Create()
+		public static ItemTypeList Create()
 		{
-			return new GameObject().AddComponent<ItemStats>();
+			return new GameObject().AddComponent<ItemTypeList>();
 		}
 
 		public void Open( Team team )
 		{
-			if ( base.Open( null, 0, 0, 320, 300 ) )
+			if ( base.Open( null, 0, 0, 460, 400 ) )
 				return;
 
 			name = "Item stats panel";
 			this.team = team;
 			UIHelpers.currentColumn = 50;
 
+			Text( "In resources", 10 ).
+			PinSideways( 0, -20, 70, 20 ).
+			SetTooltip( "Amount still available from natural resources" ).
+			AddClickHandler( delegate { SetOrder( CompareInResources ); } );
+
 			Text( "In stock", 10 ).
 			PinSideways( 0, -20, 50, 20 ).
+			SetTooltip( "Amount currently stored in stocks" ).
 			AddClickHandler( delegate { SetOrder( CompareInStock ); } );
 
-			Text( "On Road", 10 ).
+			Text( "On road", 10 ).
 			PinSideways( 0, -20, 50, 20 ).
+			SetTooltip( "Number of items currently on their way to some place where they are required" ).
 			AddClickHandler( delegate { SetOrder( CompareOnRoad ); } );
 
-			Text( "Surplus", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
-			AddClickHandler( delegate { SetOrder( CompareSurplus ); } );
+			Text( "Processed", 10 ).
+			PinSideways( 0, -20, 70, 20 ).
+			SetTooltip( "Amount already processed by your team" ).
+			AddClickHandler( delegate { SetOrder( CompareProcessed ); } );
 
 			Text( "Per minute", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
+			PinSideways( 0, -20, 70, 20 ).
 			AddClickHandler( delegate { SetOrder( ComparePerMinute ); } );
+
+			Text( "Total", 10 ).
+			PinSideways( 0, -20, 50, 20 ).
+			AddClickHandler( delegate { SetOrder( CompareTotal ); } );
+
+			Image( Icon.replay ).
+			PinSideways( 0, -20 ).
+			AddClickHandler( UpdateList );
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
 
-			int row = 0;
+			int row = 0, j = 0;
 			for ( int i = 0; i < inStock.Length; i++ )
 			{
 				if ( game.itemTypeUsage[i] == 0 )
 					continue;
-				itemIcon[i] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
-				inStock[i] = Text( "0" ).Link( scroll.content ).Pin( 30, row, 40, iconSize );
-				stockButtons[i] = inStock[i].gameObject.AddComponent<Button>();
-				onWay[i] = Text( "0" ).Link( scroll.content ).Pin( 80, row, 40 );
-				surplus[i] = Text( "0" ).Link( scroll.content ).Pin( 130, row, 40 );
-				production[i] = Text( "0" ).Link( scroll.content ).Pin( 180, row, 40 );
+				itemIcon[j] = ItemIcon( (Item.Type)i ).Link( scroll.content ).Pin( 0, row );
+				inResources[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 30, row, 70, iconSize );
+				inStock[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 100, row, 60, iconSize );
+				stockButtons[j] = inStock[j].gameObject.AddComponent<Button>();
+				onWay[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 150, row, 40 );
+				alreadyProcessed[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 200, row, 70 );
+				production[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 270, row, 40 );
+				total[j++] = Text( "0", 10 ).Link( scroll.content ).Pin( 320, row, 40 );
 				row -= iconSize + 5;
 			}
 
 			scroll.SetContentSize( -1, -row );
+			UpdateList();
 		}
 
 		int CompareInStock( int a, int b )
@@ -6851,19 +6884,29 @@ if ( cart )
 			return inStockCount[a].CompareTo( inStockCount[b] );
 		}
 
+		int CompareInResources( int a, int b )
+		{
+			return inResourceCount[a].CompareTo( inResourceCount[b] );
+		}
+
 		int CompareOnRoad( int a, int b )
 		{
 			return onWayCount[a].CompareTo( onWayCount[b] );
 		}
 
-		int CompareSurplus( int a, int b )
+		int CompareProcessed( int a, int b )
 		{
-			return team.surplus[a].CompareTo( team.surplus[b] );
+			return team.processed[a].CompareTo( team.processed[b] );
 		}
 
 		int ComparePerMinute( int a, int b )
 		{
 			return team.itemProductivityHistory[a].production.CompareTo( team.itemProductivityHistory[b].production );
+		}
+
+		int CompareTotal( int a, int b )
+		{
+			return totalCount[a].CompareTo( totalCount[b] );
 		}
 
 		void SetOrder( Comparison<int> comparison )
@@ -6875,11 +6918,11 @@ if ( cart )
 				currentComparison = comparison;
 				reverse = false;
 			}
+			UpdateList();
 		}
 
-		public new void Update()
+		public void UpdateList()
 		{
-			base.Update();
 			for ( int i = 0; i < inStockCount.Length; i++ )
 			{
 				inStockCount[i] = 0;
@@ -6900,6 +6943,9 @@ if ( cart )
 				}
 			}
 
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+				inResourceCount[i] = team.world.MaximumPossible( (Item.Type)i, true );
+
 			foreach ( var item in team.items )
 			{
 				if ( item == null )
@@ -6907,26 +6953,42 @@ if ( cart )
 				onWayCount[(int)item.type]++;
 			}
 
+			for ( int i = 0; i < totalCount.Length; i++ )
+			{
+				if ( inResourceCount[i] == 0 || inResourceCount[i] == int.MaxValue )
+					totalCount[i] = -1;
+				else
+					totalCount[i] = inResourceCount[i] + inStockCount[i] + onWayCount[i] + team.processed[i];
+			}
+
 			List<int> order = new ();
 			for ( int i = 0; i < inStock.Length; i++ )
-				order.Add( i );
+				if ( game.itemTypeUsage[i] != 0 )
+					order.Add( i );
 			if ( currentComparison != null )
 				order.Sort( currentComparison );
 			if ( reverse )
 				order.Reverse();
 
-			for ( int i = 0; i < inStock.Length; i++ )
+			for ( int i = 0; i < order.Count; i++ )
 			{
-				if ( itemIcon[i] == null )
-					continue;
-
 				itemIcon[i].SetType( (Item.Type)order[i] );
 				inStock[i].text = inStockCount[order[i]].ToString();
 				stockButtons[i].onClick.RemoveAllListeners();
 				Stock stock = richestStock[order[i]];
 				stockButtons[i].onClick.AddListener( delegate { SelectBuilding( stock ); } );
+				int resources = inResourceCount[order[i]];
+				inResources[i].text = resources switch { 0 => "-", int.MaxValue => "infinite", _ => resources.ToString() };
 				onWay[i].text = onWayCount[order[i]].ToString();
-				surplus[i].text = team.surplus[order[i]].ToString();
+				total[i].text = totalCount[order[i]] == -1 ? "" : totalCount[order[i]].ToString();
+				alreadyProcessed[i].text = team.processed[order[i]].ToString();
+				if ( resources != 0 && resources != int.MaxValue )
+				{
+					inStock[i].text += $" ({inStockCount[order[i]]*100/totalCount[order[i]]}%)";
+					onWay[i].text += $" ({onWayCount[order[i]]*100/totalCount[order[i]]}%)";
+					inResources[i].text += $" ({resources*100/totalCount[order[i]]}%)";
+					alreadyProcessed[i].text += $" ({team.processed[order[i]]*100/totalCount[order[i]]}%)";
+				}
 
 				var itemData = team.itemProductivityHistory[order[i]];
 				production[i].text = itemData.current.ToString( "n2" );

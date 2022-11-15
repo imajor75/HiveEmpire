@@ -66,6 +66,33 @@ public class Item : HiveObject
 	public SpriteRenderer onMap;
 	public Vector3 mapPosition { set { onMap.transform.position = value + Vector3.up * 6; } }
 
+	public Transform Link( Unit hauler, Unit.LinkType linkType )
+	{
+		var slot = hauler.links[(int)linkType];
+		if ( slot )
+		{
+			transform.SetParent( slot.transform, false );
+			slot.SetActive( true );
+		}
+		if ( onMap )
+		{
+			onMap.transform.SetParent( hauler.transform, false );
+			onMap.transform.localScale = Vector3.one * 0.15f / hauler.transform.lossyScale.x;
+		}
+		transform.localPosition = Vector3.zero;
+		return slot?.transform;
+	}
+
+	public void Link( Transform parent )
+	{
+		transform.SetParent( parent, false );
+		if ( onMap )
+		{
+			onMap.transform.SetParent( transform, false );
+			onMap.transform.localScale = Vector3.one * 0.15f / transform.lossyScale.x;
+		}
+	}
+
 	[JsonIgnore]
 	public bool debugCancelTrip;
 
@@ -227,9 +254,56 @@ public class Item : HiveObject
 		base.Start();
 	}
 
+	public enum DistanceType
+	{
+		roadCount,
+		stepCount,
+		stepsAsCrowFly
+	}
+
+	public int DistanceFromDestination( DistanceType type, bool full = false )
+	{
+		if ( destination == null || path == null )
+			return -1;
+
+		if ( type == DistanceType.roadCount )
+			return path.roadPath.Count - ( full ? 0 : path.progress );
+
+		if ( type == DistanceType.stepsAsCrowFly )
+		{
+			if ( full && origin == null )
+				return 0;
+			var start = full ? origin.location : location;
+			return start.DistanceFrom( destination.location );
+		}
+
+		int distance = 0, segment = 0;
+
+		if ( !full )
+		{
+			if ( path.progress > 0 )
+			{
+				var currentRoad = path.roadPath[path.progress - 1];
+				var currentLocation = location;
+				for ( int i = 0; i < currentRoad.nodes.Count; i++ )
+				{
+					if ( currentRoad.nodes[i] == currentLocation )
+						distance = path.roadPathReversed[path.progress - 1] ? i : currentRoad.length - i;
+				}
+			}
+			segment = path.progress;
+		}
+
+		while ( segment < path.roadPath.Count )
+			distance += path.roadPath[segment++].length;
+
+		return distance;
+	}
+
 	new void Update()
 	{
-		onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+		if ( eye.isMapModeUsed )
+			onMap.transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
 		base.Update();
 	}
 
@@ -430,6 +504,7 @@ public class Item : HiveObject
 		destination.ItemArrived( this );
 
 		team.UnregisterItem( this );
+		Destroy( onMap );
 		base.Remove();
 	}
 
@@ -462,6 +537,7 @@ public class Item : HiveObject
 			hauler.ResetTasks();	// TODO What if the hauler has a second item in hand?
 		};
 		CancelTrip();
+		Destroy( onMap );
 		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )
 		{

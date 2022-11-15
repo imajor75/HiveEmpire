@@ -365,6 +365,7 @@ public class Stock : Attackable
 		public Stock boss { get { return building as Stock; } }
 		readonly GameObject[] frames = new GameObject[frameCount];
 		public SpriteRenderer onMap;
+		public override bool priority { get => true; }
 		new public static Cart Create()
 		{
 			return new GameObject().AddComponent<Cart>();

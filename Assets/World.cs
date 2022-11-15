@@ -243,7 +243,7 @@ public class World : HiveObject
 		return soundSource;
 	}
 
-	public int MaximumPossible( Item.Type itemType )
+	public int MaximumPossible( Item.Type itemType, bool rawOnly = false )
 	{
 		List<(float, Item.Type)> CollectCost( Item.Type itemType )
 		{
@@ -314,6 +314,8 @@ public class World : HiveObject
 			}
 			default:
 			{
+				if ( rawOnly )
+					return 0;
 				int possible = 0;
 				int source = int.MaxValue;
 				foreach ( var raw in CollectCost( itemType ) )
@@ -479,8 +481,8 @@ public class World : HiveObject
 			}
 		}
 
-		AddWeight( Item.Type.plank, 1 );
-		AddWeight( Item.Type.stone, 1 );
+		AddWeight( Item.Type.plank, 0.5f );
+		AddWeight( Item.Type.stone, 0.5f );
 		AddWeight( Item.Type.soldier, 1 );
 		workshopTypeUsage[(int)Workshop.Type.forester] = workshopTypeUsage[(int)Workshop.Type.woodcutter];
 	}
@@ -1073,6 +1075,7 @@ public class World : HiveObject
 		animalSpawnerCount = 0; 
 		treeCount = 0;
 		rockCount = 0;
+		int rockCharges = 0;
 
 		foreach ( var node in ground.nodes )
 		{
@@ -1082,7 +1085,10 @@ public class World : HiveObject
 			if ( r.NextDouble() < generatorSettings.forestChance )
 				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd, 1 );
 			if ( r.NextDouble() < generatorSettings.rocksChance )
+			{
 				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f, rnd, Constants.Resource.rockCharges );
+				rockCharges += Constants.Resource.rockCharges;
+			}
 
 			if ( node.CheckType( Node.Type.land ) )
 			{
@@ -1097,20 +1103,24 @@ public class World : HiveObject
 			}
 		}
 
-		Ore.totalResourceCount = 0;
-		void AddOre( Resource.Type resourceType )
+		Ore.totalResourceCount = rockCharges;
+		void AddOre( Resource.Type resourceType, int charges = 0 )
 		{
 			float weight = itemTypeUsage[(int)Resource.ItemType( resourceType )];
 			if ( weight == 0 )
 				return;
 
-			ores.Add( new Ore{ resourceType = resourceType, weight = weight } );
+			foreach ( var mine in workshopConfigurations )
+				if ( mine.outputType == Resource.ItemType( resourceType ) )
+					weight /= mine.outputStackSize;
+
+			ores.Add( new Ore{ resourceType = resourceType, weight = weight, resourceCount = charges } );
 		}
 		AddOre( Resource.Type.coal );
 		AddOre( Resource.Type.iron );
 		AddOre( Resource.Type.gold );
 		AddOre( Resource.Type.salt );
-		AddOre( Resource.Type.stone );
+		AddOre( Resource.Type.stone, rockCharges );
 		AddOre( Resource.Type.copper );
 		AddOre( Resource.Type.silver );
 		for ( int patchCount = 0; patchCount < (int)( game.nodeCount * Constants.World.oreCountPerNode ); patchCount++ )
@@ -1347,6 +1357,21 @@ public class Game : World
 			{
 				newHiveObject.worldIndex = hiveObjects.Count;
 				hiveObjects.Add( newHiveObject );
+			}
+
+			if ( newHiveObject.priority )
+			{
+				int i = newHiveObject.worldIndex;
+				while ( i > 0 && ( hiveObjects[i-1] == null || !hiveObjects[i-1].priority ) )
+					i--;
+				if ( i != newHiveObject.worldIndex && hiveObjects[i] )
+				{
+					var old = hiveObjects[i];
+					hiveObjects[newHiveObject.worldIndex] = old;
+					old.worldIndex = newHiveObject.worldIndex;
+					hiveObjects[i] = newHiveObject;
+					newHiveObject.worldIndex = i;
+				}
 			}
 		}
 		newHiveObjects.Clear();
