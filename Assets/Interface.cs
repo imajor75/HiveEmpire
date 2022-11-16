@@ -1351,6 +1351,7 @@ public class Interface : HiveObject
 	{
 		public HiveObject target;
 		public bool followTarget = true;
+		public bool goAway;
 		public Image frame;
 		Image resizer;
 		public bool escCloses = true;
@@ -1724,12 +1725,22 @@ public class Interface : HiveObject
 				float width = t.offsetMax.x - t.offsetMin.x;
 				float height = t.offsetMax.y - t.offsetMin.y;
 
+				if ( goAway )
+				{
+					screenPosition.x = Screen.width - width;
+					screenPosition.y = Screen.height;
+				}
+
 				if ( screenPosition.x + width > Screen.width )
 					screenPosition.x -= width + 2 * offset.x;
 				if ( screenPosition.y < height )
 					screenPosition.y = height;
 				if ( screenPosition.y > Screen.height )
 					screenPosition.y = Screen.height;
+				if ( screenPosition.x < 0 )
+					screenPosition.x = 0;
+				if ( screenPosition.x + width > Screen.width )
+					screenPosition.x = Screen.width - width;
 
 				screenPosition.y -= Screen.height;
 				t.offsetMin = screenPosition - Vector3.up * height;
@@ -1851,6 +1862,21 @@ public class Interface : HiveObject
 			public Building building;
 			public Ground.Area area, originalArea;
 			public Image image;
+			public Panel panel
+			{
+				get
+				{
+					var ancestor = transform.parent;
+					while ( ancestor )
+					{
+						Panel panel;
+						if ( ancestor.gameObject.TryGetComponent<Panel>( out panel ) )
+							return panel;
+						ancestor = ancestor.parent;
+					}
+					return null;
+				}
+			}
 
 			public void Setup( Building building, Ground.Area area )
 			{
@@ -1922,6 +1948,8 @@ public class Interface : HiveObject
 				root.viewport.inputHandler = this;
 				increaseSizeHotkey.Activate();
 				decreaseSizeHotkey.Activate();
+				if ( panel )
+					panel.goAway = true;
 			}
 
 			public void Show( bool show )
@@ -1965,6 +1993,8 @@ public class Interface : HiveObject
 				eye.highlight.TurnOff();
 				increaseSizeHotkey.Deactivate();
 				decreaseSizeHotkey.Deactivate();
+				if ( panel )
+					panel.goAway = false;
 			}
 
 			public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
