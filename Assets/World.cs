@@ -248,7 +248,7 @@ public class World : HiveObject
 		List<(float, Item.Type)> CollectCost( Item.Type itemType )
 		{
 			List<(float, Item.Type)> result = new ();
-			if ( itemType == Item.Type.coal || itemType == Item.Type.iron || itemType == Item.Type.gold || itemType == Item.Type.silver || itemType == Item.Type.copper || itemType == Item.Type.stone )
+			if ( itemType == Item.Type.coal || itemType == Item.Type.iron || itemType == Item.Type.gold || itemType == Item.Type.silver || itemType == Item.Type.copper || itemType == Item.Type.stone || itemType == Item.Type.salt )
 			{
 				result.Add( (1, itemType) );
 				return result;
