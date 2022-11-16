@@ -1561,7 +1561,8 @@ public class Unit : HiveObject
 				return;
 			walkProgress += currentSpeed;
 
-			World.CRC( ( id << 16 ) + node.x + node.y + (int)( walkProgress * 10000 ), OperationHandler.Event.CodeLocation.unitWalk );
+			if ( node )
+				World.CRC( ( id << 16 ) + node.x + node.y + (int)( walkProgress * 10000 ), OperationHandler.Event.CodeLocation.unitWalk );
 			if ( walkProgress >= 1 )
 			{
 				walkTo = walkFrom = null;

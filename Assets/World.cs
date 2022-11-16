@@ -1435,9 +1435,7 @@ public class Game : World
 		operationHandler.Setup( this );
 		operationHandler.challenge = localChallenge;
 		operationHandler.challenge.Begin( this );
-#if DEBUG
-		operationHandler.recordCRC = true;
-#endif
+		operationHandler.recordCRC = false;
 		var mainTeam = Team.Create().Setup( this, Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
 		if ( mainTeam )
 		{
