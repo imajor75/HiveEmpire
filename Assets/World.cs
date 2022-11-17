@@ -1432,7 +1432,7 @@ public class Game : World
 		this.challenge = localChallenge;
 		defeatedSimpletonCount = 0;
 		operationHandler = OperationHandler.Create();
-		operationHandler.Setup( this );
+		operationHandler.Setup( null );
 		operationHandler.challenge = localChallenge;
 		operationHandler.challenge.Begin( this );
 		operationHandler.recordCRC = false;

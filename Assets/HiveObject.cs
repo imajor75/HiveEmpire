@@ -120,11 +120,14 @@ public abstract class HiveObject : HiveCommon
 	public void Setup( World world )
 	{
 		this.world = world;
-		assert.IsFalse( world.hiveObjects.Contains( this ) );
-		assert.IsFalse( world.newHiveObjects.Contains( this ) );
-		Register();
-		if ( !blueprintOnly )
-			id = world.nextID++;
+		if ( world )
+		{
+			assert.IsFalse( world.hiveObjects.Contains( this ) );
+			assert.IsFalse( world.newHiveObjects.Contains( this ) );
+			Register();
+			if ( !blueprintOnly )
+				id = world.nextID++;
+		}
 	}
 
 	public void OnDestroy()
@@ -215,10 +218,13 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Validate( bool chainCall )
 	{
-		if ( !blueprintOnly )
+		if ( !blueprintOnly && world )
 			assert.AreNotEqual( id, 0 );
 		if ( worldIndex >= 0 )
+		{
+			assert.IsNotNull( world );
 			assert.AreEqual( this, world.hiveObjects[worldIndex] );
+		}
 	}
 
 	public class SiteTestResult

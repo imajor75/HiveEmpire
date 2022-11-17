@@ -302,9 +302,6 @@ public class OperationHandler : HiveObject
 
     public string SaveReplay( string name = null )
     {
-        var worldRef = world;
-        world = null;
-
         if ( name == null )
             name = Application.persistentDataPath + $"/Replays/{nextFileName}.json";
         if ( name.Contains( nextFileName ) ) 
@@ -317,8 +314,6 @@ public class OperationHandler : HiveObject
             assert.AreEqual( replayLength, CRCCodesSkipped + CRCCodes.Count );
 		Serializer.Write( name, this, true );
         SaveEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
-
-        world = worldRef;
         return name;
     }
 
@@ -642,6 +637,7 @@ public class OperationHandler : HiveObject
     public override void Validate( bool chain )
     {
         assert.IsFalse( destroyed );
+        base.Validate( chain );
     }
 }
 [Serializable]
