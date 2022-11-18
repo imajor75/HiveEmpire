@@ -687,6 +687,7 @@ public class Workshop : Building
 			}
 		}
 
+		allowFreeStone.Start( Constants.Workshop.freeStoneTimePeriod );
 		return this;
 	}
 
@@ -1154,7 +1155,7 @@ public class Workshop : Building
 				{
 					if ( useInputs && !UseInput() )
 					{
-						if ( type != Type.stoneMine || allowFreeStone.inProgress )
+						if ( type != Type.stoneMine || allowFreeStone.done )
 							return false;
 						Log( "Stone mine giving one stone for free due to long starvation" );
 					}
