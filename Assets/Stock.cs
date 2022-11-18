@@ -308,14 +308,17 @@ public class Stock : Attackable
 
 			int itemIndex = (int)itemType;
 			int minimalQuantity = start.itemData[itemIndex].cartOutputTemporary > 0 ? start.itemData[itemIndex].cartOutputTemporary : start.itemData[itemIndex].cartOutput;
+			int expectedDelivery = Math.Min( minimalQuantity, Constants.Stock.cartCapacity );
+			int atDest = end.itemData[itemIndex].content + end.itemData[itemIndex].onWay;
+
+			if ( atDest + expectedDelivery > end.itemData[itemIndex].inputMax || atDest >= end.itemData[itemIndex].cartInput )
+			{
+				state = State.destinationNotAccepting;
+				return false;
+			}
 			if ( start.itemData[itemIndex].content < minimalQuantity )
 			{
 				state = State.noSourceItems;
-				return false;
-			}
-			if ( end.itemData[itemIndex].content + end.itemData[itemIndex].onWay + Constants.Stock.cartCapacity > end.itemData[itemIndex].inputMax )
-			{
-				state = State.destinationNotAccepting;
 				return false;
 			}
 			if ( !start.cart.IsIdle( true ) )
