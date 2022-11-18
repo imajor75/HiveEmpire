@@ -1182,7 +1182,7 @@ public class Operation
                 if ( route == null )
                     return null;
                 route.priority += direction;
-                route.start.team.UpdateStockRoutes( route.itemType );
+                route.start.team.UpdateStockRoutes();
                 return Create().SetupAsChangePriority( route, direction * -1 );
             }
             case Type.changeWorkshopRunningMode:

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -234,7 +234,7 @@ public class Stock : Attackable
 			ChannelValue( channel ) = newValue;
 			if ( channel == Channel.inputMax && old != 0 && newValue == 0 )
 				boss.CancelOrders( itemType );
-			boss.team.UpdateStockRoutes( itemType );
+			boss.team.UpdateStockRoutes();
 			return old;
 		}
 	}
@@ -671,7 +671,7 @@ public class Stock : Attackable
 	{
 		destroyed = true;
 		team.UnregisterStock( this );
-		team.RebuildStockRoutes();
+		team.UpdateStockRoutes();
 		if ( main )
 			team.Defeat();
 		base.Remove();

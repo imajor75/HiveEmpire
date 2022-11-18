@@ -464,29 +464,19 @@ public class Team : HiveObject
 		return AttackStatus.done;
 	}
 
-	public void UpdateStockRoutes( Item.Type itemType )
+	public void UpdateStockRoutes()
 	{
-		var i = (int)itemType;
-		bool hasInput = false;
-		foreach ( var stock in stocks )
-		{
-			stock.itemData[i].UpdateRoutes();
-			if ( stock.itemData[i].cartInput > 0 )
-				hasInput = true;
-		}
-		stocksHaveNeed[i] = hasInput;
-	}
-
-	public void RebuildStockRoutes()
-	{
-		foreach ( var stock in stocks )
-		{
-			foreach ( var itemType in stock.itemData )
-				itemType.outputRoutes.Clear();
-		}
-
 		for ( int i = 0; i < (int)Item.Type.total; i++ )
-		UpdateStockRoutes( (Item.Type)i );
+		{
+			bool hasInput = false;
+			foreach ( var stock in stocks )
+			{
+				stock.itemData[i].UpdateRoutes();
+				if ( stock.itemData[i].cartInput > 0 )
+					hasInput = true;
+			}
+			stocksHaveNeed[i] = hasInput;
+		}
 	}
 
 	public new void Start()
