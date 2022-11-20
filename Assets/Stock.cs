@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -529,7 +529,7 @@ public class Stock : Attackable
 
 		new void Update()
 		{
-			onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
+			onMap.transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
 			base.Update();
 		}
 	}
