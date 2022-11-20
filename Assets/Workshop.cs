@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -406,6 +406,7 @@ public class Workshop : Building
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public Resource.Type resourceType;
 		public Game.Timer timer = new ();
+		public int maximum = 1;
 		[Obsolete( "Compatibility with old files", true )]
 		Item item
 		{
@@ -417,10 +418,11 @@ public class Workshop : Building
 		}
 
 
-		public void Setup( Unit boss, Resource resource )
+		public void Setup( Unit boss, Resource resource, int maximum = 1 )
 		{
 			base.Setup( boss );
 			this.resource = resource;
+			this.maximum = maximum;
 		}
 		public override void Validate()
 		{
@@ -458,11 +460,17 @@ public class Workshop : Building
 		void ProcessResource( Resource resource )
 		{
 			boss.assert.AreEqual( boss, resource.hunter );
+			int collectedCharges = maximum;
 			if ( resource.underGround || resource.node == boss.node )
 			{
 				resource.gathered.Start();
-				if ( !resource.infinite && --resource.charges == 0 )
-					resource.Remove();
+				if ( !resource.infinite )
+				{
+					collectedCharges = Math.Min( maximum, resource.charges );
+					resource.charges -= collectedCharges;
+					if ( resource.charges == 0 )
+						resource.Remove();
+				}
 			}
 			else
 			{
@@ -472,9 +480,9 @@ public class Workshop : Building
 			boss.assert.AreEqual( resource.hunter, boss );
 			resource.hunter = null;
 			if ( resource.underGround )
-				( boss.building as Workshop )?.ItemGathered();
+				( boss.building as Workshop )?.ItemsGathered( collectedCharges );
 			else
-				FinishJob( boss, Resource.ItemType( resource.type ) );
+				FinishJob( boss, Resource.ItemType( resource.type ), collectedCharges );
 		}
 	}
 
@@ -484,12 +492,14 @@ public class Workshop : Building
 		public Game.Timer wait = new ();
 		public bool done;
 		public Resource.Type resourceType;
+		public int charges;
 
-		public void Setup( Unit boss, Node node, Resource.Type resourceType )
+		public void Setup( Unit boss, Node node, Resource.Type resourceType, int charges = 1 )
 		{
 			base.Setup( boss );
 			this.node = node;
 			this.resourceType = resourceType;
+			this.charges = charges;
 		}
 		public override bool ExecuteFrame()
 		{
@@ -520,7 +530,7 @@ public class Workshop : Building
 			if ( node.block.IsBlocking( Node.Block.Type.units ) )
 				return true;
 
-			Resource.Create().Setup( node, resourceType );
+			Resource.Create().Setup( node, resourceType, charges );
 			done = true;
 			wait.Start( Constants.Workshop.gathererHarvestTime );
 			boss.animator?.SetBool( Unit.sowingID, true );
@@ -848,18 +858,18 @@ public class Workshop : Building
 		}
 
 		assert.AreEqual( productionConfiguration.outputType, item.type );
-		ItemGathered();
+		ItemsGathered();
 	}
 
-	public void ItemGathered()
+	public void ItemsGathered( int count = 1 )
 	{
 		// Gatherer arrived back from harvest
 		assert.IsTrue( gatherer );
-		assert.IsTrue( output < productionConfiguration.outputMax );
-		output += productionConfiguration.outputStackSize;
-		itemsProduced += productionConfiguration.outputStackSize;
-		team.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
-		statusProduction += productionConfiguration.outputStackSize;
+		assert.IsTrue( output + count <= productionConfiguration.outputMax );
+		output += count;
+		itemsProduced += count;
+		team.ItemProduced( productionConfiguration.outputType, count );
+		statusProduction += count;
 		resting.Start( restTime );
 		ChangeStatus( Status.resting );
 		SetWorking( false );
@@ -962,7 +972,7 @@ public class Workshop : Building
 						if ( place.block || !place.CheckType( Node.Type.grass ) || place.suspendPlanting.inProgress )
 							continue;
 						UseInput();
-						PlantAt( place, resourceType );
+						PlantAt( place, resourceType, productionConfiguration.outputStackSize );
 						return;
 					}
 					suspendGathering.Start( Constants.Workshop.gathererSleepTimeAfterFail );
@@ -989,7 +999,7 @@ public class Workshop : Building
 							if ( blockedAdjacentNodes >= 2 )
 								continue;
 						}
-						PlantAt( place, Resource.Type.tree );
+						PlantAt( place, Resource.Type.tree, world.treeFactor );
 						return;
 					}
 					suspendGathering.Start( Constants.Workshop.gathererSleepTimeAfterFail );
@@ -1211,7 +1221,7 @@ public class Workshop : Building
 		}
 		resourcePlace = resource.node;
 		var task = ScriptableObject.CreateInstance<GetResource>();
-		task.Setup( tinkerer, resource );
+		task.Setup( tinkerer, resource, productionConfiguration.outputStackSize );
 		tinkerer.ScheduleTask( task );
 		resource.hunter = tinkerer;
 		resource.StartRest();
@@ -1219,21 +1229,30 @@ public class Workshop : Building
 		return true;
 	}
 
-	static void FinishJob( Unit unit, Item.Type itemType )
+	static void FinishJob( Unit unit, Item.Type itemType, int count )
 	{
-		Item item = null;
+		Item[] items = new Item[2];
 		if ( itemType != Item.Type.unknown )
-			item = Item.Create().Setup( itemType, unit.building );
-		if ( item != null )
 		{
-			item.SetRawTarget( unit.building );
-			item.hauler = unit;
-			unit.SchedulePickupItem( item );
+			items[0] = Item.Create().Setup( itemType, unit.building );
+			if ( count > 1 )
+				items[1] = Item.Create().Setup( itemType, unit.building );
 		}
+		foreach ( var item in items )
+		{
+			if ( item != null )
+			{
+				item.SetRawTarget( unit.building );
+				item.hauler = unit;
+			}
+		}
+		if ( items[0] )
+			unit.SchedulePickupItems( items[0], items[1] );
+
 		unit.ScheduleWalkToNode( unit.building.flag.node );
 		unit.ScheduleWalkToNeighbour( unit.building.node );
-		if ( item != null )
-			unit.ScheduleDeliverItem( item );
+		if ( items[0] != null )
+			unit.ScheduleDeliverItems( items[0], items[1] );
 		unit.ScheduleCall( unit.building as Workshop );
 	}
 
@@ -1276,14 +1295,14 @@ public class Workshop : Building
 		SetWorking( false );
 	}
 
-	void PlantAt( Node place, Resource.Type resourceType )
+	void PlantAt( Node place, Resource.Type resourceType, int charges = 1 )
 	{
 		assert.IsTrue( tinkerer.IsIdle() );
 		tinkerer.SetActive( true );
 		tinkerer.ScheduleWalkToNeighbour( flag.node );
 		tinkerer.ScheduleWalkToNode( place, true );
 		var task = ScriptableObject.CreateInstance<Plant>();
-		task.Setup( tinkerer, place, resourceType );
+		task.Setup( tinkerer, place, resourceType, charges );
 		tinkerer.ScheduleTask( task );
 		SetWorking( true );
 	}
@@ -1402,8 +1421,8 @@ public class Workshop : Building
 		if ( construction.done )
 		{
 			int missing = itemsOnTheWay.Count - itemsOnTheWayCount;
-			assert.IsTrue( missing >= 0 && missing < 2 );
-			if ( missing == 1 )
+			assert.IsTrue( missing >= 0 && missing < 3 );
+			if ( missing > 0 )
 			{
 				// If an incoming item is missing, then that can only happen if the tinkerer is just gathering it
 				assert.IsTrue( gatherer );

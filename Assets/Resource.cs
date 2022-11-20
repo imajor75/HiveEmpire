@@ -372,7 +372,7 @@ public class Resource : HiveObject
 				if ( resource.type == Type.apple )
 					hasApple = true;
 			if ( !hasApple )
-				Create().Setup( node, Type.apple, allowBlocking:true );
+				Create().Setup( node, Type.apple, world.appleFactor, true );
 			apple.Start( Constants.Workshop.appleGrowTime );
 		}
 	}

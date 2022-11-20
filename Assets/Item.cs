@@ -595,19 +595,8 @@ public class Item : HiveObject
 					assert.IsNotNull( hauler.road );
 					break;
 				}
-				case Unit.Type.tinkerer:
-				{
-					if ( !justCreated )
-						assert.AreEqual( hauler.itemsInHands[0], this );
-					break;
-				}
-				case Unit.Type.unemployed:
-				{
-					break;
-				}
 				default:
 				{
-					assert.Fail();
 					break;
 				}
 			}

@@ -686,9 +686,9 @@ abstract public class Building : HiveObject
 		if ( item != null )
 		{
 			flag.ReserveItem( item );
-			dispenser.SchedulePickupItem( item );
+			dispenser.SchedulePickupItems( item );
 			dispenser.ScheduleWalkToNeighbour( flag.node );
-			dispenser.ScheduleDeliverItem( item );
+			dispenser.ScheduleDeliverItems( item );
 			dispenser.ScheduleWalkToNeighbour( node );
 			item.hauler = dispenser;
 		}

@@ -101,6 +101,11 @@ public class World : HiveObject
 	public Settings generatorSettings = new ();
 	public bool repeating { get { return !generatorSettings.reliefSettings.island; } }
 
+	public int treeFactor => workshopConfigurations[(int)Workshop.Type.woodcutter].outputStackSize;
+	public int appleFactor => workshopConfigurations[(int)Workshop.Type.appleGatherer].outputStackSize;
+	public int wheatFactor => workshopConfigurations[(int)Workshop.Type.wheatFarm].outputStackSize;
+	public int cornFactor => workshopConfigurations[(int)Workshop.Type.cornFarm].outputStackSize;
+
 	[System.Serializable]
 	public class Ore
 	{
@@ -1083,7 +1088,7 @@ public class World : HiveObject
 				continue;
 			var r = new System.Random( rnd.Next() );
 			if ( r.NextDouble() < generatorSettings.forestChance )
-				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd, 1 );
+				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd, treeFactor );
 			if ( r.NextDouble() < generatorSettings.rocksChance )
 			{
 				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f, rnd, Constants.Resource.rockCharges );
@@ -1109,10 +1114,6 @@ public class World : HiveObject
 			float weight = itemTypeUsage[(int)Resource.ItemType( resourceType )];
 			if ( weight == 0 )
 				return;
-
-			foreach ( var mine in workshopConfigurations )
-				if ( mine.outputType == Resource.ItemType( resourceType ) )
-					weight /= mine.outputStackSize;
 
 			ores.Add( new Ore{ resourceType = resourceType, weight = weight, resourceCount = charges } );
 		}

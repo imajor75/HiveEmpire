@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -783,12 +783,12 @@ public class Unit : HiveObject
 		[Obsolete( "Compatibility with old files", true )]
 		Path[] paths { set { path = value[0]; } }
 
-		public void Setup( Unit boss, Item item )
+		public void Setup( Unit boss, Item item, Item secondary = null )
 		{
 			base.Setup( boss );
 			items[0] = item;
 			path = item.path;
-			items[1] = null;
+			items[1] = secondary;
 		}
 		public override void Cancel()
 		{
@@ -948,10 +948,11 @@ public class Unit : HiveObject
 		[Obsolete( "Compatibility with old files", true )]
 		Item item { set { items[0] = value; } }
 
-		public void Setup( Unit boss, Item item )
+		public void Setup( Unit boss, Item item, Item secondary = null )
 		{
 			base.Setup( boss );
 			this.items[0] = item;
+			this.items[1] = secondary;
 		}
 		public override void Cancel()
 		{
@@ -1776,7 +1777,7 @@ public class Unit : HiveObject
 				ScheduleWalkToNode( building.flag.node );
 			ScheduleWalkToNeighbour( building.node );
 			if ( itemsInHands[0] )
-				ScheduleDeliverItem( itemsInHands[0], itemsInHands[1] );
+				ScheduleDeliverItems( itemsInHands[0], itemsInHands[1] );
 			if ( type == Type.tinkerer && building.tinkerer == this )
 				ScheduleCall( building as Workshop );
 			return;
@@ -1893,7 +1894,7 @@ public class Unit : HiveObject
 				ScheduleWalkToRoadPoint( road, i * ( road.nodes.Count - 1 ) );
 			else
 				ScheduleWalkToNode( road.ends[i].node );
-			ScheduleDeliverItem( itemsInHands[0] );
+			ScheduleDeliverItems( itemsInHands[0] );
 
 			// The item is expecting the hauler to deliver it to nextFlag, but the hauled is delivering it to whichever flag has room
 			// By calling CancelTrip, this expectation is eliminated, and won't cause an assert fail.
@@ -2071,17 +2072,17 @@ public class Unit : HiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public void SchedulePickupItem( Item item, bool first = false )
+	public void SchedulePickupItems( Item item, Item secondary = null, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<PickupItem>();
-		instance.Setup( this, item );
+		instance.Setup( this, item, secondary );
 		ScheduleTask( instance, first );
 	}
 
-	public void ScheduleDeliverItem( Item item = null, bool first = false )
+	public void ScheduleDeliverItems( Item item = null, Item secondary = null, bool first = false )
 	{
 		var instance = ScriptableObject.CreateInstance<DeliverItem>();
-		instance.Setup( this, item );
+		instance.Setup( this, item, secondary );
 		ScheduleTask( instance, first );
 	}
 
@@ -2139,7 +2140,7 @@ public class Unit : HiveObject
 		if ( item.buddy == null )
 		{
 			ScheduleWalkToRoadPoint( road, itemPoint );
-			SchedulePickupItem( item );
+			SchedulePickupItems( item );
 		}
 
 		if ( !item.path.isFinished )	// When the path is finished, the item is already at the target flag, the hauler only needs to carry it inside a building
@@ -2150,7 +2151,7 @@ public class Unit : HiveObject
 			assert.IsNull( replace );
 			var destination = item.destination;
 			ScheduleWalkToNeighbour( destination.node );
-			ScheduleDeliverItem( item );
+			ScheduleDeliverItems( item );
 			ScheduleWalkToNeighbour( destination.flag.node );
 		}
 		else
@@ -2158,7 +2159,7 @@ public class Unit : HiveObject
 			if ( replace == null )
 				assert.IsTrue( other.freeSlots > 0 );
 			other.ReserveItem( item, replace );
-			ScheduleDeliverItem( item );
+			ScheduleDeliverItems( item );
 			if ( replace && item.buddy == null )
 				CarryItem( replace, item );
 		}
