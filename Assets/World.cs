@@ -762,20 +762,6 @@ public class World : HiveObject
 		}
 
 		{
-			var list = Resources.FindObjectsOfTypeAll<Workshop.GetResource>();
-			foreach ( var o in list )
-			{
-#pragma warning disable 0618
-				if ( o.node != null )
-				{
-					foreach ( var resource in o.node.resources )
-						if ( resource.type == o.resourceType )
-							o.resource = resource;
-				}
-#pragma warning restore 0618
-			}
-		}
-		{
 			var list = Resources.FindObjectsOfTypeAll<Flag>();
 			foreach ( var f in list )
 			{
@@ -1088,7 +1074,7 @@ public class World : HiveObject
 				continue;
 			var r = new System.Random( rnd.Next() );
 			if ( r.NextDouble() < generatorSettings.forestChance )
-				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd, treeFactor );
+				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd, treeFactor, scaleCharges:false );
 			if ( r.NextDouble() < generatorSettings.rocksChance )
 			{
 				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f, rnd, Constants.Resource.rockCharges );

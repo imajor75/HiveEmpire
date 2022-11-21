@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -335,7 +335,7 @@ public class Node : HiveObject
 		return another.GetPositionRelativeTo( this ) - position;
 	}
 
-	public int AddResourcePatch( Resource.Type type, int size, float density, System.Random rnd, int charges, bool overwrite = false )
+	public int AddResourcePatch( Resource.Type type, int size, float density, System.Random rnd, int charges, bool overwrite = false, bool scaleCharges = true )
 	{
 		int count = 0;
 		for ( int x = -size; x < size; x++ )
@@ -349,7 +349,7 @@ public class Node : HiveObject
 				{
 					var factor = (size*1.5-distance) / size;
 					int localCharges = charges;
-					if ( localCharges != int.MaxValue && factor < 1 )
+					if ( localCharges != int.MaxValue && factor < 1 && scaleCharges )
 					{
 						localCharges = (int)( factor * localCharges );
 						if ( localCharges == 0 )

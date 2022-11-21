@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1213,7 +1213,7 @@ public class Unit : HiveObject
 		{
 			animation = gatheringID,
 			timeToInterrupt = 0.7f,
-			duration = 1200
+			duration = 1500
 		};
 		resourceCollectAct[(int)Resource.Type.pasturingAnimal] = new Act( "pasture" )
 		{

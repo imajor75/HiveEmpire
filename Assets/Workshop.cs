@@ -404,7 +404,7 @@ public class Workshop : Building
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
 		public Node node;
 		[Obsolete( "Compatibility with old files" ), JsonIgnore]
-		public Resource.Type resourceType;
+		Resource.Type resourceType { set {} }
 		public Game.Timer timer = new ();
 		public int maximum = 1;
 		[Obsolete( "Compatibility with old files", true )]
