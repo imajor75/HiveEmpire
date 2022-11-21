@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -116,12 +116,21 @@ public class Workshop : Building
 
 	static public List<Configuration> LoadConfigurations()
 	{
-
+		var sortedList = new List<Configuration>();
+		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+		sortedList.Add( null );
 		var workshopConfigurations = Serializer.Read<Configurations>( Application.streamingAssetsPath + "/workshops.json", new ConfigurationTypeConverter() ).list;
 		foreach ( var c in workshopConfigurations )
+		{
 			if ( c.constructionTime == 0 )
 				c.constructionTime = 1000 * ( c.plankNeeded + c.stoneNeeded );
-		return workshopConfigurations;
+			Assert.global.IsNull( sortedList[(int)c.type], $"The type {c.type} is listed in workshops.json multiple times" );
+			sortedList[(int)c.type] = c;
+		}
+		sortedList[(int)Workshop.Type._geologistObsolete] = new Configuration { type = Workshop.Type._geologistObsolete };
+		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
+			Assert.global.IsNotNull( sortedList[i], $"The workshop type {(Workshop.Type)i} is missing from workshops.json" );
+		return sortedList;
 	}
 
 	public float CalculateProductivity( bool maximumPossible = false, int timeRange = Constants.Workshop.productivityPeriod )
