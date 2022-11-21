@@ -6988,7 +6988,15 @@ if ( cart )
 				if ( inResourceCount[i] == 0 || inResourceCount[i] == int.MaxValue )
 					totalCount[i] = -1;
 				else
+				{
 					totalCount[i] = inResourceCount[i] + inStockCount[i] + onWayCount[i] + team.processed[i];
+					foreach ( var ore in game.ores )
+					{
+						var itemType = Resource.ItemType( ore.resourceType );
+						if ( i == (int)itemType )
+							totalCount[i] = ore.resourceCount;	// TODO Rocks should be counted too
+					}
+				}
 			}
 
 			List<int> order = new ();
