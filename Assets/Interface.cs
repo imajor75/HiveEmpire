@@ -6901,7 +6901,7 @@ if ( cart )
 				onWay[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 150, row, 40 );
 				alreadyProcessed[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 200, row, 70 );
 				production[j] = Text( "0", 10 ).Link( scroll.content ).Pin( 270, row, 40 );
-				total[j++] = Text( "0", 10 ).Link( scroll.content ).Pin( 320, row, 40 );
+				total[j++] = Text( "0", 10 ).Link( scroll.content ).Pin( 340, row, 40 );
 				row -= iconSize + 5;
 			}
 
@@ -6985,17 +6985,12 @@ if ( cart )
 
 			for ( int i = 0; i < totalCount.Length; i++ )
 			{
-				if ( inResourceCount[i] == 0 || inResourceCount[i] == int.MaxValue )
-					totalCount[i] = -1;
-				else
+				totalCount[i] = int.MaxValue;
+				foreach ( var ore in game.ores )
 				{
-					totalCount[i] = inResourceCount[i] + inStockCount[i] + onWayCount[i] + team.processed[i];
-					foreach ( var ore in game.ores )
-					{
-						var itemType = Resource.ItemType( ore.resourceType );
-						if ( i == (int)itemType )
-							totalCount[i] = ore.resourceCount;	// TODO Rocks should be counted too
-					}
+					var itemType = Resource.ItemType( ore.resourceType );
+					if ( i == (int)itemType )
+						totalCount[i] = ore.resourceCount;	// TODO Rocks should be counted too
 				}
 			}
 
@@ -7018,9 +7013,9 @@ if ( cart )
 				int resources = inResourceCount[order[i]];
 				inResources[i].text = resources switch { 0 => "-", int.MaxValue => "infinite", _ => resources.ToString() };
 				onWay[i].text = onWayCount[order[i]].ToString();
-				total[i].text = totalCount[order[i]] == -1 ? "" : totalCount[order[i]].ToString();
+				total[i].text = totalCount[order[i]] == int.MaxValue ? "" : totalCount[order[i]].ToString();
 				alreadyProcessed[i].text = team.processed[order[i]].ToString();
-				if ( resources != 0 && resources != int.MaxValue )
+				if ( totalCount[order[i]] != int.MaxValue )
 				{
 					inStock[i].text += $" ({inStockCount[order[i]]*100/totalCount[order[i]]}%)";
 					onWay[i].text += $" ({onWayCount[order[i]]*100/totalCount[order[i]]}%)";
