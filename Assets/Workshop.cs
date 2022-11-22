@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -501,7 +501,7 @@ public class Workshop : Building
 		public Game.Timer wait = new ();
 		public bool done;
 		public Resource.Type resourceType;
-		public int charges;
+		public int charges = 1;
 
 		public void Setup( Unit boss, Node node, Resource.Type resourceType, int charges = 1 )
 		{
