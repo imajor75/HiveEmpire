@@ -1851,15 +1851,7 @@ public class Game : World
 			if ( mainBuildingContent != null )
 			{
 				for ( int i = 0; i < mainBuildingContent.Count; i++ )
-				{
-					int stock = team.mainBuilding.itemData[i].content;
-					if ( i == (int)Item.Type.soldier )
-					{
-						foreach ( var post in team.guardHouses )
-							stock += post.soldiers.Count;
-					}
-					CheckCondition( stock, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}", integer:true );
-				}
+					CheckCondition( team.mainBuilding.itemData[i].content, mainBuildingContent[i], true, $"{(Item.Type)i}s in headquarters {{0}}/{{1}}", integer:true );
 			}
 
 			if ( buildingMax != null )
