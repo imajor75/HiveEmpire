@@ -311,8 +311,6 @@ public class Serializer
 				Assert.global.AreEqual( objects[index], value );
 				writer.WritePropertyName( "$ref" );
 				writer.WriteValue( index );
-				writer.WritePropertyName( "$comment" );
-				writer.WriteValue( $"objectIndices:{objectIndices.Count}" );
 			}
 			else
 			{
@@ -320,8 +318,6 @@ public class Serializer
 				writer.WriteValue( value.GetType().FullName );
 				writer.WritePropertyName( "$ref" );	// Reference index is only written to the file for debug purposes, it is not needed
 				writer.WriteValue( objects.Count );
-				writer.WritePropertyName( "$comment" );
-				writer.WriteValue( $"objectIndices:{objectIndices.Count}" );
 				objectIndices[value] = objects.Count;
 				objects.Add( value );
 			}
