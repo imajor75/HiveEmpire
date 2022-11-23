@@ -390,6 +390,9 @@ public class Simpleton : Player
 
             foreach ( var workshopType in game.workshopConfigurations )
             {
+                if ( workshopType.type == Workshop.Type._geologistObsolete )
+                    continue;
+
                 if ( workshopType.type == Workshop.Type.barrack && boss.lackingProductions.Count != 0 )
                 {
                     boss.lackingProductions.Clear();
