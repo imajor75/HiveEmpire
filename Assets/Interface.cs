@@ -7014,13 +7014,13 @@ if ( cart )
 				inResources[i].text = resources switch { 0 => "-", int.MaxValue => "infinite", _ => resources.ToString() };
 				onWay[i].text = onWayCount[order[i]].ToString();
 				total[i].text = totalCount[order[i]] == int.MaxValue ? "" : totalCount[order[i]].ToString();
-				alreadyProcessed[i].text = team.processed[order[i]].ToString();
+				alreadyProcessed[i].text = team.processed.Count > order[i] ? team.processed[order[i]].ToString() : "";
 				if ( totalCount[order[i]] != int.MaxValue )
 				{
 					inStock[i].text += $" ({inStockCount[order[i]]*100/totalCount[order[i]]}%)";
 					onWay[i].text += $" ({onWayCount[order[i]]*100/totalCount[order[i]]}%)";
 					inResources[i].text += $" ({resources*100/totalCount[order[i]]}%)";
-					alreadyProcessed[i].text += $" ({team.processed[order[i]]*100/totalCount[order[i]]}%)";
+					alreadyProcessed[i].text += team.processed.Count > order[i] ? $" ({team.processed[order[i]]*100/totalCount[order[i]]}%)" : "0%";
 				}
 
 				var itemData = team.itemProductivityHistory[order[i]];
