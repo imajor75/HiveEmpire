@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +52,7 @@ public class Interface : HiveObject
 	public Node openFlagPanel;
 
 	public static Material materialUIPath;
-	static bool focusOnInputField, focusOnDropdown;
+	public bool focusOnInputField, focusOnDropdown;
 	static KeyCode ignoreKey = KeyCode.None;
 	static public System.Random rnd = new ();
 
@@ -368,7 +368,7 @@ public class Interface : HiveObject
 
 	public static bool IsKeyDown( KeyCode key )
 	{
-		if ( focusOnInputField || ignoreKey == key )
+		if ( root.focusOnInputField || ignoreKey == key )
 			return false;
 
 		return Input.GetKey( key );
@@ -376,7 +376,7 @@ public class Interface : HiveObject
 
 	public static bool IsKeyPressed( KeyCode key )
 	{
-		if ( focusOnInputField || ignoreKey == key )
+		if ( root.focusOnInputField || ignoreKey == key )
 			return false;
 
 		if ( key == KeyCode.JoystickButton0 )
@@ -1286,7 +1286,7 @@ public class Interface : HiveObject
 
         public void OnPointerEnter( PointerEventData eventData )
         {
-			if ( focusOnDropdown )
+			if ( root.focusOnDropdown )
 				return;
 			if ( onShow != null && !active )
 				onShow( true );
