@@ -7933,11 +7933,7 @@ if ( cart )
 
 	void OpenReplay()
 	{
-		BrowseFilePanel.Create( Application.persistentDataPath + "/Replays", "Replay", ( string fileName ) =>
-		{
-			var o = OperationHandler.LoadReplay( fileName );
-			ReplayLoader.Create( o );
-		} );
+		BrowseFilePanel.Create( Application.persistentDataPath + "/Replays", "Replay", ( string fileName ) => LoadReplay( fileName ) );
 	}
 
 	public Menu OpenNewGameMenu()
