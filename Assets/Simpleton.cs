@@ -19,6 +19,7 @@ public class Simpleton : Player
     public bool active;
 	public bool showActions;
     public bool peaceful;
+    public Workshop.Type debugPlacement = Workshop.Type.unknown;
     public bool noRoom;
     public bool dumpTasks, dumpYields;
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
@@ -177,6 +178,7 @@ public class Simpleton : Player
         public Item.Type possiblePartnerItemType;
         public bool hasOutputStock;
         public List<Flag> failedConnections = new ();
+        public YieldTask.Fit latestTestResult;
 
        	[Obsolete( "Compatibility with old files", true )]
         Building possibleDealer { set {} }
@@ -682,9 +684,11 @@ public class Simpleton : Player
             }
         }
 
+        [Serializable]
         public struct Fit
         {
             public float resource, relax, dependency, factor;
+            public float resourceCount;
             public float sum => ( resource + relax + dependency ) * factor;
         }
 
@@ -737,7 +741,11 @@ public class Simpleton : Player
             if ( resources == 0 )
                 return result;
 
-            result.resource = ( resources > expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count ) ? Constants.Simpleton.highResourceEfficiency : Constants.Simpleton.lowResourceEfficiency;
+            result.resourceCount = resources;
+            float resourceCoverage = resources / ( expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count );
+            if ( resourceCoverage > 1 )
+                resourceCoverage = 1;
+            result.resource = resourceCoverage * ( Constants.Simpleton.highResourceEfficiency - Constants.Simpleton.lowResourceEfficiency ) + Constants.Simpleton.lowResourceEfficiency;
 
             int relaxSpotCount = 0;
             foreach ( var relaxOffset in Ground.areas[Constants.Workshop.relaxAreaSize] )
@@ -773,6 +781,12 @@ public class Simpleton : Player
             if ( node.valuable )
                 result.factor = Constants.Simpleton.valuableNodePenalty;
 
+            if ( configuration.type == Workshop.Type.woodcutter )
+                HiveCommon.Log( $"{node.x}:{node.y} - {resources} {expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count}" );
+
+            if ( boss.debugPlacement == configuration.type )
+                node.simpletonDataSafe.latestTestResult = result;
+
             return result;
         }
 
@@ -786,7 +800,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Building a {workshopType} at {bestLocation} (score: {bestScore.resource}, {bestScore.relax}, {bestScore.dependency})" );
+            boss.Log( $"Building a {workshopType} at {bestLocation} (score: {bestScore.resource}, {bestScore.relax}, {bestScore.dependency}, {bestScore.resourceCount})" );
             boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
         }
