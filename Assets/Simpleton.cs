@@ -521,7 +521,7 @@ public class Simpleton : Player
         public int nodeRow;
         public Node bestLocation;
         public int bestFlagDirection;
-        public float bestScore = float.MinValue;
+        public Fit bestScore;
         public List<Workshop.Type> dependencies = new ();
         public Workshop.Configuration configuration;
         public int reservedPlank, reservedStone;
@@ -671,19 +671,27 @@ public class Simpleton : Player
                 if ( workingFlagDirection < 0 )
                     continue;
 
-                float score = CalculateAvailaibily( site );
-                if ( score > bestScore )
+                var score = CalculateAvailaibily( site );
+                if ( score.sum > bestScore.sum )
                 {
                     bestScore = score;
                     bestLocation = site;
                     bestFlagDirection = workingFlagDirection;
-                    solutionEfficiency = score;
+                    solutionEfficiency = score.sum;
                 }
             }
         }
 
-        float CalculateAvailaibily( Node node )
+        public struct Fit
         {
+            public float resource, relax, dependency, factor;
+            public float sum => ( resource + relax + dependency ) * factor;
+        }
+
+        Fit CalculateAvailaibily( Node node )
+        {
+            Fit result = new ();
+            result.factor = 1;
             float resources = 0;
             foreach ( var offset in Ground.areas[configuration.gatheringRange] )
             {
@@ -727,9 +735,9 @@ public class Simpleton : Player
                 _ => 2f
             };
             if ( resources == 0 )
-                return 0;
+                return result;
 
-            float score = ( resources > expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count ) ? Constants.Simpleton.highResourceEfficiency : Constants.Simpleton.lowResourceEfficiency;
+            result.resource = ( resources > expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count ) ? Constants.Simpleton.highResourceEfficiency : Constants.Simpleton.lowResourceEfficiency;
 
             int relaxSpotCount = 0;
             foreach ( var relaxOffset in Ground.areas[Constants.Workshop.relaxAreaSize] )
@@ -741,7 +749,7 @@ public class Simpleton : Player
             float relaxAvailability = (float)relaxSpotCount / configuration.relaxSpotCountNeeded;
             if ( relaxAvailability > 1 )
                 relaxAvailability = 1;
-            score += relaxAvailability * Constants.Simpleton.relaxImportance;
+            result.relax = relaxAvailability * Constants.Simpleton.relaxImportance;
 
             float sourceAvailability = 0.5f;
             int buildingCount = 0;
@@ -760,12 +768,12 @@ public class Simpleton : Player
                 }
                 sourceAvailability = (float)sourceScore / ( dependencies.Count * Constants.Simpleton.sourceSearchRange );
             }
-            score += sourceAvailability * Constants.Simpleton.sourceImportance;
+            result.dependency = sourceAvailability * Constants.Simpleton.sourceImportance;
 
             if ( node.valuable )
-                score *= Constants.Simpleton.valuableNodePenalty;
+                result.factor = Constants.Simpleton.valuableNodePenalty;
 
-            return score;
+            return result;
         }
 
         public override string description
@@ -778,7 +786,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Building a {workshopType} at {bestLocation}" );
+            boss.Log( $"Building a {workshopType} at {bestLocation} (score: {bestScore.resource}, {bestScore.relax}, {bestScore.dependency})" );
             boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
         }
