@@ -528,6 +528,7 @@ public class Simpleton : Player
         public Workshop.Configuration configuration;
         public int reservedPlank, reservedStone;
         public int currentPlank, currentStone;
+        public bool inspected => boss.debugPlacement == configuration.type;
 
         public YieldTask( Simpleton boss, Workshop.Type workshopType, float target ) : base( boss ) 
         {
@@ -671,9 +672,15 @@ public class Simpleton : Player
                 }
 
                 if ( workingFlagDirection < 0 )
+                {
+                    if ( inspected )
+                        node.simpletonDataSafe.latestTestResult.notSuitable = true;
                     continue;
+                }
 
                 var score = CalculateAvailaibily( site );
+                if ( inspected )
+                    node.simpletonDataSafe.latestTestResult = score;
                 if ( score.sum > bestScore.sum )
                 {
                     bestScore = score;
@@ -689,7 +696,9 @@ public class Simpleton : Player
         {
             public float resource, relax, dependency, factor;
             public float resourceCount;
+            public float resourceCoverage;
             public float sum => ( resource + relax + dependency ) * factor;
+            public bool notSuitable;
         }
 
         Fit CalculateAvailaibily( Node node )
@@ -740,17 +749,17 @@ public class Simpleton : Player
             };
             float minimumResourceCoverage = workshopType switch
             {
-                Workshop.Type.forester => 0.25f,
+                Workshop.Type.forester => 0.2f,
                 _ => 0
             };
             if ( resources == 0 )
                 return result;
 
             result.resourceCount = resources;
-            float resourceCoverage = resources / Ground.areas[configuration.gatheringRange].Count;
-            float relativeResourceCoverage = ( resourceCoverage - minimumResourceCoverage ) / ( idealResourceCoverage - minimumResourceCoverage );
+            result.resourceCoverage = resources / Ground.areas[configuration.gatheringRange].Count;
+            float relativeResourceCoverage = ( result.resourceCoverage - minimumResourceCoverage ) / ( idealResourceCoverage - minimumResourceCoverage );
             if ( relativeResourceCoverage > 1 )
-                resourceCoverage = 1;
+                result.resourceCoverage = 1;
             if ( relativeResourceCoverage < 0 )
                 return result;
             result.resource = relativeResourceCoverage * ( Constants.Simpleton.highResourceEfficiency - Constants.Simpleton.lowResourceEfficiency ) + Constants.Simpleton.lowResourceEfficiency;
@@ -788,9 +797,6 @@ public class Simpleton : Player
 
             if ( node.valuable )
                 result.factor = Constants.Simpleton.valuableNodePenalty;
-
-            if ( boss.debugPlacement == configuration.type )
-                node.simpletonDataSafe.latestTestResult = result;
 
             return result;
         }
