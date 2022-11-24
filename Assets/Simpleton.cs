@@ -723,7 +723,7 @@ public class Simpleton : Player
                 if ( workshopType == Workshop.Type.woodcutter && nearby.type == Node.Type.forest )
                     resources += 0.5f;
             }
-            float expectedResourceCoverage = workshopType switch
+            float idealResourceCoverage = workshopType switch
             {
                 Workshop.Type.stonemason => 0.05f,
                 Workshop.Type.dungCollector => 0.05f,
@@ -738,14 +738,22 @@ public class Simpleton : Player
                 Workshop.Type.forester => 0.5f,
                 _ => 2f
             };
+            float minimumResourceCoverage = workshopType switch
+            {
+                Workshop.Type.forester => 0.25f,
+                _ => 0
+            };
             if ( resources == 0 )
                 return result;
 
             result.resourceCount = resources;
-            float resourceCoverage = resources / ( expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count );
-            if ( resourceCoverage > 1 )
+            float resourceCoverage = resources / Ground.areas[configuration.gatheringRange].Count;
+            float relativeResourceCoverage = ( resourceCoverage - minimumResourceCoverage ) / ( idealResourceCoverage - minimumResourceCoverage );
+            if ( relativeResourceCoverage > 1 )
                 resourceCoverage = 1;
-            result.resource = resourceCoverage * ( Constants.Simpleton.highResourceEfficiency - Constants.Simpleton.lowResourceEfficiency ) + Constants.Simpleton.lowResourceEfficiency;
+            if ( relativeResourceCoverage < 0 )
+                return result;
+            result.resource = relativeResourceCoverage * ( Constants.Simpleton.highResourceEfficiency - Constants.Simpleton.lowResourceEfficiency ) + Constants.Simpleton.lowResourceEfficiency;
 
             int relaxSpotCount = 0;
             foreach ( var relaxOffset in Ground.areas[Constants.Workshop.relaxAreaSize] )
@@ -780,9 +788,6 @@ public class Simpleton : Player
 
             if ( node.valuable )
                 result.factor = Constants.Simpleton.valuableNodePenalty;
-
-            if ( configuration.type == Workshop.Type.woodcutter )
-                HiveCommon.Log( $"{node.x}:{node.y} - {resources} {expectedResourceCoverage * Ground.areas[configuration.gatheringRange].Count}" );
 
             if ( boss.debugPlacement == configuration.type )
                 node.simpletonDataSafe.latestTestResult = result;
