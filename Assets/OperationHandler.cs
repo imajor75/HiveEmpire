@@ -980,7 +980,7 @@ public class Operation
         this.stockChannel = channel;
         this.itemType = itemType;
         itemCount = value;
-        name = "Stock Adjustment";
+        name = $"Stock Adjustment ({itemType} {channel} <= {value})";
         return this;
     }
 
