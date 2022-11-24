@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1174,7 +1174,7 @@ public class Workshop : Building
 				{
 					if ( useInputs && !UseInput() )
 					{
-						if ( type != Type.stoneMine || allowFreeStone.done )
+						if ( type != Type.stoneMine || allowFreeStone.inProgress )
 							return false;
 						Log( "Stone mine giving one stone for free due to long starvation" );
 					}
