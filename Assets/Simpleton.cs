@@ -113,7 +113,7 @@ public class Simpleton : Player
                 tasks.Sort( ( a, b ) => b.importance.CompareTo( a.importance ) );
                 Log( "==================" );
                 Log( $"{name} tasks:" );
-                for ( int i = 0; i < tasks.Count && i < 30; i++ )
+                for ( int i = 0; i < tasks.Count; i++ )
                 {
                     var task = tasks[i];
                     Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task}" );
@@ -527,6 +527,19 @@ public class Simpleton : Player
         public int currentPlank, currentStone;
         public bool inspected => boss.debugPlacement == configuration.type;
 
+        public enum State
+        {
+            inProgress,
+            surplus,
+            noProblem,
+            noPlank,
+            noStone,
+            noSpace,
+            option
+        };
+
+        public State state;
+
         public YieldTask( Simpleton boss, Workshop.Type workshopType, float target ) : base( boss ) 
         {
             this.workshopType = workshopType;
@@ -534,6 +547,7 @@ public class Simpleton : Player
             if ( workshopType == Workshop.Type.barrack )
                 priority = 0.5f;
         }
+        public override string ToString() => $"Yieldcheck for {workshopType}: {state} {bestLocation}";
         public override bool Analyze()
         {
             if ( currentYield < 0 )
@@ -541,6 +555,7 @@ public class Simpleton : Player
                 int currentWorkshopCount = 0;
                 var outputType = Workshop.GetConfiguration( game, workshopType ).outputType;
                 currentYield = 0;
+                bool hasStonemason = false;
                 if ( workshopType == Workshop.Type.forester )
                 {
                     foreach ( var workshop in boss.team.workshops )
@@ -561,6 +576,7 @@ public class Simpleton : Player
                             if ( workshop.output > 0 )
                             {
                                 surplus = true;
+                                state = State.surplus;
                                 return finished;
                             }
                             currentYield += workshop.CalculateProductivity( true, Constants.Simpleton.maximumProductionCalculatingPeriod );
@@ -596,6 +612,8 @@ public class Simpleton : Player
                     if ( outputType != Item.Type.unknown && outputType != Item.Type.soldier )
                         boss.lackingProductions.Add( outputType );
                 }
+                if ( problemWeight == 0 )
+                    state = State.noProblem;
                 return problemWeight > 0 ? needMoreTime : finished;
             }
 
@@ -609,9 +627,15 @@ public class Simpleton : Player
             currentStone = boss.team.Stockpile( Item.Type.stone );
 
             if ( configuration.plankNeeded + reservedPlank > currentPlank )
+            {
+                state = State.noPlank;
                 return finished;
+            }
             if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > currentStone )
+            {
+                state = State.noStone;
                 return finished;
+            }
 
             ScanRow( nodeRow++ );
 
@@ -621,7 +645,9 @@ public class Simpleton : Player
                 {
                     boss.Log( $"A new {workshopType} would be good, but there is no room" );
                     boss.noRoom = true;
+                    state = State.noSpace;
                 }
+                state = State.option;
                 return finished;
             }
 
@@ -797,8 +823,6 @@ public class Simpleton : Player
 
             return result;
         }
-
-        public override string ToString() => $"YieldTask: building {workshopType} at {bestLocation}";
 
         public override void ApplySolution()
         {
