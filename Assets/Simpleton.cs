@@ -116,7 +116,7 @@ public class Simpleton : Player
                 for ( int i = 0; i < tasks.Count && i < 30; i++ )
                 {
                     var task = tasks[i];
-                    Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task.description}" );
+                    Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task}" );
                 }            
                 dumpTasks = false;
             }
@@ -268,7 +268,6 @@ public class Simpleton : Player
         public virtual void ApplySolution() {}
         public float problemWeight, solutionEfficiency, priority = 1;
         public float importance { get { return solutionEfficiency * problemWeight * priority; } }
-        virtual public string description { get { return ToString(); } }
         public Simpleton boss;
     }
 
@@ -464,20 +463,17 @@ public class Simpleton : Player
             }
         }
 
-        public override string description
+        public override string ToString()
         {
-            get
+            string d = "GlobalTask: ";
+            d += action switch
             {
-                string d = "GlobalTask: ";
-                d += action switch
-                {
-                    Action.toggleEmergency => "toggle emergency",
-                    Action.disableNonConstruction => "disable base material usage for economy",
-                    Action.enableNonConstruction => "enable base material usage for economy",
-                    _ => "unknown"
-                };
-                return d;
-            }
+                Action.toggleEmergency => "toggle emergency",
+                Action.disableNonConstruction => "disable base material usage for economy",
+                Action.enableNonConstruction => "enable base material usage for economy",
+                _ => "unknown"
+            };
+            return d;
         }
     }
 
@@ -801,13 +797,7 @@ public class Simpleton : Player
             return result;
         }
 
-        public override string description
-        {
-            get
-            {
-                return $"YieldTask: building {workshopType} at {bestLocation}";
-            }
-        }
+        public override string ToString() => $"YieldTask: building {workshopType} at {bestLocation}";
 
         public override void ApplySolution()
         {
@@ -831,42 +821,39 @@ public class Simpleton : Player
         public PathFinder path = PathFinder.Create();
         public Flag flag;
         public Road road;
-        override public string description
+        override public string ToString()
         { 
-            get 
-            {
-                string d = "FlagTask: ";
-                switch ( action )
-                {   
-                    case Action.connect:
+            string d = "FlagTask: ";
+            switch ( action )
+            {   
+                case Action.connect:
+                {
+                    if ( path == null || path.path == null || path.path.Count < 2 || flag == null )
+                        d += $"failed connect attempt of {flag.node.x}:{flag.node.y}";
+                    else
                     {
-                        if ( path == null || path.path == null || path.path.Count < 2 || flag == null )
-                            d += $"failed connect attempt of {flag.node.x}:{flag.node.y}";
-                        else
-                        {
-                            var lastNode = path.path.Last();
-                            d += $"connecting {flag.node.x}:{flag.node.y} to {lastNode.x}:{lastNode.y}";
-                        }
-                        break;
+                        var lastNode = path.path.Last();
+                        d += $"connecting {flag.node.x}:{flag.node.y} to {lastNode.x}:{lastNode.y}";
                     }
-                    case Action.remove:
-                        d += $"removing flag at {flag.node}";
-                        break;
-                    case Action.removeBlocked:
-                        d += $"removing blocked flag at {flag.node}";
-                        break;
-                    case Action.removeRoad:
-                        d += $"removing {road}";
-                        break;
-                    case Action.capture:
-                        d += $"capturing roads around flag at {flag.node}";
-                        break;
-                    default:
-                        d += "unknown";
-                        break;
-                };
-                return d;
-            }
+                    break;
+                }
+                case Action.remove:
+                    d += $"removing flag at {flag.node}";
+                    break;
+                case Action.removeBlocked:
+                    d += $"removing blocked flag at {flag.node}";
+                    break;
+                case Action.removeRoad:
+                    d += $"removing {road}";
+                    break;
+                case Action.capture:
+                    d += $"capturing roads around flag at {flag.node}";
+                    break;
+                default:
+                    d += "unknown";
+                    break;
+            };
+            return d;
         }
         public FlagTask( Simpleton boss, Flag flag ) : base( boss )
         {
@@ -1066,6 +1053,8 @@ public class Simpleton : Player
             this.flagA = flagA;
             this.flagB = flagB;
         }
+
+        public override string ToString() => $"Connecting {flagA} and {flagB}";
 
         public override bool Analyze()
         {
