@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -148,9 +148,9 @@ public class Workshop : Building
 			if ( statusTime > 0 )
 			{
 				if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 || status.status == Status.waitingForAnyInput )
-					wastedTime += status.length;
+					wastedTime += statusTime;
 				else
-					usedTime += status.length;
+					usedTime += statusTime;
 				itemsProduced += status.itemsProduced;
 			}
 			if ( status.startTime < startTime )
