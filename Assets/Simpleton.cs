@@ -593,7 +593,7 @@ public class Simpleton : Player
                 if ( problemWeight > 0 )
                 {
                     GatherDependencies();
-                    if ( outputType != Item.Type.unknown )
+                    if ( outputType != Item.Type.unknown && outputType != Item.Type.soldier )
                         boss.lackingProductions.Add( outputType );
                 }
                 return problemWeight > 0 ? needMoreTime : finished;
