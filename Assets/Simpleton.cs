@@ -571,6 +571,8 @@ public class Simpleton : Player
                 {
                     foreach ( var workshop in boss.team.workshops )
                     {
+                        if ( workshop.type == Workshop.Type.stonemason )
+                            hasStonemason = true;
                         if ( workshop.productionConfiguration.outputType == outputType )
                         {
                             if ( workshop.output > 0 )
@@ -590,6 +592,8 @@ public class Simpleton : Player
                     problemWeight = 0;
                 else
                     problemWeight = 1 - 0.5f * ( (float)currentYield / target );
+                if ( workshopType == Workshop.Type.stonemason && !hasStonemason )
+                    problemWeight = Math.Max( problemWeight, 0.1f );
 
                 if ( currentYield == 0 )
                 {
