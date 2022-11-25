@@ -179,6 +179,7 @@ public class Simpleton : Player
         public bool hasOutputStock;
         public List<Flag> failedConnections = new ();
         public YieldTask.Fit latestTestResult;
+        public bool countedTree;
 
        	[Obsolete( "Compatibility with old files", true )]
         Building possibleDealer { set {} }
@@ -338,11 +339,11 @@ public class Simpleton : Player
                         {
                             if ( resource.type != Resource.Type.tree )
                                 continue;
-                            if ( resource.charges > 0 )
+                            if ( !resource.simpletonDataSafe.countedTree )
                             {
-                                resource.charges = 0;   // TODO Not so nice
+                                treeCount += resource.charges;
+                                resource.simpletonDataSafe.countedTree = true;   // TODO Not so nice
                                 countedTrees.Add( resource );
-                                treeCount++;
                             }
                         }
                     }
@@ -355,7 +356,7 @@ public class Simpleton : Player
                     hasSawmill = true;
             }
             foreach ( var tree in countedTrees )
-                tree.charges = 1;
+                tree.simpletonDataSafe.countedTree = false;
             boss.expectedPlank += hasSawmill ? boss.expectedLog : 0;
 
             foreach ( var stock in boss.team.stocks )
