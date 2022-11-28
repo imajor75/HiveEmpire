@@ -935,9 +935,10 @@ public class Simpleton : Player
                     return finished;
                 }
 
-                problemWeight = Constants.Simpleton.blockedFlagWeight;
-                solutionEfficiency = 1;
-                action = Action.removeBlocked;
+                // The following three lines caused an infinite loop of (remove flag)-(split road) actions. It is not clear in what situation are these lines needed
+                // problemWeight = Constants.Simpleton.blockedFlagWeight;
+                // solutionEfficiency = 1;
+                // action = Action.removeBlocked;
                 return finished;
             }
             else
