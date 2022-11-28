@@ -2587,7 +2587,7 @@ public class Interface : HiveObject
 		public void Open( Workshop workshop, Content contentToShow = Content.everything, bool show = false )
 		{
 			noResize = true;
-			if ( base.Open( workshop, 250, 150 ) )
+			if ( base.Open( workshop, 250, 160 ) )
 				return;
 
 			name = "Workshop panel";
@@ -2678,13 +2678,13 @@ public class Interface : HiveObject
 
 			if ( ( contentToShow & Content.controlIcons ) != 0 )
 			{
-				Image( Icon.destroy ).Pin( 190, row ).AddClickHandler( Remove ).SetTooltip( "Remove the building" );
-				Image( Icon.hauler ).Pin( 170, row ).AddClickHandler( ShowTinkerer ).SetTooltip( "Show the tinkerer of the building" );
-				changeModeImage = Image( GetModeIcon() ).Pin( 150, row ).AddClickHandler( ChangeMode ).SetTooltip( "Current running mode of the building\nLMB to cycle throught possible modes", null, 
+				Image( Icon.destroy ).Pin( 190, iconSize + 5, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the building" );
+				Image( Icon.hauler ).Pin( 170, iconSize + 5, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowTinkerer ).SetTooltip( "Show the tinkerer of the building" );
+				changeModeImage = Image( GetModeIcon() ).Pin( 150, iconSize + 5, iconSize, iconSize, 0, 0 ).AddClickHandler( ChangeMode ).SetTooltip( "Current running mode of the building\nLMB to cycle throught possible modes", null, 
 				"Clock (default) - Work when needed\n" +
 				"Alarm - Work even if not needed\n" +
 				"Bed - Don't work at all" );
-				Image( Icon.buildings ).Pin( 130, row ).AddClickHandler( () => BuildingList.Create().Open( building.type ) ).SetTooltip( "Show a list of buildings with the same type" );
+				Image( Icon.buildings ).Pin( 130, iconSize + 5, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( building.type ) ).SetTooltip( "Show a list of buildings with the same type" );
 				row -= 25;
 			}
 
