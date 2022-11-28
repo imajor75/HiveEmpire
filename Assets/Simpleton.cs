@@ -555,7 +555,7 @@ public class Simpleton : Player
                 int currentWorkshopCount = 0;
                 var outputType = Workshop.GetConfiguration( game, workshopType ).outputType;
                 currentYield = 0;
-                bool hasStonemason = false;
+                int stonemasonCount = 0;
                 if ( workshopType == Workshop.Type.forester )
                 {
                     foreach ( var workshop in boss.team.workshops )
@@ -572,7 +572,7 @@ public class Simpleton : Player
                     foreach ( var workshop in boss.team.workshops )
                     {
                         if ( workshop.type == Workshop.Type.stonemason )
-                            hasStonemason = true;
+                            stonemasonCount++;
                         if ( workshop.productionConfiguration.outputType == outputType )
                         {
                             if ( workshop.output > 0 )
@@ -592,8 +592,8 @@ public class Simpleton : Player
                     problemWeight = 0;
                 else
                     problemWeight = 1 - 0.5f * ( (float)currentYield / target );
-                if ( workshopType == Workshop.Type.stonemason && !hasStonemason )
-                    problemWeight = Math.Max( problemWeight, 0.1f );
+                if ( workshopType == Workshop.Type.stonemason )
+                    problemWeight = Math.Max( problemWeight, stonemasonCount switch { 0 => 1, 1 => 0.3f, _ => 0.1f } );
 
                 if ( currentYield == 0 )
                 {
@@ -819,6 +819,21 @@ public class Simpleton : Player
                         sourceScore += Constants.Simpleton.sourceSearchRange - buildingNode.DistanceFrom( node );
                 }
                 sourceAvailability = (float)sourceScore / ( dependencies.Count * Constants.Simpleton.sourceSearchRange );
+            }
+            float redundancyProblem = workshopType switch
+            {
+                Workshop.Type.stonemason => 1,
+                _ => 0
+            };
+            if ( configuration.gatheredResource != Resource.Type.unknown && redundancyProblem != 0 )
+            {
+                foreach ( var offset in Ground.areas[configuration.gatheringRange] )
+                {
+                    var offsetedNode = node + offset;
+                    if ( offsetedNode.building && offsetedNode.building.type == (Building.Type)workshopType )
+                        sourceAvailability -= redundancyProblem * offsetedNode.DistanceFrom( node );
+                }
+
             }
             result.dependency = sourceAvailability * Constants.Simpleton.sourceImportance;
 
