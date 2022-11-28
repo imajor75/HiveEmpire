@@ -633,7 +633,6 @@ public class Workshop : Building
 			"smelter", 1.0f, Type.steelSmelter, Type.sterlingSmelter,
 			"windmill", 1.0f, Type.mill, Type.cornMill,
 			"brewery", 0.7f, Type.brewery,
-			"coinmaker", 0.5f, Type.jeweler,
 			"pig", 1.0f, Type.butcher,
 			"chicken", 1.0f, Type.poultryRun,
 			"cow", 1.0f, Type.dairy,
@@ -644,6 +643,7 @@ public class Workshop : Building
 			"bow", 1.0f, true, Type.bowMaker,
 			"fight", 1.0f, Type.barrack,
 			"frying", 0.3f, Type.fishFryer,
+			"jewelry", 1.0f, Type.jeweler,
 			"pickaxe_deep", 1.0f, Type.goldMine, Type.saltMine, Type.coalMine, Type.stoneMine, Type.ironMine, Type.silverMine, Type.copperMine
  		};
 		processingSounds.fileNamePrefix = "soundEffects/";
