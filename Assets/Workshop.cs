@@ -642,6 +642,7 @@ public class Workshop : Building
 			"rasp", 1.0f, Type.slingMaker,
 			"bow", 1.0f, true, Type.bowMaker,
 			"fight", 1.0f, Type.barrack,
+			"frying", 0.3f, Type.fishFryer,
 			"pickaxe_deep", 1.0f, Type.goldMine, Type.saltMine, Type.coalMine, Type.stoneMine, Type.ironMine, Type.silverMine, Type.copperMine
  		};
 		processingSounds.fileNamePrefix = "soundEffects/";
