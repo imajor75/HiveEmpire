@@ -1236,6 +1236,8 @@ public class Simpleton : Player
             this.workshop = workshop;
         }
 
+        public override string ToString() => $"Maintenance of {workshop}, action: {action}";
+
         public override bool Analyze()
         {
             var data = workshop.simpletonDataSafe;
