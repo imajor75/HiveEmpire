@@ -639,7 +639,8 @@ public class Workshop : Building
 			"cow", 1.0f, Type.dairy,
 			"kneading", 1.0f, Type.bakery, Type.confectionery,
 			"weaponforging", 0.7f, Type.weaponMaker,
-			"rasp", 1.0f, Type.bowMaker, Type.slingMaker,
+			"rasp", 1.0f, Type.slingMaker,
+			"bow", 1.0f, true, Type.bowMaker,
 			"fight", 1.0f, Type.barrack,
 			"pickaxe_deep", 1.0f, Type.goldMine, Type.saltMine, Type.coalMine, Type.stoneMine, Type.ironMine, Type.silverMine, Type.copperMine
  		};
