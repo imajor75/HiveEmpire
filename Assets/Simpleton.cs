@@ -1259,10 +1259,13 @@ public class Simpleton : Player
 
             if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
             {
+                bool useless = false;
                 if ( workshop.ResourcesLeft() != 0 )
                     data.lastTimeHadResources.Start( Constants.Simpleton.noResourceTolerance );
+                else
+                    useless = workshop.tinkerer.IsIdle( true ) && workshop.tinkererMate.IsIdle( true ) && workshop.output == 0;
 
-                if ( data.lastTimeHadResources.done )
+                if ( data.lastTimeHadResources.done || ( workshop.type == Workshop.Type.stonemason && useless ) )
                 {
                     action = Action.remove;
                     problemWeight = solutionEfficiency = 1;
