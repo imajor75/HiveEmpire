@@ -277,9 +277,10 @@ public class Simpleton : Player
     {
         public enum Action
         {   
+            nothing,
             toggleEmergency,
             disableNonConstruction,
-            enableNonConstruction,
+            enableNonConstruction
         }
         public Action action;
 
@@ -369,13 +370,13 @@ public class Simpleton : Player
 
             boss.emergencyPlank = boss.expectedPlank < Constants.Simpleton.expectedPlankPanic;
 
-            if ( !boss.emergencyPlank && boss.reservedPlank > 0 && !boss.preservingConstructionMaterial )
+            if ( ( boss.emergencyPlank || boss.reservedPlank > 0 ) && !boss.preservingConstructionMaterial )
             {
                 action = Action.disableNonConstruction;
                 problemWeight = solutionEfficiency = 1;
             }
 
-            if ( ( boss.emergencyPlank || boss.reservedPlank == 0 ) && boss.preservingConstructionMaterial )
+            if ( !boss.emergencyPlank && boss.reservedPlank == 0 && boss.preservingConstructionMaterial )
             {
                 action = Action.enableNonConstruction;
                 problemWeight = solutionEfficiency = 1;
@@ -475,7 +476,7 @@ public class Simpleton : Player
                 Action.toggleEmergency => "toggle emergency",
                 Action.disableNonConstruction => "disable base material usage for economy",
                 Action.enableNonConstruction => "enable base material usage for economy",
-                _ => "unknown"
+                _ => "nothing to do"
             };
             return d;
         }
