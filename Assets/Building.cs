@@ -791,6 +791,12 @@ abstract public class Building : HiveObject
 
 	public override void Remove()
 	{
+		if ( construction.done )
+		{
+			team.mainBuilding.itemData[(int)Item.Type.plank].content += configuration.plankNeeded / 2;
+			team.mainBuilding.itemData[(int)Item.Type.stone].content += configuration.stoneNeeded / 2;
+		}
+
 		construction.Remove();
 		if ( !blueprintOnly )
 			team.buildingCounts[(int)type]--;
