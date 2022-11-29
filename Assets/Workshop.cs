@@ -137,23 +137,28 @@ public class Workshop : Building
 	{
 		var startTime = time - timeRange;
 		int itemsProduced = 0;
-			
 		int wastedTime = 0, usedTime = 0;
-		for ( var statusNode = statuses.Last; statusNode != null; statusNode = statusNode.Previous )
+
+		bool ProcessPeriod( int start, int length, Status status, int items )
 		{
-			var status = statusNode.Value;
-			int statusTime = status.length;
-			if ( status.startTime < startTime )
-				statusTime -= startTime - status.startTime;
+			int statusTime = length;
+			if ( start < startTime )
+				statusTime -= startTime - start;
 			if ( statusTime > 0 )
 			{
-				if ( status.status == Status.waitingForOutputSlot || status.status == Status.waitingForInput0 || status.status == Status.waitingForInput1 || status.status == Status.waitingForInput2 || status.status == Status.waitingForInput3 || status.status == Status.waitingForAnyInput )
+				if ( status == Status.waitingForOutputSlot || status == Status.waitingForInput0 || status == Status.waitingForInput1 || status == Status.waitingForInput2 || status == Status.waitingForInput3 || status == Status.waitingForAnyInput )
 					wastedTime += statusTime;
 				else
 					usedTime += statusTime;
-				itemsProduced += status.itemsProduced;
+				itemsProduced += items;
 			}
-			if ( status.startTime < startTime )
+			return start < startTime;
+		}
+
+		ProcessPeriod( statusDuration.reference, statusDuration.age, currentStatus, statusProduction );
+		for ( var statusNode = statuses.Last; statusNode != null; statusNode = statusNode.Previous )
+		{
+			if ( ProcessPeriod( statusNode.Value.startTime, statusNode.Value.length, statusNode.Value.status, statusNode.Value.itemsProduced ) )
 				break;
 		}
 
