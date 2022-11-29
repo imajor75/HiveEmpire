@@ -220,6 +220,23 @@ public class PathFinder
         return;
     }
 
+	public int length
+	{
+		get
+		{
+			if ( !ready )
+				return int.MaxValue;
+			if ( mode == Mode.onRoad )
+			{
+				int length = 0;
+				foreach ( var road in roadPath )
+					length += road.length;
+				return length;
+			}
+			return path.Count - 1;
+		}
+	}
+
 	virtual public void Validate()
 	{
 		if ( ready )

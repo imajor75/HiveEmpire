@@ -1381,8 +1381,9 @@ public class Simpleton : Player
             bool constructionInProgress = false;
             foreach ( var stock in boss.team.stocks )
             {
-                float score = 1f / stock.node.DistanceFrom( workshop.node );
-                if ( stock.node.DistanceFrom( workshop.node ) > Constants.Simpleton.stockCoverage )
+                int distance = stock.flag.PathDistanceFrom( workshop.flag );
+                float score = 1f / distance;
+                if ( distance > Constants.Simpleton.stockCoverage * 2 )
                     continue;
                 if ( stock.simpletonDataSafe.managedItemTypes.Contains( itemType ) )
                     score *= 5;

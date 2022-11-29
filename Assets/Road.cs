@@ -44,7 +44,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 	}
 
-	public int length { get => nodes.Count - 1; }
+	public int length => nodes.Count - 1;
 
 	override public int checksum
 	{

@@ -136,6 +136,13 @@ public class Flag : HiveObject
 			team.flags.Add( this );
 	}
 
+	public int PathDistanceFrom( Flag other )
+	{
+		var p = new PathFinder();
+		p.FindPathBetween( node, other.node, Path.Mode.onRoad );
+		return p.length;
+	}
+
 	new public void Start()
 	{
 		base.Start();
