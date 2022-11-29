@@ -634,7 +634,7 @@ public class Simpleton : Player
             currentPlank = boss.expectedPlank;
             currentStone = boss.team.Stockpile( Item.Type.stone );
 
-            if ( configuration.plankNeeded + reservedPlank > currentPlank || boss.emergencyPlank )
+            if ( configuration.plankNeeded + reservedPlank > currentPlank || ( boss.emergencyPlank && workshopType != Workshop.Type.woodcutter && workshopType != Workshop.Type.sawmill && workshopType != Workshop.Type.stonemason && workshopType != Workshop.Type.forester ) )
             {
                 state = State.noPlank;
                 return finished;
