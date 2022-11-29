@@ -829,6 +829,7 @@ public class Simpleton : Player
             float redundancyProblem = workshopType switch
             {
                 Workshop.Type.stonemason => 1,
+                Workshop.Type.woodcutter => 0.5f,
                 _ => 0
             };
             if ( configuration.gatheredResource != Resource.Type.unknown && redundancyProblem != 0 )
@@ -837,7 +838,7 @@ public class Simpleton : Player
                 {
                     var offsetedNode = node + offset;
                     if ( offsetedNode.building && offsetedNode.building.type == (Building.Type)workshopType )
-                        sourceAvailability -= redundancyProblem * offsetedNode.DistanceFrom( node );
+                        sourceAvailability -= (int)( redundancyProblem / offsetedNode.DistanceFrom( node ) );
                 }
 
             }
