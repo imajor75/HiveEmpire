@@ -16,6 +16,7 @@ public class Simpleton : Player
     public List<Item.Type> lackingProductions = new ();
     public int reservedPlank, reservedStone;
     public int expectedLog, expectedPlank;
+    public bool emergencyPlank;
     public bool active;
 	public bool showActions;
     public bool peaceful;
@@ -366,24 +367,26 @@ public class Simpleton : Player
             foreach ( var guardHouse in boss.team.guardHouses )
                 CheckBuilding( guardHouse );
 
-            if ( boss.reservedPlank > 0 && !boss.preservingConstructionMaterial )
+            boss.emergencyPlank = boss.expectedPlank < Constants.Simpleton.expectedPlankPanic;
+
+            if ( !boss.emergencyPlank && boss.reservedPlank > 0 && !boss.preservingConstructionMaterial )
             {
                 action = Action.disableNonConstruction;
                 problemWeight = solutionEfficiency = 1;
             }
 
-            if ( boss.reservedPlank == 0 && boss.preservingConstructionMaterial )
+            if ( ( boss.emergencyPlank || boss.reservedPlank == 0 ) && boss.preservingConstructionMaterial )
             {
                 action = Action.enableNonConstruction;
                 problemWeight = solutionEfficiency = 1;
             }
             
-            if ( boss.expectedPlank < Constants.Simpleton.expectedPlankPanic && boss.team.constructionFactors[(int)Building.Type.stock] != 0 )
+            if ( boss.emergencyPlank && boss.team.constructionFactors[(int)Building.Type.stock] != 0 )
             {
                 action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
             }
-            if ( boss.expectedPlank >= Constants.Simpleton.expectedPlankPanic && boss.team.constructionFactors[(int)Building.Type.stock] == 0 )
+            if ( !boss.emergencyPlank && boss.team.constructionFactors[(int)Building.Type.stock] == 0 )
             {
                 action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
@@ -630,7 +633,7 @@ public class Simpleton : Player
             currentPlank = boss.expectedPlank;
             currentStone = boss.team.Stockpile( Item.Type.stone );
 
-            if ( configuration.plankNeeded + reservedPlank > currentPlank )
+            if ( configuration.plankNeeded + reservedPlank > currentPlank || boss.emergencyPlank )
             {
                 state = State.noPlank;
                 return finished;
