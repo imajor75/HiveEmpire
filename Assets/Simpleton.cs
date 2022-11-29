@@ -298,7 +298,7 @@ public class Simpleton : Player
             boss.reservedPlank = boss.reservedStone = 0;
             void CheckBuilding( Building building )
             {
-                if ( !building.construction.done )
+                if ( !building.construction.done && boss.team.constructionFactors[(int)building.type] == 1 )
                 {
                     boss.reservedPlank += building.construction.plankMissing;
                     boss.reservedStone += building.construction.stoneMissing;
@@ -535,7 +535,7 @@ public class Simpleton : Player
             noPlank,
             noStone,
             noSpace,
-            option
+            possible
         };
 
         public State state;
@@ -547,7 +547,7 @@ public class Simpleton : Player
             if ( workshopType == Workshop.Type.barrack )
                 priority = 0.5f;
         }
-        public override string ToString() => $"Yieldcheck for {workshopType}: {state} {bestLocation}";
+        public override string ToString() => $"Yieldcheck for {workshopType} - target:{target}, current: {currentYield}, result: {state} (at {bestLocation})";
         public override bool Analyze()
         {
             if ( currentYield < 0 )
@@ -651,7 +651,7 @@ public class Simpleton : Player
                     boss.noRoom = true;
                     state = State.noSpace;
                 }
-                state = State.option;
+                state = State.possible;
                 return finished;
             }
 

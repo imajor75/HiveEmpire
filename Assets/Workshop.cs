@@ -227,7 +227,7 @@ public class Workshop : Building
 		public int maxRestTime = Constants.Workshop.defaultMaxRestTime;
 		public int outputMax = Constants.Workshop.defaultOutputMax;
 		public bool producesDung = false;
-		public float productivity {get { return (float)Constants.World.normalSpeedPerSecond * 60 / ( productionTime == 0 ? approximatedProductionTime : productionTime ); } }
+		public float productivity => (float)Constants.World.normalSpeedPerSecond * 60 / ( productionTime == 0 ? approximatedProductionTime : productionTime );
 
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }

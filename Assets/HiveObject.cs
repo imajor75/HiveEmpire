@@ -219,7 +219,7 @@ public abstract class HiveObject : HiveCommon
 	public virtual void Validate( bool chainCall )
 	{
 		if ( !blueprintOnly && world )
-			assert.AreNotEqual( id, 0 );
+			assert.AreNotEqual( id, 0, $"{this} has an ID ({id}) but has no world" );
 		if ( worldIndex >= 0 )
 		{
 			assert.IsNotNull( world );
