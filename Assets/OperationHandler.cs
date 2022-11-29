@@ -1279,10 +1279,18 @@ public class Operation
             }
             case Type.toggleEmergencyConstruction:
             {
-                float normal = team.constructionFactors[(int)Building.Type.guardHouse] == 1 ? 0 : 1;
+                float normal = team.constructionFactors[(int)Building.Type.stock] == 1 ? 0 : 1;
+                var allowed = new List<Building.Type>
+                {
+                    Building.Type.guardHouse,
+                    (Building.Type)Workshop.Type.forester,
+                    (Building.Type)Workshop.Type.woodcutter,
+                    (Building.Type)Workshop.Type.stonemason,
+                    (Building.Type)Workshop.Type.sawmill
+                };
                 for ( int i = 0; i < (int)Building.Type.total; i++ )
                 {
-                    if ( i != (int)Workshop.Type.woodcutter && i != (int)Workshop.Type.stonemason && i != (int)Workshop.Type.sawmill && i != (int)Workshop.Type.forester )
+                    if ( !allowed.Contains( (Building.Type)i ) )
                         team.constructionFactors[i] = normal;
                 }
                 return Create().SetupAsToggleEmergencyConstruction( team );
