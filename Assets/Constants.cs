@@ -429,6 +429,7 @@ public static class Constants
         public const int expectedLogFromRenewWoodcutter = 50;
         public const int expectedPlankPanic = 40;
         public const float valuableNodePenalty = 0.5f;
+        public const float alreadyHasFlagBonus = 1.3f;
         public const int maximumProductionCalculatingPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
     }
 }

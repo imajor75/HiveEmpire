@@ -710,6 +710,8 @@ public class Simpleton : Player
                 }
 
                 var score = CalculateAvailaibily( site );
+                if ( node.validFlag )
+                    score.factor *= Constants.Simpleton.alreadyHasFlagBonus;
                 if ( inspected )
                     node.simpletonDataSafe.latestTestResult = score;
                 if ( score.sum > bestScore.sum )
@@ -842,7 +844,7 @@ public class Simpleton : Player
             result.dependency = sourceAvailability * Constants.Simpleton.sourceImportance;
 
             if ( node.valuable )
-                result.factor = Constants.Simpleton.valuableNodePenalty;
+                result.factor *= Constants.Simpleton.valuableNodePenalty;
 
             return result;
         }
