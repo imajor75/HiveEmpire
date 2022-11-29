@@ -762,7 +762,7 @@ public class Simpleton : Player
                 };
                 if ( isThisGood )
                     resources++;
-                if ( workshopType == Workshop.Type.woodcutter && nearby.type == Node.Type.forest )
+                if ( workshopType == Workshop.Type.woodcutter && nearby.type == Node.Type.forest && !boss.emergencyPlank )
                     resources += 0.5f;
             }
             float idealResourceCoverage = workshopType switch
