@@ -64,6 +64,7 @@ public class Water : HiveObject
                     continue;
 
                 var mf = new GameObject( "Water clone" ).AddComponent<MeshFilter>();
+                mf.gameObject.layer = World.layerIndexWater;
                 mf.mesh = mesh;
                 mf.gameObject.AddComponent<MeshRenderer>().material = cloneMaterial;
                 mf.transform.SetParent( transform );
