@@ -555,7 +555,7 @@ public class Eye : HiveObject
 			if ( !settings.renderGround )
 				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexGround );
 			if ( !settings.renderResources )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexResources );
+				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexResources ) - ( 1 << LayerMask.NameToLayer( "Trees" ) );
 			if ( !settings.renderUnits )
 				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexUnits );
 			if ( !settings.renderItems )
