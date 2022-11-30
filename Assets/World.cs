@@ -60,7 +60,17 @@ public class World : HiveObject
 		game.operationHandler.currentCRCCode += code;
 	}
 
-	public string nextSaveFileName { get { return $"{name} {UIHelpers.TimeToString( time, ignoreSeconds:true, separator:'-' )} ({saveIndex})"; } }
+	public enum SaveType
+	{
+		manual,
+		auto,
+		exit
+	}
+
+	public string NextSaveFileName( SaveType type ) 
+	{ 
+		return $"{name} ({saveIndex}-{UIHelpers.TimeToString( time, ignoreSeconds:true, separator:'.' )}-{type})"; 
+	}
 
 	[Obsolete( "Compatibility with old files", true )]
 	float lastAutoSave { set {} }
@@ -834,15 +844,10 @@ public class World : HiveObject
 
 	public void Save( string fileName, bool manualSave, bool compact = false )
 	{
-		var match = Regex.Match( fileName, @".*/(.*) [\d-]+ \(\d+\)(?: manual| auto| exit)?\.json" );
+		var match = Regex.Match( fileName, @".*/(.*) \(.*\)\.json" );
 		if ( match.Success )
 			name = match.Groups.Last().Value;
-		else
-		{
-			var freeMatch = Regex.Match( fileName, @".*/(.*)\.json" );
-			if ( freeMatch.Success )
-				name = freeMatch.Groups.Last().Value;
-		}
+
 		saveIndex++;
 		this.fileName = fileName;
 		if ( root.playerInCharge || manualSave )
@@ -1399,7 +1404,7 @@ public class Game : World
 		time = 0;
 		lastChecksum = 0;
 		string pattern = challenge.title + " #{0}";
-		name = String.Format( pattern, Interface.FirstUnusedIndex( Application.persistentDataPath + "/Saves", pattern + " (0).json" ) );
+		name = String.Format( pattern, Interface.FirstUnusedIndex( Application.persistentDataPath + "/Saves", challenge.title ) );
 		saveIndex = 0;
 		SetSpeed( Speed.normal );
 		if ( operationHandler )

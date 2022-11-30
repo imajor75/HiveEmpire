@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -361,7 +361,7 @@ public class Interface : HiveObject
 	public void OnApplicationQuit()
 	{
 		if ( settings.saveOnExit && !errorOccured && !game.demo )
-			game.Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + " exit.json", false );
+			game.Save( Application.persistentDataPath + "/Saves/" + game.NextSaveFileName( World.SaveType.exit ) + ".json", false );
 		game.Clear();
 		logFile.Close();
 	}
@@ -703,7 +703,7 @@ public class Interface : HiveObject
 	public void Save( string fileName = "", bool manualSave = false )
 	{
 		if ( fileName == "" )
-			fileName = Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + ".json";
+			fileName = Application.persistentDataPath + "/Saves/" + game.NextSaveFileName( manualSave ? World.SaveType.manual : World.SaveType.auto ) + ".json";
 		delayedSaveName = fileName;
 		delayedManualSave = manualSave;
 		delayedSaveValid = false;
@@ -776,7 +776,7 @@ public class Interface : HiveObject
 	{
 		requestUpdate = false;
 		if ( settings.autoSave && Time.unscaledTime - lastSave > settings.autoSaveInterval )
-			Save( Application.persistentDataPath + "/Saves/" + game.nextSaveFileName + " auto.json", false );
+			Save( Application.persistentDataPath + "/Saves/" + game.NextSaveFileName( World.SaveType.auto ) + ".json", false );
 		if ( mainPlayer && messageButton )
 		{
 			if ( mainPlayer.messages.Count != 0 )
@@ -7923,7 +7923,7 @@ if ( cart )
 		menu.AddItem( "New Game", () => { menu.Close(); OpenNewGameMenu(); } );
 		menu.AddItem( "Load", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Load", root.Load ); } );
 		if ( !initial && !game.demo )
-			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.nextSaveFileName + " manual", true ); } );
+			menu.AddItem( "Save", () => { menu.Close(); BrowseFilePanel.Create( Application.persistentDataPath + "/Saves", "Save", ( string fileName ) => root.Save( fileName, true ), "json", game.NextSaveFileName( World.SaveType.manual ), true ); } );
 		menu.AddItem( "Replay", () => { menu.Close(); OpenReplay(); } );
 		menu.AddItem( "Multiplayer", () => OpenMultiplayerMenu() );
 		menu.AddItem( "Options", () => OpenOptionsMenu() );
@@ -8083,18 +8083,22 @@ if ( cart )
 	protected const bool keepGoing = true;	// possible return values for IInputHandler functions
 	protected const bool finished = false;
 
-	public static int FirstUnusedIndex( string path, string pattern, int limit = 1000 )
+	public static int FirstUnusedIndex( string path, string name )
 	{
 		var files = Directory.GetFiles( path ).Select(f => System.IO.Path.GetFileName( f ) );
-		var sortedFiles = files.ToList();
-		sortedFiles.Sort();
-
-		for ( int index = 0; index < limit; index++ )
+		int biggestIndex = -1;
+		foreach ( var file in files )
 		{
-			if ( sortedFiles.BinarySearch( String.Format( pattern, index ) ) < 0 )
-				return index;
+			var match = Regex.Match( file, name + @" #(\d+) \(.*\)\.json" );
+			HiveCommon.Log( $"hiszti {file} {match.Success} {match.Groups.Last()}" );
+			if ( match.Success )
+			{
+				var index = int.Parse( match.Groups.Last().Value );
+				if ( index > biggestIndex )
+					biggestIndex = index;
+			}
 		}
-		return -1;
+		return biggestIndex + 1;
 	}
 
 	public class Controller : HiveCommon
