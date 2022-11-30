@@ -1172,7 +1172,8 @@ public class Simpleton : Player
     public class ExtendBorderTask : Task
     {
         public Node best;
-        public int flagDirection;
+        public float bestScore = 0;
+        public int bestFlagDirection;
 
         public ExtendBorderTask( Simpleton boss ) : base( boss ) {}
         public override bool Analyze()
@@ -1217,25 +1218,41 @@ public class Simpleton : Player
                 if ( hasGuardHouseAround )
                     continue;
 
-                for ( flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
+                float score = 0;
+                foreach ( var offset in Ground.areas[Constants.GuardHouse.defaultInfluence] )
+                {
+                    var o = node + offset;
+                    if ( o.team )
+                        continue;
+                    score += o.type switch { Node.Type.underWater => 0.5f, Node.Type.hill => 1.25f, _ => 1 };
+                }
+
+                if ( score < bestScore )
+                    continue;
+
+                for ( int flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
                 {
                     if ( GuardHouse.IsNodeSuitable( node, boss.team, flagDirection ) )
                     {
                         best = node;
-                        solutionEfficiency = 1;
-                        return finished;
+                        bestScore = score;
+                        bestFlagDirection = flagDirection;
+                        solutionEfficiency = (float)score / Ground.areas[Constants.GuardHouse.defaultInfluence].Count;
                     }
                 }
             }
-            boss.Log( "No room for a new guardhouse" );
+            if ( best == null )
+                boss.Log( "No room for a new guardhouse" );
             return finished;
         }
 
         public override void ApplySolution()
         {
             boss.Log( $"Building guard house at {best.name}" );
-            HiveCommon.oh.ScheduleCreateBuilding( best, flagDirection, Building.Type.guardHouse, boss.team, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateBuilding( best, bestFlagDirection, Building.Type.guardHouse, boss.team, true, Operation.Source.computer );
         }
+
+        public override string ToString() => $"Extend border (best location: {best}, best score: {bestScore}";
     }
 
     public class MaintenanceTask : Task
