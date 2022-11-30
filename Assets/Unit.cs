@@ -909,6 +909,11 @@ public class Unit : HiveObject
 			{
 				reparented[0] = true;
 				items[0].Link( boss, expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight );
+				if ( items[1] )
+				{
+					reparented[1] = true;
+					items[1].Link( boss, LinkType.haulingBoxSecondary );
+				}
 			}
 
 			if ( !timer.done )
@@ -1616,8 +1621,6 @@ public class Unit : HiveObject
 			itemsInHands[0].mapPosition = transform.position;
 		if ( itemsInHands[1] )
 			itemsInHands[1].mapPosition = transform.position;
-			
-
 	}
 
 	public override void Remove()
