@@ -834,6 +834,8 @@ public class Eye : HiveObject
 
 					void DrawMeshRepeatedly( Mesh mesh, Matrix4x4 location, Material material )
 					{
+						if ( mesh == null )
+							return;
 						maskCreator.DrawMesh( mesh, location, material );
 						if ( !game.repeating )
 							return;
@@ -866,7 +868,7 @@ public class Eye : HiveObject
 							if ( eye.mapMode )
 							{
 								var shiftUp = Matrix4x4.Translate( new Vector3( 0, 10, 0 ) );
-								DrawMeshRepeatedly( building.mapIndicator.GetComponent<MeshCollider>().sharedMesh, shiftUp * building.mapIndicator.transform.localToWorldMatrix, markerMaterial );
+								DrawMeshRepeatedly( building.mapIndicator?.GetComponent<MeshCollider>()?.sharedMesh, shiftUp * building.mapIndicator.transform.localToWorldMatrix, markerMaterial );
 							}
 							else
 								DrawMeshRecursively( building.body );
