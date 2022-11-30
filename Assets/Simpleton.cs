@@ -617,7 +617,7 @@ public class Simpleton : Player
                 if ( problemWeight > 0 )
                 {
                     GatherDependencies();
-                    if ( outputType != Item.Type.unknown && outputType != Item.Type.soldier )
+                    if ( outputType != Item.Type.unknown && outputType != Item.Type.soldier && outputType != Item.Type.stone )        // TODO Hacky special case for stone
                         boss.lackingProductions.Add( outputType );
                 }
                 if ( problemWeight == 0 )
