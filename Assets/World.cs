@@ -142,7 +142,7 @@ public class World : HiveObject
 	public class Settings
 	{
 		[Range(16, 128)]
-		public int size = 48;
+		public int size = 32;
 
 		public float maxHeight = 6;
 		[Range(0.0f, 1.0f)]
