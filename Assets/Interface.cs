@@ -7328,7 +7328,7 @@ if ( cart )
 		void Open( bool defeat )
 		{
 			allowInSpectateMode = true;
-			base.Open( 500, 300 + (defeat ? (int)( iconSize * 1.5 ) : 0) );
+			base.Open( 540, 300 + (defeat ? (int)( iconSize * 1.5 ) : 0) );
 			int titleRow = -borderWidth;
 			if ( defeat )
 			{
@@ -7338,7 +7338,7 @@ if ( cart )
 			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize * 3, -borderWidth, -borderWidth + titleRow );
 			Text( "Manual seed:" ).Pin( -330, borderWidth + iconSize, 150, iconSize, 1, 0 );
 			manualSeed = InputField( new System.Random().Next().ToString() ).PinSideways( 0, borderWidth + iconSize, 150, iconSize, 1, 0 );
-			Text( "Challenge name" ).Pin( borderWidth, titleRow, 140, iconSize );
+			Text( "Challenge name" ).Pin( borderWidth, titleRow, 180, iconSize );
 			Text( "Time limit" ).PinSideways( 0, titleRow, 70, iconSize );
 			Text( "World size" ).PinSideways( 0, titleRow, 70, iconSize );
 			Text( "Best solution" ).PinSideways( 50, titleRow, 100, iconSize );
@@ -7348,7 +7348,7 @@ if ( cart )
 			int row = 0;
 			foreach ( var challenge in root.challenges )
 			{
-				Text( challenge.title ).Pin( 0, row, 140, iconSize ).Link( view ).SetTooltip( challenge.description );
+				Text( challenge.title ).Pin( 0, row, 180, iconSize ).Link( view ).SetTooltip( challenge.description );
 				Text( challenge.timeLimit > 0 ? UIHelpers.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Text( challenge.worldGenerationSettings.size switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Button( "Begin" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
