@@ -156,7 +156,7 @@ public class World : HiveObject
 
 		public bool randomizeProductionChain = true;
 		public float forestChance = 0.006f;
-		public float rocksChance = 0.002f;
+		public float rocksChance = 0.0025f;
 		public float animalSpawnerChance = 0.001f;
 		public HeightMap.Settings reliefSettings = new (), forestSettings = new ();
 		public int oreChargesPerNode = Constants.Resource.oreChargePerNodeDefault;

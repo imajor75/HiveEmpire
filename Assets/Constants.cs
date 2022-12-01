@@ -321,7 +321,7 @@ public static class Constants
         public const int wheatFieldGrowthTime = 10000;
         public const int animalSpawnTime = 1000;
         public const int treeSoundTime = 60000;
-        public const int rockCharges = 6;
+        public const int rockCharges = 7;
         public const int oreChargePerNodeDefault = 10;
         public const int scaleUpdatePeriod = Constants.World.normalSpeedPerSecond * 5;
     }
