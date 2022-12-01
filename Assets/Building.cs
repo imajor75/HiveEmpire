@@ -440,6 +440,8 @@ abstract public class Building : HiveObject
 			if ( done )
 				return false;
 
+			boss.team.ItemProcessed( item.type );
+
 			if ( item.type == Item.Type.plank )
 			{
 				boss.assert.IsTrue( plankOnTheWay > 0 );
