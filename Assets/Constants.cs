@@ -421,15 +421,15 @@ public static class Constants
         public const float isolatedFlagWeight = 0.5f;
         public const float blockedFlagWeight = 0.75f;
         public const float badConnectionWeight = 0.75f;
-        public const float lowResourceEfficiency = 0.2f;
-        public const float highResourceEfficiency = 0.6f;
+        public const float resourceWeight = 0.6f;
         public const float relaxImportance = 0.2f;
         public const float sourceImportance = 0.2f;
+        public const float redundancyWeight = 0.5f;
         public const int forestNodeCountForRenew = 15;
         public const int expectedLogFromRenewWoodcutter = 50;
         public const int expectedPlankPanic = 40;
         public const float valuableNodePenalty = 0.5f;
-        public const float alreadyHasFlagBonus = 1.3f;
+        public const float alreadyHasFlagBonus = 1.2f;
         public const int maximumProductionCalculatingPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
     }
 }

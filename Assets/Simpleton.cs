@@ -762,7 +762,7 @@ public class Simpleton : Player
                 };
                 if ( isThisGood )
                     resources++;
-                if ( workshopType == Workshop.Type.woodcutter && nearby.type == Node.Type.forest && !boss.emergencyPlank )
+                if ( workshopType == Workshop.Type.woodcutter && nearby.type == Node.Type.forest && !boss.emergencyPlank && !nearby.block )
                     resources += 0.5f;
             }
             float idealResourceCoverage = workshopType switch
@@ -795,14 +795,13 @@ public class Simpleton : Player
                 result.resourceCoverage = 1;
             if ( relativeResourceCoverage < 0 )
                 return result;
-            result.resource = relativeResourceCoverage * ( Constants.Simpleton.highResourceEfficiency - Constants.Simpleton.lowResourceEfficiency ) + Constants.Simpleton.lowResourceEfficiency;
+            result.resource = relativeResourceCoverage * Constants.Simpleton.resourceWeight;
 
             int relaxSpotCount = 0;
             foreach ( var relaxOffset in Ground.areas[Constants.Workshop.relaxAreaSize] )
             {
                 if ( Workshop.IsNodeGoodForRelax( node + relaxOffset ) )
                     relaxSpotCount++;
-
             }
             float relaxAvailability = (float)relaxSpotCount / configuration.relaxSpotCountNeeded;
             if ( relaxAvailability > 1 )
@@ -825,22 +824,28 @@ public class Simpleton : Player
                         sourceScore += Constants.Simpleton.sourceSearchRange - buildingNode.DistanceFrom( node );
                 }
                 sourceAvailability = (float)sourceScore / ( dependencies.Count * Constants.Simpleton.sourceSearchRange );
+                if ( sourceAvailability > 1 )
+                    sourceAvailability = 1;
             }
+
             float redundancyProblem = workshopType switch
             {
                 Workshop.Type.stonemason => 1,
                 Workshop.Type.woodcutter => 0.5f,
+                Workshop.Type.forester => 0.5f,
                 _ => 0
             };
             if ( configuration.gatheredResource != Resource.Type.unknown && redundancyProblem != 0 )
             {
+                float redundancy = 0;
                 foreach ( var offset in Ground.areas[configuration.gatheringRange] )
                 {
                     var offsetedNode = node + offset;
                     if ( offsetedNode.building && offsetedNode.building.type == (Building.Type)workshopType )
-                        sourceAvailability -= (int)( redundancyProblem / offsetedNode.DistanceFrom( node ) );
+                        redundancy += configuration.gatheringRange - offsetedNode.DistanceFrom( node );
                 }
-
+                float problem = Math.Min( 1, redundancy / configuration.gatheringRange * redundancyProblem );
+                result.factor *= 1 - problem * Constants.Simpleton.redundancyWeight;
             }
             result.dependency = sourceAvailability * Constants.Simpleton.sourceImportance;
 
@@ -852,7 +857,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Building a {workshopType} at {bestLocation} (score: {bestScore.resource}, {bestScore.relax}, {bestScore.dependency}, {bestScore.resourceCount})" );
+            boss.Log( $"Building a {workshopType} at {bestLocation} (score: {bestScore.resource}, {bestScore.relax}, {bestScore.dependency}, {bestScore.resourceCount}, {bestScore.factor})" );
             boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
         }
