@@ -551,7 +551,10 @@ public class Unit : HiveObject
 			}
 			boss.Walk( path.NextNode() );   // TODO Check if the node is blocked? The shoveling for construction code relies on we don't check.
 			if ( path.isFinished && lastStepInterruption != null )
+			{
 				boss.ScheduleDoAct( lastStepInterruption, true );
+				lastStepInterruption = null;
+			}
 			return false;
 		}
 	}

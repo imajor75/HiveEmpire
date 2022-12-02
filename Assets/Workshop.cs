@@ -12,7 +12,7 @@ public class Workshop : Building
 	public int output;
 	public Ground.Area outputArea = new ();
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
-	public float craftingProgress;
+	public float craftingProgress, gatheringProgress;
 	public bool working;
 	new public Type type = Type.unknown;
 	public List<Buffer> buffers = new ();
@@ -1195,11 +1195,28 @@ public class Workshop : Building
 			if ( !gatherer || tinkerer == null )
 				return craftingProgress;
 
-			var getResourceTask = tinkerer.FindTaskInQueue<GetResource>();
-			if ( getResourceTask == null )
-				return 0;
+			if ( productionConfiguration.productionTime != 0 )
+			{
+				var getResourceTask = tinkerer.FindTaskInQueue<GetResource>();
+				if ( getResourceTask == null )
+					return 0;
 
-			return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime + 1;
+				return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime;
+			}
+			else
+			{
+				if ( tinkerer.firstTask is Unit.WalkToNode walk && walk.path != null )
+				{
+					if ( tinkerer.itemsInHands[0] )
+						gatheringProgress = 0.666f + 0.333f * ( walk.path.progress - 1 ) / walk.path.length;
+					else if ( walk.lastStepInterruption != null )
+						gatheringProgress = 0.333f * ( walk.path.progress - 1 ) / walk.path.length;
+				}
+				if ( tinkerer.firstTask is Unit.DoAct work && work.act != null )
+					gatheringProgress =  0.333f + 0.333f * work.timeSinceStarted.age / work.act.duration;
+
+				return gatheringProgress;
+			}
 		}
 		[Obsolete( "Compatibility with old files", true )]
 		set {}
