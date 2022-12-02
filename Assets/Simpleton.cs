@@ -169,6 +169,7 @@ public class Simpleton : Player
     public class Data
     {
         public bool isolated;
+        public float price = 1;
         public Game.Timer lastCleanup = new ();
         public List<Deal> deals = new ();
         public List<Item.Type> managedItemTypes = new ();
@@ -283,10 +284,42 @@ public class Simpleton : Player
             enableNonConstruction
         }
         public Action action;
+        public bool nodePricesCalculated;
 
         public GlobalTask( Simpleton boss ) : base( boss ) {}
         public override bool Analyze()
         {
+            if ( !nodePricesCalculated )
+            {
+                nodePricesCalculated = true;
+                foreach ( var node in ground.nodes )
+                    node.simpletonDataSafe.price = node.HasResource( Resource.Type.rock ) ? Constants.Simpleton.nodeWithRockPrice : 1;
+                foreach ( var workshop in boss.team.workshops )
+                {
+                    if ( workshop.type == Workshop.Type.wheatFarm || workshop.type == Workshop.Type.cornFarm )
+                    {
+                        foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )
+                        {
+                            var data = workshop.node.Add( offset ).simpletonDataSafe;
+                            if ( data.price < Constants.Simpleton.nodeAtFarmPrice )
+                                data.price = Constants.Simpleton.nodeAtFarmPrice;
+                        }
+                    }
+                    if ( workshop.type == Workshop.Type.forester )
+                    {
+                        foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )
+                        {
+                            var nearby = workshop.node + offset;
+                            if ( nearby.type != Node.Type.forest )
+                                continue;
+                            if ( nearby.simpletonDataSafe.price < Constants.Simpleton.nodeAtForesterPrice )
+                                nearby.simpletonDataSafe.price = Constants.Simpleton.nodeAtForesterPrice;
+                        }
+                    }
+                }
+                return needMoreTime;
+            }
+
             float soldierYield = 0;
             foreach ( var workshop in boss.team.workshops )
             {
@@ -688,6 +721,7 @@ public class Simpleton : Player
             {
                 var node = HiveCommon.ground.GetNode( x, nodeRow );
                 int workingFlagDirection = -1;
+                float price = 1;
                 Node site = null;
                 for ( int flagDirection = 0; flagDirection < Constants.Node.neighbourCount; flagDirection++ )
                 {
@@ -695,7 +729,8 @@ public class Simpleton : Player
                     site = node.Neighbour( o );
                     if ( boss.blockedNodes.Contains( site ) )
                         continue;
-                    if ( Workshop.IsNodeSuitable( site, boss.team, configuration, flagDirection ) )
+                    price = 1;
+                    if ( Workshop.IsNodeSuitable( site, boss.team, configuration, flagDirection, nodeAction:( node ) => price *= node.simpletonDataSafe.price ) )
                     {
                         workingFlagDirection = flagDirection;
                         break;
@@ -710,6 +745,7 @@ public class Simpleton : Player
                 }
 
                 var score = CalculateAvailaibily( site );
+                score.factor = (float)( 1 / Math.Pow( price, 2 ) );
                 if ( node.validFlag )
                     score.factor *= Constants.Simpleton.alreadyHasFlagBonus;
                 if ( inspected )
@@ -848,10 +884,6 @@ public class Simpleton : Player
                 result.factor *= 1 - problem * Constants.Simpleton.redundancyWeight;
             }
             result.dependency = sourceAvailability * Constants.Simpleton.sourceImportance;
-
-            if ( node.valuable )
-                result.factor *= Constants.Simpleton.valuableNodePenalty;
-
             return result;
         }
 
@@ -954,10 +986,13 @@ public class Simpleton : Player
                     var node = flag.node + offset;
                     if ( node.team != boss.team || node.flag == null || node.flag.simpletonDataSafe.isolated )
                         continue;
-                    if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true ) )
+                    if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true, appraiser: ( node ) => node.simpletonDataSafe.price ) )
                         continue;
 
-                    solutionEfficiency = (float)Math.Pow( 1f/path.path.Count, 0.25f );
+                    float price = 0;
+                    foreach ( var point in path.path )
+                        price += point.simpletonDataSafe.price;
+                    solutionEfficiency = (float)Math.Pow( 1f/price, 0.25f );
                     action = Action.connect;
                     return finished;
                 }
@@ -1127,10 +1162,13 @@ public class Simpleton : Player
             if ( problemWeight < 0.5 )
                 return finished;
 
-            if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.forRoads, true, tryToAvoidValuableNodes:true ) )
+            if ( !path.FindPathBetween( flagA.node, flagB.node, PathFinder.Mode.forRoads, true, appraiser:( node ) => node.simpletonDataSafe.price ) )
                 return finished;
 
-            solutionEfficiency = 1 - (float)(path.path.Count - 1) / onRoadLength;
+            float price = 0;
+            foreach ( var point in path.path )
+                price += point.simpletonDataSafe.price;
+            solutionEfficiency = 1 - (price - 1) / onRoadLength;
             return finished;
         }
 

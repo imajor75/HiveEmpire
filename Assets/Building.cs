@@ -492,7 +492,7 @@ abstract public class Building : HiveObject
 		Construction.Initialize();
 	}
 
-	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Team team, Configuration configuration, int flagDirection, bool ignoreBlockingResources = true )
+	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Team team, Configuration configuration, int flagDirection, bool ignoreBlockingResources = true, Action<Node> nodeAction = null )
 	{
 		var area = GetFoundation( configuration.huge, flagDirection );
 
@@ -500,6 +500,8 @@ abstract public class Building : HiveObject
 		foreach ( var o in area )
 		{
 			var basis = placeToBuild.Add( o );
+			if ( nodeAction != null )
+				nodeAction( basis );
 			if ( basis.block )
 			{
 				bool resourceBlocking = false;

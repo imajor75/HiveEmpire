@@ -11,12 +11,14 @@ public class PathFinder
 	public List<Road> roadPath = new ();
 	public List<bool> roadPathReversed = new ();
 	public HiveObject ignoreObject;
-	public bool tryToAvoidValuableNodes;
+	public Func<Node, float> appraiser;
 	public bool ready = false;
 	public int openNodes;
 	public Mode mode;
 	public bool ignoreFinalObstacle;
 
+	[Obsolete( "Compatibility with old files", true )]
+	public bool tryToAvoidValuableNodes { set {} }
 	public class Reached
     {
         public Node node;
@@ -60,12 +62,12 @@ public class PathFinder
 		}
 	}
 
-    public bool FindPathBetween( Node start, Node end, Mode mode, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null, bool tryToAvoidValuableNodes = false )
+    public bool FindPathBetween( Node start, Node end, Mode mode, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null, Func<Node, float> appraiser = null )
     {
         target = end;
 		this.ignoreFinalObstacle = ignoreFinalObstacle;
 		this.ignoreObject = ignoreObject;
-		this.tryToAvoidValuableNodes = tryToAvoidValuableNodes;
+		this.appraiser = appraiser;
 		this.mode = mode;
 		if ( start == end )
 		{
@@ -187,8 +189,8 @@ public class PathFinder
 			{
 				Node t = r.node.Neighbour( i );
 				var newCost = 0.01f/Unit.SpeedBetween( r.node, t );
-				if ( tryToAvoidValuableNodes && t.valuable )
-					newCost *= Constants.Simpleton.valuableNodePenalty;
+				if ( appraiser != null )
+					newCost *= appraiser( t );
 				VisitNode( t, r.costG + newCost, r );
 			}
 		}

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -23,7 +23,6 @@ public class Node : HiveObject
 	public int decorationDirection = -1;
 	public int decorationType;
 	public bool avoidGrass;
-	public bool valuable;
 	public Game.Timer suspendPlanting = new ();
 
 	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
@@ -38,6 +37,8 @@ public class Node : HiveObject
 		set {}
 	}
 
+	[Obsolete( "Compatibility with old files", true )]
+	bool valuable { set { simpletonDataSafe.price = value ? 1.5f : 1.0f; } }
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;
 	[Obsolete( "Compatibility with old files", true )]

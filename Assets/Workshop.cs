@@ -702,29 +702,12 @@ public class Workshop : Building
 
 		team.workshops.Add( this );
 
-		if ( type == Type.woodcutter || type == Type.forester || type == Type.wheatFarm || type == Type.cornFarm )
-		{
-			foreach ( var nearbyNodeOffset in Ground.areas[productionConfiguration.gatheringRange] )
-			{
-				var nearbyNode = node + nearbyNodeOffset;
-				if ( ( type == Type.wheatFarm || type == Type.cornFarm ) && nearbyNode.type == Node.Type.grass )
-					nearbyNode.valuable = true;
-				if ( ( type == Type.woodcutter || type == Type.forester ) && nearbyNode.type == Node.Type.forest )
-					nearbyNode.valuable = true;
-			}
-		}
-
 		allowFreeStone.Start( Constants.Workshop.freeStoneTimePeriod );
 		return this;
 	}
 
 	public override void Remove()
 	{
-		if ( type == Type.woodcutter || type == Type.forester || type == Type.wheatFarm || type == Type.cornFarm )
-		{
-			foreach ( var nearbyNode in Ground.areas[productionConfiguration.gatheringRange] )
-				node.Add( nearbyNode ).valuable = false;
-		}
 		dungPile?.Remove();
 		team.workshops.Remove( this );
 		base.Remove();

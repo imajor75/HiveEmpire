@@ -428,7 +428,9 @@ public static class Constants
         public const int forestNodeCountForRenew = 15;
         public const int expectedLogFromRenewWoodcutter = 50;
         public const int expectedPlankPanic = 40;
-        public const float valuableNodePenalty = 0.5f;
+        public const float nodeWithRockPrice = 3;
+        public const float nodeAtFarmPrice = 1.5f;
+        public const float nodeAtForesterPrice = 1.25f;
         public const float alreadyHasFlagBonus = 1.2f;
         public const int maximumProductionCalculatingPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
     }
