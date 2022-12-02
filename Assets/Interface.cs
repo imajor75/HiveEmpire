@@ -2512,7 +2512,19 @@ public class Interface : HiveObject
 				if ( !building.construction.done )
 					barMaterial.SetFloat( progressShaderID, building.construction.progress );
 				else if ( building is Workshop workshop )
-					barMaterial.SetFloat( progressShaderID, workshop.progress );
+				{
+					if ( workshop.resting.inProgress )
+					{
+						barMaterial.SetFloat( progressShaderID, (float)( -workshop.resting.age ) / workshop.restTime );
+						barMaterial.color = Color.grey.Light();
+
+					}
+					else
+					{
+						barMaterial.SetFloat( progressShaderID, workshop.progress );
+						barMaterial.color = Color.yellow;
+					}
+				}
 			}
 			if ( contentWatch.status && building.construction.done )
 			{
