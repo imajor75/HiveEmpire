@@ -3785,7 +3785,7 @@ public class Interface : HiveObject
 						if ( flow.remainingOrigins == 0 )
 							readyFlowCount++;
 					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, readyFlowCount );
-					Assert.global.IsTrue( expectedWorkshopCountInRow > 0 );	// TODO Triggered
+					Assert.global.IsTrue( expectedWorkshopCountInRow > 0 );	// TODO Triggered, triggered again
 					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
 					logicalRow++;
 					continue;

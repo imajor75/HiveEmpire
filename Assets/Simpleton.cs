@@ -14,6 +14,7 @@ public class Simpleton : Player
     public float confidence = Constants.Simpleton.defaultConfidence;
     public List<Node> blockedNodes = new ();
     public List<Item.Type> lackingProductions = new ();
+    public List<float> itemWeights;
     public int reservedPlank, reservedStone;
     public int expectedLog, expectedPlank;
     public bool emergencyPlank;
@@ -90,6 +91,27 @@ public class Simpleton : Player
         }
         if ( team.mainBuilding == null )
             return;
+
+        if ( itemWeights == null )
+        {
+            itemWeights = new ();
+            for ( int i = 0; i < (int)Item.Type.total; i++ )
+                itemWeights.Add( 1 );
+            void AddItemWeight( Item.Type itemType, float weight )
+            {
+                itemWeights[(int)itemType] *= weight;
+                if ( weight < 1.05f && weight > 0.95f )
+                    return;
+                foreach ( var source in world.workshopConfigurations )
+                {
+                    if ( source.outputType != itemType || source.generatedInputs == null )
+                        continue;
+                    foreach ( var input in source.generatedInputs )
+                        AddItemWeight( input, (float)Math.Pow( weight, 0.7f ) );
+                }
+            }
+            AddItemWeight( Item.Type.stone, 2 );
+        }
 
         if ( tasks == null && active )
         {
@@ -628,9 +650,11 @@ public class Simpleton : Player
                 if ( currentYield >= target )
                     problemWeight = 0;
                 else
-                    problemWeight = 1 - 0.5f * ( (float)currentYield / target );
+                    problemWeight = 0.75f - 0.5f * ( (float)currentYield / target );
                 if ( workshopType == Workshop.Type.stonemason )
                     problemWeight = Math.Max( problemWeight, stonemasonCount switch { 0 => 1, 1 => 0.3f, _ => 0.1f } );
+                if ( (int)outputType < boss.itemWeights.Count && (int)outputType >= 0 )
+                    problemWeight = (float)Math.Pow( problemWeight, 1 / boss.itemWeights[(int)outputType] );
 
                 if ( currentYield == 0 )
                 {
