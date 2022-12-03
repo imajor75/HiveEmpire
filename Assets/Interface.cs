@@ -8102,7 +8102,6 @@ if ( cart )
 		foreach ( var file in files )
 		{
 			var match = Regex.Match( file, name + @" #(\d+) \(.*\)\.json" );
-			HiveCommon.Log( $"hiszti {file} {match.Success} {match.Groups.Last()}" );
 			if ( match.Success )
 			{
 				var index = int.Parse( match.Groups.Last().Value );

@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -451,7 +451,16 @@ public class World : HiveObject
 			seed = 0;
 		System.Random rnd = new System.Random( seed );
 		foreach ( var configuration in workshopConfigurations )
+		{
 			configuration.generatedInputs = configuration.baseMaterials?.GenerateList( rnd );
+			if ( configuration.generatedInputs != null )
+			{
+				string message = $"Generated inputs for {configuration.type}: ";
+				foreach ( var input in configuration.generatedInputs )
+					message += $"{input}, ";
+				Log( message.Remove( message.Length - 2 ) );
+			}
+		}
 
 		foreach ( var configuration in workshopConfigurations )
 		{
@@ -474,10 +483,6 @@ public class World : HiveObject
 
 		void AddWeight( Item.Type itemType, float weight, int level = 0 )
 		{
-			string indentation = "";
-			for ( int i = 0; i < level; i++ )
-				indentation += " ";
-			Log( indentation + $"{itemType} {weight}" );
 			itemTypeUsage[(int)itemType] += weight;
 			foreach ( var configuration in workshopConfigurations )
 			{
