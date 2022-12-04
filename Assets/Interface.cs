@@ -3768,10 +3768,8 @@ public class Interface : HiveObject
 				Flow current = null;
 				foreach ( var connection in flows )
 					if ( connection.startRow != row )
-						current = connection;
-				foreach ( var connection in flows )
-					if ( connection.remainingOrigins > 0 && connection.startRow != row )
-						current = connection;
+						if ( connection.remainingOrigins > 0 || current == null )
+							current = connection;
 
 				if ( workshopIndexInRow == maxWorkshopsPerLine || current == null )
 				{
@@ -3785,7 +3783,16 @@ public class Interface : HiveObject
 						if ( flow.remainingOrigins == 0 )
 							readyFlowCount++;
 					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, readyFlowCount );
-					Assert.global.IsTrue( expectedWorkshopCountInRow > 0 );	// TODO Triggered, triggered again
+					if ( expectedWorkshopCountInRow == 0 )
+					{
+						foreach ( var flow in flows )
+							if ( flow.remainingOrigins != 0 )
+							{
+								flow.remainingOrigins = 0;
+								expectedWorkshopCountInRow = 1;
+								break;
+							}
+					}
 					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
 					logicalRow++;
 					continue;
