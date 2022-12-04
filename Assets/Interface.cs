@@ -3681,6 +3681,7 @@ public class Interface : HiveObject
 
 			var itemTypeUsage = new int[(int)Item.Type.total];
 			var itemTypes = new List<Item.Type>();
+			var exposed = new List<Workshop.Type>();
 			itemTypes.Add( Item.Type.soldier );
 			int itemTypeIndex = 0;
 			while ( itemTypes.Count != itemTypeIndex )
@@ -3768,10 +3769,8 @@ public class Interface : HiveObject
 				Flow current = null;
 				foreach ( var connection in flows )
 					if ( connection.startRow != row )
-						current = connection;
-				foreach ( var connection in flows )
-					if ( connection.remainingOrigins > 0 && connection.startRow != row )
-						current = connection;
+						if ( connection.remainingOrigins > 0 || current == null )
+							current = connection;
 
 				if ( workshopIndexInRow == maxWorkshopsPerLine || current == null )
 				{
@@ -3785,7 +3784,16 @@ public class Interface : HiveObject
 						if ( flow.remainingOrigins == 0 )
 							readyFlowCount++;
 					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, readyFlowCount );
-					Assert.global.IsTrue( expectedWorkshopCountInRow > 0 );	// TODO Triggered, triggered again
+					if ( expectedWorkshopCountInRow == 0 )
+					{
+						foreach ( var flow in flows )
+							if ( flow.remainingOrigins != 0 )
+							{
+								flow.remainingOrigins = 0;
+								expectedWorkshopCountInRow = 1;
+								break;
+							}
+					}
 					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
 					logicalRow++;
 					continue;
@@ -3822,8 +3830,9 @@ public class Interface : HiveObject
 				int flowRow = nextFlowRow;
 				nextFlowRow -= 10;
 
-				if ( workshop.generatedInputs != null )
+				if ( workshop.generatedInputs != null && !exposed.Contains( workshop.type ) )
 				{
+					exposed.Add( workshop.type );
 					foreach ( var input in workshop.generatedInputs )
 					{
 						Flow existing = null;
