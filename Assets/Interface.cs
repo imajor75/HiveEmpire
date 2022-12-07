@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7036,7 +7036,7 @@ if ( cart )
 				onWay[i].text = onWayCount[order[i]].ToString();
 				total[i].text = totalCount[order[i]] == int.MaxValue ? "" : totalCount[order[i]].ToString();
 				alreadyProcessed[i].text = team.processed.Count > order[i] ? team.processed[order[i]].ToString() : "";
-				if ( totalCount[order[i]] != int.MaxValue )
+				if ( totalCount[order[i]] != int.MaxValue && totalCount[order[i]] != 0 )
 				{
 					inStock[i].text += $" ({inStockCount[order[i]]*100/totalCount[order[i]]}%)";
 					onWay[i].text += $" ({onWayCount[order[i]]*100/totalCount[order[i]]}%)";
