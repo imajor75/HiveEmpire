@@ -1354,7 +1354,6 @@ public class Simpleton : Player
                 foreach ( var resource in resourcesToRemove )
                     oh.ScheduleRemoveResource( resource, true, Operation.Source.computer );
             }
-
         }
 
         public override bool Analyze()
@@ -1393,7 +1392,10 @@ public class Simpleton : Player
                 var resourcesToRemove = new List<Resource>();
                 foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )
                 {
-                    foreach ( var resource in workshop.node.Add( offset ).resources )
+                    var sideNode = workshop.node.Add( offset );
+                    if ( sideNode.type != Node.Type.grass )
+                        continue;
+                    foreach ( var resource in sideNode.resources )
                     {
                         if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock )
                             resourcesToRemove.Add( resource );
