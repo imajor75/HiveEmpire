@@ -26,6 +26,11 @@ public class Simpleton : Player
     public bool dumpTasks, dumpYields;
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
     public bool preservingConstructionMaterial = false;
+    public bool prepared => oh.challenge.preparation switch 
+    {
+        Game.Challenge.Preparation.construction => !emergencyPlank,
+        Game.Challenge.Preparation.none or _ => true
+    };
 
    	[Obsolete( "Compatibility with old files", true )]
     List<Node> isolatedNodes { set { blockedNodes = value; } }
@@ -72,6 +77,19 @@ public class Simpleton : Player
 
     public override void GameLogicUpdate()
     {
+        Advance();
+    }
+
+    public enum AdvanceResult
+    {
+        needMoreCalls,
+        done,
+        confused
+
+    }
+
+    public AdvanceResult Advance()
+    {
         if ( nonConstructionUsage == null && game.workshopConfigurations != null )
         {
             nonConstructionUsage = new ();
@@ -90,7 +108,7 @@ public class Simpleton : Player
             }
         }
         if ( team.mainBuilding == null )
-            return;
+            return AdvanceResult.needMoreCalls;
 
         if ( itemWeights == null )
         {
@@ -118,16 +136,17 @@ public class Simpleton : Player
             tasks = new ();
             tasks.Add( new GlobalTask( this ) );
             currentProblem = 0;
-            return;
+            return AdvanceResult.needMoreCalls;
         }
         if ( tasks == null )
-            return;
+            return AdvanceResult.confused;
         if ( currentProblem < tasks.Count )
         {
             tasks[currentProblem].boss = this;
             var current = tasks[currentProblem];
             if ( tasks[currentProblem].Analyze() == Task.finished )
                 currentProblem++;
+            return AdvanceResult.needMoreCalls;
         }
         else
         {
@@ -184,7 +203,20 @@ public class Simpleton : Player
             }
 
             tasks = null;
+            return AdvanceResult.done;
         }
+    }
+
+    public bool DoSomething()
+    {
+        AdvanceResult status = AdvanceResult.needMoreCalls;
+        while ( status == AdvanceResult.needMoreCalls )
+        {
+            status = Advance();
+            team.FinishConstructions();
+        }
+
+        return status == AdvanceResult.done;
     }
 
     [Serializable]

@@ -202,6 +202,16 @@ public class Team : HiveObject
 		public float weight;
 	}
 
+	public void FinishConstructions()
+	{
+		foreach ( var workshop in workshops )
+			workshop.construction.done = true;
+		foreach ( var guardHouse in guardHouses )
+			guardHouse.construction.done = true;
+		foreach ( var stock in stocks )
+			stock.construction.done = true;
+	}
+
 	public int Stockpile( Item.Type itemType )
 	{
 		int amount = 0;

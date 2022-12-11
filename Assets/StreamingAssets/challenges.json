@@ -81,6 +81,7 @@
       "title": "Full mobilization",
       "description": "Produce as many soldiers as possible on a big island",
       "worldSize": 48,
+      "preparation": "construction",
       "islandOnly": true,
       "conditions": [
         "headquarters soldier -10 allPossible"

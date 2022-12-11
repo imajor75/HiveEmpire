@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1739,6 +1739,7 @@ public class Game : World
 		public bool allowTimeLeftLevels;
 		public string bestSolutionReplayFileName;
 		public Goal bestSolutionLevel;
+		public Preparation preparation;
 
 		int worldSize { set { worldGenerationSettings.size = value; } }
 		bool islandOnly { set { if ( value ) { randomizeIslands = false; worldGenerationSettings.reliefSettings.island = true; } } }
@@ -1757,6 +1758,13 @@ public class Game : World
 		bool craftAllSoldiers { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		List<int> productivityGoalsByBuildingCount { set {} }
+
+		public enum Preparation
+		{
+			none,
+			construction,
+			firstSoldier
+		}
 
         public static Challenge Create()
 		{
@@ -1790,6 +1798,18 @@ public class Game : World
 		public void Begin( World world )
 		{
 			life.Start();
+			if ( world is Game game )
+			{
+				foreach ( var player in game.players )
+				{
+					if ( player is Simpleton simpleton )
+					{
+						bool preparation = true;
+						while ( preparation && !simpleton.prepared )
+							preparation = simpleton.DoSomething();
+					}
+				}
+			}
 			maintainBronze.Reset();
 			maintainSilver.Reset();
 			maintainGold.Reset();
