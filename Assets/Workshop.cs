@@ -42,6 +42,9 @@ public class Workshop : Building
 	ParticleSystem smoke;
 	public Transform millWheel;
 
+	[JsonIgnore]
+	public bool advanceInputs;
+
 	public override List<Ground.Area> areas
 	{
 		get
@@ -1074,6 +1077,7 @@ public class Workshop : Building
 				buffer.stored -= count;
 				team.ItemProcessed( buffer.itemType, count );
 			}
+			advanceInputs = true;
 			return true;
 		}
 

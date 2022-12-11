@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -83,11 +83,11 @@ public class Interface : HiveObject
 
 	static public Hotkey showFPSHotkey = new Hotkey( "Show FPS", KeyCode.UpArrow, true, true );
 
-	public bool playerInCharge { get { return game.operationHandler.mode == OperationHandler.Mode.recording; } }
-	public Team mainTeam { get { return mainPlayer?.team; } }
+	public bool playerInCharge => game.operationHandler.mode == OperationHandler.Mode.recording;
+	public Team mainTeam => mainPlayer?.team;
 
-	public static int iconSize { get => Constants.Interface.iconSize; }
-	public static float uiScale { get => Constants.Interface.uiScale; }
+	public static int iconSize => Constants.Interface.iconSize;
+	public static float uiScale => Constants.Interface.uiScale;
 
 	public class Hotkey
 	{
@@ -2575,6 +2575,8 @@ public class Interface : HiveObject
 		public EditableText title;
 		public Text resourcesLeft;
 		public Text status;
+		public RectTransform inputsPlatform;
+		public float scroll;
 
 		public List<Buffer> buffers;
 		public Buffer outputs;
@@ -2700,6 +2702,13 @@ public class Interface : HiveObject
 				row -= 25;
 			}
 
+			var window = new GameObject( "Window for inputs" ).AddComponent<RectMask2D>().Pin( 37, 0, 100, 200 ).Link( this );
+			inputsPlatform = new GameObject( "Platforms for inputs" ).AddComponent<RectTransform>().Link( window );
+			inputsPlatform.offsetMin = Vector2.zero;
+			foreach ( var buffer in buffers )
+				buffer.Link( inputsPlatform );
+			workshop.advanceInputs = false;
+
 			this.SetSize( 250, 15 - row );
 			Update();
 			if ( show )
@@ -2746,6 +2755,17 @@ public class Interface : HiveObject
 			if ( buffers != null )
 				foreach ( var buffer in buffers )
 					buffer.Update();
+
+			if ( workshop.advanceInputs )
+			{
+				workshop.advanceInputs = false;
+				scroll = (float)Math.PI;
+			}
+
+			scroll -= Time.unscaledDeltaTime * 1;
+			if ( scroll < 0 )
+				scroll = 0;
+			inputsPlatform.offsetMin = new Vector2( (float)( Math.Cos( scroll ) * -1 + 1 ) * ( iconSize + 5 ) / 2 * uiScale, 0 );
 
 			outputs?.Update( workshop.output, 0 );
 
@@ -2856,6 +2876,7 @@ public class Interface : HiveObject
 
 		public class Buffer
 		{
+			public ItemImage current;
 			public ItemImage[] items;
 			public Sprite[] usageSprites;
 			public BuildingPanel boss;
@@ -2885,6 +2906,8 @@ public class Interface : HiveObject
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
+				if ( input )
+					current = boss.ItemIcon( itemType ).PinSideways( -iconSize, y );
 				for ( int i = 0; i < itemCount; i++ )
 					items[i] = boss.ItemIcon( itemType ).PinSideways( xi - iconSize, y );
 				if ( workshop && workshop.productionConfiguration.commonInputs && buffer != null )
@@ -2941,6 +2964,13 @@ public class Interface : HiveObject
 			{
 				this.buffer = buffer;
 				Setup( boss, buffer.itemType, buffer.size, x, y, xi, buffer.area );
+			}
+
+			public void Link( RectTransform parent )
+			{
+				foreach ( var item in items )
+					item.transform.SetParent( parent );
+				current.transform.SetParent( parent );
 			}
 
 			public void Update( int inStock, int onTheWay )
