@@ -433,6 +433,9 @@ public static class Constants
         public const float nodeAtForesterPrice = 1.25f;
         public const float alreadyHasFlagBonus = 1.2f;
         public const int maximumProductionCalculatingPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
+        public const float resourcesAroundFarmProblem = 0.3f;
+        public const float solutionToRemoveTreesAroundFarm = 0.8f;
+        public const float solutionToRemoveRocksAroundFarm = 0.5f;
     }
 }
 

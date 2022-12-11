@@ -42,6 +42,9 @@ public class Workshop : Building
 	ParticleSystem smoke;
 	public Transform millWheel;
 
+	[JsonIgnore]
+	public bool advanceInputs;
+
 	public override List<Ground.Area> areas
 	{
 		get
@@ -960,21 +963,22 @@ public class Workshop : Building
 				var resourceType = type == Type.cornFarm ? Resource.Type.cornField : Resource.Type.wheatField;
 				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress && !suspendGathering.inProgress )
 				{
+					if ( UseInput( 1, true ) )
+					{
+						foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
+						{
+							Node place = node.Add( o );
+							if ( place.block || !place.CheckType( Node.Type.grass ) || place.suspendPlanting.inProgress )
+								continue;
+							UseInput();
+							PlantAt( place, resourceType, productionConfiguration.outputStackSize );
+							return;
+						}
+					}
+
 					if ( CollectResource( productionConfiguration.gatheredResource, productionConfiguration.gatheringRange, false, currentStatus != Status.waitingForInput0 ) )
 						return;
-
-					if ( !UseInput( 1, true ) )
-						return;
-
-					foreach ( var o in Ground.areas[productionConfiguration.gatheringRange] )
-					{
-						Node place = node.Add( o );
-						if ( place.block || !place.CheckType( Node.Type.grass ) || place.suspendPlanting.inProgress )
-							continue;
-						UseInput();
-						PlantAt( place, resourceType, productionConfiguration.outputStackSize );
-						return;
-					}
+						
 					suspendGathering.Start( Constants.Workshop.gathererSleepTimeAfterFail );
 				}
 				break;
@@ -1073,6 +1077,7 @@ public class Workshop : Building
 				buffer.stored -= count;
 				team.ItemProcessed( buffer.itemType, count );
 			}
+			advanceInputs = true;
 			return true;
 		}
 

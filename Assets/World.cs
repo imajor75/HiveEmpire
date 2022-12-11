@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -122,15 +122,18 @@ public class World : HiveObject
 		public Resource.Type resourceType;
 		public float weight;
 		public int resourceCount;
+		public int patchCount;
 		public static int totalResourceCount;
 
+		[Obsolete( "Compatibility with old files", true )]
+		int external { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		float idealRatio { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		float ideal { set {} }
 
-		public float share => (float)resourceCount / totalResourceCount;
-		public float satisfaction => share / weight;
+		public float share => totalResourceCount == 0 ? 0 : (float)resourceCount / totalResourceCount;
+		public float missing => weight - share;
 	}
 
 	public int oreCount;
@@ -501,12 +504,11 @@ public class World : HiveObject
 			}
 		}
 
-		AddWeight( Item.Type.plank, 0.5f );
-		AddWeight( Item.Type.stone, 0.5f );
+		AddWeight( Item.Type.plank, 0.1f );
+		AddWeight( Item.Type.stone, 0.1f );
 		AddWeight( Item.Type.soldier, 1 );
 		workshopTypeUsage[(int)Workshop.Type.forester] = workshopTypeUsage[(int)Workshop.Type.woodcutter];
 	}
-
 
     public void Load( string fileName )
 	{
@@ -1076,7 +1078,6 @@ public class World : HiveObject
 		animalSpawnerCount = 0; 
 		treeCount = 0;
 		rockCount = 0;
-		int rockCharges = 0;
 
 		foreach ( var node in ground.nodes )
 		{
@@ -1086,10 +1087,7 @@ public class World : HiveObject
 			if ( r.NextDouble() < generatorSettings.forestChance )
 				treeCount += node.AddResourcePatch( Resource.Type.tree, 8, 0.6f, rnd, treeFactor, scaleCharges:false );
 			if ( r.NextDouble() < generatorSettings.rocksChance )
-			{
 				rockCount += node.AddResourcePatch( Resource.Type.rock, 5, 0.5f, rnd, Constants.Resource.rockCharges );
-				rockCharges += Constants.Resource.rockCharges;
-			}
 
 			if ( node.CheckType( Node.Type.land ) )
 			{
@@ -1104,28 +1102,32 @@ public class World : HiveObject
 			}
 		}
 
-		Ore.totalResourceCount = rockCharges;
-		void AddOre( Resource.Type resourceType, int charges = 0 )
+		Ore.totalResourceCount = 0;
+		void AddOre( Resource.Type resourceType, float external = 0 )
 		{
-			float weight = itemTypeUsage[(int)Resource.ItemType( resourceType )];
+			float weight = itemTypeUsage[(int)Resource.ItemType( resourceType )] - external;
 			if ( weight == 0 )
 				return;
 
-			ores.Add( new Ore{ resourceType = resourceType, weight = weight, resourceCount = charges } );
+			ores.Add( new Ore{ resourceType = resourceType, weight = weight } );
 		}
 		AddOre( Resource.Type.coal );
 		AddOre( Resource.Type.iron );
 		AddOre( Resource.Type.gold );
 		AddOre( Resource.Type.salt );
-		AddOre( Resource.Type.stone, rockCharges );
+		AddOre( Resource.Type.stone, 0.1f );
 		AddOre( Resource.Type.copper );
 		AddOre( Resource.Type.silver );
-		for ( int patchCount = 0; patchCount < (int)( game.nodeCount * Constants.World.oreCountPerNode ); patchCount++ )
+
+		float totalWeight = 0;
+		foreach ( var ore in ores )
+			totalWeight += ore.weight;
+		foreach ( var ore in ores )
+			ore.weight /= totalWeight;
+
+		int AddOrePatch( Resource.Type resourceType, int size, int density, int chargesPerNode )
 		{
 			int randomX = rnd.Next( ground.dimension ), randomY = rnd.Next( ground.dimension );
-			if ( Ore.totalResourceCount > 0 )
-				ores.Sort( ( a, b ) => a.satisfaction.CompareTo( b.satisfaction ) );
-			var ore = ores.First();
 			bool go = true;
 			for ( int x = 0; x < ground.dimension && go; x++ )
 			{
@@ -1141,11 +1143,24 @@ public class World : HiveObject
 						continue;
 					go = false;
 
-					var resourceCount = node.AddResourcePatch( ore.resourceType, generatorSettings.size / 6, 10, rnd, generatorSettings.oreChargesPerNode );
-					ore.resourceCount += resourceCount;
-					Ore.totalResourceCount += resourceCount;
+					return node.AddResourcePatch( resourceType, size, density, rnd, chargesPerNode );
 				}
 			}
+			return 0;
+		}
+
+		AddOrePatch( Resource.Type.stone, 2, 10, int.MaxValue );
+		for ( int patchCount = 0; patchCount < (int)( game.nodeCount * Constants.World.oreCountPerNode ); patchCount++ )
+		{
+			if ( Ore.totalResourceCount > 0 )
+				ores.Sort( ( a, b ) => a.missing.CompareTo( b.missing ) );
+			var ore = ores.Last();
+			int sizeDivider = ore.missing < 0.05f ? 12 : 6;
+			var resourceCount = AddOrePatch( ore.resourceType, generatorSettings.size / sizeDivider, 10, generatorSettings.oreChargesPerNode );
+			ore.resourceCount += resourceCount;
+			if ( resourceCount > 0 )
+				ore.patchCount++;
+			Ore.totalResourceCount += resourceCount;
 		}
 
 		int idealAnimalSpawnerCount = (int)( generatorSettings.size * generatorSettings.size * generatorSettings.animalSpawnerChance );

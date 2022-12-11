@@ -1344,6 +1344,18 @@ public class Simpleton : Player
 
         public override string ToString() => $"Maintenance of {workshop}, action: {action}";
 
+        class RemoveResources : Task
+        {
+            public List<Resource> resourcesToRemove = new ();
+            public RemoveResources( Simpleton boss ) : base( boss ) {}
+            override public bool Analyze() => finished;
+            override public void ApplySolution()
+            {
+                foreach ( var resource in resourcesToRemove )
+                    oh.ScheduleRemoveResource( resource, true, Operation.Source.computer );
+            }
+        }
+
         public override bool Analyze()
         {
             var data = workshop.simpletonDataSafe;
@@ -1360,6 +1372,7 @@ public class Simpleton : Player
                 {
                     action = Action.remove;
                     problemWeight = solutionEfficiency = 1;
+                    return finished;
                 }
             }
             if ( workshop.type == Workshop.Type.ironMine || workshop.type == Workshop.Type.coalMine )
@@ -1370,7 +1383,34 @@ public class Simpleton : Player
                     {
                         action = Action.disableFish;
                         problemWeight = solutionEfficiency = 1;
+                        return finished;
                     }
+                }
+            }
+            if ( workshop.type == Workshop.Type.wheatFarm || workshop.type == Workshop.Type.cornFarm )
+            {
+                var resourcesToRemove = new List<Resource>();
+                foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )
+                {
+                    var sideNode = workshop.node.Add( offset );
+                    if ( sideNode.type != Node.Type.grass )
+                        continue;
+                    foreach ( var resource in sideNode.resources )
+                    {
+                        if ( resource.type == Resource.Type.tree || resource.type == Resource.Type.rock )
+                            resourcesToRemove.Add( resource );
+                    }
+                }
+                if ( resourcesToRemove.Count > 0 )
+                {
+                    var solution = new RemoveResources( boss );
+                    solution.problemWeight = (float)Math.Pow( Constants.Simpleton.resourcesAroundFarmProblem, 1 / resourcesToRemove.Count );
+                    solution.solutionEfficiency = Constants.Simpleton.solutionToRemoveTreesAroundFarm;
+                    foreach ( var resource in resourcesToRemove )
+                        if ( resource.type == Resource.Type.rock )
+                            solution.solutionEfficiency = Constants.Simpleton.solutionToRemoveRocksAroundFarm;
+                    solution.resourcesToRemove = resourcesToRemove;
+                    boss.tasks.Add( solution );
                 }
             }
 

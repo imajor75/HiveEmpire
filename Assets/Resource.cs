@@ -284,6 +284,7 @@ public class Resource : HiveObject
 			mapObject.transform.localScale = Vector3.one * 0.15f;
 			mapObject.transform.localPosition = new Vector3( 0, 3, 0 );
 			mapObject.layer = World.layerIndexMapOnly;
+			Destroy( mapObject.GetComponent<Collider>() );
 		}
 
 		base.Start();
