@@ -18,6 +18,7 @@ public class Simpleton : Player
     public int reservedPlank, reservedStone;
     public int expectedLog, expectedPlank;
     public bool emergencyPlank;
+    public bool hasSeparatedFlags;
     public Operation.Source activity;
 	public bool showActions;
     public bool peaceful;
@@ -42,7 +43,7 @@ public class Simpleton : Player
             }
 
             if ( oh.challenge.preparation == Game.Challenge.Preparation.construction )
-                return isProduced[(int)Item.Type.log] && isProduced[(int)Item.Type.plank] && isProduced[(int)Item.Type.stone];
+                return isProduced[(int)Item.Type.log] && isProduced[(int)Item.Type.plank] && isProduced[(int)Item.Type.stone] && !hasSeparatedFlags;
 
             return true;
         }
@@ -158,6 +159,7 @@ public class Simpleton : Player
             tasks = new ();
             tasks.Add( new GlobalTask( this ) );
             currentProblem = 0;
+            hasSeparatedFlags = false;
             return AdvanceResult.needMoreCalls;
         }
         if ( tasks == null )
@@ -1044,6 +1046,7 @@ public class Simpleton : Player
             if ( ( roadCount == 0 && flag != boss.team.mainBuilding.flag ) || !path.FindPathBetween( flag.node, boss.team.mainBuilding.flag.node, PathFinder.Mode.onRoad ) )
             {
                 flag.simpletonDataSafe.isolated = true;
+                boss.hasSeparatedFlags = true;
 
                 var buildingCount = flag.Buildings().Count;
                 if ( buildingCount > 0 )
