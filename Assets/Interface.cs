@@ -7657,10 +7657,10 @@ if ( cart )
 			if ( root.mainPlayer is Simpleton simpleton )
 			{
 				if ( index == 0 )
-					simpleton.active = false;
+					simpleton.activity = Operation.Source.manual;
 				else
 				{
-					simpleton.active = true;
+					simpleton.activity = Operation.Source.computer;
 					simpleton.showActions = index == 2;
 				}
 			}

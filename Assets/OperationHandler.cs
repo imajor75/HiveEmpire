@@ -275,7 +275,11 @@ public class OperationHandler : HiveObject
             operation.group = currentGroup;
             operation.groupName = currentGroupName;
         }
-        ScheduleOperationRaw( operation );
+
+        if ( source == Operation.Source.preparation )
+            ExecuteOperation( operation );
+        else
+            ScheduleOperationRaw( operation );
     }
 
     public void ScheduleOperationRaw( Operation operation )
@@ -286,6 +290,7 @@ public class OperationHandler : HiveObject
         operation.scheduleAt = time;
         if ( game.gameAdvancingInProgress )
             operation.scheduleAt++;
+
         executeBuffer.Add( operation );
 	}
 
@@ -675,7 +680,8 @@ public class Operation
         networkServer,
         computer,
         undo,
-        redo
+        redo,
+        preparation
     }
 
     public Node location

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1446,7 +1446,6 @@ public class Game : World
 		operationHandler = OperationHandler.Create();
 		operationHandler.Setup( null );
 		operationHandler.challenge = localChallenge;
-		operationHandler.challenge.Begin( this );
 		operationHandler.recordCRC = false;
 		var mainTeam = Team.Create().Setup( this, Constants.Player.teamNames.Random(), Constants.Player.teamColors.First() );
 		if ( mainTeam )
@@ -1461,7 +1460,7 @@ public class Game : World
 			var team = Team.Create().Setup( this, Constants.Player.teamNames.Random(), Constants.Player.teamColors[(i+1)%Constants.Player.teamColors.Length] );
 			teams.Add( team );
 			var player = Simpleton.Create().Setup( Constants.Player.names.Random(), team );	// TODO Avoid using the same name again
-			player.active = true;
+			player.activity = Operation.Source.computer;
 			players.Add( player );
 		}
 		ground.RecalculateOwnership();
@@ -1482,6 +1481,8 @@ public class Game : World
 		network.SetState( Network.State.server );
 		gameInProgress = true;
 		demo = false;
+
+		operationHandler.challenge.Begin( this );
 	}
 
     public new void Load( string fileName )

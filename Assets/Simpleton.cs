@@ -18,7 +18,7 @@ public class Simpleton : Player
     public int reservedPlank, reservedStone;
     public int expectedLog, expectedPlank;
     public bool emergencyPlank;
-    public bool active;
+    public Operation.Source activity;
 	public bool showActions;
     public bool peaceful;
     public Workshop.Type debugPlacement = Workshop.Type.unknown;
@@ -26,11 +26,33 @@ public class Simpleton : Player
     public bool dumpTasks, dumpYields;
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
     public bool preservingConstructionMaterial = false;
-    public bool prepared => oh.challenge.preparation switch 
+    public bool prepared 
     {
-        Game.Challenge.Preparation.construction => !emergencyPlank,
-        Game.Challenge.Preparation.none or _ => true
-    };
+        get
+        {
+            if ( oh.challenge.preparation == Game.Challenge.Preparation.none )
+                return true;
+
+            bool[] isProduced = new bool[(int)Item.Type.total];
+            foreach ( var workshop in team.workshops )
+            {
+                var outputType = workshop.productionConfiguration.outputType;
+                if ( outputType != Item.Type.unknown )
+                    isProduced[(int)outputType] = true;
+            }
+
+            if ( oh.challenge.preparation == Game.Challenge.Preparation.construction )
+                return isProduced[(int)Item.Type.log] && isProduced[(int)Item.Type.plank] && isProduced[(int)Item.Type.stone];
+
+            return true;
+        }
+    }
+    public bool active
+    {
+        get { return activity == Operation.Source.computer; }
+       	[Obsolete( "Compatibility with old files", true )]
+        set { activity = value ? Operation.Source.computer : Operation.Source.manual; }
+    }
 
    	[Obsolete( "Compatibility with old files", true )]
     List<Node> isolatedNodes { set { blockedNodes = value; } }
@@ -131,7 +153,7 @@ public class Simpleton : Player
             AddItemWeight( Item.Type.stone, 2 );
         }
 
-        if ( tasks == null && active )
+        if ( tasks == null && activity != Operation.Source.manual )
         {
             tasks = new ();
             tasks.Add( new GlobalTask( this ) );
@@ -209,12 +231,16 @@ public class Simpleton : Player
 
     public bool DoSomething()
     {
+        activity = Operation.Source.preparation;
+        dumpTasks = true;
         AdvanceResult status = AdvanceResult.needMoreCalls;
         while ( status == AdvanceResult.needMoreCalls )
         {
             status = Advance();
             team.FinishConstructions();
         }
+
+        activity = Operation.Source.manual;
 
         return status == AdvanceResult.done;
     }
@@ -258,7 +284,7 @@ public class Simpleton : Player
             return true;
         }
 
-        public bool RegisterPartner( Building partner, Item.Type itemType )
+        public bool RegisterPartner( Building partner, Item.Type itemType, Simpleton boss )
         {
             if ( partner == null )
                 return false;
@@ -297,9 +323,9 @@ public class Simpleton : Player
                         hasStock = true;
                 }
                 if ( workshop.type != Workshop.Type.woodcutter || hasStock )
-                    HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, Operation.Source.computer );
+                    HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, boss.activity );
             }
-            partner.simpletonDataSafe.RegisterPartner( hiveObject as Building, itemType );
+            partner.simpletonDataSafe.RegisterPartner( hiveObject as Building, itemType, boss );
             return true;
         }
     }
@@ -540,16 +566,16 @@ public class Simpleton : Player
             switch ( action )
             {
                 case Action.toggleEmergency:
-                    HiveCommon.oh.ScheduleToggleEmergencyConstruction( boss.team, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleToggleEmergencyConstruction( boss.team, true, boss.activity );
                     break;
                 case Action.disableNonConstruction:
                     foreach ( var usage in boss.nonConstructionUsage )
-                        HiveCommon.oh.ScheduleInputWeightChange( boss.team, usage.workshopType, usage.itemType, 0 );
+                        HiveCommon.oh.ScheduleInputWeightChange( boss.team, usage.workshopType, usage.itemType, 0, source:boss.activity );
                     boss.preservingConstructionMaterial = true;
                     break;
                 case Action.enableNonConstruction:
                     foreach ( var usage in boss.nonConstructionUsage )
-                        HiveCommon.oh.ScheduleInputWeightChange( boss.team, usage.workshopType, usage.itemType, 0.5f );
+                        HiveCommon.oh.ScheduleInputWeightChange( boss.team, usage.workshopType, usage.itemType, 0.5f, source:boss.activity );
                     boss.preservingConstructionMaterial = false;
                     break;
             }
@@ -598,7 +624,7 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            HiveCommon.oh.ScheduleAttack( boss.team, target, target.defenderCount * 2 + 1, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleAttack( boss.team, target, target.defenderCount * 2 + 1, true, boss.activity );
         }
     }
 
@@ -947,7 +973,7 @@ public class Simpleton : Player
         {
             boss.Log( $"Building a {workshopType} at {bestLocation} (score: {bestScore.resource}, {bestScore.relax}, {bestScore.dependency}, {bestScore.resourceCount}, {bestScore.factor})" );
             boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
-            HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, boss.activity );
         }
     }
 
@@ -1152,7 +1178,7 @@ public class Simpleton : Player
                     if ( path == null || path.path == null || path.path.Count < 2 || flag == null ) // TODO path.Count was 0
                         return;
                     boss.Log( $"Connecting {flag.name} to the road network at {path.path.Last().name}" );
-                    HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, boss.activity );
                     boss.blockedNodes.Clear();
                     break;
                 }
@@ -1161,25 +1187,25 @@ public class Simpleton : Player
                     foreach ( var building in flag.Buildings() )
                         boss.blockedNodes.Add( building.node );
                     boss.Log( $"Removing blocked flag at {flag.node.x}:{flag.node.y}" );
-                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, boss.activity );
                     break;
                 }
                 case Action.remove:
                 {
                     boss.Log( $"Removing flag at {flag.node.x}:{flag.node.y}" );
-                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveFlag( flag, true, boss.activity );
                     break;
                 }
                 case Action.capture:
                 {
                     boss.Log( $"Capturing roads around {flag}" );
-                    HiveCommon.oh.ScheduleCaptureRoad( flag, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleCaptureRoad( flag, true, boss.activity );
                     break;
                 }
                 case Action.removeRoad:
                 {
                     boss.Log( $"Removing road {road}" );
-                    HiveCommon.oh.ScheduleRemoveRoad( road, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveRoad( road, true, boss.activity );
                     if ( road.ends[0] != road.ends[1] )
                     {
                         road.ends[0].simpletonDataSafe.failedConnections.Add( road.ends[1] );
@@ -1231,7 +1257,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             boss.Log( $"Creating new road between {path.path.First().name} and {path.path.Last().name}" );
-            HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, boss.activity );
         }
     }
 
@@ -1264,7 +1290,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             boss.Log( $"Spliting road at {road.nodes[best].name}" );
-            HiveCommon.oh.ScheduleCreateFlag( road.nodes[best], boss.team, false, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateFlag( road.nodes[best], boss.team, false, true, boss.activity );
         }
     }
 
@@ -1348,7 +1374,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             boss.Log( $"Building guard house at {best.name}" );
-            HiveCommon.oh.ScheduleCreateBuilding( best, bestFlagDirection, Building.Type.guardHouse, boss.team, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateBuilding( best, bestFlagDirection, Building.Type.guardHouse, boss.team, true, boss.activity );
         }
 
         public override string ToString() => $"Extend border (best location: {best}, best score: {bestScore}";
@@ -1384,7 +1410,7 @@ public class Simpleton : Player
             override public void ApplySolution()
             {
                 foreach ( var resource in resourcesToRemove )
-                    oh.ScheduleRemoveResource( resource, true, Operation.Source.computer );
+                    oh.ScheduleRemoveResource( resource, true, boss.activity );
             }
         }
 
@@ -1590,9 +1616,9 @@ public class Simpleton : Player
                 case Action.remove:
                 boss.Log( $"Removing {workshop.name}" );
                 if ( workshop.flag.roadsStartingHereCount == 1 )
-                    HiveCommon.oh.ScheduleRemoveFlag( workshop.flag, true, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveFlag( workshop.flag, true, boss.activity );
                 else
-                    HiveObject.oh.ScheduleRemoveBuilding( workshop, true, Operation.Source.computer );
+                    HiveObject.oh.ScheduleRemoveBuilding( workshop, true, boss.activity );
                 break;
 
                 case Action.disableFish:
@@ -1600,7 +1626,7 @@ public class Simpleton : Player
                 foreach ( var input in workshop.buffers )
                 {
                     if ( input.itemType == Item.Type.fish )
-                        HiveCommon.oh.ScheduleChangeBufferUsage( workshop, input, Workshop.Buffer.Priority.disabled, true, Operation.Source.computer );
+                        HiveCommon.oh.ScheduleChangeBufferUsage( workshop, input, Workshop.Buffer.Priority.disabled, true, boss.activity );
                 }
                 break;
 
@@ -1609,16 +1635,16 @@ public class Simpleton : Player
                 workshop.simpletonDataSafe.lastCleanup.Start();
                 HiveCommon.oh.StartGroup( $"Cleaning up roads and junctions in the area" );
                 foreach ( var road in cleanupRoads )
-                    HiveCommon.oh.ScheduleRemoveRoad( road, false, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveRoad( road, false, boss.activity );
                 foreach ( var flag in cleanupFlags )
-                    HiveCommon.oh.ScheduleRemoveFlag( flag, false, Operation.Source.computer );
+                    HiveCommon.oh.ScheduleRemoveFlag( flag, false, boss.activity );
                 break;
 
                 case Action.linkToPartner:
                 boss.Log( $"Linking {itemTypeToLink} at {workshop} to {partner}" );
                 Assert.global.IsTrue( itemTypeToLink >= 0 && itemTypeToLink < Item.Type.total );
                 HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to partner" );
-                workshop.simpletonDataSafe.RegisterPartner( partner, itemTypeToLink );
+                workshop.simpletonDataSafe.RegisterPartner( partner, itemTypeToLink, boss );
                 workshop.simpletonDataSafe.possiblePartner = null;
                 if ( partner is Stock stock )
                 {
@@ -1626,17 +1652,17 @@ public class Simpleton : Player
                     if ( workshop.productionConfiguration.outputType == itemTypeToLink )
                     {
                         workshop.simpletonDataSafe.hasOutputStock = true;
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, Operation.Source.computer );
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, Operation.Source.computer );
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, boss.activity );
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, boss.activity );
                     }
                     else
                     {
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, Operation.Source.computer );
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, Operation.Source.computer );
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, boss.activity );
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, boss.activity );
                     }
                 }
                 if ( partner is Workshop )
-                    partner.simpletonDataSafe.RegisterPartner( workshop, itemTypeToLink );
+                    partner.simpletonDataSafe.RegisterPartner( workshop, itemTypeToLink, boss );
                 break;
             }
         }
@@ -1673,7 +1699,7 @@ public class Simpleton : Player
         public override void ApplySolution()
         {
             boss.Log( $"Building stock at {site.name}" );
-            HiveCommon.oh.ScheduleCreateBuilding( site, flagDirection, Building.Type.stock, boss.team, true, Operation.Source.computer );
+            HiveCommon.oh.ScheduleCreateBuilding( site, flagDirection, Building.Type.stock, boss.team, true, boss.activity );
         }
     }
 }
