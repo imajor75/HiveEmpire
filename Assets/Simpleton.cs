@@ -1427,7 +1427,7 @@ public class Simpleton : Player
                 if ( workshop.ResourcesLeft() != 0 || data.lastTimeHadResources.empty )
                     data.lastTimeHadResources.Start( Constants.Simpleton.noResourceTolerance );
                 else
-                    useless = workshop.tinkerer.IsIdle( true ) && workshop.tinkererMate.IsIdle( true ) && workshop.output == 0;
+                    useless = workshop.tinkerer && workshop.tinkererMate && workshop.tinkerer.IsIdle( true ) && workshop.tinkererMate.IsIdle( true ) && workshop.output == 0;
 
                 if ( data.lastTimeHadResources.done || ( workshop.type == Workshop.Type.stonemason && useless ) )
                 {
