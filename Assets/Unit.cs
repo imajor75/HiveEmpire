@@ -1323,7 +1323,7 @@ public class Unit : HiveObject
 		return this;
 	}
 
-	public Unit SetupForBuilding( Building building, bool mate = false )
+	public Unit SetupForBuilding( Building building, bool mate = false, bool teleport = false )
 	{
 		World.CRC( building.id, OperationHandler.Event.CodeLocation.unitSetupAsTinkerer );
 		look = type = Type.tinkerer;
@@ -1331,7 +1331,7 @@ public class Unit : HiveObject
 			look = Type.tinkererMate;
 		currentColor = Color.cyan;
 		name = "Tinkerer";
-		return SetupForBuildingSite( building );
+		return SetupForBuildingSite( building, teleport );
 	}
 
 	public Unit SetupForConstruction( Building building )
@@ -1390,12 +1390,12 @@ public class Unit : HiveObject
 		return this;
 	}
 
-	Unit SetupForBuildingSite( Building building )
+	Unit SetupForBuildingSite( Building building, bool teleport = false )
 	{
 		team = building.team;
 		this.building = building;
 		Building main = team.mainBuilding;
-		if ( main && main != building )
+		if ( main && main != building && !teleport )
 		{
 			node = main.node;
 			ScheduleWalkToNeighbour( main.flag.node );

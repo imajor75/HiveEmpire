@@ -205,11 +205,25 @@ public class Team : HiveObject
 	public void FinishConstructions()
 	{
 		foreach ( var workshop in workshops )
+		{
+			if ( workshop.construction.done )
+				continue;
+
 			workshop.construction.done = true;
+			workshop.tinkerer = Unit.Create().SetupForBuilding( workshop, false, true );
+			workshop.tinkererMate = Unit.Create().SetupForBuilding( workshop, true, true );
+		}
 		foreach ( var guardHouse in guardHouses )
 			guardHouse.construction.done = true;
 		foreach ( var stock in stocks )
+		{
+			if ( stock.construction.done )
+				continue;
+				
 			stock.construction.done = true;
+			stock.dispenser = stock.tinkerer = Unit.Create().SetupForBuilding( stock, false, true );
+			stock.tinkererMate = Unit.Create().SetupForBuilding( stock, true, true );
+		}
 	}
 
 	public int Stockpile( Item.Type itemType )
