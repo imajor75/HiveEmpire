@@ -214,7 +214,18 @@ public class Team : HiveObject
 			workshop.tinkererMate = Unit.Create().SetupForBuilding( workshop, true, true );
 		}
 		foreach ( var guardHouse in guardHouses )
+		{
+			if ( guardHouse.construction.done )
+				continue;
+				
 			guardHouse.construction.done = true;
+			var newSoldier = Unit.Create().SetupAsSoldier( guardHouse, true );
+			soldierCount--;
+			newSoldier.standingOffsetInsideBuilding = guardHouse.GetNextSoldierSpot();
+			guardHouse.soldiers.Add( newSoldier );
+			RegisterInfluence( guardHouse );
+			ground.RecalculateOwnership();
+		}
 		foreach ( var stock in stocks )
 		{
 			if ( stock.construction.done )

@@ -1360,14 +1360,14 @@ public class Unit : HiveObject
 		return this;
 	}
 
-	public Unit SetupAsSoldier( Building building )
+	public Unit SetupAsSoldier( Building building, bool teleport = false )
 	{
 		World.CRC( building.id, OperationHandler.Event.CodeLocation.unitSetupAsSoldier );
 		look = type = Type.soldier;
 		name = "Soldier";
 		currentColor = Color.red;
 		if ( building is GuardHouse guardHouse )
-			return SetupForBuildingSite( building );
+			return SetupForBuildingSite( building, teleport );
 		
 		team = building.team;
 		this.building = building;

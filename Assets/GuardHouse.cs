@@ -295,7 +295,7 @@ public class GuardHouse : Attackable
 	}
 
 	public int lastDefenderSpot;
-	Vector3 GetNextSoldierSpot()
+	public Vector3 GetNextSoldierSpot()
 	{
 		var a = Math.PI * lastDefenderSpot++ * 2 / 3.2f;
 		return new Vector3( (float)Math.Sin( a ) * 0.15f, 0.375f, (float)Math.Cos( a ) * 0.15f );
