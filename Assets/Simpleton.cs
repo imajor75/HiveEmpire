@@ -152,6 +152,7 @@ public class Simpleton : Player
                 }
             }
             AddItemWeight( Item.Type.stone, 2 );
+            itemWeights[(int)Item.Type.stone] = 1;  // Restore the weight of stone back to 1, because otherwise too much stonemasons are built
         }
 
         if ( tasks == null && activity != Operation.Source.manual )
@@ -645,6 +646,7 @@ public class Simpleton : Player
         public int reservedPlank, reservedStone;
         public int currentPlank, currentStone;
         public bool inspected => boss.debugPlacement == configuration.type;
+        public int stonemasonCount;
 
         public enum State
         {
@@ -674,7 +676,7 @@ public class Simpleton : Player
                 int currentWorkshopCount = 0;
                 var outputType = Workshop.GetConfiguration( game, workshopType ).outputType;
                 currentYield = 0;
-                int stonemasonCount = 0;
+                stonemasonCount = 0;
                 if ( workshopType == Workshop.Type.forester )
                 {
                     foreach ( var workshop in boss.team.workshops )
@@ -912,7 +914,7 @@ public class Simpleton : Player
             result.resourceCoverage = resources / Ground.areas[configuration.gatheringRange].Count;
             float relativeResourceCoverage = ( result.resourceCoverage - minimumResourceCoverage ) / ( idealResourceCoverage - minimumResourceCoverage );
             if ( relativeResourceCoverage > 1 )
-                result.resourceCoverage = 1;
+                relativeResourceCoverage = 1;
             if ( relativeResourceCoverage < 0 )
                 return result;
             result.resource = relativeResourceCoverage * Constants.Simpleton.resourceWeight;
