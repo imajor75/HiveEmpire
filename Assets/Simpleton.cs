@@ -234,7 +234,6 @@ public class Simpleton : Player
     public bool DoSomething()
     {
         activity = Operation.Source.preparation;
-        dumpTasks = true;
         AdvanceResult status = AdvanceResult.needMoreCalls;
         while ( status == AdvanceResult.needMoreCalls )
         {

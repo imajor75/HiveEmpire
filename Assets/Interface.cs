@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -50,6 +50,7 @@ public class Interface : HiveObject
 	public float FPS;
 	[JsonIgnore]
 	public Node openFlagPanel;
+	public bool needWelcomePanel;
 
 	public static Material materialUIPath;
 	public bool focusOnInputField, focusOnDropdown;
@@ -686,8 +687,8 @@ public class Interface : HiveObject
 		else
 			mainPlayer = null;
 		eye.FocusOn( mainTeam.mainBuilding, approach:false );
-		WelcomePanel.Create();
 		lastSave = Time.unscaledTime;
+		needWelcomePanel = true;	// Delayed display of the panel to prevent it showing up during prepare
 		defeatReported = false;
 	}
 
@@ -796,6 +797,15 @@ public class Interface : HiveObject
 			defeatReported = true;
 			ChallengeList.Create( true );
 		}
+
+		if ( needWelcomePanel && !game.preparing )
+		{
+			needWelcomePanel = false;
+			WelcomePanel.Create();
+		}
+
+		if ( game.preparing && panels.Count == 1 )
+			Interface.PrepareProgress.Create();
 
 		if ( EventSystem.current?.currentSelectedGameObject != null )
 		{ 
@@ -7362,6 +7372,44 @@ if ( cart )
 			}
 
 			base.Update();
+		}
+	}
+
+	public class PrepareProgress : Panel
+	{
+		public Text workshops, guardHouses, stocks, roads;
+		public static PrepareProgress Create()
+		{
+			var p = new GameObject( "Preparation Progress" ).AddComponent<PrepareProgress>();
+			p.Open();
+			return p;
+		}
+
+		void Open()
+		{
+			noCloseButton = noPin = true;
+			base.Open( 300, 150 );
+			Log( "hopp" );
+			var title = Text( "Preparing empire", 14 );
+			title.PinCenter( 0, -borderWidth * 2, (int)( title.preferredWidth / uiScale + 1 ), iconSize, 0.5f );
+			workshops = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
+			guardHouses = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
+			stocks = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
+			roads = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
+		}
+
+		new void Update()
+		{
+			if ( !game.preparing )
+			{
+				Close();
+				return;
+			}
+
+			workshops.text = $"workshops: {root.mainTeam.workshops.Count}";
+			guardHouses.text = $"guardhouses: {root.mainTeam.guardHouses.Count}";
+			stocks.text = $"stocks: {root.mainTeam.stocks.Count}";
+			roads.text = $"roads: {root.mainTeam.roads.Count}";
 		}
 	}
 

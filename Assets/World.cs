@@ -1241,6 +1241,7 @@ public class Game : World
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public bool gameInProgress;
+	public bool preparing;
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Building lastAreaInfluencer;
@@ -1297,6 +1298,20 @@ public class Game : World
 
 	new void Update()
 	{
+		if ( preparing )
+		{
+			preparing = false;
+			foreach ( var player in players )
+			{
+				if ( player is Simpleton simpleton && !simpleton.prepared )
+				{
+					preparing = true;
+					simpleton.DoSomething();
+				}
+			}
+			return;
+		}
+
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
         if ( oh && oh.orders.Count > 0 && network.state == Network.State.client )
         {
@@ -1411,6 +1426,9 @@ public class Game : World
 	{
 		base.FixedUpdate();
 		massDestroy = false;
+		if ( preparing )
+			return;
+
 		for ( int i = 0; i < timeFactor; i++ )
 			Advance();
 	}
@@ -1804,11 +1822,7 @@ public class Game : World
 				foreach ( var player in game.players )
 				{
 					if ( player is Simpleton simpleton )
-					{
-						bool preparation = true;
-						while ( preparation && !simpleton.prepared )
-							preparation = simpleton.DoSomething();
-					}
+						game.preparing = !simpleton.prepared;
 				}
 			}
 			maintainBronze.Reset();
