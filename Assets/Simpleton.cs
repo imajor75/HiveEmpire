@@ -159,7 +159,6 @@ public class Simpleton : Player
             tasks = new ();
             tasks.Add( new GlobalTask( this ) );
             currentProblem = 0;
-            hasSeparatedFlags = false;
             return AdvanceResult.needMoreCalls;
         }
         if ( tasks == null )
@@ -513,7 +512,7 @@ public class Simpleton : Player
                 if ( workshopType.type == Workshop.Type._geologistObsolete )
                     continue;
 
-                if ( workshopType.type == Workshop.Type.barrack && boss.lackingProductions.Count != 0 )
+                if ( workshopType.type == Workshop.Type.barrack && ( boss.lackingProductions.Count != 0 || boss.hasSeparatedFlags ) )
                 {
                     boss.lackingProductions.Clear();
                     continue;
@@ -532,6 +531,8 @@ public class Simpleton : Player
                     outputType = Item.Type.log;
                 boss.tasks.Add( new YieldTask( boss, workshopType.type, Math.Max( soldierYield * game.itemTypeUsage[(int)outputType], targetMinimum ) ) );
             }
+
+            boss.hasSeparatedFlags = false;
 
             boss.tasks.Add( new ExtendBorderTask( boss ) );
 
