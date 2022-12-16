@@ -7388,7 +7388,7 @@ if ( cart )
 		void Open()
 		{
 			noCloseButton = noPin = true;
-			base.Open( 300, 150 );
+			base.Open( 300, 200 );
 			Log( "hopp" );
 			var title = Text( "Preparing empire", 14 );
 			title.PinCenter( 0, -borderWidth * 2, (int)( title.preferredWidth / uiScale + 1 ), iconSize, 0.5f );
@@ -7396,6 +7396,7 @@ if ( cart )
 			guardHouses = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			stocks = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			roads = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
+			Button( "Skip" ).PinCenter( 0, borderWidth * 2, 120, iconSize, 0.5f, 0 ).SetTooltip( "Stop the prepare process and start playing" ).AddClickHandler( () => game.preparing = false );
 		}
 
 		new void Update()
