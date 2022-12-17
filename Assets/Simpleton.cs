@@ -714,7 +714,7 @@ public class Simpleton : Player
                 else
                     problemWeight = 0.75f - 0.5f * ( (float)currentYield / target );
                 if ( workshopType == Workshop.Type.stonemason )
-                    problemWeight = Math.Max( problemWeight, stonemasonCount switch { 0 => 1, 1 => 0.3f, _ => 0.1f } );
+                    problemWeight = Math.Max( problemWeight, stonemasonCount switch { 0 => 1, 1 => 0.3f, _ => 0 } );
                 if ( (int)outputType < boss.itemWeights.Count && (int)outputType >= 0 )
                     problemWeight = (float)Math.Pow( problemWeight, 1 / boss.itemWeights[(int)outputType] );
 
