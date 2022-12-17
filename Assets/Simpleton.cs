@@ -27,6 +27,7 @@ public class Simpleton : Player
     public bool dumpTasks, dumpYields;
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
     public bool preservingConstructionMaterial = false;
+    public int actionIndex;
     public bool prepared 
     {
         get
@@ -209,8 +210,9 @@ public class Simpleton : Player
             }
             if ( best != null && best.importance >= confidence && best.importance > 0 )
             {
-                Log( $"Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
+                Log( $"{actionIndex} Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
                 best.ApplySolution();
+                actionIndex++;
                 inability.Start( Constants.Simpleton.inabilityTolerance );
                 confidence = Constants.Simpleton.defaultConfidence;
             }
