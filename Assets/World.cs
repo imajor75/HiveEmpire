@@ -1303,7 +1303,7 @@ public class Game : World
 			preparing = false;
 			foreach ( var player in players )
 			{
-				if ( player is Simpleton simpleton && !simpleton.prepared )
+				if ( player is Simpleton simpleton && !simpleton.prepared && simpleton.actionIndex < root.preparationActionIndexLimit )
 					preparing = simpleton.DoSomething();
 			}
 			return;

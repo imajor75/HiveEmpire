@@ -51,6 +51,7 @@ public class Interface : HiveObject
 	[JsonIgnore]
 	public Node openFlagPanel;
 	public bool needWelcomePanel;
+	public int preparationActionIndexLimit = int.MaxValue;
 
 	public static Material materialUIPath;
 	public bool focusOnInputField, focusOnDropdown;
