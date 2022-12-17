@@ -165,6 +165,7 @@ public class Simpleton : Player
         }
         if ( tasks == null )
             return AdvanceResult.confused;
+
         if ( currentProblem < tasks.Count )
         {
             tasks[currentProblem].boss = this;
@@ -173,64 +174,64 @@ public class Simpleton : Player
                 currentProblem++;
             return AdvanceResult.needMoreCalls;
         }
-        else
+        var result = AdvanceResult.done;
+        if ( dumpTasks )
         {
-            if ( dumpTasks )
+            tasks.Sort( ( a, b ) => b.importance.CompareTo( a.importance ) );
+            Log( "==================" );
+            Log( $"{name} tasks:" );
+            for ( int i = 0; i < tasks.Count; i++ )
             {
-                tasks.Sort( ( a, b ) => b.importance.CompareTo( a.importance ) );
-                Log( "==================" );
-                Log( $"{name} tasks:" );
-                for ( int i = 0; i < tasks.Count; i++ )
-                {
-                    var task = tasks[i];
-                    Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task}" );
-                }            
-                dumpTasks = false;
-            }
+                var task = tasks[i];
+                Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task}" );
+            }            
+            dumpTasks = false;
+        }
 
-            if ( dumpYields )
-            {
-                Log( "==================" );
-                foreach ( var task in tasks )
-                {
-                    if ( task is YieldTask yieldTask )
-                    {
-                        var currentYield = yieldTask.surplus ? "surplus" : yieldTask.currentYield.ToString();
-                        Log( $"{yieldTask.workshopType} - target: {yieldTask.target}, current: {currentYield}, best location: {yieldTask.bestLocation}" );
-                    }
-                }
-                dumpYields = false;
-            }
-
-            Task best = null;
+        if ( dumpYields )
+        {
+            Log( "==================" );
             foreach ( var task in tasks )
             {
-                if ( best == null || task.importance > best.importance )
-                    best = task;
-            }
-            if ( best != null && best.importance >= confidence && best.importance > 0 )
-            {
-                Log( $"{actionIndex} Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
-                best.ApplySolution();
-                actionIndex++;
-                inability.Start( Constants.Simpleton.inabilityTolerance );
-                confidence = Constants.Simpleton.defaultConfidence;
-            }
-            if ( inability.done )
-            {
-                if ( confidence > Constants.Simpleton.minimumConfidence )
+                if ( task is YieldTask yieldTask )
                 {
-                    confidence -= Constants.Simpleton.confidenceLevel;
-                    Log( $"No good solution (best: {best.importance}), reducing confidence to {confidence}" );
-                    inability.Start( Constants.Simpleton.inabilityTolerance );
+                    var currentYield = yieldTask.surplus ? "surplus" : yieldTask.currentYield.ToString();
+                    Log( $"{yieldTask.workshopType} - target: {yieldTask.target}, current: {currentYield}, best location: {yieldTask.bestLocation}" );
                 }
-                else
-                    Log( $"Confidence is already at minimum ({confidence}), don't know what to do" );
             }
-
-            tasks = null;
-            return AdvanceResult.done;
+            dumpYields = false;
         }
+
+        Task best = null;
+        foreach ( var task in tasks )
+        {
+            if ( best == null || task.importance > best.importance )
+                best = task;
+        }
+        if ( best != null && best.importance >= confidence && best.importance > 0 )
+        {
+            Log( $"{actionIndex} Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
+            best.ApplySolution();
+            actionIndex++;
+            inability.Start( Constants.Simpleton.inabilityTolerance );
+            confidence = Constants.Simpleton.defaultConfidence;
+        }
+        else
+            result = AdvanceResult.confused;
+        if ( inability.done )
+        {
+            if ( confidence > Constants.Simpleton.minimumConfidence )
+            {
+                confidence -= Constants.Simpleton.confidenceLevel;
+                Log( $"No good solution (best: {best.importance}), reducing confidence to {confidence}" );
+                inability.Start( Constants.Simpleton.inabilityTolerance );
+            }
+            else
+                Log( $"Confidence is already at minimum ({confidence}), don't know what to do" );
+        }
+
+        tasks = null;
+        return result;
     }
 
     public bool DoSomething()
