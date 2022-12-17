@@ -1304,10 +1304,7 @@ public class Game : World
 			foreach ( var player in players )
 			{
 				if ( player is Simpleton simpleton && !simpleton.prepared )
-				{
-					preparing = true;
-					simpleton.DoSomething();
-				}
+					preparing = simpleton.DoSomething();
 			}
 			return;
 		}
