@@ -1304,7 +1304,14 @@ public class Game : World
 			foreach ( var player in players )
 			{
 				if ( player is Simpleton simpleton && !simpleton.prepared && simpleton.actionIndex < root.preparationActionIndexLimit )
+				{
 					preparing = simpleton.DoSomething();
+					if ( !preparing && !simpleton.prepared )
+					{
+						Log( $"Failed to finish preparation!", Severity.warning );
+						simpleton.DumpTasks();
+					}
+				}
 			}
 			return;
 		}

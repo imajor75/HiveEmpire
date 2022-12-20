@@ -8,7 +8,7 @@ using System.Linq;
 public class Simpleton : Player
 {
     [JsonIgnore]
-    public List<Task> tasks;
+    public List<Task> tasks = new ();
     public int currentProblem;
     public Game.Timer inability = new ();
     public float confidence = Constants.Simpleton.defaultConfidence;
@@ -28,6 +28,7 @@ public class Simpleton : Player
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
     public bool preservingConstructionMaterial = false;
     public int actionIndex;
+    public bool inProgress;
     public bool prepared 
     {
         get
@@ -114,6 +115,9 @@ public class Simpleton : Player
 
     public AdvanceResult Advance()
     {
+        if ( activity == Operation.Source.manual )
+            return AdvanceResult.confused;
+
         if ( nonConstructionUsage == null && game.workshopConfigurations != null )
         {
             nonConstructionUsage = new ();
@@ -156,15 +160,14 @@ public class Simpleton : Player
             itemWeights[(int)Item.Type.stone] = 1;  // Restore the weight of stone back to 1, because otherwise too much stonemasons are built
         }
 
-        if ( tasks == null && activity != Operation.Source.manual )
+        if ( !inProgress && activity != Operation.Source.manual )
         {
-            tasks = new ();
+            tasks.Clear();
             tasks.Add( new GlobalTask( this ) );
+            inProgress = true;
             currentProblem = 0;
             return AdvanceResult.needMoreCalls;
         }
-        if ( tasks == null )
-            return AdvanceResult.confused;
 
         if ( currentProblem < tasks.Count )
         {
@@ -177,14 +180,7 @@ public class Simpleton : Player
         var result = AdvanceResult.done;
         if ( dumpTasks )
         {
-            tasks.Sort( ( a, b ) => b.importance.CompareTo( a.importance ) );
-            Log( "==================" );
-            Log( $"{name} tasks:" );
-            for ( int i = 0; i < tasks.Count; i++ )
-            {
-                var task = tasks[i];
-                Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task}" );
-            }            
+            DumpTasks();
             dumpTasks = false;
         }
 
@@ -208,7 +204,7 @@ public class Simpleton : Player
             if ( best == null || task.importance > best.importance )
                 best = task;
         }
-        if ( best != null && best.importance >= confidence && best.importance > 0 )
+        if ( best != null && ( best.importance >= confidence || activity == Operation.Source.preparation ) && best.importance > 0 )
         {
             Log( $"{actionIndex} Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
             best.ApplySolution();
@@ -223,15 +219,27 @@ public class Simpleton : Player
             if ( confidence > Constants.Simpleton.minimumConfidence )
             {
                 confidence -= Constants.Simpleton.confidenceLevel;
-                Log( $"No good solution (best: {best.importance}), reducing confidence to {confidence}" );
+                Log( $"No good solution (best: {best?.importance}), reducing confidence to {confidence}" );
                 inability.Start( Constants.Simpleton.inabilityTolerance );
             }
             else
                 Log( $"Confidence is already at minimum ({confidence}), don't know what to do" );
         }
 
-        tasks = null;
+        inProgress = false;
         return result;
+    }
+
+    public void DumpTasks()
+    {
+        tasks.Sort( ( a, b ) => b.importance.CompareTo( a.importance ) );
+        Log( "==================" );
+        Log( $"{name} tasks:" );
+        for ( int i = 0; i < tasks.Count; i++ )
+        {
+            var task = tasks[i];
+            Log( $"{i}. {task.importance:F2} ({task.problemWeight:F2}, {task.solutionEfficiency:F2}) {task}" );
+        }            
     }
 
     public bool DoSomething()
