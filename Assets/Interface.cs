@@ -7390,7 +7390,6 @@ if ( cart )
 		{
 			noCloseButton = noPin = true;
 			base.Open( 300, 200 );
-			Log( "hopp" );
 			var title = Text( "Preparing empire", 14 );
 			title.PinCenter( 0, -borderWidth * 2, (int)( title.preferredWidth / uiScale + 1 ), iconSize, 0.5f );
 			workshops = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );

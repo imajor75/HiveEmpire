@@ -992,12 +992,14 @@ public class Simpleton : Player
             remove,
             removeBlocked,
             removeRoad,
+            createAnother,
             capture
         }
         public Action action;
         public PathFinder path = PathFinder.Create();
         public Flag flag;
         public Road road;
+        public Node bestNewFlag;
         override public string ToString()
         { 
             string d = "FlagTask: ";
@@ -1025,6 +1027,9 @@ public class Simpleton : Player
                     break;
                 case Action.capture:
                     d += $"capturing roads around flag at {flag.node}";
+                    break;
+                case Action.createAnother:
+                    d += $"creating a bridge flag at {bestNewFlag}";
                     break;
                 default:
                     d += "unknown";
@@ -1071,9 +1076,17 @@ public class Simpleton : Player
                     return finished;
                 }
 
+                bestNewFlag = null;
+                int bestNewFlagDistance = int.MaxValue;
                 foreach ( var offset in Ground.areas[Constants.Ground.maxArea-1] )
                 {
                     var node = flag.node + offset;
+                    if ( Flag.IsNodeSuitable( node, boss.team ) && node.DistanceFrom( boss.team.mainBuilding.node ) < bestNewFlagDistance )
+                    {
+                        bestNewFlag = node;
+                        bestNewFlagDistance = node.DistanceFrom( boss.team.mainBuilding.node );
+                    }
+
                     if ( node.team != boss.team || node.flag == null || node.flag.simpletonDataSafe.isolated )
                         continue;
                     if ( !path.FindPathBetween( flag.node, node, PathFinder.Mode.forRoads, true, appraiser: ( node ) => node.simpletonDataSafe.price ) )
@@ -1085,6 +1098,12 @@ public class Simpleton : Player
                     solutionEfficiency = (float)Math.Pow( 1f/price, 0.25f );
                     action = Action.connect;
                     return finished;
+                }
+
+                if ( bestNewFlag )
+                {
+                    action = Action.createAnother;
+                    solutionEfficiency = Constants.Simpleton.bridgeFlagEfficiency;
                 }
 
                 // The following three lines caused an infinite loop of (remove flag)-(split road) actions. It is not clear in what situation are these lines needed
@@ -1219,6 +1238,12 @@ public class Simpleton : Player
                         road.ends[0].simpletonDataSafe.failedConnections.Add( road.ends[1] );
                         road.ends[1].simpletonDataSafe.failedConnections.Add( road.ends[0] );
                     }
+                    break;
+                }
+                case Action.createAnother:
+                {
+                    boss.Log( $"Creating bridge flag at {bestNewFlag}" );
+                    HiveCommon.oh.ScheduleCreateFlag( bestNewFlag, boss.team, source:boss.activity );
                     break;
                 }
             }

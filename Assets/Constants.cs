@@ -421,6 +421,7 @@ public static class Constants
         public const float isolatedFlagWeight = 0.5f;
         public const float blockedFlagWeight = 0.75f;
         public const float badConnectionWeight = 0.75f;
+        public const float bridgeFlagEfficiency = 0.1f;
         public const float resourceWeight = 0.6f;
         public const float relaxImportance = 0.2f;
         public const float sourceImportance = 0.2f;
