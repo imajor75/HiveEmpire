@@ -986,8 +986,6 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Building a {workshopType} at {bestLocation} (score: {bestScore.resource}, {bestScore.relax}, {bestScore.dependency}, {bestScore.resourceCount}, {bestScore.factor})" );
-            boss.Log( $" plank: {currentPlank} ({reservedPlank} reserved), stone: {currentStone} ({reservedStone} reserved)" );
             HiveCommon.oh.ScheduleCreateBuilding( bestLocation, bestFlagDirection, (Building.Type)workshopType, boss.team, true, boss.activity );
         }
     }
@@ -1212,7 +1210,6 @@ public class Simpleton : Player
                 {
                     if ( path == null || path.path == null || path.path.Count < 2 || flag == null ) // TODO path.Count was 0
                         return;
-                    boss.Log( $"Connecting {flag.name} to the road network at {path.path.Last().name}" );
                     HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, boss.activity );
                     boss.blockedNodes.Clear();
                     break;
@@ -1221,25 +1218,21 @@ public class Simpleton : Player
                 {
                     foreach ( var building in flag.Buildings() )
                         boss.blockedNodes.Add( building.node );
-                    boss.Log( $"Removing blocked flag at {flag.node.x}:{flag.node.y}" );
                     HiveCommon.oh.ScheduleRemoveFlag( flag, true, boss.activity );
                     break;
                 }
                 case Action.remove:
                 {
-                    boss.Log( $"Removing flag at {flag.node.x}:{flag.node.y}" );
                     HiveCommon.oh.ScheduleRemoveFlag( flag, true, boss.activity );
                     break;
                 }
                 case Action.capture:
                 {
-                    boss.Log( $"Capturing roads around {flag}" );
                     HiveCommon.oh.ScheduleCaptureRoad( flag, true, boss.activity );
                     break;
                 }
                 case Action.removeRoad:
                 {
-                    boss.Log( $"Removing road {road}" );
                     HiveCommon.oh.ScheduleRemoveRoad( road, true, boss.activity );
                     if ( road.ends[0] != road.ends[1] )
                     {
@@ -1250,7 +1243,6 @@ public class Simpleton : Player
                 }
                 case Action.createAnother:
                 {
-                    boss.Log( $"Creating bridge flag at {bestNewFlag}" );
                     HiveCommon.oh.ScheduleCreateFlag( bestNewFlag, boss.team, source:boss.activity );
                     break;
                 }
@@ -1297,7 +1289,6 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Creating new road between {path.path.First().name} and {path.path.Last().name}" );
             HiveCommon.oh.ScheduleCreateRoad( path.path, boss.team, true, boss.activity );
         }
     }
@@ -1330,7 +1321,6 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Spliting road at {road.nodes[best].name}" );
             HiveCommon.oh.ScheduleCreateFlag( road.nodes[best], boss.team, false, true, boss.activity );
         }
     }
@@ -1414,7 +1404,6 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Building guard house at {best.name}" );
             HiveCommon.oh.ScheduleCreateBuilding( best, bestFlagDirection, Building.Type.guardHouse, boss.team, true, boss.activity );
         }
 
@@ -1655,7 +1644,6 @@ public class Simpleton : Player
             switch ( action )
             {
                 case Action.remove:
-                boss.Log( $"Removing {workshop.name}" );
                 if ( workshop.flag.roadsStartingHereCount == 1 )
                     HiveCommon.oh.ScheduleRemoveFlag( workshop.flag, true, boss.activity );
                 else
@@ -1663,7 +1651,6 @@ public class Simpleton : Player
                 break;
 
                 case Action.disableFish:
-                boss.Log( $"Disabling fish input for {workshop.name}" );
                 foreach ( var input in workshop.buffers )
                 {
                     if ( input.itemType == Item.Type.fish )
@@ -1672,7 +1659,6 @@ public class Simpleton : Player
                 break;
 
                 case Action.cleanup:
-                boss.Log( $"Cleaning up around {workshop.name}" );
                 workshop.simpletonDataSafe.lastCleanup.Start();
                 HiveCommon.oh.StartGroup( $"Cleaning up roads and junctions in the area" );
                 foreach ( var road in cleanupRoads )
@@ -1682,7 +1668,6 @@ public class Simpleton : Player
                 break;
 
                 case Action.linkToPartner:
-                boss.Log( $"Linking {itemTypeToLink} at {workshop} to {partner}" );
                 Assert.global.IsTrue( itemTypeToLink >= 0 && itemTypeToLink < Item.Type.total );
                 HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to partner" );
                 workshop.simpletonDataSafe.RegisterPartner( partner, itemTypeToLink, boss );
@@ -1739,7 +1724,6 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            boss.Log( $"Building stock at {site.name}" );
             HiveCommon.oh.ScheduleCreateBuilding( site, flagDirection, Building.Type.stock, boss.team, true, boss.activity );
         }
     }

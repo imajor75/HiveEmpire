@@ -610,7 +610,8 @@ public class OperationHandler : HiveObject
 
     void ExecuteOperation( Operation operation )
     {
-        HiveObject.Log( $"{time}: Executing {operation.name}" );
+        if ( operation.source != Operation.Source.preparation )
+            HiveObject.Log( $"{time}: Executing {operation.name}" );
         network.OnExecuteOperation( operation );
 
         if ( root.mainPlayer is Simpleton simpleton && simpleton.showActions && operation.source == Operation.Source.computer )
