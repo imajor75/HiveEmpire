@@ -7428,7 +7428,7 @@ if ( cart )
 		void Open( bool defeat )
 		{
 			allowInSpectateMode = true;
-			base.Open( 540, 300 + (defeat ? (int)( iconSize * 1.5 ) : 0) );
+			base.Open( 540, 320 + (defeat ? (int)( iconSize * 1.5 ) : 0) );
 			int titleRow = -borderWidth;
 			if ( defeat )
 			{

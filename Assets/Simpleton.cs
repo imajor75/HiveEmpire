@@ -47,6 +47,20 @@ public class Simpleton : Player
             if ( oh.challenge.preparation == Game.Challenge.Preparation.construction )
                 return isProduced[(int)Item.Type.log] && isProduced[(int)Item.Type.plank] && isProduced[(int)Item.Type.stone] && !hasSeparatedFlags;
 
+            if ( oh.challenge.preparation == Game.Challenge.Preparation.production )
+            {
+                if ( hasSeparatedFlags )
+                    return false;
+                
+                for ( int i = 0; i < (int)Item.Type.total; i++ )
+                {
+                    if ( world.itemTypeUsage[i] > 0 && !isProduced[i] )
+                        return false;
+                }
+
+                return true;
+            }
+
             return true;
         }
     }

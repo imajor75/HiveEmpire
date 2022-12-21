@@ -86,6 +86,16 @@
       "conditions": [
         "headquarters soldier -10 allPossible"
       ]
+    },
+    {
+      "title": "Set up routes",
+      "description": "Set up routes to an existing empire, reach some soldier production level",
+      "worldSize": 48,
+      "preparation": "production",
+      "landOnly": true,
+      "conditions": [
+        "production soldier 1"
+      ]
     }
   ]
 }

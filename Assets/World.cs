@@ -1786,7 +1786,7 @@ public class Game : World
 		{
 			none,
 			construction,
-			firstSoldier
+			production
 		}
 
         public static Challenge Create()
