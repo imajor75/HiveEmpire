@@ -1303,10 +1303,10 @@ public class Game : World
 			preparing = false;
 			foreach ( var player in players )
 			{
-				if ( player is Simpleton simpleton && !simpleton.prepared && simpleton.actionIndex < root.preparationActionIndexLimit )
+				if ( player is Simpleton simpleton && simpleton.preparationProgress < 1 && simpleton.actionIndex < root.preparationActionIndexLimit )
 				{
 					preparing = simpleton.DoSomething();
-					if ( !preparing && !simpleton.prepared )
+					if ( !preparing && simpleton.preparationProgress < 1 )
 					{
 						Log( $"Failed to finish preparation!", Severity.warning );
 						simpleton.DumpTasks();
@@ -1786,7 +1786,8 @@ public class Game : World
 		{
 			none,
 			construction,
-			production
+			production,
+			routes
 		}
 
         public static Challenge Create()
@@ -1826,7 +1827,7 @@ public class Game : World
 				foreach ( var player in game.players )
 				{
 					if ( player is Simpleton simpleton )
-						game.preparing = !simpleton.prepared;
+						game.preparing = simpleton.preparationProgress < 1;
 				}
 			}
 			maintainBronze.Reset();

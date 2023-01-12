@@ -7383,6 +7383,7 @@ if ( cart )
 	public class PrepareProgress : Panel
 	{
 		public Text workshops, guardHouses, stocks, roads;
+		public ProgressBar bar;
 		public static PrepareProgress Create()
 		{
 			var p = new GameObject( "Preparation Progress" ).AddComponent<PrepareProgress>();
@@ -7396,6 +7397,7 @@ if ( cart )
 			base.Open( 300, 200 );
 			var title = Text( "Preparing empire", 14 );
 			title.PinCenter( 0, -borderWidth * 2, (int)( title.preferredWidth / uiScale + 1 ), iconSize, 0.5f );
+			bar = Progress().PinDownwards( -75, 0, 150, 20, 0.5f );
 			workshops = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			guardHouses = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			stocks = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
@@ -7411,6 +7413,8 @@ if ( cart )
 				return;
 			}
 
+			if ( root.mainPlayer is Simpleton simpleton )
+				bar.progress = simpleton.preparationProgress;
 			workshops.text = $"workshops: {root.mainTeam.workshops.Count}";
 			guardHouses.text = $"guardhouses: {root.mainTeam.guardHouses.Count}";
 			stocks.text = $"stocks: {root.mainTeam.stocks.Count}";

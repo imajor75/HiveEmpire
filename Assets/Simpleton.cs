@@ -29,12 +29,14 @@ public class Simpleton : Player
     public bool preservingConstructionMaterial = false;
     public int actionIndex;
     public bool inProgress;
-    public bool prepared 
+    public int preparationMissingProduction, preparationTotalProduction;
+    public int preparationMissingDeals, preparationTotalDeals;
+    public float preparationProgress 
     {
         get
         {
             if ( oh.challenge.preparation == Game.Challenge.Preparation.none )
-                return true;
+                return 1;
 
             bool[] isProduced = new bool[(int)Item.Type.total];
             foreach ( var workshop in team.workshops )
@@ -45,23 +47,56 @@ public class Simpleton : Player
             }
 
             if ( oh.challenge.preparation == Game.Challenge.Preparation.construction )
-                return isProduced[(int)Item.Type.log] && isProduced[(int)Item.Type.plank] && isProduced[(int)Item.Type.stone] && !hasSeparatedFlags;
-
-            if ( oh.challenge.preparation == Game.Challenge.Preparation.production )
             {
-                if ( hasSeparatedFlags )
-                    return false;
-                
-                for ( int i = 0; i < (int)Item.Type.total; i++ )
-                {
-                    if ( world.itemTypeUsage[i] > 0 && !isProduced[i] )
-                        return false;
-                }
-
-                return true;
+                float constructionProgress = 0;
+                if ( isProduced[(int)Item.Type.log] )
+                    constructionProgress += 0.25f;
+                if ( isProduced[(int)Item.Type.plank] )
+                    constructionProgress += 0.25f;
+                if ( isProduced[(int)Item.Type.stone] )
+                    constructionProgress += 0.25f;
+                if ( !hasSeparatedFlags )
+                    constructionProgress += 0.25f;
+                return constructionProgress;
             }
 
-            return true;
+            preparationMissingDeals = preparationMissingProduction = preparationTotalDeals = preparationTotalProduction = 0;
+            for ( int i = 0; i < (int)Item.Type.total; i++ )
+            {
+                if ( world.itemTypeUsage[i] <= 0 )
+                    continue;
+                preparationTotalProduction++;
+                if ( !isProduced[i] )
+                    preparationMissingProduction++;
+            }
+
+            foreach ( var workshop in team.workshops )
+            {
+                preparationTotalDeals++;
+                if ( workshop.outputArea?.center == null )
+                    preparationMissingDeals++;
+
+                foreach ( var input in workshop.buffers )
+                {
+                    preparationTotalDeals++;
+                    if ( input.area?.center == null )
+                        preparationMissingDeals++;
+                }
+            }
+
+            float progress = 0;
+            if ( oh.challenge.preparation == Game.Challenge.Preparation.production || oh.challenge.preparation == Game.Challenge.Preparation.routes )
+                progress = 1 - (float)preparationMissingProduction / preparationTotalProduction;
+            if ( oh.challenge.preparation == Game.Challenge.Preparation.routes )
+            {
+                if ( preparationTotalDeals > 0 )
+                    progress += 1 - (float)preparationMissingDeals / preparationTotalDeals;
+                progress *= 0.5f;
+            }
+            if ( hasSeparatedFlags )
+                progress -= 0.01f;
+
+            return progress;
         }
     }
     public bool active
@@ -279,7 +314,6 @@ public class Simpleton : Player
         public Game.Timer lastCleanup = new ();
         public List<Deal> deals = new ();
         public List<Item.Type> managedItemTypes = new ();
-        public Game.Timer lastDealCheck = new ();
         public Game.Timer lastTimeHadResources = new ();
         public HiveObject hiveObject;
         public Building possiblePartner;
@@ -293,6 +327,8 @@ public class Simpleton : Player
         Building possibleDealer { set {} }
        	[Obsolete( "Compatibility with old files", true )]
         Workshop.Buffer possibleDealerBuffer { set {} }
+       	[Obsolete( "Compatibility with old files", true )]
+        Game.Timer lastDealCheck;
 
         public Data() {}
 
@@ -1538,15 +1574,10 @@ public class Simpleton : Player
                 }
             }
 
-            if ( data.possiblePartner == null && workshop.simpletonDataSafe.lastDealCheck.ageinf > Constants.Simpleton.dealCheckPeriod )
+            if ( data.possiblePartner == null )
             {
-                workshop.simpletonDataSafe.lastDealCheck.Start();
-                
                 foreach ( var buffer in workshop.buffers )
                 {
-                    if ( workshop.type == Workshop.Type.stoneMine && buffer.itemType == Item.Type.fish )
-                        continue;
-                        
                     foreach ( var offset in Ground.areas[Constants.Simpleton.workshopCoverage] )
                     {
                         var building = workshop.node.Add( offset ).building;

@@ -88,10 +88,10 @@
       ]
     },
     {
-      "title": "Set up routes",
+      "title": "Optimize existing empire",
       "description": "Set up routes to an existing empire, reach some soldier production level",
       "worldSize": 48,
-      "preparation": "production",
+      "preparation": "routes",
       "landOnly": true,
       "conditions": [
         "production soldier 1"
