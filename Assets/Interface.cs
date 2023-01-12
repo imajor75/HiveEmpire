@@ -755,8 +755,12 @@ public class Interface : HiveObject
 		challenges = Serializer.Read<Game.Challenge.List>( file ).list;
 		var challengeContainer = new GameObject( "Challenges" );
 		challengeContainer.transform.SetParent( transform, false );
+		Log( "Available challenges:" );
 		foreach ( var challenge in challenges )
+		{
 			challenge.transform.SetParent( challengeContainer.transform, false );
+			Log( $" - {challenge.title}, {challenge.worldGenerationSettings.size}, {challenge.timeLimit}, {challenge.preparation}" );
+		}
 	}
 
 	public void OnGoalReached( Game.Goal goal )
