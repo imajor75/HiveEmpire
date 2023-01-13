@@ -1300,7 +1300,6 @@ public class Game : World
 	{
 		if ( preparing )
 		{
-			preparing = false;
 			foreach ( var player in players )
 			{
 				if ( player is Simpleton simpleton && simpleton.preparationProgress < 1 && simpleton.actionIndex < root.preparationActionIndexLimit )
@@ -1786,7 +1785,7 @@ public class Game : World
 		{
 			none,
 			construction,
-			production,
+			chain,
 			routes
 		}
 

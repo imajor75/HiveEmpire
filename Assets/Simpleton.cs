@@ -85,7 +85,7 @@ public class Simpleton : Player
             }
 
             float progress = 0;
-            if ( oh.challenge.preparation == Game.Challenge.Preparation.production || oh.challenge.preparation == Game.Challenge.Preparation.routes )
+            if ( oh.challenge.preparation == Game.Challenge.Preparation.chain || oh.challenge.preparation == Game.Challenge.Preparation.routes )
                 progress = 1 - (float)preparationMissingProduction / preparationTotalProduction;
             if ( oh.challenge.preparation == Game.Challenge.Preparation.routes )
             {
@@ -770,7 +770,7 @@ public class Simpleton : Player
                     }
                 }
 
-                if ( currentYield >= target )
+                if ( currentYield >= target || ( currentYield > 0 && game.preparing && oh.challenge.preparation == Game.Challenge.Preparation.routes ) )
                     problemWeight = 0;
                 else
                     problemWeight = 0.75f - 0.5f * ( (float)currentYield / target );
