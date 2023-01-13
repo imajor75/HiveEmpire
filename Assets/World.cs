@@ -1298,6 +1298,7 @@ public class Game : World
 
 	new void Update()
 	{
+		eye.enabled = !preparing;
 		if ( preparing )
 		{
 			foreach ( var player in players )

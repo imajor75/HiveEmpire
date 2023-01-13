@@ -970,7 +970,15 @@ public class Eye : HiveObject
 		{
 			void OnRenderImage( RenderTexture source, RenderTexture target )
 			{
-				eye.highlight.ApplyHighlight( source, target );
+				if ( eye.enabled )
+					eye.highlight.ApplyHighlight( source, target );
+				else
+				{
+					var prev = RenderTexture.active;
+					RenderTexture.active = target;
+					GL.Clear( false, true, Color.black, 0 );
+					RenderTexture.active = prev;
+				}
 			}
 		}
 	}

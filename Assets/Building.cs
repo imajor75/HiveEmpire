@@ -783,6 +783,9 @@ abstract public class Building : HiveObject
 			}
 		}
 
+		if ( !eye.enabled || eye.highlight == null )
+			return;
+
 		if ( eye.highlight.type == Eye.Highlight.Type.area && eye.highlight.area != null && eye.highlight.area.IsInside( node ) )
 		{
 			highlightArrow.transform.localPosition = Vector3.up * ( ( float )( height + 0.3f * Math.Sin( 2 * Time.time ) ) );
