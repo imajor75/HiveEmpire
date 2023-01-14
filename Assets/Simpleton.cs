@@ -73,7 +73,7 @@ public class Simpleton : Player
             foreach ( var workshop in team.workshops )
             {
                 preparationTotalDeals++;
-                if ( workshop.outputArea?.center == null )
+                if ( workshop.outputArea?.center == null && workshop.productionConfiguration.outputType != Item.Type.unknown )
                     preparationMissingDeals++;
 
                 foreach ( var input in workshop.buffers )

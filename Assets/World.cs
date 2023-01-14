@@ -1305,7 +1305,7 @@ public class Game : World
 			{
 				if ( player is Simpleton simpleton && simpleton.preparationProgress < 1 && simpleton.actionIndex < root.preparationActionIndexLimit )
 				{
-					preparing = simpleton.DoSomething();
+					preparing = simpleton.DoSomething() && simpleton.preparationProgress < 1;
 					if ( !preparing && simpleton.preparationProgress < 1 )
 					{
 						Log( $"Failed to finish preparation!", Severity.warning );
