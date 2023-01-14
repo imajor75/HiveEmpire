@@ -803,13 +803,13 @@ public class Interface : HiveObject
 			ChallengeList.Create( true );
 		}
 
-		if ( needWelcomePanel && !game.preparing )
+		if ( needWelcomePanel && game.preparation == Game.PrepareState.ready )
 		{
 			needWelcomePanel = false;
 			WelcomePanel.Create();
 		}
 
-		if ( game.preparing && panels.Count == 1 )
+		if ( game.preparation != Game.PrepareState.ready && panels.Count == 1 )
 			Interface.PrepareProgress.Create();
 
 		if ( EventSystem.current?.currentSelectedGameObject != null )
@@ -7402,12 +7402,12 @@ if ( cart )
 			guardHouses = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			stocks = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			roads = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
-			Button( "Skip" ).PinCenter( 0, borderWidth * 2, 120, iconSize, 0.5f, 0 ).SetTooltip( "Stop the prepare process and start playing" ).AddClickHandler( () => game.preparing = false );
+			Button( "Skip" ).PinCenter( 0, borderWidth * 2, 120, iconSize, 0.5f, 0 ).SetTooltip( "Stop the prepare process and start playing" ).AddClickHandler( () => game.preparation = Game.PrepareState.ready );
 		}
 
 		new void Update()
 		{
-			if ( !game.preparing )
+			if ( game.preparation == Game.PrepareState.ready )
 			{
 				Close();
 				return;

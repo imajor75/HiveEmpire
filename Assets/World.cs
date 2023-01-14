@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1241,7 +1241,7 @@ public class Game : World
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public bool gameInProgress;
-	public bool preparing;
+	public PrepareState preparation;
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Building lastAreaInfluencer;
@@ -1258,6 +1258,13 @@ public class Game : World
 	public System.Random rnd;
 	public bool demo;
 
+	public enum PrepareState
+	{
+		create,
+		prerun,
+		ready
+	}
+
 	static public Game instance;
 
 	[Obsolete( "Compatibility with old files", true )]
@@ -1266,6 +1273,8 @@ public class Game : World
 	new Settings settings { set { generatorSettings = value; } }
 	[Obsolete( "Compatibility with old files", true )]
 	int currentSeed { set { generatorSettings.seed = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	bool preparing { set {} }
 
 	public new static Game Create()
 	{
@@ -1298,15 +1307,17 @@ public class Game : World
 
 	new void Update()
 	{
-		eye.enabled = !preparing;
-		if ( preparing )
+		eye.enabled = preparation == PrepareState.ready;
+		if ( preparation == PrepareState.create )		
 		{
 			foreach ( var player in players )
 			{
 				if ( player is Simpleton simpleton && simpleton.preparationProgress < 1 && simpleton.actionIndex < root.preparationActionIndexLimit )
 				{
-					preparing = simpleton.DoSomething() && simpleton.preparationProgress < 1;
-					if ( !preparing && simpleton.preparationProgress < 1 )
+					bool progress = simpleton.DoSomething();
+					if ( simpleton.preparationProgress >= 1 || !progress )
+						preparation = PrepareState.ready;
+					if ( !progress && simpleton.preparationProgress < 1 )
 					{
 						Log( $"Failed to finish preparation!", Severity.warning );
 						simpleton.DumpTasks();
@@ -1430,7 +1441,7 @@ public class Game : World
 	{
 		base.FixedUpdate();
 		massDestroy = false;
-		if ( preparing )
+		if ( preparation != PrepareState.ready )
 			return;
 
 		for ( int i = 0; i < timeFactor; i++ )
@@ -1827,7 +1838,7 @@ public class Game : World
 				foreach ( var player in game.players )
 				{
 					if ( player is Simpleton simpleton )
-						game.preparing = simpleton.preparationProgress < 1;
+						game.preparation = simpleton.preparationProgress < 1 ? PrepareState.create : PrepareState.ready;
 				}
 			}
 			maintainBronze.Reset();
@@ -1971,6 +1982,7 @@ public class Game : World
 			foreach ( var condition in conditions )
 			{
 				var p = condition.Split( ' ' );
+				Log( " Cond: " + condition );
 				switch ( p[0] )
 				{
 					case "headquarters":

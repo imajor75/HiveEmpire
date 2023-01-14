@@ -770,7 +770,7 @@ public class Simpleton : Player
                     }
                 }
 
-                if ( currentYield >= target || ( currentYield > 0 && game.preparing && oh.challenge.preparation == Game.Challenge.Preparation.routes ) )
+                if ( currentYield >= target || ( currentYield > 0 && game.preparation == Game.PrepareState.create && oh.challenge.preparation == Game.Challenge.Preparation.routes ) )
                     problemWeight = 0;
                 else
                     problemWeight = 0.75f - 0.5f * ( (float)currentYield / target );
