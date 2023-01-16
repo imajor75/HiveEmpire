@@ -12,6 +12,7 @@ public static class Constants
         public const float uiScale = 1.5f;
         public const float highightedMenuItemScale = 1.2f;
         public const float menuHighlightChangeSpeed = 0.1f;
+        public const int prerunPerFrame = 100;
     }
 
     public static class World

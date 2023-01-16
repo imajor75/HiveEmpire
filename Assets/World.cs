@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1316,7 +1316,7 @@ public class Game : World
 				{
 					bool progress = simpleton.DoSomething();
 					if ( simpleton.preparationProgress >= 1 || !progress )
-						preparation = PrepareState.ready;
+						preparation = PrepareState.prerun;
 					if ( !progress && simpleton.preparationProgress < 1 )
 					{
 						Log( $"Failed to finish preparation!", Severity.warning );
@@ -1325,6 +1325,19 @@ public class Game : World
 				}
 			}
 			return;
+		}
+
+		if ( preparation == PrepareState.prerun )
+		{
+			int prerunDone = 0;
+			while ( time < challenge.prerun )
+			{
+				Advance();
+				prerunDone++;
+				if ( prerunDone >= Constants.Interface.prerunPerFrame )
+					return;
+			}
+			preparation = PrepareState.ready;
 		}
 
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
@@ -1353,7 +1366,7 @@ public class Game : World
 		base.Start();
 	}
 
-	public bool Advance()
+	public bool OnTick()
 	{
 		if ( !oh || advanceCharges == 0 )
 			return false;
@@ -1374,10 +1387,18 @@ public class Game : World
 		if ( lastChecksum > 0 )
 			Assert.global.AreEqual( checksum, lastChecksum, "Game state was modified between World.Advance calls" );
 		#endif
-		gameAdvancingInProgress = true;
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		oh.OnBeginGameStep();
 		network.OnBeginGameStep();
+		Advance();
+		oh.OnEndGameStep();
+		advanceCharges--;
+		return true;
+	}
+
+	public void Advance()
+	{
+		gameAdvancingInProgress = true;
 		rnd = new System.Random( frameSeed );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldFrameStart );
 
@@ -1425,7 +1446,6 @@ public class Game : World
 
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
-		oh.OnEndGameStep();
 		#if DEBUG
 		lastChecksum = checksum;
 		#else
@@ -1433,8 +1453,6 @@ public class Game : World
 		#endif
 		time++;
 		gameAdvancingInProgress = false;
-		advanceCharges--;
-		return true;
 	}
 
 	public new void FixedUpdate()
@@ -1445,7 +1463,7 @@ public class Game : World
 			return;
 
 		for ( int i = 0; i < timeFactor; i++ )
-			Advance();
+			OnTick();
 	}
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
@@ -1774,6 +1792,7 @@ public class Game : World
 		public string bestSolutionReplayFileName;
 		public Goal bestSolutionLevel;
 		public Preparation preparation;
+		public int prerun;
 
 		int worldSize { set { worldGenerationSettings.size = value; } }
 		bool islandOnly { set { if ( value ) { randomizeIslands = false; worldGenerationSettings.reliefSettings.island = true; } } }

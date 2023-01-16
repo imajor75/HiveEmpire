@@ -93,6 +93,7 @@
       "worldSize": 48,
       "preparation": "routes",
       "landOnly": true,
+      "prerun": 180000,
       "conditions": [
         "production soldier 1"
       ]

@@ -7413,8 +7413,13 @@ if ( cart )
 				return;
 			}
 
-			if ( root.mainPlayer is Simpleton simpleton )
+			if ( game.preparation == Game.PrepareState.create && root.mainPlayer is Simpleton simpleton )
 				bar.progress = simpleton.preparationProgress;
+			if ( game.preparation == Game.PrepareState.prerun )
+			{
+				bar.color = Color.Lerp( Color.green, Color.grey, 0.5f );
+				bar.progress = (float)game.time / game.challenge.prerun;
+			}
 			workshops.text = $"workshops: {root.mainTeam.workshops.Count}";
 			guardHouses.text = $"guardhouses: {root.mainTeam.guardHouses.Count}";
 			stocks.text = $"stocks: {root.mainTeam.stocks.Count}";
