@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1241,7 +1241,7 @@ public class Game : World
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
 	public bool gameInProgress;
-	public PrepareState preparation;
+	public PrepareState preparation = PrepareState.ready;
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Building lastAreaInfluencer;
