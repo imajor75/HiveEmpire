@@ -21,8 +21,8 @@ public class World : HiveObject
 	public int nextID = 1;
 	public int frameSeed;
 	public string fileName;
-	public List<HiveObject> hiveObjects = new (), newHiveObjects = new ();
-	public List<int> hiveListFreeSlots = new ();
+	public Store realtimeHiveObjects = new ();
+	public Store lazyHiveObjects = new ();
 	public List<Workshop.Configuration> workshopConfigurations;
 	public List<float> itemTypeUsage = new ();
 	public List<float> workshopTypeUsage = new ();
@@ -50,6 +50,105 @@ public class World : HiveObject
 	static public Shader defaultCutoutTextureShader;
 	public GameObject nodes;
 	public GameObject itemsJustCreated, playersAndTeams;
+
+	public class Store
+	{
+		public List<HiveObject> objects = new ();
+		public LinkedList<HiveObject> newObjects = new ();
+		public LinkedList<int> freeSlots = new ();
+		public int processIndex;
+
+		public void Process( float amount = 1 )
+		{
+			foreach ( var newObject in newObjects )
+			{
+				Assert.global.IsFalse( objects.Contains( newObject ) );
+				if ( freeSlots.Count > 0 )
+				{
+					int i = freeSlots.Last();
+					freeSlots.RemoveLast();
+					Assert.global.AreEqual( objects[i], null );
+					objects[i] = newObject;
+					newObject.worldIndex = i;
+				}
+				else
+				{
+					newObject.worldIndex = objects.Count;
+					objects.Add( newObject );
+				}
+
+				if ( newObject.priority )
+				{
+					int i = newObject.worldIndex;
+					while ( i > 0 && ( objects[i-1] == null || !objects[i-1].priority ) )
+						i--;
+					if ( i != newObject.worldIndex && objects[i] )
+					{
+						var old = objects[i];
+						objects[newObject.worldIndex] = old;
+						old.worldIndex = newObject.worldIndex;
+						objects[i] = newObject;
+						newObject.worldIndex = i;
+					}
+				}
+			}
+			newObjects.Clear();
+			int newIndex = processIndex + (int)( objects.Count * amount );
+			while ( processIndex < newIndex )
+			{
+				if ( processIndex >= objects.Count )
+				{
+					processIndex = 0;
+					break;
+				}
+				var hiveObject = objects[processIndex++];
+				if ( hiveObject && !hiveObject.destroyed )
+					hiveObject.GameLogicUpdate();
+			}
+		}
+		
+		public void Clear()
+		{
+			foreach ( var ho in objects )
+				if ( ho )
+					ho.worldIndex = -1;
+
+			objects.Clear();
+			newObjects.Clear();
+			freeSlots.Clear();
+		}
+
+		public void Validate()
+		{
+			int nullCount = 0;
+			for ( int i = 0; i < objects.Count; i++ )
+			{
+				if ( objects[i] )
+					Assert.global.AreEqual( objects[i].worldIndex, i );
+				else
+					nullCount++;
+			}
+			Assert.global.AreEqual( freeSlots.Count, nullCount, "Corrupt free slots array" );
+			foreach ( var freeSlot in freeSlots )
+				Assert.global.IsNull( objects[freeSlot] );
+		}
+
+		public void Add( HiveObject newObject )
+		{
+			newObjects.AddLast( newObject );
+		}
+
+		public void Remove( HiveObject objectToRemove )
+		{
+			if ( objectToRemove.worldIndex >= 0 && objects.Count > objectToRemove.worldIndex && objectToRemove == objects[objectToRemove.worldIndex] )
+			{
+				objects[objectToRemove.worldIndex] = null;
+				freeSlots.AddLast( objectToRemove.worldIndex );
+				objectToRemove.worldIndex = -1;
+			}
+			newObjects.Remove( objectToRemove );	// in pause mode the object might still sitting in this array
+		}
+	}
 
 	public static void CRC( int code, OperationHandler.Event.CodeLocation caller )
 	{
@@ -108,6 +207,12 @@ public class World : HiveObject
 	int replayIndex { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int overseas;
+	[Obsolete( "Compatibility with old files", true )]
+	public List<HiveObject> hiveObjects { set { realtimeHiveObjects.objects = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	public List<HiveObject> newHiveObjects { set { Assert.global.AreEqual( value.Count, 0 ); } }
+	[Obsolete( "Compatibility with old files", true )]
+	public LinkedList<int> hiveListFreeSlots { set { realtimeHiveObjects.freeSlots = value; } }
 	public Settings generatorSettings = new ();
 	public bool repeating { get { return !generatorSettings.reliefSettings.island; } }
 
@@ -544,13 +649,6 @@ public class World : HiveObject
 				water.Remove();
 		}
 
-		if ( ground.worldIndex < 0 )
-		{
-			for ( int i = 0; i < hiveObjects.Count; i++ )
-				if ( hiveObjects[i] )
-					hiveObjects[i].worldIndex = i;
-		}
-
 		if ( ground.nodes.Count == ( ground.dimension + 1 ) * ( ground.dimension + 1 ) )
 		{
 			List<Node> newNodes = new ();
@@ -562,6 +660,18 @@ public class World : HiveObject
 					node.Remove();
 			}
 			ground.nodes = newNodes;
+		}
+
+		List<HiveObject> moveToLazy = new ();
+		foreach ( var hiveObject in realtimeHiveObjects.objects )
+		{
+			if ( hiveObject && hiveObject.runMode == RunMode.lazy )
+				moveToLazy.Add( hiveObject );
+		}
+		foreach ( var objectToMove in moveToLazy )
+		{
+			realtimeHiveObjects.Remove( objectToMove );
+			lazyHiveObjects.Add( objectToMove );
 		}
 
 		if ( water == null )	// Fix old files
@@ -835,7 +945,7 @@ public class World : HiveObject
 			itemTypeUsage.Add( 0 );
 		while ( workshopTypeUsage.Count < (int)Workshop.Type.total )
 			workshopTypeUsage.Add( 0 );
-		foreach ( var hiveObject in hiveObjects )
+		foreach ( var hiveObject in realtimeHiveObjects.objects )
 			if ( hiveObject )
 				hiveObject.world = this;
 
@@ -921,18 +1031,8 @@ public class World : HiveObject
 			Destroy( light.gameObject );
 		light = null;
 
-		foreach ( var ho in hiveObjects )
-		{
-			if ( ho )
-				ho.worldIndex = -1;
-		}
-
-		for ( int i = 0; i < hiveObjects.Count; i++ )
-			assert.IsTrue( hiveObjects[i] == null || hiveObjects[i].destroyed, $"Object not correctly removed: {hiveObjects[i]}" );
-
-		hiveObjects.Clear();
-		newHiveObjects.Clear();
-		hiveListFreeSlots.Clear();
+		realtimeHiveObjects.Clear();
+		lazyHiveObjects.Clear();
 
 		Destroy( transform.Find( "Nodes" )?.gameObject );
 
@@ -1206,23 +1306,10 @@ public class World : HiveObject
 
 	public override void Validate( bool chain )
 	{
-		int nulls = 0;
-		foreach ( var obj in hiveObjects )
-		{
-			if ( obj == null )
-			{
-				nulls++;
-				continue;
-			}
-			if ( obj.destroyed || obj.location == null )
-				continue;
-			assert.IsTrue( obj.location.real, $"Not real object {obj} in the world" );
-		}
+		realtimeHiveObjects.Validate();
+		lazyHiveObjects.Validate();
 
-		assert.AreEqual( nulls, hiveListFreeSlots.Count );
 		assert.AreEqual( workshopTypeUsage.Count, (int)Workshop.Type.total );
-		foreach ( var freeSlot in hiveListFreeSlots )
-			assert.AreEqual( hiveObjects[freeSlot], null );
 
 		if ( !chain )
 			return;
@@ -1404,45 +1491,9 @@ public class Game : World
 
 		if ( challenge.life.empty )
 			challenge.Begin( this );
-
-		foreach ( var newHiveObject in newHiveObjects )
-		{
-			Assert.global.IsFalse( hiveObjects.Contains( newHiveObject ) );
-			if ( hiveListFreeSlots.Count > 0 )
-			{
-				int i = hiveListFreeSlots.Last();
-				hiveListFreeSlots.RemoveAt( hiveListFreeSlots.Count - 1 );
-				assert.AreEqual( hiveObjects[i], null );
-				hiveObjects[i] = newHiveObject;
-				newHiveObject.worldIndex = i;
-			}
-			else
-			{
-				newHiveObject.worldIndex = hiveObjects.Count;
-				hiveObjects.Add( newHiveObject );
-			}
-
-			if ( newHiveObject.priority )
-			{
-				int i = newHiveObject.worldIndex;
-				while ( i > 0 && ( hiveObjects[i-1] == null || !hiveObjects[i-1].priority ) )
-					i--;
-				if ( i != newHiveObject.worldIndex && hiveObjects[i] )
-				{
-					var old = hiveObjects[i];
-					hiveObjects[newHiveObject.worldIndex] = old;
-					old.worldIndex = newHiveObject.worldIndex;
-					hiveObjects[i] = newHiveObject;
-					newHiveObject.worldIndex = i;
-				}
-			}
-		}
-		newHiveObjects.Clear();
-		foreach ( var hiveObject in hiveObjects )
-		{
-			if ( hiveObject && !hiveObject.destroyed )
-				hiveObject.GameLogicUpdate();
-		}
+		
+		realtimeHiveObjects.Process();
+		lazyHiveObjects.Process( Constants.World.lazyExectuteSpeed );
 
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );
 		CRC( frameSeed, OperationHandler.Event.CodeLocation.worldOnEndOfLogicalFrame );

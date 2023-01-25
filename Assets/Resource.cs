@@ -27,6 +27,7 @@ public class Resource : HiveObject
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
+	override public World.RunMode runMode => World.RunMode.lazy;
 	public Node.Block block
 	{
 		get
@@ -469,5 +470,6 @@ public class Resource : HiveObject
 		if ( node )
 			assert.IsTrue( node.resources.Contains( this ) );
 		assert.IsTrue( charges > 0 || infinite );
+		base.Validate( chain );
 	}
 }

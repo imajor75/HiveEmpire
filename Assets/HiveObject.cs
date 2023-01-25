@@ -83,6 +83,15 @@ public abstract class HiveObject : HiveCommon
 	[JsonIgnore]
 	public bool selectThis;
 
+	public enum RunMode
+	{
+		realtime,
+		lazy,
+		sleep
+	}
+
+	virtual public RunMode runMode => RunMode.realtime;
+
 	public Simpleton.Data simpletonDataSafe
 	{
 		get
@@ -93,10 +102,10 @@ public abstract class HiveObject : HiveCommon
 			return simpletonData;
 		}
 	}
-	public virtual bool wantFoeClicks { get { return false; } }
+	public virtual bool wantFoeClicks => false;
 
-	public virtual int checksum { get { return id; } }
-	public virtual bool priority { get => false; }
+	public virtual int checksum => id;
+	public virtual bool priority => false;
 	
 	[JsonIgnore]
 	public Assert assert;
@@ -113,7 +122,11 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Register()
 	{
-		world.newHiveObjects.Add( this );
+		switch ( runMode )
+		{
+			case RunMode.realtime: world.realtimeHiveObjects.Add( this ); break;
+			case RunMode.lazy: world.lazyHiveObjects.Add( this ); break;
+		};
 		registered = true;
 	}
 
@@ -122,8 +135,10 @@ public abstract class HiveObject : HiveCommon
 		this.world = world;
 		if ( world )
 		{
-			assert.IsFalse( world.hiveObjects.Contains( this ) );
-			assert.IsFalse( world.newHiveObjects.Contains( this ) );
+			assert.IsFalse( world.realtimeHiveObjects.objects.Contains( this ) );
+			assert.IsFalse( world.realtimeHiveObjects.newObjects.Contains( this ) );
+			assert.IsFalse( world.lazyHiveObjects.objects.Contains( this ) );
+			assert.IsFalse( world.lazyHiveObjects.newObjects.Contains( this ) );
 			Register();
 			if ( !blueprintOnly )
 				id = world.nextID++;
@@ -132,13 +147,11 @@ public abstract class HiveObject : HiveCommon
 
 	public void OnDestroy()
 	{
-		if ( worldIndex >= 0 && world.hiveObjects.Count > worldIndex && this == world.hiveObjects[worldIndex] )
+		switch ( runMode )
 		{
-			world.hiveObjects[worldIndex] = null;
-			world.hiveListFreeSlots.Add( worldIndex );
-			worldIndex = -1;
+			case RunMode.realtime: world?.realtimeHiveObjects?.Remove( this ); break;
+			case RunMode.lazy: world?.lazyHiveObjects?.Remove( this ); break;
 		}
-		world?.newHiveObjects.Remove( this );	// in pause mode the object might still sitting in this array
 		destroyed = true;
 		registered = false;
 	}
@@ -222,8 +235,19 @@ public abstract class HiveObject : HiveCommon
 			assert.AreNotEqual( id, 0, $"{this} has an ID ({id}) but has no world" );
 		if ( worldIndex >= 0 )
 		{
+			assert.IsTrue( registered );
 			assert.IsNotNull( world );
-			assert.AreEqual( this, world.hiveObjects[worldIndex] );
+			if ( runMode == RunMode.realtime )
+			{
+				assert.IsTrue( worldIndex < world.realtimeHiveObjects.objects.Count, "Hive object store is corrupt" );
+				assert.AreEqual( this, world.realtimeHiveObjects.objects[worldIndex], "Hive object store is corrupt" );
+			}
+			if ( runMode == RunMode.lazy )
+			{
+				assert.IsTrue( worldIndex < world.lazyHiveObjects.objects.Count, "Hive object store is corrupt" );
+				assert.AreEqual( this, world.lazyHiveObjects.objects[worldIndex], "Hive object store is corrupt" );
+			}
+			assert.AreNotEqual( runMode, RunMode.sleep );
 		}
 	}
 
