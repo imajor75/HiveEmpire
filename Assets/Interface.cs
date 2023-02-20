@@ -502,7 +502,6 @@ public class Interface : HiveObject
 		GuardHouse.Initialize();
 		Viewport.Initialize();
 		Water.Initialize();
-		Network.Initialize();
 		BuildingMapWidget.Initialize();
 		Eye.Highlight.Initialize();
 		Ground.Grass.Initialize();
@@ -8000,7 +7999,7 @@ if ( cart )
 		{
 			network.StartServer( serverName );
 			game.nameOnNetwork = serverName;
-			MessagePanel.Create( $"Current game can be joined at {network.ownAddress}:{network.port}" );
+			MessagePanel.Create( $"Current game can be joined at {network.driver.LocalEndPoint()}" );
 			Close();
 		}
 	}
