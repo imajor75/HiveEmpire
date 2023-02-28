@@ -7999,7 +7999,7 @@ if ( cart )
 		{
 			network.StartServer( serverName );
 			game.nameOnNetwork = serverName;
-			MessagePanel.Create( $"Current game can be joined at {network.driver.LocalEndPoint()}" );
+			MessagePanel.Create( $"Current game can be joined at port {network.driver.LocalEndPoint().Port}" );
 			Close();
 		}
 	}
