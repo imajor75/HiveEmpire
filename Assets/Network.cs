@@ -114,14 +114,21 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 
 	public State state;
 
-	public void Start()
+	public void Awake()
 	{
 		driver = NetworkDriver.Create();
 		var endPoint = NetworkEndPoint.AnyIpv4;
 		endPoint.Port = 5000;
 		driver.Bind( endPoint );
 		reliablePipeline = driver.CreatePipeline( typeof( ReliableSequencedPipelineStage ) );		
-	}
+
+		if ( active )
+		{
+			Assert.global.AreNotEqual( active, this );
+			active.Remove();
+		}
+		active = this;
+ 	}
 
 	public void Remove()
 	{
@@ -183,18 +190,6 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
     public static Network Create()
     {
         return new GameObject( "Network" ).AddComponent<Network>();
-    }
-
-    void Awake()
-    {
-		if ( active )
-		{
-			Assert.global.AreNotEqual( active, this );
-			active.Remove();
-		}
-
-	
-		active = this;
     }
 
     void Update()
