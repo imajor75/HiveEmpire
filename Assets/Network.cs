@@ -77,7 +77,7 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 				{
 					if ( boss.driver.BeginSend( boss.reliablePipeline, connection, out var writer ) != 0 )
 						return Result.needModeTime;
-					NativeArray<byte> nativeArray = new NativeArray<byte>( bytes, Allocator.Persistent );
+					NativeArray<byte> nativeArray = new NativeArray<byte>( bytes, Allocator.Temp );
 					writer.WriteBytes( nativeArray );
 					nativeArray.Dispose();
 					int sentNow = boss.driver.EndSend( writer );
@@ -214,7 +214,7 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 				writer.WriteLong( fi.Length );
 				driver.EndSend( writer );
 				client.tasks.Add( new Task( this, fileName, newConnection ) );
-				HiveCommon.Log( $"Sending game state to {newConnection} ({fi.Length} bytes)" );
+				HiveCommon.Log( $"Sending game state to {driver.RemoteEndPoint( newConnection ).Address} ({fi.Length} bytes)" );
 				serverConnections.Add( client );
 			}
 		}
@@ -399,7 +399,7 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
     {
         if ( state == State.server && serverConnections.Count != 0 )
         {
-            DataStreamWriter frameBeginPacket = new ();
+            var frameBeginPacket = new DataStreamWriter( 8, Allocator.Persistent );
             frameBeginPacket.WriteInt( HiveCommon.time );
 			frameBeginPacket.WriteInt( HiveCommon.oh.currentCRCCode );
 
