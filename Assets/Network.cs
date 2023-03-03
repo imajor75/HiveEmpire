@@ -315,12 +315,13 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 						}
 						if ( gameStateSize == -1 )
 						{
-							gameStateSize = receiver.ReadInt();
+							gameStateSize = receiver.ReadLong();
 							HiveCommon.Log( $"Size of game state: {gameStateSize}" );
 						}
 						var nativeArray = new NativeArray<byte>( receiver.Length - receiver.GetBytesRead(), Allocator.Temp );
 						receiver.ReadBytes( nativeArray );
 						gameState.Write( nativeArray.ToArray() );
+						HiveCommon.Log( $"{nativeArray.Length} bytes written to {gameStateFile}" );
 						gameStateWritten += nativeArray.Length;
 						Assert.global.IsFalse( gameStateWritten > gameStateSize );
 						Interface.MessagePanel.Create( $"Receiving game state from server {100*gameStateWritten/gameStateSize}%" );
