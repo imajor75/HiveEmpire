@@ -200,8 +200,8 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 
 		if ( state == State.server )
 		{
-			var newConnection = driver.Accept();
-			if ( newConnection != default(NetworkConnection) )
+			NetworkConnection newConnection;
+			while ( ( newConnection = driver.Accept() ) != default(NetworkConnection) )
 			{
 				var otherEnd = driver.RemoteEndPoint( newConnection );
 				HiveCommon.Log( $"Incoming connection from {otherEnd.Address}" );
