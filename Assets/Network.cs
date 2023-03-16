@@ -119,6 +119,9 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		driver = NetworkDriver.Create();
 		var endPoint = NetworkEndPoint.AnyIpv4;
 		endPoint.Port = Constants.Network.defaultPort;
+	#if UNITY_EDITOR
+		endPoint.Port++;
+	#endif
 		var bindResult = driver.Bind( endPoint );
 		if ( bindResult != 0 )
 			HiveCommon.Log( $"Failed to bind network interface to {endPoint} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
@@ -443,7 +446,15 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 
     public bool Join( string address, int port )
     {
-		clientConnection = driver.Connect( NetworkEndPoint.Parse( address, (ushort)port ) );
+		NetworkEndPoint target;
+		if ( address == "localhost" )
+		{
+			target = NetworkEndPoint.LoopbackIpv4;
+			target.Port = (ushort)port;
+		}
+		else
+			target = NetworkEndPoint.Parse( address, (ushort)port );
+		clientConnection = driver.Connect( target );
 		if ( !clientConnection.IsCreated )
 		{
 			HiveCommon.Log( $"Failed to connect to {address}:{port}" );
