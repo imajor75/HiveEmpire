@@ -12,7 +12,7 @@ using Unity.Collections;
 
 using UnityEngine.Events;
 
-public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryResponseData>
+public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, DiscoveryResponseData>
 {
 	public enum State
 	{
@@ -148,20 +148,20 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 		this.state = state;
 	}
 
-    protected override bool ProcessBroadcast( IPEndPoint sender, DiscoveryBroadcastData broadCast, out DiscoveryResponseData response )
-    {
-        response = new DiscoveryResponseData()
-        {
-            ServerName = HiveCommon.game.name,
-			Port = 5555,
-        };
-        return true;
-    }
+    // protected override bool ProcessBroadcast( IPEndPoint sender, DiscoveryBroadcastData broadCast, out DiscoveryResponseData response )
+    // {
+    //     response = new DiscoveryResponseData()
+    //     {
+    //         ServerName = HiveCommon.game.name,
+	// 		Port = 5555,
+    //     };
+    //     return true;
+    // }
 
-    protected override void ResponseReceived( IPEndPoint sender, DiscoveryResponseData response )
-    {
-		localDestinations.Add( new AvailableHost { address = sender.Address.ToString(), name = name, port = sender.Port } );
-    }
+    // protected override void ResponseReceived( IPEndPoint sender, DiscoveryResponseData response )
+    // {
+	// 	localDestinations.Add( new AvailableHost { address = sender.Address.ToString(), name = name, port = sender.Port } );
+    // }
 
 	public long gameStateSize, gameStateWritten;
 	public string gameStateFile;

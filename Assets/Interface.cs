@@ -454,7 +454,7 @@ public class Interface : HiveObject
 		// 	System.IO.File.WriteAllBytes( "target.png", d.EncodeToPNG() );
 		// }
 
-		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "Arial.ttf" );
+		font = (Font)Resources.GetBuiltinResource( typeof( Font ), "LegacyRuntime.ttf" );
 		Assert.global.IsNotNull( font );
 		object[] table = {
 		"greenCheck", Icon.yes,
