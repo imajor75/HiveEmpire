@@ -117,14 +117,6 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 	public void Awake()
 	{
 		driver = NetworkDriver.Create();
-		var endPoint = NetworkEndPoint.AnyIpv4;
-		endPoint.Port = Constants.Network.defaultPort;
-	#if UNITY_EDITOR
-		endPoint.Port++;
-	#endif
-		var bindResult = driver.Bind( endPoint );
-		if ( bindResult != 0 )
-			HiveCommon.Log( $"Failed to bind network interface to {endPoint} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
 		reliablePipeline = driver.CreatePipeline( typeof( ReliableSequencedPipelineStage ) );		
 
 		if ( active )
@@ -250,6 +242,16 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		if ( state != State.server )
 			return false;
 
+		var endPoint = NetworkEndPoint.AnyIpv4;
+		var myPort = Constants.Network.defaultPort;
+	#if UNITY_EDITOR
+		myPort += 2;
+	#endif
+		endPoint.Port = (ushort)myPort;
+		var bindResult = driver.Bind( endPoint );
+		if ( bindResult != 0 )
+			HiveCommon.Log( $"Failed to bind network interface to {endPoint} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
+			
 		serverName = name;
 		var listening = driver.Listen();
 		if ( listening != 0 )
