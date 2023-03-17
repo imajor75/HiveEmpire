@@ -118,20 +118,20 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		driver = NetworkDriver.Create();
 		reliablePipeline = driver.CreatePipeline( typeof( ReliableSequencedPipelineStage ) );		
 
-		if ( active )
-		{
-			Assert.global.AreNotEqual( active, this );
-			active.Remove();
-		}
-		active = this;
+		var endPoint = NetworkEndPoint.AnyIpv4;
+		endPoint.Port = Constants.Network.defaultPort;
+	#if UNITY_EDITOR
+		endPoint.Port++;
+	#endif
+		var bindResult = driver.Bind( endPoint );
+		if ( bindResult != 0 )
+			HiveCommon.Log( $"Failed to bind network interface to {endPoint} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
  	}
 
 	public void Remove()
 	{
 		driver.Dispose();
 		Destroy( gameObject );
-		if ( active == this )
-			active = null;
 	}
 
 	public void SetState( State state )
@@ -164,7 +164,6 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 	public BinaryWriter gameState;
 	public NetworkDriver driver;
 	public NetworkPipeline reliablePipeline;
-	public static Network active;
 
 	public int id = 0, nextClientId = 1;
 	public NetworkConnection clientConnection;
@@ -242,16 +241,6 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		if ( state != State.server )
 			return false;
 
-		var endPoint = NetworkEndPoint.AnyIpv4;
-		var myPort = Constants.Network.defaultPort;
-	#if UNITY_EDITOR
-		myPort += 2;
-	#endif
-		endPoint.Port = (ushort)myPort;
-		var bindResult = driver.Bind( endPoint );
-		if ( bindResult != 0 )
-			HiveCommon.Log( $"Failed to bind network interface to {endPoint} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
-			
 		serverName = name;
 		var listening = driver.Listen();
 		if ( listening != 0 )
