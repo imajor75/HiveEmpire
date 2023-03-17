@@ -79,9 +79,8 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 						return Result.needModeTime;
 					NativeArray<byte> nativeArray = new NativeArray<byte>( bytes, Allocator.Temp );
 					writer.WriteBytes( nativeArray );
-					nativeArray.Dispose();
 					int sentNow = boss.driver.EndSend( writer );
-					if ( sentNow == 0 )
+					if ( sentNow <= 0 )
 						return Result.needModeTime;
 					sent += sentNow;
 					bytes = reader.ReadBytes( Constants.Network.bufferSize );
@@ -191,8 +190,6 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 
     void Update()
     {
-		driver.ScheduleUpdate().Complete();
-
 		if ( state == State.server )
 		{
 			NetworkConnection newConnection;
@@ -235,6 +232,9 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			SetState( State.client );
 			gameStateFileReady = null;
 		}
+
+		if ( !HiveCommon.root.requestUpdate && state != State.prepare )
+			driver.ScheduleUpdate().Complete();
     }
 
 	public bool StartServer( string name )
