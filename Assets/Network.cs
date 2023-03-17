@@ -404,7 +404,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
     {
         if ( state == State.server && serverConnections.Count != 0 )
         {
-            var frameBeginPacket = new DataStreamWriter( 8, Allocator.Persistent );
+            var frameBeginPacket = new DataStreamWriter( 8, Allocator.Temp );
             frameBeginPacket.WriteInt( HiveCommon.time );
 			frameBeginPacket.WriteInt( HiveCommon.oh.currentCRCCode );
 
