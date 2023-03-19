@@ -117,15 +117,6 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 	{
 		driver = NetworkDriver.Create();
 		reliablePipeline = driver.CreatePipeline( typeof( ReliableSequencedPipelineStage ) );		
-
-		var endPoint = NetworkEndPoint.AnyIpv4;
-		endPoint.Port = Constants.Network.defaultPort;
-	#if UNITY_EDITOR
-		endPoint.Port++;
-	#endif
-		var bindResult = driver.Bind( endPoint );
-		if ( bindResult != 0 )
-			HiveCommon.Log( $"Failed to bind network interface to {endPoint} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
  	}
 
 	public void Remove()
@@ -241,6 +232,15 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		if ( state != State.server )
 			return false;
 
+		var endPoint = NetworkEndPoint.AnyIpv4;
+		endPoint.Port = Constants.Network.defaultPort;
+	#if UNITY_EDITOR
+		endPoint.Port++;
+	#endif
+		var bindResult = driver.Bind( endPoint );
+		if ( bindResult != 0 )
+			HiveCommon.Log( $"Failed to bind network interface to {endPoint.Address} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
+			
 		serverName = name;
 		var listening = driver.Listen();
 		if ( listening != 0 )
@@ -273,7 +273,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 				switch ( state )
 				{
 					case State.server:
-					HiveCommon.Log( $"Client {connection} disconnected" );
+					HiveCommon.Log( $"Client {driver.RemoteEndPoint( connection ).Address} disconnected" );
 					foreach ( var client in serverConnections )
 					{
 						if ( client.connection == connection )
