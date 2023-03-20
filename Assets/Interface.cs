@@ -2661,6 +2661,13 @@ public class Interface : HiveObject
 						Text( workshop.productionConfiguration.commonInputs ? " or" : "and" ).Pin( borderWidth - 5, row - 20, 50 );
 					row -= iconSize * 3 / 2;
 				}
+
+				var window = new GameObject( "Window for inputs" ).AddComponent<RectMask2D>().Pin( 37, 0, 100, 200 ).Link( this );
+				inputsPlatform = new GameObject( "Platforms for inputs" ).AddComponent<RectTransform>().Link( window );
+				inputsPlatform.offsetMin = Vector2.zero;
+				foreach ( var buffer in buffers )
+					buffer.Link( inputsPlatform );
+				workshop.advanceInputs = false;
 			}
 
 			if ( showProgressBar )
@@ -2718,13 +2725,6 @@ public class Interface : HiveObject
 				row -= 25;
 			}
 
-			var window = new GameObject( "Window for inputs" ).AddComponent<RectMask2D>().Pin( 37, 0, 100, 200 ).Link( this );
-			inputsPlatform = new GameObject( "Platforms for inputs" ).AddComponent<RectTransform>().Link( window );
-			inputsPlatform.offsetMin = Vector2.zero;
-			foreach ( var buffer in buffers )
-				buffer.Link( inputsPlatform );
-			workshop.advanceInputs = false;
-
 			this.SetSize( 250, 15 - row );
 			Update();
 			if ( show )
@@ -2781,7 +2781,8 @@ public class Interface : HiveObject
 			scroll -= Time.unscaledDeltaTime * 1;
 			if ( scroll < 0 )
 				scroll = 0;
-			inputsPlatform.offsetMin = new Vector2( (float)( Math.Cos( scroll ) * -1 + 1 ) * ( iconSize + 5 ) / 2 * uiScale, 0 );
+			if ( inputsPlatform )
+				inputsPlatform.offsetMin = new Vector2( (float)( Math.Cos( scroll ) * -1 + 1 ) * ( iconSize + 5 ) / 2 * uiScale, 0 );
 
 			outputs?.Update( workshop.output, 0 );
 
