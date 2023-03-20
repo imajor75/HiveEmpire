@@ -1323,8 +1323,6 @@ public class Game : World
 	[JsonIgnore]
 	public bool gameAdvancingInProgress;
 	public Building lastAreaInfluencer;
-	[JsonIgnore]
-	public new Network network;
 	public string nameOnNetwork;
 	[JsonIgnore]
 	public int advanceCharges;
@@ -1443,7 +1441,7 @@ public class Game : World
 	{
 		Clear();
 		Prepare();
-		network = Network.Create();
+		network.Reset();
 		Log( $"Joining to server {address} port {port}", Severity.important );
 		return network.Join( address, port );
 	}
@@ -1514,7 +1512,7 @@ public class Game : World
 
 	public void NewGame( Challenge challenge, bool keepCameraLocation = false )
 	{
-		network = Network.Create();
+		network.Reset();
 		var localChallenge = Challenge.Create().Setup( challenge );
 		localChallenge.transform.SetParent( transform );
 		generatorSettings = localChallenge.worldGenerationSettings;
@@ -1583,14 +1581,10 @@ public class Game : World
 		operationHandler.challenge.Begin( this );
 	}
 
-    public new void Load( string fileName )
+    public void Load( string fileName, bool skipNetwork = false )
 	{
 		HiveObject.Log( $"Loading game {fileName} (checksum: {checksum})" );
 		base.Load( fileName );
-
-		if ( network == null )
-			network = Network.Create();
-		network.SetState( demo ? Network.State.idle : Network.State.server );
 
 		foreach ( var team in teams )
 		{
@@ -1614,8 +1608,13 @@ public class Game : World
 		HiveObject.Log( $"Time: {time}, Next ID: {nextID}" );
 		operationHandler.LoadEvents( System.IO.Path.ChangeExtension( fileName, "bin" ) );
 
-		if ( nameOnNetwork != null && nameOnNetwork != "" )
-			network.StartServer( nameOnNetwork );
+		if ( !skipNetwork )
+		{
+			network.SetState( game.demo ? Network.State.idle : Network.State.server );
+
+			if ( game.nameOnNetwork != null && game.nameOnNetwork != "" )
+				network.StartServer( game.nameOnNetwork );
+		}
 	}
 
 	public new void Save( string fileName, bool manualSave, bool compact = false )
@@ -1655,10 +1654,6 @@ public class Game : World
 
 	public override void Clear()
 	{
-		if ( network )
-			Destroy( network.gameObject );
-		network = null;
-
 		gameInProgress = false;
 
 		RemoveElements( teams );

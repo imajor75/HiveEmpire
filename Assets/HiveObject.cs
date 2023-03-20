@@ -15,7 +15,7 @@ public class HiveCommon : MonoBehaviour
 	public static OperationHandler oh { get { return game.operationHandler; } }
 	public static Eye eye { get { return game.eye; } }
 	public static Interface root { get { return Interface.root; } }
-	public static Network network { get { return game.network; } }
+	public static Network network { get { return Network.instance; } }
 	public static Settings settings { get { return root.globalSettings; } }
 
 	public enum Severity

@@ -505,6 +505,7 @@ public class Interface : HiveObject
 		BuildingMapWidget.Initialize();
 		Eye.Highlight.Initialize();
 		Ground.Grass.Initialize();
+		Network.Initialize();
 
 		Directory.CreateDirectory( Application.persistentDataPath + "/Saves" );
 		Directory.CreateDirectory( Application.persistentDataPath + "/Settings" );
@@ -694,6 +695,7 @@ public class Interface : HiveObject
 
 	public void Load( string fileName )
 	{
+		network.Reset();
 		game.Load( fileName );
 		mainPlayer = game.controllingPlayer;
 		if ( mainPlayer == null && game.players.Count > 0 )

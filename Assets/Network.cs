@@ -112,12 +112,20 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 	}
 
 	public State state;
+	public static Network instance;
 
 	public void Awake()
 	{
 		driver = NetworkDriver.Create();
 		reliablePipeline = driver.CreatePipeline( typeof( ReliableSequencedPipelineStage ) );		
  	}
+
+	public void Reset()
+	{
+		driver.Dispose();
+		driver = NetworkDriver.Create();
+		reliablePipeline = driver.CreatePipeline( typeof( ReliableSequencedPipelineStage ) );		
+	}
 
 	public void Remove()
 	{
@@ -173,9 +181,9 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		public int port;
 	}
 	
-    public static Network Create()
+    public static void Initialize()
     {
-        return new GameObject( "Network" ).AddComponent<Network>();
+		instance = new GameObject( "Network" ).AddComponent<Network>();
     }
 
     void Update()
@@ -216,7 +224,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 
 		if ( gameStateFileReady != null && gameStateFileReadyDelayer-- < 0 )
 		{
-			HiveCommon.root.Load( gameStateFile );
+			game.Load( gameStateFile, true );
 			HiveCommon.root.mainPlayer = null;
 			Interface.PlayerSelectorPanel.Create( true );
 			SetState( State.client );
