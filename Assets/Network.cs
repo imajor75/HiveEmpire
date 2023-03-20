@@ -94,7 +94,12 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 					writer.WriteBytes( packet );
 					int sentPacket = boss.driver.EndSend( writer );
 					Assert.global.IsTrue( sentPacket == 0 || sentPacket == packet.Length );
-					return sentPacket == packet.Length ? Result.done : Result.needModeTime;
+					if ( packet.Length == sentPacket )
+					{
+						packet.Dispose();
+						return Result.done;
+					}
+					return Result.needModeTime;
 				}
 
 				default:
@@ -425,7 +430,11 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			frameBeginPacket.WriteInt( HiveCommon.oh.currentCRCCode );
 
             foreach ( var client in serverConnections )
-                client.tasks.Add( new Task( this, frameBeginPacket.AsNativeArray(), client.connection ) );
+			{
+				var data = new NativeArray<byte>( frameBeginPacket.Length, Allocator.Persistent );
+				data.CopyFrom( frameBeginPacket.AsNativeArray() );
+                client.tasks.Add( new Task( this, data, client.connection ) );
+			}
         }
     }
 
