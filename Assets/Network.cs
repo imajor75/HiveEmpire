@@ -113,6 +113,22 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 
 	public State state;
 	public static Network instance;
+	public int eventQueueSize 
+	{
+		get
+		{
+			if ( state == State.client || state == State.receivingGameState )
+				return driver.GetEventQueueSizeForConnection( clientConnection );
+
+			if ( state != State.server )
+				return 0;
+			
+			int size = 0;
+			foreach ( var connection in serverConnections )
+				size += driver.GetEventQueueSizeForConnection( connection.connection );
+			return size;
+		}
+	}
 
 	public void Awake()
 	{
@@ -209,6 +225,15 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			}
 		}
 
+		if ( gameStateFileReady != null && gameStateFileReadyDelayer-- < 0 )
+		{
+			game.Load( gameStateFile, true );
+			HiveCommon.root.mainPlayer = null;
+			Interface.PlayerSelectorPanel.Create( true );
+			SetState( State.client );
+			gameStateFileReady = null;
+		}
+
         while ( Handle() && !HiveCommon.root.requestUpdate );
 
 		foreach ( var client in serverConnections )
@@ -222,17 +247,11 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			}
 		}
 
-		if ( gameStateFileReady != null && gameStateFileReadyDelayer-- < 0 )
-		{
-			game.Load( gameStateFile, true );
-			HiveCommon.root.mainPlayer = null;
-			Interface.PlayerSelectorPanel.Create( true );
-			SetState( State.client );
-			gameStateFileReady = null;
-		}
-
 		if ( !HiveCommon.root.requestUpdate && state != State.prepare )
+		{
+			Assert.global.AreEqual( eventQueueSize, 0, "Unprocessed events" );
 			driver.ScheduleUpdate().Complete();
+		}
     }
 
 	public bool StartServer( string name )
