@@ -1366,6 +1366,7 @@ public class Interface : HiveObject
 	public class Panel : HiveCommon, IDragHandler, IBeginDragHandler, IPointerClickHandler
 	{
 		public HiveObject target;
+		public bool linked;
 		public bool followTarget = true;
 		public bool goAway;
 		public Image frame;
@@ -1431,6 +1432,7 @@ public class Interface : HiveObject
 			transform.SetParent( root.transform, false );
 			Prepare();
 			this.target = target;
+			linked = target;
 			this.Pin( x, y, xs, ys );
 			UpdatePosition();
 			return false;
@@ -1715,12 +1717,17 @@ public class Interface : HiveObject
 
 		public virtual void Close()
 		{
+			if ( this is WorkshopPanel )
+				LogStackTrace();
 			Destroy( gameObject );
 		}
 
 		public virtual void Update()
 		{
-			UpdatePosition();
+			if ( target == null && linked )
+				Close();
+			else
+				UpdatePosition();
 		}
 
 		public void UpdatePosition()
@@ -2324,7 +2331,7 @@ public class Interface : HiveObject
 			Selection.activeGameObject = building.gameObject;
 #endif
 			this.building = building;
-			return base.Open( building.node, xs, ys );
+			return base.Open( building, xs, ys );
 		}
 		public override CompareResult IsTheSame( Panel other )
 		{
@@ -4167,7 +4174,6 @@ public class Interface : HiveObject
 	public class NewBuildingPanel : Panel, IInputHandler
 	{
 		public HiveObject currentBlueprint;
-		public WorkshopPanel currentBlueprintPanel;
 		public Construct constructionMode = Construct.nothing;
 		public Workshop.Type workshopType;
 		public static int currentFlagDirection = 1;    // 1 is a legacy value.
@@ -4230,9 +4236,6 @@ public class Interface : HiveObject
 		{
 			currentBlueprint?.Remove();
 			currentBlueprint = null;
-			if ( currentBlueprintPanel )
-				currentBlueprintPanel.Close();
-			currentBlueprintPanel = null;
 		}
 
         public void OnLostInput()
@@ -4285,9 +4288,9 @@ public class Interface : HiveObject
 					var workshop = Workshop.Create().Setup( node, root.mainTeam, workshopType, currentFlagDirection, true, Resource.BlockHandling.ignore );
 					if ( workshop && workshop.gatherer )
 					{
-						currentBlueprintPanel = WorkshopPanel.Create();
-						currentBlueprintPanel.offset = new Vector2( 100, 0 );
-						currentBlueprintPanel.Open( workshop, WorkshopPanel.Content.resourcesLeft );
+						var panel = WorkshopPanel.Create();
+						panel.offset = new Vector2( 100, 0 );
+						panel.Open( workshop, WorkshopPanel.Content.resourcesLeft );
 					}
 					currentBlueprint = workshop;
 					break;
@@ -4337,8 +4340,6 @@ public class Interface : HiveObject
 			if ( currentBlueprint is Flag flag )
 				oh.ScheduleCreateFlag( flag.node, root.mainTeam, flag.crossing );
 			currentBlueprint = null;
-			currentBlueprintPanel?.Close();
-			currentBlueprintPanel = null;
 			constructionMode = Construct.nothing;
 			return false;
         }
@@ -5153,11 +5154,6 @@ if ( cart )
 
 		public new void Update()
 		{
-			if ( construction.boss.destroyed )
-			{
-				Close();
-				return;
-			}
 			if ( construction.done )
 			{
 				Workshop workshop = construction.boss as Workshop;
