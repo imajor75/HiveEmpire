@@ -2053,7 +2053,6 @@ public class Game : World
 			foreach ( var condition in conditions )
 			{
 				var p = condition.Split( ' ' );
-				Log( " Cond: " + condition );
 				switch ( p[0] )
 				{
 					case "headquarters":

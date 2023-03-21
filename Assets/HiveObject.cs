@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Diagnostics;
 using UnityEngine;
 
 #pragma warning disable UNT0001
@@ -34,9 +35,20 @@ public class HiveCommon : MonoBehaviour
 		switch ( severity )
 		{ 	
 			case Severity.important: print( text ); return;
-			case Severity.warning: Debug.LogWarning( text ); return;
-			case Severity.error: Debug.LogError( text ); return;
+			case Severity.warning: UnityEngine.Debug.LogWarning( text ); return;
+			case Severity.error: UnityEngine.Debug.LogError( text ); return;
 			default: return;
+		}
+	}
+
+	public static void LogStackTrace()
+	{
+		var stackTrace = new StackTrace();
+		for ( var i = 1; i < stackTrace.FrameCount; i++ )
+		{
+			var stackFrame = stackTrace.GetFrame( i );
+			var method = stackFrame.GetMethod();
+			Log( method.DeclaringType.Name + "." + method.Name );
 		}
 	}
 
