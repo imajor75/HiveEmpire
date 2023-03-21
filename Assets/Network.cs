@@ -380,7 +380,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 						{
 							var binForm = new BinaryFormatter();
 							var memStream = new MemoryStream();
-							var nativeArray = new NativeArray<byte>();
+							var nativeArray = new NativeArray<byte>( receiver.Length, Allocator.Temp );
 							receiver.ReadBytes( nativeArray );
 							memStream.Write( nativeArray.ToArray() );
 							memStream.Seek( 0, SeekOrigin.Begin );
@@ -466,10 +466,10 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		using ( var ms = new MemoryStream() )
 		{
 			bf.Serialize( ms, operation );
-			using ( var na = new NativeArray<byte>( ms.ToArray(), Allocator.Persistent ) )
+			foreach ( var client in serverConnections )
 			{
-				foreach ( var client in serverConnections )
-					client.tasks.Add( new Task( this, na, client.connection ) );
+				var na = new NativeArray<byte>( ms.ToArray(), Allocator.Persistent );
+				client.tasks.Add( new Task( this, na, client.connection ) );
 			}
 		}
 	}			
