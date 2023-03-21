@@ -2328,7 +2328,8 @@ public class Interface : HiveObject
 		public bool Open( Building building, int xs, int ys )
 		{
 #if DEBUG
-			Selection.activeGameObject = building.gameObject;
+			if ( !building.blueprintOnly )
+				Selection.activeGameObject = building.gameObject;
 #endif
 			this.building = building;
 			return base.Open( building, xs, ys );

@@ -288,6 +288,8 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			return false;
 
 		var nextEvent = driver.PopEvent( out var connection, out var receiver );
+		if ( state == State.receivingGameState )
+			Log( $"Event: {nextEvent}" );
 		switch( nextEvent )
 		{
 			case NetworkEvent.Type.Empty:
@@ -370,6 +372,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 							var frameOrder = new OperationHandler.GameStepOrder();
 							frameOrder.time = receiver.ReadInt();
 							frameOrder.CRC = receiver.ReadInt();
+							Log( $"Frame {frameOrder.time}, {frameOrder.CRC}" );
 							HiveCommon.oh.orders.AddLast( frameOrder );
 							lag = (float)HiveCommon.oh.orders.Count / Constants.World.normalSpeedPerSecond;
 						}
