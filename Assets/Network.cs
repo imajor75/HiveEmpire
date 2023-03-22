@@ -439,6 +439,21 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
                 client.tasks.Add( new Task( this, data, client.connection ) );
 			}
         }
+        if ( state == State.client )
+        {
+            Assert.global.AreEqual( serverOrders.First().time, time, $"Network time mismatch (server: {serverOrders.First().time}, client: {time})" );
+            var order = serverOrders.First();
+            serverOrders.RemoveFirst();
+            if ( order.CRC != oh.currentCRCCode )
+            {
+                if ( !oh.eventsDumped )
+                {
+                    OperationHandler.DumpEvents( oh.events, "events-client.txt", time );
+                    oh.eventsDumped = true;
+                }
+                Assert.global.Fail( $"Network CRC mismatch, server: {order.CRC}, client: {oh.currentCRCCode} at {time}" );
+            }
+        }
     }
 
 	public bool OnScheduleOperation( Operation operation )

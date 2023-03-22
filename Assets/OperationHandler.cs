@@ -472,22 +472,6 @@ public class OperationHandler : HiveObject
 
     public void OnBeginGameStep()
     {
-        if ( network.state == Network.State.client )
-        {
-            Assert.global.AreEqual( orders.First().time, time, $"Network time mismatch (server: {orders.First().time}, client: {time})" );
-            var order = orders.First();
-            orders.RemoveFirst();
-            if ( order.CRC != currentCRCCode )
-            {
-                if ( !eventsDumped )
-                {
-                    DumpEvents( events, "events-client.txt", time );
-                    eventsDumped = true;
-                }
-                Assert.global.Fail( $"Network CRC mismatch, server: {order.CRC}, client: {currentCRCCode} at {time}" );
-            }
-        }
-
         while ( executeIndex < executeBuffer.Count && executeBuffer[executeIndex].scheduleAt == time )
             ExecuteOperation( executeBuffer[executeIndex++] );
     }
@@ -537,7 +521,7 @@ public class OperationHandler : HiveObject
         }
    }
 
-    static void DumpEvents( List<Event> events, string file, int frame = -1 )
+    public static void DumpEvents( List<Event> events, string file, int frame = -1 )
     {
         if ( events == null )
             return;
