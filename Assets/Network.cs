@@ -116,8 +116,15 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		public Network boss;
 	}
 
+    public class ServerOrder
+    {
+        public int time;
+        public int CRC;
+    }
+
 	public State state;
 	public static Network instance;
+    public LinkedList<ServerOrder> serverOrders = new ();
 	public int eventQueueSize 
 	{
 		get
@@ -134,6 +141,19 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			return size;
 		}
 	}
+    public bool readyForNextGameLogicStep
+    {
+        get
+        {
+            if ( state == State.client && serverOrders.Count == 0 )
+            {
+                Log( $"Client is stuck at time {time}, no order from server yet" ); // TODO Is this the correct place to do this?
+                return false;
+            }
+
+            return true;
+        }
+    }
 
 	public void Awake()
 	{
@@ -369,12 +389,12 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 						Assert.global.AreEqual( clientConnection, connection );
 						if ( receiver.Length == 2 * sizeof( int ) )
 						{
-							var frameOrder = new OperationHandler.GameStepOrder();
+							var frameOrder = new ServerOrder();
 							frameOrder.time = receiver.ReadInt();
 							frameOrder.CRC = receiver.ReadInt();
 							Log( $"Frame {frameOrder.time}, {frameOrder.CRC}" );
-							HiveCommon.oh.orders.AddLast( frameOrder );
-							lag = (float)HiveCommon.oh.orders.Count / Constants.World.normalSpeedPerSecond;
+							serverOrders.AddLast( frameOrder );
+							lag = (float)serverOrders.Count / Constants.World.normalSpeedPerSecond;
 						}
 						else
 						{

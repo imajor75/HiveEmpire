@@ -98,8 +98,8 @@ public class OperationHandler : HiveObject
         }
     }
 
-    List<Event> events = new (), frameEvents = new (), previousFrameEvents;
-    bool eventsDumped;
+    public List<Event> events = new (), frameEvents = new (), previousFrameEvents;
+    public bool eventsDumped;
 
 	[Conditional( "DEBUG" )]
     public void RegisterEvent( Event.Type type, Event.CodeLocation caller, int code = 0 )
@@ -174,20 +174,6 @@ public class OperationHandler : HiveObject
     int finishedFrameIndex { set {} }
 	[Obsolete( "Compatibility with old files", true )]
     bool frameFinishPending { set {} }
-
-    public bool readyForNextGameLogicStep
-    {
-        get
-        {
-            if ( network.state == Network.State.client && orders.Count == 0 )
-            {
-                Log( $"Client is stuck at time {time}, no order from server yet" ); // TODO Is this the correct place to do this?
-                return false;
-            }
-
-            return true;
-        }
-    }
 
     public Operation NextToExecute( Team team ) 
     {
@@ -559,7 +545,8 @@ public class OperationHandler : HiveObject
         public int CRC;
     }
 
-    public LinkedList<GameStepOrder> orders = new ();
+	[Obsolete( "Compatibility with old files", true )]
+    LinkedList<GameStepOrder> orders { set {} }
 
     new void Update()
     {

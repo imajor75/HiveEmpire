@@ -1412,9 +1412,9 @@ public class Game : World
 		}
 
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
-        if ( oh && oh.orders.Count > 0 && network.state == Network.State.client )
+        if ( network.serverOrders.Count > 0 && network.state == Network.State.client )
         {
-            if ( speed == Speed.normal && oh.orders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
+            if ( speed == Speed.normal && network.serverOrders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
             {
                 Interface.MessagePanel.Create( "Catching up server", autoclose:3 );
                 SetSpeed( Speed.fast );
@@ -1451,7 +1451,7 @@ public class Game : World
 		if ( !oh || advanceCharges == 0 )
 			return false;
 
-		if ( !oh.readyForNextGameLogicStep )
+		if ( !network.readyForNextGameLogicStep )
 		{
 			if ( speed == Speed.normal && lastNetworkSlowdown + 1 < Time.unscaledTime )
 				SetSpeed( Speed.pause );
