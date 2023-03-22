@@ -308,8 +308,6 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			return false;
 
 		var nextEvent = driver.PopEvent( out var connection, out var receiver );
-		if ( state == State.receivingGameState )
-			Log( $"Event: {nextEvent}" );
 		switch( nextEvent )
 		{
 			case NetworkEvent.Type.Empty:
@@ -423,11 +421,13 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 						Operation o;
 						using ( var memStream = new MemoryStream() )
 						{
-							var nativeArray = new NativeArray<byte>();
+							var receiverLength = receiver.Length;
+							var nativeArray = new NativeArray<byte>( receiver.Length, Allocator.Temp );
 							receiver.ReadBytes( nativeArray );
 							memStream.Write( nativeArray.ToArray() );
 							memStream.Seek( 0, SeekOrigin.Begin );
 							var binForm = new BinaryFormatter();
+							Assert.global.AreEqual( memStream.Length, receiverLength );
 							o = binForm.Deserialize( memStream ) as Operation;
 						}
 						o.source = Operation.Source.networkClient;
@@ -487,10 +487,10 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		{
 			bf.Serialize( ms, operation );
 			driver.BeginSend( reliablePipeline, clientConnection, out var writer );
-			var nativeArray = new NativeArray<byte>( ms.ToArray(), Allocator.Persistent );
+			var nativeArray = new NativeArray<byte>( ms.ToArray(), Allocator.Temp );
 			writer.WriteBytes( nativeArray );
-			nativeArray.Dispose();
-			driver.EndSend( writer );
+			var sentBytes = driver.EndSend( writer );
+			Assert.global.AreEqual( sentBytes, ms.Length );
 		}
 		return false;
     }
