@@ -1219,13 +1219,14 @@ public class Operation
                     team = Team.Create().Setup( HiveCommon.game, teamName, Constants.Player.teamColors[HiveCommon.game.teams.Count%Constants.Player.teamColors.Length] );
                     if ( team == null )
                     {
-                        Interface.MessagePanel.Create( "No room for a new headquarters" );
+                        Interface.Display( "No room for a new headquarter", closeAfter:int.MaxValue );
                         return null;
                     }
                     HiveCommon.game.teams.Add( team );
                 }
                 var newPlayer = Simpleton.Create().Setup( playerName, team );
                 HiveCommon.game.players.Add( newPlayer );
+                Interface.Display( $"{playerName} (team {teamName}) joined the game" );
                 if ( networkId == HiveCommon.network.id )
                     HiveCommon.root.mainPlayer = newPlayer;
                 return null;

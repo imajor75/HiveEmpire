@@ -338,7 +338,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 
 					case State.receivingGameState:
 					HiveCommon.root.OpenMainMenu();
-					Interface.MessagePanel.Create( "Failed to connect to server", autoclose:3 );
+					Interface.Display( "Failed to connect to server" );
 					break;
 				
 					case State.client:
@@ -370,12 +370,12 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 						HiveCommon.Log( $"{nativeArray.Length} bytes written to {gameStateFile}" );
 						gameStateWritten += nativeArray.Length;
 						Assert.global.IsFalse( gameStateWritten > gameStateSize );
-						Interface.MessagePanel.Create( $"Receiving game state from server {100*gameStateWritten/gameStateSize}%" );
+						Interface.Display( $"Receiving game state from server {100*gameStateWritten/gameStateSize}%", closeAfter:int.MaxValue );
 						if ( gameStateWritten == gameStateSize )
 						{
 							gameState.Close();
 							HiveCommon.Log( $"Game state received to {gameStateFile}" );
-							Interface.MessagePanel.Create( "Loading game state" );
+							Interface.Display( "Loading game state", closeAfter:int.MaxValue );
 							SetState( State.prepare );
 							gameStateFileReady = gameStateFile;
 							gameStateFileReadyDelayer = 2;	// TODO Not a nice thing here. We delay the loading of the file in order to be able to render a message box.

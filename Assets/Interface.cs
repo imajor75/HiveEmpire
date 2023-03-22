@@ -306,6 +306,11 @@ public class Interface : HiveObject
 		root = this;
 	}
 
+	public static void Display( string text, HiveObject location = null, int closeAfter = 5 )
+	{
+		MessagePanel.Create( text, location, closeAfter );
+	}
+
 	static public string GetKeyName( KeyCode k )
 	{
 		if ( k == KeyCode.JoystickButton0 )
@@ -345,7 +350,7 @@ public class Interface : HiveObject
 		if ( eye.target && lastShownOperation == operation )
 			return;
 
-		MessagePanel.Create( operation.name, operation.place, 5 );
+		Display( operation.name, operation.place );
 		lastShownOperation = operation;
 	}
 
@@ -603,7 +608,7 @@ public class Interface : HiveObject
 	{
 		if ( network.state == Network.State.client )
 		{
-			MessagePanel.Create( "Changing world speed in client mode is not allowed", null, 3 );
+			Display( "Changing world speed in client mode is not allowed" );
 			return;
 		}
 
@@ -713,7 +718,7 @@ public class Interface : HiveObject
 		lastSave = Time.unscaledTime;
 		if ( !manualSave )
 			viewport.inputHandler = viewport;
-		MessagePanel.Create( $"Saving {fileName}", autoclose:1 );
+		Display( $"Saving {fileName}", closeAfter:1 );
 	}
 
 	public void LoadReplay( string name )
@@ -3267,10 +3272,10 @@ public class Interface : HiveObject
 			switch ( root.mainTeam.Attack( attackable, 1, true ) )
 			{
 				case Team.AttackStatus.noSoldiers:
-					MessagePanel.Create( "Not enough soldiers", autoclose:3 );
+					Display( "Not enough soldiers" );
 					break;
 				case Team.AttackStatus.tooFar:
-					MessagePanel.Create( "No guard house nearby", autoclose:3 );
+					Display( "No guard house nearby" );
 					break;
 				case Team.AttackStatus.available:
 					oh.ScheduleAttack( root.mainTeam, attackable, 1 );
@@ -7999,7 +8004,7 @@ if ( cart )
 		{
 			network.StartServer( serverName );
 			game.nameOnNetwork = serverName;
-			MessagePanel.Create( $"Current game can be joined at port {network.driver.LocalEndPoint().Port}" );
+			Display( $"Current game can be joined at port {network.driver.LocalEndPoint().Port}" );
 			Close();
 		}
 	}

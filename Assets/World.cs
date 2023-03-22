@@ -1416,7 +1416,7 @@ public class Game : World
         {
             if ( speed == Speed.normal && network.serverOrders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
             {
-                Interface.MessagePanel.Create( "Catching up server", autoclose:3 );
+                Interface.Display( "Catching up server" );
                 SetSpeed( Speed.fast );
             }
             if ( speed == Speed.pause )
