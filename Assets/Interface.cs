@@ -8011,6 +8011,8 @@ if ( cart )
 
 	public class JoinPanel : Panel
 	{
+		public bool wasDiscoveryServer;
+
 		public static JoinPanel Create()
 		{
 			var panel = new GameObject( "Join Panel" ).AddComponent<JoinPanel>();
@@ -8029,6 +8031,17 @@ if ( cart )
 			var direct = Button( "Connect to " ).PinDownwards( borderWidth, 0, 80, iconSize + iconSize / 5 );
 			var target = InputField( $"localhost:{Constants.Network.defaultPort}" ).PinSideways( 0, row, 150, iconSize );
 			direct.AddClickHandler( () => game.Join( target.text.Split( ':' ).First(), int.Parse( target.text.Split( ':' ).Last() ) ) );
+
+			wasDiscoveryServer = network.IsDiscoveryServer;
+			network.StartDiscoveryClient();
+		}
+
+		new void OnDestroy()
+		{
+			base.OnDestroy();
+			network.StopDiscovery();
+			if ( wasDiscoveryServer )
+				network.StartDiscoveryServer();
 		}
 	}
 

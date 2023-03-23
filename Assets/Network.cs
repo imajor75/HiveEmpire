@@ -12,7 +12,7 @@ using Unity.Collections;
 
 using UnityEngine.Events;
 
-public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, DiscoveryResponseData>
+public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryResponseData>
 {
 	public enum State
 	{
@@ -85,7 +85,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 					sent += sentNow;
 					bytes = reader.ReadBytes( Constants.Network.bufferSize );
 				}
-				HiveCommon.Log( $"File {name} sent" );
+				Log( $"File {name} sent" );
 				return Result.done;
 
 				case Type.sendPacket:
@@ -166,6 +166,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		driver.Dispose();
 		driver = NetworkDriver.Create();
 		reliablePipeline = driver.CreatePipeline( typeof( ReliableSequencedPipelineStage ) );		
+		base.StopDiscovery();
 	}
 
 	public void Remove()
@@ -182,20 +183,26 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		this.state = state;
 	}
 
-    // protected override bool ProcessBroadcast( IPEndPoint sender, DiscoveryBroadcastData broadCast, out DiscoveryResponseData response )
-    // {
-    //     response = new DiscoveryResponseData()
-    //     {
-    //         ServerName = HiveCommon.game.name,
-	// 		Port = 5555,
-    //     };
-    //     return true;
-    // }
+    protected override bool ProcessBroadcast( IPEndPoint sender, DiscoveryBroadcastData broadCast, out DiscoveryResponseData response )
+    {
+		Log( $"Broadcast from {sender.Address}" );
+        response = new DiscoveryResponseData()
+        {
+            ServerName = game.name,
+			Port = driver.LocalEndPoint().Port,
+        };
+        return true;
+    }
 
-    // protected override void ResponseReceived( IPEndPoint sender, DiscoveryResponseData response )
-    // {
-	// 	localDestinations.Add( new AvailableHost { address = sender.Address.ToString(), name = name, port = sender.Port } );
-    // }
+    protected override void ResponseReceived( IPEndPoint sender, DiscoveryResponseData response )
+    {
+		Log( $"Response from {sender.Address}" );
+		foreach ( var local in localDestinations )
+			if ( local.name == response.ServerName )
+				return;
+
+		localDestinations.Add( new AvailableHost { address = sender.Address.ToString(), name = response.ServerName, port = response.Port } );
+    }
 
 	public long gameStateSize, gameStateWritten;
 	public string gameStateFile;
@@ -235,17 +242,17 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			while ( ( newConnection = driver.Accept() ) != default(NetworkConnection) )
 			{
 				var otherEnd = driver.RemoteEndPoint( newConnection );
-				HiveCommon.Log( $"Incoming connection from {otherEnd.Address}" );
+				Log( $"Incoming connection from {otherEnd.Address}" );
 				var client = new Network.Client( newConnection );
 				string fileName = System.IO.Path.GetTempFileName();
-				HiveCommon.game.Save( fileName, false, true );
+				game.Save( fileName, false, true );
 				FileInfo fi = new FileInfo( fileName );
 				driver.BeginSend( reliablePipeline, newConnection, out var writer );
 				writer.WriteInt( nextClientId++ );
 				writer.WriteLong( fi.Length );
 				driver.EndSend( writer );
 				client.tasks.Add( new Task( this, fileName, newConnection ) );
-				HiveCommon.Log( $"Sending game state to {driver.RemoteEndPoint( newConnection ).Address} ({fi.Length} bytes)" );
+				Log( $"Sending game state to {driver.RemoteEndPoint( newConnection ).Address} ({fi.Length} bytes)" );
 				serverConnections.Add( client );
 			}
 		}
@@ -253,13 +260,13 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		if ( gameStateFileReady != null && gameStateFileReadyDelayer-- < 0 )
 		{
 			game.Load( gameStateFile, true );
-			HiveCommon.root.mainPlayer = null;
+			root.mainPlayer = null;
 			Interface.PlayerSelectorPanel.Create( true );
 			SetState( State.client );
 			gameStateFileReady = null;
 		}
 
-        while ( Handle() && !HiveCommon.root.requestUpdate );
+        while ( Handle() && !root.requestUpdate );
 
 		foreach ( var client in serverConnections )
 		{
@@ -272,7 +279,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			}
 		}
 
-		if ( !HiveCommon.root.requestUpdate && state != State.prepare )
+		if ( !root.requestUpdate && state != State.prepare )
 		{
 			Assert.global.AreEqual( eventQueueSize, 0, "Unprocessed events" );
 			driver.ScheduleUpdate().Complete();
@@ -291,14 +298,16 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 	#endif
 		var bindResult = driver.Bind( endPoint );
 		if ( bindResult != 0 )
-			HiveCommon.Log( $"Failed to bind network interface to {endPoint.Address} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
+			Log( $"Failed to bind network interface to {endPoint.Address} due to error {(Unity.Networking.Transport.Error.StatusCode)bindResult}" );
 			
 		serverName = name;
 		var listening = driver.Listen();
 		if ( listening != 0 )
-			HiveCommon.Log( $"Failed to start network listening on port {driver.LocalEndPoint().Port}:, error: {(Unity.Networking.Transport.Error.StatusCode)listening}", HiveCommon.Severity.error );
+			Log( $"Failed to start network listening on port {driver.LocalEndPoint().Port}:, error: {(Unity.Networking.Transport.Error.StatusCode)listening}", Severity.error );
 		else
-			HiveCommon.Log( $"Listening on port {driver.LocalEndPoint().Port}" );
+			Log( $"Listening on port {driver.LocalEndPoint().Port}" );
+
+		base.StartDiscoveryServer();
 		return true;
 	}
 
@@ -315,9 +324,9 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 			case NetworkEvent.Type.Connect:
 			{
 				if ( clientConnection == connection )
-					HiveCommon.Log( $"Connected to server" );
+					Log( $"Connected to server" );
 				else
-					HiveCommon.Log( $"Connected to {connection}" );
+					Log( $"Connected to {connection}" );
 				break;
 			}
 			case NetworkEvent.Type.Disconnect:
@@ -325,7 +334,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 				switch ( state )
 				{
 					case State.server:
-					HiveCommon.Log( $"Client {driver.RemoteEndPoint( connection ).Address} disconnected" );
+					Log( $"Client {driver.RemoteEndPoint( connection ).Address} disconnected" );
 					foreach ( var client in serverConnections )
 					{
 						if ( client.connection == connection )
@@ -337,12 +346,12 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 					break;
 
 					case State.receivingGameState:
-					HiveCommon.root.OpenMainMenu();
+					root.OpenMainMenu();
 					Interface.Display( "Failed to connect to server" );
 					break;
 				
 					case State.client:
-					HiveCommon.Log( $"Server disconnected, switching to server mode and waiting for incoming connections", HiveCommon.Severity.important );
+					Log( $"Server disconnected, switching to server mode and waiting for incoming connections", Severity.important );
 					SetState( State.server );
 					break;
 				}
@@ -357,24 +366,24 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 						if ( id == -1 )
 						{
 							id = receiver.ReadInt();
-							HiveCommon.Log( $"Network ID: {id}" );
+							Log( $"Network ID: {id}" );
 						}
 						if ( gameStateSize == -1 )
 						{
 							gameStateSize = receiver.ReadLong();
-							HiveCommon.Log( $"Size of game state: {gameStateSize}" );
+							Log( $"Size of game state: {gameStateSize}" );
 						}
 						var nativeArray = new NativeArray<byte>( receiver.Length - receiver.GetBytesRead(), Allocator.Temp );
 						receiver.ReadBytes( nativeArray );
 						gameState.Write( nativeArray.ToArray() );
-						HiveCommon.Log( $"{nativeArray.Length} bytes written to {gameStateFile}" );
+						Log( $"{nativeArray.Length} bytes written to {gameStateFile}" );
 						gameStateWritten += nativeArray.Length;
 						Assert.global.IsFalse( gameStateWritten > gameStateSize );
 						Interface.Display( $"Receiving game state from server {100*gameStateWritten/gameStateSize}%", closeAfter:int.MaxValue );
 						if ( gameStateWritten == gameStateSize )
 						{
 							gameState.Close();
-							HiveCommon.Log( $"Game state received to {gameStateFile}" );
+							Log( $"Game state received to {gameStateFile}" );
 							Interface.Display( "Loading game state", closeAfter:int.MaxValue );
 							SetState( State.prepare );
 							gameStateFileReady = gameStateFile;
@@ -405,7 +414,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 							var o = binForm.Deserialize( memStream ) as Operation;
 							o.source = Operation.Source.networkServer;
 							Assert.global.AreEqual( memStream.Position, memStream.Length );
-							HiveCommon.oh.executeBuffer.Add( o );
+							oh.executeBuffer.Add( o );
 						}
 						break;
 					}
@@ -431,14 +440,14 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 							o = binForm.Deserialize( memStream ) as Operation;
 						}
 						o.source = Operation.Source.networkClient;
-						HiveCommon.oh.ScheduleOperation( o );
+						oh.ScheduleOperation( o );
 						break;
 					}
 				}
 				break;
 			}
 			default:
-			HiveCommon.Log( $"Network event occured: {state}", HiveCommon.Severity.warning );
+			Log( $"Network event occured: {state}", Severity.warning );
 			break;
 		}
         return true;
@@ -449,8 +458,8 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
         if ( state == State.server && serverConnections.Count != 0 )
         {
             var frameBeginPacket = new DataStreamWriter( 8, Allocator.Temp );
-            frameBeginPacket.WriteInt( HiveCommon.time );
-			frameBeginPacket.WriteInt( HiveCommon.oh.currentCRCCode );
+            frameBeginPacket.WriteInt( time );
+			frameBeginPacket.WriteInt( oh.currentCRCCode );
 
             foreach ( var client in serverConnections )
 			{
@@ -522,7 +531,7 @@ public class Network : HiveCommon//NetworkDiscovery<DiscoveryBroadcastData, Disc
 		clientConnection = driver.Connect( target );
 		if ( !clientConnection.IsCreated )
 		{
-			HiveCommon.Log( $"Failed to connect to {address}:{port}" );
+			Log( $"Failed to connect to {address}:{port}" );
 			return false;
 		}
 		SetState( State.receivingGameState );
