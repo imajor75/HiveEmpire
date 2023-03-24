@@ -2780,6 +2780,12 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
+			if ( !workshop.blueprintOnly && !workshop.construction.done )
+			{
+				Close();
+				return;
+			}
+			
 			base.Update();
 			if ( buffers != null )
 				foreach ( var buffer in buffers )
