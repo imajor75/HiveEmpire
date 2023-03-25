@@ -86,23 +86,147 @@ public abstract class HiveObject : HiveCommon
 	public bool inactive;
 	public int id;
 	public bool noAssert;
-	public bool registered;
 	public bool destroyed;
-	public int worldIndex = -1;
+	public int[] updateIndices = new int[3];
 	public World world;
 	public Team team;
 	public Simpleton.Data simpletonData;
 	[JsonIgnore]
 	public bool selectThis;
 
-	public enum RunMode
+	[Obsolete( "Compatibility with old files", true )]
+	public int worldIndex { set { Log( $"fixir {value} {id}" ); updateIndices[0] = value; } }
+	[Obsolete( "Compatibility with old files", true )]
+	public bool registered { set {} }
+
+	public enum UpdateStage
 	{
-		realtime,
-		lazy,
-		sleep
+		none = 0,
+		realtime = 1,
+		lazy = 2,
+		turtle = 4
 	}
 
-	virtual public RunMode runMode => RunMode.realtime;
+	public class Store
+	{
+		public List<HiveObject> objects = new ();
+		public LinkedList<HiveObject> newObjects = new ();
+		public LinkedList<int> freeSlots = new ();
+		public int processIndex;
+		public UpdateStage stage;
+		public int stageIndex;
+		public float updateSpeed = 1;
+
+		public Store( UpdateStage stage, int stageIndex, float updateSpeed = 1 )
+		{
+			this.stage = stage;
+			this.stageIndex = stageIndex;
+			this.updateSpeed = updateSpeed;
+		}
+
+		public void Update()
+		{
+			foreach ( var newObject in newObjects )
+			{
+				Assert.global.IsFalse( objects.Contains( newObject ) );
+				if ( freeSlots.Count > 0 )
+				{
+					int i = freeSlots.Last.Value;
+					freeSlots.RemoveLast();
+					Assert.global.AreEqual( objects[i], null );
+					objects[i] = newObject;
+					newObject.updateIndices[stageIndex] = i;
+				}
+				else
+				{
+					newObject.updateIndices[stageIndex] = objects.Count;
+					objects.Add( newObject );
+				}
+
+				if ( newObject.priority )
+				{
+					int i = newObject.updateIndices[stageIndex];
+					while ( i > 0 && ( objects[i-1] == null || !objects[i-1].priority ) )
+						i--;
+					if ( i != newObject.updateIndices[stageIndex] )
+					{
+						var old = objects[i];
+						objects[newObject.updateIndices[stageIndex]] = old;
+						if ( old )
+							old.updateIndices = newObject.updateIndices;
+						objects[i] = newObject;
+						newObject.updateIndices[stageIndex] = i;
+					}
+				}
+			}
+			newObjects.Clear();
+
+			game.updateStage = stage;
+			int newIndex = processIndex + (int)( objects.Count * updateSpeed );
+			while ( processIndex < newIndex )
+			{
+				if ( processIndex >= objects.Count )
+				{
+					processIndex = 0;
+					break;
+				}
+				var hiveObject = objects[processIndex++];
+				if ( hiveObject && !hiveObject.destroyed )
+					hiveObject.GameLogicUpdate( stage );
+			}
+			game.updateStage = UpdateStage.none;
+		}
+
+		public bool Contains( HiveObject ho )
+		{
+			return objects.Contains( ho ) || newObjects.Contains( ho );
+		}
+		
+		public void Clear()
+		{
+			foreach ( var ho in objects )
+				if ( ho )
+					ho.updateIndices[stageIndex] = -1;
+
+			objects.Clear();
+			newObjects.Clear();
+			freeSlots.Clear();
+		}
+
+		public void Validate()
+		{
+			int nullCount = 0;
+			for ( int i = 0; i < objects.Count; i++ )
+			{
+				if ( objects[i] )
+					Assert.global.AreEqual( objects[i].updateIndices[stageIndex], i );
+				else
+					nullCount++;
+			}
+			Assert.global.AreEqual( freeSlots.Count, nullCount, $"Corrupt free slots in the {stage} array" );
+			foreach ( var freeSlot in freeSlots )
+				Assert.global.IsNull( objects[freeSlot] );
+		}
+
+		public void Add( HiveObject newObject )
+		{
+			newObjects.AddLast( newObject );
+		}
+
+		public void Remove( HiveObject objectToRemove )
+		{
+			Log( $" store remove {stage} {objectToRemove.GetType()} id:{objectToRemove.id}" );
+			if ( objectToRemove.updateIndices[stageIndex] >= 0 && objects.Count > objectToRemove.updateIndices[stageIndex] && objectToRemove == objects[objectToRemove.updateIndices[stageIndex]] )
+			{
+				objects[objectToRemove.updateIndices[stageIndex]] = null;
+				freeSlots.AddLast( objectToRemove.updateIndices[stageIndex] );
+				objectToRemove.updateIndices[stageIndex] = -1;
+			}
+			newObjects.Remove( objectToRemove );	// in pause mode the object might still sitting in this array
+		}
+	}
+
+	virtual public UpdateStage updateMode => UpdateStage.realtime;
 
 	public Simpleton.Data simpletonDataSafe
 	{
@@ -125,6 +249,7 @@ public abstract class HiveObject : HiveCommon
 	public HiveObject()
 	{
 		assert = new Assert( this );
+		updateIndices[0] = updateIndices[1] = updateIndices[2] = -1;
 	}
 
 	override public string ToString()
@@ -134,12 +259,18 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Register()
 	{
-		switch ( runMode )
-		{
-			case RunMode.realtime: world.realtimeHiveObjects.Add( this ); break;
-			case RunMode.lazy: world.lazyHiveObjects.Add( this ); break;
-		};
-		registered = true;
+		foreach ( var store in world.updateHiveObjects )
+			if ( ( updateMode & store.stage ) != 0 )
+				store.Add( this );
+	}
+
+	public virtual void Unregister()
+	{
+		if ( id == 2 )
+			Log( $" unreg {updateIndices[0]} {updateIndices[1]} {updateIndices[2]}" );
+		foreach ( var store in world.updateHiveObjects )
+			if ( updateIndices[store.stageIndex] != -1 )
+				store.Remove( this );
 	}
 
 	public void Setup( World world )
@@ -147,10 +278,8 @@ public abstract class HiveObject : HiveCommon
 		this.world = world;
 		if ( world )
 		{
-			assert.IsFalse( world.realtimeHiveObjects.objects.Contains( this ) );
-			assert.IsFalse( world.realtimeHiveObjects.newObjects.Contains( this ) );
-			assert.IsFalse( world.lazyHiveObjects.objects.Contains( this ) );
-			assert.IsFalse( world.lazyHiveObjects.newObjects.Contains( this ) );
+			foreach ( var store in world.updateHiveObjects )
+				assert.IsFalse( store.Contains( this ) );
 			Register();
 			if ( !blueprintOnly )
 				id = world.nextID++;
@@ -159,13 +288,9 @@ public abstract class HiveObject : HiveCommon
 
 	public void OnDestroy()
 	{
-		switch ( runMode )
-		{
-			case RunMode.realtime: world?.realtimeHiveObjects?.Remove( this ); break;
-			case RunMode.lazy: world?.lazyHiveObjects?.Remove( this ); break;
-		}
+		Log( $"destroy {this} {id}" );
+		Unregister();
 		destroyed = true;
-		registered = false;
 	}
 
 	public void Update()
@@ -179,9 +304,7 @@ public abstract class HiveObject : HiveCommon
 
 	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, sucs as when woodcutters decide which tree to cut. 
 	// So when this function is called by World.FixedUpdate it is always called in the same order.
-	public virtual void GameLogicUpdate()
-	{
-	}
+	public virtual void GameLogicUpdate( UpdateStage stage ) {}
 
 	public virtual void Remove()
 	{
@@ -243,23 +366,26 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Validate( bool chainCall )
 	{
-		if ( !blueprintOnly && world )
-			assert.AreNotEqual( id, 0, $"{this} has an ID ({id}) but has no world" );
-		if ( worldIndex >= 0 )
+		if ( !world )
 		{
-			assert.IsTrue( registered );
-			assert.IsNotNull( world );
-			if ( runMode == RunMode.realtime )
+			if ( !blueprintOnly )
+				assert.AreNotEqual( id, 0, $"{this} has an ID ({id}) but has no world" );
+			return;
+		}
+
+		foreach ( var store in world.updateHiveObjects )
+		{
+			if ( updateIndices[store.stageIndex] >= 0 )
 			{
-				assert.IsTrue( worldIndex < world.realtimeHiveObjects.objects.Count, "Hive object store is corrupt" );
-				assert.AreEqual( this, world.realtimeHiveObjects.objects[worldIndex], "Hive object store is corrupt" );
+				assert.IsNotNull( world );
+				assert.AreNotEqual( (int)( updateMode & store.stage ), 0 );
+				if ( updateMode == UpdateStage.realtime )
+				{
+					assert.IsTrue( updateIndices[store.stageIndex] < store.objects.Count, "Hive object store is corrupt" );
+					assert.AreEqual( this, store.objects[updateIndices[store.stageIndex]], "Hive object store is corrupt" );
+				}
+				assert.AreNotEqual( updateMode, UpdateStage.none );
 			}
-			if ( runMode == RunMode.lazy )
-			{
-				assert.IsTrue( worldIndex < world.lazyHiveObjects.objects.Count, "Hive object store is corrupt" );
-				assert.AreEqual( this, world.lazyHiveObjects.objects[worldIndex], "Hive object store is corrupt" );
-			}
-			assert.AreNotEqual( runMode, RunMode.sleep );
 		}
 	}
 

@@ -149,7 +149,7 @@ public class Simpleton : Player
         base.Defeat();
     }
 
-    public override void GameLogicUpdate()
+    public override void GameLogicUpdate( UpdateStage stage )
     {
         Advance();
     }

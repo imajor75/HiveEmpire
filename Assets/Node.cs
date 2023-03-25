@@ -25,7 +25,7 @@ public class Node : HiveObject
 	public bool avoidGrass;
 	public Game.Timer suspendPlanting = new ();
 
-	override public World.RunMode runMode => World.RunMode.sleep;
+	override public World.UpdateStage updateMode => World.UpdateStage.none;
 	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
 	public bool hasDecoration { get { return decorationDirection != -1; } }
 	public bool real

@@ -1548,8 +1548,7 @@ public class Unit : HiveObject
 		node = walkTo = target;
 	}
 
-	// Update is called once per frame
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
@@ -2589,7 +2588,6 @@ public class Unit : HiveObject
 		}
 		
 		assert.IsTrue( team == null || team.destroyed || game.teams.Contains( team ) );
-		assert.IsTrue( registered );
 		assert.IsTrue( node.real, "Standing on an invalid node" );
 		base.Validate( chain );
 	}

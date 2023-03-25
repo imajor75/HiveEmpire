@@ -897,9 +897,9 @@ public class Workshop : Building
 		statusProduction = 0;
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
-		base.GameLogicUpdate();
+		base.GameLogicUpdate( stage );
 
 		if ( !construction.done || blueprintOnly )
 			return;

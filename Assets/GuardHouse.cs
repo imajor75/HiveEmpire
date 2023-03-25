@@ -64,9 +64,9 @@ public abstract class Attackable : Building
 		}
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
-		base.GameLogicUpdate();
+		base.GameLogicUpdate( stage );
 		if ( blueprintOnly || !construction.done )
 			return;
 
@@ -260,9 +260,9 @@ public class GuardHouse : Attackable
 		return template;
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
-		base.GameLogicUpdate();
+		base.GameLogicUpdate( stage );
 		if ( blueprintOnly || !construction.done )
 			return;
 		if ( !ready && soldiers.Count > 0 && soldiers.First().node == node )

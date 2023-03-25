@@ -274,7 +274,7 @@ public class OperationHandler : HiveObject
             return;
     
         operation.scheduleAt = time;
-        if ( game.gameAdvancingInProgress )
+        if ( game.updateStage != UpdateStage.none )
             operation.scheduleAt++;
 
         executeBuffer.Add( operation );
@@ -311,7 +311,8 @@ public class OperationHandler : HiveObject
     public static OperationHandler LoadReplay( string name )
     {
         var t = Serializer.Read<OperationHandler>( name );
-        t.challenge.worldIndex = -1;
+        // TODO is this line needed?
+        // t.challenge.updateIndices = -1;
         t.LoadEvents( System.IO.Path.ChangeExtension( name, "bin" ) );
         return t;
     }

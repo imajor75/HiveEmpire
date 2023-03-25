@@ -206,7 +206,7 @@ public class Ground : HiveObject
 		hiveObject.transform.SetParent( transform, false );
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		if ( dirtyOwnership )
 			RecalculateOwnership();

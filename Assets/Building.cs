@@ -672,7 +672,7 @@ abstract public class Building : HiveObject
 		base.Update();
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		itemDispatchedThisFrame = false;
 		construction.GameLogicUpdate();
@@ -911,7 +911,6 @@ abstract public class Building : HiveObject
 		construction?.Validate( true );
 		if ( team && !team.destroyed )
 			assert.IsTrue( game.teams.Contains( team ) );
-		assert.IsTrue( registered );
 		base.Validate( chain );
 	}
 }

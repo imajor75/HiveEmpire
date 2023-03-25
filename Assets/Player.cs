@@ -536,7 +536,7 @@ public class Team : HiveObject
 		base.Start();
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		if ( chartAdvanceTimer.done )
 		{

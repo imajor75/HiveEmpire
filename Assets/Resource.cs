@@ -27,7 +27,7 @@ public class Resource : HiveObject
 	static public MediaTable<AudioClip, Type> ambientSounds;
 	AudioSource soundSource;
 	static public MediaTable<GameObject, Type> meshes;
-	override public World.RunMode runMode => World.RunMode.lazy;
+	override public World.UpdateStage updateMode => World.UpdateStage.turtle;
 	public Node.Block block
 	{
 		get
@@ -326,7 +326,7 @@ public class Resource : HiveObject
 		base.Update();
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		if ( type == Type.animalSpawner && ( spawn.done || spawn.empty ) )
 		{

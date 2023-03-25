@@ -438,7 +438,7 @@ public class Stock : Attackable
 			UpdateLook();
 		}
 
-		public override void GameLogicUpdate()
+		public override void GameLogicUpdate( UpdateStage stage )
 		{
 			if ( itemQuantity > 0 && destination == null )
 			{
@@ -448,7 +448,7 @@ public class Stock : Attackable
 				ResetTasks();
 				DeliverItems( boss );
 			}
-			base.GameLogicUpdate();
+			base.GameLogicUpdate( stage );
 		}
 
 		override public void FindTask()
@@ -738,9 +738,9 @@ public class Stock : Attackable
 		unit.Remove();
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
-		base.GameLogicUpdate();
+		base.GameLogicUpdate( stage );
 
 		if ( main && !resupplyTimer.inProgress )
 		{

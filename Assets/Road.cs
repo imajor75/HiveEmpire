@@ -262,7 +262,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		base.Start();
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		if ( !ready )
 			return;
@@ -1155,7 +1155,6 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( !ready )
 			assert.AreEqual( root.viewport.inputHandler, this );
 		assert.IsTrue( team == null || team.destroyed || game.teams.Contains( team ) );
-		assert.IsTrue( registered );
 		int j = 0;
 		foreach ( var r in team.roads )
 			if ( r == this )

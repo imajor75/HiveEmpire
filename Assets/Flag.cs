@@ -187,7 +187,7 @@ public class Flag : HiveObject
 		onMap.sprite = Resources.Load<Sprite>( "icons/ring" );
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		if ( requestFlattening && !flattening.builder && !blueprintOnly )
 		{
@@ -529,7 +529,6 @@ public class Flag : HiveObject
 			assert.IsNull( user );
 		if ( team && !team.destroyed )
 			assert.IsTrue( game.teams.Contains( team ) );
-		assert.IsTrue( registered );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.units ) );
 		assert.IsTrue( team.flags.Contains( this ) );

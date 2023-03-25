@@ -22,7 +22,8 @@ public static class Constants
         public const int allowedAdvancePerFrame = 5;
         public const float oreCountPerNode = 0.02f;
         public const int soundMaxDistance = 7;
-        public const float lazyExectuteSpeed = 0.01f;
+        public const float lazyUpdateSpeed = 0.1f;
+        public const float turtleUpdateSpeed = 0.01f;
     }
 
     public static class Network

@@ -307,7 +307,7 @@ public class Item : HiveObject
 		base.Update();
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		// This is dirty. When the origin of an item is destroyed, unity will return true when comparing it to null, however the object is still there, because the 
 		// reference keeps it alive. The problem occurs when the game is saved, the destroyed building is also serialized into the file, and when the file is loaded,

@@ -148,7 +148,7 @@ public class ItemDispatcher : HiveObject
 		markets[(int)item.type].RegisterOffer( item, priority, area );
 	}
 
-	public override void GameLogicUpdate()
+	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		foreach ( var market in markets )
 			market.GameLogicUpdate();

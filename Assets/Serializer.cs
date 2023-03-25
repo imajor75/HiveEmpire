@@ -123,6 +123,8 @@ public class Serializer
 						typeName = "Game+Challenge";
 					if ( typeName == "World+Timer" )
 						typeName = "Game+Timer";
+					if ( typeName == "World+Store" )
+						typeName = "HiveObject+Store";
 					var newType = Type.GetType( typeName );
 					Assert.global.IsNotNull( newType, $"Type {typeName} not found in {fileName}" );
 					objects.Add( owner = CreateObject( newType ) );
