@@ -117,6 +117,10 @@ public abstract class HiveObject : HiveCommon
 		public int stageIndex;
 		public float updateSpeed = 1;
 
+		public Store()
+		{
+		}
+
 		public Store( UpdateStage stage, int stageIndex, float updateSpeed = 1 )
 		{
 			this.stage = stage;
@@ -126,6 +130,7 @@ public abstract class HiveObject : HiveCommon
 
 		public void Update()
 		{
+			Assert.global.IsTrue( updateSpeed > 0 );
 			foreach ( var newObject in newObjects )
 			{
 				Assert.global.IsFalse( objects.Contains( newObject ) );
@@ -266,6 +271,8 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Unregister()
 	{
+		if ( !world )
+			return;
 		if ( id == 2 )
 			Log( $" unreg {updateIndices[0]} {updateIndices[1]} {updateIndices[2]}" );
 		foreach ( var store in world.updateHiveObjects )
@@ -369,7 +376,7 @@ public abstract class HiveObject : HiveCommon
 		if ( !world )
 		{
 			if ( !blueprintOnly )
-				assert.AreNotEqual( id, 0, $"{this} has an ID ({id}) but has no world" );
+				assert.AreEqual( id, 0, $"{this} has an ID ({id}) but has no world" );
 			return;
 		}
 

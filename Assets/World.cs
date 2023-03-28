@@ -1799,11 +1799,6 @@ public class Game : World
 			return this;
 		}
 
-		void Awake()
-		{
-			id = -1;
-		}
-
 		new void Start()
 		{
 			if ( transform.parent == null )
