@@ -27,7 +27,7 @@ public class Node : HiveObject
 
 	override public World.UpdateStage updateMode => World.UpdateStage.none;
 	public bool fixedHeight { get { return staticHeight >= 0; } set { if ( value ) staticHeight = height; else staticHeight = -1; } }
-	public bool hasDecoration { get { return decorationDirection != -1; } }
+	public bool hasDecoration => decorationDirection != -1;
 	public bool real
 	{
 		get
@@ -184,10 +184,6 @@ public class Node : HiveObject
 			}
 		}
 		base.Start();
-	}
-
-	public override void Register()
-	{
 	}
 
 	override public void Remove()

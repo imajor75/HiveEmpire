@@ -644,6 +644,8 @@ public class Ground : HiveObject
 		public new MeshCollider collider;
 		public int layoutVersion = 1, meshVersion = 0;
 
+		override public UpdateStage updateMode => UpdateStage.none;
+
 		public static Block Create()
 		{
 			return new GameObject( "Ground Block" ).AddComponent<Block>();

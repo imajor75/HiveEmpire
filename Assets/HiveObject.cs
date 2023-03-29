@@ -107,6 +107,7 @@ public abstract class HiveObject : HiveCommon
 		turtle = 4
 	}
 
+	[Serializable]
 	public class Store
 	{
 		public List<HiveObject> objects = new ();
@@ -116,6 +117,7 @@ public abstract class HiveObject : HiveCommon
 		public UpdateStage stage;
 		public int stageIndex;
 		public float updateSpeed = 1;
+		public int objectCount => objects.Count + newObjects.Count - freeSlots.Count;
 
 		public Store()
 		{
@@ -158,7 +160,7 @@ public abstract class HiveObject : HiveCommon
 						var old = objects[i];
 						objects[newObject.updateIndices[stageIndex]] = old;
 						if ( old )
-							old.updateIndices = newObject.updateIndices;
+							old.updateIndices[stageIndex] = newObject.updateIndices[stageIndex];
 						objects[i] = newObject;
 						newObject.updateIndices[stageIndex] = i;
 					}
@@ -204,7 +206,7 @@ public abstract class HiveObject : HiveCommon
 			for ( int i = 0; i < objects.Count; i++ )
 			{
 				if ( objects[i] )
-					Assert.global.AreEqual( objects[i].updateIndices[stageIndex], i );
+					objects[i].assert.AreEqual( objects[i].updateIndices[stageIndex], i, $"Store index for the object {objects[i]} is wrong, {objects[i].updateIndices[stageIndex]} is stored while the real value is {i}" );
 				else
 					nullCount++;
 			}
@@ -215,6 +217,7 @@ public abstract class HiveObject : HiveCommon
 
 		public void Add( HiveObject newObject )
 		{
+			newObject.assert.AreEqual( newObject.updateIndices[stageIndex], -1, $"Already registered object {newObject} is added to the {stage} store" );
 			newObjects.AddLast( newObject );
 		}
 
@@ -262,19 +265,20 @@ public abstract class HiveObject : HiveCommon
 		return name;
 	}
 
-	public virtual void Register()
+	public void Register()
 	{
+		if ( !world ) return;
+
+		Unregister();
 		foreach ( var store in world.updateHiveObjects )
 			if ( ( updateMode & store.stage ) != 0 )
 				store.Add( this );
 	}
 
-	public virtual void Unregister()
+	public void Unregister()
 	{
-		if ( !world )
-			return;
-		if ( id == 2 )
-			Log( $" unreg {updateIndices[0]} {updateIndices[1]} {updateIndices[2]}" );
+		if ( !world ) return;
+
 		foreach ( var store in world.updateHiveObjects )
 			if ( updateIndices[store.stageIndex] != -1 )
 				store.Remove( this );
@@ -295,7 +299,6 @@ public abstract class HiveObject : HiveCommon
 
 	public void OnDestroy()
 	{
-		Log( $"destroy {this} {id}" );
 		Unregister();
 		destroyed = true;
 	}

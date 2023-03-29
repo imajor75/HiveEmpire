@@ -10,6 +10,8 @@ public class Water : HiveObject
     public Material material;
     static int offset0ID, offset1ID, iterID;
 
+	override public UpdateStage updateMode => UpdateStage.none;
+
     public static void Initialize()
     {
         offset0ID = Shader.PropertyToID( "Offset0" );
@@ -28,10 +30,6 @@ public class Water : HiveObject
         base.Setup( ground.world );
         PrepareRendering();
         return this;
-    }
-
-    override public void Register()
-    {
     }
 
     new void Start()

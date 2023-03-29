@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -120,6 +120,7 @@ public class World : HiveObject
 	public int appleFactor => workshopConfigurations[(int)Workshop.Type.appleGatherer].outputStackSize;
 	public int wheatFactor => workshopConfigurations[(int)Workshop.Type.wheatFarm].outputStackSize;
 	public int cornFactor => workshopConfigurations[(int)Workshop.Type.cornFarm].outputStackSize;
+	override public UpdateStage updateMode => UpdateStage.none;
 
 	[System.Serializable]
 	public class Ore
@@ -528,7 +529,8 @@ public class World : HiveObject
 		Prepare();
 
 		World world = Serializer.Read<World>( fileName );
-		Log( $"Exe: {eye.updateIndices[0]} {eye.updateIndices[1]} {eye.updateIndices[2]} {eye.id}" );
+		if ( id == -1 )
+			id = 0;
 		Assert.global.AreEqual( world, this );
 		this.fileName = fileName;
 		if ( name == null || name == "" )

@@ -5,6 +5,8 @@ public class BorderEdge : HiveObject
     public Node node;
     public int direction;
 
+	override public UpdateStage updateMode => UpdateStage.none;
+
 	public static BorderEdge Create()
 	{
 		GameObject body = GameObject.CreatePrimitive( PrimitiveType.Cube );
@@ -35,10 +37,6 @@ public class BorderEdge : HiveObject
 		ground.Link( this );
 		UpdateBody();
 		base.Start();
-	}
-
-	public override void Register()
-	{
 	}
 
 	public void UpdateBody()
