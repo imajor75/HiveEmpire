@@ -135,6 +135,9 @@ public abstract class HiveObject : HiveCommon
 			Assert.global.IsTrue( updateSpeed > 0 );
 			foreach ( var newObject in newObjects )
 			{
+				if ( newObject == null )
+					continue;
+					
 				Assert.global.IsFalse( objects.Contains( newObject ) );
 				if ( freeSlots.Count > 0 )
 				{
@@ -223,7 +226,6 @@ public abstract class HiveObject : HiveCommon
 
 		public void Remove( HiveObject objectToRemove )
 		{
-			Log( $" store remove {stage} {objectToRemove.GetType()} id:{objectToRemove.id}" );
 			if ( objectToRemove.updateIndices[stageIndex] >= 0 && objects.Count > objectToRemove.updateIndices[stageIndex] && objectToRemove == objects[objectToRemove.updateIndices[stageIndex]] )
 			{
 				objects[objectToRemove.updateIndices[stageIndex]] = null;
