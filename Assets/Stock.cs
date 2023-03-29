@@ -20,6 +20,7 @@ public class Stock : Attackable
 
 	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
 	override public bool wantFoeClicks { get { return main; } }
+	
 	override public int checksum
 	{
 		get

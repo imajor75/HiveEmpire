@@ -64,6 +64,8 @@ public class Unit : HiveObject
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
 
+	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
+
 	override public int checksum
 	{
 		get
@@ -1550,6 +1552,13 @@ public class Unit : HiveObject
 
 	public override void GameLogicUpdate( UpdateStage stage )
 	{
+		if ( stage == UpdateStage.turtle )
+		{
+			if ( IsIdle() && !destroyed )
+				FindTask();
+			return;
+		}
+		assert.AreEqual( stage, UpdateStage.realtime );
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
 			SetActive( false );
@@ -1589,8 +1598,6 @@ public class Unit : HiveObject
 					taskQueue.Remove( task );
 			}
 		}
-		if ( IsIdle() && !destroyed )
-			FindTask();
 	}
 
 	new public void Update()
