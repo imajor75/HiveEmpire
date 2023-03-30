@@ -33,6 +33,7 @@ public class Workshop : Building
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
+	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
 
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> processingSounds;
@@ -901,6 +902,31 @@ public class Workshop : Building
 	{
 		base.GameLogicUpdate( stage );
 
+		if ( stage == UpdateStage.turtle )
+		{	
+			int freeSpaceAtFlag = flag.freeSlots;
+			foreach ( Buffer b in buffers )
+			{
+				if ( b.disabled || mode == Mode.sleeping )
+					continue;
+				int missing = b.size-b.stored-b.onTheWay;
+				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
+				float weight = b.weight != null ? b.weight.weight : 0.5f;
+				team.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
+			}
+			if ( reachable )
+			{
+				if ( productionConfiguration.outputType != Item.Type.unknown && mode != Mode.always )
+				{
+					bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
+					team.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
+				}
+			}
+			return;
+		}
+
+		assert.AreEqual( stage, UpdateStage.realtime );
+
 		if ( !construction.done || blueprintOnly )
 			return;
 
@@ -924,27 +950,8 @@ public class Workshop : Building
 		if ( gatherer && tinkerer.IsIdle() && tinkerer.node == node )
 			SetWorking( false );
 
-		if ( reachable )
-		{
-			int freeSpaceAtFlag = flag.freeSlots;
-			foreach ( Buffer b in buffers )
-			{
-				if ( b.disabled || mode == Mode.sleeping )
-					continue;
-				int missing = b.size-b.stored-b.onTheWay;
-				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
-				float weight = b.weight != null ? b.weight.weight : 0.5f;
-				team.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
-			}
-			if ( productionConfiguration.outputType != Item.Type.unknown && mode != Mode.always )
-			{
-				bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
-				team.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
-			}
-
-			if ( mode == Mode.always && output > 0 && dispenser.IsIdle() && freeSpaceAtFlag > 2 )
-				SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
-		}
+		if ( reachable && mode == Mode.always && output > 0 && dispenser.IsIdle() && flag.freeSlots > 2 )
+			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
 
 		if ( !blueprintOnly )
 		{

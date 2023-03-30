@@ -65,6 +65,7 @@ public class Item : HiveObject
 	public GameObject body;
 	public SpriteRenderer onMap;
 	public Vector3 mapPosition { set { onMap.transform.position = value + Vector3.up * 6; } }
+	override public UpdateStage updateMode => UpdateStage.turtle;
 
 	public Transform Link( Unit hauler, Unit.LinkType linkType )
 	{

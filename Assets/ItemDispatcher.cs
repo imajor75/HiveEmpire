@@ -63,6 +63,8 @@ public class ItemDispatcher : HiveObject
 	public Potential.Type queryType;
 	public bool fullTracking;
 
+	override public UpdateStage updateMode => UpdateStage.turtle;
+
 	[Obsolete( "Compatibility with old files", true )]
 	public Player player { set { team = value.team; } }
 
@@ -77,7 +79,9 @@ public class ItemDispatcher : HiveObject
 		public Priority priority;
 	}
 
-	public List<LogisticResult> results, resultsInThisFrame;
+	public List<LogisticResult> results, resultsInThisCycle;
+	[Obsolete( "Compatibility with old files", true )]
+	List<LogisticResult> resultsInThisFrame { set { resultsInThisCycle = value; } }
 
     static public ItemDispatcher Create()
 	{
@@ -150,14 +154,15 @@ public class ItemDispatcher : HiveObject
 
 	public override void GameLogicUpdate( UpdateStage stage )
 	{
+		Assert.global.AreEqual( game.updateStage, UpdateStage.turtle );
 		foreach ( var market in markets )
 			market.GameLogicUpdate();
 
-		results = resultsInThisFrame;
+		results = resultsInThisCycle;
 		if ( queryBuilding )
-			resultsInThisFrame = new ();
+			resultsInThisCycle = new ();
 		else
-			resultsInThisFrame = null;
+			resultsInThisCycle = null;
 	}
 
 	public class Market : ScriptableObject
@@ -182,6 +187,7 @@ public class ItemDispatcher : HiveObject
 
 		public void RegisterRequest( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
 		{
+			building.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var r = new Potential
 			{
 				building = building,
@@ -197,6 +203,7 @@ public class ItemDispatcher : HiveObject
 
 		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f, bool flagJammed = false, bool noDispenser = false )
 		{
+			building.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var o = new Potential
 			{
 				building = building,
@@ -214,6 +221,7 @@ public class ItemDispatcher : HiveObject
 
 		public void RegisterOffer( Item item, Priority priority, Ground.Area area, float weight = 0.5f )
 		{
+			item.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var o = new Potential
 			{
 				item = item,
@@ -372,7 +380,7 @@ public class ItemDispatcher : HiveObject
 			if ( potential.building == null )
 				return;
 
-			boss.resultsInThisFrame.Add( new LogisticResult
+			boss.resultsInThisCycle.Add( new LogisticResult
 			{
 				building = potential.building,
 				incoming = potential.type == Potential.Type.offer,
@@ -385,7 +393,7 @@ public class ItemDispatcher : HiveObject
 
 		void ConsiderResult( Potential first, Potential second, Result result )
 		{
-			if ( boss.resultsInThisFrame == null || boss.queryItemType != itemType )
+			if ( boss.resultsInThisCycle == null || boss.queryItemType != itemType )
 				return;
 			if ( boss.queryBuilding == first.building && boss.queryType == first.type )
 				AddResult( second, result, false );

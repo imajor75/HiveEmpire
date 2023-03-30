@@ -672,20 +672,6 @@ public class World : HiveObject
 		}
 
 		{
-			List<HiveObject> relocate = new ();
-			foreach ( var ho in updateHiveObjects[0].objects )
-			{
-				if ( ho && ( ho.updateMode & UpdateStage.realtime ) == 0 )
-					relocate.Add( ho );
-			}
-
-			foreach ( var ho in relocate )
-			{
-				ho.Unregister();
-				ho.Register();
-			}
-		}
-		{
 			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
