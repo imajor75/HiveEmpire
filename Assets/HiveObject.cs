@@ -137,7 +137,7 @@ public abstract class HiveObject : HiveCommon
 			{
 				if ( newObject == null )
 					continue;
-					
+
 				Assert.global.IsFalse( objects.Contains( newObject ) );
 				if ( freeSlots.Count > 0 )
 				{
@@ -172,18 +172,19 @@ public abstract class HiveObject : HiveCommon
 			newObjects.Clear();
 
 			game.updateStage = stage;
-			int newIndex = processIndex + (int)( objects.Count * updateSpeed );
+			int newIndex = processIndex + (int)( objects.Count * updateSpeed );	// nothing will be removed from the objects list during this loop right?
+			if ( newIndex == processIndex )
+				newIndex = processIndex + 1;
+			if ( newIndex > objects.Count )
+				newIndex = objects.Count;
 			while ( processIndex < newIndex )
 			{
-				if ( processIndex >= objects.Count )
-				{
-					processIndex = 0;
-					break;
-				}
 				var hiveObject = objects[processIndex++];
 				if ( hiveObject && !hiveObject.destroyed )
 					hiveObject.GameLogicUpdate( stage );
 			}
+			if ( processIndex >= objects.Count )
+				processIndex = 0;
 			game.updateStage = UpdateStage.none;
 		}
 
