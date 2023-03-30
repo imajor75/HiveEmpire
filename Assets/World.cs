@@ -657,6 +657,8 @@ public class World : HiveObject
 					o.haulerRoadBegin.Attach( o.road.ends[0].itemsStored );
 					o.haulerRoadEnd.Attach( o.road.ends[1].itemsStored );
 				}
+				if ( o.updateIndices[1] == -1 )
+					o.Register();
 			}
 		}
 		{

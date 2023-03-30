@@ -64,7 +64,7 @@ public class Unit : HiveObject
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
 
-	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
+	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.lazy;
 
 	override public int checksum
 	{
@@ -1552,7 +1552,7 @@ public class Unit : HiveObject
 
 	public override void GameLogicUpdate( UpdateStage stage )
 	{
-		if ( stage == UpdateStage.turtle )
+		if ( stage == UpdateStage.lazy )
 		{
 			if ( IsIdle() && !destroyed )
 				FindTask();
@@ -2572,8 +2572,6 @@ public class Unit : HiveObject
 		{
 			if ( building )
 			{
-				if ( building.type == (Building.Type)Workshop.Type.barrack )
-					assert.IsFalse( IsIdle() );
 				if ( building is Attackable target )
 				{
 					if ( target.team == team )
