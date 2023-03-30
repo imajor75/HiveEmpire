@@ -7410,7 +7410,9 @@ if ( cart )
 	public class PrepareProgress : Panel
 	{
 		public Text workshops, guardHouses, stocks, roads;
+		public Text total, current, remaining;
 		public ProgressBar bar;
+		public float prerunStart = -1;
 		public static PrepareProgress Create()
 		{
 			var p = new GameObject( "Preparation Progress" ).AddComponent<PrepareProgress>();
@@ -7425,10 +7427,12 @@ if ( cart )
 			var title = Text( "Preparing empire", 14 );
 			title.PinCenter( 0, -borderWidth * 2, (int)( title.preferredWidth / uiScale + 1 ), iconSize, 0.5f );
 			bar = Progress( true ).PinDownwards( -75, 0, 150, 20, 0.5f );
-			workshops = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
-			guardHouses = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
-			stocks = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
-			roads = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
+
+			total = workshops = Text().PinDownwards( borderWidth, 0, 250, iconSize );
+			current = guardHouses = Text().PinDownwards( borderWidth, 0, 250, iconSize );
+			remaining = stocks = Text().PinDownwards( borderWidth, 0, 250, iconSize );
+			roads = Text().PinDownwards( borderWidth, 0, 250, iconSize );
+
 			Button( "Skip" ).PinCenter( 0, borderWidth * 2, 120, iconSize, 0.5f, 0 ).SetTooltip( "Stop the prepare process and start playing" ).AddClickHandler( () => game.preparation = Game.PrepareState.ready );
 		}
 
@@ -7441,16 +7445,27 @@ if ( cart )
 			}
 
 			if ( game.preparation == Game.PrepareState.create && root.mainPlayer is Simpleton simpleton )
+			{		
 				bar.progress = simpleton.preparationProgress;
+				workshops.text = $"workshops: {root.mainTeam.workshops.Count}";
+				guardHouses.text = $"guardhouses: {root.mainTeam.guardHouses.Count}";
+				stocks.text = $"stocks: {root.mainTeam.stocks.Count}";
+				roads.text = $"roads: {root.mainTeam.roads.Count}";
+			}
+
 			if ( game.preparation == Game.PrepareState.prerun )
 			{
 				bar.color = Color.Lerp( Color.green, Color.grey, 0.5f );
 				bar.progress = (float)game.time / game.challenge.prerun;
+				total.text = $"Total: {UIHelpers.TimeToString( game.challenge.prerun )}";
+				current.text = $"Current: {UIHelpers.TimeToString( game.time )}";
+				if ( prerunStart < 0 )
+					prerunStart = Time.unscaledTime;
+				float estimated = ( Time.unscaledTime - prerunStart ) / game.time;
+				estimated *= game.challenge.prerun - game.time;
+				remaining.text = $"Estimated time left: {UIHelpers.TimeToString((int)( estimated * Constants.World.normalSpeedPerSecond ) )}";
+				roads.text = "";
 			}
-			workshops.text = $"workshops: {root.mainTeam.workshops.Count}";
-			guardHouses.text = $"guardhouses: {root.mainTeam.guardHouses.Count}";
-			stocks.text = $"stocks: {root.mainTeam.stocks.Count}";
-			roads.text = $"roads: {root.mainTeam.roads.Count}";
 		}
 	}
 
