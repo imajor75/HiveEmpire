@@ -45,6 +45,7 @@ abstract public class Building : HiveObject
 	public List<MeshRenderer> renderers;
 	[JsonIgnore]
 	public Interface.BuildingMapWidget mapIndicator;
+	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
 
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;
@@ -209,7 +210,7 @@ abstract public class Building : HiveObject
 		/// 
 		/// </summary>
 		/// <returns>True if the function call was useful</returns>
-		public bool GameLogicUpdate()
+		public bool GameLogicUpdate( UpdateStage stage )
 		{
 			if ( area == null || area.Count == 0 )	// If area exists, its size is never 0, but sometimes unity just creates an empty list here with no elements at all
 				return false;
@@ -318,17 +319,18 @@ abstract public class Building : HiveObject
 			base.Remove();
 		}
 
-		new public void GameLogicUpdate()
+		new public void GameLogicUpdate( UpdateStage stage )
 		{
 			if ( done || suspend.inProgress || boss.blueprintOnly )
 				return;
 
-			if ( boss.reachable )
+			if ( boss.reachable && stage == UpdateStage.turtle )
 			{
 				int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
 				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.plankForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
 				int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
 				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.stoneForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
+				return;
 			}
 
 			if ( builder == null && Path.Between( boss.team.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
@@ -344,7 +346,7 @@ abstract public class Building : HiveObject
 				return;
 			};
 
-			if ( boss.configuration.flatteningNeeded && !flattened && base.GameLogicUpdate() )
+			if ( boss.configuration.flatteningNeeded && !flattened && base.GameLogicUpdate( stage ) )
 				return;
 
 			if ( !builder.IsIdle() )
@@ -675,7 +677,7 @@ abstract public class Building : HiveObject
 	public override void GameLogicUpdate( UpdateStage stage )
 	{
 		itemDispatchedThisFrame = false;
-		construction.GameLogicUpdate();
+		construction.GameLogicUpdate( stage );
 	}
 
 	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )

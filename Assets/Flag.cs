@@ -203,7 +203,7 @@ public class Flag : HiveObject
 		}
 		if ( !blueprintOnly )
 			World.CRC( freeSlots + ( crossing ? Constants.Flag.maxItems : 0 ), OperationHandler.Event.CodeLocation.flagFreeSlots );
-		flattening?.GameLogicUpdate();
+		flattening?.GameLogicUpdate( stage );
 	}
 
 	public void UpdateBody()
