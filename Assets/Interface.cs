@@ -1531,14 +1531,14 @@ public class Interface : HiveObject
 			return UIHelpers.CheckBox( this, text );
 		}
 
-		public ProgressBar Progress( Sprite picture = null )
+		public ProgressBar Progress( bool showPercentage = false, Sprite picture = null )
 		{
 			Image i = new GameObject().AddComponent<Image>();
 			i.name = "Progress Bar";
 			i.sprite = picture;
 			i.transform.SetParent( transform );
 			var p = i.gameObject.AddComponent<ProgressBar>();
-			p.Open();
+			p.Open( showPercentage );
 			return p;
 		}
 
@@ -1840,7 +1840,8 @@ public class Interface : HiveObject
 		public class ProgressBar : MonoBehaviour
 		{
 			Image bar;
-			public void Open()
+			Text percentage;
+			public void Open( bool showPercentage )
 			{
 				Image frame = gameObject.GetComponent<Image>();
 				frame.sprite = iconTable.GetMediaData( Icon.smallFrame );
@@ -1858,6 +1859,18 @@ public class Interface : HiveObject
 				bar.rectTransform.offsetMin = Vector2.one * uiScale * 3;
 				bar.rectTransform.offsetMax = -Vector2.one * uiScale * 3;
 				bar.color = Color.yellow;
+				if ( showPercentage )
+				{
+					percentage = new GameObject().AddComponent<Text>();
+					percentage.name = "Percentage";
+					percentage.transform.SetParent( transform );
+					percentage.rectTransform.anchorMin = percentage.rectTransform.anchorMax = new Vector2( 0.5f, 0.5f );
+					percentage.font = Interface.font;
+					percentage.fontSize = (int)( 12 * Interface.uiScale );
+					percentage.color = Color.white;
+					percentage.alignment = TextAnchor.MiddleCenter;
+					percentage.AddOutline();
+				}
 			}
 			public float progress
 			{
@@ -1868,7 +1881,11 @@ public class Interface : HiveObject
 				set
 				{
 					if ( value >= 0 && value <= 1 )
+					{
 						bar.rectTransform.anchorMax = new Vector2( Math.Min( value, 1 ), 1 );
+						if ( percentage )
+							percentage.text = ((int)(value * 100)).ToString() + "%";
+					}
 				}
 			}
 			public Color color
@@ -7407,7 +7424,7 @@ if ( cart )
 			base.Open( 300, 200 );
 			var title = Text( "Preparing empire", 14 );
 			title.PinCenter( 0, -borderWidth * 2, (int)( title.preferredWidth / uiScale + 1 ), iconSize, 0.5f );
-			bar = Progress().PinDownwards( -75, 0, 150, 20, 0.5f );
+			bar = Progress( true ).PinDownwards( -75, 0, 150, 20, 0.5f );
 			workshops = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			guardHouses = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
 			stocks = Text( "" ).PinDownwards( borderWidth, 0, 250, iconSize );
