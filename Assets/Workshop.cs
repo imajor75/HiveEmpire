@@ -902,6 +902,9 @@ public class Workshop : Building
 	{
 		base.GameLogicUpdate( stage );
 
+		if ( !construction.done || blueprintOnly )
+			return;
+			
 		if ( stage == UpdateStage.turtle )
 		{	
 			int freeSpaceAtFlag = flag.freeSlots;
@@ -926,9 +929,6 @@ public class Workshop : Building
 		}
 
 		assert.AreEqual( stage, UpdateStage.realtime );
-
-		if ( !construction.done || blueprintOnly )
-			return;
 
 		if ( productionConfiguration.producesDung && dungPile == null )
 			dungPile = Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true );
