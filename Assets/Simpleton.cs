@@ -1724,6 +1724,7 @@ public class Simpleton : Player
                     {
                         workshop.simpletonDataSafe.hasOutputStock = true;
                         HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, boss.activity );
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutputTemporary, 5, false, boss.activity );
                         HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, boss.activity );
                     }
                     else
