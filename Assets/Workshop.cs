@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -707,6 +707,9 @@ public class Workshop : Building
 		team.workshops.Add( this );
 
 		allowFreeStone.Start( Constants.Workshop.freeStoneTimePeriod );
+		if ( productionConfiguration.producesDung )
+			dungPile = Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true );
+
 		return this;
 	}
 
