@@ -539,6 +539,7 @@ public class Item : HiveObject
 		};
 		CancelTrip();
 		Destroy( onMap );
+		flag?.RemoveItem( this );
 		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )
 		{

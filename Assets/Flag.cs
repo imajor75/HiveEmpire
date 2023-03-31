@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +27,9 @@ public class Flag : HiveObject
 	GameObject tiles;
 	GameObject pole;
 	public SpriteRenderer onMap;
+
+	[JsonIgnore]
+	public bool wipe;
 
 	public int roadsStartingHereCount
 	{
@@ -203,6 +206,12 @@ public class Flag : HiveObject
 		}
 		if ( !blueprintOnly )
 			World.CRC( freeSlots + ( crossing ? Constants.Flag.maxItems : 0 ), OperationHandler.Event.CodeLocation.flagFreeSlots );
+		if ( wipe )
+		{
+			foreach ( var item in items )
+				item?.Remove();
+			wipe = false;
+		}
 		flattening?.GameLogicUpdate( stage );
 	}
 
@@ -302,7 +311,7 @@ public class Flag : HiveObject
 		return RemoveItem( item );
 	}
 
-	bool RemoveItem( Item item, Item replace = null )
+	public bool RemoveItem( Item item, Item replace = null )
 	{
 		for ( int i = 0; i < items.Length; i++ )
 		{
