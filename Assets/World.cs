@@ -112,7 +112,7 @@ public class World : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	public List<HiveObject> newHiveObjects { set { Assert.global.AreEqual( value.Count, 0 ); } }
 	[Obsolete( "Compatibility with old files", true )]
-	public LinkedList<int> hiveListFreeSlots { set { updateHiveObjects[0].freeSlots = value; } }
+	public List<int> hiveListFreeSlots { set { updateHiveObjects[0].freeSlots = value; } }
 	public Settings generatorSettings = new ();
 	public bool repeating { get { return !generatorSettings.reliefSettings.island; } }
 

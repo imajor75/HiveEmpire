@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Diagnostics;
+using System.Linq;
 using UnityEngine;
 
 #pragma warning disable UNT0001
@@ -111,8 +112,8 @@ public abstract class HiveObject : HiveCommon
 	public class Store
 	{
 		public List<HiveObject> objects = new ();
-		public LinkedList<HiveObject> newObjects = new ();
-		public LinkedList<int> freeSlots = new ();
+		public List<HiveObject> newObjects = new ();
+		public List<int> freeSlots = new ();
 		public int processIndex;
 		public UpdateStage stage;
 		public int stageIndex;
@@ -141,9 +142,9 @@ public abstract class HiveObject : HiveCommon
 				Assert.global.IsFalse( objects.Contains( newObject ) );
 				if ( freeSlots.Count > 0 )
 				{
-					int i = freeSlots.Last.Value;
-					freeSlots.RemoveLast();
-					Assert.global.AreEqual( objects[i], null );
+					int i = freeSlots.Last();
+					freeSlots.RemoveAt( freeSlots.Count - 1 );
+					Assert.global.AreEqual( objects[i], null, $"Slot {i} in the {stage} store is not null ({objects[i]})" );
 					objects[i] = newObject;
 					newObject.updateIndices[stageIndex] = i;
 				}
@@ -214,6 +215,8 @@ public abstract class HiveObject : HiveCommon
 				else
 					nullCount++;
 			}
+			foreach ( var freeIndex in freeSlots )
+				Assert.global.IsNull( objects[freeIndex] );
 			Assert.global.AreEqual( freeSlots.Count, nullCount, $"Corrupt free slots in the {stage} array" );
 			foreach ( var freeSlot in freeSlots )
 				Assert.global.IsNull( objects[freeSlot] );
@@ -222,7 +225,7 @@ public abstract class HiveObject : HiveCommon
 		public void Add( HiveObject newObject )
 		{
 			newObject.assert.AreEqual( newObject.updateIndices[stageIndex], -1, $"Already registered object {newObject} is added to the {stage} store" );
-			newObjects.AddLast( newObject );
+			newObjects.Add( newObject );
 		}
 
 		public void Remove( HiveObject objectToRemove )
@@ -230,7 +233,7 @@ public abstract class HiveObject : HiveCommon
 			if ( objectToRemove.updateIndices[stageIndex] >= 0 && objects.Count > objectToRemove.updateIndices[stageIndex] && objectToRemove == objects[objectToRemove.updateIndices[stageIndex]] )
 			{
 				objects[objectToRemove.updateIndices[stageIndex]] = null;
-				freeSlots.AddLast( objectToRemove.updateIndices[stageIndex] );
+				freeSlots.Add( objectToRemove.updateIndices[stageIndex] );
 				objectToRemove.updateIndices[stageIndex] = -1;
 			}
 			newObjects.Remove( objectToRemove );	// in pause mode the object might still sitting in this array
@@ -391,13 +394,8 @@ public abstract class HiveObject : HiveCommon
 			if ( updateIndices[store.stageIndex] >= 0 )
 			{
 				assert.IsNotNull( world );
-				assert.AreNotEqual( (int)( updateMode & store.stage ), 0 );
-				if ( updateMode == UpdateStage.realtime )
-				{
-					assert.IsTrue( updateIndices[store.stageIndex] < store.objects.Count, "Hive object store is corrupt" );
-					assert.AreEqual( this, store.objects[updateIndices[store.stageIndex]], "Hive object store is corrupt" );
-				}
-				assert.AreNotEqual( updateMode, UpdateStage.none );
+				assert.IsTrue( updateIndices[store.stageIndex] < store.objects.Count, "Hive object store is corrupt" );
+				assert.AreEqual( this, store.objects[updateIndices[store.stageIndex]], "Hive object store is corrupt" );
 			}
 		}
 	}
