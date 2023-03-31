@@ -259,16 +259,34 @@ abstract public class Building : HiveObject
 	{
 		public Building boss;
 		public bool done;
-		public float progress;
 		public int plankOnTheWay;
 		public int plankArrived;
 		public int stoneOnTheWay;
 		public int stoneArrived;
 		public int plankMissing { get { return boss.configuration.plankNeeded - plankOnTheWay - plankArrived; } }
 		public int stoneMissing { get { return boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived; } }
+		public int materialUsed;
+		public Game.Timer materialProgress = new ();
 		public static Shader shader;
 		public static int sliceLevelID;
 		public Unit.DoAct hammering;
+		public float progress
+		{
+			get
+			{
+				float timePerMaterial = boss.configuration.constructionTime / ( boss.configuration.plankNeeded + boss.configuration.stoneNeeded );
+				float current = timePerMaterial * materialUsed;
+				if ( !materialProgress.empty )
+				{
+					current += timePerMaterial;
+					if ( !materialProgress.done )
+						current += materialProgress.age;
+				}
+				return current / boss.configuration.constructionTime;
+			}
+			[Obsolete( "Compatibility with old files", true )]
+			set {}
+		}
 
 		[Obsolete( "Compatibility with old files", true )]
 		int timeSinceCreated;
@@ -330,7 +348,6 @@ abstract public class Building : HiveObject
 				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.plankForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
 				int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
 				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.stoneForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
-				return;
 			}
 
 			if ( builder == null && Path.Between( boss.team.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
@@ -352,7 +369,7 @@ abstract public class Building : HiveObject
 			if ( !builder.IsIdle() )
 				return;
 
-			if ( progress == 0 && hammering == null )
+			if ( hammering == null )
 			{
 				Node node = boss.node.Neighbour( 0 );
 				foreach ( var offset in Ground.areas[1] )
@@ -376,19 +393,27 @@ abstract public class Building : HiveObject
 				builder.TurnTo( boss.node );
 				hammering = ScriptableObject.CreateInstance<Unit.DoAct>();
 				hammering.Setup( builder, Unit.constructingAct );
-				hammering.StartAct();
 			}
-			progress += 1f / boss.configuration.constructionTime;
-			float maxProgress = ((float)plankArrived+stoneArrived)/(boss.configuration.plankNeeded+boss.configuration.stoneNeeded);
-			if ( progress >= maxProgress )
-			{
-				progress = maxProgress;
-				hammering.StopAct();
-			}
-			else
-				hammering.StartAct();
 
-			if ( progress < 1 )
+			if ( materialProgress.inProgress )
+				return;
+
+			int total = boss.configuration.plankNeeded + boss.configuration.stoneNeeded;
+
+			if ( materialProgress.done )
+			{
+				materialUsed++;
+				hammering.StopAct();
+				materialProgress.Reset();
+			}
+
+			if ( materialUsed < plankArrived + stoneArrived )
+			{
+				hammering.StartAct();
+				materialProgress.Start( boss.configuration.constructionTime / total );
+			}
+
+			if ( materialUsed != total )
 				return;
 
 			done = true;
