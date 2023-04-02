@@ -7385,6 +7385,8 @@ if ( cart )
 			if ( needGenerate )
 			{
 				preview.Generate();
+				preview.eye = Eye.Create();
+				preview.eye.Setup( preview );
 				preview.eye.SetMapMode( true );
 				preview.eye.fixedAltitude = 30;
 				preview.eye.cameraGrid.targetTexture = view;
