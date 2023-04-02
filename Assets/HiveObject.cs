@@ -153,22 +153,6 @@ public abstract class HiveObject : HiveCommon
 					newObject.updateIndices[stageIndex] = objects.Count;
 					objects.Add( newObject );
 				}
-
-				if ( newObject.priority )
-				{
-					int i = newObject.updateIndices[stageIndex];
-					while ( i > 0 && ( objects[i-1] == null || !objects[i-1].priority ) )
-						i--;
-					if ( i != newObject.updateIndices[stageIndex] )
-					{
-						var old = objects[i];
-						objects[newObject.updateIndices[stageIndex]] = old;
-						if ( old )
-							old.updateIndices[stageIndex] = newObject.updateIndices[stageIndex];
-						objects[i] = newObject;
-						newObject.updateIndices[stageIndex] = i;
-					}
-				}
 			}
 			newObjects.Clear();
 
@@ -255,7 +239,6 @@ public abstract class HiveObject : HiveCommon
 	public virtual bool wantFoeClicks => false;
 
 	public virtual int checksum => id;
-	public virtual bool priority => false;
 	
 	[JsonIgnore]
 	public Assert assert;
@@ -324,6 +307,7 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Remove()
 	{
+		Unregister();
 		destroyed = true;
 		Destroy( gameObject );
 	}
