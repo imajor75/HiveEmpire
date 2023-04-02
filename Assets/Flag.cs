@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,7 @@ public class Flag : HiveObject
 	public Node node;
 	public Item[] items = new Item[Constants.Flag.maxItems];
 	public Unit user;
+	public Unit candidate;				// This is null most of the time, but when a unit is trying to take exclusivity of a flag first it sets this member to itself in order to solve concurence problems
 	public Game.Timer freedom = new ();	// This timer is used to prevent units allocating a flag on the same frame as it was released.
 										// This is important because units should try to allocate the flag in the order how units lie in the world.hiveObjects array
 	public bool crossing;

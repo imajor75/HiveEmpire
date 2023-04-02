@@ -627,6 +627,13 @@ public class Unit : HiveObject
 				{
 					boss.assert.IsTrue( other == null || other == flag.user );
 					other = flag.user;
+					if ( other == null && flag.candidate != boss )
+					{
+						if ( flag.candidate == null || boss.HasPriorityOver( flag.candidate ) )
+							flag.candidate = boss;
+						return false;
+					}
+					flag.candidate = null;
 				}
 				if ( other && !other.Call( road, currentPoint ) )
 				{
@@ -1820,6 +1827,11 @@ public class Unit : HiveObject
 		ScheduleCall( team.mainBuilding );
 		ScheduleWait( Constants.World.normalSpeedPerSecond );	// Wait to prevent further calls to this function once the unit reached the headquarters
 		recalled = true;
+	}
+
+	bool HasPriorityOver( Unit other )
+	{
+		return type == Type.cart && other.type != Type.cart;
 	}
 
 	void FindHaulerTask()
