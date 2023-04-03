@@ -255,17 +255,17 @@ public abstract class HiveObject : HiveCommon
 		return name;
 	}
 
-	public void Register()
+	public void ScheduleUpdates()
 	{
 		if ( !world ) return;
 
-		Unregister();
+		UnscheduleUpdates();
 		foreach ( var store in world.updateHiveObjects )
 			if ( ( updateMode & store.stage ) != 0 )
 				store.Add( this );
 	}
 
-	public void Unregister()
+	public void UnscheduleUpdates()
 	{
 		if ( !world ) return;
 
@@ -281,7 +281,7 @@ public abstract class HiveObject : HiveCommon
 		{
 			foreach ( var store in world.updateHiveObjects )
 				assert.IsFalse( store.Contains( this ) );
-			Register();
+			ScheduleUpdates();
 			if ( !blueprintOnly )
 				id = world.nextID++;
 		}
@@ -289,7 +289,7 @@ public abstract class HiveObject : HiveCommon
 
 	public void OnDestroy()
 	{
-		Unregister();
+		UnscheduleUpdates();
 		destroyed = true;
 	}
 
@@ -308,7 +308,7 @@ public abstract class HiveObject : HiveCommon
 
 	public virtual void Remove()
 	{
-		Unregister();
+		UnscheduleUpdates();
 		destroyed = true;
 		Destroy( gameObject );
 	}
