@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
+using Newtonsoft.Json;
 
 public class ItemDispatcher : HiveObject
 {
@@ -62,6 +63,8 @@ public class ItemDispatcher : HiveObject
 	public Item.Type queryItemType;
 	public Potential.Type queryType;
 	public bool fullTracking;
+	[JsonIgnore]
+	public Item.Type dump = Item.Type.unknown;
 
 	override public UpdateStage updateMode => UpdateStage.turtle;
 
@@ -253,6 +256,19 @@ public class ItemDispatcher : HiveObject
 		{
 			offers.Sort( ComparePotentials );
 			requests.Sort( ComparePotentials );
+
+			if ( boss.dump == itemType )
+			{
+				Log( "Offers" );
+				for ( int i = 0; i < offers.Count; i++ )
+					Log( $" {i} {offers[i].building} {offers[i].quantity} {offers[i].location}" );
+
+				Log( "Requests" );
+				for ( int i = 0; i < requests.Count; i++ )
+					Log( $" {i} {requests[i].building} {requests[i].quantity} {requests[i].location}" );
+
+				boss.dump = Item.Type.unknown;
+			}
 
 			Priority[] priorities = { Priority.high, Priority.low };
 			int nextOffer = 0, nextRequest = 0;
