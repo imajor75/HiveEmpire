@@ -1722,8 +1722,6 @@ public class Interface : HiveObject
 
 		public virtual void Close()
 		{
-			if ( this is WorkshopPanel )
-				LogStackTrace();
 			Destroy( gameObject );
 		}
 

@@ -12,7 +12,7 @@ public class Workshop : Building
 	public int output;
 	public Ground.Area outputArea = new ();
 	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
-	public float craftingProgress, gatheringProgress;
+	public float gatheringProgress;
 	public bool working;
 	new public Type type = Type.unknown;
 	public List<Buffer> buffers = new ();
@@ -30,10 +30,17 @@ public class Workshop : Building
 	public Resource dungPile;
 	public Game.Timer allowFreeStone = new ();
 	public Game.Timer suspendGathering = new ();
+	public Game.Timer crafting = new ();
 	
 	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
-	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
+	override public UpdateStage updateMode => UpdateStage.turtle;
+	public float craftingProgress 
+	{
+		get	=> (float)( productionConfiguration.productionTime + crafting.age ) / productionConfiguration.productionTime;
+		[Obsolete( "Compatibility with old files", true )]
+		set {}
+	}
 
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> processingSounds;
@@ -928,10 +935,7 @@ public class Workshop : Building
 					team.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
 				}
 			}
-			return;
 		}
-
-		assert.AreEqual( stage, UpdateStage.realtime );
 
 		if ( productionConfiguration.producesDung && dungPile == null )
 			dungPile = Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true );
@@ -1130,23 +1134,18 @@ public class Workshop : Building
 			if ( UseInput() )
 				SetWorking( true );
 		}
-		if ( working )
+		if ( working && crafting.done )
 		{
-			craftingProgress += 1f / productionConfiguration.productionTime;
-			World.CRC( (int)( 10000 * craftingProgress ), OperationHandler.Event.CodeLocation.workshopWorkProgress );
-			if ( craftingProgress > 1 )
+			output += productionConfiguration.outputStackSize;
+			SetWorking( false );
+			itemsProduced += productionConfiguration.outputStackSize;
+			if ( productionConfiguration.outputType != Item.Type.unknown )
 			{
-				output += productionConfiguration.outputStackSize;
-				SetWorking( false );
-				itemsProduced += productionConfiguration.outputStackSize;
-				if ( productionConfiguration.outputType != Item.Type.unknown )
-				{
-					team.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
-					statusProduction += productionConfiguration.outputStackSize;
-				}
-				resting.Start( restTime );
-				ChangeStatus( Status.resting );
+				team.ItemProduced( productionConfiguration.outputType, productionConfiguration.outputStackSize );
+				statusProduction += productionConfiguration.outputStackSize;
 			}
+			resting.Start( restTime );
+			ChangeStatus( Status.resting );
 		}
 	}
 
@@ -1302,7 +1301,7 @@ public class Workshop : Building
 		if ( this.working == working )
 			return;
 
-		craftingProgress = 0;
+		crafting.Start( productionConfiguration.productionTime );
 		this.working = working;
 		if ( working && soundSource )
 		{
