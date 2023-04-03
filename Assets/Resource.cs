@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -21,6 +21,8 @@ public class Resource : HiveObject
 	public List<Unit> animals = new ();
 	public Unit origin;		// Only valid for a prey, references the bunny
 	public Game.Timer silence = new ();
+
+	override public string textId => base.textId + $" ({type})";
 
 	static Material bark, leaves;
 	GameObject body;

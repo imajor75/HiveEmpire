@@ -18,7 +18,7 @@ public class World : HiveObject
 	public int saveIndex;
 	public new Eye eye;
 	public new Light light;
-	public int nextID = 1;
+	public int nextID;
 	public int frameSeed;
 	public string fileName;
 	public Store[] updateHiveObjects = new Store[3];
@@ -926,6 +926,8 @@ public class World : HiveObject
 		Destroy( transform.Find( "Nodes" )?.gameObject );
 
 		massDestroy = true;
+		assert.AreEqual( id, 0 );
+		nextID = 1;
 	}
 
 	public static Transform FindChildRecursive( Transform parent, string substring )
@@ -1495,6 +1497,9 @@ public class Game : World
 			while ( team.buildingCounts.Count < (int)Building.Type.total )
 				team.buildingCounts.Add( 0 );
 		}
+
+		if ( challenge && challenge.id == 0 )
+			challenge.id = -1;
 
 		if ( challenge?.productivityGoals != null )
 		{

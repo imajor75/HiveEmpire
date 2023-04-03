@@ -85,7 +85,7 @@ public abstract class HiveObject : HiveCommon
 {
 	public bool blueprintOnly;
 	public bool inactive;
-	public int id;
+	public int id = -1;
 	public bool noAssert;
 	public bool destroyed;
 	public int[] updateIndices = new int[3];
@@ -94,6 +94,7 @@ public abstract class HiveObject : HiveCommon
 	public Simpleton.Data simpletonData;
 	[JsonIgnore]
 	public bool selectThis;
+	virtual public string textId => $"{GetType()}" + location == null ? "" : " at {location.x}:{location.y}";
 
 	[Obsolete( "Compatibility with old files", true )]
 	public int worldIndex { set { Log( $"fixir {value} {id}" ); updateIndices[0] = value; } }
@@ -369,7 +370,7 @@ public abstract class HiveObject : HiveCommon
 		if ( !world )
 		{
 			if ( !blueprintOnly )
-				assert.AreEqual( id, 0, $"{this} has an ID ({id}) but has no world" );
+				assert.AreEqual( id, -1, $"{this} has an ID ({id}) but has no world" );
 			return;
 		}
 

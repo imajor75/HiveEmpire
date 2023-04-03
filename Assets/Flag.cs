@@ -44,6 +44,8 @@ public class Flag : HiveObject
 		}
 	}
 
+	override public UpdateStage updateMode => UpdateStage.turtle;
+
 	override public int checksum
 	{
 		get

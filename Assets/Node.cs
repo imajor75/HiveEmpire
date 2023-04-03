@@ -150,7 +150,6 @@ public class Node : HiveObject
 	{
 		this.x = x;
 		this.y = y;
-		this.world = ground.world;
 
 		if ( rnd.NextDouble() <= Constants.Node.decorationDensity )
 		{
@@ -161,6 +160,7 @@ public class Node : HiveObject
 			// The reason why we use an upper limit here is to avoid the value -1, which is OK, but gives an assert fail
 		}
 
+		base.Setup( ground.world );
 		return this;
 	}
 
