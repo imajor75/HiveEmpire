@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1365,6 +1365,7 @@ public class Unit : HiveObject
 		node = main.node;
 		ScheduleWalkToNeighbour( main.flag.node );
 		ScheduleWalkToFlag( flag );
+		SetupVisuals();
 		base.Setup( flag.world );
 		return this;
 	}
@@ -1442,6 +1443,14 @@ public class Unit : HiveObject
 
 	new public void Start()
 	{
+		SetupVisuals();
+	}
+
+	public void SetupVisuals()
+	{
+		if ( transform.parent )
+			return;
+
 		transform.SetParent( ground.transform, false );
 		Vector3 pos = node.position;
 		if ( building && node == building.node )
