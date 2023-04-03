@@ -25,6 +25,7 @@ public class Road : HiveObject, Interface.IInputHandler
 	public Node referenceLocation;
 	[JsonIgnore]
 	public List<Vector3> nodePositions;
+	override public UpdateStage updateMode => UpdateStage.turtle;
 
 	Material mapMaterial;
 	Mesh mapMesh;
