@@ -304,9 +304,6 @@ public class Team : HiveObject
 				itemHaulPriorities.Add( 1 );
 		}
 
-		itemDispatcher = ItemDispatcher.Create();
-		itemDispatcher.Setup( this );
-
 		while ( buildingCounts.Count < (int)Building.Type.total )
 			buildingCounts.Add( 0 );
 		while ( stocksHaveNeed.Count < (int)Item.Type.total )
@@ -321,6 +318,9 @@ public class Team : HiveObject
 		productivityUpdateTimer.Start( Constants.Player.productivityUpdateTime );
 		CreateInputWeights();
 		base.Setup( game );
+
+		itemDispatcher = ItemDispatcher.Create();
+		itemDispatcher.Setup( this );
 
 		return this;
 	}
