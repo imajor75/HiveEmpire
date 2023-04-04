@@ -1789,7 +1789,6 @@ public class Unit : HiveObject
 					ScheduleWalkToNode( building.flag.node );
 					ScheduleWalkToNeighbour( building.node );
 				}
-				ScheduleWait( int.MaxValue );
 				return;
 			}
 

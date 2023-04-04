@@ -5044,14 +5044,13 @@ public class Interface : HiveObject
 					case Unit.Type.soldier:
 					{
 						if ( unit.building )
-						{
-							if ( unit.team != unit.building.team )
-								status.text = "Attacking";
-							else if ( unit.building.type == (Building.Type)Workshop.Type.barrack )
-								status.text = "Joining the army";
-							else
-								status.text = "Guarding";
-						}
+						unit.assert.IsNotNull( unit.building );
+						if ( unit.team != unit.building.team )
+							status.text = "Attacking";
+						else if ( unit.building.type == (Building.Type)Workshop.Type.barrack )
+							status.text = "Joining the army";
+						else if ( unit.taskQueue.Count == 0 )
+							status.text = "Guarding";
 						else
 							status.text = "Walking to the post";
 						break;
