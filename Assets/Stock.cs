@@ -131,6 +131,7 @@ public class Stock : Attackable
 		public int inputMax = Constants.Stock.defaultInputMax, inputMin = Constants.Stock.defaultInputMin;
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
 		public int cartOutput = Constants.Stock.defaultCartOutput, cartOutputTemporary = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
+		public int cartPledged;
 		public List<Route> outputRoutes = new ();
 		public Stock boss;
 		public Item.Type itemType;
@@ -283,6 +284,8 @@ public class Stock : Attackable
 			automatic
 		}
 
+		public int pledged => end.itemData[(int)itemType].cartPledged;
+
 		[Obsolete( "Compatibility with old files", true )]
 		float averateTransferRate { set { averageTransferRate = value; } }
 		[Obsolete( "Compatibility with old files", true )]
@@ -395,6 +398,7 @@ public class Stock : Attackable
 			itemQuantity = Math.Min( Constants.Stock.cartCapacity, boss.itemData[typeIndex].content );
 			boss.itemData[typeIndex].content -= itemQuantity;
 			boss.itemData[typeIndex].cartOutputTemporary = 0;
+			route.end.itemData[typeIndex].cartPledged += itemQuantity;
 			boss.contentChange.Trigger();
 			this.itemType = route.itemType;
 			currentRoute = route;
@@ -789,27 +793,35 @@ public class Stock : Attackable
 			if ( itemType == (int)Item.Type.soldier )
 				continue;
 
-			for ( int i = 0; i < itemData[itemType].outputRoutes.Count; i++ )
+			Route best = null;
+			List<Route> toRemove = new ();
+			foreach ( var route in itemData[itemType].outputRoutes )
 			{
-				var destination = itemData[itemType].outputRoutes[i].end;
-				if ( destination == null )	// unity like null
+				if ( route.end == null )	// unity like null
 				{
-					itemData[itemType].outputRoutes.RemoveAt( i );
-					i--;
+					toRemove.Add( route );
 					continue;
 				}
 
-				CRC += destination.id;
-				if ( itemData[itemType].outputRoutes[i].IsAvailable() )
+				CRC += route.end.id;
+				if ( route.IsAvailable() )
 				{
-					cart.TransferItems( itemData[itemType].outputRoutes[i] );
-					destination.fullReportedCart = false;
+					if ( best == null || best.pledged > route.pledged )
+						best = route;
 				}
-				else if ( itemData[itemType].outputRoutes[i].state == Route.State.noFreeSpaceAtDestination && !destination.fullReportedCart )
+				else if ( route.state == Route.State.noFreeSpaceAtDestination && !route.end.fullReportedCart )
 				{
-					destination.fullReportedCart = true;
-					team.SendMessage( $"Stock full, cart couldn't deliver {(Item.Type)itemType}", destination );
+					route.end.fullReportedCart = true;
+					team.SendMessage( $"Stock full, cart couldn't deliver {(Item.Type)itemType}", route.end );
 				}
+			}
+			foreach ( var dead in toRemove )
+				itemData[itemType].outputRoutes.Remove( dead );
+
+			if ( best != null )
+			{
+				cart.TransferItems( best );
+				best.end.fullReportedCart = false;
 			}
 
 			CRC += itemData[itemType].inputMin + itemData[itemType].inputMax + itemData[itemType].outputMin + itemData[itemType].outputMax + itemData[itemType].content;
