@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -64,7 +64,7 @@ public class Unit : HiveObject
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
 
-	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.lazy;
+	override public UpdateStage updateMode => IsIdle() ? UpdateStage.lazy : UpdateStage.realtime | UpdateStage.lazy;
 
 	override public int checksum
 	{
@@ -1578,6 +1578,7 @@ public class Unit : HiveObject
 		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
 		{
 			SetActive( false );
+			ScheduleUpdates();
 			return;
 		}
 		if ( debugReset )
@@ -1613,6 +1614,8 @@ public class Unit : HiveObject
 				if ( task.ExecuteFrame() )
 					taskQueue.Remove( task );
 			}
+			else
+				ScheduleUpdates();
 		}
 	}
 
@@ -2153,6 +2156,8 @@ public class Unit : HiveObject
 			taskQueue.Insert( 0, task );
 		else
 			taskQueue.Add( task );
+		if ( taskQueue.Count == 1 )
+			ScheduleUpdates();
 	}
 
 	public void CarryItem( Item item, Item replace = null )

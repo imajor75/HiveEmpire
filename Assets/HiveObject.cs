@@ -140,7 +140,7 @@ public abstract class HiveObject : HiveCommon
 				if ( newObject == null )
 					continue;
 
-				Assert.global.IsFalse( objects.Contains( newObject ) );
+				newObject.assert.IsFalse( objects.Contains( newObject ), $"Object {newObject} is already in {stage} store" );
 				if ( freeSlots.Count > 0 )
 				{
 					int i = freeSlots.Last();
@@ -210,6 +210,7 @@ public abstract class HiveObject : HiveCommon
 		public void Add( HiveObject newObject )
 		{
 			newObject.assert.AreEqual( newObject.updateIndices[stageIndex], -1, $"Already registered object {newObject} is added to the {stage} store" );
+			newObject.assert.IsFalse( Contains( newObject ), $"Object {newObject} is already in {stage} store" );
 			newObjects.Add( newObject );
 		}
 
@@ -270,8 +271,7 @@ public abstract class HiveObject : HiveCommon
 		if ( !world ) return;
 
 		foreach ( var store in world.updateHiveObjects )
-			if ( updateIndices[store.stageIndex] != -1 )
-				store.Remove( this );
+			store.Remove( this );
 	}
 
 	public void Setup( World world )
