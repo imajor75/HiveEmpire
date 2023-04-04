@@ -1365,7 +1365,7 @@ public class Game : World
 
 		#if DEBUG
 		if ( lastChecksum > 0 )
-			Assert.global.AreEqual( checksum, lastChecksum, "Game state was modified between World.Advance calls" );
+			Assert.global.AreEqual( checksum, lastChecksum, $"Game state was modified between World.Advance calls (last: {lastChecksum}, current: {checksum})" );
 		#endif
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		oh.OnBeginGameStep();

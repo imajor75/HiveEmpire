@@ -616,11 +616,18 @@ public class Stock : Attackable
 		if ( base.Setup( node, owner, main ? mainConfiguration : stockConfiguration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
-		owner.RegisterStock( this );
+		if ( !blueprintOnly )
+			owner.RegisterStock( this );
 		while ( itemData.Count < (int)Item.Type.total )
 			itemData.Add( new ItemTypeData( this, (Item.Type)itemData.Count ) );
 
 		return this;
+	}
+
+	override public void Materialize()
+	{
+		team.RegisterStock( this );
+		base.Materialize();
 	}
 
 	public Stock SetupAsMain( Node node, Team team, int flagDirection )

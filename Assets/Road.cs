@@ -124,7 +124,6 @@ public class Road : HiveObject, Interface.IInputHandler
 	public Road Setup( Team team )
 	{
 		this.team = team;
-		team.roads.Add( this );
 		base.Setup( team.world );
 		lastUsed.Start();
 		return this;
@@ -209,6 +208,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		RegisterOnGround();
 		gameObject.GetComponent<MeshRenderer>().material = material;
 
+		team.roads.Add( this );
 		team.versionedRoadNetworkChanged.Trigger();
 		base.Materialize();
 		
@@ -1155,7 +1155,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		}
 		if ( !ready )
 			assert.AreEqual( root.viewport.inputHandler, this );
-		assert.IsTrue( team == null || team.destroyed || game.teams.Contains( team ) );
+		assert.IsTrue( blueprintOnly || team == null || team.destroyed || game.teams.Contains( team ) );
 		int j = 0;
 		foreach ( var r in team.roads )
 			if ( r == this )

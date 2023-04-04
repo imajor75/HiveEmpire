@@ -88,7 +88,8 @@ public class Flag : HiveObject
 			this.blueprintOnly = blueprintOnly;
 			this.crossing = crossing;
 			base.Setup( node.world );
-			team.flags.Add( this );
+			if ( !blueprintOnly )
+				team.flags.Add( this );
 			freeSlotsWatch.Attach( itemsStored );
 			if ( node.road && !blueprintOnly )
 			{
@@ -114,6 +115,7 @@ public class Flag : HiveObject
 
 	public override void Materialize()
 	{
+		team.flags.Add( this );
 		base.Materialize();
 		Resource.RemoveFromGround( node );
 		if ( node.road )
@@ -543,7 +545,7 @@ public class Flag : HiveObject
 			assert.IsTrue( game.teams.Contains( team ) );
 		if ( !blueprintOnly )
 			assert.IsFalse( node.block.IsBlocking( Node.Block.Type.units ) );
-		assert.IsTrue( team.flags.Contains( this ) );
+		assert.IsTrue( blueprintOnly || team.flags.Contains( this ) );
 		base.Validate( chain );
 	}
 

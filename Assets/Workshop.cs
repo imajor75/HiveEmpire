@@ -711,13 +711,20 @@ public class Workshop : Building
 		if ( Setup( node, owner, configuration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
-		team.workshops.Add( this );
+		if ( !blueprintOnly )
+			team.workshops.Add( this );
 
 		allowFreeStone.Start( Constants.Workshop.freeStoneTimePeriod );
 		if ( productionConfiguration.producesDung )
 			dungPile = Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true );
 
 		return this;
+	}
+
+	override public void Materialize()
+	{
+		team.workshops.Add( this );
+		base.Materialize();
 	}
 
 	public override void Remove()
@@ -1462,6 +1469,6 @@ public class Workshop : Building
 		}
 		if ( currentStatus != Status.unknown && !World.massDestroy )
 			assert.IsTrue( statusDuration.done );	// Triggered once after pause and then switching to fast
-		assert.IsTrue( team.workshops.Contains( this ) );
+		assert.IsTrue( blueprintOnly || team.workshops.Contains( this ) );
 	}
 }

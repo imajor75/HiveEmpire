@@ -180,6 +180,7 @@ public class GuardHouse : Attackable
 			return defenderCount;
 		}
 	}
+	override public UpdateStage updateMode => UpdateStage.turtle;
 
 	public override Unit GetDefender()
 	{
@@ -238,9 +239,16 @@ public class GuardHouse : Attackable
 		if ( base.Setup( node, owner, guardHouseConfiguration, flagDirection, blueprintOnly, block ) == null )
 			return null;
 
-		owner.guardHouses.Add( this );
+		if ( !blueprintOnly )
+			owner.guardHouses.Add( this );
 
 		return this;
+	}
+
+	override public void Materialize()
+	{
+		team.guardHouses.Add( this );
+		base.Materialize();
 	}
 
 	new void Start()
@@ -339,7 +347,7 @@ public class GuardHouse : Attackable
 			foreach ( var soldier in attackers )
 				assert.AreEqual( soldier.team, enemy );
 		}
-		assert.IsTrue( team.guardHouses.Contains( this ) );
+		assert.IsTrue( blueprintOnly || team.guardHouses.Contains( this ) );
 		base.Validate( chain );
 	}
 }
