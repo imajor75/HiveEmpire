@@ -69,7 +69,7 @@ public class Workshop : Building
 		get
 		{
 			int checksum = base.checksum;
-			return checksum + (int)( craftingProgress * 1000 );
+			return checksum + output;
 		}
 	}
 

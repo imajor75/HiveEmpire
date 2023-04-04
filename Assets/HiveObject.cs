@@ -240,7 +240,7 @@ public abstract class HiveObject : HiveCommon
 	}
 	public virtual bool wantFoeClicks => false;
 
-	public virtual int checksum => id;
+	public virtual int checksum { get { assert.AreNotEqual( id, -1 ); return id; } }
 	
 	[JsonIgnore]
 	public Assert assert;
