@@ -996,6 +996,9 @@ public class Road : HiveObject, Interface.IInputHandler
 		ReassignHaulersTo( newRoad, secondRoad );
 		Remove();
 		newRoad.RegisterOnGround();
+		team.roads.Add( newRoad );
+		if ( secondRoad )
+			team.roads.Add( secondRoad );
 		secondRoad?.RegisterOnGround();
 		return newRoad;
 	}
@@ -1156,11 +1159,14 @@ public class Road : HiveObject, Interface.IInputHandler
 		if ( !ready )
 			assert.AreEqual( root.viewport.inputHandler, this );
 		assert.IsTrue( blueprintOnly || team == null || team.destroyed || game.teams.Contains( team ) );
-		int j = 0;
-		foreach ( var r in team.roads )
-			if ( r == this )
-				j++;
-		assert.AreEqual( j, 1 );
+		if ( !blueprintOnly )
+		{
+			int j = 0;
+			foreach ( var r in team.roads )
+				if ( r == this )
+					j++;
+			assert.AreEqual( j, 1 );
+		}
 		base.Validate( chain );
 	}
 

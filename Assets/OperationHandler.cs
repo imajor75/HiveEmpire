@@ -1078,12 +1078,11 @@ public class Operation
                             allGood &= newRoad.AddNode( roadPath[i] );
                         if ( allGood )
                         {
-                                if ( !newRoad.Finish() )
-                                {
-                                    newRoad.Remove();
-                                    newRoad = null;
-                                }
-
+                            if ( !newRoad.Finish() )
+                            {
+                                newRoad.Remove();
+                                newRoad = null;
+                            }
                         }
                     }
                 }

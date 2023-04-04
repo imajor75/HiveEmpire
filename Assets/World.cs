@@ -606,7 +606,7 @@ public class World : HiveObject
 				if ( !o.team.roads.Contains( o ) && !o.destroyed )
 				{
 					o.team.roads.Add( o );
-					Assert.global.Fail();
+					o.assert.Fail( $"Road {o} was missing from team array" );
 				}
 				if ( o.watchStartFlag.source != o.ends[0].itemsStored )
 				{
@@ -1365,7 +1365,10 @@ public class Game : World
 
 		#if DEBUG
 		if ( lastChecksum > 0 )
-			Assert.global.AreEqual( checksum, lastChecksum, $"Game state was modified between World.Advance calls (last: {lastChecksum}, current: {checksum})" );
+		{
+			var current = checksum;
+			Assert.global.AreEqual( current, lastChecksum, $"Game state was modified between World.Advance calls in tick {time} (last: {lastChecksum}, current: {current}, difference: {current-lastChecksum})" );
+		}
 		#endif
 		oh?.RegisterEvent( OperationHandler.Event.Type.frameStart, OperationHandler.Event.CodeLocation.worldNewFrame, time );
 		oh.OnBeginGameStep();
