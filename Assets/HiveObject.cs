@@ -157,6 +157,20 @@ public abstract class HiveObject : HiveCommon
 			}
 			newObjects.Clear();
 
+			while ( freeSlots.Count > objects.Count / 10 )
+			{
+				var last = objects.Last();
+				if ( last )
+				{
+					objects[freeSlots[0]] = last;
+					last.updateIndices[stageIndex] = freeSlots[0];
+				}
+				else
+					Assert.global.AreEqual( freeSlots[0], objects.Count - 1 );
+				objects.RemoveAt( objects.Count - 1 );
+				freeSlots.RemoveAt( 0 );
+			}
+
 			game.updateStage = stage;
 			int newIndex = processIndex + (int)( objects.Count * updateSpeed );	// nothing will be removed from the objects list during this loop right?
 			if ( newIndex == processIndex )
@@ -220,6 +234,7 @@ public abstract class HiveObject : HiveCommon
 			{
 				objects[objectToRemove.updateIndices[stageIndex]] = null;
 				freeSlots.Add( objectToRemove.updateIndices[stageIndex] );
+				freeSlots.Sort( ( a, b ) => b.CompareTo( a ) );
 				objectToRemove.updateIndices[stageIndex] = -1;
 			}
 			newObjects.Remove( objectToRemove );	// in pause mode the object might still sitting in this array

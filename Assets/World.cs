@@ -541,6 +541,9 @@ public class World : HiveObject
 			lastChecksum = 0;
 		}
 
+		foreach ( var stock in updateHiveObjects )
+			stock.freeSlots.Sort( ( a, b ) => b.CompareTo( a ) );
+
 		UpdateWorkshopConfigurations();
 
 		foreach ( var water in Resources.FindObjectsOfTypeAll<Water>() )
