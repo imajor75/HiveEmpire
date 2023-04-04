@@ -17,6 +17,8 @@ public class Ground : HiveObject
 	public Texture2D mapGroundTexture;
 	public MeshRenderer mapGround;
 	public Node centerNode { get { return nodes[dimension*dimension/2+dimension/2]; } }
+	override public UpdateStage updateMode => UpdateStage.turtle;
+
 
 	[Obsolete( "Compatibility with old files", true )]
 	List<GrassBlock> grassBlocks { set {} }

@@ -8,6 +8,7 @@ public abstract class Player : HiveObject
 {
 	public new string name;
 	public List<Message> messages = new ();
+	override public UpdateStage updateMode => UpdateStage.none;
 
 	[Obsolete( "Compatibility with old files", true )]
 	float totalEfficiency { set {} }
@@ -171,6 +172,7 @@ public class Team : HiveObject
 		set { mainBuilding.itemData[(int)Item.Type.soldier].content = value; }
 		get { return mainBuilding.itemData[(int)Item.Type.soldier].content; } 
 	}
+	override public UpdateStage updateMode => UpdateStage.lazy;
 
     public override int checksum
 	{

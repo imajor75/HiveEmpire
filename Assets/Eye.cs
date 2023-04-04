@@ -35,6 +35,7 @@ public class Eye : HiveObject
 	public Highlight highlight;
 
 	public bool isMapModeUsed { get => mapMode || Map.MapImage.instance != null; }
+	override public UpdateStage updateMode => UpdateStage.none;
 
 	public void SetMapMode( bool mapMode )
 	{
