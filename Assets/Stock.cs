@@ -386,7 +386,7 @@ public class Stock : Attackable
 			ScheduleWalkToFlag( destination.flag, true );
 			ScheduleWalkToNeighbour( destination.node );
 
-			var task = ScriptableObject.CreateInstance<DeliverStackTask>();
+			var task = new DeliverStackTask();
 			task.Setup( this, destination );
 			ScheduleTask( task );
 		}

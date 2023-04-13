@@ -177,7 +177,7 @@ public class Unit : HiveObject
 		death
 	}
 
-	public class Task : ScriptableObject // TODO Inheriting from ScriptableObject really slows down the code.
+	public class Task
 	{
 		protected const bool finished = true;
 		protected const bool needMoreCalls = false;
@@ -459,7 +459,7 @@ public class Unit : HiveObject
 				path = Path.Between( boss.node, target.node, PathFinder.Mode.onRoad, boss );
 				if ( path == null )
 				{
-					var instance = CreateInstance<WalkToNode>();
+					var instance = new WalkToNode();
 					instance.Setup( boss, target.node );
 					ReplaceThisWith( instance );
 					return false;
@@ -1634,7 +1634,7 @@ public class Unit : HiveObject
 			if ( taskQueue.Count > 0 )
 			{
 				var t = taskQueue[0] as WalkToRoadPoint;
-				if ( t && t.wishedPoint >= 0 )
+				if ( t != null && t.wishedPoint >= 0 )
 				{
 					var wp = t.road.nodes[t.wishedPoint].position;
 					arrowObject.SetActive( true );
@@ -1743,7 +1743,7 @@ public class Unit : HiveObject
 					continue;
 				ScheduleWalkToNeighbour( t );
 				if ( game.NextFloatRnd( OperationHandler.Event.CodeLocation.animalPasturing ) < Constants.Workshop.pasturingPrayChance )
-					ScheduleTask( ScriptableObject.CreateInstance<Workshop.Pasturing>().Setup( this ) );
+					ScheduleTask( new Workshop.Pasturing().Setup( this ) );
 				return;
 			}
 		}
@@ -1774,7 +1774,7 @@ public class Unit : HiveObject
 			else
 				ScheduleWalkToNode( building.flag.node );
 			ScheduleWalkToNeighbour( building.node );
-			var task = ScriptableObject.CreateInstance<Stock.DeliverStackTask>();
+			var task = new Stock.DeliverStackTask();
 			task.Setup( this, stock );
 			ScheduleTask( task );
 			return;
@@ -2035,14 +2035,14 @@ public class Unit : HiveObject
 	public void ScheduleCall( HiveObject handler, float floatData = 0, bool boolData = false )
 	{
 		assert.IsNotNull( handler );
-		var instance = ScriptableObject.CreateInstance<Callback>();
+		var instance = new Callback();
 		instance.Setup( this, handler, floatData, boolData );
 		ScheduleTask( instance );
 	}
 
 	public void ScheduleWalkToNeighbour( Node target, bool first = false, Act interruption = null )
 	{
-		var instance = ScriptableObject.CreateInstance<WalkToNeighbour>();
+		var instance = new WalkToNeighbour();
 		instance.Setup( this, target, interruption );
 		ScheduleTask( instance, first );
 	}
@@ -2080,21 +2080,21 @@ public class Unit : HiveObject
 	/// <returns>True, if a valid path is found.</returns>
 	public void ScheduleWalkToNode( Node target, bool ignoreFinalObstacle = false, bool first = false, Act interruption = null, HiveObject ignoreObject = null, Node avoid = null )
 	{
-		var instance = ScriptableObject.CreateInstance<WalkToNode>();
+		var instance = new WalkToNode();
 		instance.Setup( this, target, ignoreFinalObstacle, interruption, ignoreObject, avoid );
 		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWalkToFlag( Flag target, bool exclusive = false, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<WalkToFlag>();
+		var instance = new WalkToFlag();
 		instance.Setup( this, target, exclusive );
 		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWalkToRoadPoint( Road road, int target, bool exclusive = true, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
+		var instance = new WalkToRoadPoint();
 		instance.Setup( this, road, target, exclusive );
 		ScheduleTask( instance, first );
 		instance.Validate();
@@ -2102,49 +2102,49 @@ public class Unit : HiveObject
 
 	public void ScheduleWalkToRoadNode( Road road, Node target, bool exclusive = true, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<WalkToRoadPoint>();
+		var instance = new WalkToRoadPoint();
 		instance.Setup( this, road, road.NodeIndex( target ), exclusive );
 		ScheduleTask( instance, first );
 	}
 
 	public void SchedulePickupItems( Item item, Item secondary = null, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<PickupItem>();
+		var instance = new PickupItem();
 		instance.Setup( this, item, secondary );
 		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleDeliverItems( Item item = null, Item secondary = null, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<DeliverItem>();
+		var instance = new DeliverItem();
 		instance.Setup( this, item, secondary );
 		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleStartWorkingOnRoad( Road road, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<StartWorkingOnRoad>();
+		var instance = new StartWorkingOnRoad();
 		instance.Setup( this );
 		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWait( int time, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<Wait>();
+		var instance = new Wait();
 		instance.Setup( this, time );
 		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleWait( Unit other, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<Sync>();
+		var instance = new Sync();
 		instance.Setup( this, other );
 		ScheduleTask( instance, first );
 	}
 
 	public void ScheduleDoAct( Act act, bool first = false )
 	{
-		var instance = ScriptableObject.CreateInstance<DoAct>();
+		var instance = new DoAct();
 		instance.Setup( this, act );
 		ScheduleTask( instance, first );
 	}

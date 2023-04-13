@@ -4966,7 +4966,7 @@ public class Interface : HiveObject
 							break;
 						}
 						var deliver = unit.FindTaskInQueue<Unit.DeliverItem>();
-						if ( deliver )
+						if ( deliver != null )
 						{
 							status.text = "Delivering";
 							statusImage0.SetItem( deliver.items[0] );
@@ -4981,7 +4981,7 @@ public class Interface : HiveObject
 							break;
 						}
 						var startWorking = unit.FindTaskInQueue<Unit.StartWorkingOnRoad>();
-						if ( startWorking )
+						if ( startWorking != null )
 						{
 							status.text = "Going to a road to start working\nas a hauler";
 							break;
@@ -4992,14 +4992,14 @@ public class Interface : HiveObject
 					case Unit.Type.tinkerer:
 					{
 						var res = unit.FindTaskInQueue<Workshop.GetResource>();
-						if ( res )
+						if ( res != null )
 						{
 							status.text = "Getting " + res.resource.type.ToString();
 							targetObject = res.resource;
 							break;
 						}
 						var plant = unit.FindTaskInQueue<Workshop.Plant>();
-						if ( plant )
+						if ( plant != null )
 						{
 							status.text = "Planting " + plant.resourceType.ToString();
 							targetObject = plant.node;
@@ -5007,7 +5007,7 @@ public class Interface : HiveObject
 
 						}
 						var deliver = unit.FindTaskInQueue<Unit.DeliverItem>();
-						if ( deliver )
+						if ( deliver != null )
 						{
 							if ( unit == unit.building.tinkerer )
 								status.text = "Bringing             home";
@@ -5018,7 +5018,7 @@ public class Interface : HiveObject
 							break;
 						}
 						var step = unit.FindTaskInQueue<Unit.WalkToNeighbour>();
-						if ( step )
+						if ( step != null )
 						{
 							status.text = "Going home";
 							break;
@@ -5030,7 +5030,7 @@ public class Interface : HiveObject
 					case Unit.Type.constructor:
 					{
 						var flattening = unit.FindTaskInQueue<Unit.Callback>();
-						if ( flattening )
+						if ( flattening != null )
 						{
 							status.text = "Flattening land";
 							break;
@@ -5058,7 +5058,7 @@ public class Interface : HiveObject
 					case Unit.Type.cart:
 					{
 						var massDeliver = unit.FindTaskInQueue<Stock.DeliverStackTask>();
-						if ( massDeliver )
+						if ( massDeliver != null )
 						{
 							status.text = $"Transporting {cart.itemQuantity}";
 							statusImage1.SetType( cart.itemType );

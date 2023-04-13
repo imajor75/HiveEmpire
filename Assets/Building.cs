@@ -391,7 +391,7 @@ abstract public class Building : HiveObject
 				}
 
 				builder.TurnTo( boss.node );
-				hammering = ScriptableObject.CreateInstance<Unit.DoAct>();
+				hammering = new Unit.DoAct();
 				hammering.Setup( builder, Unit.constructingAct );
 			}
 

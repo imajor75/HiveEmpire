@@ -1258,7 +1258,7 @@ public class Workshop : Building
 			tinkerer.ScheduleWalkToNode( resource.node, true, false, Unit.resourceCollectAct[(int)resource.type] );
 		}
 		resourcePlace = resource.node;
-		var task = ScriptableObject.CreateInstance<GetResource>();
+		var task = new GetResource();
 		task.Setup( tinkerer, resource, productionConfiguration.outputStackSize );
 		tinkerer.ScheduleTask( task );
 		resource.hunter = tinkerer;
@@ -1339,7 +1339,7 @@ public class Workshop : Building
 		tinkerer.SetActive( true );
 		tinkerer.ScheduleWalkToNeighbour( flag.node );
 		tinkerer.ScheduleWalkToNode( place, true );
-		var task = ScriptableObject.CreateInstance<Plant>();
+		var task = new Plant();
 		task.Setup( tinkerer, place, resourceType, charges );
 		tinkerer.ScheduleTask( task );
 		SetWorking( true );

@@ -771,18 +771,6 @@ public class World : HiveObject
 		}
 
 		{
-			var list = Resources.FindObjectsOfTypeAll<Unit.DoAct>();
-			foreach ( var d in list )
-			{
-				if ( d.act == null )
-				{
-					d.act = Unit.actLibrary.First();
-					Log( $"Working around missing act in DoAct (boss id: {d.boss.id})", Severity.error );
-				}
-			}
-		}
-
-		{
 			var list = Resources.FindObjectsOfTypeAll<Flag>();
 			foreach ( var f in list )
 			{
