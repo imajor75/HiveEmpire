@@ -7409,7 +7409,7 @@ if ( cart )
 	public class PrepareProgress : Panel
 	{
 		public Text workshops, guardHouses, stocks, roads;
-		public Text total, current, remaining;
+		public Text total, current, remaining, itemCount;
 		public ProgressBar bar;
 		public float prerunStart = -1;
 		public static PrepareProgress Create()
@@ -7430,7 +7430,7 @@ if ( cart )
 			total = workshops = Text().PinDownwards( borderWidth, 0, 250, iconSize );
 			current = guardHouses = Text().PinDownwards( borderWidth, 0, 250, iconSize );
 			remaining = stocks = Text().PinDownwards( borderWidth, 0, 250, iconSize );
-			roads = Text().PinDownwards( borderWidth, 0, 250, iconSize );
+			itemCount = roads = Text().PinDownwards( borderWidth, 0, 250, iconSize );
 
 			Button( "Skip" ).PinCenter( 0, borderWidth * 2, 120, iconSize, 0.5f, 0 ).SetTooltip( "Stop the prepare process and start playing" ).AddClickHandler( () => game.preparation = Game.PrepareState.ready );
 		}
@@ -7463,7 +7463,10 @@ if ( cart )
 				float estimated = ( Time.unscaledTime - prerunStart ) / game.time;
 				estimated *= game.challenge.prerun - game.time;
 				remaining.text = $"Estimated time left: {UIHelpers.TimeToString((int)( estimated * Constants.World.normalSpeedPerSecond ) )}";
-				roads.text = "";
+				int count = 0;
+				foreach ( var itemCount in root.mainTeam.itemsProduced )
+					count += itemCount;
+				itemCount.text = $"Items produced: {count} (soldiers: {root.mainTeam.itemsProduced[(int)Item.Type.soldier]})";
 			}
 		}
 	}

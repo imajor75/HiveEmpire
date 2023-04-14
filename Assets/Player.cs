@@ -152,6 +152,7 @@ public class Team : HiveObject
 	public List<Building> influencers = new ();
 	public Game.Timer chartAdvanceTimer = new (), productivityUpdateTimer = new ();
 	public List<Chart> itemProductivityHistory = new ();
+	public List<int> itemsProduced = new ();
 	public List<Stock> stocks = new ();
 	public List<Flag> flags = new ();
 	public List<Road> roads = new ();
@@ -508,6 +509,8 @@ public class Team : HiveObject
 			itemHaulPriorities.Add( 1 );
 		while ( itemProductivityHistory.Count < (int)Item.Type.total )
 			itemProductivityHistory.Add( Chart.Create().Setup( (Item.Type)itemProductivityHistory.Count ) );
+		while ( itemsProduced.Count < (int)Item.Type.total )
+			itemsProduced.Add( 0 );
 
 		if ( inputWeights == null )
 			CreateInputWeights();	// For compatibility with old files
@@ -724,6 +727,7 @@ public class Team : HiveObject
 	{
 		Assert.global.IsTrue( quantity > 0 );
 		itemProductivityHistory[(int)itemType].production += quantity;
+		itemsProduced[(int)itemType] += quantity;
 	}
 
 	public void Validate()
