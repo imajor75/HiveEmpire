@@ -1109,7 +1109,7 @@ public class Operation
             {
                 Flag newFlag = location.flag;
                 if ( !newFlag )
-                    newFlag = Flag.Create().Setup( location, team, false, crossing );
+                    newFlag = Flag.Create().Setup( location, team, false, crossing, Resource.BlockHandling.remove );
                 else
                 {
                     newFlag.assert.IsTrue( newFlag.blueprintOnly );
