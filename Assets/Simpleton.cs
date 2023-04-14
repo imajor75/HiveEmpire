@@ -588,6 +588,8 @@ public class Simpleton : Player
                     Workshop.Type.stoneMine => 1,
                     _ => 0
                 };
+                if ( game.preparation == Game.PrepareState.create && workshopType.type != Workshop.Type.barrack )
+                    targetMinimum = 0;
                 var outputType = workshopType.outputType;
                 if ( workshopType.type == Workshop.Type.forester )
                     outputType = Item.Type.log;
@@ -814,18 +816,21 @@ public class Simpleton : Player
             currentPlank = boss.expectedPlank;
             currentStone = boss.team.Stockpile( Item.Type.stone );
 
-            if ( configuration.plankNeeded + reservedPlank > currentPlank || ( boss.emergencyPlank && workshopType != Workshop.Type.woodcutter && workshopType != Workshop.Type.sawmill && workshopType != Workshop.Type.stonemason && workshopType != Workshop.Type.forester ) )
+            if ( game.preparation != Game.PrepareState.create )
             {
-                state = State.noPlank;
-                return finished;
-            }
-            if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > currentStone )
-            {
-                state = State.noStone;
-                return finished;
+                if ( configuration.plankNeeded + reservedPlank > currentPlank || ( boss.emergencyPlank && workshopType != Workshop.Type.woodcutter && workshopType != Workshop.Type.sawmill && workshopType != Workshop.Type.stonemason && workshopType != Workshop.Type.forester ) )
+                {
+                    state = State.noPlank;
+                    return finished;
+                }
+                if ( configuration.stoneNeeded > 0 && configuration.stoneNeeded + reservedStone > currentStone )
+                {
+                    state = State.noStone;
+                    return finished;
+                }
             }
 
-            ScanRow( nodeRow++ );
+            ScanRow( nodeRow++ ); 
 
             if ( nodeRow == HiveCommon.ground.dimension )
             {
