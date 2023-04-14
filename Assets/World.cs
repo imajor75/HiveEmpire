@@ -1300,6 +1300,7 @@ public class Game : World
 					return;
 			}
 			preparation = PrepareState.ready;
+			challenge.ParseConditions( this );
 		}
 
 		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
@@ -1500,7 +1501,6 @@ public class Game : World
 			while ( challenge.productivityGoals.Count < (int)Item.Type.total )
 				challenge.productivityGoals.Add( -1 );
 		}
-		challenge?.ParseConditions( this );
 
 		SetSpeed( speed, true );    // Just for the animators and sound
 
@@ -1978,15 +1978,24 @@ public class Game : World
 						}
 						while ( productivityGoals.Count < (int)Item.Type.total )
 							productivityGoals.Add( -1 );
-						productivityGoals[(int)itemType] = float.Parse( p[2], CultureInfo.InvariantCulture );
-						if ( p.Length < 4 )
-							break;
-						float productivityByBuildingWeight = float.Parse( p[3] );
-						foreach ( var configuration in world.workshopConfigurations )
+						bool multiply = false;
+						if ( p[2][0] == '*' )
 						{
-							if ( configuration.outputType == itemType )
-								productivityGoals[(int)itemType] += productivityByBuildingWeight * configuration.productivity;
+							p[2] = p[2].TrimStart( '*' );
+							multiply = true;
 						}
+						productivityGoals[(int)itemType] = float.Parse( p[2], CultureInfo.InvariantCulture );
+						if ( p.Length >= 4 )
+						{
+							float productivityByBuildingWeight = float.Parse( p[3] );
+							foreach ( var configuration in world.workshopConfigurations )
+							{
+								if ( configuration.outputType == itemType )
+									productivityGoals[(int)itemType] += productivityByBuildingWeight * configuration.productivity;
+							}
+						}
+						if ( multiply && root.mainTeam )
+							productivityGoals[(int)itemType] *=	root.mainTeam.itemProductivityHistory[(int)itemType].current;
 						break;
 					}
 					case "buildingMax":
