@@ -22,6 +22,7 @@ public class Simpleton : Player
     public Operation.Source activity;
 	public bool showActions;
     public bool peaceful;
+    public Task lastApplied;
     public Workshop.Type debugPlacement = Workshop.Type.unknown;
     public bool noRoom;
     public bool dumpTasks, dumpYields;
@@ -58,6 +59,14 @@ public class Simpleton : Player
                 if ( !hasSeparatedFlags )
                     constructionProgress += 0.25f;
                 return constructionProgress;
+            }
+
+            if ( oh.challenge.preparation == Game.Challenge.Preparation.full )
+            {
+                if ( lastApplied == null )
+                    return actionIndex > 0 ? 1 : 0;
+
+                return Constants.Simpleton.enoughPreparation - lastApplied.importance;
             }
 
             preparationMissingDeals = preparationMissingProduction = preparationTotalDeals = preparationTotalProduction = 0;
@@ -247,16 +256,16 @@ public class Simpleton : Player
             dumpYields = false;
         }
 
-        Task best = null;
+        lastApplied = null;
         foreach ( var task in tasks )
         {
-            if ( best == null || task.importance > best.importance )
-                best = task;
+            if ( lastApplied == null || task.importance > lastApplied.importance )
+                lastApplied = task;
         }
-        if ( best != null && ( best.importance >= confidence || activity == Operation.Source.preparation ) && best.importance > 0 )
+        if ( lastApplied != null && ( lastApplied.importance >= confidence || activity == Operation.Source.preparation ) && lastApplied.importance > 0 )
         {
-            Log( $"{actionIndex} Applying solution {best.ToString()} (problem: {best.problemWeight}, solution: {best.solutionEfficiency})" );
-            best.ApplySolution();
+            Log( $"{actionIndex} Applying solution {lastApplied.ToString()} (problem: {lastApplied.problemWeight}, solution: {lastApplied.solutionEfficiency})" );
+            lastApplied.ApplySolution();
             actionIndex++;
             inability.Start( Constants.Simpleton.inabilityTolerance );
             confidence = Constants.Simpleton.defaultConfidence;
@@ -268,7 +277,7 @@ public class Simpleton : Player
             if ( confidence > Constants.Simpleton.minimumConfidence )
             {
                 confidence -= Constants.Simpleton.confidenceLevel;
-                Log( $"No good solution (best: {best?.importance}), reducing confidence to {confidence}" );
+                Log( $"No good solution (best: {lastApplied?.importance}), reducing confidence to {confidence}" );
                 inability.Start( Constants.Simpleton.inabilityTolerance );
             }
             else
@@ -579,17 +588,23 @@ public class Simpleton : Player
                     boss.lackingProductions.Clear();
                     continue;
                 }
-                float targetMinimum = workshopType.type switch
+
+                float targetMinimum = 0;
+                if ( game.preparation != Game.PrepareState.create )
                 {
-                    Workshop.Type.barrack => soldierYield + 0.1f,
-                    Workshop.Type.woodcutter => 3,
-                    Workshop.Type.sawmill => 3,
-                    Workshop.Type.forester => 2,
-                    Workshop.Type.stoneMine => 1,
-                    _ => 0
-                };
-                if ( game.preparation == Game.PrepareState.create && workshopType.type != Workshop.Type.barrack )
-                    targetMinimum = 0;
+                    targetMinimum = workshopType.type switch
+                    {
+                        Workshop.Type.barrack => soldierYield + 0.1f,
+                        Workshop.Type.woodcutter => 3,
+                        Workshop.Type.sawmill => 3,
+                        Workshop.Type.forester => 2,
+                        Workshop.Type.stoneMine => 1,
+                        _ => 0
+                    };
+                }
+                else if ( workshopType.type == Workshop.Type.barrack )
+                    targetMinimum = 1;
+
                 var outputType = workshopType.outputType;
                 if ( workshopType.type == Workshop.Type.forester )
                     outputType = Item.Type.log;

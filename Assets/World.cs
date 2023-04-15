@@ -1768,7 +1768,8 @@ public class Game : World
 			none,
 			construction,
 			chain,
-			routes
+			routes,
+			full
 		}
 
         public static Challenge Create()
