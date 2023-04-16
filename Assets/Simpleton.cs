@@ -437,6 +437,7 @@ public class Simpleton : Player
         public Action action;
         public bool nodePricesCalculated;
 
+        public GlobalTask() : base( null ) {}
         public GlobalTask( Simpleton boss ) : base( boss ) {}
         public override bool Analyze()
         {

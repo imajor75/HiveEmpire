@@ -47,7 +47,7 @@ public abstract class Player : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	Game.Timer chartAdvanceTimer { set { safeTeam.chartAdvanceTimer = value; } }
 	[Obsolete( "Compatibility with old files", true )]
-	Game.Timer productivityUpdateTimer { set { safeTeam.productivityUpdateTimer = value; } }
+	Game.Timer productivityUpdateTimer { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	List<Team.Chart> itemProductivityHistory { set { safeTeam.itemProductivityHistory = value; } }
 	[Obsolete( "Compatibility with old files", true )]
@@ -150,7 +150,7 @@ public class Team : HiveObject
 	public Versioned versionedRoadNetworkChanged = new ();
 	public Versioned versionedBuildingDelete = new ();
 	public List<Building> influencers = new ();
-	public Game.Timer chartAdvanceTimer = new (), productivityUpdateTimer = new ();
+	public Game.Timer chartAdvanceTimer = new ();
 	public List<Chart> itemProductivityHistory = new ();
 	public List<int> itemsProduced = new ();
 	public List<Stock> stocks = new ();
@@ -174,6 +174,9 @@ public class Team : HiveObject
 		get { return mainBuilding.itemData[(int)Item.Type.soldier].content; } 
 	}
 	override public UpdateStage updateMode => UpdateStage.lazy;
+
+	[Obsolete( "Compatibility with old files", true )]
+	Game.Timer productivityUpdateTimer { set {} }
 
     public override int checksum
 	{
@@ -239,13 +242,26 @@ public class Team : HiveObject
 
 	public class Chart : ScriptableObject
 	{
-		public List<float> data;
-		public float record;
-		public float current;
-		public int recordIndex;
+		public List<int> past = new ();
+		public float lastPeriodProductivity;
 		public Item.Type itemType;
 		public int production;
 		public int total = 0;
+		Game.Timer lastAdvance = new ();
+
+		public float current
+		{
+			get
+			{
+				if ( lastAdvance.empty )
+					return 0;
+				float current = (float)production / lastAdvance.age * Constants.World.normalSpeedPerSecond * 60;
+				float currentWeight = (float)lastAdvance.age / Constants.Player.Chart.advanceTime / ( 1 - Constants.Player.Chart.pastWeight );
+				return lastPeriodProductivity * ( 1 - currentWeight ) + current - currentWeight;
+			}
+			[Obsolete( "Compatibility with old files", true )]
+			set {}
+		}
 		
 		[Obsolete( "Compatibility with old files", true )]
 		float factor { set {} }
@@ -253,6 +269,12 @@ public class Team : HiveObject
 		float weight { set {} }
 		[Obsolete( "Compatibility with old files", true )]
 		float weighted { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		List<float> data { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		float record { set {} }
+		[Obsolete( "Compatibility with old files", true )]
+		int recordIndex { set {} }
 
 		public static Chart Create()
 		{
@@ -262,31 +284,29 @@ public class Team : HiveObject
 		public Chart Setup( Item.Type itemType )
 		{
 			this.itemType = itemType;
-			data = new ();
-			record = current = 0;
-			recordIndex = production = 0;
 			return this;
-		}
-
-		public void UpdateCurrent()
-		{
-			current = current * ( Constants.Player.productionUpdateFactor ) + production * ( Constants.World.normalSpeedPerSecond * 60 / Constants.Player.productivityUpdateTime ) * ( 1 - Constants.Player.productionUpdateFactor );
-			total += production;
-			production = 0;
 		}
 
 		public void Advance()
 		{
-			if ( data == null )
-				data = new ();
+			past.Add( production );
+			lastPeriodProductivity = (float)production / Constants.Player.Chart.advanceTime * Constants.World.normalSpeedPerSecond * 60;
+			lastAdvance.Start();
+			total += production;
+			production = 0;
+		}
 
-			if ( current > record )
+		public List<float> GetSmoothData( float pastWeight = Constants.Player.Chart.pastWeight, int size = int.MaxValue )
+		{
+			var data = new List<float>();
+			float current = 0;
+			for ( int i = 0; i < past.Count; i++ )
 			{
-				record = current;
-				recordIndex = data.Count;
+				float next = (float)past[i] / Constants.Player.Chart.advanceTime * Constants.World.normalSpeedPerSecond * 60;
+				current = current * pastWeight + next * ( 1 - pastWeight );
+				data.Add( current );
 			}
-
-			data.Add( current );
+			return data;
 		}
 	}
 
@@ -317,8 +337,7 @@ public class Team : HiveObject
 			Destroy( this );
 			return null;
 		}
-		chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );
-		productivityUpdateTimer.Start( Constants.Player.productivityUpdateTime );
+		chartAdvanceTimer.Start( Constants.Player.Chart.advanceTime );
 		CreateInputWeights();
 		base.Setup( game );
 
@@ -530,17 +549,10 @@ public class Team : HiveObject
 	{
 		if ( chartAdvanceTimer.done )
 		{
-			chartAdvanceTimer.Start( Constants.Player.productivityAdvanceTime );
+			chartAdvanceTimer.Start( Constants.Player.Chart.advanceTime );
 
 			foreach ( var chart in itemProductivityHistory )
 				chart.Advance();
-		}
-		if ( productivityUpdateTimer.done || productivityUpdateTimer.empty )
-		{
-			productivityUpdateTimer.Start( Constants.Player.productivityUpdateTime );
-
-			foreach ( var chart in itemProductivityHistory )
-				chart.UpdateCurrent();
 		}
 	}
 

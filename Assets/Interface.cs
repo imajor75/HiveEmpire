@@ -7121,14 +7121,15 @@ if ( cart )
 
 	public class History : Panel
 	{
-		Item.Type selected;
-		int selectedColumn;
-		Team team;
-		float lastProductivity;
-		Image chart, itemFrame;
-		Texture2D chartContent;
-		Text record;
+		public Item.Type selected;
+		public int selectedColumn;
+		public Team team;
+		public int dataSize;
+		public Image chart, itemFrame;
+		public Texture2D chartContent;
+		public Text record;
 		public float scale = 1;
+		public float smoothness = Constants.Player.Chart.pastWeight;
 
 		public static History Create()
 		{
@@ -7153,14 +7154,14 @@ if ( cart )
 				int column = UIHelpers.currentColumn;
 				if ( t == selected )
 					selectedColumn = column;
-				ItemIcon( t ).PinSideways( 0, -20 ).AddClickHandler( () => { selected = t; selectedColumn = column; } );
+				ItemIcon( t ).PinSideways( 0, -20 ).AddClickHandler( () => { selected = t; selectedColumn = column; dataSize = -1; } );
 			}
 			int panelIdealWidth = UIHelpers.currentColumn + borderWidth;
 			itemFrame = Image( Icon.tinyFrame ).Pin( 17, -17, 26, 26 );
 			chart = Image().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize ).SetTooltip( Tooltip );
 			record = Text().Pin( 25, -45, 500 );
 			record.color = Color.yellow;
-			lastProductivity = -1;
+			dataSize = -1;
 			SetSize( panelIdealWidth, 300 );
 		}
 
@@ -7174,14 +7175,14 @@ if ( cart )
 			var cursorInside = Input.mousePosition - corners[0];
 			var diagonal = corners[2] - corners[0];
 			var relative = new Vector3( cursorInside.x / diagonal.x, cursorInside.y / diagonal.y, cursorInside.z / diagonal.z );
-			int ticks = (int)( Constants.Player.productivityAdvanceTime * ( 1 - relative.x ) * chartContent.width );
+			int ticks = (int)( Constants.Player.Chart.advanceTime * ( 1 - relative.x ) * chartContent.width );
 			var hours = ticks / 60 / 60 / Constants.World.normalSpeedPerSecond;
 			string time = $"{(ticks/60/Constants.World.normalSpeedPerSecond)%60} minutes ago\n";
 			if ( hours > 1 )
 				time = $"{hours} hours and " + time;
 			else if ( hours == 1 )
 				time = "1 hour and " + time;
-			var data = root.mainTeam.itemProductivityHistory[(int)selected].data;
+			var data = root.mainTeam.itemProductivityHistory[(int)selected].GetSmoothData();
 			string recorded = "No recorded data yet\n";
 			int index = (int)( ( 1 - relative.x ) * chartContent.width );
 			if ( data.Count > index )
@@ -7204,10 +7205,23 @@ if ( cart )
 		{
 			// TODO Clean up this function, its a mess
 			base.Update();
-			var a = team.itemProductivityHistory[(int)selected];
 
-			if ( lastProductivity == a.current )
+			int pastSize = team.itemProductivityHistory[(int)selected].past.Count;
+			if ( dataSize == pastSize )
 				return;
+			dataSize = pastSize;
+
+			var data = team.itemProductivityHistory[(int)selected].GetSmoothData( smoothness );
+			float recordValue = 0;
+			int recordIndex = 0;
+			for ( int i = 0; i < data.Count; i++ )
+			{
+				if ( data[i] > recordValue )
+				{
+					recordValue = data[i];
+					recordIndex = i;
+				}
+			}
 
 			var t = chartContent = new Texture2D( 512, 256 );
 			for ( int x = 0; x < t.width; x++ )
@@ -7216,12 +7230,12 @@ if ( cart )
 					t.SetPixel( x, y, Color.black );
 			}
 			float max = float.MinValue;
-			for ( int i = a.data.Count - t.width; i < a.data.Count; i++ )
+			for ( int i = data.Count - t.width; i < data.Count; i++ )
 			{
 				if ( i < 0 )
 					continue;
-				if ( a.data[i] > max )
-					max = a.data[i];
+				if ( data[i] > max )
+					max = data[i];
 			}
 			max = Math.Max( max, 0.0001f );
 			int tickPerBuilding = 2000, workshopCount = 0;
@@ -7264,23 +7278,23 @@ if ( cart )
 				for ( int x = 0; x < t.width; x++ )
 					t.SetPixel( x, y, c );
 			}
-			int xh = t.width - ( time % World.hourTickCount ) / Constants.Player.productivityAdvanceTime;
+			int xh = t.width - ( time % World.hourTickCount ) / Constants.Player.Chart.advanceTime;
 			while ( xh >= 0 )
 			{
 				VerticalLine( xh, Color.grey );
-				xh -= World.hourTickCount / Constants.Player.productivityAdvanceTime;
+				xh -= World.hourTickCount / Constants.Player.Chart.advanceTime;
 			}
 
-			int recordColumn = t.width - ( a.data.Count - a.recordIndex );
+			int recordColumn = t.width - ( data.Count - recordIndex );
 			if ( recordColumn >= 0 )
 				VerticalLine( recordColumn, Color.Lerp( Color.grey, Color.white, 0.5f ) );
 
 			for ( int x = t.width - 1; x >= 0; x-- )
 			{
-				int index = a.data.Count - t.width + x;
+				int index = data.Count - t.width + x;
 				if ( 0 <= index )
 				{
-					int newRow = (int)Math.Min( (float)t.height - 1, PerMinuteToPixel( a.data[index] ) );
+					int newRow = (int)Math.Min( (float)t.height - 1, PerMinuteToPixel( data[index] ) );
 					if ( row < 0 )
 						row = newRow;
 					var step = row < newRow ? 1 : -1;
@@ -7296,9 +7310,8 @@ if ( cart )
 			t.Apply();
 			chart.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
 			Assert.global.IsNotNull( chart.sprite );
-			record.text = $"Record: {a.record.ToString( "N2" )} per minute {UIHelpers.TimeToString( time - a.recordIndex * Constants.Player.productivityAdvanceTime, true, true )} ago, current: {a.current.ToString( "N2" )} per minute";
+			record.text = $"Record: {recordValue.ToString( "N2" )} per minute {UIHelpers.TimeToString( time - ( data.Count - recordIndex ) * Constants.Player.Chart.advanceTime, true, true )} ago, current: {team.itemProductivityHistory[(int)selected].current.ToString( "N2" )} per minute";
 			itemFrame.Pin( selectedColumn, -borderWidth );
-			lastProductivity = a.current;
 		}
 	}
 

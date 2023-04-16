@@ -251,9 +251,11 @@ public static class Constants
 
     public static class Player
     {
-    	public const int productivityAdvanceTime = Constants.World.normalSpeedPerSecond * 60;
-    	public const int productivityUpdateTime = 50;
-		public static float productionUpdateFactor = (float)Math.Pow( 0.9, 1.0/60 );
+        public static class Chart
+        {
+            public const int advanceTime = Constants.World.normalSpeedPerSecond * 60;
+            public const float pastWeight = 0.95f;
+        }
 		public const float defaultInputWeight = 0.5f;
         public const int attackPeriod = 200;
         public static string[] names = 
