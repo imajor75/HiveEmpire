@@ -247,7 +247,7 @@ public class Team : HiveObject
 		public Item.Type itemType;
 		public int production;
 		public int total = 0;
-		Game.Timer lastAdvance = new ();
+		public Game.Timer lastAdvance = new ();
 
 		public float current
 		{
@@ -256,8 +256,8 @@ public class Team : HiveObject
 				if ( lastAdvance.empty )
 					return 0;
 				float current = (float)production / lastAdvance.age * Constants.World.normalSpeedPerSecond * 60;
-				float currentWeight = (float)lastAdvance.age / Constants.Player.Chart.advanceTime / ( 1 - Constants.Player.Chart.pastWeight );
-				return lastPeriodProductivity * ( 1 - currentWeight ) + current - currentWeight;
+				float currentWeight = (float)lastAdvance.age / Constants.Player.Chart.advanceTime * ( 1 - Constants.Player.Chart.pastWeight );
+				return lastPeriodProductivity * ( 1 - currentWeight ) + current * currentWeight;
 			}
 			[Obsolete( "Compatibility with old files", true )]
 			set {}
@@ -290,7 +290,8 @@ public class Team : HiveObject
 		public void Advance()
 		{
 			past.Add( production );
-			lastPeriodProductivity = (float)production / Constants.Player.Chart.advanceTime * Constants.World.normalSpeedPerSecond * 60;
+			var thisPeriodProductivity = (float)production / Constants.Player.Chart.advanceTime * Constants.World.normalSpeedPerSecond * 60;
+			lastPeriodProductivity = lastPeriodProductivity * Constants.Player.Chart.pastWeight + thisPeriodProductivity * ( 1 - Constants.Player.Chart.pastWeight );
 			lastAdvance.Start();
 			total += production;
 			production = 0;
