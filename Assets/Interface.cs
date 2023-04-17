@@ -6931,6 +6931,8 @@ if ( cart )
 		int[] inResourceCount = new int[(int)Item.Type.total];
 		int[] totalCount = new int[(int)Item.Type.total];
 
+		List<int> order = new ();
+
 		public static ItemTypeList Create()
 		{
 			return new GameObject().AddComponent<ItemTypeList>();
@@ -7084,7 +7086,7 @@ if ( cart )
 				}
 			}
 
-			List<int> order = new ();
+			order = new ();
 			for ( int i = 0; i < inStock.Length; i++ )
 				if ( game.itemTypeUsage[i] != 0 )
 					order.Add( i );
@@ -7116,6 +7118,16 @@ if ( cart )
 				var itemData = team.itemProductivityHistory[order[i]];
 				production[i].text = itemData.current.ToString( "n2" );
 			};
+		}
+
+		new void Update()
+		{
+			for ( int i = 0; i < order.Count; i++ )
+			{
+				var itemData = team.itemProductivityHistory[order[i]];
+				production[i].text = itemData.current.ToString( "n2" );
+			};
+			base.Update();
 		}
 	}
 
