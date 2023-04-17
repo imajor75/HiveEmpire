@@ -97,9 +97,9 @@
       "worldSize": 48,
       "preparation": "full",
       "landOnly": true,
-      "prerun": 360000,
+      "prerun": 540000,
       "conditions": [
-        "production soldier *4"
+        "production soldier *3"
       ]
     }
   ]

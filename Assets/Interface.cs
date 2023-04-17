@@ -3071,7 +3071,7 @@ public class Interface : HiveObject
 			public Workshop workshop;
 			public Game.Timer autoRefresh = new ();
 			public Image circle;
-			const int autoRefreshInterval = Constants.World.normalSpeedPerSecond * 60;
+			const int autoRefreshInterval = Constants.Game.normalSpeedPerSecond * 60;
 			public List<Text> intervalTexts = new ();
 
 			public static PastStatuses Create()
@@ -3086,7 +3086,7 @@ public class Interface : HiveObject
 
 				this.workshop = workshop;
 				autoRefresh.Start( autoRefreshInterval );
-				SetInterval( Constants.World.normalSpeedPerSecond * 60 * 10 );
+				SetInterval( Constants.Game.normalSpeedPerSecond * 60 * 10 );
 			}
 			
 			public void Fill()
@@ -3131,7 +3131,7 @@ public class Interface : HiveObject
 				statusColors = new Color[] { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light(), Color.Lerp( Color.green, Color.blue, 0.5f ).Light() };
 				Assert.global.AreEqual( statusColors.Length, (int)Workshop.Status.total );
 
-				Text( $"Last {totalTicks / 60 / Constants.World.normalSpeedPerSecond} minutes" ).Pin( -150, -borderWidth, 300, iconSize, 1, 1 );
+				Text( $"Last {totalTicks / 60 / Constants.Game.normalSpeedPerSecond} minutes" ).Pin( -150, -borderWidth, 300, iconSize, 1, 1 );
 				for ( int i = 0; i < (int)Workshop.Status.total; i++ )
 				{
 					if ( ticksInStatus[i] == 0 )
@@ -3156,10 +3156,10 @@ public class Interface : HiveObject
 					t.color = interval == this.interval ? Color.white : Color.grey;
 				}
 				UIHelpers.currentColumn = -160;
-				AddIntervalText( "1h", Constants.World.normalSpeedPerSecond * 60 * 60 );
-				AddIntervalText( "30m", Constants.World.normalSpeedPerSecond * 60 * 30 );
-				AddIntervalText( "10m", Constants.World.normalSpeedPerSecond * 60 * 10 );
-				AddIntervalText( "1m", Constants.World.normalSpeedPerSecond * 60 );
+				AddIntervalText( "1h", Constants.Game.normalSpeedPerSecond * 60 * 60 );
+				AddIntervalText( "30m", Constants.Game.normalSpeedPerSecond * 60 * 30 );
+				AddIntervalText( "10m", Constants.Game.normalSpeedPerSecond * 60 * 10 );
+				AddIntervalText( "1m", Constants.Game.normalSpeedPerSecond * 60 );
 			}
 
 			void FillCircle()
@@ -3950,7 +3950,7 @@ public class Interface : HiveObject
 				tooltip += "2X ";
 			tooltip += $"{HiveCommon.Nice( workshop.outputType.ToString() )}";
 			if ( workshop.productionTime > 0 )
-				tooltip += $" in {workshop.productionTime / Constants.World.normalSpeedPerSecond} second";
+				tooltip += $" in {workshop.productionTime / Constants.Game.normalSpeedPerSecond} second";
 			if ( workshop.generatedInputs != null )
 			{
 				tooltip += "\nBase materials: ";
@@ -4793,8 +4793,8 @@ public class Interface : HiveObject
 						itemTimers[i].enabled = true;
 						items[i].SetInTransit( false );
 						int timeAtFlag = flag.items[i].atFlag.age;
-						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / Constants.World.normalSpeedPerSecond / 60 ), 3 );
-						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / Constants.World.normalSpeedPerSecond / 600f );
+						itemTimers[i].rectTransform.sizeDelta = new Vector2( Math.Min( iconSize, timeAtFlag / Constants.Game.normalSpeedPerSecond / 60 ), 3 );
+						itemTimers[i].color = Color.Lerp( Color.green, Color.red, timeAtFlag / Constants.Game.normalSpeedPerSecond / 600f );
 					}
 					else
 						items[i].SetInTransit( true );
@@ -5290,9 +5290,9 @@ if ( cart )
 			}
 			
 			if ( item.flag )
-				stats.text = "Age: " + item.life.age / Constants.World.normalSpeedPerSecond + " secs, at flag for " + item.atFlag.age / Constants.World.normalSpeedPerSecond + " secs";
+				stats.text = "Age: " + item.life.age / Constants.Game.normalSpeedPerSecond + " secs, at flag for " + item.atFlag.age / Constants.Game.normalSpeedPerSecond + " secs";
 			else
-				stats.text = "Age: " + item.life.age / Constants.World.normalSpeedPerSecond + " secs";
+				stats.text = "Age: " + item.life.age / Constants.Game.normalSpeedPerSecond + " secs";
 
 			if ( item.destination && route == null )
 				route = PathVisualization.Create().Setup( item.path );
@@ -5520,7 +5520,7 @@ if ( cart )
 				}
 				else
 					last[i].text = "-";
-				rate[i].text = $"~{(list[i].averageTransferRate*Constants.World.normalSpeedPerSecond*60).ToString( "F2" )}/m";
+				rate[i].text = $"~{(list[i].averageTransferRate*Constants.Game.normalSpeedPerSecond*60).ToString( "F2" )}/m";
 				total[i].text = list[i].itemsDelivered.ToString();
 				cart[i].gameObject.SetActive( list[i].start.cart?.currentRoute == list[i] );
 				priority[i].text = list[i].priority.ToString();
@@ -7188,8 +7188,8 @@ if ( cart )
 			var diagonal = corners[2] - corners[0];
 			var relative = new Vector3( cursorInside.x / diagonal.x, cursorInside.y / diagonal.y, cursorInside.z / diagonal.z );
 			int ticks = (int)( Constants.Player.Chart.advanceTime * ( 1 - relative.x ) * chartContent.width );
-			var hours = ticks / 60 / 60 / Constants.World.normalSpeedPerSecond;
-			string time = $"{(ticks/60/Constants.World.normalSpeedPerSecond)%60} minutes ago\n";
+			var hours = ticks / 60 / 60 / Constants.Game.normalSpeedPerSecond;
+			string time = $"{(ticks/60/Constants.Game.normalSpeedPerSecond)%60} minutes ago\n";
 			if ( hours > 1 )
 				time = $"{hours} hours and " + time;
 			else if ( hours == 1 )
@@ -7487,7 +7487,7 @@ if ( cart )
 					prerunStart = Time.unscaledTime;
 				float estimated = ( Time.unscaledTime - prerunStart ) / game.time;
 				estimated *= game.challenge.prerun - game.time;
-				remaining.text = $"Estimated time left: {UIHelpers.TimeToString((int)( estimated * Constants.World.normalSpeedPerSecond ) )}";
+				remaining.text = $"Estimated time left: {UIHelpers.TimeToString((int)( estimated * Constants.Game.normalSpeedPerSecond ) )}";
 				int count = 0;
 				foreach ( var itemCount in root.mainTeam.itemsProduced )
 					count += itemCount;
@@ -8823,7 +8823,7 @@ public static class UIHelpers
 	{
 		string result = "";
 		bool hasHours = false, hasDays = false;
-		int days = time/24/60/60/Constants.World.normalSpeedPerSecond;
+		int days = time/24/60/60/Constants.Game.normalSpeedPerSecond;
 		if ( days > 0 )
 		{
 			result = $"{days}";
@@ -8838,7 +8838,7 @@ public static class UIHelpers
 				result += separator;
 			hasDays = true;
 		}
-		int hours = time/Constants.World.normalSpeedPerSecond/60/60;
+		int hours = time/Constants.Game.normalSpeedPerSecond/60/60;
 		if ( hours > 0 )
 		{
 			result += $"{(hours%24).ToString( hasDays ? "d2" : "d1" )}";
@@ -8853,7 +8853,7 @@ public static class UIHelpers
 				result += separator;
 			hasHours = true;
 		}
-		var minutes = time/Constants.World.normalSpeedPerSecond/60;
+		var minutes = time/Constants.Game.normalSpeedPerSecond/60;
 		result += $"{(minutes%60).ToString( hasHours ? "d2" : "d1" )}";
 		if ( text )
 		{
@@ -8867,7 +8867,7 @@ public static class UIHelpers
 				result += " and ";
 			else
 				result += separator;
-			result += $"{((time/Constants.World.normalSpeedPerSecond)%60).ToString( "d2" )}";
+			result += $"{((time/Constants.Game.normalSpeedPerSecond)%60).ToString( "d2" )}";
 		}
 		return result;
 	}

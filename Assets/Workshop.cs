@@ -173,7 +173,7 @@ public class Workshop : Building
 				break;
 		}
 
-		var result = (float)(itemsProduced) / timeRange * Constants.World.normalSpeedPerSecond * 60;
+		var result = (float)(itemsProduced) / timeRange * Constants.Game.normalSpeedPerSecond * 60;
 		if ( maximumPossible )
 		{
 			if ( usedTime > 0 )
@@ -243,7 +243,7 @@ public class Workshop : Building
 		public int maxRestTime = Constants.Workshop.defaultMaxRestTime;
 		public int outputMax = Constants.Workshop.defaultOutputMax;
 		public bool producesDung = false;
-		public float productivity => (float)Constants.World.normalSpeedPerSecond * 60 / ( productionTime == 0 ? approximatedProductionTime : productionTime );
+		public float productivity => (float)Constants.Game.normalSpeedPerSecond * 60 / ( productionTime == 0 ? approximatedProductionTime : productionTime );
 
 		[Obsolete( "Compatibility with old files", true )]
 		float processSpeed { set { productionTime = (int)( 1 / value ); } }

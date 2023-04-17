@@ -401,7 +401,7 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 							frameOrder.CRC = receiver.ReadInt();
 							Log( $"Frame {frameOrder.time}, {frameOrder.CRC}" );
 							serverOrders.AddLast( frameOrder );
-							lag = (float)serverOrders.Count / Constants.World.normalSpeedPerSecond;
+							lag = (float)serverOrders.Count / Constants.Game.normalSpeedPerSecond;
 						}
 						else
 						{

@@ -890,7 +890,7 @@ public class Stock : Attackable
 			itemData[(int)itemType].content--;
 			contentChange.Trigger();
 			dispenser = tinkerer.IsIdle() ? tinkerer : tinkererMate;
-			offersSuspended.Start( Constants.World.normalSpeedPerSecond );	// Cosmetic reasons only
+			offersSuspended.Start( Constants.Game.normalSpeedPerSecond );	// Cosmetic reasons only
 		}
 
 		return item;

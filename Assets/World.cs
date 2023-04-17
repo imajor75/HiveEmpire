@@ -260,8 +260,8 @@ public class World : HiveObject
 	public World()
 	{
 		updateHiveObjects[0] = new HiveObject.Store( UpdateStage.realtime, 0 );
-		updateHiveObjects[1] = new HiveObject.Store( UpdateStage.lazy, 1, Constants.World.lazyUpdateSpeed );
-		updateHiveObjects[2] = new HiveObject.Store( UpdateStage.turtle, 2, Constants.World.turtleUpdateSpeed );
+		updateHiveObjects[1] = new HiveObject.Store( UpdateStage.lazy, 1, Constants.Game.lazyUpdateSpeed );
+		updateHiveObjects[2] = new HiveObject.Store( UpdateStage.turtle, 2, Constants.Game.turtleUpdateSpeed );
 	}
 
 	static public AudioSource CreateSoundSource( Component component )
@@ -475,7 +475,7 @@ public class World : HiveObject
 			if ( configuration.productionTimeMax >= 0 )
 			{
 				configuration.productionTime = configuration.productionTimeMin + (int)( (configuration.productionTimeMax - configuration.productionTimeMin) * Math.Pow( rnd.NextDouble(), 2 ) );
-				configuration.productionTime -= configuration.productionTime % Constants.World.normalSpeedPerSecond;
+				configuration.productionTime -= configuration.productionTime % Constants.Game.normalSpeedPerSecond;
 			}
 
 			if ( configuration.outputCount > 0 )
@@ -1303,10 +1303,10 @@ public class Game : World
 			challenge.ParseConditions( this );
 		}
 
-		advanceCharges = (int)timeFactor * Constants.World.allowedAdvancePerFrame;
+		advanceCharges = (int)timeFactor * Constants.Game.allowedAdvancePerFrame;
         if ( network.serverOrders.Count > 0 && network.state == Network.State.client )
         {
-            if ( speed == Speed.normal && network.serverOrders.Count > Constants.Network.lagTolerance * Constants.World.normalSpeedPerSecond )
+            if ( speed == Speed.normal && network.serverOrders.Count > Constants.Network.lagTolerance * Constants.Game.normalSpeedPerSecond )
             {
                 Interface.Display( "Catching up server" );
                 SetSpeed( Speed.fast );
@@ -1618,7 +1618,7 @@ public class Game : World
 			{
 				Speed.pause => 0,
 				Speed.normal => 1,
-				Speed.fast => Constants.World.fastSpeedFactor,
+				Speed.fast => Constants.Game.fastSpeedFactor,
 				_ => 1
 			};
 		}
@@ -1996,7 +1996,16 @@ public class Game : World
 							}
 						}
 						if ( multiply && root.mainTeam )
-							productivityGoals[(int)itemType] *=	root.mainTeam.itemProductivityHistory[(int)itemType].current;
+						{
+							float total = 0;
+							var data = root.mainTeam.itemProductivityHistory[(int)itemType].past;
+							int i = 0;
+							while ( i * Constants.Player.Chart.advanceTime < Constants.Game.improveChallengeSampleRange )
+							if ( ++i < data.Count )
+								total += data[data.Count - i];
+
+							productivityGoals[(int)itemType] *=	total / i / Constants.Player.Chart.advanceTime * Constants.Game.normalSpeedPerSecond * 60;
+						}
 						break;
 					}
 					case "buildingMax":

@@ -5,7 +5,7 @@ public static class Constants
 {
     public static class Interface
     {
-        public const int showNextActionDuringReplay = Constants.World.normalSpeedPerSecond * 2;
+        public const int showNextActionDuringReplay = Constants.Game.normalSpeedPerSecond * 2;
     	public const float autoSaveIntervalInSecond = 60 * 5;
         public const int maxMessages = 50;
         public const int iconSize = 20;
@@ -17,13 +17,18 @@ public static class Constants
 
     public static class World
     {
+        public const float oreCountPerNode = 0.02f;
+        public const int soundMaxDistance = 7;
+    }
+
+    public static class Game
+    {
         public const float fastSpeedFactor = 8;
         public const int normalSpeedPerSecond = 50;
         public const int allowedAdvancePerFrame = 5;
-        public const float oreCountPerNode = 0.02f;
-        public const int soundMaxDistance = 7;
         public const float lazyUpdateSpeed = 0.1f;
         public const float turtleUpdateSpeed = 0.01f;
+        public const int improveChallengeSampleRange = normalSpeedPerSecond * 60 * 30;
     }
 
     public static class Network
@@ -214,7 +219,7 @@ public static class Constants
         public const int hitTime = 0;
         public const int sufferTime = 120;
         public const int fightDuration = 300;
-        public const int constructionTime = Constants.World.normalSpeedPerSecond * 60;
+        public const int constructionTime = Constants.Game.normalSpeedPerSecond * 60;
         public const int attackMaxDistance = 8;
     }
 
@@ -253,7 +258,7 @@ public static class Constants
     {
         public static class Chart
         {
-            public const int advanceTime = Constants.World.normalSpeedPerSecond * 60;
+            public const int advanceTime = Constants.Game.normalSpeedPerSecond * 60;
             public const float pastWeight = 0.95f;
         }
 		public const float defaultInputWeight = 0.5f;
@@ -328,12 +333,12 @@ public static class Constants
         public const int treeSoundTime = 60000;
         public const int rockCharges = 7;
         public const int oreChargePerNodeDefault = 10;
-        public const int scaleUpdatePeriod = Constants.World.normalSpeedPerSecond * 5;
+        public const int scaleUpdatePeriod = Constants.Game.normalSpeedPerSecond * 5;
     }
 
     public static class Road
     {
-    	public const int timeBetweenHaulersAdded = Constants.World.normalSpeedPerSecond * 60;
+    	public const int timeBetweenHaulersAdded = Constants.Game.normalSpeedPerSecond * 60;
     	public const float bodyHeight = 1.0f/20;
     	public const int blocksInSection = 8;
     }
@@ -352,47 +357,47 @@ public static class Constants
         public const int plankNeeded = 3;
         public const int stoneNeeded = 3;
         public const bool flatteningNeeded = true;
-        public const int constructionTime = Constants.World.normalSpeedPerSecond * 120;
+        public const int constructionTime = Constants.Game.normalSpeedPerSecond * 120;
         public const global::Node.Type groundTypeNeeded = global::Node.Type.aboveWater;
 		public const int cartCapacity = 25;
         public const float cartSpeed = 1.25f;
         public const int startPlankCount = 10;
         public const int startStoneCount = 5;
         public const int startSoldierCount = 15;
-        public const int resupplyPeriod = Constants.World.normalSpeedPerSecond * 60 * 30;
+        public const int resupplyPeriod = Constants.Game.normalSpeedPerSecond * 60 * 30;
         public const int minimumPlank = 2;
         public const int fullTolerance = 20;
     }
 
     public static class Unit
     {
-       	public const int stuckTimeout = Constants.World.normalSpeedPerSecond * 60;
-    	public const int boredTimeBeforeRemove = Constants.World.normalSpeedPerSecond * 120;
+       	public const int stuckTimeout = Constants.Game.normalSpeedPerSecond * 60;
+    	public const int boredTimeBeforeRemove = Constants.Game.normalSpeedPerSecond * 120;
         public const int flagSearchDistance = 6;
     }
 
     public static class Workshop
     {
-	    public const int mineOreRestTime = Constants.World.normalSpeedPerSecond * 400;
-	    public const int fishRestTime = Constants.World.normalSpeedPerSecond * 600;
-	    public const int appleGrowTime = Constants.World.normalSpeedPerSecond * 600;
-	    public const int dungRestTime = Constants.World.normalSpeedPerSecond * 25;
-	    public const int pasturingTime = Constants.World.normalSpeedPerSecond * 2;
+	    public const int mineOreRestTime = Constants.Game.normalSpeedPerSecond * 400;
+	    public const int fishRestTime = Constants.Game.normalSpeedPerSecond * 600;
+	    public const int appleGrowTime = Constants.Game.normalSpeedPerSecond * 600;
+	    public const int dungRestTime = Constants.Game.normalSpeedPerSecond * 25;
+	    public const int pasturingTime = Constants.Game.normalSpeedPerSecond * 2;
 	    public const float pasturingPrayChance = 0.2f;  
-    	public const int maxSavedStatusTime = Constants.World.normalSpeedPerSecond * 60 * 60;
-        public const int defaultProductionTime = Constants.World.normalSpeedPerSecond * 30;
-        public const int defaultMaxRestTime = Constants.World.normalSpeedPerSecond * 60;
+    	public const int maxSavedStatusTime = Constants.Game.normalSpeedPerSecond * 60 * 60;
+        public const int defaultProductionTime = Constants.Game.normalSpeedPerSecond * 30;
+        public const int defaultMaxRestTime = Constants.Game.normalSpeedPerSecond * 60;
         public const int defaultRelaxSpotNeeded = 20;
         public const int defaultOutputMax = 4;
         public const int defaultGatheringRange = 6;
         public const int defaultBufferSize = 4;
         public const int defaultImportantInBuffer = 3;
         public const int relaxAreaSize = 3;
-        public const int productivityPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
-        public const int gathererSleepTimeAfterFail = Constants.World.normalSpeedPerSecond * 6;
-        public const int gathererHarvestTime = Constants.World.normalSpeedPerSecond * 6;
-        public const int freeStoneTimePeriod = Constants.World.normalSpeedPerSecond * 60 * 10;
-        public const int keepAwayOnNoPath = Constants.World.normalSpeedPerSecond * 60 * 3;
+        public const int productivityPeriod = Constants.Game.normalSpeedPerSecond * 60 * 5;
+        public const int gathererSleepTimeAfterFail = Constants.Game.normalSpeedPerSecond * 6;
+        public const int gathererHarvestTime = Constants.Game.normalSpeedPerSecond * 6;
+        public const int freeStoneTimePeriod = Constants.Game.normalSpeedPerSecond * 60 * 10;
+        public const int keepAwayOnNoPath = Constants.Game.normalSpeedPerSecond * 60 * 3;
     }
 
     public static class Simpleton
@@ -401,26 +406,26 @@ public static class Constants
         public const int flagConnectionRange = 7;
         public const float defaultConfidence = 0.1f;
         public const float minimumConfidence = 0.0f;
-        public const int inabilityTolerance = Constants.World.normalSpeedPerSecond * 60;
+        public const int inabilityTolerance = Constants.Game.normalSpeedPerSecond * 60;
         public const float confidenceLevel = 0.1f;
         public const int sourceSearchRange = 6;
         public const float extensionImportance = 0.3f;
         public const float flagCaptureImportance = 0.3f;
         public const float relaxTolerance = 0.8f;
-        public static int cleanupPeriod = 0;//60 * 60 * Constants.World.normalSpeedPerSecond;
+        public static int cleanupPeriod = 0;//60 * 60 * Constants.Game.normalSpeedPerSecond;
         public const int stockCoverage = 8;
         public const int workshopCoverage = 8;
         public const int stockSave = Constants.Stock.cartCapacity;
         public const int cartMin = 5;
         public const int itemTypesPerStock = 6;
         public const int itemTypesPerMainStock = 10;
-        public const int dealCheckPeriod = Constants.World.normalSpeedPerSecond * 60 * 2;
+        public const int dealCheckPeriod = Constants.Game.normalSpeedPerSecond * 60 * 2;
         public const float guardHouseWorkshopRatio = 1.5f;
-        public const int roadLastUsedMin = Constants.World.normalSpeedPerSecond * 60 * 20;
-        public const int roadLastUsedMax = Constants.World.normalSpeedPerSecond * 60 * 120;
+        public const int roadLastUsedMin = Constants.Game.normalSpeedPerSecond * 60 * 20;
+        public const int roadLastUsedMax = Constants.Game.normalSpeedPerSecond * 60 * 120;
         public const int soldiersReserved = 15;
         public const float deadEndProblemFactor = 0.8f;
-        public const int noResourceTolerance = Constants.World.normalSpeedPerSecond * 60 * 20;
+        public const int noResourceTolerance = Constants.Game.normalSpeedPerSecond * 60 * 20;
         public const float abandonedFlagWeight = 0.25f;
         public const float isolatedBuildingWeight = 0.5f;
         public const float isolatedFlagWeight = 0.5f;
@@ -438,7 +443,7 @@ public static class Constants
         public const float nodeAtFarmPrice = 1.5f;
         public const float nodeAtForesterPrice = 1.25f;
         public const float alreadyHasFlagBonus = 1.2f;
-        public const int maximumProductionCalculatingPeriod = Constants.World.normalSpeedPerSecond * 60 * 5;
+        public const int maximumProductionCalculatingPeriod = Constants.Game.normalSpeedPerSecond * 60 * 5;
         public const float resourcesAroundFarmProblem = 0.3f;
         public const float solutionToRemoveTreesAroundFarm = 0.8f;
         public const float solutionToRemoveRocksAroundFarm = 0.5f;

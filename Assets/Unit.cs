@@ -1555,7 +1555,7 @@ public class Unit : HiveObject
 	{
 		float heightDifference = Math.Abs( a.height - b.height );
 		float time = 2f + heightDifference * 4f;    // Number of seconds it takes for the unit to reach the other node
-		return 1 / time / Constants.World.normalSpeedPerSecond;
+		return 1 / time / Constants.Game.normalSpeedPerSecond;
 	}
 
 	public void Walk( Node target )
@@ -1836,7 +1836,7 @@ public class Unit : HiveObject
 			ScheduleWalkToNeighbour( team.mainBuilding.node );
 		};
 		ScheduleCall( team.mainBuilding );
-		ScheduleWait( Constants.World.normalSpeedPerSecond );	// Wait to prevent further calls to this function once the unit reached the headquarters
+		ScheduleWait( Constants.Game.normalSpeedPerSecond );	// Wait to prevent further calls to this function once the unit reached the headquarters
 		recalled = true;
 	}
 
