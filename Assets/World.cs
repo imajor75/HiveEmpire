@@ -1277,12 +1277,16 @@ public class Game : World
 				if ( player is Simpleton simpleton && simpleton.preparationProgress < 1 && simpleton.actionIndex < root.preparationActionIndexLimit )
 				{
 					bool progress = simpleton.DoSomething();
-					if ( simpleton.preparationProgress >= 1 || !progress )
-						preparation = PrepareState.prerun;
 					if ( !progress && simpleton.preparationProgress < 1 )
 					{
 						Log( $"Failed to finish preparation!", Severity.warning );
 						simpleton.DumpTasks();
+					}
+					if ( simpleton.preparationProgress >= 1 || !progress )
+					{
+						if ( challenge.prerun > 0 )
+							Log( $"Entering prerun for {challenge.prerun} ticks, game checksum: {checksum}" );
+						preparation = PrepareState.prerun;
 					}
 				}
 			}
@@ -1297,7 +1301,10 @@ public class Game : World
 				Advance();
 				prerunDone++;
 				if ( prerunDone >= Constants.Interface.prerunPerFrame )
+				{
+					Log( $"Prerun at {time} checksum: {checksum}" );
 					return;
+				}
 			}
 			preparation = PrepareState.ready;
 			challenge.ParseConditions( this );

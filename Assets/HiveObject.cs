@@ -202,6 +202,7 @@ public abstract class HiveObject : HiveCommon
 			objects.Clear();
 			newObjects.Clear();
 			freeSlots.Clear();
+			processIndex = 0;
 		}
 
 		public void Validate()
