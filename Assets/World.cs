@@ -1301,10 +1301,7 @@ public class Game : World
 				Advance();
 				prerunDone++;
 				if ( prerunDone >= Constants.Interface.prerunPerFrame )
-				{
-					Log( $"Prerun at {time} checksum: {checksum}" );
 					return;
-				}
 			}
 			preparation = PrepareState.ready;
 			challenge.ParseConditions( this );
@@ -1751,6 +1748,7 @@ public class Game : World
 		public Goal bestSolutionLevel;
 		public Preparation preparation;
 		public int prerun;
+		public float soldierProductivityMax = float.MaxValue;
 
 		int worldSize { set { worldGenerationSettings.size = value; } }
 		bool islandOnly { set { if ( value ) { randomizeIslands = false; worldGenerationSettings.reliefSettings.island = true; } } }

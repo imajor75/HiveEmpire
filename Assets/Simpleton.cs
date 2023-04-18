@@ -66,7 +66,7 @@ public class Simpleton : Player
                 if ( lastApplied == null )
                     return actionIndex > 0 ? 1 : 0;
 
-                return Constants.Simpleton.enoughPreparation - lastApplied.importance;
+                return Constants.Simpleton.enoughPreparation - lastApplied.problemWeight;
             }
 
             preparationMissingDeals = preparationMissingProduction = preparationTotalDeals = preparationTotalProduction = 0;
@@ -481,6 +481,8 @@ public class Simpleton : Player
                     continue;
                 boss.tasks.Add( new MaintenanceTask( boss, workshop ) );
             }
+            if ( game.preparation == Game.PrepareState.create && game.challenge.soldierProductivityMax < soldierYield )
+                soldierYield = game.challenge.soldierProductivityMax;
 
             boss.reservedPlank = boss.reservedStone = 0;
             void CheckBuilding( Building building )

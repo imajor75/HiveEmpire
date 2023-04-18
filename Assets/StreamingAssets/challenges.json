@@ -93,13 +93,14 @@
     },
     {
       "title": "Optimize existing empire",
-      "description": "Set up routes to an existing empire, reach some soldier production level",
+      "description": "Create more workshops and road network to reach a soldier production level",
       "worldSize": 48,
       "preparation": "full",
       "landOnly": true,
-      "prerun": 540000,
+      "prerun": 180000,
+      "soldierProductivityMax": 0.8,
       "conditions": [
-        "production soldier *3"
+        "production soldier 2"
       ]
     }
   ]
