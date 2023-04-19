@@ -593,20 +593,15 @@ public class Simpleton : Player
                 }
 
                 float targetMinimum = 0;
-                if ( game.preparation != Game.PrepareState.create )
+                targetMinimum = workshopType.type switch
                 {
-                    targetMinimum = workshopType.type switch
-                    {
-                        Workshop.Type.barrack => soldierYield + 0.1f,
-                        Workshop.Type.woodcutter => 3,
-                        Workshop.Type.sawmill => 3,
-                        Workshop.Type.forester => 2,
-                        Workshop.Type.stoneMine => 1,
-                        _ => 0
-                    };
-                }
-                else if ( workshopType.type == Workshop.Type.barrack )
-                    targetMinimum = 1;
+                    Workshop.Type.barrack => game.preparation == Game.PrepareState.create ? 1 : soldierYield + 0.1f,
+                    Workshop.Type.woodcutter => 3,
+                    Workshop.Type.sawmill => 3,
+                    Workshop.Type.forester => 2,
+                    Workshop.Type.stoneMine => 1,
+                    _ => 0
+                };
 
                 var outputType = workshopType.outputType;
                 if ( workshopType.type == Workshop.Type.forester )
