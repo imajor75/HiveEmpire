@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -829,7 +829,7 @@ public class Stock : Attackable
 			if ( maxItems > total )
 			{
 				var p = ItemDispatcher.Priority.stock;
-				if ( current < itemData[itemType].inputMin )
+				if ( current < itemData[itemType].inputMin || current < itemData[itemType].cartOutput )
 					p = ItemDispatcher.Priority.high;
 				if ( current > itemData[itemType].inputMax )
 					p = ItemDispatcher.Priority.zero;
@@ -845,11 +845,11 @@ public class Stock : Attackable
 			if ( itemData.Count > itemType )
 			{
 				var p = ItemDispatcher.Priority.stock;
-				if ( current < itemData[itemType].outputMin )
+				if ( current < itemData[itemType].outputMin || current < itemData[itemType].cartOutput )
 					p = ItemDispatcher.Priority.zero;
 				if ( current > itemData[itemType].outputMax )
 					p = ItemDispatcher.Priority.high;
-				team.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, 0.5f, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
+				team.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
 		World.CRC( CRC, OperationHandler.Event.CodeLocation.stockCriticalUpdate );

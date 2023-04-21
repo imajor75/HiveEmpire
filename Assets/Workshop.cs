@@ -939,8 +939,7 @@ public class Workshop : Building
 				if ( productionConfiguration.outputType != Item.Type.unknown && mode != Mode.always )
 				{
 					bool noDispenser = dispenser == null || !dispenser.IsIdle( true );
-					team.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, 0.5f, freeSpaceAtFlag == 0, noDispenser );
-				}
+					team.itemDispatcher.RegisterOffer( this, productionConfiguration.outputType, output, outputPriority, outputArea, freeSpaceAtFlag == 0, noDispenser );				}
 			}
 		}
 

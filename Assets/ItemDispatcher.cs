@@ -135,7 +135,7 @@ public class ItemDispatcher : HiveObject
 		markets[(int)itemType].RegisterRequest( building, quantity, priority, area, weight );
 	}
 
-	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f, bool flagJammed = false, bool noDispenser = false )
+	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, bool flagJammed = false, bool noDispenser = false )
 	{
 		Assert.global.IsNotNull( area );
 		if ( priority == Priority.zero )
@@ -143,7 +143,7 @@ public class ItemDispatcher : HiveObject
 		if ( quantity == 0 && !fullTracking )
 			return;
 
-		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, weight, flagJammed, noDispenser );
+		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, flagJammed, noDispenser );
 	}
 
 	public void RegisterOffer( Item item, Priority priority, Ground.Area area )
@@ -204,7 +204,7 @@ public class ItemDispatcher : HiveObject
 			requests.Add( r );
 		}
 
-		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f, bool flagJammed = false, bool noDispenser = false )
+		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area, bool flagJammed = false, bool noDispenser = false )
 		{
 			building.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var o = new Potential
@@ -217,7 +217,6 @@ public class ItemDispatcher : HiveObject
 				area = area,
 				flagJammed = flagJammed,
 				noDispenser = noDispenser,
-				weight = weight
 			};
 			offers.Add( o );
 		}

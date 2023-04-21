@@ -394,7 +394,7 @@ public class Team : HiveObject
 		} );
 		foreach ( var c in game.workshopConfigurations )
 		{
-			if ( c.generatedInputs == null )
+			if ( c.generatedInputs == null || game.itemTypeUsage[(int)c.outputType] == 0 )
 				continue;
 			foreach ( var b in c.generatedInputs )
 			{

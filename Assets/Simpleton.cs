@@ -27,7 +27,7 @@ public class Simpleton : Player
     public bool noRoom;
     public bool dumpTasks, dumpYields;
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
-    public bool preservingConstructionMaterial = false;
+    public ItemHandling preservingConstructionMaterial = ItemHandling.uninitialized;
     public int actionIndex;
     public bool inProgress;
     public int preparationMissingProduction, preparationTotalProduction;
@@ -124,6 +124,12 @@ public class Simpleton : Player
    	[Obsolete( "Compatibility with old files", true )]
     bool hasWoodcutter { set {} }
 
+    public enum ItemHandling
+    {
+        uninitialized,
+        constructionOnly,
+        free
+    }
 
     [Serializable]
     public struct ItemUsage
@@ -181,7 +187,7 @@ public class Simpleton : Player
             nonConstructionUsage = new ();
             foreach ( var workshopType in game.workshopConfigurations )
             {
-                if ( workshopType.generatedInputs == null )
+                if ( workshopType.generatedInputs == null || workshopType.outputType == Item.Type.unknown || game.itemTypeUsage[(int)workshopType.outputType] == 0 )
                     continue;
                 foreach ( var input in workshopType.generatedInputs )
                 {
@@ -557,13 +563,13 @@ public class Simpleton : Player
 
             boss.emergencyPlank = boss.expectedPlank < Constants.Simpleton.expectedPlankPanic;
 
-            if ( ( boss.emergencyPlank || boss.reservedPlank > 0 ) && !boss.preservingConstructionMaterial )
+            if ( ( boss.emergencyPlank || boss.reservedPlank > 0 ) && boss.preservingConstructionMaterial != ItemHandling.constructionOnly )
             {
                 action = Action.disableNonConstruction;
                 problemWeight = solutionEfficiency = 1;
             }
 
-            if ( !boss.emergencyPlank && boss.reservedPlank == 0 && boss.preservingConstructionMaterial )
+            if ( !boss.emergencyPlank && boss.reservedPlank == 0 && boss.preservingConstructionMaterial != ItemHandling.free )
             {
                 action = Action.enableNonConstruction;
                 problemWeight = solutionEfficiency = 1;
@@ -650,12 +656,21 @@ public class Simpleton : Player
                 case Action.disableNonConstruction:
                     foreach ( var usage in boss.nonConstructionUsage )
                         HiveCommon.oh.ScheduleInputWeightChange( boss.team, usage.workshopType, usage.itemType, 0, source:boss.activity );
-                    boss.preservingConstructionMaterial = true;
+                    boss.preservingConstructionMaterial = ItemHandling.constructionOnly;
                     break;
                 case Action.enableNonConstruction:
-                    foreach ( var usage in boss.nonConstructionUsage )
-                        HiveCommon.oh.ScheduleInputWeightChange( boss.team, usage.workshopType, usage.itemType, 0.5f, source:boss.activity );
-                    boss.preservingConstructionMaterial = false;
+                    foreach ( var usage in boss.team.inputWeights )
+                    {
+                        float weight = 0.5f;
+                        var config = Workshop.GetConfiguration( game, usage.workshopType );
+                        if ( config != null )
+                        {
+                            if ( config.outputType != Item.Type.unknown )
+                                weight = game.itemTypeUsage[(int)config.outputType];
+                        }
+                        HiveCommon.oh.ScheduleInputWeightChange( boss.team, usage.workshopType, usage.itemType, weight, source:boss.activity );
+                    }
+                    boss.preservingConstructionMaterial = ItemHandling.free;
                     break;
             }
         }
