@@ -1436,7 +1436,6 @@ public class Interface : HiveObject
 				}
 			}
 
-			Log( "ztr");
 			if ( target == null && x == 0 && y == 0 )
 			{
 				x = (int)( Screen.width - xs * uiScale ) / 2;
@@ -5743,6 +5742,7 @@ if ( cart )
 		List<Text> outputs = new ();
 		static Building.Type filter = Building.Type.unknown;
 		List<List<Text>> inputs = new ();
+		Dropdown typeName;
 		static bool reversed;
 		static Comparison<Building> comparison = CompareTypes;
 		Text summary;
@@ -5760,7 +5760,7 @@ if ( cart )
 				filter = buildingType;
 
 			Text( "Filter:" ).Pin( 20, -20, 150 );
-			var d = Dropdown().Pin( 80, -20, 150 );
+			typeName = Dropdown().Pin( 80, -20, 150 );
 			List<string> options = new ();
 			for ( int j = 0; j < (int)Building.Type.total; j++ )
 			{
@@ -5772,10 +5772,10 @@ if ( cart )
 			}
 			options.Sort();
 			options.Add( "All" );
-			d.AddOptions( options );
-			d.value = options.IndexOf( BuildingTypeToString( filter ) );
+			typeName.AddOptions( options );
+			typeName.value = options.IndexOf( BuildingTypeToString( filter ) );
 
-			d.onValueChanged.AddListener( delegate { SetFilter( d ); } );
+			typeName.onValueChanged.AddListener( delegate { SetFilter( typeName ); } );
 
 			var t = Text( "type", 10 ).Pin( 20, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareTypes ); } );
 			var p = Text( "productivity", 10 ).Pin( 170, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareProductivities ); } );
@@ -5785,7 +5785,7 @@ if ( cart )
 
 			summary = Text().Pin( 20, 40, 200, iconSize, 0, 0 );
 
-			SetFilter( d );
+			SetFilter( typeName );
 		}
 
 		public string BuildingTypeToString( Building.Type type )
@@ -5814,6 +5814,22 @@ if ( cart )
 			else
 				eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
 			Fill();
+		}
+
+		void ShowProducers( Item.Type itemType )
+		{
+			foreach ( var configuration in game.workshopConfigurations )
+			{
+				if ( configuration.outputType == itemType )
+				{
+					filter = (Building.Type)configuration.type;
+					eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
+					Fill();
+					typeName.SelectOption( BuildingTypeToString( filter ) );
+					return;
+				}
+			}
+
 		}
 
 		void ChangeComparison( Comparison<Building> comparison )
@@ -5862,7 +5878,7 @@ if ( cart )
 					int bi = 0;
 					foreach ( var buffer in workshop.buffers )
 					{
-						ItemIcon( buffer.itemType ).Link( scroll.content ).Pin( 215 + bi * 35, -iconSize * i );
+						ItemIcon( buffer.itemType ).Link( scroll.content ).Pin( 215 + bi * 35, -iconSize * i ).AddClickHandler( () => ShowProducers( buffer.itemType ) );
 						inputs[i].Add( Text( "0" ).Link( scroll.content ).Pin( 240 + bi * 35, -iconSize * i, 50 ) );
 						bi++;
 					}
@@ -8885,6 +8901,19 @@ public static class UIHelpers
 			result += $"{((time/Constants.Game.normalSpeedPerSecond)%60).ToString( "d2" )}";
 		}
 		return result;
+	}
+
+	public static bool SelectOption( this Dropdown d, string text )
+	{
+		for ( int i = 0; i < d.options.Count; i++ )
+		{
+			if ( d.options[i].text == text )
+			{
+				d.value = i;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static List<byte> Add( this List<byte> packet, int value )
