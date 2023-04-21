@@ -494,7 +494,7 @@ public class Stock : Attackable
 			{
 				foreach ( var f in frames )
 					if ( f.transform.childCount > 0 )
-						Destroy( f.transform.GetChild( 0 ).gameObject );
+						Eradicate( f.transform.GetChild( 0 ).gameObject );
 			}
 			if ( taskQueue.Count == 0 && walkTo == null )
 				SetActive( false );

@@ -364,7 +364,7 @@ public class Unit : HiveObject
 			boss.animator?.SetBool( walkingID, wasWalking );
 			boss.bodyState = preState;
 			if ( tool )
-				Destroy( tool );
+				Eradicate( tool );
 			started = false;
 			boss.OnActFinished( act );
 		}
@@ -1821,7 +1821,7 @@ public class Unit : HiveObject
 	{
 		if ( team == null )
 		{
-			Destroy( gameObject );
+			Eradicate( gameObject );
 			return;
 		}
 		if ( this as Stock.Cart )

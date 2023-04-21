@@ -238,7 +238,7 @@ public class Resource : HiveObject
 			Tree treeCreator;
 			if ( body.TryGetComponent<Tree>( out treeCreator ) )
 			{
-				Destroy( treeCreator );
+				Eradicate( treeCreator );
 				var renderer = body.GetComponent<MeshRenderer>();
 				var materials = new Material[2];
 				materials[0] = bark;
@@ -287,7 +287,7 @@ public class Resource : HiveObject
 			mapObject.transform.localScale = Vector3.one * 0.15f;
 			mapObject.transform.localPosition = new Vector3( 0, 3, 0 );
 			mapObject.layer = World.layerIndexMapOnly;
-			Destroy( mapObject.GetComponent<Collider>() );
+			Eradicate( mapObject.GetComponent<Collider>() );
 		}
 
 		base.Start();

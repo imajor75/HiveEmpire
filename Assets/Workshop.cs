@@ -684,15 +684,15 @@ public class Workshop : Building
 			if ( smoke )
 			{
 				smoke.SetParent( null );
-				Destroy( smoke.gameObject );
+				Eradicate( smoke.gameObject );
 			}
 			Texture2D tex = RuntimePreviewGenerator.GenerateModelPreview( handle, 256, 256 );
 			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
 			Assert.global.IsNotNull( sprites[i] );
-			Destroy( handle.gameObject );
+			Eradicate( handle.gameObject );
 		}
 
-		Destroy( dl );
+		Eradicate( dl );
 	}
 
 	public static Workshop Create()

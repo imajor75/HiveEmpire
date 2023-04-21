@@ -881,7 +881,7 @@ public class World : HiveObject
 		{
 			// HACK The event system needs to be recreated after the main camera is destroyed,
 			// otherwise there is a crash in unity
-			Destroy( GameObject.FindObjectOfType<EventSystem>().gameObject );
+			Eradicate( GameObject.FindObjectOfType<EventSystem>().gameObject );
 			var esObject = new GameObject( "Event System" );
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();
@@ -908,13 +908,13 @@ public class World : HiveObject
 		water = null;
 
 		if ( light )
-			Destroy( light.gameObject );
+			Eradicate( light.gameObject );
 		light = null;
 
 		foreach ( var store in updateHiveObjects )
 			store.Clear();
 
-		Destroy( transform.Find( "Nodes" )?.gameObject );
+		Eradicate( transform.Find( "Nodes" )?.gameObject );
 
 		massDestroy = true;
 		assert.AreEqual( id, 0 );
@@ -1422,7 +1422,7 @@ public class Game : World
 		saveIndex = 0;
 		SetSpeed( Speed.normal );
 		if ( operationHandler )
-			Destroy( operationHandler );
+			Eradicate( operationHandler );
 		fileName = "";
 		roadTutorialShowed = false;
 		createRoadTutorialShowed = false;
@@ -1573,8 +1573,8 @@ public class Game : World
 
 		nameOnNetwork = null;
 
-		Destroy( transform.Find( "Items just created" )?.gameObject );
-		Destroy( transform.Find( "Players and teams" )?.gameObject );
+		Eradicate( transform.Find( "Items just created" )?.gameObject );
+		Eradicate( transform.Find( "Players and teams" )?.gameObject );
 
 		root.Clear();
 	}

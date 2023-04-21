@@ -84,7 +84,7 @@ public abstract class Attackable : Building
 		if ( trashTimer.done )
 		{
 			foreach ( var g in trash )
-				Destroy( g );
+				Eradicate( g );
 		}
 	}
 

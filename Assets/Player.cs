@@ -105,7 +105,7 @@ public abstract class Player : HiveObject
 		game.players.Remove( this );
 		if ( root.mainPlayer == this )
 			root.mainPlayer = null;
-		Destroy( gameObject );
+		Eradicate( gameObject );
 	}
 
 	public virtual void Defeat()
@@ -335,7 +335,7 @@ public class Team : HiveObject
 
 		if ( !CreateMainBuilding() )
 		{
-			Destroy( this );
+			Eradicate( this );
 			return null;
 		}
 		chartAdvanceTimer.Start( Constants.Player.Chart.advanceTime );
@@ -658,7 +658,7 @@ public class Team : HiveObject
 		RemoveObjects();
 		itemDispatcher?.Remove();
 		game.ground.dirtyOwnership = true;
-		Destroy( gameObject );
+		Eradicate( gameObject );
 	}
 
 	public void Defeat()

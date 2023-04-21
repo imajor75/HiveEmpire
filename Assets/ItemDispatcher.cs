@@ -116,7 +116,7 @@ public class ItemDispatcher : HiveObject
 	public override void Remove()
 	{
 		foreach ( var market in markets )
-			Destroy( market );
+			Eradicate( market );
 		base.Remove();
 	}
 

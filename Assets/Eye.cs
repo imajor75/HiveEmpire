@@ -99,7 +99,7 @@ public class Eye : HiveObject
 
 	override public void Remove()
 	{
-		Destroy( cameraGrid.gameObject );
+		Eradicate( cameraGrid.gameObject );
 		base.Remove();
 	}
 
@@ -647,7 +647,7 @@ public class Eye : HiveObject
 			public void Setup( int width, int height, int steps, RenderTextureFormat format = RenderTextureFormat.ARGB32 )
 			{
 				if ( temporary )
-					Destroy( temporary );
+					Eradicate( temporary );
 				materials.Clear();
 
 				if ( steps > 1 )
@@ -791,7 +791,7 @@ public class Eye : HiveObject
 			{
 				if ( mask )
 				{
-					Destroy( mask );
+					Eradicate( mask );
 					mask = null;
 					maskCreator = null;
 				}
@@ -800,7 +800,7 @@ public class Eye : HiveObject
 			{
 				if ( mask == null || mask.width != Screen.width || mask.height != Screen.height )
 				{
-					Destroy( mask );
+					Eradicate( mask );
 
 					mask = new RenderTexture( Screen.width, Screen.height, 0, RenderTextureFormat.RFloat );
 					mask.name = "Eye highlight mask";
@@ -814,7 +814,7 @@ public class Eye : HiveObject
 
 				if ( blur == null || blur.width != Screen.width || blur.height != Screen.height )
 				{
-					Destroy( blur );
+					Eradicate( blur );
 
 					blur = new RenderTexture( Screen.width, Screen.height, 0 );
 					blur.name = "Eye highlight blur";

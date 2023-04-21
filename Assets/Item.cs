@@ -198,7 +198,7 @@ public class Item : HiveObject
 			Assert.global.IsNotNull( sprites[i] );
 		}
 
-		Destroy( dl );
+		Eradicate( dl );
 	}
 
 	public static Item Create()
@@ -505,7 +505,7 @@ public class Item : HiveObject
 		destination.ItemArrived( this );
 
 		team.UnregisterItem( this );
-		Destroy( onMap );
+		Eradicate( onMap );
 		base.Remove();
 	}
 
@@ -538,7 +538,7 @@ public class Item : HiveObject
 			hauler.ResetTasks();	// TODO What if the hauler has a second item in hand?
 		};
 		CancelTrip();
-		Destroy( onMap );
+		Eradicate( onMap );
 		flag?.RemoveItem( this );
 		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )

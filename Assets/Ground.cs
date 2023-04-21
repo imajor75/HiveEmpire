@@ -165,7 +165,7 @@ public class Ground : HiveObject
 	void CreateBlocks()
 	{
 		foreach ( var block in blocks )
-			Destroy( block.gameObject );
+			Eradicate( block.gameObject );
 		blocks.Clear();
 
 		for ( int x = dimension / Constants.Ground.blockCount / 2; x < dimension; x += dimension / Constants.Ground.blockCount )
@@ -404,7 +404,7 @@ public class Ground : HiveObject
 	public void RecreateMapGroundTexture()
 	{
 		if ( mapGroundTexture )
-			Destroy( mapGroundTexture );
+			Eradicate( mapGroundTexture );
 
 		int size = 512;
 		float pixelPerNode = (float)size / dimension;

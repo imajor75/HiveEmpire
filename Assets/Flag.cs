@@ -288,7 +288,7 @@ public class Flag : HiveObject
 		recentlyLeftCrossing = true;
 		if ( pole )
 		{
-			Destroy( pole );
+			Eradicate( pole );
 			pole = null;
 		}
 	}

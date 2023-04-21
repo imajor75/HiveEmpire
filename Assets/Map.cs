@@ -52,7 +52,7 @@ public class Map : Interface.Panel
 	new void OnDestroy()
 	{
 		if ( content )
-			Destroy( content.gameObject );
+			Eradicate( content.gameObject );
 
 		base.OnDestroy();
 	}
@@ -108,7 +108,7 @@ public class Map : Interface.Panel
 		{
 			instance = null;
 			base.OnDestroy();
-			Destroy( camera.gameObject );
+			Eradicate( camera.gameObject );
 		}
 
 		new void OnRectTransformDimensionsChange()

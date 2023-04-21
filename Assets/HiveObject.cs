@@ -42,6 +42,11 @@ public class HiveCommon : MonoBehaviour
 		}
 	}
 
+	public static void Eradicate( UnityEngine.Object target )
+	{
+		Destroy( target );
+	}
+
 	public static void LogStackTrace()
 	{
 		var stackTrace = new StackTrace();
@@ -326,7 +331,7 @@ public abstract class HiveObject : HiveCommon
 	{
 		UnscheduleUpdates();
 		destroyed = true;
-		Destroy( gameObject );
+		Eradicate( gameObject );
 	}
 
 	public virtual Node location { get { return null; } }
@@ -347,7 +352,7 @@ public abstract class HiveObject : HiveCommon
 		gameObject.SetActive( !inactive );
 		if ( destroyed )	// If this is true, and this function is called, we are right after load. We should let unity know that this object should be treated as nonexistent
 		{
-			Destroy( gameObject );
+			Eradicate( gameObject );
 			Log( $"Dead object in file: {name} (type:{GetType()}, id:{id})" );
 		}
 	}

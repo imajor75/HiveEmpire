@@ -172,7 +172,7 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 	public void Remove()
 	{
 		driver.Dispose();
-		Destroy( gameObject );
+		Eradicate( gameObject );
 	}
 
 	public void SetState( State state )

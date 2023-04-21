@@ -357,7 +357,7 @@ public class Interface : HiveObject
 	public void Clear()
 	{
 		foreach ( Transform d in debug.transform )
-			Destroy( d.gameObject );
+			Eradicate( d.gameObject );
 		foreach ( var panel in panels )
 		{
 			if ( panel != tooltip )
@@ -1056,7 +1056,7 @@ public class Interface : HiveObject
 		{
 			if ( path == null || !path.IsValid )
 			{
-				Destroy( this );
+				Eradicate( this );
 				return null;
 			}
 			this.path = path;
@@ -1181,7 +1181,7 @@ public class Interface : HiveObject
 
 		public void OnDestroy()
 		{
-			Destroy( gameObject );
+			Eradicate( gameObject );
 		}
 
 	}
@@ -1208,7 +1208,7 @@ public class Interface : HiveObject
 			allowInSpectateMode = true;
 			noPin = true;
 			base.pinned = true;
-			reopen = true;
+			openMode = OpenMode.reopen;
 			base.Open( width = 100, height = 100 );
 			escCloses = false;
 
@@ -1383,7 +1383,7 @@ public class Interface : HiveObject
 		public bool noCloseButton;
 		public bool noResize;
 		public bool noPin;
-		public bool reopen;
+		public OpenMode openMode = OpenMode.normal;
 		public bool allowInSpectateMode;
 		public Image pin;
 		public bool pinned;
@@ -1399,6 +1399,13 @@ public class Interface : HiveObject
 			same
 		}
 
+		public enum OpenMode
+		{
+			normal,
+			ignorePrevious,
+			reopen
+		}
+
 		// Summary:
 		// Return true if the caller should give
 		public bool Open( HiveObject target, int x, int y, int xs, int ys )
@@ -1412,20 +1419,24 @@ public class Interface : HiveObject
 			if ( !(transform is RectTransform) )
 				gameObject.AddComponent<RectTransform>();
 
-			foreach ( var panel in root.panels )
+			if ( openMode != OpenMode.ignorePrevious )
 			{
-				if ( panel.pinned )
-					continue;
-				var r = IsTheSame( panel );
-				if ( r != CompareResult.different )
-					panel.Close();
-				if ( r == CompareResult.same && !reopen )
+				foreach ( var panel in root.panels )
 				{
-					Destroy( gameObject );
-					return true;
+					if ( panel.pinned )
+						continue;
+					var r = IsTheSame( panel );
+					if ( r != CompareResult.different )
+						panel.Close();
+					if ( r == CompareResult.same && openMode == OpenMode.normal )
+					{
+						Eradicate( gameObject );
+						return true;
+					}
 				}
 			}
 
+			Log( "ztr");
 			if ( target == null && x == 0 && y == 0 )
 			{
 				x = (int)( Screen.width - xs * uiScale ) / 2;
@@ -1471,7 +1482,7 @@ public class Interface : HiveObject
 		public void Clear()
 		{
 			foreach ( Transform c in transform )
-				Destroy( c.gameObject );
+				Eradicate( c.gameObject );
 
 			Prepare();
 		}
@@ -1722,7 +1733,7 @@ public class Interface : HiveObject
 
 		public virtual void Close()
 		{
-			Destroy( gameObject );
+			Eradicate( gameObject );
 		}
 
 		public virtual void Update()
@@ -2068,7 +2079,7 @@ public class Interface : HiveObject
 					return;
 
 				text = newText;
-				Destroy( editor.gameObject );
+				Eradicate( editor.gameObject );
 				if ( onValueChanged != null )
 					onValueChanged();
 			}
@@ -2136,7 +2147,7 @@ public class Interface : HiveObject
 				if ( this.itemType == itemType )
 					return;
 
-				Destroy( pathVisualization );
+				Eradicate( pathVisualization );
 				pathVisualization = null;
 
 				this.itemType = itemType;
@@ -2160,7 +2171,7 @@ public class Interface : HiveObject
 
 			public void OnDestroy()
 			{
-				Destroy( pathVisualization );
+				Eradicate( pathVisualization );
 				pathVisualization = null;
 			}
 
@@ -2179,7 +2190,7 @@ public class Interface : HiveObject
 					pathVisualization = PathVisualization.Create().Setup( item.path );
 				if ( !show )
 				{
-					Destroy( pathVisualization?.gameObject );
+					Eradicate( pathVisualization?.gameObject );
 					pathVisualization = null;
 				}
 			}
@@ -2221,7 +2232,7 @@ public class Interface : HiveObject
 			autoCloseAfter = autoClose;
 			creationTime = Time.unscaledTime;
 			noResize = true;
-			reopen = true;
+			openMode = OpenMode.reopen;
 			allowInSpectateMode = true;
 			base.Open( location, 400, 60 );
 
@@ -2269,9 +2280,9 @@ public class Interface : HiveObject
 		public void OnPointerExit( PointerEventData eventData )
 		{
 			Assert.global.IsNotNull( ring );
-			Destroy( ring.gameObject );
+			Eradicate( ring.gameObject );
 			ring = null;
-			Destroy( arrow.gameObject );
+			Eradicate( arrow.gameObject );
 			arrow = null;
 		}
 
@@ -2327,8 +2338,8 @@ public class Interface : HiveObject
 
 		void OnDestroy()
 		{
-			Destroy( ring?.gameObject );
-			Destroy( arrow?.gameObject );
+			Eradicate( ring?.gameObject );
+			Eradicate( arrow?.gameObject );
 		}
 	}
 
@@ -2575,7 +2586,7 @@ public class Interface : HiveObject
 				if ( building is Stock stock )
 				{
 					foreach ( Transform c in transform )
-						Destroy( c.gameObject );
+						Eradicate( c.gameObject );
 
 					int slot = 0;
 					for ( int i = 0; i < (int)Item.Type.total; i++ )
@@ -2594,7 +2605,7 @@ public class Interface : HiveObject
 				if ( building is GuardHouse gh )
 				{
 					foreach ( Transform c in transform )
-						Destroy( c.gameObject );
+						Eradicate( c.gameObject );
 
 					for ( int i = 0; i < gh.soldiers.Count; i++ )
 					{
@@ -2996,7 +3007,11 @@ public class Interface : HiveObject
 				{
 					var config = Workshop.GetConfiguration( game, (Workshop.Type)i );
 					if ( config != null && config.outputType == itemType )
-						BuildingList.Create().Open( (Building.Type)i );
+					{
+						var list = BuildingList.Create();
+						list.openMode = OpenMode.reopen;
+						list.Open( (Building.Type)i );
+					}
 				}
 			}
 
@@ -3371,7 +3386,7 @@ public class Interface : HiveObject
 		void RecreateControls()
 		{
 			if ( controls )
-				Destroy( controls.gameObject );
+				Eradicate( controls.gameObject );
 			controls = new GameObject( "Stock Controls" ).AddComponent<RectTransform>();
 			controls.Link( this ).Stretch();
 
@@ -4242,7 +4257,7 @@ public class Interface : HiveObject
 			constructionMode = type;
 			this.workshopType = workshopType;
 
-			reopen = true;
+			openMode = OpenMode.reopen;
 			base.Open( 500, 150 );
 			this.Pin( 40, 200, 500, 150, 0, 0 );
 			Text( $"Building a new {(type==Construct.workshop?workshopType.ToString():type.ToString()).GetPrettyName( false )}", 14 ).Pin( borderWidth, -borderWidth, 460, 30 );
@@ -4559,7 +4574,7 @@ public class Interface : HiveObject
 		new public void OnDestroy()
 		{
 			base.OnDestroy();
-			Destroy( ring.gameObject );
+			Eradicate( ring.gameObject );
 		}
 
 		public override void Update()
@@ -5085,7 +5100,7 @@ if ( cart )
 				{
 					cartDestination = cart.destination;
 					var path = cart.FindTaskInQueue<Unit.WalkToFlag>()?.path;
-					Destroy( cartPath );
+					Eradicate( cartPath );
 					cartPath = PathVisualization.Create().Setup( path );
 				}
 			}
@@ -5100,7 +5115,7 @@ if ( cart )
 		{
 			base.OnDestroy();
 			eye.ReleaseFocus( this );
-			Destroy( cartPath );
+			Eradicate( cartPath );
 		}
 	}
 
@@ -5165,14 +5180,14 @@ if ( cart )
 			if ( construction.boss is Stock s )
 			{
 				var p = StockPanel.Create();
-				p.reopen = true;
+				p.openMode = OpenMode.reopen;
 				p.Open( s );
 
 			}
 			if ( construction.boss is Workshop w )
 			{
 				var p = WorkshopPanel.Create();
-				p.reopen = true;
+				p.openMode = OpenMode.reopen;
 				p.Open( w );
 			}
 			Close();
@@ -5284,7 +5299,7 @@ if ( cart )
 			if ( item.destination != destination )
 			{
 				if ( destinationText )
-					Destroy( destinationText.gameObject );
+					Eradicate( destinationText.gameObject );
 				destinationText = BuildingIcon( item.destination )?.Pin( 100, -75, 120 );
 				destination = item.destination;
 			}
@@ -5301,7 +5316,7 @@ if ( cart )
 		public override void Close()
 		{
 			base.Close();
-			Destroy( route );
+			Eradicate( route );
 		}
 
 		public void SetCameraTarget( Eye eye )
@@ -6755,7 +6770,7 @@ if ( cart )
 		{
 			int row = 0;
 			foreach ( Transform child in scroll.content )
-				Destroy( child.gameObject );
+				Eradicate( child.gameObject );
 
 			List<Resource> sortedResources = new ();
 			foreach ( var resource in Resources.FindObjectsOfTypeAll<Resource>() )
@@ -6862,7 +6877,7 @@ if ( cart )
 		{
 			int row = 0;
 			foreach ( Transform child in scroll.content )
-				Destroy( child.gameObject );
+				Eradicate( child.gameObject );
 
 			foreach ( var result in root.mainTeam.itemDispatcher.results )
 			{
@@ -7595,7 +7610,7 @@ if ( cart )
 			noResize = true;
 			noPin = true;
 			if ( reached != Game.Goal.none )
-				reopen = true;
+				openMode = OpenMode.reopen;
 			if ( base.Open( 400, 220 ) )
 				return;
 			this.Pin( -200, -110, 200, 110, 0.5f, 0.5f );
@@ -7735,7 +7750,7 @@ if ( cart )
 		{
 			noResize = true;
 			noPin = true;
-			reopen = true;
+			openMode = OpenMode.reopen;
 			allowInSpectateMode = true;
 			base.Open( 300, 200 );
 			this.createNewPlayer = createNewPlayer;
@@ -7956,7 +7971,7 @@ if ( cart )
 
 		public void Open( string title )
 		{
-			reopen = true;
+			openMode = OpenMode.reopen;
 			base.Open( 200, 200 );
 			row = 0;
 			scrollRect = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
@@ -8032,7 +8047,7 @@ if ( cart )
 				if ( progress > Math.PI )
 				{
 					transform.localScale = Vector3.one * endScale;
-					Destroy( this );
+					Eradicate( this );
 					return;
 				}
 
@@ -8352,7 +8367,7 @@ if ( cart )
 		void Update()
 		{
 			if ( group && Interface.IsKeyPressed( KeyCode.Escape ) )
-				Destroy( group );
+				Eradicate( group );
 				
 			const float fadeTime = 0.5f;
 			if ( group )
@@ -8377,12 +8392,12 @@ if ( cart )
 
 		public void Open()
 		{
-			Destroy( group );
+			Eradicate( group );
 
 			group = new GameObject( "Controller Group", typeof( RectTransform ) );
 			group.transform.SetParent( root.transform, false );
 			group.transform.Pin( (int)( Input.mousePosition.x / uiScale ), (int)( ( Input.mousePosition.y - Screen.height ) / uiScale ) );
-			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Destroy( group ) ).AddClickHandler( () => Destroy( group ), MouseButton.right ).color = new Color( 0, 0, 0, 0 );
+			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Eradicate( group ) ).AddClickHandler( () => Eradicate( group ), MouseButton.right ).color = new Color( 0, 0, 0, 0 );
 
 			foreach ( var action in actions )
 			{
@@ -8401,7 +8416,7 @@ if ( cart )
 
 		void Activate( Action action )
 		{
-			Destroy( group );
+			Eradicate( group );
 			action?.callback();
 		}
 	}
@@ -8726,7 +8741,7 @@ public static class UIHelpers
 	{
 		var s = g.gameObject.GetComponent<Interface.TooltipSource>();
 		if ( s )
-			UnityEngine.Object.Destroy( s );
+			HiveCommon.Eradicate( s );
 		foreach ( Transform t in g.transform )
 			t.RemoveTooltip();
 		return g;
@@ -8769,7 +8784,7 @@ public static class UIHelpers
 	public static ScrollRect Clear( this ScrollRect s )
 	{
 		foreach ( Transform child in s.content )
-			MonoBehaviour.Destroy( child.gameObject );
+			HiveCommon.Eradicate( child.gameObject );
 
 		var bg = new GameObject().AddComponent<Image>().Link( s.content ).Stretch();
 		bg.color = new Color( 0, 0, 0, 0 );	// emptry transparent background image for picking, otherwise mouse wheel is not srolling when not over a child element

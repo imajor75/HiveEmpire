@@ -12,7 +12,7 @@ public class BorderEdge : HiveObject
 		GameObject body = GameObject.CreatePrimitive( PrimitiveType.Cube );
 		body.name = "Border buoy";
 		body.layer = World.layerIndexGround;
-		Destroy( body.GetComponent<BoxCollider>() );
+		Eradicate( body.GetComponent<BoxCollider>() );
 		return body.AddComponent<BorderEdge>();
 	}
 

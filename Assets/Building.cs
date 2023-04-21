@@ -417,7 +417,7 @@ abstract public class Building : HiveObject
 				return;
 
 			done = true;
-			Destroy( boss.mapIndicator?.gameObject );
+			Eradicate( boss.mapIndicator?.gameObject );
 			boss.mapIndicator = null;
 			builder.ScheduleWalkToNeighbour( boss.flag.node );
 			builder.type = Unit.Type.unemployed;
