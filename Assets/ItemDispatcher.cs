@@ -45,7 +45,7 @@ public class ItemDispatcher : HiveObject
 		public int quantity;
 		public Type type;
 		public Ground.Area area;
-		public float weight = 0.5f;
+		public float importance = 0.5f;
 		public bool flagJammed;
 		public bool noDispenser;
 		public int id 
@@ -61,6 +61,8 @@ public class ItemDispatcher : HiveObject
 				return -1;
 			} 
 		}
+		[Obsolete( "Compatibility with old files", true )]
+		float weight { set { importance = value; } }
 	}
 
 	public List<Market> markets = new ();
@@ -84,7 +86,8 @@ public class ItemDispatcher : HiveObject
 		public bool incoming;
 		public bool remote; // This is true if the result is determined by the remote building, not queryBuilding
 		public int quantity;
-		public Category priority;
+		public float importance;
+		public Category category;
 	}
 
 	public List<LogisticResult> results, resultsInThisCycle;
@@ -204,7 +207,7 @@ public class ItemDispatcher : HiveObject
 				location = building.node,
 				type = Potential.Type.request,
 				area = area,
-				weight = weight
+				importance = weight
 			};
 			requests.Add( r );
 		}
@@ -241,7 +244,7 @@ public class ItemDispatcher : HiveObject
 				o.location = item.nextFlag.node;
 			o.type = Potential.Type.offer;
 			o.area = area;
-			o.weight = weight;
+			o.importance = weight;
 
 			offers.Add( o );
 		}
@@ -266,7 +269,7 @@ public class ItemDispatcher : HiveObject
 
 				Log( "Requests" );
 				for ( int i = 0; i < requests.Count; i++ )
-					Log( $" {i} {requests[i].building} {requests[i].quantity} {requests[i].location} {requests[i].priority} {requests[i].weight}" );
+					Log( $" {i} {requests[i].building} {requests[i].quantity} {requests[i].location} {requests[i].priority} {requests[i].importance}" );
 
 				boss.dump = Item.Type.unknown;
 			}
@@ -320,7 +323,7 @@ public class ItemDispatcher : HiveObject
 				{
 					if ( potential.building == other.building )
 						continue;
-					if ( other.weight == 0 )
+					if ( other.importance == 0 )
 						continue;
 					if ( !IsGoodFor( other, potential ) )
 						continue;
@@ -333,7 +336,7 @@ public class ItemDispatcher : HiveObject
 					}
 					ConsiderResult( potential, other, Result.match );
 					int distance = other.location.DistanceFrom( potential.location );
-					float score = 10 + 1f / distance * potential.weight * other.weight;
+					float score = 10 + 1f / distance * potential.importance * other.importance;
 					if ( score >= maxScore )
 						continue;
 					if ( score > bestScore )
@@ -383,8 +386,9 @@ public class ItemDispatcher : HiveObject
 			{
 				building = potential.building,
 				incoming = potential.type == Potential.Type.offer,
-				priority = potential.priority,
+				category = potential.priority,
 				quantity = potential.quantity,
+				importance = potential.importance,
 				result = result,
 				remote = remote
 			} );

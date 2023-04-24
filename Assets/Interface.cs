@@ -6863,7 +6863,7 @@ if ( cart )
 			if ( game.speed == Game.Speed.pause )
 				game.SetSpeed( Game.Speed.normal );
 
-			if ( base.Open( null, 0, 0, 540, 320 ) )
+			if ( base.Open( null, 0, 0, 570, 320 ) )
 				return;
 			name = "Logistic list panel";
 
@@ -6874,9 +6874,10 @@ if ( cart )
 			Text( "Building", 10 ).Pin( 20, -40, 100 );
 			Text( "Distance", 10 ).Pin( 100, -40, 100 );
 			Text( "Direction", 10 ).Pin( 140, -40, 100 );
-			Text( "Priority", 10 ).Pin( 190, -40, 100 );
-			Text( "Quantity", 10 ).Pin( 230, -40, 100 );
-			Text( "Result", 10 ).Pin( 270, -40, 100 );
+			Text( "Category", 10 ).Pin( 190, -40, 100 );
+			Text( "Importance", 10 ).Pin( 240, -40, 100 );
+			Text( "Quantity", 10 ).Pin( 300, -40, 100 );
+			Text( "Result", 10 ).Pin( 340, -40, 100 );
 
 			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
 		}
@@ -6917,8 +6918,9 @@ if ( cart )
 					BuildingIcon( result.building ).Link( scroll.content ).Pin( 0, row, 80 );
 					Text( result.building.node.DistanceFrom( building.node ).ToString() ).Link( scroll.content ).Pin( 100, row, 50 );
 					Text( result.incoming ? "Out" : "In" ).Link( scroll.content ).Pin( 130, row, 50 );
-					Text( result.priority.ToString() ).Link( scroll.content ).Pin( 170, row, 50 );
-					Text( result.quantity.ToString() ).Link( scroll.content ).Pin( 210, row, 50 );
+					Text( result.category.ToString() ).Link( scroll.content ).Pin( 180, row, 50 );
+					Text( result.importance.ToString() ).Link( scroll.content ).Pin( 240, row, 50 );
+					Text( result.quantity.ToString() ).Link( scroll.content ).Pin( 300, row, 50 );
 				}
 				string message = result.result switch
 				{
@@ -6950,7 +6952,7 @@ if ( cart )
 					else
 						message = "Not needed";
 				}
-				Text( message ).Link( scroll.content ).Pin( 250, row, 200, 40 );
+				Text( message ).Link( scroll.content ).Pin( 320, row, 200, 40 );
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( -1, root.mainTeam.itemDispatcher.results.Count * ( iconSize + 5 ) );
