@@ -3336,6 +3336,7 @@ public class Interface : HiveObject
 		public Item.Type selectedItemType = Item.Type.log;
 		public ItemImage selected;
 		public Text inputMin, inputMax, outputMin, outputMax, cartInput, cartOutput;
+		public InputField importance;
 		public RectTransform controls;
 		public Image selectedInput, selectedOutput;
 		new public EditableText name;
@@ -3466,7 +3467,7 @@ public class Interface : HiveObject
 
 			SetSize( 300, 100 - row );
 
-			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 180, 70, 100, 40, 0, 0 );
+			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 120, 70, 100, 40, 0, 0 );
 			selectedItemArea.name = "Selected item area";
 			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
 			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock\nRMB to change cart orders for this item" ).name = "Selected item";;
@@ -3496,6 +3497,11 @@ public class Interface : HiveObject
 			selectedInput.transform.rotation = Quaternion.Euler( 0, 0, 180 );
 			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.25f );
 			selectedOutput.color = new Color( 1, 0.75f, 0.15f );
+			string importanceTooltip = "This number indicates how strongly the stock pulls that item type. Increase this number if you want it to compete with workshops.";
+			Text( "Importance", 8 ).Link( selectedItemArea ).Pin( 150, 0, 40, iconSize ).SetTooltip( importanceTooltip );
+			importance = InputField( "0" ).Link( selectedItemArea ).Pin( 150, -20, 40, iconSize );
+			importance.onEndEdit.AddListener( ( value ) => stock.itemData[(int)selectedItemType].importance = float.Parse( value ) );
+			importance.SetTooltip( importanceTooltip );
 
 			Image( Icon.reset ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).SetTooltip( "Reset all values to default" ).name = "Reset";
 			Image( Icon.cart ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).SetTooltip( "Show the cart of the stock", null, 
@@ -3559,6 +3565,8 @@ public class Interface : HiveObject
 			if ( channelText != outputMax ) outputMax.text = "<" + stock.itemData[t].outputMax;
 			if ( channelText != cartInput ) cartInput.text = stock.itemData[t].cartInput.ToString();
 			if ( channelText != cartOutput ) cartOutput.text = stock.itemData[t].cartOutput.ToString();
+			if ( !importance.isFocused )
+				importance.text = stock.itemData[t].importance.ToString();
 
 			if ( IsKeyPressed( KeyCode.Mouse0 ) )
 			{

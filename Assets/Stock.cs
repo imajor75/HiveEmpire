@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -132,7 +132,7 @@ public class Stock : Attackable
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
 		public int cartOutput = Constants.Stock.defaultCartOutput, cartOutputTemporary = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
 		public int cartPledged;
-		public float importance = 0.5f;
+		public float importance = 0.1f;
 		public List<Route> outputRoutes = new ();
 		public Stock boss;
 		public Item.Type itemType;
