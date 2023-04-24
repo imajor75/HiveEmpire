@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -232,10 +232,16 @@ public class Stock : Attackable
 			throw new Exception();
 		}
 
-		public int ChangeChannelValue( Channel channel, int newValue )
+		public float ChangeChannelValue( Channel channel, float newValue )
 		{
+			if ( channel == Channel.importance )
+			{
+				var oldImportance = importance;
+				importance = newValue;
+				return oldImportance;
+			}
 			var old = ChannelValue( channel );
-			ChannelValue( channel ) = newValue;
+			ChannelValue( channel ) = (int)newValue;
 			if ( channel == Channel.inputMax && old != 0 && newValue == 0 )
 				boss.CancelOrders( itemType );
 			boss.team.UpdateStockRoutes();
@@ -252,6 +258,7 @@ public class Stock : Attackable
 		cartInput,
 		cartOutput,
 		cartOutputTemporary,
+		importance
 	}
 
 	[Obsolete( "Compatibility for old files", true )]

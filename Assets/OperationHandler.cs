@@ -437,7 +437,7 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsMoveRoad( road, index, direction ), standalone, source );
     }
 
-    public void ScheduleStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value, bool standalone = true, Operation.Source source = Operation.Source.manual )
+    public void ScheduleStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, float value, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
         ScheduleOperation( Operation.Create().SetupAsStockAdjustment( stock, itemType, channel, value ), standalone, source );
     }
@@ -952,13 +952,13 @@ public class Operation
         return this;
     }
 
-    public Operation SetupAsStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, int value )
+    public Operation SetupAsStockAdjustment( Stock stock, Item.Type itemType, Stock.Channel channel, float value )
     {
         type = Type.stockAdjustment;
         building = stock;
         this.stockChannel = channel;
         this.itemType = itemType;
-        itemCount = value;
+        weight = value;
         name = $"Stock Adjustment ({value} => {itemType} {channel})";
         return this;
     }
@@ -1188,7 +1188,7 @@ public class Operation
             {
                 if ( building is Stock stock )
                 {
-                    var oldValue = stock.itemData[(int)itemType].ChangeChannelValue( stockChannel, itemCount );
+                    var oldValue = stock.itemData[(int)itemType].ChangeChannelValue( stockChannel, weight );
                     return Create().SetupAsStockAdjustment( building as Stock, itemType, stockChannel, oldValue );
                 }
                 return null;

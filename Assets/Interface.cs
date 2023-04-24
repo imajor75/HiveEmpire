@@ -3500,7 +3500,7 @@ public class Interface : HiveObject
 			string importanceTooltip = "This number indicates how strongly the stock pulls that item type. Increase this number if you want it to compete with workshops.";
 			Text( "Importance", 8 ).Link( selectedItemArea ).Pin( 150, 0, 40, iconSize ).SetTooltip( importanceTooltip );
 			importance = InputField( "0" ).Link( selectedItemArea ).Pin( 150, -20, 40, iconSize );
-			importance.onEndEdit.AddListener( ( value ) => stock.itemData[(int)selectedItemType].importance = float.Parse( value ) );
+			importance.onEndEdit.AddListener( ( value ) => oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.importance, float.Parse( value ) ) );
 			importance.SetTooltip( importanceTooltip );
 
 			Image( Icon.reset ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).SetTooltip( "Reset all values to default" ).name = "Reset";
