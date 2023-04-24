@@ -3411,6 +3411,13 @@ public class Interface : HiveObject
 				var t = (Item.Type)j;
 				var i = ItemIcon( (Item.Type)j ).Link( controls ).Pin( 20 + offset, row );
 				string tooltip = "LMB Select item type\nRMB Popup menu";
+				tooltip += $"\ninput min: {stock.itemData[j].inputMin}";
+				tooltip += $"\ninput max: {stock.itemData[j].inputMax}";
+				tooltip += $"\noutput min: {stock.itemData[j].outputMin}";
+				tooltip += $"\noutput max: {stock.itemData[j].outputMax}";
+				tooltip += $"\ncart input: {stock.itemData[j].cartInput}";
+				tooltip += $"\ncart output: {stock.itemData[j].cartOutput}";
+				tooltip += $"\nimportance: {stock.itemData[j].importance}";
 				i.additionalTooltip = tooltip;
 
 				if ( stock.itemData[j].cartInput > 0 )
