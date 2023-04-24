@@ -6,12 +6,17 @@ using Newtonsoft.Json;
 
 public class ItemDispatcher : HiveObject
 {
-	public enum Priority
+	public enum Category
 	{
 		zero,
-		stock,
-		low,
-		high
+		reserve,
+		work,
+
+		// Compatibility
+		high = work,
+		low = work,
+		stock = reserve,
+		route = reserve
 	};
 
 	public enum Result
@@ -36,7 +41,7 @@ public class ItemDispatcher : HiveObject
 		public Item item;
 		public Node location;
 		public Building building;
-		public Priority priority;
+		public Category priority;
 		public int quantity;
 		public Type type;
 		public Ground.Area area;
@@ -79,7 +84,7 @@ public class ItemDispatcher : HiveObject
 		public bool incoming;
 		public bool remote; // This is true if the result is determined by the remote building, not queryBuilding
 		public int quantity;
-		public Priority priority;
+		public Category priority;
 	}
 
 	public List<LogisticResult> results, resultsInThisCycle;
@@ -120,12 +125,12 @@ public class ItemDispatcher : HiveObject
 		base.Remove();
 	}
 
-	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
+	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Category priority, Ground.Area area, float weight = 0.5f )
 	{
 		Assert.global.IsNotNull( area );
 		if ( quantity < 0 )
 			quantity = 0;
-		if ( priority == Priority.zero )
+		if ( priority == Category.zero )
 			return;
 		if ( quantity == 0 && !fullTracking )
 			return;
@@ -135,10 +140,10 @@ public class ItemDispatcher : HiveObject
 		markets[(int)itemType].RegisterRequest( building, quantity, priority, area, weight );
 	}
 
-	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Priority priority, Ground.Area area, bool flagJammed = false, bool noDispenser = false )
+	public void RegisterOffer( Building building, Item.Type itemType, int quantity, Category priority, Ground.Area area, bool flagJammed = false, bool noDispenser = false )
 	{
 		Assert.global.IsNotNull( area );
-		if ( priority == Priority.zero )
+		if ( priority == Category.zero )
 			return;
 		if ( quantity == 0 && !fullTracking )
 			return;
@@ -146,9 +151,9 @@ public class ItemDispatcher : HiveObject
 		markets[(int)itemType].RegisterOffer( building, quantity, priority, area, flagJammed, noDispenser );
 	}
 
-	public void RegisterOffer( Item item, Priority priority, Ground.Area area )
+	public void RegisterOffer( Item item, Category priority, Ground.Area area )
 	{
-		if ( priority == Priority.zero )
+		if ( priority == Category.zero )
 			return;
 
 		Assert.global.IsNotNull( area );
@@ -188,7 +193,7 @@ public class ItemDispatcher : HiveObject
 			name = itemType + " market";
 		}
 
-		public void RegisterRequest( Building building, int quantity, Priority priority, Ground.Area area, float weight = 0.5f )
+		public void RegisterRequest( Building building, int quantity, Category priority, Ground.Area area, float weight = 0.5f )
 		{
 			building.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var r = new Potential
@@ -204,7 +209,7 @@ public class ItemDispatcher : HiveObject
 			requests.Add( r );
 		}
 
-		public void RegisterOffer( Building building, int quantity, Priority priority, Ground.Area area, bool flagJammed = false, bool noDispenser = false )
+		public void RegisterOffer( Building building, int quantity, Category priority, Ground.Area area, bool flagJammed = false, bool noDispenser = false )
 		{
 			building.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var o = new Potential
@@ -221,7 +226,7 @@ public class ItemDispatcher : HiveObject
 			offers.Add( o );
 		}
 
-		public void RegisterOffer( Item item, Priority priority, Ground.Area area, float weight = 0.5f )
+		public void RegisterOffer( Item item, Category priority, Ground.Area area, float weight = 0.5f )
 		{
 			item.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var o = new Potential
@@ -253,57 +258,37 @@ public class ItemDispatcher : HiveObject
 
 		public void GameLogicUpdate()
 		{
-			offers.Sort( ComparePotentials );
-			requests.Sort( ComparePotentials );
-
 			if ( boss.dump == itemType )
 			{
 				Log( "Offers" );
 				for ( int i = 0; i < offers.Count; i++ )
-					Log( $" {i} {offers[i].building} {offers[i].quantity} {offers[i].location}" );
+					Log( $" {i} {offers[i].building} {offers[i].quantity} {offers[i].location} {offers[i].priority}" );
 
 				Log( "Requests" );
 				for ( int i = 0; i < requests.Count; i++ )
-					Log( $" {i} {requests[i].building} {requests[i].quantity} {requests[i].location}" );
+					Log( $" {i} {requests[i].building} {requests[i].quantity} {requests[i].location} {requests[i].priority} {requests[i].weight}" );
 
 				boss.dump = Item.Type.unknown;
 			}
 
-			Priority[] priorities = { Priority.high, Priority.low };
-			int nextOffer = 0, nextRequest = 0;
-			foreach ( var priority in priorities )
+			// TODO what if one of these is zero? if priority is high, it is still possible that there are potentials which can be paired then, but we should not start with the one which has zero items
+			// For example when lots of woodcutters offer log with low priority, so the high priority offers are zero, but there is a request with high priority somewhere? In that case are we finding
+			// pair for a random offer?
+			if ( offers.Count < requests.Count )
 			{
-				do
-				{
-					int offerItemCount = 0, requestItemCount = 0;
-					foreach ( var offer in offers )
-					{
-						if ( offer.priority >= priority )
-							offerItemCount += offer.quantity;
-					}
-					foreach ( var request in requests )
-					{
-						if ( request.priority >= priority )
-							requestItemCount += request.quantity;
-					}
-
-					// TODO what if one of these is zero? if priority is high, it is still possible that there are potentials which can be paired then, but we should not start with the one which has zero items
-					// For example when lots of woodcutters offer log with low priority, so the high priority offers are zero, but there is a request with high priority somewhere? In that case are we finding
-					// pair for a random offer?
-					if ( offerItemCount < requestItemCount && offers.Count > nextOffer )
-						FulfillPotentialFrom( offers[nextOffer++], requests, nextRequest );
-					else if ( requests.Count > nextRequest )
-						FulfillPotentialFrom( requests[nextRequest++], offers, nextOffer );
-					else
-						break;
-				}
-				while ( ( offers.Count > nextOffer && offers[nextOffer].priority > Priority.stock ) || ( requests.Count > nextRequest && requests[nextRequest].priority > Priority.stock ) );
+				foreach ( var offer in offers )
+					FulfillPotentialFrom( offer, requests );
+			}
+			else
+			{
+				foreach ( var request in requests )
+					FulfillPotentialFrom( request, offers );
 			}
 			int surplus = 0;
 			foreach ( var offer in offers )
 			{
 				// If an item is not needed, it is on its way to a stock, it is not treated as surplus
-				if ( offer.item && offer.priority < Priority.high )
+				if ( offer.item && offer.priority < Category.work )
 					continue;
 				int quantity = offer.quantity;
 				Stock stock = offer.building as Stock;
@@ -322,7 +307,7 @@ public class ItemDispatcher : HiveObject
 
 		// This function is trying to fulfill a request or offer from a list of offers/requests. Returns true, if the request/offer
 		// was fully fulfilled.
-		public bool FulfillPotentialFrom( Potential potential, List<Potential> list, int startIndex = 0 )
+		public bool FulfillPotentialFrom( Potential potential, List<Potential> list )
 		{
 			float maxScore = float.MaxValue;
 
@@ -331,9 +316,8 @@ public class ItemDispatcher : HiveObject
 			{
 				float bestScore = 0;
 				Potential best = null;
-				for ( int i = startIndex; i < list.Count; i++ )
+				foreach ( var other in list )
 				{
-					var other = list[i];
 					if ( potential.building == other.building )
 						continue;
 					if ( other.weight == 0 )
@@ -342,14 +326,14 @@ public class ItemDispatcher : HiveObject
 						continue;
 					if ( !IsGoodFor( potential, other ) )
 						continue;
-					if ( potential.priority <= Priority.stock && other.priority <= Priority.stock )
+					if ( potential.priority <= Category.reserve && other.priority <= Category.reserve )
 					{
 						ConsiderResult( potential, other, Result.tooLowPriority );
 						continue;
 					}
 					ConsiderResult( potential, other, Result.match );
 					int distance = other.location.DistanceFrom( potential.location );
-					float score = (int)other.priority * 10 + 1f / distance * potential.weight * other.weight;
+					float score = 10 + 1f / distance * potential.weight * other.weight;
 					if ( score >= maxScore )
 						continue;
 					if ( score > bestScore )

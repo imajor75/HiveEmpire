@@ -11,7 +11,7 @@ public class Workshop : Building
 {
 	public int output;
 	public Ground.Area outputArea = new ();
-	public ItemDispatcher.Priority outputPriority = ItemDispatcher.Priority.low;
+	public ItemDispatcher.Category outputPriority = ItemDispatcher.Category.work;
 	public float gatheringProgress;
 	public bool working;
 	new public Type type = Type.unknown;
@@ -355,7 +355,7 @@ public class Workshop : Building
 		public int size = Constants.Workshop.defaultBufferSize;
 		[Obsolete( "Compatibility with old files", true )]
 		int stackSize { set {} }
-		public ItemDispatcher.Priority priority = ItemDispatcher.Priority.high;
+		public ItemDispatcher.Category priority = ItemDispatcher.Category.work;
 		public int stored;
 		public int onTheWay;
 		public int important = Constants.Workshop.defaultImportantInBuffer;
@@ -821,7 +821,7 @@ public class Workshop : Building
 		return looks.GetMediaData( type );
 	}
 
-	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
+	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Category priority )
 	{
 		assert.AreEqual( productionConfiguration.outputType, itemType );
 		assert.IsTrue( output > 0 );		// TODO Triggered for stone, in a stonemason, destination stock
@@ -930,7 +930,7 @@ public class Workshop : Building
 				if ( b.disabled || mode == Mode.sleeping )
 					continue;
 				int missing = b.size-b.stored-b.onTheWay;
-				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Priority.low;
+				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Category.work;
 				float weight = b.weight != null ? b.weight.weight : 0.5f;
 				team.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 			}
@@ -964,7 +964,7 @@ public class Workshop : Building
 			SetWorking( false );
 
 		if ( reachable && mode == Mode.always && output > 0 && dispenser.IsIdle() && flag.freeSlots > 2 )
-			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Priority.high );
+			SendItem( productionConfiguration.outputType, null, ItemDispatcher.Category.work );
 
 		if ( !blueprintOnly )
 		{

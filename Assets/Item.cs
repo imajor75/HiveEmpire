@@ -27,7 +27,7 @@ public class Item : HiveObject
 	public Unit hauler;		// If this is a valid reference, the item has a unit who promised to come and pick it up. Other units will not care about the item, when it already has an associated unit.
 	public Type type;
 	public Path path;			// This is the current path of the item leading to the destination. The next road in this path is starting at the current flag, and the last road on this path is using the final flag. This member might be null at any point, if the previous path was destroyed for some reason (for example because the player did remove a road)
-	public ItemDispatcher.Priority currentOrderPriority = ItemDispatcher.Priority.zero;	// This member shows the priority of the current order the item is fulfilling, so the destination member should not be zero. If this priority is low, the item keeps offering itself at higher priorities, so it is possible that the item changes its destination while on the way to the previous one. (for example a log is carried to a stock, but meanwhile a sawmill requests a new one)
+	public ItemDispatcher.Category currentOrderPriority = ItemDispatcher.Category.zero;	// This member shows the priority of the current order the item is fulfilling, so the destination member should not be zero. If this priority is low, the item keeps offering itself at higher priorities, so it is possible that the item changes its destination while on the way to the previous one. (for example a log is carried to a stock, but meanwhile a sawmill requests a new one)
 	public Building destination;	// The current destination of the item. This could be null at any point, if the item is not needed anywhere. The game is trying to avoid it, so buildings are only spitting out items if they know that the item is needed somewhere, but the player might remove the destination building at any time. The current destination can change also if the game finds a better use for the item, except on the last road, where the item is not offered, even if it is delivered to a stock.
 	public Building origin;			// This is where the item comes from. Only used for statistical and validation purposes. The game is constantly checking this reference to make sure it is valid, and if it is not, it sets it to null. Otherwise this reference might keep old buildings alive in the memory while the player already removed them from the game.
 	public Watch watchRoadDelete = new ();
@@ -206,7 +206,7 @@ public class Item : HiveObject
 		return new GameObject().AddComponent<Item>();
 	}
 
-	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Priority priority = ItemDispatcher.Priority.zero )
+	public Item Setup( Type type, Building origin, Building destination = null, ItemDispatcher.Category priority = ItemDispatcher.Category.zero )
 	{
 		assert.AreNotEqual( type, Item.Type.soldier );
 		this.origin = origin;
@@ -382,21 +382,21 @@ public class Item : HiveObject
 		{
 			foreach ( var building in flag.Buildings() )
 			{
-				if ( building as Stock && building.construction.done && destination != building && hauler == null && atFlag.age > timeoutAtFlag )
+				if ( building is Stock && building.construction.done && destination != building && hauler == null && atFlag.age > timeoutAtFlag )
 				{
-					SetTarget( building, ItemDispatcher.Priority.high );
+					SetTarget( building, ItemDispatcher.Category.work );
 					return;
 				}
 			}
 		}
 
-		var offerPriority = ItemDispatcher.Priority.zero;
-		if ( currentOrderPriority == ItemDispatcher.Priority.zero )
-			offerPriority = ItemDispatcher.Priority.high;
-		if ( currentOrderPriority == ItemDispatcher.Priority.stock )
-			offerPriority = ItemDispatcher.Priority.stock;
+		var offerPriority = ItemDispatcher.Category.zero;
+		if ( currentOrderPriority == ItemDispatcher.Category.zero )
+			offerPriority = ItemDispatcher.Category.work;
+		if ( currentOrderPriority == ItemDispatcher.Category.reserve )
+			offerPriority = ItemDispatcher.Category.reserve;
 
-		if ( offerPriority == ItemDispatcher.Priority.zero )
+		if ( offerPriority == ItemDispatcher.Category.zero )
 			return;
 
 		team.itemDispatcher.RegisterOffer( this, offerPriority, Ground.Area.empty );
@@ -411,7 +411,7 @@ public class Item : HiveObject
 			team.RegisterItem( this );
 	}
 
-	public void SetRawTarget( Building building, ItemDispatcher.Priority priority = ItemDispatcher.Priority.low )
+	public void SetRawTarget( Building building, ItemDispatcher.Category priority = ItemDispatcher.Category.work )
 	{
 		assert.IsNull( destination );
 		destination = building;
@@ -420,7 +420,7 @@ public class Item : HiveObject
 		tripCancelled = false;
 	}
 
-	public bool SetTarget( Building building, ItemDispatcher.Priority priority, Building origin = null )
+	public bool SetTarget( Building building, ItemDispatcher.Category priority, Building origin = null )
 	{
 		assert.IsTrue( building != destination || priority != currentOrderPriority );
 
@@ -460,7 +460,7 @@ public class Item : HiveObject
 
 		destination.ItemOnTheWay( this, true );
 		destination = null;
-		currentOrderPriority = ItemDispatcher.Priority.zero;
+		currentOrderPriority = ItemDispatcher.Category.zero;
 		flag?.itemsStored.Trigger();
 		tripCancelled = true;
 	}
@@ -656,10 +656,10 @@ public class Item : HiveObject
 			if ( origin != destination )
 				assert.IsNotNull( path );	
 			assert.IsTrue( destination.itemsOnTheWay.Contains( this ) );
-			assert.IsTrue( currentOrderPriority > ItemDispatcher.Priority.zero );
+			assert.IsTrue( currentOrderPriority > ItemDispatcher.Category.zero );
 		}
 		else
-			assert.IsTrue( currentOrderPriority == ItemDispatcher.Priority.zero );
+			assert.IsTrue( currentOrderPriority == ItemDispatcher.Category.zero );
 		if ( buddy )
 		{
 			if ( buddy.buddy )

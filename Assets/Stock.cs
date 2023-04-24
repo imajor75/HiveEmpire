@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -132,6 +132,7 @@ public class Stock : Attackable
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
 		public int cartOutput = Constants.Stock.defaultCartOutput, cartOutputTemporary = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
 		public int cartPledged;
+		public float importance = 0.5f;
 		public List<Route> outputRoutes = new ();
 		public Stock boss;
 		public Item.Type itemType;
@@ -828,12 +829,12 @@ public class Stock : Attackable
 			int current = itemData[itemType].content + itemData[itemType].onWay;
 			if ( maxItems > total )
 			{
-				var p = ItemDispatcher.Priority.stock;
-				if ( current < itemData[itemType].inputMin || current < itemData[itemType].cartOutput )
-					p = ItemDispatcher.Priority.high;
+				var p = ItemDispatcher.Category.reserve;
+				if ( current < itemData[itemType].inputMin )
+					p = ItemDispatcher.Category.work;
 				if ( current > itemData[itemType].inputMax )
-					p = ItemDispatcher.Priority.zero;
-				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea ); // TODO Should not order more than what fits
+					p = ItemDispatcher.Category.zero;
+				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea, itemData[itemType].importance ); // TODO Should not order more than what fits
 				if ( total < maxItems - Constants.Stock.fullTolerance )
 					fullReported = false;
 			}
@@ -844,11 +845,11 @@ public class Stock : Attackable
 			}
 			if ( itemData.Count > itemType )
 			{
-				var p = ItemDispatcher.Priority.stock;
-				if ( current < itemData[itemType].outputMin || current < itemData[itemType].cartOutput )
-					p = ItemDispatcher.Priority.zero;
+				var p = ItemDispatcher.Category.reserve;
+				if ( current < itemData[itemType].outputMin || itemData[itemType].content < itemData[itemType].cartOutput || best != null )
+					p = ItemDispatcher.Category.zero;
 				if ( current > itemData[itemType].outputMax )
-					p = ItemDispatcher.Priority.high;
+					p = ItemDispatcher.Category.work;
 				team.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}
@@ -881,7 +882,7 @@ public class Stock : Attackable
 		}
 	}
 
-	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
+	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Category priority )
 	{
 		assert.IsTrue( itemData[(int)itemType].content > 0 );	// TODO Triggered?
 		Item item = base.SendItem( itemType, destination, priority );

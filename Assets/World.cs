@@ -691,15 +691,8 @@ public class World : HiveObject
 				{
 					if ( s.tinkerer && s.tinkerer.node == s.node && s.tinkerer.taskQueue.Count == 0 && s.tinkerer.walkTo && s.gatherer )
 						s.working = false;
-					if ( s.outputPriority == ItemDispatcher.Priority.stock )
-						s.outputPriority = ItemDispatcher.Priority.low;
-					if ( s.mode == Workshop.Mode.unknown )
-					{
-						if ( s.outputPriority == ItemDispatcher.Priority.low )
-							s.mode = Workshop.Mode.whenNeeded;
-						if ( s.outputPriority == ItemDispatcher.Priority.high )
-							s.mode = Workshop.Mode.always;
-					}
+					if ( s.outputPriority == ItemDispatcher.Category.reserve )
+						s.outputPriority = ItemDispatcher.Category.work;
 					foreach ( var b in s.buffers )
 						if ( b.stored > b.size )
 							b.stored = b.size;

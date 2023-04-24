@@ -345,9 +345,9 @@ abstract public class Building : HiveObject
 			if ( boss.reachable && stage == UpdateStage.turtle )
 			{
 				int plankMissing = boss.configuration.plankNeeded - plankOnTheWay - plankArrived;
-				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.plankForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
+				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.plank, plankMissing, ItemDispatcher.Category.work, Ground.Area.global, boss.team.plankForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
 				int stoneMissing = boss.configuration.stoneNeeded - stoneOnTheWay - stoneArrived;
-				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Priority.high, Ground.Area.global, boss.team.stoneForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
+				boss.team.itemDispatcher.RegisterRequest( boss, Item.Type.stone, stoneMissing, ItemDispatcher.Category.work, Ground.Area.global, boss.team.stoneForConstructionWeight.weight * boss.team.constructionFactors[(int)boss.type] );
 			}
 
 			if ( builder == null && Path.Between( boss.team.mainBuilding.flag.node, boss.flag.node, PathFinder.Mode.onRoad, boss ) != null )
@@ -705,7 +705,7 @@ abstract public class Building : HiveObject
 		construction.GameLogicUpdate( stage );
 	}
 
-	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Priority priority )
+	public virtual Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Category priority )
 	{
 		if ( dispenser == null || !dispenser.IsIdle( true ) || flag.freeSlots == 0 )
 			return null;
