@@ -976,6 +976,7 @@ public class Simpleton : Player
                 bool isThisGood = workshopType switch
                 {
                     Workshop.Type.woodcutter => nearby.HasResource( Resource.Type.tree ),
+                    Workshop.Type.appleGatherer => nearby.HasResource( Resource.Type.tree ),
                     Workshop.Type.stonemason => nearby.HasResource( Resource.Type.rock ),
                     Workshop.Type.coalMine => nearby.HasResource( Resource.Type.coal, true ),
                     Workshop.Type.ironMine => nearby.HasResource( Resource.Type.iron, true ),
@@ -995,6 +996,8 @@ public class Simpleton : Player
                     resources++;
                 if ( workshopType == Workshop.Type.woodcutter && nearby.type == Node.Type.forest && !boss.emergencyPlank && !nearby.block )
                     resources += 0.5f;
+                if ( workshopType == Workshop.Type.appleGatherer && nearby.type == Node.Type.forest && !nearby.block )
+                    resources += 0.5f;
             }
             float idealResourceCoverage = workshopType switch
             {
@@ -1008,6 +1011,7 @@ public class Simpleton : Player
                 Workshop.Type.hunter => 0.01f,
                 Workshop.Type.fishingHut => 0.1f,
                 Workshop.Type.woodcutter => 0.5f,
+                Workshop.Type.appleGatherer => 0.5f,
                 Workshop.Type.forester => 0.5f,
                 _ => 2f
             };
