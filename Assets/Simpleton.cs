@@ -500,6 +500,8 @@ public class Simpleton : Player
                     continue;
                 boss.tasks.Add( new MaintenanceTask( boss, workshop ) );
             }
+            foreach ( var stock in boss.team.stocks )
+                boss.tasks.Add( new MaintenanceTask( boss, stock ) );
             if ( game.preparation == Game.PrepareState.create && game.challenge.soldierProductivityMax < soldierYield )
                 soldierYield = game.challenge.soldierProductivityMax;
 
@@ -1508,7 +1510,6 @@ public class Simpleton : Player
 
     public class MaintenanceTask : Task
     {
-        public Workshop workshop;
         public enum Action
         {
             remove,
@@ -1517,16 +1518,16 @@ public class Simpleton : Player
             linkToPartner
         }
         public Action action;
-        public Building partner;
+        public Building partner, target;
         public Item.Type itemTypeToLink;
         public List<Road> cleanupRoads = new ();
         public List<Flag> cleanupFlags = new ();
-        public MaintenanceTask( Simpleton boss, Workshop workshop ) : base( boss )
+        public MaintenanceTask( Simpleton boss, Building target ) : base( boss )
         {
-            this.workshop = workshop;
+            this.target = target;
         }
 
-        public override string ToString() => $"Maintenance of {workshop}, action: {action}";
+        public override string ToString() => $"Maintenance of {target}, action: {action}";
 
         class RemoveResources : Task
         {
@@ -1542,6 +1543,22 @@ public class Simpleton : Player
 
         public override bool Analyze()
         {
+            if ( target is Stock s )
+            {
+                foreach ( var itemData in s.itemData )
+                {
+                    foreach ( var route in itemData.outputRoutes )
+                    {
+                        if ( route.endData.importance - Constants.Simpleton.importanceReduction > itemData.importance )
+                            HiveCommon.oh.ScheduleStockAdjustment( s, itemData.itemType, Stock.Channel.importance, route.endData.importance - Constants.Simpleton.importanceReduction, true, boss.activity );
+                    }
+                }
+            }
+
+            var workshop = target as Workshop;
+            if ( workshop == null )
+                return finished;
+
             var data = workshop.simpletonDataSafe;
 
             if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
@@ -1673,14 +1690,14 @@ public class Simpleton : Player
 
         bool ConsiderPartner( Building partner, Item.Type itemType )
         {
-            foreach ( var deal in workshop.simpletonDataSafe.deals )
+            foreach ( var deal in target.simpletonDataSafe.deals )
             {
                 if ( deal.partner == partner && itemType == deal.itemType )
                     return false;
             }
 
-            workshop.simpletonDataSafe.possiblePartner = partner;
-            workshop.simpletonDataSafe.possiblePartnerItemType = itemType;
+            target.simpletonDataSafe.possiblePartner = partner;
+            target.simpletonDataSafe.possiblePartnerItemType = itemType;
             return true;
         }
 
@@ -1729,28 +1746,31 @@ public class Simpleton : Player
 
         public override void ApplySolution()
         {
-            if ( workshop == null )
+            if ( target == null )
                 return;
 
             switch ( action )
             {
                 case Action.remove:
-                if ( workshop.flag.roadsStartingHereCount == 1 )
-                    HiveCommon.oh.ScheduleRemoveFlag( workshop.flag, true, boss.activity );
+                if ( target.flag.roadsStartingHereCount == 1 )
+                    HiveCommon.oh.ScheduleRemoveFlag( target.flag, true, boss.activity );
                 else
-                    HiveObject.oh.ScheduleRemoveBuilding( workshop, true, boss.activity );
+                    HiveObject.oh.ScheduleRemoveBuilding( target, true, boss.activity );
                 break;
 
                 case Action.disableFish:
-                foreach ( var input in workshop.buffers )
+                if ( target is Workshop w )
                 {
-                    if ( input.itemType == Item.Type.fish )
-                        HiveCommon.oh.ScheduleChangeBufferUsage( workshop, input, Workshop.Buffer.Priority.disabled, true, boss.activity );
+                    foreach ( var input in w.buffers )
+                    {
+                        if ( input.itemType == Item.Type.fish )
+                            HiveCommon.oh.ScheduleChangeBufferUsage( w, input, Workshop.Buffer.Priority.disabled, true, boss.activity );
+                    }
                 }
                 break;
 
                 case Action.cleanup:
-                workshop.simpletonDataSafe.lastCleanup.Start();
+                target.simpletonDataSafe.lastCleanup.Start();
                 HiveCommon.oh.StartGroup( $"Cleaning up roads and junctions in the area" );
                 foreach ( var road in cleanupRoads )
                     HiveCommon.oh.ScheduleRemoveRoad( road, false, boss.activity );
@@ -1760,27 +1780,30 @@ public class Simpleton : Player
 
                 case Action.linkToPartner:
                 Assert.global.IsTrue( itemTypeToLink >= 0 && itemTypeToLink < Item.Type.total );
-                HiveCommon.oh.StartGroup( $"Linkink {workshop.moniker} to partner" );
-                workshop.simpletonDataSafe.RegisterPartner( partner, itemTypeToLink, boss );
-                workshop.simpletonDataSafe.possiblePartner = null;
-                if ( partner is Stock stock )
+                HiveCommon.oh.StartGroup( $"Linkink {target.moniker} to partner" );
+                target.simpletonDataSafe.RegisterPartner( partner, itemTypeToLink, boss );
+                target.simpletonDataSafe.possiblePartner = null;
+                if ( target is Workshop workshop )
                 {
-                    stock.simpletonDataSafe.RegisterManagedItemType( itemTypeToLink );
-                    if ( workshop.productionConfiguration.outputType == itemTypeToLink )
+                    if ( partner is Stock stock )
                     {
-                        workshop.simpletonDataSafe.hasOutputStock = true;
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, boss.activity );
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutputTemporary, 5, false, boss.activity );
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, boss.activity );
+                        stock.simpletonDataSafe.RegisterManagedItemType( itemTypeToLink );
+                        if ( workshop.productionConfiguration.outputType == itemTypeToLink )
+                        {
+                            workshop.simpletonDataSafe.hasOutputStock = true;
+                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, boss.activity );
+                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutputTemporary, 5, false, boss.activity );
+                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, boss.activity );
+                        }
+                        else
+                        {
+                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, boss.activity );
+                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, boss.activity );
+                        }
                     }
-                    else
-                    {
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, boss.activity );
-                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, boss.activity );
-                    }
+                    if ( partner is Workshop )
+                        partner.simpletonDataSafe.RegisterPartner( workshop, itemTypeToLink, boss );
                 }
-                if ( partner is Workshop )
-                    partner.simpletonDataSafe.RegisterPartner( workshop, itemTypeToLink, boss );
                 break;
             }
         }
