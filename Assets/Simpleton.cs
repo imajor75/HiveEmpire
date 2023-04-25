@@ -374,9 +374,15 @@ public class Simpleton : Player
             if ( hiveObject is Workshop workshop )
             {
                 var area = workshop.outputArea;
-                foreach ( var buffer in workshop.buffers )
-                    if ( buffer.itemType == itemType )
-                        area = buffer.area;
+                Workshop.Buffer buffer = null;
+                foreach ( var b in workshop.buffers )
+                {
+                    if ( b.itemType == itemType )
+                    {
+                        area = b.area;
+                        buffer = b;
+                    }
+                }
                 var offset = new Ground.Offset( 0, 0, 0 );
                 int dealCount = 0;
                 foreach ( var deal in deals )
@@ -401,6 +407,13 @@ public class Simpleton : Player
                 }
                 if ( workshop.type != Workshop.Type.woodcutter || hasStock )
                     HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, boss.activity );
+
+                if ( partner is Stock stock && buffer?.weight != null )
+                {
+                    float minimumImportance = buffer.weight.weight - Constants.Simpleton.importanceReduction;
+                    if ( stock.itemData[(int)itemType].importance < minimumImportance )
+                        HiveCommon.oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.importance, minimumImportance );
+                }
             }
             partner.simpletonDataSafe.RegisterPartner( hiveObject as Building, itemType, boss );
             return true;
