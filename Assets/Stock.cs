@@ -853,7 +853,7 @@ public class Stock : Attackable
 			if ( itemData.Count > itemType )
 			{
 				var p = ItemDispatcher.Category.reserve;
-				if ( current < itemData[itemType].outputMin || itemData[itemType].content < itemData[itemType].cartOutput || best != null )
+				if ( current < itemData[itemType].outputMin || itemData[itemType].content <= itemData[itemType].cartOutput || best != null )
 					p = ItemDispatcher.Category.zero;
 				if ( current > itemData[itemType].outputMax )
 					p = ItemDispatcher.Category.work;
