@@ -3988,15 +3988,18 @@ public class Interface : HiveObject
 				tooltip = tooltip.Remove( tooltip.Length - 2, 2 );
 			}
 			int instanceCount = 0;
+			int productionCount = 0;
 			float currentProduction = 0;
 			foreach ( var playerWorkshop in root.mainTeam.workshops )
 			{
 				if ( playerWorkshop.type != workshop.type )
 					continue;
 				instanceCount++;
+				productionCount += playerWorkshop.itemsProduced;
 				currentProduction += playerWorkshop.CalculateProductivity();
 			}
 			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/minute";
+			tooltip += $"\nTotal production so far: {productionCount}";
 			float demand = 0;
 			foreach ( var target in flow.targets )
 			{
