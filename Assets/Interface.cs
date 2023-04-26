@@ -7114,6 +7114,8 @@ if ( cart )
 					}
 					inStockCount[i] += stock.itemData[i].content;
 				}
+				if ( stock.cart.itemType != Item.Type.unknown )
+					onWayCount[(int)stock.cart.itemType] += stock.cart.itemQuantity;
 			}
 
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
