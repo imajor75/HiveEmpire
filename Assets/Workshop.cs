@@ -356,8 +356,7 @@ public class Workshop : Building
 		[Obsolete( "Compatibility with old files", true )]
 		int stackSize { set {} }
 		public ItemDispatcher.Category priority = ItemDispatcher.Category.work;
-		public int stored;
-		public int onTheWay;
+		public int stored, onTheWay, used;
 		public int important = Constants.Workshop.defaultImportantInBuffer;
 		public Ground.Area area = new ();
 		public Team.InputWeight weight;
@@ -1095,6 +1094,7 @@ public class Workshop : Building
 			foreach ( var buffer in buffers )
 			{
 				buffer.stored -= count;
+				buffer.used += count;
 				team.ItemProcessed( buffer.itemType, count );
 			}
 			advanceInputs = true;
@@ -1123,6 +1123,7 @@ public class Workshop : Building
 			}
 			count -= used;
 			b.stored -= used;
+			b.used += used;
 			team.ItemProcessed( b.itemType, used );
 		}
 		return true;

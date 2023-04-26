@@ -2963,7 +2963,7 @@ public class Interface : HiveObject
 			{
 				var workshop = boss.building as Workshop;
 				int itemsStartX = x - xi + iconSize;
-				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, y ).SetTooltip( Nice( itemType.ToString() ) );
+				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, y ).SetTooltip( () => Nice( itemType.ToString() ) + ( buffer != null ? $"\nUsed so far: {buffer.used}" : "" ) );
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
