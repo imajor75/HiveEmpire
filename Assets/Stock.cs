@@ -803,6 +803,7 @@ public class Stock : Attackable
 
 			Route best = null;
 			List<Route> toRemove = new ();
+			bool allRoutesJammed = true;
 			foreach ( var route in itemData[itemType].outputRoutes )
 			{
 				if ( route.end == null )	// unity like null
@@ -822,6 +823,8 @@ public class Stock : Attackable
 					route.end.fullReportedCart = true;
 					team.SendMessage( $"Stock full, cart couldn't deliver {(Item.Type)itemType}", route.end );
 				}
+				if ( route.state != Route.State.destinationNotAccepting && route.state != Route.State.noFreeSpaceAtDestination )
+					allRoutesJammed = false;
 			}
 			foreach ( var dead in toRemove )
 				itemData[itemType].outputRoutes.Remove( dead );
@@ -853,7 +856,7 @@ public class Stock : Attackable
 			if ( itemData.Count > itemType )
 			{
 				var p = ItemDispatcher.Category.reserve;
-				if ( current < itemData[itemType].outputMin || itemData[itemType].content <= itemData[itemType].cartOutput || best != null )
+				if ( current < itemData[itemType].outputMin || ( itemData[itemType].content <= itemData[itemType].cartOutput && !allRoutesJammed ) )
 					p = ItemDispatcher.Category.zero;
 				if ( current > itemData[itemType].outputMax )
 					p = ItemDispatcher.Category.work;
