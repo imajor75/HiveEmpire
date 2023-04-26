@@ -97,7 +97,7 @@
       "worldSize": 48,
       "preparation": "full",
       "landOnly": true,
-      "prerun": 180000,
+      "prerun": 360000,
       "soldierProductivityMax": 0.8,
       "conditions": [
         "production soldier 2"
