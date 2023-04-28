@@ -3729,6 +3729,19 @@ public class Interface : HiveObject
 	{
 		static Flow highlight;
 		public World world;
+		public List<Flow> flowsUnderConstruction = new (), flows = new ();
+		public int logicalRows = 0;
+		public int width;
+		public ScrollRect scroll;
+		public RawImage background;
+		public RenderTexture rt;
+
+		public (
+			int pixel,
+			int workshopIndex,
+			int expectedWorkshopCount,
+			List<(int start, int width)> freeSpace
+		) currentRow;
 
 		public static ProductionChainPanel Create( World world = null )
 		{
@@ -3740,55 +3753,122 @@ public class Interface : HiveObject
 			return panel;
 		}
 
-		class Flow
+		[Serializable]
+		public class Flow
 		{
 			public Item.Type itemType;
-			public int startColumn = -1, startRow, row;
+			public int currentColumn = -1, currentRow;
 			public Color color;
 			public int remainingOrigins;
-			public List<Image> lines = new ();
+			public int finishedRow = -1;
 			public void Highlight( bool on )
 			{
-				ProductionChainPanel.highlight = on ? this : null;
-				if ( on )
-					foreach ( var line in lines ) line.transform.SetAsLastSibling();
-				else
-					foreach ( var line in lines ) line.color = color;
+				// ProductionChainPanel.highlight = on ? this : null;
+				// if ( on )
+				// 	foreach ( var line in lines ) line.transform.SetAsLastSibling();
+				// else
+				// 	foreach ( var line in lines ) line.color = color;
 			}
 			string TooltipText()
 			{
 				var tooltipText = $"{HiveCommon.Nice( itemType.ToString() )}\nSource: {HiveCommon.Nice( source.type.ToString() )}\nTargets: ";
-				foreach ( var target in targets )
-					tooltipText += $"{HiveCommon.Nice( target.type.ToString() )}, ";
+				foreach ( var connection in connections )
+					tooltipText += $"{HiveCommon.Nice( connection.target.type.ToString() )}, ";
 				tooltipText = tooltipText.Remove( tooltipText.Length - 2, 2 );
 				return tooltipText;
 			}
-			public void AddLine( Image line )
+			public void Continue( int column, int row )
 			{
-				lines.Add( line );
-				line.color = color;
-				line.SetTooltip( Highlight, TooltipText );
+				AddPoint( new Vector2( column, row ) );
+				currentRow = row;
+				currentColumn = column;
+			}
+			public void AddPoint( Vector2 point )
+			{
+				foreach ( var connection in connections )
+					connection.points.Add( point );
 			}
 			public Workshop.Configuration source;
-			public List<Workshop.Configuration> targets = new ();
+			public List<Connection> connections = new ();
 		}
 
-		class Range
+		[Serializable]
+		public class Connection
 		{
-			public int start, width;
+			public Flow boss;
+			public Workshop.Configuration target;
+			public List<Vector2> points = new ();
 		}
 
-		public void Open()
+		public void StartNewRow()
 		{
-			int width = 400;
-			base.Open( width + 2 * iconSize, 400 );
+			currentRow.workshopIndex = 0;
 
-			Text( "Production chain is randomized based on the current world seed. If you start a new world it will be different" ).Pin( borderWidth, -borderWidth, width, 2 * iconSize );
-			var scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - 2 * iconSize );
+			currentRow.freeSpace = new ();
+			currentRow.freeSpace.Add( ( 0, width ) );
 
-			var lineParent = Image().Stretch().Link( scroll.content );
-			lineParent.color = new Color( 0, 0, 0, 0 );
+			currentRow.pixel -= Constants.Interface.ProductionChainPanel.pixelsPerRow;
 
+			int readyFlowCount = 0;
+			foreach ( var flow in flowsUnderConstruction )
+				if ( flow.remainingOrigins == 0 )
+					readyFlowCount++;
+
+			currentRow.expectedWorkshopCount = Math.Min( Constants.Interface.ProductionChainPanel.maxWorkshopsPerLine, readyFlowCount );
+			if ( currentRow.expectedWorkshopCount == 0 )
+			{
+				foreach ( var flow in flowsUnderConstruction )
+					if ( flow.remainingOrigins != 0 )
+					{
+						flow.remainingOrigins = 0;
+						currentRow.expectedWorkshopCount = 1;
+						break;
+					}
+			}
+
+			flowsUnderConstruction.Sort( ( a, b ) => b.currentColumn.CompareTo( a.currentColumn ) );
+			logicalRows++;
+		}
+
+		int AllocColumn( int width, int preferred = -1 )
+		{
+			int halfWidth = width / 2;
+			(int start, int width) best = (0, 0);
+			int bestDiff = int.MaxValue;
+			foreach ( var range in currentRow.freeSpace )
+			{
+				if ( range.width < width )
+					continue;
+
+				int option = preferred;
+				if ( range.start > preferred - halfWidth )
+					option = range.start + halfWidth;
+				if ( range.start + range.width < preferred + halfWidth )
+					option = range.start + range.width - halfWidth;
+				var diff = Math.Abs( preferred - option );
+				if ( diff < bestDiff )
+				{
+					bestDiff = diff;
+					best = range;
+				}
+			}
+
+			if ( bestDiff == int.MaxValue )
+				return 0;
+
+			int result = preferred;
+			if ( best.start > preferred - halfWidth )
+				result = best.start + halfWidth;
+			if ( best.start + best.width < preferred + halfWidth )
+				result = best.start + best.width - halfWidth;
+			currentRow.freeSpace.Remove( best );
+			currentRow.freeSpace.Add( ( best.start, result - halfWidth - best.start ) );
+			currentRow.freeSpace.Add( ( result + halfWidth, best.start + best.width - result - halfWidth ) );
+			return result;
+		}
+
+		public void Fill()
+		{
 			var itemTypeUsage = new int[(int)Item.Type.total];
 			var itemTypes = new List<Item.Type>();
 			var exposed = new List<Workshop.Type>();
@@ -3813,122 +3893,52 @@ public class Interface : HiveObject
 				}
 			}
 
-			int maxWorkshopsPerLine = 5;
-			var flows = new List<Flow>();
-			flows.Add( new Flow { itemType = Item.Type.soldier, startColumn = width / 2, startRow = -20, row = -20 } );
-			int expectedWorkshopCountInRow = 1;
-			int logicalRow = 0;
-			int row = -80;
-			var freeSpace = new List<Range>();
-			freeSpace.Add( new Range { start = 0, width = width } );
-			List<Color> flowColors = new List<Color> { Color.black, Color.red, Color.blue, Color.green };
-			for ( int i = 0; i < flowColors.Count; i++ )
-				flowColors[i] = Color.Lerp( flowColors[i], Color.gray, 0.5f );
+			List<Color> flowColors = new ();
+			foreach ( var color in Constants.Interface.ProductionChainPanel.flowColors )
+				flowColors.Add( Color.Lerp( color, Color.gray, 0.5f ) );
 			int flowColorIndex = 0;
 
-			int AllocColumn( int width, int preferred = -1 )
-			{
-				int halfWidth = width / 2;
-				Range best = null;
-				int bestDiff = int.MaxValue;
-				foreach ( var range in freeSpace )
-				{
-					if ( range.width < width )
-						continue;
+			var soldierFlow = new Flow { itemType = Item.Type.soldier, currentColumn = width / 2, currentRow = -20, color = Color.yellow };
+			flowsUnderConstruction.Add( soldierFlow );
+			var rootConnection = new Connection{ target = null, boss = soldierFlow };
+			rootConnection.points.Add( new Vector2( width / 2, 0 ) );
+			soldierFlow.connections.Add( rootConnection );
 
-					int option = preferred;
-					if ( range.start > preferred - halfWidth )
-						option = range.start + halfWidth;
-					if ( range.start + range.width < preferred + halfWidth )
-						option = range.start + range.width - halfWidth;
-					var diff = Math.Abs( preferred - option );
-					if ( diff < bestDiff )
-					{
-						bestDiff = diff;
-						best = range;
-					}
-				}
+			StartNewRow();
 
-				if ( best == null )
-					return 0;
-				int result = preferred;
-				if ( best.start > preferred - halfWidth )
-					result = best.start + halfWidth;
-				if ( best.start + best.width < preferred + halfWidth )
-					result = best.start + best.width - halfWidth;
-				freeSpace.Remove( best );
-				freeSpace.Add( new Range { start = best.start, width = result - halfWidth - best.start } );
-				freeSpace.Add( new Range { start = result + halfWidth, width = best.start + best.width - result - halfWidth } );
-				return result;
-			}
-
-			void DrawFlow( Flow flow, int column, int row )
-			{
-				flow.AddLine( Image().PinCenter( flow.startColumn, ( flow.startRow + flow.row ) / 2, 3, flow.startRow - flow.row ) );
-				flow.AddLine( Image().PinCenter( ( flow.startColumn + column ) / 2, flow.row, Math.Abs( flow.startColumn - column ), 3 ) );
-				flow.AddLine( Image().PinCenter( column, ( flow.row + row ) / 2, 3, flow.row - row ) );
-				foreach ( var line in flow.lines )
-					line.Link( lineParent );
-				ItemIcon( flow.itemType ).PinCenter( column, ( flow.row + row ) / 2 ).Link( scroll.content );
-			}
-
-			int workshopIndexInRow = 0;
-			int nextFlowRow = row - 30;
-			while ( flows.Count > 0 )
+			while ( flowsUnderConstruction.Count > 0 )
 			{
 				Flow current = null;
-				foreach ( var connection in flows )
-					if ( connection.startRow != row )
-						if ( connection.remainingOrigins > 0 || current == null )
-							current = connection;
+				foreach ( var flow in flowsUnderConstruction )
+					if ( ( flow.remainingOrigins > 0 || current == null ) && flow.finishedRow != logicalRows )
+						current = flow;
 
-				if ( workshopIndexInRow == maxWorkshopsPerLine || current == null )
+				if ( currentRow.workshopIndex == Constants.Interface.ProductionChainPanel.maxWorkshopsPerLine || current == null )
 				{
-					workshopIndexInRow = 0;
-					freeSpace.Clear();
-					freeSpace.Add( new Range { start = 0, width = width } );
-					row = nextFlowRow - 40;
-					nextFlowRow = row - 30;
-					int readyFlowCount = 0;
-					foreach ( var flow in flows )
-						if ( flow.remainingOrigins == 0 )
-							readyFlowCount++;
-					expectedWorkshopCountInRow = Math.Min( maxWorkshopsPerLine, readyFlowCount );
-					if ( expectedWorkshopCountInRow == 0 )
-					{
-						foreach ( var flow in flows )
-							if ( flow.remainingOrigins != 0 )
-							{
-								flow.remainingOrigins = 0;
-								expectedWorkshopCountInRow = 1;
-								break;
-							}
-					}
-					flows.Sort( ( a, b ) => b.startColumn.CompareTo( a.startColumn ) );
-					logicalRow++;
+					StartNewRow();
 					continue;
 				}
+				
 				if ( current.remainingOrigins > 0 )
 				{
-					int tmpColumn = AllocColumn( 20, current.startColumn );
-					DrawFlow( current, tmpColumn, row );
-
-					current.startColumn = tmpColumn;
-					current.row = nextFlowRow;
-					current.startRow = row;
-					nextFlowRow -= 10;
+					int tmpColumn = AllocColumn( 20, current.currentColumn );
+					current.Continue( tmpColumn, currentRow.pixel );
+					currentRow.pixel -= Constants.Interface.ProductionChainPanel.pixelsPerFlow;
+					current.finishedRow = logicalRows;
 					continue;
 				}
-				int column = AllocColumn( iconSize * 2, width / expectedWorkshopCountInRow / 2 * ( workshopIndexInRow * 2 + 1 ) );
+
+				int column = AllocColumn( iconSize * 2, width / currentRow.expectedWorkshopCount / 2 * ( currentRow.workshopIndex * 2 + 1 ) );
 				Workshop.Configuration workshop = null;
 				foreach ( var configuration in world.workshopConfigurations )
 					if ( configuration.outputType == current.itemType && configuration.type != Workshop.Type.stonemason )
 						workshop = configuration;
 				Assert.global.IsNotNull( workshop );
 
-				DrawFlow( current, column, row );
+				current.Continue( column, currentRow.pixel );
 
-				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, row, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ) ).Link( scroll.content );
+				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, currentRow.pixel, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ) ).Link( scroll.content );
+				workshopImage.gameObject.name = workshop.type.ToString();
 				if ( workshop.outputStackSize > 1 )
 					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
 				workshopImage.AddController().
@@ -3937,38 +3947,107 @@ public class Interface : HiveObject
 
 				current.source = workshop;
 
-				int flowRow = nextFlowRow;
-				nextFlowRow -= 10;
-
 				if ( workshop.generatedInputs != null && !exposed.Contains( workshop.type ) )
 				{
 					exposed.Add( workshop.type );
 					foreach ( var input in workshop.generatedInputs )
 					{
-						Flow existing = null;
-						foreach ( var connection in flows )
-							if ( connection.itemType == input )
-								existing = connection;
-						if ( existing == null )
+						Flow outputFlow = null;
+						foreach ( var flow in flowsUnderConstruction )
+							if ( flow.itemType == input )
+								outputFlow = flow;
+						if ( outputFlow == null )
 						{
-							var newFlow = new Flow { itemType = input, startColumn = column, startRow = row, row = flowRow, color = flowColors[(flowColorIndex++) % flowColors.Count], remainingOrigins = itemTypeUsage[(int)input] - 1 };
-							newFlow.targets.Add( workshop );
-							flows.Insert( 0, newFlow );
+							outputFlow = new Flow { itemType = input, currentColumn = column, currentRow = currentRow.pixel, color = flowColors[(flowColorIndex++) % flowColors.Count], remainingOrigins = itemTypeUsage[(int)input] - 1, finishedRow = logicalRows };
+							flowsUnderConstruction.Add( outputFlow );
 						}
 						else
-						{
-							existing.AddLine( Image().PinCenter( column, ( row + existing.row ) / 2, 3, row - existing.row ).Link( lineParent ) );
-							existing.AddLine( Image().PinCenter( ( existing.startColumn + column ) / 2, existing.row, Math.Abs( existing.startColumn - column ), 3 ).Link( lineParent ) );
-							existing.remainingOrigins--;
-							existing.targets.Add( workshop );
-						}
+							outputFlow.remainingOrigins--;
+						var newConnection = new Connection{ target = workshop, boss = outputFlow };
+						newConnection.points.Add( new Vector2( column, currentRow.pixel ) );
+						outputFlow.connections.Add( newConnection );
 					}
 				}
 
-				flows.Remove( current );
-				workshopIndexInRow++;
+				flowsUnderConstruction.Remove( current );
+				flows.Add( current );
+				currentRow.workshopIndex++;
 			}
-			scroll.SetContentSize( -1, 20 - row );
+		}
+
+		public void Open()
+		{
+			width = Constants.Interface.ProductionChainPanel.width;
+			base.Open( width + 2 * iconSize, 400 );
+
+			Text( "Production chain is randomized based on the current world seed. If you start a new world it will be different" ).Pin( borderWidth, -borderWidth, width, 2 * iconSize );
+			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - 2 * iconSize );
+
+			var lineParent = Image().Stretch().Link( scroll.content );
+			lineParent.color = new Color( 0, 0, 0, 0 );
+
+			Fill();
+
+			scroll.SetContentSize( -1, 20 - currentRow.pixel );
+		}
+
+		public RenderTexture GenerateBackground()
+		{
+			var view = new RenderTexture( 1024, 1024, 32 );
+			Graphics.SetRenderTarget( view );
+
+			GL.Clear( false, true, new Color( 0, 0, 0, 0 ), 1 );
+			List<Vector3> vertices = new ();
+
+			void Vertex( Vector2 p )
+			{
+				vertices.Add( new Vector3( (float)p.x / ( scroll.content.rect.width / uiScale ) * 2 - 1, (float)p.y / currentRow.pixel * 2 - 1, 0.5f ) );
+			}
+			void Line( Vector2 start, Vector2 end )
+			{
+				var dif = end - start;
+				var side = new Vector2( dif.y, -dif.x );
+				side.Normalize();
+				Vertex( start + side * Constants.Interface.ProductionChainPanel.flowWidthInPixel / 2 );
+				Vertex( start - side * Constants.Interface.ProductionChainPanel.flowWidthInPixel / 2 );
+				Vertex( end - side * Constants.Interface.ProductionChainPanel.flowWidthInPixel / 2 );
+				Vertex( end + side * Constants.Interface.ProductionChainPanel.flowWidthInPixel / 2 );
+			}
+
+			foreach ( var flow in flows )
+			{
+				foreach ( var connection in flow.connections )
+				{
+					for ( int i = 0; i < connection.points.Count - 1; i++ )
+						Line( connection.points[i], connection.points[i+1] );
+				}
+
+				List<int> indices = new ();
+				Assert.global.AreEqual( vertices.Count % 4, 0, "Corrupt mesh" );
+				for ( int i = 0; i < vertices.Count; i += 4 )
+				{
+					indices.Add( i );
+					indices.Add( i + 1 );
+					indices.Add( i + 2 );
+					indices.Add( i );
+					indices.Add( i + 2 );
+					indices.Add( i + 3 );
+				}
+
+				var material = new Material( Resources.Load<Shader>( "Shaders/Solid" ) );
+				material.color = flow.color;
+				material.SetPass( 0 );
+
+				var mesh = new Mesh();
+				mesh.vertices = vertices.ToArray();
+				mesh.triangles = indices.ToArray();
+
+				Graphics.DrawMeshNow( mesh, Matrix4x4.identity );
+
+				vertices.Clear();
+			}
+
+			return view;
 		}
 
 		string WorkshopTooltip( Flow flow )
@@ -4001,11 +4080,11 @@ public class Interface : HiveObject
 			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/minute";
 			tooltip += $"\nTotal production so far: {productionCount}";
 			float demand = 0;
-			foreach ( var target in flow.targets )
+			foreach ( var connection in flow.connections )
 			{
 				foreach ( var playerWorkshop in root.mainTeam.workshops )
 				{
-					if ( playerWorkshop.type == target.type )
+					if ( playerWorkshop.type == connection.target.type )
 						demand += playerWorkshop.CalculateProductivity();
 				}
 			}
@@ -4028,9 +4107,17 @@ public class Interface : HiveObject
 
 		new void Update()
 		{
-			if ( highlight != null )
-				foreach ( var line in highlight.lines )
-					line.color = Color.Lerp( highlight.color, Color.white, (float)( Math.Sin( Time.unscaledTime * 4 ) + 1 ) * 0.5f );
+			if ( background == null )
+			{
+				rt = GenerateBackground();
+
+				background = new GameObject( "Connections" ).AddComponent<RawImage>().Link( scroll.content ).Stretch();
+				background.texture = rt;
+				background.transform.SetAsFirstSibling();
+			}
+			// if ( highlight != null )
+			// 	foreach ( var line in highlight.lines )
+			// 		line.color = Color.Lerp( highlight.color, Color.white, (float)( Math.Sin( Time.unscaledTime * 4 ) + 1 ) * 0.5f );
 			base.Update();
 		}
 	}
