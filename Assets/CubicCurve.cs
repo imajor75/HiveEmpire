@@ -1,12 +1,13 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System;
 
 [System.Serializable]
-public class CubicCurve : ScriptableObject
+public class CubicCurve
 {
 	public float a, b, c, d;
 	public static CubicCurve Create()
 	{
-		return ScriptableObject.CreateInstance<CubicCurve>();
+		return new CubicCurve();
 	}
 
 	public CubicCurve Setup( float position0, float position1, float direction0, float direction1 )
@@ -45,5 +46,41 @@ public class CubicCurve : ScriptableObject
 	public float DirectionAt( float v )
 	{
 		return 3 * a * v * v + 2 * b * v + c;
+	}
+}
+
+public class CubicArray
+{
+	public float startDirection, endDirection;
+	public List<float> positions = new ();
+	public List<CubicCurve> curves = new ();
+
+	void UpdateCurves()
+	{
+		if ( curves.Count == positions.Count )
+			return;
+
+		curves.Clear();
+		for ( int i = 0; i < positions.Count - 1; i++ )
+		{
+			var curve = CubicCurve.Create();
+			float direction0 = i == 0 ? startDirection : positions[i+1] - positions[i-1];
+			float direction1 = i == positions.Count - 2 ? endDirection : positions[i+2] - positions[i];
+			curve.Setup( positions[i], positions[i+1], direction0, direction1 );
+		}
+	}
+
+	public float PositionAt( float v )
+	{
+		UpdateCurves();
+		var floor = MathF.Floor( v );
+		return curves[(int)floor].PositionAt( v - floor );
+	}
+
+	public float DirectionAt( float v )
+	{
+		UpdateCurves();
+		var floor = MathF.Floor( v );
+		return curves[(int)floor].DirectionAt( v - floor );
 	}
 }
