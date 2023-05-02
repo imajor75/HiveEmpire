@@ -4018,8 +4018,17 @@ public class Interface : HiveObject
 			{
 				foreach ( var connection in flow.connections )
 				{
-					for ( int i = 0; i < connection.points.Count - 1; i++ )
-						Line( connection.points[i], connection.points[i+1] );
+					var curveX = new CubicArray { startDirection = 0, endDirection = 0 };
+					var curveY = new CubicArray { startDirection = -200, endDirection = -200 };
+					for ( int i = 0; i < connection.points.Count; i++ )
+					{
+						curveX.positions.Add( connection.points[i].x );
+						curveY.positions.Add( connection.points[i].y );
+					}
+
+					float step = Constants.Interface.ProductionChainPanel.flowSegmentLength;
+					for ( float v = 0; v < connection.points.Count - 1 - step; v += step )
+						Line( new Vector2( curveX.PositionAt( v ), curveY.PositionAt( v )), new Vector2( curveX.PositionAt( v + step ), curveY.PositionAt( v + step ) ) );
 				}
 
 				List<int> indices = new ();

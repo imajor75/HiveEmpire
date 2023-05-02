@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System;
+using System.Linq;
 
 [System.Serializable]
 public class CubicCurve
@@ -57,7 +58,7 @@ public class CubicArray
 
 	void UpdateCurves()
 	{
-		if ( curves.Count == positions.Count )
+		if ( curves.Count == positions.Count - 1 )
 			return;
 
 		curves.Clear();
@@ -67,12 +68,16 @@ public class CubicArray
 			float direction0 = i == 0 ? startDirection : positions[i+1] - positions[i-1];
 			float direction1 = i == positions.Count - 2 ? endDirection : positions[i+2] - positions[i];
 			curve.Setup( positions[i], positions[i+1], direction0, direction1 );
+			curves.Add( curve );
 		}
 	}
 
 	public float PositionAt( float v )
 	{
 		UpdateCurves();
+		if ( v >= curves.Count )
+			return positions.Last();
+
 		var floor = MathF.Floor( v );
 		return curves[(int)floor].PositionAt( v - floor );
 	}
@@ -80,6 +85,9 @@ public class CubicArray
 	public float DirectionAt( float v )
 	{
 		UpdateCurves();
+		if ( v >= curves.Count )
+			return endDirection;
+
 		var floor = MathF.Floor( v );
 		return curves[(int)floor].DirectionAt( v - floor );
 	}
