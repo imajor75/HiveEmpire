@@ -52,24 +52,37 @@ public class CubicCurve
 
 public class CubicArray
 {
-	public float startDirection, endDirection;
-	public List<float> positions = new ();
-	public List<CubicCurve> curves = new ();
+	List<float> positions = new (), directions = new ();
+	List<CubicCurve> curves = new ();
 
 	void UpdateCurves()
 	{
 		if ( curves.Count == positions.Count - 1 )
 			return;
 
+		Assert.global.AreEqual( positions.Count, directions.Count );
+		Assert.global.AreNotEqual( directions.First(), float.MaxValue );
+		Assert.global.AreNotEqual( directions.Last(), float.MaxValue );
+
 		curves.Clear();
 		for ( int i = 0; i < positions.Count - 1; i++ )
 		{
 			var curve = CubicCurve.Create();
-			float direction0 = i == 0 ? startDirection : positions[i+1] - positions[i-1];
-			float direction1 = i == positions.Count - 2 ? endDirection : positions[i+2] - positions[i];
+			float direction0 = directions[i];
+			if ( direction0 == float.MaxValue && i > 0 )
+				direction0 = positions[i+1] - positions[i-1];
+			float direction1 = directions[i+1];
+			if ( direction1 == float.MaxValue && i != positions.Count - 2 )
+				direction1 = positions[i+2] - positions[i];
 			curve.Setup( positions[i], positions[i+1], direction0, direction1 );
 			curves.Add( curve );
 		}
+	}
+
+	public void AddPosition( float position, float direction = float.MaxValue )
+	{
+		positions.Add( position );
+		directions.Add( direction );
 	}
 
 	public float PositionAt( float v )
@@ -86,7 +99,7 @@ public class CubicArray
 	{
 		UpdateCurves();
 		if ( v >= curves.Count )
-			return endDirection;
+			return directions.Last();
 
 		var floor = MathF.Floor( v );
 		return curves[(int)floor].DirectionAt( v - floor );

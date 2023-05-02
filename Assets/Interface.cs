@@ -4018,12 +4018,12 @@ public class Interface : HiveObject
 			{
 				foreach ( var connection in flow.connections )
 				{
-					var curveX = new CubicArray { startDirection = 0, endDirection = 0 };
-					var curveY = new CubicArray { startDirection = -200, endDirection = -200 };
+					var curveX = new CubicArray();
+					var curveY = new CubicArray();
 					for ( int i = 0; i < connection.points.Count; i++ )
 					{
-						curveX.positions.Add( connection.points[i].x );
-						curveY.positions.Add( connection.points[i].y );
+						curveX.AddPosition( connection.points[i].x, 0 );
+						curveY.AddPosition( connection.points[i].y, -200 );
 					}
 
 					float step = Constants.Interface.ProductionChainPanel.flowSegmentLength;
