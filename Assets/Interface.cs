@@ -3738,7 +3738,7 @@ public class Interface : HiveObject
 		public int logicalRows = 0;
 		public int width;
 		public ScrollRect scroll;
-		public RawImage background;
+		public Background background;
 		public RenderTexture rt;
 
 		public (
@@ -3766,19 +3766,13 @@ public class Interface : HiveObject
 			public Color color;
 			public int remainingOrigins;
 			public int finishedRow = -1;
-			public void Highlight( bool on )
-			{
-				// ProductionChainPanel.highlight = on ? this : null;
-				// if ( on )
-				// 	foreach ( var line in lines ) line.transform.SetAsLastSibling();
-				// else
-				// 	foreach ( var line in lines ) line.color = color;
-			}
-			string TooltipText()
+			public UIHelpers.Rectangle area = new ();
+			public string TooltipText()
 			{
 				var tooltipText = $"{HiveCommon.Nice( itemType.ToString() )}\nSource: {HiveCommon.Nice( source.type.ToString() )}\nTargets: ";
 				foreach ( var connection in connections )
-					tooltipText += $"{HiveCommon.Nice( connection.target.type.ToString() )}, ";
+					if ( connection.target != null )
+						tooltipText += $"{HiveCommon.Nice( connection.target.type.ToString() )}, ";
 				tooltipText = tooltipText.Remove( tooltipText.Length - 2, 2 );
 				return tooltipText;
 			}
@@ -3803,6 +3797,51 @@ public class Interface : HiveObject
 			public Flow boss;
 			public Workshop.Configuration target;
 			public List<Vector2> points = new ();
+			public CubicArray curveX, curveY;
+		}
+
+		public class Background : RawImage, IPointerMoveHandler
+		{
+			public ProductionChainPanel boss;
+
+			public void OnPointerMove( PointerEventData data )
+			{
+				Vector3[] corners = new Vector3[4];
+				rectTransform.GetWorldCorners( corners );
+				boss.PointerMoveOverContent( ( data.position - new Vector2( corners[1].x, corners[1].y ) ) / uiScale );
+			}
+		}
+
+		public void PointerMoveOverContent( Vector2 point )
+		{
+			foreach ( var flow in flows )
+			{
+				if ( !flow.area.Contains( point ) )
+					continue;
+
+				foreach ( var connection in flow.connections )
+				{
+					for ( int i = 0; i < connection.points.Count - 1; i++ )
+					{
+						var rect = new UIHelpers.Rectangle().Extend( connection.points[i] ).Extend( connection.points[i+1] ).Grow( 2 );
+						if ( !rect.Contains( point ) )
+							continue;
+
+						for ( float v = 0; v < 1; v += Constants.Interface.ProductionChainPanel.flowSegmentLength )
+						{
+							var position = new Vector2( connection.curveX.PositionAt( i+v ), connection.curveY.PositionAt( i+v ) );
+							float distance = ( position - point ).magnitude;
+							if ( distance < 10 )
+							{
+								Interface.tooltip.SetText( this, flow.TooltipText() );
+								return;
+							}
+						}
+					}
+				}
+			}
+			if ( Interface.tooltip.origin == this )
+				Interface.tooltip.Clear();
 		}
 
 		public void StartNewRow()
@@ -3978,6 +4017,17 @@ public class Interface : HiveObject
 				flows.Add( current );
 				currentRow.workshopIndex++;
 			}
+
+			foreach ( var flow in flows )
+			{
+				flow.area.Clear();
+				foreach ( var connection in flow.connections )
+				{
+					foreach ( var point in connection.points )
+						flow.area.Extend( point );
+				}
+				flow.area.Grow( 2 );
+			}
 		}
 
 		public void Open()
@@ -3987,9 +4037,6 @@ public class Interface : HiveObject
 
 			Text( "Production chain is randomized based on the current world seed. If you start a new world it will be different" ).Pin( borderWidth, -borderWidth, width, 2 * iconSize );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - 2 * iconSize );
-
-			var lineParent = Image().Stretch().Link( scroll.content );
-			lineParent.color = new Color( 0, 0, 0, 0 );
 
 			Fill();
 
@@ -4023,17 +4070,17 @@ public class Interface : HiveObject
 			{
 				foreach ( var connection in flow.connections )
 				{
-					var curveX = new CubicArray();
-					var curveY = new CubicArray();
+					connection.curveX = new ();
+					connection.curveY = new ();
 					for ( int i = 0; i < connection.points.Count; i++ )
 					{
-						curveX.AddPosition( connection.points[i].x, 0 );
-						curveY.AddPosition( connection.points[i].y, -200 );
+						connection.curveX.AddPosition( connection.points[i].x, 0 );
+						connection.curveY.AddPosition( connection.points[i].y, -200 );
 					}
 
 					float step = Constants.Interface.ProductionChainPanel.flowSegmentLength;
 					for ( float v = 0; v < connection.points.Count - 1 - step; v += step )
-						Line( new Vector2( curveX.PositionAt( v ), curveY.PositionAt( v )), new Vector2( curveX.PositionAt( v + step ), curveY.PositionAt( v + step ) ) );
+						Line( new Vector2( connection.curveX.PositionAt( v ), connection.curveY.PositionAt( v )), new Vector2( connection.curveX.PositionAt( v + step ), connection.curveY.PositionAt( v + step ) ) );
 				}
 
 				List<int> indices = new ();
@@ -4096,6 +4143,9 @@ public class Interface : HiveObject
 			float demand = 0;
 			foreach ( var connection in flow.connections )
 			{
+				if ( connection.target == null )
+					continue;
+
 				foreach ( var playerWorkshop in root.mainTeam.workshops )
 				{
 					if ( playerWorkshop.type == connection.target.type )
@@ -4125,9 +4175,10 @@ public class Interface : HiveObject
 			{
 				rt = GenerateBackground();
 
-				background = new GameObject( "Connections" ).AddComponent<RawImage>().Link( scroll.content ).Stretch();
+				background = new GameObject( "Connections" ).AddComponent<Background>().Link( scroll.content ).Stretch();
 				background.texture = rt;
 				background.transform.SetAsFirstSibling();
+				background.boss = this;
 			}
 			// if ( highlight != null )
 			// 	foreach ( var line in highlight.lines )
@@ -8842,13 +8893,67 @@ public static class UIHelpers
 		return Color.Lerp( color, Color.black, 0.5f );
 	}
 
+	[Serializable]
+	public class Rectangle
+	{
+		public float xMin, xMax;
+		public float yMin, yMax;
+	
+		public Rectangle()
+		{
+			Clear();
+		}
+
+		public Rectangle( Vector2 min, Vector2 max )
+		{
+			xMin = min.x;
+			yMin = min.y;
+			xMax = max.x;
+			yMax = max.y;
+		}
+
+		public Rectangle Extend( Vector2 point )
+		{
+			if ( xMin > point.x )
+				xMin = point.x;
+			if ( xMax < point.x )
+				xMax = point.x;
+			if ( yMin > point.y )
+				yMin = point.y;
+			if ( yMax < point.y )
+				yMax = point.y;
+			return this;
+		}
+
+		public Rectangle Clear()
+		{
+			xMin = yMin = float.MaxValue;
+			xMax = yMax = float.MinValue;
+			return this;
+		}
+
+		public bool Contains( Vector2 point )
+		{
+			return xMin <= point.x && yMin <= point.y && xMax >= point.x && yMax >= point.y;
+		}
+
+		public Rectangle Grow( float value )
+		{
+			xMin -= value;
+			yMin -= value;
+			xMax += value;
+			yMax += value;
+			return this;
+		}
+	}
+
 	public static bool Contains<UIElement>( this UIElement g, Vector2 position ) where UIElement : Component
 	{
 		if ( g.transform is RectTransform t )
 		{
 			Vector3[] corners = new Vector3[4];
 			t.GetWorldCorners( corners );
-			var rect = new Rect( corners[0], corners[2] - corners[0] );
+			var rect = new Rect( corners[0], corners[2] );
 			return rect.Contains( position );
 		}
 		return false;
@@ -8856,14 +8961,14 @@ public static class UIHelpers
 	
 	public static UIElement SetTooltip<UIElement>( this UIElement g, Func<string> textGenerator, Sprite image = null, string additionalText = "", Action<bool> onShow = null, int width = 300 ) where UIElement : Component
 	{
-			Assert.global.IsTrue( textGenerator != null || onShow != null );
-			var s = g.gameObject.GetComponent<Interface.TooltipSource>();
-			if ( s == null )
-				s = g.gameObject.AddComponent<Interface.TooltipSource>();
-			s.SetData( textGenerator, image, additionalText, onShow, width );
-			foreach ( Transform t in g.transform )
-				t.SetTooltip( textGenerator, image, additionalText, onShow );
-			return g;
+		Assert.global.IsTrue( textGenerator != null || onShow != null );
+		var s = g.gameObject.GetComponent<Interface.TooltipSource>();
+		if ( s == null )
+			s = g.gameObject.AddComponent<Interface.TooltipSource>();
+		s.SetData( textGenerator, image, additionalText, onShow, width );
+		foreach ( Transform t in g.transform )
+			t.SetTooltip( textGenerator, image, additionalText, onShow );
+		return g;
 	}
 
 	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
@@ -8925,9 +9030,6 @@ public static class UIHelpers
 		foreach ( Transform child in s.content )
 			HiveCommon.Eradicate( child.gameObject );
 
-		var bg = new GameObject().AddComponent<Image>().Link( s.content ).Stretch();
-		bg.color = new Color( 0, 0, 0, 0 );	// emptry transparent background image for picking, otherwise mouse wheel is not srolling when not over a child element
-		bg.name = "Background";
 		return s;
 	}
 
