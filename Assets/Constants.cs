@@ -21,7 +21,7 @@ public static class Constants
             public const int pixelsPerFlow = 20;
             public static Color[] flowColors = new Color[4]{ Color.black, Color.red, Color.blue, Color.green };
             public const float flowWidthInPixel = 2;
-            public const float flowSegmentLength = 0.1f;
+            public const float flowSegmentLength = 0.05f;
         }
     }
 

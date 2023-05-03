@@ -3826,7 +3826,7 @@ public class Interface : HiveObject
 					}
 			}
 
-			flowsUnderConstruction.Sort( ( a, b ) => b.currentColumn.CompareTo( a.currentColumn ) );
+			flowsUnderConstruction.Sort( ( a, b ) => a.currentColumn.CompareTo( b.currentColumn ) );
 			logicalRows++;
 		}
 
