@@ -1340,7 +1340,12 @@ public class Interface : HiveObject
 		void Update()
 		{
 			if ( active && textGenerator != null )
-				tooltip.SetText( this, textGenerator(), image, additionalText, width:width );
+			{
+				if ( tooltip.origin == this )
+					tooltip.SetText( this, textGenerator(), image, additionalText, width:width );
+				else
+					active = false;
+			}
 		}
 
 		void Start()
