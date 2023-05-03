@@ -17,10 +17,10 @@ public static class Constants
         {
     		public const int maxWorkshopsPerLine = 5;
             public const int width = 400;
-            public const int pixelsPerRow = 70;
-            public const int pixelsPerFlow = 10;
+            public const int pixelsPerRow = 100;
+            public const int pixelsPerFlow = 20;
             public static Color[] flowColors = new Color[4]{ Color.black, Color.red, Color.blue, Color.green };
-            public const float flowWidthInPixel = 5;
+            public const float flowWidthInPixel = 2;
             public const float flowSegmentLength = 0.1f;
         }
     }
