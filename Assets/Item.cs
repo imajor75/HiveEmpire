@@ -62,6 +62,20 @@ public class Item : HiveObject
 		set {}
 	}
 
+	public float tripProgress
+	{
+		get
+		{
+			if ( path == null )		
+				return 0;
+
+			float progress = (float)path.progress / path.roadPath.Count;
+			if ( hauler && ( hauler.itemsInHands[0] == this || hauler.itemsInHands[1] == this ) && hauler.firstTask is Unit.WalkToRoadPoint )
+				progress -= ( 1 - hauler.roadProgress ) / path.roadPath.Count;
+			return progress;
+		}
+	}
+
 	public GameObject body;
 	public SpriteRenderer onMap;
 	public Vector3 mapPosition { set { if ( onMap ) onMap.transform.position = value + Vector3.up * 6; } }

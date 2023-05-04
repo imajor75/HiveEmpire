@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -65,6 +65,8 @@ public class Unit : HiveObject
 	readonly GameObject[] wheels = new GameObject[4];
 
 	override public UpdateStage updateMode => IsIdle() ? UpdateStage.lazy : UpdateStage.realtime | UpdateStage.lazy;
+
+	public float roadProgress => firstTask is WalkToRoadPoint w ? w.progress : 0;
 
 	override public int checksum
 	{
@@ -733,6 +735,17 @@ public class Unit : HiveObject
 			{
 				boss.assert.IsTrue( wishedPoint <= road.nodes.Count );
 				boss.assert.AreEqual( Math.Abs( wishedPoint - cp ), 1 );
+			}
+		}
+
+		public float progress
+		{
+			get
+			{
+				float roadSegmentLeft = Math.Abs( targetPoint - currentPoint );
+				if ( boss.walkTo )
+					roadSegmentLeft += 1 - boss.walkProgress;
+				return 1 - roadSegmentLeft / road.length;
 			}
 		}
 	}

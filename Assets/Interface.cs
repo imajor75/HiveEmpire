@@ -5397,6 +5397,7 @@ if ( cart )
 	{
 		public Item item;
 		public PathVisualization route;
+		public ProgressBar tripProgress;
 		public Text stats;
 		Building destination;
 		Text destinationText;
@@ -5412,25 +5413,25 @@ if ( cart )
 			this.item = item;
 
 			noResize = true;
-			if ( base.Open( null, 0, 0, 250, 210 ) )
+			if ( base.Open( null, 0, 0, 250, 240 ) )
 				return;
 
 			name = "Item panel";
-
-			Text( item.type.ToString() ).Pin( 15, -15, 100 );
-			stats = Text().Pin( 15, -35, 250 );
-			Text( "Origin:" ).Pin( 15, -55, 170 );
+			Text( item.type.ToString() ).Pin( borderWidth, -15, 100 );
+			stats = Text().Pin( borderWidth, -35, 250 );
+			Text( "Origin:" ).Pin( borderWidth, -55, 170 );
 			if ( item.origin )
 				BuildingIcon( item.origin ).Pin( 100, -55, 120 );
-			Text( "Destination:" ).Pin( 15, -75, 170 );
-			Text( "Distance to destination:" ).Pin( 15, -95, 170 );
+			Text( "Destination:" ).Pin( borderWidth, -75, 170 );
+			Text( "Distance to destination:" ).Pin( borderWidth, -95, 170 );
 
 			Text( "Full" ).Pin( 120, -115, 40 );
 			Text( "Remaining" ).Pin( 170, -115, 70 );
 
-			Text( "Road count:" ).Pin( 15, -135, 100 );
-			Text( "Step count:" ).Pin( 15, -155, 100 );
-			Text( "As the crow fly:" ).Pin( 15, -175, 100 );
+			Text( "Road count:" ).Pin( borderWidth, -135, 100 );
+			Text( "Step count:" ).Pin( borderWidth, -155, 100 );
+			Text( "As the crow fly:" ).Pin( borderWidth, -175, 100 );
+			tripProgress = Progress( true ).PinCenter( 0, -205, 200, iconSize, 0.5f ).SetTooltip( "Progress of the current trip to the destination" );
 
 			distances[0] = Text( "?" ).Pin( 120, -135, 50 ).SetTooltip( "Count of roads on the full trip" );
 			distances[1] = Text( "?" ).Pin( 170, -135, 50 ).SetTooltip( "Count of roads left to the destinaion" );
@@ -5480,6 +5481,8 @@ if ( cart )
 
 			if ( item.destination && route == null )
 				route = PathVisualization.Create().Setup( item.path );
+
+			tripProgress.progress = item.tripProgress;
 		}
 
 		public override void Close()
