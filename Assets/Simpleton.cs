@@ -708,6 +708,7 @@ public class Simpleton : Player
     {
         public Attackable target;
 
+        public AttackTask() : base( null ) {}
         public AttackTask( Simpleton boss, Attackable target ) : base( boss )
         {
             this.target = target;
@@ -767,6 +768,7 @@ public class Simpleton : Player
 
         public State state;
 
+        public YieldTask() : base( null ) {}
         public YieldTask( Simpleton boss, Workshop.Type workshopType, float target ) : base( boss ) 
         {
             this.workshopType = workshopType;
@@ -1145,6 +1147,7 @@ public class Simpleton : Player
             };
             return d;
         }
+        public FlagTask() : base( null ) {}
         public FlagTask( Simpleton boss, Flag flag ) : base( boss )
         {
             this.flag = flag;
@@ -1357,6 +1360,7 @@ public class Simpleton : Player
         public Flag flagA, flagB;
         public PathFinder path = PathFinder.Create();
 
+        public ConnectionTask() : base( null ) {}
         public ConnectionTask( Simpleton boss, Flag flagA, Flag flagB ) : base( boss )
         {
             this.flagA = flagA;
@@ -1400,6 +1404,7 @@ public class Simpleton : Player
         public Road road;
         public int best;
 
+        public SplitRoadTask() : base( null ) {}
         public SplitRoadTask( Simpleton boss, Road road ) : base( boss )
         {
             this.road = road;
@@ -1433,6 +1438,7 @@ public class Simpleton : Player
         public float bestScore = 0;
         public int bestFlagDirection;
 
+        public ExtendBorderTask() : base( null ) {}
         public ExtendBorderTask( Simpleton boss ) : base( boss ) {}
         public override bool Analyze()
         {
@@ -1526,6 +1532,7 @@ public class Simpleton : Player
         public Item.Type itemTypeToLink;
         public List<Road> cleanupRoads = new ();
         public List<Flag> cleanupFlags = new ();
+        public MaintenanceTask() : base( null ) {}
         public MaintenanceTask( Simpleton boss, Building target ) : base( boss )
         {
             this.target = target;
@@ -1819,6 +1826,7 @@ public class Simpleton : Player
         public Node site;
         public int flagDirection;
 
+        public BuildStockTask() : base( null ) {}
         public BuildStockTask( Simpleton boss, Node center ) : base( boss )
         {
             this.center = center;
