@@ -66,7 +66,7 @@ public class Item : HiveObject
 	{
 		get
 		{
-			if ( path == null )		
+			if ( path == null || path.roadPath.Count == 0 )		
 				return 0;
 
 			float progress = (float)path.progress / path.roadPath.Count;

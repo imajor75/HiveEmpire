@@ -1644,6 +1644,14 @@ public class Interface : HiveObject
 			return i;
 		}
 
+		public ItemImage ItemIcon( Item item )
+		{
+			var icon = ItemIcon( item.type );
+			icon.SetItem( item );
+			return icon;
+
+		}
+
 		public RectTransform RectTransform()
 		{
 			return new GameObject().AddComponent<RectTransform>();
@@ -3740,6 +3748,7 @@ public class Interface : HiveObject
 		public ScrollRect scroll;
 		public Background background;
 		public RenderTexture rt;
+		public List<ItemImage> itemImages = new ();
 
 		public (
 			int pixel,
@@ -4180,9 +4189,30 @@ public class Interface : HiveObject
 				background.transform.SetAsFirstSibling();
 				background.boss = this;
 			}
-			// if ( highlight != null )
-			// 	foreach ( var line in highlight.lines )
-			// 		line.color = Color.Lerp( highlight.color, Color.white, (float)( Math.Sin( Time.unscaledTime * 4 ) + 1 ) * 0.5f );
+
+			foreach ( var old in itemImages )
+				HiveCommon.Eradicate( old.gameObject );
+			itemImages.Clear();
+
+			foreach ( var item in root.mainTeam.items )
+			{
+				if ( item?.origin == null || item.destination == null )
+					continue;
+				foreach ( var flow in flows )
+				{
+					if ( (Building.Type)flow.source.type != item.origin.type )
+						continue;
+					foreach ( var connection in flow.connections )
+					{
+						if ( (Building.Type)connection.target.type != item.destination.type || connection.curveX.length <= 0 )
+							continue;
+
+						var progress = ( 1 - item.tripProgress ) * connection.curveX.length;
+						itemImages.Add( ItemIcon( item ).Link( scroll.content ).PinCenter( (int)connection.curveX.PositionAt( progress ), (int)connection.curveY.PositionAt( progress ) ) );
+					}
+				}
+			}
+
 			base.Update();
 		}
 	}

@@ -55,6 +55,8 @@ public class CubicArray
 	List<float> positions = new (), directions = new ();
 	List<CubicCurve> curves = new ();
 
+	public int length => positions.Count - 1;
+
 	void UpdateCurves()
 	{
 		if ( curves.Count == positions.Count - 1 )
