@@ -4222,21 +4222,34 @@ public class Interface : HiveObject
 				HiveCommon.Eradicate( old.gameObject );
 			itemImages.Clear();
 
+			void ShowItem( Item item, float x, float y )
+			{
+				itemImages.Add( ItemIcon( item ).Link( scroll.content ).PinCenter( (int)x, (int)y ) );
+			}
+
 			foreach ( var item in root.mainTeam.items )
 			{
 				if ( item?.origin == null || item.destination == null )
 					continue;
 				foreach ( var flow in flows )
 				{
-					if ( (Building.Type)flow.source.type != item.origin.type )
+					if ( flow.itemType != item.type || flow.connections.Count == 0 )
 						continue;
+					if ( item.destination is Stock stock && stock.itemData[(int)item.type].cartOutput > 0 )
+					{
+						var connection = flow.connections.First();
+						var location = connection.curveX.length - item.tripProgress * flow.stockPoint;
+						ShowItem( item, connection.curveX.PositionAt( location ), connection.curveY.PositionAt( location ) );
+						break;
+					}
 					foreach ( var connection in flow.connections )
 					{
 						if ( (Building.Type)connection.target.type != item.destination.type || connection.curveX.length <= 0 )
 							continue;
 
 						var progress = ( 1 - item.tripProgress ) * connection.curveX.length;
-						itemImages.Add( ItemIcon( item ).Link( scroll.content ).PinCenter( (int)connection.curveX.PositionAt( progress ), (int)connection.curveY.PositionAt( progress ) ) );
+						ShowItem( item, connection.curveX.PositionAt( progress ), connection.curveY.PositionAt( progress ) );
+
 					}
 				}
 			}
