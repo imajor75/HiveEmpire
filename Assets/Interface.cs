@@ -1715,9 +1715,9 @@ public class Interface : HiveObject
 			return i;
 		}
 
-		public Text Text( string text = "", int fontSize = 12 )
+		public Text Text( string text = "", int fontSize = 12, bool alignToCenter = false )
 		{
-			return UIHelpers.Text( this, text, fontSize );
+			return UIHelpers.Text( this, text, fontSize, alignToCenter );
 		}
 
 		public EditableText Editable( string text = "", int fontSize = 12 )
@@ -3777,7 +3777,7 @@ public class Interface : HiveObject
 			public float stockPoint;
 			public int finishedRow = -1;
 			public UIHelpers.Rectangle area = new ();
-			public Text cartInput, cartOutput;
+			public Text cartInput, cartOutput, cartOnWay;
 			public string TooltipText()
 			{
 				var tooltipText = $"{HiveCommon.Nice( itemType.ToString() )}\nSource: {HiveCommon.Nice( source.type.ToString() )}\nTargets: ";
@@ -4202,7 +4202,7 @@ public class Interface : HiveObject
 					continue;
 
 				int itemIndex = (int)flow.itemType;
-				int input = 0, output = 0;
+				int input = 0, output = 0, onWay = 0;
 				foreach ( var stock in root.mainTeam.stocks )
 				{
 					var data = stock.itemData[itemIndex];
@@ -4210,9 +4210,12 @@ public class Interface : HiveObject
 						input += data.content;
 					if ( data.cartInput > 0 )
 						output += data.content;
+					if ( stock.cart.itemType == flow.itemType )
+						onWay += stock.cart.itemQuantity;
 				}
 				flow.cartInput.text = input.ToString();
 				flow.cartOutput.text = output.ToString();
+				flow.cartOnWay.text = onWay == 0 ? "" : onWay.ToString();
 			}
 
 			foreach ( var old in itemImages )
@@ -4260,8 +4263,12 @@ public class Interface : HiveObject
 				float stockPoint = connection.curveX.length - flow.stockPoint;
 				var cart = Image( Icon.cart ).Link( scroll.content ).PinCenter( (int)connection.curveX.PositionAt( stockPoint ), (int)connection.curveY.PositionAt( stockPoint ) );
 				cart.name = $"{flow.itemType} stock";
-				flow.cartInput = Text( "0", 10 ).Link( cart ).Pin( -10, 0, 50 );
-				flow.cartOutput = Text( "0", 10 ).Link( cart ).Pin( 20, 0, 50 );
+				flow.cartInput = Text( "0", 10, true ).Link( cart ).PinCenter( -15, 0, 50, iconSize, 0.5f, 0.5f );
+				flow.cartOutput = Text( "0", 10, true ).Link( cart ).PinCenter( 15, 0, 50, iconSize, 0.5f, 0.5f );
+				flow.cartOnWay = Text( "", 10, true ).Link( cart ).PinCenter( 0, 0, 50, iconSize, 0.5f, 0.5f );
+				flow.cartInput.name = "input";
+				flow.cartOutput.name = "output";
+				flow.cartOnWay.name = "onway";
 			}
 		}
 	}
@@ -8758,9 +8765,11 @@ public static class UIHelpers
 		return b;
 	}
 
-	public static Text Text( this Component panel, string text = "", int fontSize = 12 )
+	public static Text Text( this Component panel, string text = "", int fontSize = 12, bool alignToCenter = false )
 	{
 		Text t = new GameObject().AddComponent<Text>();
+		if ( alignToCenter )
+			t.alignment = TextAnchor.MiddleCenter;
 		t.name = "Text";
 		t.transform.SetParent( panel.transform );
 		t.font = Interface.font;
