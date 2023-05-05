@@ -3774,8 +3774,10 @@ public class Interface : HiveObject
 			public int currentColumn = -1, currentRow;
 			public Color color;
 			public int remainingOrigins;
+			public float stockPoint;
 			public int finishedRow = -1;
 			public UIHelpers.Rectangle area = new ();
+			public Text cartInput, cartOutput;
 			public string TooltipText()
 			{
 				var tooltipText = $"{HiveCommon.Nice( itemType.ToString() )}\nSource: {HiveCommon.Nice( source.type.ToString() )}\nTargets: ";
@@ -3795,6 +3797,7 @@ public class Interface : HiveObject
 			{
 				foreach ( var connection in connections )
 					connection.points.Add( point );
+				stockPoint++;
 			}
 			public Workshop.Configuration source;
 			public List<Connection> connections = new ();
@@ -4019,6 +4022,7 @@ public class Interface : HiveObject
 						var newConnection = new Connection{ target = workshop, boss = outputFlow };
 						newConnection.points.Add( new Vector2( column, currentRow.pixel ) );
 						outputFlow.connections.Add( newConnection );
+						outputFlow.stockPoint = 0;
 					}
 				}
 
@@ -4188,6 +4192,27 @@ public class Interface : HiveObject
 				background.texture = rt;
 				background.transform.SetAsFirstSibling();
 				background.boss = this;
+
+				CreateFlowStocks();
+			}
+
+			foreach ( var flow in flows )
+			{
+				if ( flow.cartInput == null || flow.cartOutput == null )
+					continue;
+
+				int itemIndex = (int)flow.itemType;
+				int input = 0, output = 0;
+				foreach ( var stock in root.mainTeam.stocks )
+				{
+					var data = stock.itemData[itemIndex];
+					if ( data.cartOutput > 0 )
+						input += data.content;
+					if ( data.cartInput > 0 )
+						output += data.content;
+				}
+				flow.cartInput.text = input.ToString();
+				flow.cartOutput.text = output.ToString();
 			}
 
 			foreach ( var old in itemImages )
@@ -4214,6 +4239,30 @@ public class Interface : HiveObject
 			}
 
 			base.Update();
+		}
+
+		void CreateFlowStocks()
+		{
+			foreach ( var flow in flows )
+			{
+				if ( flow.connections.Count < 1 )
+					continue;
+
+				var connection = flow.connections.First();
+				if ( flow.connections.Count == 1 )
+					flow.stockPoint = connection.curveX.length * 0.5f;
+
+				if ( flow.stockPoint == 0 )
+					continue;
+
+				if ( flow.stockPoint > connection.curveX.length * 0.5f )
+					flow.stockPoint = connection.curveX.length * 0.5f;
+				float stockPoint = connection.curveX.length - flow.stockPoint;
+				var cart = Image( Icon.cart ).Link( scroll.content ).PinCenter( (int)connection.curveX.PositionAt( stockPoint ), (int)connection.curveY.PositionAt( stockPoint ) );
+				cart.name = $"{flow.itemType} stock";
+				flow.cartInput = Text( "0", 10 ).Link( cart ).Pin( -10, 0, 50 );
+				flow.cartOutput = Text( "0", 10 ).Link( cart ).Pin( 20, 0, 50 );
+			}
 		}
 	}
 	public class BuildPanel : Panel
