@@ -17,11 +17,14 @@ public static class Constants
         {
     		public const int maxWorkshopsPerLine = 5;
             public const int width = 400;
-            public const int pixelsPerRow = 80;
+            public const int pixelsPerRow = 120;
             public const int pixelsPerFlow = 20;
-            public static Color[] flowColors = new Color[4]{ Color.black, Color.red, Color.blue, Color.green };
+            public static Color[] flowColors = new Color[4]{ Color.black.Wash(), Color.red.Wash(), Color.blue.Wash(), Color.green.Wash() };
             public const float flowWidthInPixel = 2;
             public const float flowSegmentLength = 0.05f;
+            public const int flowHorizontalSpace = 10;
+            public const int backGroundWidth = 1024;
+            public const int backGroundHeight = 2048;
         }
     }
 

@@ -3749,11 +3749,14 @@ public class Interface : HiveObject
 		public Background background;
 		public RenderTexture rt;
 		public List<ItemImage> itemImages = new ();
+		public bool showItems = true;
+		List<Workshop.Type> exposed = new ();
+		int[] itemTypeUsage = new int[(int)Item.Type.total];
 
 		public (
 			int pixel,
+			int index,
 			int workshopIndex,
-			int expectedWorkshopCount,
 			List<(int start, int width)> freeSpace
 		) currentRow;
 
@@ -3767,17 +3770,21 @@ public class Interface : HiveObject
 			return panel;
 		}
 
+		int flowColorIndex;
+		public Color newColor => Constants.Interface.ProductionChainPanel.flowColors[(flowColorIndex++) % Constants.Interface.ProductionChainPanel.flowColors.Length];
+
 		[Serializable]
 		public class Flow
 		{
+			public ProductionChainPanel boss;
 			public Item.Type itemType;
-			public int currentColumn = -1, currentRow;
+			public int column = -1;
 			public Color color;
 			public int remainingOrigins;
-			public float stockPoint;
-			public int finishedRow = -1;
+			public float stockPoint = 0;
 			public UIHelpers.Rectangle area = new ();
 			public Text cartInput, cartOutput, cartOnWay;
+			public bool ready => remainingOrigins <= 0 && stockPoint >= 0;
 			public string TooltipText()
 			{
 				var tooltipText = $"{HiveCommon.Nice( itemType.ToString() )}\nSource: {HiveCommon.Nice( source.type.ToString() )}\nTargets: ";
@@ -3790,8 +3797,7 @@ public class Interface : HiveObject
 			public void Continue( int column, int row )
 			{
 				AddPoint( new Vector2( column, row ) );
-				currentRow = row;
-				currentColumn = column;
+				this.column = column;
 			}
 			public void AddPoint( Vector2 point )
 			{
@@ -3856,36 +3862,6 @@ public class Interface : HiveObject
 				Interface.tooltip.Clear();
 		}
 
-		public void StartNewRow()
-		{
-			currentRow.workshopIndex = 0;
-
-			currentRow.freeSpace = new ();
-			currentRow.freeSpace.Add( ( 0, width ) );
-
-			currentRow.pixel -= Constants.Interface.ProductionChainPanel.pixelsPerRow;
-
-			int readyFlowCount = 0;
-			foreach ( var flow in flowsUnderConstruction )
-				if ( flow.remainingOrigins == 0 )
-					readyFlowCount++;
-
-			currentRow.expectedWorkshopCount = Math.Min( Constants.Interface.ProductionChainPanel.maxWorkshopsPerLine, readyFlowCount );
-			if ( currentRow.expectedWorkshopCount == 0 )
-			{
-				foreach ( var flow in flowsUnderConstruction )
-					if ( flow.remainingOrigins != 0 )
-					{
-						flow.remainingOrigins = 0;
-						currentRow.expectedWorkshopCount = 1;
-						break;
-					}
-			}
-
-			flowsUnderConstruction.Sort( ( a, b ) => a.currentColumn.CompareTo( b.currentColumn ) );
-			logicalRows++;
-		}
-
 		int AllocColumn( int width, int preferred = -1 )
 		{
 			int halfWidth = width / 2;
@@ -3923,11 +3899,90 @@ public class Interface : HiveObject
 			return result;
 		}
 
+		public void StartNewRow()
+		{
+			if ( flowsUnderConstruction.Count == 0 )
+				return;
+
+			currentRow.freeSpace = new ();
+			currentRow.freeSpace.Add( ( 0, width ) );
+			currentRow.pixel -= currentRow.workshopIndex == 0 ? Constants.Interface.ProductionChainPanel.pixelsPerFlow : Constants.Interface.ProductionChainPanel.pixelsPerRow;
+			currentRow.workshopIndex = 0;
+
+			bool hasCircle = true;
+			foreach ( var possibleFlow in flowsUnderConstruction )
+				if ( possibleFlow.remainingOrigins == 0 )
+					hasCircle = false;
+
+			if ( hasCircle )
+				flowsUnderConstruction.First().remainingOrigins = 0;
+
+			flowsUnderConstruction.Sort( ( a, b ) => a.column.CompareTo( b.column ) );
+			currentRow.index = logicalRows++;
+
+			if ( logicalRows > 100 )
+			{
+				foreach ( var flow in flowsUnderConstruction )
+					Log( $"Failed to finish flow: {flow.itemType}, {flow.stockPoint}, {flow.connections.Count}, {flow.remainingOrigins}" );
+				flowsUnderConstruction.Clear();
+			}
+		}
+
+		public void FinishFlow( Flow flow, int preferredColumn )
+		{
+			int column = AllocColumn( iconSize * 2, preferredColumn );
+
+			flow.Continue( column, currentRow.pixel );
+
+			Workshop.Configuration workshop = null;
+			foreach ( var configuration in world.workshopConfigurations )
+				if ( configuration.outputType == flow.itemType && configuration.type != Workshop.Type.stonemason )
+					workshop = configuration;
+			Assert.global.IsNotNull( workshop );
+
+			var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, currentRow.pixel, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( flow ) ).Link( scroll.content );
+			workshopImage.gameObject.name = workshop.type.ToString();
+			if ( workshop.outputStackSize > 1 )
+				Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
+			workshopImage.AddController().
+			AddOption( Icon.hammer, "Build a new instance of this workshop", () => BuildNewWorkshop( workshop.type ), Controller.Location.northEast ).
+			AddOption( Icon.house, "List all instances of this workshop", () => ListCurrentWorkshops( workshop.type ), Controller.Location.southEast );
+
+			flow.source = workshop;
+
+			if ( workshop.generatedInputs != null && !exposed.Contains( workshop.type ) )
+			{
+				exposed.Add( workshop.type );
+				foreach ( var input in workshop.generatedInputs )
+				{
+					Flow outputFlow = null;
+					foreach ( var oldFlow in flowsUnderConstruction )
+						if ( oldFlow.itemType == input )
+							outputFlow = oldFlow;
+					if ( outputFlow == null )
+					{
+						outputFlow = new Flow { boss = this, itemType = input, column = column, color = newColor, remainingOrigins = itemTypeUsage[(int)input] - 1 };
+						flowsUnderConstruction.Add( outputFlow );
+					}
+					else
+					{
+						outputFlow.remainingOrigins--;
+						outputFlow.stockPoint = -1;
+					}
+					var newConnection = new Connection{ target = workshop, boss = outputFlow };
+					newConnection.points.Add( new Vector2( column, currentRow.pixel ) );
+					outputFlow.connections.Add( newConnection );
+				}
+			}
+
+			flowsUnderConstruction.Remove( flow );
+			flows.Add( flow );
+			currentRow.workshopIndex++;
+		}
+
 		public void Fill()
 		{
-			var itemTypeUsage = new int[(int)Item.Type.total];
 			var itemTypes = new List<Item.Type>();
-			var exposed = new List<Workshop.Type>();
 			itemTypes.Add( Item.Type.soldier );
 			int itemTypeIndex = 0;
 			while ( itemTypes.Count != itemTypeIndex )
@@ -3949,86 +4004,34 @@ public class Interface : HiveObject
 				}
 			}
 
-			List<Color> flowColors = new ();
-			foreach ( var color in Constants.Interface.ProductionChainPanel.flowColors )
-				flowColors.Add( Color.Lerp( color, Color.gray, 0.5f ) );
-			int flowColorIndex = 0;
-
-			var soldierFlow = new Flow { itemType = Item.Type.soldier, currentColumn = width / 2, currentRow = -20, color = Color.yellow };
+			var soldierFlow = new Flow{ boss = this, itemType = Item.Type.soldier, column = width / 2, color = Color.yellow, stockPoint = 0 };
 			flowsUnderConstruction.Add( soldierFlow );
 			var rootConnection = new Connection{ target = null, boss = soldierFlow };
 			rootConnection.points.Add( new Vector2( width / 2, 0 ) );
 			soldierFlow.connections.Add( rootConnection );
 
+			currentRow.pixel = -50;
 			StartNewRow();
 
 			while ( flowsUnderConstruction.Count > 0 )
 			{
-				Flow current = null;
+				List<Flow> toContinue = new (), toFinish = new();
+
 				foreach ( var flow in flowsUnderConstruction )
-					if ( ( flow.remainingOrigins > 0 || current == null ) && flow.finishedRow != logicalRows )
-						current = flow;
-
-				if ( currentRow.workshopIndex == Constants.Interface.ProductionChainPanel.maxWorkshopsPerLine || current == null )
 				{
-					StartNewRow();
-					continue;
+					if ( flow.ready && toFinish.Count < Constants.Interface.ProductionChainPanel.maxWorkshopsPerLine )
+						toFinish.Add( flow );
+					else
+						toContinue.Add( flow );
 				}
+
+				foreach ( var flowToContinue in toContinue )
+					flowToContinue.Continue( AllocColumn( Constants.Interface.ProductionChainPanel.flowHorizontalSpace, flowToContinue.column ), currentRow.pixel );
 				
-				if ( current.remainingOrigins > 0 )
-				{
-					int tmpColumn = AllocColumn( 20, current.currentColumn );
-					current.Continue( tmpColumn, currentRow.pixel );
-					currentRow.pixel -= Constants.Interface.ProductionChainPanel.pixelsPerFlow;
-					current.finishedRow = logicalRows;
-					continue;
-				}
-
-				int column = AllocColumn( iconSize * 2, width / currentRow.expectedWorkshopCount / 2 * ( currentRow.workshopIndex * 2 + 1 ) );
-				Workshop.Configuration workshop = null;
-				foreach ( var configuration in world.workshopConfigurations )
-					if ( configuration.outputType == current.itemType && configuration.type != Workshop.Type.stonemason )
-						workshop = configuration;
-				Assert.global.IsNotNull( workshop );
-
-				current.Continue( column, currentRow.pixel );
-
-				var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, currentRow.pixel, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( current ) ).Link( scroll.content );
-				workshopImage.gameObject.name = workshop.type.ToString();
-				if ( workshop.outputStackSize > 1 )
-					Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
-				workshopImage.AddController().
-				AddOption( Icon.hammer, "Build a new instance of this workshop", () => BuildNewWorkshop( workshop.type ), Controller.Location.northEast ).
-				AddOption( Icon.house, "List all instances of this workshop", () => ListCurrentWorkshops( workshop.type ), Controller.Location.southEast );
-
-				current.source = workshop;
-
-				if ( workshop.generatedInputs != null && !exposed.Contains( workshop.type ) )
-				{
-					exposed.Add( workshop.type );
-					foreach ( var input in workshop.generatedInputs )
-					{
-						Flow outputFlow = null;
-						foreach ( var flow in flowsUnderConstruction )
-							if ( flow.itemType == input )
-								outputFlow = flow;
-						if ( outputFlow == null )
-						{
-							outputFlow = new Flow { itemType = input, currentColumn = column, currentRow = currentRow.pixel, color = flowColors[(flowColorIndex++) % flowColors.Count], remainingOrigins = itemTypeUsage[(int)input] - 1, finishedRow = logicalRows };
-							flowsUnderConstruction.Add( outputFlow );
-						}
-						else
-							outputFlow.remainingOrigins--;
-						var newConnection = new Connection{ target = workshop, boss = outputFlow };
-						newConnection.points.Add( new Vector2( column, currentRow.pixel ) );
-						outputFlow.connections.Add( newConnection );
-						outputFlow.stockPoint = 0;
-					}
-				}
-
-				flowsUnderConstruction.Remove( current );
-				flows.Add( current );
-				currentRow.workshopIndex++;
+				foreach ( var flowToFinish in toFinish )
+					FinishFlow( flowToFinish, width / toFinish.Count / 2 * ( currentRow.workshopIndex * 2 + 1 ) );
+				
+				StartNewRow();
 			}
 
 			foreach ( var flow in flows )
@@ -4058,7 +4061,7 @@ public class Interface : HiveObject
 
 		public RenderTexture GenerateBackground()
 		{
-			var view = new RenderTexture( 1024, 1024, 32 );
+			var view = new RenderTexture( Constants.Interface.ProductionChainPanel.backGroundWidth, Constants.Interface.ProductionChainPanel.backGroundHeight, 0 );
 			Graphics.SetRenderTarget( view );
 
 			GL.Clear( false, true, new Color( 0, 0, 0, 0 ), 1 );
@@ -4227,6 +4230,11 @@ public class Interface : HiveObject
 				itemImages.Add( ItemIcon( item ).Link( scroll.content ).PinCenter( (int)x, (int)y ) );
 			}
 
+			if ( !showItems )
+			{	
+				base.Update();
+				return;
+			}
 			foreach ( var item in root.mainTeam.items )
 			{
 				if ( item?.origin == null || item.destination == null )
@@ -4261,7 +4269,7 @@ public class Interface : HiveObject
 		{
 			foreach ( var flow in flows )
 			{
-				if ( flow.connections.Count < 1 )
+				if ( flow.connections.Count < 1 || flow.itemType == Item.Type.soldier )
 					continue;
 
 				var connection = flow.connections.First();
@@ -8995,6 +9003,11 @@ public static class UIHelpers
 	public static Color Dark( this Color color )
 	{
 		return Color.Lerp( color, Color.black, 0.5f );
+	}
+
+	public static Color Wash( this Color color )
+	{
+		return Color.Lerp( color, Color.grey, 0.5f );
 	}
 
 	[Serializable]
