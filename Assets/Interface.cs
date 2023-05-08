@@ -4255,9 +4255,18 @@ public class Interface : HiveObject
 						if ( (Building.Type)connection.target.type != item.destination.type || connection.curveX.length <= 0 )
 							continue;
 
-						var progress = ( 1 - item.tripProgress ) * connection.curveX.length;
-						ShowItem( item, connection.curveX.PositionAt( progress ), connection.curveY.PositionAt( progress ) );
+						float start = 0;
+						if ( item.origin is Stock origin )
+						{
+							if ( origin.itemData[(int)item.type].cartInput > 0 )
+								start = flow.stockPoint;
+							else
+								continue;
+						}
 
+						var progress = ( 1 - item.tripProgress ) * ( connection.curveX.length - start );
+
+						ShowItem( item, connection.curveX.PositionAt( progress ), connection.curveY.PositionAt( progress ) );
 					}
 				}
 			}
