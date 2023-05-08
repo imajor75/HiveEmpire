@@ -1263,7 +1263,14 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
-			if ( origin == null || !origin.gameObject.activeSelf || life.done )
+			var corners = new Vector3[4];
+			(origin.transform as RectTransform).GetWorldCorners( corners );
+			bool insideOrigin = 
+				Input.mousePosition.x >= corners[0].x &&
+				Input.mousePosition.y >= corners[0].y &&
+				Input.mousePosition.x <= corners[2].x &&
+				Input.mousePosition.y <= corners[2].y;
+			if ( origin == null || !origin.gameObject.activeSelf || life.done || (!pinned && !insideOrigin) )
 			{
 				gameObject.SetActive( false );
 				return;
@@ -1339,7 +1346,14 @@ public class Interface : HiveObject
 
 		void Update()
 		{
-			if ( active && textGenerator != null )
+			var corners = new Vector3[4];
+			(transform as RectTransform).GetWorldCorners( corners );
+			bool inside = 
+				Input.mousePosition.x >= corners[0].x &&
+				Input.mousePosition.y >= corners[0].y &&
+				Input.mousePosition.x <= corners[2].x &&
+				Input.mousePosition.y <= corners[2].y;
+			if ( active && textGenerator != null && inside )
 			{
 				if ( tooltip.origin == this )
 					tooltip.SetText( this, textGenerator(), image, additionalText, width:width );
