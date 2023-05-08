@@ -4069,7 +4069,7 @@ public class Interface : HiveObject
 
 			void Vertex( Vector2 p )
 			{
-				vertices.Add( new Vector3( (float)p.x / ( scroll.content.rect.width / uiScale ) * 2 - 1, (float)p.y / currentRow.pixel * 2 - 1, 0.5f ) );
+				vertices.Add( new Vector3( (float)p.x / ( scroll.content.rect.width / uiScale ) * 2 - 1, -(float)p.y / scroll.content.rect.height * uiScale * 2 - 1, 0.5f ) );
 			}
 			void Line( Vector2 start, Vector2 end )
 			{
