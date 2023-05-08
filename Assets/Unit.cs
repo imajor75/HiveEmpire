@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1033,6 +1033,7 @@ public class Unit : HiveObject
 			if ( items[1] )
 				boss.itemsDelivered++;
 			boss.bored.Start( Constants.Unit.boredTimeBeforeRemove );
+			boss.assert.IsNotNull( boss.links );
 			boss.links[(int)LinkType.haulingBoxLight]?.SetActive( items[0].buddy != null );
 			boss.links[(int)LinkType.haulingBoxHeavy]?.SetActive( false );
 			for ( int i = 0; i < items.Length; i++ )
@@ -1457,6 +1458,7 @@ public class Unit : HiveObject
 	new public void Start()
 	{
 		SetupVisuals();
+		base.Start();
 	}
 
 	public void SetupVisuals()
@@ -1559,8 +1561,6 @@ public class Unit : HiveObject
 
 		foreach ( var task in taskQueue )
 			task.Start();
-
-		base.Start();
 	}
 
 	// Distance the unit is taking in a single frame (0.02 sec)
@@ -1583,17 +1583,16 @@ public class Unit : HiveObject
 	{
 		if ( stage == UpdateStage.lazy )
 		{
+			if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
+			{
+				SetActive( false );
+				return;
+			}
 			if ( IsIdle() && !destroyed )
 				FindTask();
 			return;
 		}
 		assert.AreEqual( stage, UpdateStage.realtime );
-		if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
-		{
-			SetActive( false );
-			ScheduleUpdates();
-			return;
-		}
 		if ( debugReset )
 		{
 			ResetTasks();
