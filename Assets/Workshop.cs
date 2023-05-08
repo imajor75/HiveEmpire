@@ -37,7 +37,7 @@ public class Workshop : Building
 	override public UpdateStage updateMode => UpdateStage.turtle;
 	public float craftingProgress 
 	{
-		get	=> (float)( productionConfiguration.productionTime + crafting.age ) / productionConfiguration.productionTime;
+		get	=> crafting.inProgress ? (float)( productionConfiguration.productionTime + crafting.age ) / productionConfiguration.productionTime : 0;
 		[Obsolete( "Compatibility with old files", true )]
 		set {}
 	}
