@@ -1267,15 +1267,15 @@ public class Game : World
 		{
 			foreach ( var player in players )
 			{
-				if ( player is Simpleton simpleton && simpleton.preparationProgress < 1 && simpleton.actionIndex < root.preparationActionIndexLimit )
+				if ( player is Simpleton simpleton && simpleton.preparationProgress < Constants.Simpleton.enoughPreparation && simpleton.actionIndex < root.preparationActionIndexLimit )
 				{
 					bool progress = simpleton.DoSomething();
-					if ( !progress && simpleton.preparationProgress < 1 )
+					if ( !progress && simpleton.preparationProgress < Constants.Simpleton.enoughPreparation )
 					{
 						Log( $"Failed to finish preparation!", Severity.warning );
 						simpleton.DumpTasks();
 					}
-					if ( simpleton.preparationProgress >= 1 || !progress )
+					if ( simpleton.preparationProgress >= Constants.Simpleton.enoughPreparation || !progress )
 					{
 						if ( challenge.prerun > 0 )
 							Log( $"Entering prerun for {challenge.prerun} ticks, game checksum: {checksum}" );
@@ -1802,7 +1802,7 @@ public class Game : World
 				foreach ( var player in game.players )
 				{
 					if ( player is Simpleton simpleton )
-						game.preparation = simpleton.preparationProgress < 1 ? PrepareState.create : PrepareState.ready;
+						game.preparation = simpleton.preparationProgress < Constants.Simpleton.enoughPreparation ? PrepareState.create : PrepareState.ready;
 				}
 			}
 			maintainBronze.Reset();

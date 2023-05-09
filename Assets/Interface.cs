@@ -6096,8 +6096,6 @@ if ( cart )
 		{
 			if ( type == Building.Type.unknown )
 				return "All";
-			if ( type == (Building.Type)Workshop.Type._geologistObsolete )
-				return null;
 			string name = "";
 			if ( type < Building.Type.stock )
 				name = ((Workshop.Type)type).ToString();
@@ -7776,6 +7774,7 @@ if ( cart )
 		public Text total, current, remaining, itemCount;
 		public ProgressBar bar;
 		public float prerunStart = -1;
+		public float best;
 		public static PrepareProgress Create()
 		{
 			var p = new GameObject( "Preparation Progress" ).AddComponent<PrepareProgress>();
@@ -7809,7 +7808,8 @@ if ( cart )
 
 			if ( game.preparation == Game.PrepareState.create && root.mainPlayer is Simpleton simpleton )
 			{		
-				bar.progress = simpleton.preparationProgress;
+				best = Math.Max( best, simpleton.preparationProgress );
+				bar.progress = (float)Math.Pow( best / Constants.Simpleton.enoughPreparation, 3 );
 				workshops.text = $"workshops: {root.mainTeam.workshops.Count}";
 				guardHouses.text = $"guardhouses: {root.mainTeam.guardHouses.Count}";
 				stocks.text = $"stocks: {root.mainTeam.stocks.Count}";

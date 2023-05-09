@@ -422,7 +422,7 @@ public static class Constants
         public const int inabilityTolerance = Constants.Game.normalSpeedPerSecond * 60;
         public const float confidenceLevel = 0.1f;
         public const int sourceSearchRange = 6;
-        public const float extensionImportance = 0.3f;
+        public const float extensionImportance = 0.2f;
         public const float flagCaptureImportance = 0.3f;
         public const float relaxTolerance = 0.8f;
         public static int cleanupPeriod = 0;//60 * 60 * Constants.Game.normalSpeedPerSecond;

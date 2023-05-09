@@ -210,6 +210,8 @@ public class Serializer
 								value = "jeweler";
 							if ( value == "farm" )
 								value = "wheatFarm";
+							if ( value == "_geologistObsolete" )
+								value = "unknown";
 						}
 						if ( type == typeof( Resource.Type ) && value == "cornfield" )
 							value = "cornField";

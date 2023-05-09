@@ -138,7 +138,6 @@ public class Workshop : Building
 			Assert.global.IsNull( sortedList[(int)c.type], $"The type {c.type} is listed in workshops.json multiple times" );
 			sortedList[(int)c.type] = c;
 		}
-		sortedList[(int)Workshop.Type._geologistObsolete] = new Configuration { type = Workshop.Type._geologistObsolete };
 		for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			Assert.global.IsNotNull( sortedList[i], $"The workshop type {(Workshop.Type)i} is missing from workshops.json" );
 		return sortedList;
@@ -398,7 +397,6 @@ public class Workshop : Building
 		goldMine,
 		silverMine,
 		forester,
-		_geologistObsolete,	// Obsolete, kept here only to remain compatible with old files
 		bowMaker,
 		steelSmelter,
 		sterlingSmelter,

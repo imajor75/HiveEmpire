@@ -22,9 +22,9 @@ public class Simpleton : Player
     public Operation.Source activity;
 	public bool showActions;
     public bool peaceful;
-    public Task lastApplied;
+    public Task lastApplied, biggestProblem;
     public Workshop.Type debugPlacement = Workshop.Type.unknown;
-    public bool noRoom;
+    public float noRoomProblem;
     public bool dumpTasks, dumpYields;
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
     public ItemHandling preservingConstructionMaterial = ItemHandling.uninitialized;
@@ -64,9 +64,8 @@ public class Simpleton : Player
             if ( oh.challenge.preparation == Game.Challenge.Preparation.full )
             {
                 if ( lastApplied == null )
-                    return actionIndex > 0 ? 1 : 0;
-
-                return Constants.Simpleton.enoughPreparation - lastApplied.problemWeight;
+                    return 0;
+                return 1 - lastApplied.importance;
             }
 
             preparationMissingDeals = preparationMissingProduction = preparationTotalDeals = preparationTotalProduction = 0;
@@ -115,6 +114,8 @@ public class Simpleton : Player
         set { activity = value ? Operation.Source.computer : Operation.Source.manual; }
     }
 
+   	[Obsolete( "Compatibility with old files", true )]
+    bool noRoom { set {} }
    	[Obsolete( "Compatibility with old files", true )]
     List<Node> isolatedNodes { set { blockedNodes = value; } }
    	[Obsolete( "Compatibility with old files", true )]
@@ -263,14 +264,25 @@ public class Simpleton : Player
         }
 
         lastApplied = null;
+        biggestProblem = null;
         foreach ( var task in tasks )
         {
             if ( lastApplied == null || task.importance > lastApplied.importance )
                 lastApplied = task;
+            if ( biggestProblem == null || task.problemWeight > biggestProblem.problemWeight )
+                biggestProblem = task;
         }
         if ( lastApplied != null && ( lastApplied.importance >= confidence || activity == Operation.Source.preparation ) && lastApplied.importance > 0 )
         {
-            Log( $"{actionIndex} Applying solution {lastApplied.ToString()} (problem: {lastApplied.problemWeight}, solution: {lastApplied.solutionEfficiency})" );
+            string chart = "";
+            // float a = lastApplied.importance;
+            // for ( int i = 0; i < 20; i++ )
+            // {
+            //     chart += a > 0 && a < 0.05f ? 'o' : ' ';
+            //     a -= 0.05f;
+            // }
+            Log( $"{chart} {actionIndex}({lastApplied.importance}) Applying solution {lastApplied.ToString()} (problem: {lastApplied.problemWeight}, solution: {lastApplied.solutionEfficiency})" );
+            //Log( $"    Biggest problem: {biggestProblem.problemWeight} {biggestProblem.ToString()} (solution: {biggestProblem.solutionEfficiency}, index: {actionIndex})" );
             lastApplied.ApplySolution();
             actionIndex++;
             inability.Start( Constants.Simpleton.inabilityTolerance );
@@ -600,14 +612,11 @@ public class Simpleton : Player
                 action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
             }
-            boss.noRoom = false;
+            boss.noRoomProblem = Constants.Simpleton.extensionImportance;
 
             foreach ( var workshopType in game.workshopConfigurations )
             {
-                if ( workshopType.type == Workshop.Type._geologistObsolete )
-                    continue;
-
-                if ( workshopType.type == Workshop.Type.barrack && ( boss.lackingProductions.Count != 0 || boss.hasSeparatedFlags ) )
+                if ( workshopType.type == Workshop.Type.barrack && boss.activity != Operation.Source.preparation && ( boss.lackingProductions.Count != 0 || boss.hasSeparatedFlags ) )
                 {
                     boss.lackingProductions.Clear();
                     continue;
@@ -817,10 +826,19 @@ public class Simpleton : Player
                     }
                 }
 
+                float baseProblem = workshopType switch
+                {
+                    Workshop.Type.woodcutter => 0.95f,
+                    Workshop.Type.sawmill => 0.90f,
+                    Workshop.Type.stonemason => 0.85f,
+                    Workshop.Type.forester => 0.80f,
+                    _ => 0.75f
+                };
+
                 if ( currentYield >= target || ( currentYield > 0 && game.preparation == Game.PrepareState.create && oh.challenge.preparation == Game.Challenge.Preparation.routes ) )
                     problemWeight = 0;
                 else
-                    problemWeight = 0.75f - 0.5f * ( (float)currentYield / target );
+                    problemWeight = baseProblem - 0.5f * ( (float)currentYield / target );
                 if ( workshopType == Workshop.Type.stonemason )
                     problemWeight = Math.Max( problemWeight, stonemasonCount switch { 0 => 1, 1 => 0.3f, _ => 0 } );
                 if ( (int)outputType < boss.itemWeights.Count && (int)outputType >= 0 )
@@ -881,8 +899,13 @@ public class Simpleton : Player
             {
                 if ( bestLocation == null )
                 {
-                    boss.Log( $"A new {workshopType} would be good, but there is no room" );
-                    boss.noRoom = true;
+                    //boss.Log( $"A new {workshopType} would be good, but there is no room" );
+                    float noRoomProblem = workshopType switch
+                    {
+                        Workshop.Type.dungCollector => 0.2f,
+                        _ => 1
+                    };
+                    boss.noRoomProblem = Math.Max( boss.noRoomProblem, noRoomProblem );
                     state = State.noSpace;
                 }
                 state = State.possible;
@@ -1446,10 +1469,10 @@ public class Simpleton : Player
                 return finished;
             if ( boss.team.Stockpile( Item.Type.stone ) < GuardHouse.guardHouseConfiguration.stoneNeeded + boss.reservedStone )
                 return finished;
-            if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count && !boss.noRoom )
+            if ( boss.team.guardHouses.Count * Constants.Simpleton.guardHouseWorkshopRatio > boss.team.workshops.Count )
                 return finished;
 
-            problemWeight = boss.noRoom ? 1 : Constants.Simpleton.extensionImportance;
+            problemWeight = boss.noRoomProblem;
             
             foreach ( var node in HiveCommon.ground.nodes )
             {
