@@ -852,7 +852,7 @@ public class Ground : HiveObject
 				bool roadCrossing = false;
 				if ( nodes[a].road && !nodes[a].road.blueprintOnly )
 				{
-					if ( nodes[b].road == nodes[a].road || nodes[a].road.ends[0].node == nodes[b] || nodes[a].road.ends[1].node == nodes[b] )
+					if ( ( nodes[b].road == nodes[a].road && ( nodes[a].roadIndex == nodes[b].roadIndex + 1 || nodes[a].roadIndex == nodes[b].roadIndex - 1 ) ) || nodes[a].road.ends[0].node == nodes[b] || nodes[a].road.ends[1].node == nodes[b] )
 						roadCrossing = true;
 				}
 				else if ( nodes[b].road && !nodes[b].road.blueprintOnly )
