@@ -1264,7 +1264,8 @@ public class Interface : HiveObject
 		public override void Update()
 		{
 			var corners = new Vector3[4];
-			(origin.transform as RectTransform).GetWorldCorners( corners );
+			if ( origin )
+				(origin.transform as RectTransform).GetWorldCorners( corners );
 			bool insideOrigin = 
 				Input.mousePosition.x >= corners[0].x &&
 				Input.mousePosition.y >= corners[0].y &&
