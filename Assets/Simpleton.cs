@@ -306,6 +306,11 @@ public class Simpleton : Player
         return result;
     }
 
+    public void Cleanup()
+    {
+        lastApplied = biggestProblem = null;
+    }
+
     public void DumpTasks()
     {
         tasks.Sort( ( a, b ) => b.importance.CompareTo( a.importance ) );

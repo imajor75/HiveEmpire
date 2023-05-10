@@ -1280,6 +1280,7 @@ public class Game : World
 						if ( challenge.prerun > 0 )
 							Log( $"Entering prerun for {challenge.prerun} ticks, game checksum: {checksum}" );
 						preparation = PrepareState.prerun;
+						simpleton.Cleanup();
 					}
 				}
 			}
