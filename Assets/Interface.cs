@@ -7774,6 +7774,7 @@ if ( cart )
 		public Text total, current, remaining, itemCount;
 		public ProgressBar bar;
 		public float prerunStart = -1;
+		public int prerunStartTime;
 		public float best;
 		public static PrepareProgress Create()
 		{
@@ -7823,8 +7824,11 @@ if ( cart )
 				total.text = $"Total: {UIHelpers.TimeToString( game.challenge.prerun )}";
 				current.text = $"Current: {UIHelpers.TimeToString( game.time )}";
 				if ( prerunStart < 0 )
+				{
 					prerunStart = Time.unscaledTime;
-				float estimated = ( Time.unscaledTime - prerunStart ) / game.time;
+					prerunStartTime = game.time;
+				}
+				float estimated = ( Time.unscaledTime - prerunStart ) / ( game.time - prerunStartTime );
 				estimated *= game.challenge.prerun - game.time;
 				remaining.text = $"Estimated time left: {UIHelpers.TimeToString((int)( estimated * Constants.Game.normalSpeedPerSecond ) )}";
 				int count = 0;
