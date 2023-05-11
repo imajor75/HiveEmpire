@@ -452,11 +452,7 @@ public class Serializer
 				if ( link.referencer is HiveObject referencerHiveObject )
 					referencerHiveObject.OnDeadReference( link.member, link.reference as HiveObject );
 				else
-				{
-					if ( link.referencer is Player.Message me )
-						HiveCommon.Log( "hoppéla");
 					Assert.global.Fail( $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member} (raw)" );
-				}
 			}
 		}
 		return result;

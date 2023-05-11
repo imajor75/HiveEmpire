@@ -1206,6 +1206,7 @@ public class Game : World
 	public PrepareState preparation = PrepareState.ready;
 	[JsonIgnore]
 	public HiveObject.UpdateStage updateStage;
+	[JsonIgnore]
 	public Building lastAreaInfluencer;
 	public string nameOnNetwork;
 	[JsonIgnore]
