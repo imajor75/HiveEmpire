@@ -761,7 +761,7 @@ public class Eye : HiveObject
 
 		public void ApplyHighlight( RenderTexture source, RenderTexture target )
 		{
-			if ( maskCreator == null )
+			if ( maskCreator == null || mask.width != Screen.width || mask.height != Screen.height )
 				Graphics.Blit( source, target );
 			else
 			{
