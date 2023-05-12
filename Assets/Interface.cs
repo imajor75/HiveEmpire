@@ -2704,7 +2704,7 @@ public class Interface : HiveObject
 			{
 				string name = workshop.moniker;
 				if ( name == null )
-					name = workshop.type.ToString().GetPrettyName();
+					name = workshop.kind.ToString().GetPrettyName();
 				title = Editable( name ).Pin( 20, row, 160, 20 );
 				title.onValueChanged = Rename;
 				title.name = "Title";
@@ -2763,7 +2763,7 @@ public class Interface : HiveObject
 			if ( workshop.gatherer && ( contentToShow & Content.resourcesLeft ) > 0 )
 			{
 				resourcesLeft = Text( "Resources left: 0" ).Pin( 20, row, 150, 20 );
-				string tooltip = workshop.type switch
+				string tooltip = workshop.kind switch
 				{
 					Workshop.Type.hunter => "Hunters needs to be build around wild animal spawners, otherwise they will not able to catch anything. Animal spawners are always spawning new animals, so this is an endless resource.",
 					Workshop.Type.stonemason => "Rocks on the ground have multiple charges, but they are eventually running out. In that case the stonemason should be destroyed. Build stone mines if you need more stone.",
@@ -2889,7 +2889,7 @@ public class Interface : HiveObject
 			}
 			if ( resourcesLeft )
 			{
-				string text = workshop.type switch
+				string text = workshop.kind switch
 				{
 					Workshop.Type.woodcutter => $"Trees left: {workshop.ResourcesLeft()}",
 					Workshop.Type.appleGatherer => $"Trees left: {workshop.ResourcesLeft()}",
@@ -4164,7 +4164,7 @@ public class Interface : HiveObject
 			float currentProduction = 0;
 			foreach ( var playerWorkshop in root.mainTeam.workshops )
 			{
-				if ( playerWorkshop.type != workshop.type )
+				if ( playerWorkshop.kind != workshop.type )
 					continue;
 				instanceCount++;
 				productionCount += playerWorkshop.itemsProduced;
@@ -4180,7 +4180,7 @@ public class Interface : HiveObject
 
 				foreach ( var playerWorkshop in root.mainTeam.workshops )
 				{
-					if ( playerWorkshop.type == connection.target.type )
+					if ( playerWorkshop.kind == connection.target.type )
 						demand += playerWorkshop.CalculateProductivity();
 				}
 			}
@@ -4347,7 +4347,7 @@ public class Interface : HiveObject
 					continue;
 				int c = 0;
 				foreach ( var workshop in workshops )
-					if ( workshop.type == type && workshop.team == root.mainTeam )
+					if ( workshop.kind == type && workshop.team == root.mainTeam )
 						c++;
 				var b = BuildButton( column, row, $"{type.ToString().GetPrettyName()} ({c})", delegate { BuildWorkshop( type ); } );
 				string tooltip = "";
@@ -4498,7 +4498,7 @@ public class Interface : HiveObject
 				var workshops = FindObjectsOfType<Workshop>( true );
 				for ( int i = showID; i < workshops.Length; i++ )
 				{
-					if ( workshops[i].type == type && workshops[i].team == root.mainTeam )
+					if ( workshops[i].kind == type && workshops[i].team == root.mainTeam )
 					{
 						WorkshopPanel.Create().Open( workshops[i], WorkshopPanel.Content.everything, true );
 						showType = type;
@@ -7595,7 +7595,7 @@ if ( cart )
 				{
 					tickPerBuilding = c.productionTime / c.outputStackSize;
 					foreach ( var w in root.mainTeam.workshops ) 
-						if ( w.type == c.type )
+						if ( w.kind == c.type )
 							workshopCount++;
 					break;
 				}

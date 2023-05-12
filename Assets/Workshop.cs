@@ -14,7 +14,7 @@ public class Workshop : Building
 	public ItemDispatcher.Category outputPriority = ItemDispatcher.Category.work;
 	public float gatheringProgress;
 	public bool working;
-	new public Type type = Type.unknown;
+	public Type kind = Type.unknown;
 	public List<Buffer> buffers = new ();
 	public Item.Type lastUsedInput = Item.Type.unknown;
 	public float millWheelSpeed = 0;
@@ -32,7 +32,7 @@ public class Workshop : Building
 	public Game.Timer suspendGathering = new ();
 	public Game.Timer crafting = new ();
 	
-	override public string title { get { return type.ToString().GetPrettyName(); } set{} }
+	override public string title { get { return kind.ToString().GetPrettyName(); } set{} }
 	public Configuration productionConfiguration { get { return base.configuration as Configuration; } set { base.configuration = value; } }
 	override public UpdateStage updateMode => UpdateStage.turtle;
 	public float craftingProgress 
@@ -99,6 +99,8 @@ public class Workshop : Building
 	Game.Timer maxOutputCalculationTimer { set {} }
 	[Obsolete( "Compatibility with old files", true )]
 	int itemsProducedAtLastCheck { set {} }
+	[Obsolete( "Compatibility with old files", true )]
+	new Type type { set { kind = value; } }
 
 	[Obsolete( "Compatibility with old files", true )]
 	struct Productivity
@@ -699,7 +701,7 @@ public class Workshop : Building
 
 	public Workshop Setup( Node node, Team owner, Type type, int flagDirection, bool blueprintOnly = false, Resource.BlockHandling block = Resource.BlockHandling.block )
 	{
-		this.type = type;
+		this.kind = type;
 		this.team = owner;
 		buffers.Clear();
 
@@ -743,7 +745,7 @@ public class Workshop : Building
 
 	void RefreshConfiguration()
 	{
-		configuration = GetConfiguration( game, type );
+		configuration = GetConfiguration( game, kind );
 		assert.IsNotNull( configuration );
 
 		if ( productionConfiguration.generatedInputs == null )
@@ -775,12 +777,12 @@ public class Workshop : Building
 		assert.AreEqual( newList.Count, productionConfiguration.generatedInputs.Count );
 		buffers = newList;
 		foreach ( var b in buffers )
-			b.weight = team.FindInputWeight( type, b.itemType );
+			b.weight = team.FindInputWeight( kind, b.itemType );
 	}
 
 	public new void Start()
 	{
-		height = looks.GetMedia( type ).floatData;
+		height = looks.GetMedia( kind ).floatData;
 		levelBrake = height / 2;    // TODO Better way?
 		if ( levelBrake < 1 )
 			levelBrake = 1;
@@ -788,9 +790,9 @@ public class Workshop : Building
 		if ( destroyed )
 			return;
 		assert.IsNotNull( body );
-		if ( type == Type.mill || type == Type.cornMill )
+		if ( kind == Type.mill || kind == Type.cornMill )
 			millWheel = body.transform.Find( "SM_Bld_Preset_House_Windmill_01_Blades_Optimized" );
-		string name = type.ToString();
+		string name = kind.ToString();
 		this.name = name.First().ToString().ToUpper() + name.Substring( 1 ) + $" {node.x}:{node.y}";
 
 		RefreshConfiguration();
@@ -815,7 +817,7 @@ public class Workshop : Building
 
 	public override GameObject Template()
 	{
-		return looks.GetMediaData( type );
+		return looks.GetMediaData( kind );
 	}
 
 	public override Item SendItem( Item.Type itemType, Building destination, ItemDispatcher.Category priority )
@@ -943,7 +945,7 @@ public class Workshop : Building
 		if ( productionConfiguration.producesDung && dungPile == null )
 			dungPile = Resource.Create().Setup( node, Resource.Type.dung, int.MaxValue, true );
 
-		if ( type == Type.barrack && output > 0 )
+		if ( kind == Type.barrack && output > 0 )
 		{
 			output--;
 			Unit.Create().SetupAsSoldier( this ).ScheduleWalkToNeighbour( flag.node, true );
@@ -972,12 +974,12 @@ public class Workshop : Building
 			World.CRC( disabledBufferCRC, OperationHandler.Event.CodeLocation.workshopDisabledBuffers );
 		}
 
-		switch ( type )
+		switch ( kind )
 		{
 			case Type.wheatFarm:
 			case Type.cornFarm:
 			{
-				var resourceType = type == Type.cornFarm ? Resource.Type.cornField : Resource.Type.wheatField;
+				var resourceType = kind == Type.cornFarm ? Resource.Type.cornField : Resource.Type.wheatField;
 				if ( tinkerer.IsIdle( true ) && mode != Mode.sleeping && !resting.inProgress && !suspendGathering.inProgress )
 				{
 					if ( UseInput( 1, true ) )
@@ -1039,7 +1041,7 @@ public class Workshop : Building
 
 				if ( millWheel )
 				{
-					if ( ( type == Type.mill || type == Type.cornMill ) && working )
+					if ( ( kind == Type.mill || kind == Type.cornMill ) && working )
 						millWheelSpeed += 0.01f;
 					else
 						millWheelSpeed -= 0.01f;
@@ -1184,7 +1186,7 @@ public class Workshop : Building
 				{
 					if ( useInputs && !UseInput() )
 					{
-						if ( type != Type.stoneMine || allowFreeStone.inProgress )
+						if ( kind != Type.stoneMine || allowFreeStone.inProgress )
 							return false;
 						Log( "Stone mine giving one stone for free due to long starvation" );
 					}
@@ -1193,7 +1195,7 @@ public class Workshop : Building
 				}
 			}
 		}
-		if ( ( type == Type.woodcutter || type == Type.stonemason ) && !outOfResourceReported )
+		if ( ( kind == Type.woodcutter || kind == Type.stonemason ) && !outOfResourceReported )
 		{
 			outOfResourceReported = true;
 			team.SendMessage( "Out of resources", this );
@@ -1294,7 +1296,7 @@ public class Workshop : Building
 
 	public void PlayWorkingSound()
 	{
-		var sound = processingSounds.GetMedia( type );
+		var sound = processingSounds.GetMedia( kind );
 		soundSource.clip = sound.data;
 		soundSource.volume = sound.floatData;
 		soundSource.loop = !sound.boolData;
@@ -1437,7 +1439,7 @@ public class Workshop : Building
 			Workshop.Status.waitingForInput2 => $"Waiting for {buffers[2].itemType.ToString().GetPrettyName( false )}",
 			Workshop.Status.waitingForInput3 => $"Waiting for {buffers[3].itemType.ToString().GetPrettyName( false )}",
 			Workshop.Status.waitingForOutputSlot => "Waiting for output slot",
-			Workshop.Status.waitingForResource => type != Type.forester ? "Waiting for resource" : "Waiting for free spot",
+			Workshop.Status.waitingForResource => kind != Type.forester ? "Waiting for resource" : "Waiting for free spot",
 			Workshop.Status.resting => "Resting",
 			_ => "Unknown"
 		};

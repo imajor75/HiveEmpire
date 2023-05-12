@@ -696,7 +696,7 @@ public class World : HiveObject
 					foreach ( var b in s.buffers )
 						if ( b.stored > b.size )
 							b.stored = b.size;
-					s.configuration = Workshop.GetConfiguration( this, s.type );
+					s.configuration = Workshop.GetConfiguration( this, s.kind );
 					if ( !s.team.workshops.Contains( s ) && !s.destroyed )
 					{
 						s.team.workshops.Add( s );

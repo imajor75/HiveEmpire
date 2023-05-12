@@ -89,7 +89,7 @@ abstract public class Building : HiveObject
 		get
 		{
 			if ( this is Workshop workshop )
-				return (Type)workshop.type;
+				return (Type)workshop.kind;
 			if ( this is Stock stock )
 				return stock.main ? Type.headquarters : Type.stock;
 			assert.IsTrue( this is GuardHouse );

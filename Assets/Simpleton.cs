@@ -422,7 +422,7 @@ public class Simpleton : Player
                     if ( deal.partner is Stock )
                         hasStock = true;
                 }
-                if ( workshop.type != Workshop.Type.woodcutter || hasStock )
+                if ( workshop.kind != Workshop.Type.woodcutter || hasStock )
                     HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, boss.activity );
 
                 if ( partner is Stock stock && buffer?.weight != null )
@@ -484,7 +484,7 @@ public class Simpleton : Player
                     node.simpletonDataSafe.price = node.HasResource( Resource.Type.rock ) ? Constants.Simpleton.nodeWithRockPrice : 1;
                 foreach ( var workshop in boss.team.workshops )
                 {
-                    if ( workshop.type == Workshop.Type.wheatFarm || workshop.type == Workshop.Type.cornFarm )
+                    if ( workshop.kind == Workshop.Type.wheatFarm || workshop.kind == Workshop.Type.cornFarm )
                     {
                         foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )
                         {
@@ -493,7 +493,7 @@ public class Simpleton : Player
                                 data.price = Constants.Simpleton.nodeAtFarmPrice;
                         }
                     }
-                    if ( workshop.type == Workshop.Type.forester )
+                    if ( workshop.kind == Workshop.Type.forester )
                     {
                         foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )
                         {
@@ -511,7 +511,7 @@ public class Simpleton : Player
             float soldierYield = 0;
             foreach ( var workshop in boss.team.workshops )
             {
-                if ( workshop.type == Workshop.Type.barrack )
+                if ( workshop.kind == Workshop.Type.barrack )
                     soldierYield += workshop.maxOutput;
                 if ( !workshop.construction.done )
                     continue;
@@ -551,7 +551,7 @@ public class Simpleton : Player
             List<Resource> countedTrees = new ();
             foreach ( var workshop in boss.team.workshops )
             {
-                if ( workshop.type == Workshop.Type.woodcutter && workshop.construction.done )
+                if ( workshop.kind == Workshop.Type.woodcutter && workshop.construction.done )
                 {
                     bool hasForester = false;
                     int forestNodeCount = 0, treeCount = 0;
@@ -579,7 +579,7 @@ public class Simpleton : Player
                         expectedLocalLog = Constants.Simpleton.expectedLogFromRenewWoodcutter;
                     boss.expectedLog += expectedLocalLog;
                 }
-                if ( workshop.type == Workshop.Type.sawmill && workshop.construction.done )
+                if ( workshop.kind == Workshop.Type.sawmill && workshop.construction.done )
                     hasSawmill = true;
             }
             foreach ( var tree in countedTrees )
@@ -803,7 +803,7 @@ public class Simpleton : Player
                 {
                     foreach ( var workshop in boss.team.workshops )
                     {
-                        if ( workshop.type == Workshop.Type.forester )
+                        if ( workshop.kind == Workshop.Type.forester )
                         {
                             currentYield += workshop.productionConfiguration.productivity;
                             currentWorkshopCount++;
@@ -814,7 +814,7 @@ public class Simpleton : Player
                 {
                     foreach ( var workshop in boss.team.workshops )
                     {
-                        if ( workshop.type == Workshop.Type.stonemason )
+                        if ( workshop.kind == Workshop.Type.stonemason )
                             stonemasonCount++;
                         if ( workshop.productionConfiguration.outputType == outputType )
                         {
@@ -826,7 +826,7 @@ public class Simpleton : Player
                             }
                             currentYield += workshop.CalculateProductivity( true, Constants.Simpleton.maximumProductionCalculatingPeriod );
                         }
-                        if ( workshop.type == workshopType )
+                        if ( workshop.kind == workshopType )
                             currentWorkshopCount++;
                     }
                 }
@@ -1600,7 +1600,7 @@ public class Simpleton : Player
 
             var data = workshop.simpletonDataSafe;
 
-            if ( workshop.type == Workshop.Type.woodcutter || workshop.type == Workshop.Type.stonemason )
+            if ( workshop.kind == Workshop.Type.woodcutter || workshop.kind == Workshop.Type.stonemason )
             {
                 bool useless = false;
                 if ( workshop.ResourcesLeft() != 0 || data.lastTimeHadResources.empty )
@@ -1608,14 +1608,14 @@ public class Simpleton : Player
                 else
                     useless = workshop.tinkerer && workshop.tinkererMate && workshop.tinkerer.IsIdle( true ) && workshop.tinkererMate.IsIdle( true ) && workshop.output == 0;
 
-                if ( data.lastTimeHadResources.done || ( workshop.type == Workshop.Type.stonemason && useless ) )
+                if ( data.lastTimeHadResources.done || ( workshop.kind == Workshop.Type.stonemason && useless ) )
                 {
                     action = Action.remove;
                     problemWeight = solutionEfficiency = 1;
                     return finished;
                 }
             }
-            if ( workshop.type == Workshop.Type.ironMine || workshop.type == Workshop.Type.coalMine )
+            if ( workshop.kind == Workshop.Type.ironMine || workshop.kind == Workshop.Type.coalMine )
             {
                 foreach ( var input in workshop.buffers )
                 {
@@ -1627,7 +1627,7 @@ public class Simpleton : Player
                     }
                 }
             }
-            if ( workshop.type == Workshop.Type.wheatFarm || workshop.type == Workshop.Type.cornFarm )
+            if ( workshop.kind == Workshop.Type.wheatFarm || workshop.kind == Workshop.Type.cornFarm )
             {
                 var resourcesToRemove = new List<Resource>();
                 foreach ( var offset in Ground.areas[workshop.productionConfiguration.gatheringRange] )

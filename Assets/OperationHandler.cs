@@ -1021,7 +1021,7 @@ public class Operation
                     return null;
                 var inverse = Operation.Create();
                 if ( building is Workshop workshop )
-                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, (Building.Type)workshop.type, building.team );
+                    inverse.SetupAsCreateBuilding( building.node, building.flagDirection, (Building.Type)workshop.kind, building.team );
                 if ( building is Stock )
                     inverse.SetupAsCreateBuilding( building.node, building.flagDirection, Building.Type.stock, building.team );
                 if ( building is GuardHouse )

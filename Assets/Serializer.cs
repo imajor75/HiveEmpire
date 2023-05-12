@@ -163,15 +163,24 @@ public class Serializer
 			}
 		}
 		var type = owner.GetType();
-		MemberInfo[] m = type.GetMember( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );
-		Assert.global.IsTrue( m.Length != 0, $"No member found with the name {name} in {type}" );
-		if ( m.Length > 1 ) 
-			HiveObject.Log( $"Multiple members with the name {name} in {type}" );
+		MemberInfo[] members = type.GetMember( name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance );
+		List<MemberInfo> options = new ();
+		foreach ( var maybe in members )
+			if ( maybe.Module == type.Module )
+				options.Add( maybe );
+		Assert.global.IsTrue( options.Count != 0, $"No member found with the name {name} in {type}" );
+		if ( options.Count > 1 )
+		{
+			string classes = "";
+			foreach ( var member in options )
+				classes += $"{member.DeclaringType.Name} ({member.Module}), ";
+			HiveObject.Log( $"The member with the name \"{name}\" is used in multiple classes ({classes.Substring( 0, classes.Length - 2 )})" );
+		}
 		reader.Read();
 
-		if ( m.Last() is FieldInfo i )
+		if ( options.Last() is FieldInfo i )
 			i.SetValue( owner, ProcessFieldValue( i.FieldType, i, owner ) );
-		if ( m.Last() is PropertyInfo p )
+		if ( options.Last() is PropertyInfo p )
 			p.SetValue( owner, ProcessFieldValue( p.PropertyType, p, owner ) );
 	}
 
