@@ -175,6 +175,11 @@ public class Network : NetworkDiscovery<DiscoveryBroadcastData, DiscoveryRespons
 		Eradicate( gameObject );
 	}
 
+	void OnDestroy()
+	{
+		driver.Dispose();
+	}
+
 	public void SetState( State state )
 	{
 		if ( state == this.state )
