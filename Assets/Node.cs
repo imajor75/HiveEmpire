@@ -137,7 +137,7 @@ public class Node : HiveObject
 			"prefabs/ground/crystal", Type.hill,
 			"prefabs/ground/oreIron", Type.hill
 		};
-		decorations.Fill( decorationData );
+		decorations.Fill( decorationData, false );
 	}
 
 

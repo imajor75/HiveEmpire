@@ -47,14 +47,14 @@ public class HiveCommon : MonoBehaviour
 		Destroy( target );
 	}
 
-	public static void LogStackTrace()
+	public static void LogStackTrace( string prefix = "" )
 	{
 		var stackTrace = new StackTrace();
 		for ( var i = 1; i < stackTrace.FrameCount; i++ )
 		{
 			var stackFrame = stackTrace.GetFrame( i );
 			var method = stackFrame.GetMethod();
-			Log( method.DeclaringType.Name + "." + method.Name );
+			Log( prefix + method.DeclaringType.Name + "." + method.Name );
 		}
 	}
 

@@ -1205,7 +1205,7 @@ public class Unit : HiveObject
 
 		object[] walk = {
 			"soundEffects/cart", Type.cart };
-		walkSounds.Fill( walk );
+		walkSounds.Fill( walk, false );
 
 		arrowSprite = Resources.Load<Sprite>( "icons/arrow" );
 

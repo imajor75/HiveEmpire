@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -139,7 +139,7 @@ public class Resource : HiveObject
 		"prefabs/others/field", Type.cornField,
 		"prefabs/others/wheatField", Type.wheatField,
 		null, Type.apple };
-		Resource.meshes.Fill( meshes );
+		Resource.meshes.Fill( meshes, false );
 
 		object[] sounds = {
 			"bird1", Constants.Resource.treeSoundTime, Type.tree,
@@ -147,7 +147,7 @@ public class Resource : HiveObject
 			"bird3", Constants.Resource.treeSoundTime, Type.tree,
 			"bird4", Constants.Resource.treeSoundTime, Type.tree };
 		ambientSounds.fileNamePrefix = "soundEffects/";
-		ambientSounds.Fill( sounds );
+		ambientSounds.Fill( sounds, false );
 
 		bark = Resources.Load<Material>( "treeBark" );
 		leaves = Resources.Load<Material>( "treeLeaf" );

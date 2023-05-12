@@ -26,17 +26,22 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				if ( reportError )
 					Assert.global.Fail( "Resource " + prefix + file + " not found" );
 				else
+				{
 					HiveCommon.Log( $"Failed to load resource {prefix+file} of type {typeof(MediaType)}" );
+					HiveCommon.LogStackTrace( " " );
+				}
 			}
 		}
 	}
 
 	List<Media> table;
 	Media failure;
+	bool autoExpand;
 	public string fileNamePrefix;
 
-	public void Fill( object[] data )
+	public void Fill( object[] data, bool autoExpand = true )
 	{
+		this.autoExpand = autoExpand;
 		table = new ();
 		foreach ( var g in data )
 		{
@@ -44,7 +49,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				table.Add( new Media { file = file } );
 			if ( g == null )
 			{
-				table.Add( new Media() );
+				table.Add( new Media() );	// why is this needed?
 				continue;
 			}
 			if ( g.GetType() == typeof( Key ) )
@@ -78,6 +83,9 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		{
 			if ( failure != null )
 				return failure;
+
+			if ( !autoExpand )
+				return null;
 
 			Media media = new ();
 			media.Load( fileNamePrefix, key.ToString() );
