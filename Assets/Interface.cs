@@ -3763,10 +3763,11 @@ public class Interface : HiveObject
 		public ScrollRect scroll;
 		public Background background;
 		public RenderTexture rt;
-		public List<ItemImage> itemImages = new ();
-		public bool showItems = true;
+		public Dictionary<Item, ItemImage> itemImages = new ();
+		public static bool showItems = true;
 		List<Workshop.Type> exposed = new ();
 		int[] itemTypeUsage = new int[(int)Item.Type.total];
+		public GameObject itemBase;
 
 		public (
 			int pixel,
@@ -3777,7 +3778,7 @@ public class Interface : HiveObject
 
 		public static ProductionChainPanel Create( World world = null )
 		{
-			var panel = new GameObject( "Production Chain Panel" ).AddComponent<ProductionChainPanel>();
+			var panel = new GameObject( "Production chain panel" ).AddComponent<ProductionChainPanel>();
 			if ( world == null )
 				world = game;
 			panel.world = world;
@@ -4069,6 +4070,8 @@ public class Interface : HiveObject
 			Text( "Production chain is randomized based on the current world seed. If you start a new world it will be different" ).Pin( borderWidth, -borderWidth, width, 2 * iconSize );
 			CheckBox( "Show items" ).Pin( -150, -2 * iconSize, 150, iconSize, 1 ).AddToggleHandler( ( value ) => showItems = value, showItems );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - 2 * iconSize );
+			itemBase = Text().Link( scroll.content ).Stretch().gameObject;
+			itemBase.name = "Item base";
 
 			Fill();
 
@@ -4203,6 +4206,7 @@ public class Interface : HiveObject
 
 		new void Update()
 		{
+			itemBase.SetActive( showItems );
 			if ( background == null )
 			{
 				rt = GenerateBackground();
@@ -4237,20 +4241,16 @@ public class Interface : HiveObject
 				flow.cartOnWay.text = onWay == 0 ? "" : onWay.ToString();
 			}
 
-			foreach ( var old in itemImages )
-				HiveCommon.Eradicate( old.gameObject );
-			itemImages.Clear();
-
 			void ShowItem( Item item, float x, float y )
 			{
-				itemImages.Add( ItemIcon( item ).Link( scroll.content ).PinCenter( (int)x, (int)y ) );
+				ItemImage i = null;
+				if ( itemImages.ContainsKey( item ) )
+					i = itemImages[item];
+				else
+					itemImages[item] = i = ItemIcon( item ).Link( itemBase.transform );
+				i.PinCenter( (int)x, (int)y );
 			}
 
-			if ( !showItems )
-			{	
-				base.Update();
-				return;
-			}
 			foreach ( var item in root.mainTeam.items )
 			{
 				if ( item?.origin == null || item.destination == null )
@@ -4285,6 +4285,12 @@ public class Interface : HiveObject
 						ShowItem( item, connection.curveX.PositionAt( progress ), connection.curveY.PositionAt( progress ) );
 					}
 				}
+			}
+
+			foreach ( var p in itemImages )
+			{
+				if ( p.Key == null && p.Value )
+					HiveCommon.Eradicate( p.Value.gameObject );
 			}
 
 			base.Update();
