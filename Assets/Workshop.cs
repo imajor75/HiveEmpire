@@ -1222,7 +1222,7 @@ public class Workshop : Building
 				if ( getResourceTask == null )
 					return 0;
 
-				return ( (float)getResourceTask.timer.age ) / productionConfiguration.productionTime;
+				return (float)( productionConfiguration.productionTime + getResourceTask.timer.age ) / productionConfiguration.productionTime;
 			}
 			else
 			{
