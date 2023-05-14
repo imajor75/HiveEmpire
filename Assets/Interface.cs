@@ -2833,7 +2833,7 @@ public class Interface : HiveObject
 
 		public override void Update()
 		{
-			if ( !workshop.blueprintOnly && !workshop.construction.done )
+			if ( !workshop.blueprintOnly && !workshop.construction.done && title == null )
 			{
 				Close();
 				return;
