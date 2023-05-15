@@ -50,9 +50,6 @@ public class Workshop : Building
 	ParticleSystem smoke;
 	public Transform millWheel;
 
-	[JsonIgnore]
-	public bool advanceInputs;
-
 	public override List<Ground.Area> areas
 	{
 		get
@@ -364,6 +361,7 @@ public class Workshop : Building
 		public Priority usagePriority = Priority.normal;
 		public bool optional;
 		public bool bored;
+		public bool advance;
 		public enum Priority
 		{
 			disabled,
@@ -1096,8 +1094,8 @@ public class Workshop : Building
 				buffer.stored -= count;
 				buffer.used += count;
 				team.ItemProcessed( buffer.itemType, count );
+				buffer.advance = true;
 			}
-			advanceInputs = true;
 			return true;
 		}
 
@@ -1110,20 +1108,23 @@ public class Workshop : Building
 			if ( b.bored )
 				continue;
 			int used = Math.Min( b.stored, count );
-			if ( used > 0 )
-			{
-				if ( lastUsedInput == b.itemType )
-					b.bored = true;
-				else
-					lastUsedInput = b.itemType;
+			if ( used == 0 )
+				continue;
 
-				foreach ( var otherBuffer in buffers )
-					if ( otherBuffer != b )
-						otherBuffer.bored = false;
-			}
+			if ( lastUsedInput == b.itemType )
+				b.bored = true;
+			else
+				lastUsedInput = b.itemType;
+
+			foreach ( var otherBuffer in buffers )
+				if ( otherBuffer != b )
+					otherBuffer.bored = false;
+
 			count -= used;
 			b.stored -= used;
 			b.used += used;
+			b.advance = true;
+			
 			team.ItemProcessed( b.itemType, used );
 		}
 		return true;

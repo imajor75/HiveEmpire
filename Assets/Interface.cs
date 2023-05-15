@@ -2657,8 +2657,6 @@ public class Interface : HiveObject
 		public EditableText title;
 		public Text resourcesLeft;
 		public Text status;
-		public RectTransform inputsPlatform;
-		public float scroll;
 
 		public List<Buffer> buffers;
 		public Buffer outputs;
@@ -2718,8 +2716,9 @@ public class Interface : HiveObject
 				buffers = new ();
 				foreach ( var b in workshop.buffers )
 				{
-					var bui = new Buffer();
-					bui.Setup( this, b, col, row, iconSize + 5 );
+					var bui = new GameObject().AddComponent<Buffer>();
+					bui.Setup( this, b, iconSize + 5 );
+					bui.Pin( col, row ).Link( this );
 					buffers.Add( bui );
 					if ( b == workshop.buffers.Last() )
 						Text( workshop.productionConfiguration.outputStackSize > 1 ? "= 2x" : "  =" ).Pin( borderWidth - 5, row - 20, 50 );
@@ -2728,20 +2727,17 @@ public class Interface : HiveObject
 					row -= iconSize * 3 / 2;
 				}
 
-				var window = new GameObject( "Window for inputs" ).AddComponent<RectMask2D>().Pin( 37, 0, 100, 200 ).Link( this );
-				inputsPlatform = new GameObject( "Platforms for inputs" ).AddComponent<RectTransform>().Link( window );
-				inputsPlatform.offsetMin = Vector2.zero;
-				foreach ( var buffer in buffers )
-					buffer.Link( inputsPlatform );
-				workshop.advanceInputs = false;
+				foreach ( var buffer in workshop.buffers )
+					buffer.advance = false;
 			}
 
 			if ( showProgressBar )
 			{
 				if ( showOutputBuffer )
 				{
-					outputs = new ();
-					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, 20, row, iconSize + 5, workshop.outputArea, false );
+					outputs = new GameObject().AddComponent<Buffer>();
+					outputs.Setup( this, workshop.productionConfiguration.outputType, workshop.productionConfiguration.outputMax, iconSize + 5, workshop.outputArea, false );
+					outputs.Link( this ).Pin( 20, row );
 					row -= iconSize * 3 / 2;
 				}
 				int progressWidth = ( iconSize + 5 ) * 7;
@@ -2840,23 +2836,8 @@ public class Interface : HiveObject
 			}
 			
 			base.Update();
-			if ( buffers != null )
-				foreach ( var buffer in buffers )
-					buffer.Update();
 
-			if ( workshop.advanceInputs )
-			{
-				workshop.advanceInputs = false;
-				scroll = (float)Math.PI;
-			}
-
-			scroll -= Time.unscaledDeltaTime * 1;
-			if ( scroll < 0 )
-				scroll = 0;
-			if ( inputsPlatform )
-				inputsPlatform.offsetMin = new Vector2( (float)( Math.Cos( scroll ) * -1 + 1 ) * ( iconSize + 5 ) / 2 * uiScale, 0 );
-
-			outputs?.Update( workshop.output, 0 );
+			outputs?.UpdateIcons( workshop.output, 0 );
 
 			if ( progressBar )
 			{
@@ -2963,15 +2944,17 @@ public class Interface : HiveObject
 				oh.ScheduleChangeWorkshopRunningMode( workshop, Workshop.Mode.sleeping );
 		}
 
-		public class Buffer
+		public class Buffer : HiveCommon
 		{
 			public ItemImage current;
+			public RectTransform itemPlatform;
 			public ItemImage[] items;
 			public Sprite[] usageSprites;
 			public BuildingPanel boss;
 			public Item.Type itemType;
 			Workshop.Buffer buffer;
 			Image disableIndicator, disableIcon;
+			public float scroll;
 
 			class Taste : MonoBehaviour
 			{
@@ -2987,21 +2970,29 @@ public class Interface : HiveObject
 				}
 			}
 
-			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int x, int y, int xi, Ground.Area area = null, bool input = true )
+			public void Setup( BuildingPanel boss, Item.Type itemType, int itemCount, int xi, Ground.Area area = null, bool input = true )
 			{
+				name = "Workshop buffer";
+				gameObject.AddComponent<RectTransform>();
 				var workshop = boss.building as Workshop;
-				int itemsStartX = x - xi + iconSize;
-				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, y ).SetTooltip( () => Nice( itemType.ToString() ) + ( buffer != null ? $"\nUsed so far: {buffer.used}" : "" ) );
+				int itemsStartX = - xi + iconSize;
+				boss.Image( Item.sprites[(int)itemType] ).Pin( itemsStartX, 0 ).SetTooltip( () => Nice( itemType.ToString() ) + ( buffer != null ? $"\nUsed so far: {buffer.used}" : "" ) ).Link( this );
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
+				var window = new GameObject( "Window" ).AddComponent<RectMask2D>().Link( this ).Pin( 15, 0, itemCount * ( iconSize + 5 ), iconSize + 5 );
+				var savedColumn = UIHelpers.currentColumn;
+				itemPlatform = new GameObject( "Platform" ).AddComponent<RectTransform>();
+				itemPlatform.Link( window ).Pin( 0, 0 );
 				if ( input )
-					current = boss.ItemIcon( itemType ).PinSideways( -iconSize, y );
+					current = boss.ItemIcon( itemType ).Link( itemPlatform ).Pin( -xi + 3, 0 );
+				UIHelpers.currentColumn = iconSize - xi + 3;
 				for ( int i = 0; i < itemCount; i++ )
-					items[i] = boss.ItemIcon( itemType ).PinSideways( xi - iconSize, y );
+					items[i] = boss.ItemIcon( itemType ).Link( itemPlatform ).PinSideways( xi - iconSize, 0 );
+				UIHelpers.currentColumn = savedColumn;
 				if ( workshop && workshop.productionConfiguration.commonInputs && buffer != null )
 				{
-					var image = boss.Image().PinSideways( 0, y );
+					var image = boss.Image().Link( this ).PinSideways( 0, 0 );
 					var taste = image.gameObject.AddComponent<Taste>();
 					taste.image = image;
 					taste.boss = workshop;
@@ -3013,15 +3004,15 @@ public class Interface : HiveObject
 				}
 				int itemsEndX = UIHelpers.currentColumn;
 				if ( itemCount > 0 )
-					boss.Text( "?" ).PinSideways( 0, y, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
+					boss.Text( "?" ).Link( this ).PinSideways( 0, 0, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Link( this ).Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
 				if ( area != null )
-					boss.AreaIcon( boss.building, area ).PinSideways( 0, y );
-				boss.Image( Icon.buildings ).PinSideways( 0, y ).AddClickHandler( () => ShowProducers( itemType ) ).SetTooltip( "Show a list of buildings which produce this" );
+					boss.AreaIcon( boss.building, area ).PinSideways( 0, 0 ).Link( this );
+				boss.Image( Icon.buildings ).PinSideways( 0, 0 ).Link( this ).AddClickHandler( () => ShowProducers( itemType ) ).SetTooltip( "Show a list of buildings which produce this" );
 				if ( buffer != null && buffer.optional )
 				{
-					disableIcon = boss.Image( Icon.exit ).PinSideways( 0, y ).AddClickHandler( CycleBufferUsage );
+					disableIcon = boss.Image( Icon.exit ).PinSideways( 0, 0 ).AddClickHandler( CycleBufferUsage ).Link( this );
 					disableIcon.SetTooltip( "green check: use the input normally\nred cross: do not use the input at all\nexclamation mark: use the input only if there is nothing else" );
-					disableIndicator = boss.Image( Icon.emptyFrame ).Pin( itemsStartX, y - iconSize / 2 + 2, itemsEndX - itemsStartX + 4, 4 );
+					disableIndicator = boss.Image( Icon.emptyFrame ).Pin( itemsStartX, -iconSize / 2 + 2, itemsEndX - itemsStartX + 4, 4 ).Link( this );
 					disableIndicator.color = Color.Lerp( Color.red, Color.black, 0.5f );
 				}
 
@@ -3053,20 +3044,13 @@ public class Interface : HiveObject
 				oh.ScheduleChangeBufferUsage( boss.building as Workshop, buffer, newValue );
 			}
 
-			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int x, int y, int xi )
+			public void Setup( BuildingPanel boss, Workshop.Buffer buffer, int xi )
 			{
 				this.buffer = buffer;
-				Setup( boss, buffer.itemType, buffer.size, x, y, xi, buffer.area );
+				Setup( boss, buffer.itemType, buffer.size, xi, buffer.area );
 			}
 
-			public void Link( RectTransform parent )
-			{
-				foreach ( var item in items )
-					item.transform.SetParent( parent );
-				current.transform.SetParent( parent );
-			}
-
-			public void Update( int inStock, int onTheWay )
+			public void UpdateIcons( int inStock, int onTheWay )
 			{
 				var itemsOnTheWay = boss.building.itemsOnTheWay;
 				int k = 0;
@@ -3101,8 +3085,21 @@ public class Interface : HiveObject
 
 			public void Update()
 			{
-				Assert.global.IsNotNull( buffer );
-				Update( buffer.stored, buffer.onTheWay );
+				if ( buffer == null )
+					return;
+
+				UpdateIcons( buffer.stored, buffer.onTheWay );
+
+				if ( buffer.advance )
+				{
+					buffer.advance = false;
+					scroll = (float)Math.PI;
+				}
+
+				scroll -= Time.unscaledDeltaTime * 1;
+				if ( scroll < 0 )
+					scroll = 0;
+				itemPlatform.offsetMin = new Vector2( (float)( Math.Cos( scroll ) * -1 + 1 ) * ( iconSize + 5 ) / 2 * uiScale, 0 );
 			}
 		}
 		public class PastStatuses : Panel
@@ -5471,10 +5468,13 @@ if ( cart )
 			ItemIcon( Item.Type.plank ).Link( missingText ).Pin( 60, 0 );
 			ItemIcon( Item.Type.stone ).Link( missingText ).Pin( 120, 0 );
 
-			planks = new ();
-			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, 20, row - 5, iconSize + 5 );
-			stones = new ();
-			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, 120, row - 5, iconSize + 5 );
+			planks = new GameObject().AddComponent<WorkshopPanel.Buffer>();
+			planks.Setup( this, Item.Type.plank, construction.boss.configuration.plankNeeded, iconSize + 5 );
+			planks.Link( this ).Pin( 20, row - 5 );
+
+			stones = new GameObject().AddComponent<WorkshopPanel.Buffer>();
+			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, iconSize + 5 );
+			stones.Link( this ).Pin( 120, row - 5 );
 
 			progress = Progress().Pin( 20, row - 30, ( iconSize + 5 ) * 4 );
 
@@ -5514,8 +5514,8 @@ if ( cart )
 				return;
 			}
 			base.Update();
-			planks.Update( construction.plankArrived, construction.plankOnTheWay );
-			stones.Update( construction.stoneArrived, construction.stoneOnTheWay );
+			planks.UpdateIcons( construction.plankArrived, construction.plankOnTheWay );
+			stones.UpdateIcons( construction.stoneArrived, construction.stoneOnTheWay );
 			progress.progress = construction.progress;
 
 			neededText.text = $"Needed: {construction.boss.configuration.plankNeeded}         and {construction.boss.configuration.stoneNeeded}";
@@ -8881,7 +8881,7 @@ public static class UIHelpers
 			t.offsetMax = new Vector2( (int)( ( x + xs ) * Interface.uiScale ), (int)( y * Interface.uiScale ) );
 		}
 		else
-			Assert.global.Fail( $"Object {g} without rectransform cannot be pinned" );
+			Assert.global.Fail( $"Object {g} without RectTransform component cannot be pinned" );
 		return g;
 	}
 
