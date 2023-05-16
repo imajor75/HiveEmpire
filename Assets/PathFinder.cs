@@ -285,7 +285,7 @@ public class Path : PathFinder
 		return new Path();
 	}
 
-	public static Path Between( Node start, Node end, Mode mode, HiveObject owner, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null, Node avoid = null )
+	public static Path Between( Node start, Node end, Mode mode, HiveObject owner = null, bool ignoreFinalObstacle = false, HiveObject ignoreObject = null, Node avoid = null )
 	{
 		var p = Path.Create();
 		p.owner = owner;
@@ -345,6 +345,12 @@ public class Path : PathFinder
 
 			return path.Count - progress;
 		}
+	}
+
+	public static int DistanceBetween( Flag a, Flag b )
+	{
+		var path = Between( a.node, b.node, Mode.onRoad );
+		return path == null ? int.MaxValue : path.length;
 	}
 
 	public override void Validate()

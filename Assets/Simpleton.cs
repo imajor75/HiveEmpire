@@ -1720,7 +1720,9 @@ public class Simpleton : Player
             if ( data.possiblePartner )
             {
                 action = Action.linkToPartner;
-                problemWeight = solutionEfficiency = 0.5f;
+                problemWeight = 0.5f;
+                solutionEfficiency = 0.75f - Path.DistanceBetween( target.flag, data.possiblePartner.flag ) / 32f;
+                solutionEfficiency = Math.Clamp( solutionEfficiency, 0.25f, 0.75f );
                 this.itemTypeToLink = data.possiblePartnerItemType;
                 this.partner = data.possiblePartner;
             }
