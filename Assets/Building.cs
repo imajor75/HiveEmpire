@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 [SelectionBase]
@@ -255,7 +256,7 @@ abstract public class Building : HiveObject
 	}
 
 	[System.Serializable]
-	public class Construction : Flattening
+	public class Construction : Flattening, Serializer.IReferenceUser
 	{
 		public Building boss;
 		public bool done;
@@ -298,6 +299,13 @@ abstract public class Building : HiveObject
 		int stoneNeeded;
 		[Obsolete( "Compatibility with old files", true )]
 		int flatteningNeeded;
+
+		void Serializer.IReferenceUser.OnDeadReference( MemberInfo member, HiveObject reference )
+		{
+			boss = null;
+		}
+
+
 
 		static public void Initialize()
 		{

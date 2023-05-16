@@ -86,7 +86,7 @@ public class HiveCommon : MonoBehaviour
 
 }
 
-public abstract class HiveObject : HiveCommon
+public abstract class HiveObject : HiveCommon, Serializer.IReferenceUser
 {
 	public bool blueprintOnly;
 	public bool inactive;
@@ -379,6 +379,11 @@ public abstract class HiveObject : HiveCommon
 			if ( hiveObject.id == id )
 				return hiveObject;
 		return null;
+	}
+
+	void Serializer.IReferenceUser.OnDeadReference( MemberInfo member, HiveObject reference )
+	{
+		OnDeadReference( member, reference );
 	}
 
 	virtual public void OnDeadReference( MemberInfo member, HiveObject reference )

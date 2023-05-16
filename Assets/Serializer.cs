@@ -26,6 +26,12 @@ public class Serializer
 	public TypeConverter typeConverter;
 	Dictionary<Type, List<MemberInfo>> cachedMembers = new ();
 
+
+	public interface IReferenceUser
+	{
+		void OnDeadReference( MemberInfo member, HiveObject reference );
+	}
+
 	public class TypeConverter
 	{
 		public virtual object ChangeType( object value, Type conversionType )
@@ -458,8 +464,8 @@ public class Serializer
 			bool referenceDestroyed = link.reference is HiveObject hor && hor.destroyed;
 			if ( !referencerDestroyed && referenceDestroyed )
 			{
-				if ( link.referencer is HiveObject referencerHiveObject )
-					referencerHiveObject.OnDeadReference( link.member, link.reference as HiveObject );
+				if ( link.referencer is IReferenceUser referencer )
+					referencer.OnDeadReference( link.member, link.reference as HiveObject );
 				else
 					Assert.global.Fail( $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member} (raw)" );
 			}

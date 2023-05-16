@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using System;
 using Newtonsoft.Json;
@@ -339,7 +340,7 @@ public class Simpleton : Player
     }
 
     [Serializable]
-    public class Data
+    public class Data : Serializer.IReferenceUser
     {
         public bool isolated;
         public float price = 1;
@@ -361,6 +362,11 @@ public class Simpleton : Player
         Workshop.Buffer possibleDealerBuffer { set {} }
        	[Obsolete( "Compatibility with old files", true )]
         Game.Timer lastDealCheck;
+
+		void Serializer.IReferenceUser.OnDeadReference( MemberInfo member, HiveObject reference )
+		{
+			hiveObject = null;
+		}
 
         public Data() {}
 
@@ -438,8 +444,14 @@ public class Simpleton : Player
     }
 
     [Serializable]
-    public class Deal
+    public class Deal : Serializer.IReferenceUser
     {
+    	void Serializer.IReferenceUser.OnDeadReference( MemberInfo member, HiveObject reference )
+        {
+            partner = null;
+        }
+        
+
         public Item.Type itemType;
         public Building partner;
     }
