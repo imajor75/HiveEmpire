@@ -660,7 +660,7 @@ public class Workshop : Building
 			"pickaxe_deep", 1.0f, Type.goldMine, Type.saltMine, Type.coalMine, Type.stoneMine, Type.ironMine, Type.silverMine, Type.copperMine
  		};
 		processingSounds.fileNamePrefix = "soundEffects/";
-		processingSounds.Fill( sounds );	// bool equals "dont loop"
+		processingSounds.Fill( sounds, false );	// bool equals "dont loop"
 		mapIndicatorTexture = Resources.Load<Texture2D>( "icons/brick" );
 
 		var dl = new GameObject( "Temporary Directional Light" );
@@ -1298,10 +1298,13 @@ public class Workshop : Building
 	public void PlayWorkingSound()
 	{
 		var sound = processingSounds.GetMedia( kind );
-		soundSource.clip = sound.data;
-		soundSource.volume = sound.floatData;
-		soundSource.loop = !sound.boolData;
-		soundSource.Play();
+		if ( sound != null )
+		{
+			soundSource.clip = sound.data;
+			soundSource.volume = sound.floatData;
+			soundSource.loop = !sound.boolData;
+			soundSource.Play();
+		}
 	}
 
 	public void SetWorking( bool working )

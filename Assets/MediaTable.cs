@@ -26,10 +26,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				if ( reportError )
 					Assert.global.Fail( "Resource " + prefix + file + " not found" );
 				else
-				{
 					HiveCommon.Log( $"Failed to load resource {prefix+file} of type {typeof(MediaType)}" );
-					HiveCommon.LogStackTrace( " " );
-				}
 			}
 		}
 	}
