@@ -19,6 +19,7 @@ public class Interface : HiveObject
 	public Settings globalSettings;
 	public Component dedicatedKeyboardHandler;
 	public List<Panel> panels = new ();
+	public Component autoRotateInitiator;
 	public PostProcessResources postProcessResources;
 	public static Font font;
 	Canvas canvas;
@@ -640,11 +641,12 @@ public class Interface : HiveObject
 				NewGame( challenges.First() );
 		}
 
-		eye.FocusOn( mainTeam.mainBuilding, true, useLogicalPosition:true, approach:false );
 		if ( mainTeam.workshops.Count > 0 && !game.generatorSettings.reliefSettings.island )
 			eye.autoMove = new Vector2( 0.8f, 0.17f );
 
-		OpenMainMenu( true );
+		var mainMenu = OpenMainMenu( true );
+
+		eye.FocusOn( mainTeam.mainBuilding, mainMenu, useLogicalPosition:true, approach:false );
 	}
 
 	string ReplayTooltipGenerator()
@@ -682,7 +684,7 @@ public class Interface : HiveObject
 			}
 		}
 		if ( closest )
-			eye.FocusOn( closest, true );
+			eye.FocusOn( closest, this );
 	}
 
 	public void NewGame( Game.Challenge challenge )
@@ -1533,7 +1535,7 @@ public class Interface : HiveObject
 		public void OnDestroy()
 		{
 			root.panels.Remove( this );
-			if ( eye )
+			if ( eye && root.autoRotateInitiator == this )
 				eye.StopAutoChange();
 			foreach ( var hotkey in activeHotkeys )
 				if ( hotkey.owner == this )
@@ -2265,7 +2267,7 @@ public class Interface : HiveObject
 
 			var t = Text( latestText = text ).Pin( borderWidth, -borderWidth, 400, 50 );
 			SetSize( ((int)(t.preferredWidth/uiScale))+2*borderWidth, ((int)(t.preferredHeight/uiScale))+2*borderWidth );
-			eye.FocusOn( location, true );
+			eye.FocusOn( location, this );
 		}
 
 		public new void Update()
@@ -2790,7 +2792,7 @@ public class Interface : HiveObject
 			this.SetSize( 250, 15 - row );
 			Update();
 			if ( show )
-				eye.FocusOn( workshop, true );
+				eye.FocusOn( workshop, this );
 		}
 
 		void ShowPastStatuses()
@@ -3303,7 +3305,7 @@ public class Interface : HiveObject
 			}
 			attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
 			if ( show )
-				eye.FocusOn( guardHouse, true );
+				eye.FocusOn( guardHouse, this );
 			Image( Icon.buildings ).Pin( 145, 30, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( Building.Type.guardHouse ) ).SetTooltip( "Show a list of buildings with the same type" );
 		}
 
@@ -3383,7 +3385,7 @@ public class Interface : HiveObject
 				return;
 			RecreateControls();
 			if ( show )
-				eye.FocusOn( stock, true );
+				eye.FocusOn( stock, this );
 		}
 
 		void SelectItemType( Item.Type itemType )
@@ -3709,7 +3711,7 @@ public class Interface : HiveObject
 			if ( resources != "" )
 				Text( "Resource: " + resources ).Pin( 20, -40, 160 );
 			if ( show )
-				eye.FocusOn( node, true );
+				eye.FocusOn( node, this );
 		}
 
 		void BuildButton( int x, int y, string title, bool enabled, Action action )
@@ -4779,7 +4781,7 @@ public class Interface : HiveObject
 			}
 			if ( bestSite )
 			{
-				eye.FocusOn( bestSite, true, true );
+				eye.FocusOn( bestSite, this, true );
 				currentFlagDirection = bestFlagDirection;
 			}
 		}
@@ -5063,7 +5065,7 @@ public class Interface : HiveObject
 			}
 			name = "Flag panel";
 			if ( show )
-				eye.FocusOn( flag, true );
+				eye.FocusOn( flag, this );
 			Update();
 
 			root.viewport.inputHandler = this;
@@ -5206,7 +5208,7 @@ public class Interface : HiveObject
 		void ShowTarget()
 		{
 			if ( targetObject )
-				eye.FocusOn( targetObject.location, true );
+				eye.FocusOn( targetObject.location, this );
 		}
 
 		void ShowHome()
@@ -5479,7 +5481,7 @@ if ( cart )
 			progress = Progress().Pin( 20, row - 55, ( iconSize + 5 ) * 4 );
 
 			if ( show )
-				eye.FocusOn( construction.boss, true );
+				eye.FocusOn( construction.boss, this );
 		}
 
 		public void OpenFinalPanel( )
@@ -7973,7 +7975,7 @@ if ( cart )
 					t.text = "Bronze level reached";
 				}
 				originalSpeed = HiveCommon.game.speed;
-				eye.FocusOn( root.mainTeam.mainBuilding.flag.node, true );
+				eye.FocusOn( root.mainTeam.mainBuilding.flag.node, this );
 				HiveCommon.game.SetSpeed( Game.Speed.pause );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );

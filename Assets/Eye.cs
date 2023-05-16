@@ -378,7 +378,7 @@ public class Eye : HiveObject
 		target = null;
 	}
 
-	public void FocusOn( HiveObject target, bool rotateAround = false, bool mark = false, bool useLogicalPosition = false, bool approach = true )
+	public void FocusOn( HiveObject target, Component rotateAroundInitiator = null, bool mark = false, bool useLogicalPosition = false, bool approach = true )
 	{
 		if ( target == null )
 			return;
@@ -407,7 +407,8 @@ public class Eye : HiveObject
 			}
 		}
 		director = null;
-		this.autoRotate = rotateAround ? Constants.Eye.autoRotateSpeed : 0;
+		this.autoRotate = rotateAroundInitiator ? Constants.Eye.autoRotateSpeed : 0;
+		root.autoRotateInitiator = rotateAroundInitiator;
 		root.viewport.markEyePosition = mark;
 		autoStorePositionTimer = 0;
 		currentPositionStored = false;
