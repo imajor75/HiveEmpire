@@ -6179,7 +6179,7 @@ if ( cart )
 			{
 				if ( !buildings[i].construction.done )
 					constructionCount++;
-				BuildingIcon( buildings[i] ).Link( scroll.content ).Pin( 0, -iconSize * i, 80 );
+				BuildingIcon( buildings[i] ).Link( scroll.content ).Pin( 0, -iconSize * i, 150 );
 				productivities.Add( Text( "" ).AddOutline().Link( scroll.content ).Pin( 150, -iconSize * i, 100 ) );
 				outputs.Add( Text( "" ).Link( scroll.content ).Pin( 385, -iconSize * i, 50 ) );
 				inputs.Add( new List<Text>() );
