@@ -460,7 +460,7 @@ public static class Constants
         public const float resourcesAroundFarmProblem = 0.3f;
         public const float solutionToRemoveTreesAroundFarm = 0.8f;
         public const float solutionToRemoveRocksAroundFarm = 0.5f;
-        public const float enoughPreparation = 0.75f;
+        public const float enoughPreparation = 0.9f;
         public const float importanceReduction = 0.01f;
     }
 }
