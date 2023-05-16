@@ -5438,7 +5438,7 @@ if ( cart )
 
 		public void Open( Building.Construction construction, bool show = false )
 		{
-			base.Open( construction.boss, 220, 250 );
+			base.Open( construction.boss, 220, 260 );
 			this.construction = construction;
 			Image( Icon.house ).Pin( -60, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( OpenFinalPanel ).SetTooltip( "Open the final panel which will become actual only after the construction has been finished" );
 			Image( Icon.destroy ).PinSideways( 0, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
@@ -5474,9 +5474,9 @@ if ( cart )
 
 			stones = new GameObject().AddComponent<WorkshopPanel.Buffer>();
 			stones.Setup( this, Item.Type.stone, construction.boss.configuration.stoneNeeded, iconSize + 5 );
-			stones.Link( this ).Pin( 120, row - 5 );
+			stones.Link( this ).Pin( 20, row - 30 );
 
-			progress = Progress().Pin( 20, row - 30, ( iconSize + 5 ) * 4 );
+			progress = Progress().Pin( 20, row - 55, ( iconSize + 5 ) * 4 );
 
 			if ( show )
 				eye.FocusOn( construction.boss, true );
