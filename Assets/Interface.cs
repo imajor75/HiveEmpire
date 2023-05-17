@@ -8754,7 +8754,8 @@ if ( cart )
 		void Activate( Action action )
 		{
 			Eradicate( group );
-			action?.callback();
+			if ( action?.callback != null )
+				action.callback();
 		}
 	}
 
