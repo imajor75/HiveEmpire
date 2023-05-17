@@ -276,8 +276,6 @@ public class Resource : HiveObject
 			}
 		}
 
-		soundSource = World.CreateSoundSource( this );
-
 		if ( type == Type.tree )
 		{
 			var mapObject = GameObject.CreatePrimitive( PrimitiveType.Plane );
@@ -360,13 +358,18 @@ public class Resource : HiveObject
 				silence.Start( 1500 );
 				assert.AreNotEqual( type, Type.tree );
 			}
-			else if ( soundSource )
+			else
 			{
-				if ( !silence.empty )
-					soundSource.Play();
-				silence.Start( (int)( game.NextFloatRnd( OperationHandler.Event.CodeLocation.resourceSilence ) * m.intData ) );
+				if ( !soundSource )
+					soundSource = World.CreateSoundSource( this );
+
 				soundSource.clip = m.data;
 				soundSource.loop = false;
+				
+				if ( !silence.empty )
+					soundSource.Play();
+
+				silence.Start( (int)( game.NextFloatRnd( OperationHandler.Event.CodeLocation.resourceSilence ) * m.intData ) );
 			}
 		}
 		if ( type == Type.tree && life.age > Constants.Resource.treeGrowthTime && !apple.inProgress )
