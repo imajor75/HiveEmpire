@@ -17,7 +17,6 @@ public class Workshop : Building
 	public Type kind = Type.unknown;
 	public List<Buffer> buffers = new ();
 	public Item.Type lastUsedInput = Item.Type.unknown;
-	public float millWheelSpeed = 0;
 	public Node resourcePlace;
 	public Mode mode = Mode.whenNeeded;
 	public int itemsProduced;
@@ -49,6 +48,10 @@ public class Workshop : Building
 	
 	ParticleSystem smoke;
 	public Transform millWheel;
+
+	// These two are only used for visuals, but we still serialize them so that when a game is loaded the wheel animation would be correct
+	public float millWheelSpeed = 0;
+	public int lastMillWheelUpdateTime = int.MinValue;
 
 	public override List<Ground.Area> areas
 	{
@@ -813,6 +816,30 @@ public class Workshop : Building
 			statuses.RemoveFirst();
 	}
 
+	new void Update()
+	{
+		if ( lastMillWheelUpdateTime < 0 )
+			lastMillWheelUpdateTime = time;
+
+		while ( millWheel && lastMillWheelUpdateTime < time )
+		{
+			if ( ( kind == Type.mill || kind == Type.cornMill ) && working )
+				millWheelSpeed += 0.01f;
+			else
+				millWheelSpeed -= 0.01f;
+
+			if ( millWheelSpeed > 1 )
+				millWheelSpeed = 1;
+			if ( millWheelSpeed < 0 )
+				millWheelSpeed = 0;
+				
+			millWheel.Rotate( 0, 0, millWheelSpeed );
+
+			lastMillWheelUpdateTime++;
+		}
+		base.Update();
+	}
+
 	public override GameObject Template()
 	{
 		return looks.GetMediaData( kind );
@@ -1037,18 +1064,6 @@ public class Workshop : Building
 				else
 					ProcessInput();
 
-				if ( millWheel )
-				{
-					if ( ( kind == Type.mill || kind == Type.cornMill ) && working )
-						millWheelSpeed += 0.01f;
-					else
-						millWheelSpeed -= 0.01f;
-					if ( millWheelSpeed > 1 )
-						millWheelSpeed = 1;
-					if ( millWheelSpeed < 0 )
-						millWheelSpeed = 0;
-					millWheel.Rotate( 0, 0, millWheelSpeed );
-				}
 				break;
 			}
 		}
