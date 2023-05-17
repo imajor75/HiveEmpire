@@ -13,6 +13,7 @@
       "description": "Reach soldiers production 2/minute, and maintain it for 30 minutes on a medium map",
       "maintain": 90000,
       "preparation": "construction",
+      "prerun": 45000,
       "infiniteResources": true,
       "conditions": [
         "production soldier 2"
@@ -23,6 +24,7 @@
       "description": "Reach soldiers production 1/minute, and maintain it for 30 minutes on a small map",
       "maintain": 90000,
       "preparation": "construction",
+      "prerun": 45000,
       "infiniteResources": true,
       "landOnly": true,
       "worldSize": 24,
@@ -35,6 +37,7 @@
       "description": "Reach soldier production 4.5/minute, and maintain it for 30 minutes on a big map",
       "maintain": 90000,
       "preparation": "construction",
+      "prerun": 45000,
       "infiniteResources": true,
       "landOnly": true,
       "worldSize": 48,
@@ -47,6 +50,7 @@
       "description": "Maximize soldier production with a single barrack supplying it with materials continuously",
       "maintain": 30000,
       "preparation": "construction",
+      "prerun": 45000,
       "infiniteResources": true,
       "conditions": [
         "production soldier 0 0.9"
@@ -86,6 +90,7 @@
       "description": "Produce as many soldiers as possible on a big island",
       "worldSize": 48,
       "preparation": "routes",
+      "prerun": 45000,
       "islandOnly": true,
       "conditions": [
         "headquarters soldier -10 allPossible"
