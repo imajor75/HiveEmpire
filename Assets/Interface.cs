@@ -543,7 +543,7 @@ public class Interface : HiveObject
 		this.Image( Icon.hive ).AddClickHandler( () => OpenMainMenu() ).Link( iconFolder.transform ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
 		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
 		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
-		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
+		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create() ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
 		buildingListButton.SetTooltip( () => $"List all buildings (hotkey: {buildingListButton.GetHotkey().keyName})" );
 		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
@@ -2785,7 +2785,7 @@ public class Interface : HiveObject
 				"Clock (default) - Work when needed\n" +
 				"Alarm - Work even if not needed\n" +
 				"Bed - Don't work at all" );
-				Image( Icon.buildings ).Pin( 130, iconSize + 5, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( building.type ) ).SetTooltip( "Show a list of buildings with the same type" );
+				Image( Icon.buildings ).Pin( 130, iconSize + 5, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create( building.type ) ).SetTooltip( "Show a list of buildings with the same type" );
 				row -= 25;
 			}
 
@@ -3027,11 +3027,7 @@ public class Interface : HiveObject
 				{
 					var config = Workshop.GetConfiguration( game, (Workshop.Type)i );
 					if ( config != null && config.outputType == itemType )
-					{
-						var list = BuildingList.Create();
-						list.openMode = OpenMode.reopen;
-						list.Open( (Building.Type)i );
-					}
+						BuildingList.Create( (Building.Type)i, true );
 				}
 			}
 
@@ -3306,7 +3302,7 @@ public class Interface : HiveObject
 			attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
 			if ( show )
 				eye.FocusOn( guardHouse, this );
-			Image( Icon.buildings ).Pin( 145, 30, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( Building.Type.guardHouse ) ).SetTooltip( "Show a list of buildings with the same type" );
+			Image( Icon.buildings ).Pin( 145, 30, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create( Building.Type.guardHouse ) ).SetTooltip( "Show a list of buildings with the same type" );
 		}
 
 		new void Update()
@@ -3536,7 +3532,7 @@ public class Interface : HiveObject
 			"For optimal performance the cart should be used for long range transport, haulers should be restricted by areas only to short range local transport. " +
 			"To utilize carts, you have to increase either the cart input or cart output numbers. Select an item type and look for the two numbers above the cart icon on the bottom." ).name = "Show cart";
 			Image( Icon.destroy ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
-			Image( Icon.buildings ).Link( controls ).Pin( 155, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create().Open( Building.Type.stock ) ).SetTooltip( "Show a list of buildings with the same type" );
+			Image( Icon.buildings ).Link( controls ).Pin( 155, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create( Building.Type.stock ) ).SetTooltip( "Show a list of buildings with the same type" );
 			UpdateRouteIcons();
 			currentStockCRC = StockCRC();
 		}
@@ -4200,7 +4196,7 @@ public class Interface : HiveObject
 		void ListCurrentWorkshops( Workshop.Type type )
 		{
 			Close();
-			BuildingList.Create().Open( (Building.Type)type );
+			BuildingList.Create( (Building.Type)type );
 		}
 
 		new void Update()
@@ -6053,42 +6049,174 @@ if ( cart )
 		List<Building> buildings = new ();
 		List<Text> productivities = new ();
 		List<Text> outputs = new ();
-		static Building.Type filter = Building.Type.unknown;
 		List<List<Text>> inputs = new ();
 		Dropdown typeName;
 		static bool reversed;
 		static Comparison<Building> comparison = CompareTypes;
 		Text summary;
 
-		static public BuildingList Create()
+		public class Filter
 		{
-			return new GameObject( "Building List" ).AddComponent<BuildingList>();
+			public static Filter Create( Building.Type type )
+			{
+				var filter = new Filter();
+				filter.listed.Add( type );
+				return filter;
+			}
+
+			public virtual bool IsListed( Building building )
+			{
+				if ( !listed.Contains( building.type ) )
+					return false;
+
+				if ( constructionStatus == ConstructionStatus.showReady && !building.construction.done )
+					return false;
+					
+				if ( constructionStatus == ConstructionStatus.showUnderConstruction && building.construction.done )
+					return false;
+
+				if ( building is Workshop workshop )
+				{
+					bool hasEmpty = false, hasFull = false;
+					foreach ( var buffer in workshop.buffers )
+					{
+						if ( buffer.stored == 0 )
+							hasEmpty = true;
+						if ( buffer.stored == buffer.size )
+							hasFull = true;
+					}
+					if ( inputStatus == InputStatus.showOnlyEmpty && !hasEmpty )
+						return false;
+					if ( inputStatus == InputStatus.showOnlyFull && !hasFull )
+						return false;
+
+					bool hasRed = false, hasYellow = false;
+					foreach ( var item in building.itemsOnTheWay )
+					{
+						if ( item.path != null && item.path.stepsLeft > 7 )
+							hasRed = true;
+						if ( item.path != null && item.path.stepsLeft > 2 )
+							hasYellow = true;
+					}
+					if ( inputStatus == InputStatus.showOnlyRed && !hasRed )
+						return false;
+					if ( inputStatus == InputStatus.showOnlyYellow && !hasYellow )
+						return false;
+
+					if ( outputStatus == OutputStatus.showOnlyFull && workshop.output != workshop.productionConfiguration.outputMax )
+						return false;
+					if ( outputStatus == OutputStatus.showEmptyOnly && workshop.output > 0 )
+						return false;
+					if ( outputStatus == OutputStatus.hideEmpty && workshop.output == 0 )
+						return false;
+
+					if ( workStatus == WorkStatus.showWorkingOnly && !workshop.working )
+						return false;
+					if ( workStatus == WorkStatus.showIdleOnly && workshop.working )
+						return false;
+				}
+
+				return true;
+			}
+
+			public List<Building.Type> listed = new ();
+			public enum ConstructionStatus
+			{
+				showReady,
+				showUnderConstruction,
+				showAll
+			}
+			public ConstructionStatus constructionStatus = ConstructionStatus.showAll;
+
+			public enum InputStatus
+			{	
+				showOnlyEmpty,
+				showOnlyFull,
+				showOnlyRed,
+				showOnlyYellow,
+				showAll
+			}
+			public InputStatus inputStatus = InputStatus.showAll;
+
+			public enum OutputStatus
+			{
+				showOnlyFull,
+				showEmptyOnly,
+				hideEmpty,
+				showAll
+			}
+			public OutputStatus outputStatus = OutputStatus.showAll;
+
+			public enum WorkStatus
+			{
+				showWorkingOnly,
+				showIdleOnly,
+				showAll
+			}
+			public WorkStatus workStatus = WorkStatus.showAll;
 		}
 
-		public void Open( Building.Type buildingType = Building.Type.unknown ) 
+		public class FilterEditor : Panel
 		{
+			public Filter filter;
+			public BuildingList boss;
+
+			public static FilterEditor Create( BuildingList list, Filter filter )
+			{
+				var panel = new GameObject( "Filter editor" ).AddComponent<FilterEditor>();
+				panel.Open( list, filter );
+				return panel;
+			}
+
+			void Open( BuildingList list, Filter filter )
+			{
+				string BuildingTypeToString( Building.Type type )
+				{
+					if ( type == Building.Type.unknown )
+						return "All";
+					string name = "";
+					if ( type < Building.Type.stock )
+						name = ((Workshop.Type)type).ToString();
+					else
+						name = type.ToString();
+					return Nice( name );
+				}
+
+				boss = list;
+				this.filter = filter;
+
+				base.Open( 300, 400 );
+
+				UIHelpers.currentRow = -borderWidth;
+				for ( int i = 0; i < (int)Building.Type.total; i++ )
+				{
+					if ( i < game.workshopTypeUsage.Count && game.workshopTypeUsage[i] == 0 )
+						continue;
+					CheckBox( BuildingTypeToString( (Building.Type)i ) ).PinDownwards( borderWidth, 0, 150 );
+				}
+			}
+
+		}
+
+		public static Filter filter;
+
+		static public BuildingList Create( Filter filter = null, bool reopen = false )
+		{
+			var panel = new GameObject( "Building list" ).AddComponent<BuildingList>();
+			panel.openMode = reopen ? OpenMode.reopen : OpenMode.normal;
+			panel.Open( filter );
+			return panel;
+		}
+		static public BuildingList Create( Building.Type type, bool reopen = false ) => Create( Filter.Create( type ), reopen );
+
+		public void Open( Filter newFilter ) 
+		{
+			if ( newFilter != null )
+				filter = newFilter;
+				
 			base.Open( null, 0, 0, 500, 420 );
 
-			if ( buildingType != Building.Type.unknown )
-				filter = buildingType;
-
-			Text( "Filter:" ).Pin( 20, -20, 150 );
-			typeName = Dropdown().Pin( 80, -20, 150 );
-			List<string> options = new ();
-			for ( int j = 0; j < (int)Building.Type.total; j++ )
-			{
-				if ( j < game.workshopTypeUsage.Count && game.workshopTypeUsage[j] == 0 )
-					continue;
-				string typeName = BuildingTypeToString( (Building.Type)j );
-				if ( typeName != null )
-					options.Add( typeName );
-			}
-			options.Sort();
-			options.Add( "All" );
-			typeName.AddOptions( options );
-			typeName.value = options.IndexOf( BuildingTypeToString( filter ) );
-
-			typeName.onValueChanged.AddListener( delegate { SetFilter( typeName ); } );
+			Button( "Edit filter" ).Pin( borderWidth, -borderWidth, 150 ).AddClickHandler( () => FilterEditor.Create( this, filter ) );
 
 			var t = Text( "type", 10 ).Pin( 20, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareTypes ); } );
 			var p = Text( "productivity", 10 ).Pin( 170, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareProductivities ); } );
@@ -6097,34 +6225,6 @@ if ( cart )
 			scroll = ScrollRect().Stretch( 20, 40, -20, -60 );
 
 			summary = Text().Pin( 20, 40, 200, iconSize, 0, 0 );
-
-			SetFilter( typeName );
-		}
-
-		public string BuildingTypeToString( Building.Type type )
-		{
-			if ( type == Building.Type.unknown )
-				return "All";
-			string name = "";
-			if ( type < Building.Type.stock )
-				name = ((Workshop.Type)type).ToString();
-			else
-				name = type.ToString();
-			return Nice( name );
-		}
-
-		void SetFilter( Dropdown d )
-		{
-			for ( int i = 0; i < (int)Building.Type.total; i++ )
-				if ( BuildingTypeToString( (Building.Type)i ) == d.options[d.value].text )
-					filter = (Building.Type)i;
-			if ( d.options[d.value].text == "All" )
-				filter = Building.Type.unknown;
-			if ( filter == Building.Type.unknown )
-				eye.highlight.TurnOff();
-			else
-				eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
-			Fill();
 		}
 
 		void ShowProducers( Item.Type itemType )
@@ -6133,14 +6233,12 @@ if ( cart )
 			{
 				if ( configuration.outputType == itemType )
 				{
-					filter = (Building.Type)configuration.type;
-					eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
+					filter = Filter.Create( (Building.Type)configuration.type );
+					//eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
 					Fill();
-					typeName.SelectOption( BuildingTypeToString( filter ) );
 					return;
 				}
 			}
-
 		}
 
 		void ChangeComparison( Comparison<Building> comparison )
@@ -6161,7 +6259,7 @@ if ( cart )
 			{
 				Assert.global.IsFalse( building.destroyed );	// Triggered
 				Assert.global.IsNotNull( building );
-				if ( building.team != root.mainTeam || building.blueprintOnly || ( building.type != filter && filter != Building.Type.unknown ) )
+				if ( building.team != root.mainTeam || building.blueprintOnly || !filter.IsListed( building ) )
 					continue;
 				buildings.Add( building );
 			}
