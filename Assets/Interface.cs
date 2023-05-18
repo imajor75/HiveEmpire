@@ -6187,6 +6187,8 @@ if ( cart )
 
 				base.Open( 300, 400 );
 
+				Button( "Apply" ).Pin( 180, -borderWidth, 100 ).AddClickHandler( () => { if ( boss ) boss.Fill(); } );
+
 				UIHelpers.currentRow = -borderWidth;
 				for ( int i = 0; i < (int)Building.Type.total; i++ )
 				{
@@ -8933,7 +8935,7 @@ public static class UIHelpers
 		}
 		b.visualizer = UpdateCheckboxLook;
 		b.leftClickHandler = b.Toggle;
-		Text( b, text ).Link( b ).Pin( Interface.iconSize + 5, 0, 200, Interface.iconSize ).alignment = TextAnchor.MiddleLeft;
+		Text( b, text ).Link( b ).Stretch( Interface.iconSize + 5 ).alignment = TextAnchor.MiddleLeft;
 		UIHelpers.currentRow = save;
 		return b;
 	}
