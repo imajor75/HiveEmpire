@@ -6213,6 +6213,13 @@ if ( cart )
 		{
 			if ( newFilter != null )
 				filter = newFilter;
+
+			if ( filter == null )
+			{
+				filter = new Filter();
+				for ( int j = 0; j < (int)Building.Type.total; j++ )
+					filter.listed.Add( (Building.Type)j );
+			}
 				
 			base.Open( null, 0, 0, 500, 420 );
 
@@ -6226,6 +6233,8 @@ if ( cart )
 			scroll = ScrollRect().Stretch( 20, 40, -20, -60 );
 
 			summary = Text().Pin( 20, 40, 200, iconSize, 0, 0 );
+
+			Fill();
 		}
 
 		void ShowProducers( Item.Type itemType )
@@ -6256,6 +6265,10 @@ if ( cart )
 		{
 			int constructionCount = 0;
 			buildings = new ();
+
+			foreach ( Transform child in scroll.content )
+				Eradicate( child.gameObject );
+
 			foreach ( var building in Resources.FindObjectsOfTypeAll<Building>() )
 			{
 				Assert.global.IsFalse( building.destroyed );	// Triggered
