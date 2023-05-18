@@ -6192,7 +6192,9 @@ if ( cart )
 				{
 					if ( i < game.workshopTypeUsage.Count && game.workshopTypeUsage[i] == 0 )
 						continue;
-					CheckBox( BuildingTypeToString( (Building.Type)i ) ).PinDownwards( borderWidth, 0, 150 );
+					var t = (Building.Type)i;
+					CheckBox( BuildingTypeToString( t ) ).PinDownwards( borderWidth, 0, 150 ).
+					AddToggleHandler( ( value ) => { if ( value ) filter.listed.Add( t ); else filter.listed.Remove( t ); }, filter.listed.Contains( t ) );
 				}
 			}
 
