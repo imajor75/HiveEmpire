@@ -6189,12 +6189,55 @@ if ( cart )
 
 				Button( "Apply" ).Pin( 260, -borderWidth, 100 ).AddClickHandler( () => { if ( boss ) boss.Fill(); } );
 
+				Text( "Construction:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var c = Dropdown().PinDownwards( 260, 0, 100 );
+				c.AddOptions( new List<string> {
+					Filter.ConstructionStatus.showReady.ToString(),
+					Filter.ConstructionStatus.showUnderConstruction.ToString(),
+					Filter.ConstructionStatus.showAll.ToString()
+				} );
+				c.value = (int)filter.constructionStatus;
+				c.onValueChanged.AddListener( ( value ) => filter.constructionStatus = (Filter.ConstructionStatus)value );
+
+				Text( "Input:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var i = Dropdown().PinDownwards( 260, 0, 100 );
+				i.AddOptions( new List<string> {
+					Filter.InputStatus.showOnlyEmpty.ToString(),
+					Filter.InputStatus.showOnlyFull.ToString(),
+					Filter.InputStatus.showOnlyRed.ToString(),
+					Filter.InputStatus.showOnlyYellow.ToString(),
+					Filter.InputStatus.showAll.ToString()
+				} );
+				i.value = (int)filter.inputStatus;
+				i.onValueChanged.AddListener( ( value ) => filter.inputStatus = (Filter.InputStatus)value );
+
+				Text( "Output:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var o = Dropdown().PinDownwards( 260, 0, 100 );
+				o.AddOptions( new List<string> {
+					Filter.OutputStatus.showOnlyFull.ToString(),
+					Filter.OutputStatus.showEmptyOnly.ToString(),
+					Filter.OutputStatus.hideEmpty.ToString(),
+					Filter.OutputStatus.showAll.ToString()
+				} );
+				o.value = (int)filter.outputStatus;
+				o.onValueChanged.AddListener( ( value ) => filter.outputStatus = (Filter.OutputStatus)value );
+
+				Text( "Working:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var w = Dropdown().PinDownwards( 260, 0, 100 );
+				w.AddOptions( new List<string> {
+					Filter.WorkStatus.showWorkingOnly.ToString(),
+					Filter.WorkStatus.showIdleOnly.ToString(),
+					Filter.WorkStatus.showAll.ToString()
+				} );
+				w.value = (int)filter.workStatus;
+				w.onValueChanged.AddListener( ( value ) => filter.workStatus = (Filter.WorkStatus)value );
+
 				UIHelpers.currentRow = -borderWidth;
 				RectTransform row = null;
 				int rowIndex = 0, columnIndex = 0;
-				for ( int i = 0; i < (int)Building.Type.total; i++ )
+				for ( int j = 0; j < (int)Building.Type.total; j++ )
 				{
-					if ( i < game.workshopTypeUsage.Count && game.workshopTypeUsage[i] == 0 )
+					if ( j < game.workshopTypeUsage.Count && game.workshopTypeUsage[j] == 0 )
 						continue;
 
 					if ( row == null || row.childCount > 1 )
@@ -6204,7 +6247,7 @@ if ( cart )
 						columnIndex = 0;
 					}
 
-					var t = (Building.Type)i;
+					var t = (Building.Type)j;
 					CheckBox( BuildingTypeToString( t ) ).Link( row ).Pin( columnIndex, 0, 120 ).
 					AddToggleHandler( ( value ) => { if ( value ) filter.listed.Add( t ); else filter.listed.Remove( t ); }, filter.listed.Contains( t ) );
 					columnIndex += 120;
