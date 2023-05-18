@@ -6369,7 +6369,6 @@ if ( cart )
 				if ( configuration.outputType == itemType )
 				{
 					filter = Filter.Create( (Building.Type)configuration.type );
-					//eye.highlight.HighlightBuildingTypes( filter, owner:gameObject );
 					Fill();
 					return;
 				}
@@ -6434,6 +6433,7 @@ if ( cart )
 			}
 			scroll.SetContentSize( -1, iconSize * buildings.Count );
 			summary.text = $"Total: {buildings.Count}, under construction: {constructionCount}";
+			eye.highlight.HighlightBuildings( buildings, owner:gameObject );
 		}
 
 		new public void Update()
@@ -6647,7 +6647,12 @@ if ( cart )
 		void HighlightStocks( bool state )
 		{
 			if ( state )
-				eye.highlight.HighlightBuildingTypes( Building.Type.headquarters, Building.Type.stock, gameObject );
+			{
+				List<Building> stockList = new ();
+				foreach ( var stock in root.mainTeam.stocks )
+					stockList.Add( stock );
+				eye.highlight.HighlightBuildings( stockList, gameObject );
+			}
 			else
 			{
 				if ( eye.highlight.owner == gameObject )

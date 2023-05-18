@@ -625,7 +625,8 @@ public class Eye : HiveObject
 	public class Highlight : HiveCommon
 	{
 		public Type type;
-		public List<Building.Type> buildingTypes = new (); 
+		public List<Building> buildingList = new ();
+		public bool needConstantRefresh;
 		public Ground.Area area;
 		public Mesh volume;
 		Node volumeCenter;
@@ -694,17 +695,15 @@ public class Eye : HiveObject
 			get
 			{
 				int CRC = 0;
-				if ( type == Type.buildingType )
+				if ( type == Type.buildings )
 				{
 					if ( eye.mapMode )
 						CRC++;
-					foreach ( var t in buildingTypes )
-						CRC += (int)t;
+					foreach ( var t in buildingList )
+						CRC += t.id;
 					CRC += root.mainTeam.stocks.Count();
 					CRC += root.mainTeam.workshops.Count();
 					CRC += root.mainTeam.guardHouses.Count();
-					if ( buildingTypes.Contains( (Building.Type)(Workshop.Type.mill) ) )
-						CRC += time;	// TODO In case of mills the command buffer is always recreated
 				}
 				if ( type == Type.area )
 				{
@@ -719,7 +718,7 @@ public class Eye : HiveObject
 		public enum Type
 		{
 			none,
-			buildingType,
+			buildings,
 			area
 		}
 
@@ -743,13 +742,10 @@ public class Eye : HiveObject
 			strengthChange = 1 / Constants.Eye.highlightSwitchTime;
 		}
 
-		public void HighlightBuildingTypes( Building.Type buildingType0, Building.Type buildingType1 = Building.Type.unknown, GameObject owner = null )
+		public void HighlightBuildings( List<Building> buildingList, GameObject owner = null )
 		{
-			type = Type.buildingType;
-			buildingTypes.Clear();
-			buildingTypes.Add( buildingType0 );
-			if ( buildingType1 != Building.Type.unknown )
-				buildingTypes.Add( buildingType1 );
+			type = Type.buildings;
+			this.buildingList = buildingList;
 			this.owner = owner;
 			strength = 0;
 			strengthChange = 1 / Constants.Eye.highlightSwitchTime;
@@ -823,7 +819,7 @@ public class Eye : HiveObject
 					colorSmoother.Setup( Screen.width, Screen.height, Constants.Eye.highlightEffectLevels );
 				}
 
-				if ( maskCreator == null || maskCreatorCRC != CRC )
+				if ( maskCreator == null || maskCreatorCRC != CRC || needConstantRefresh )
 				{
 					var maskId = new RenderTargetIdentifier( mask );
 					var currentId = new RenderTargetIdentifier( BuiltinRenderTextureType.CurrentActive );
@@ -851,10 +847,16 @@ public class Eye : HiveObject
 						maskCreator.DrawMesh( mesh, upShift * location, material );
 						maskCreator.DrawMesh( mesh, downShift * location, material );
 					}
-					if ( type == Type.buildingType )
+					if ( type == Type.buildings )
 					{
-						void ProcessBuilding( Building building )
+						needConstantRefresh = false;
+						foreach ( var building in buildingList )
 						{
+							if ( building.type == (Building.Type)Workshop.Type.mill )
+								needConstantRefresh = true;
+							if ( building.type == (Building.Type)Workshop.Type.cornMill )
+								needConstantRefresh = true;
+
 							void DrawMeshRecursively( GameObject o )
 							{
 								MeshFilter filter;
@@ -864,8 +866,6 @@ public class Eye : HiveObject
 								foreach ( Transform child in o.transform )
 									DrawMeshRecursively( child.gameObject );
 							}
-							if ( !buildingTypes.Contains( building.type ) )
-								return;
 								
 							if ( eye.mapMode )
 							{
@@ -875,12 +875,6 @@ public class Eye : HiveObject
 							else
 								DrawMeshRecursively( building.body );
 						}
-						foreach ( var stock in root.mainTeam.stocks )
-							ProcessBuilding( stock );
-						foreach ( var workshop in root.mainTeam.workshops )
-							ProcessBuilding( workshop );
-						foreach ( var guardHouse in root.mainTeam.guardHouses )
-							ProcessBuilding( guardHouse );
 					}
 					if ( type == Type.area )
 					{
