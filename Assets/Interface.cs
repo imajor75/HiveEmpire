@@ -6217,6 +6217,7 @@ if ( cart )
 			base.Open( null, 0, 0, 500, 420 );
 
 			Button( "Edit filter" ).Pin( borderWidth, -borderWidth, 150 ).AddClickHandler( () => FilterEditor.Create( this, filter ) );
+			Button( "Refresh" ).PinSideways( 0, -borderWidth, 80 ).AddClickHandler( Fill );
 
 			var t = Text( "type", 10 ).Pin( 20, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareTypes ); } );
 			var p = Text( "productivity", 10 ).Pin( 170, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareProductivities ); } );
