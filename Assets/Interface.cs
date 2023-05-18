@@ -6297,8 +6297,26 @@ if ( cart )
 
 					var t = (Building.Type)j;
 					CheckBox( BuildingTypeToString( t ) ).Link( row ).Pin( columnIndex, 0, 120 ).
-					AddToggleHandler( ( value ) => { if ( value ) filter.listed.Add( t ); else filter.listed.Remove( t ); }, filter.listed.Contains( t ) );
+					AddToggleHandler( ( value ) => Toggle( t, value ), filter.listed.Contains( t ) ).
+					SetTooltip( "If shift key is pressed when checking this box the other boxes will uncheck" );
 					columnIndex += 120;
+				}
+
+				void Toggle( Building.Type t, bool value )
+				{
+					if ( value ) 
+					{
+						if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+						{
+							filter.listed.Clear();
+							filter.listed.Add( t );
+							SetFilter( filter );
+						}
+						else
+							filter.listed.Add( t );
+					}
+					else 
+						filter.listed.Remove( t );
 				}
 
 				SetSize( 380, -rowIndex + 2 * borderWidth );
