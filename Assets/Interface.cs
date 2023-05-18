@@ -6185,21 +6185,33 @@ if ( cart )
 				boss = list;
 				this.filter = filter;
 
-				base.Open( 300, 400 );
+				base.Open( 350, 400 );
 
-				Button( "Apply" ).Pin( 180, -borderWidth, 100 ).AddClickHandler( () => { if ( boss ) boss.Fill(); } );
+				Button( "Apply" ).Pin( 260, -borderWidth, 100 ).AddClickHandler( () => { if ( boss ) boss.Fill(); } );
 
 				UIHelpers.currentRow = -borderWidth;
+				RectTransform row = null;
+				int rowIndex = 0, columnIndex = 0;
 				for ( int i = 0; i < (int)Building.Type.total; i++ )
 				{
 					if ( i < game.workshopTypeUsage.Count && game.workshopTypeUsage[i] == 0 )
 						continue;
-					var t = (Building.Type)i;
-					CheckBox( BuildingTypeToString( t ) ).PinDownwards( borderWidth, 0, 150 ).
-					AddToggleHandler( ( value ) => { if ( value ) filter.listed.Add( t ); else filter.listed.Remove( t ); }, filter.listed.Contains( t ) );
-				}
-			}
 
+					if ( row == null || row.childCount > 1 )
+					{
+						row = new GameObject().AddComponent<RectTransform>();
+						row.Link( this ).Pin( borderWidth, rowIndex -= iconSize );
+						columnIndex = 0;
+					}
+
+					var t = (Building.Type)i;
+					CheckBox( BuildingTypeToString( t ) ).Link( row ).Pin( columnIndex, 0, 120 ).
+					AddToggleHandler( ( value ) => { if ( value ) filter.listed.Add( t ); else filter.listed.Remove( t ); }, filter.listed.Contains( t ) );
+					columnIndex += 120;
+				}
+
+				SetSize( 380, -rowIndex + 2 * borderWidth );
+			}
 		}
 
 		public static Filter filter;
