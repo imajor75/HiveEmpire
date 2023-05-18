@@ -6160,6 +6160,16 @@ if ( cart )
 		{
 			public Filter filter;
 			public BuildingList boss;
+			public Transform content;
+
+			public enum BuildingTypeCategory
+			{
+				nothing,
+				all,
+				workshops,
+				producers,
+				gatherers
+			}
 
 			public static FilterEditor Create( BuildingList list, Filter filter )
 			{
@@ -6170,6 +6180,20 @@ if ( cart )
 
 			void Open( BuildingList list, Filter filter )
 			{
+				boss = list;
+				base.Open( 350, 400 );
+				content = new GameObject( "Content" ).AddComponent<RectTransform>();
+				content.Link( this ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
+				SetFilter( filter );
+			}
+
+			void SetFilter( Filter filter )
+			{
+				this.filter = filter;
+
+				foreach ( Transform child in content )
+					Eradicate( child.gameObject );
+
 				string BuildingTypeToString( Building.Type type )
 				{
 					if ( type == Building.Type.unknown )
@@ -6182,15 +6206,36 @@ if ( cart )
 					return Nice( name );
 				}
 
-				boss = list;
-				this.filter = filter;
+				void ApplyPreset( BuildingTypeCategory category )
+				{
+					filter.listed.Clear();
+					for ( int i = 0; i < (int)Building.Type.total; i++ )
+					{
+						var configuration = Workshop.GetConfiguration( game, (Workshop.Type)i );
+						if ( category switch {
+							BuildingTypeCategory.nothing => false,
+							BuildingTypeCategory.all => true,
+							BuildingTypeCategory.workshops => i < (int)Workshop.Type.total,
+							BuildingTypeCategory.gatherers => configuration != null && configuration.gatheredResource != Resource.Type.unknown,
+							BuildingTypeCategory.producers => configuration != null && configuration.gatheredResource == Resource.Type.unknown,
+							_ => false } )
+							filter.listed.Add( (Building.Type)i );
+					}
+					SetFilter( filter );
+				}
 
-				base.Open( 350, 400 );
+				var sidePanel = new GameObject( "Side panel" ).AddComponent<RectTransform>();
+				sidePanel.Link( content ).Pin( 240, 0 );
 
-				Button( "Apply" ).Pin( 260, -borderWidth, 100 ).AddClickHandler( () => { if ( boss ) boss.Fill(); } );
+				Text( "Preset:", 10 ).Link( sidePanel ).Pin( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				Button( "Nothing" ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).AddClickHandler( () => ApplyPreset( BuildingTypeCategory.nothing ) );
+				Button( "Everything" ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).AddClickHandler( () => ApplyPreset( BuildingTypeCategory.all ) );
+				Button( "Workshops" ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).AddClickHandler( () => ApplyPreset( BuildingTypeCategory.workshops ) );
+				Button( "Gatherers" ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).AddClickHandler( () => ApplyPreset( BuildingTypeCategory.gatherers ) );
+				Button( "Producers" ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).AddClickHandler( () => ApplyPreset( BuildingTypeCategory.producers ) );
 
-				Text( "Construction:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
-				var c = Dropdown().PinDownwards( 260, 0, 100 );
+				Text( "Construction:", 10 ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var c = Dropdown().Link( sidePanel ).PinDownwards( 0, 0, 100 );
 				c.AddOptions( new List<string> {
 					Filter.ConstructionStatus.showReady.ToString(),
 					Filter.ConstructionStatus.showUnderConstruction.ToString(),
@@ -6199,8 +6244,8 @@ if ( cart )
 				c.value = (int)filter.constructionStatus;
 				c.onValueChanged.AddListener( ( value ) => filter.constructionStatus = (Filter.ConstructionStatus)value );
 
-				Text( "Input:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
-				var i = Dropdown().PinDownwards( 260, 0, 100 );
+				Text( "Input:", 10 ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var i = Dropdown().Link( sidePanel ).PinDownwards( 0, 0, 100 );
 				i.AddOptions( new List<string> {
 					Filter.InputStatus.showOnlyEmpty.ToString(),
 					Filter.InputStatus.showOnlyFull.ToString(),
@@ -6211,8 +6256,8 @@ if ( cart )
 				i.value = (int)filter.inputStatus;
 				i.onValueChanged.AddListener( ( value ) => filter.inputStatus = (Filter.InputStatus)value );
 
-				Text( "Output:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
-				var o = Dropdown().PinDownwards( 260, 0, 100 );
+				Text( "Output:", 10 ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var o = Dropdown().Link( sidePanel ).PinDownwards( 0, 0, 100 );
 				o.AddOptions( new List<string> {
 					Filter.OutputStatus.showOnlyFull.ToString(),
 					Filter.OutputStatus.showEmptyOnly.ToString(),
@@ -6222,8 +6267,8 @@ if ( cart )
 				o.value = (int)filter.outputStatus;
 				o.onValueChanged.AddListener( ( value ) => filter.outputStatus = (Filter.OutputStatus)value );
 
-				Text( "Working:", 10 ).PinDownwards( 260, 0, 100 ).alignment = TextAnchor.LowerLeft;
-				var w = Dropdown().PinDownwards( 260, 0, 100 );
+				Text( "Working:", 10 ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
+				var w = Dropdown().Link( sidePanel ).PinDownwards( 0, 0, 100 );
 				w.AddOptions( new List<string> {
 					Filter.WorkStatus.showWorkingOnly.ToString(),
 					Filter.WorkStatus.showIdleOnly.ToString(),
@@ -6231,6 +6276,8 @@ if ( cart )
 				} );
 				w.value = (int)filter.workStatus;
 				w.onValueChanged.AddListener( ( value ) => filter.workStatus = (Filter.WorkStatus)value );
+
+				Button( "Apply" ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).AddClickHandler( () => { if ( boss ) boss.Fill(); } );
 
 				UIHelpers.currentRow = -borderWidth;
 				RectTransform row = null;
@@ -6243,7 +6290,8 @@ if ( cart )
 					if ( row == null || row.childCount > 1 )
 					{
 						row = new GameObject().AddComponent<RectTransform>();
-						row.Link( this ).Pin( borderWidth, rowIndex -= iconSize );
+						row.Link( content ).Pin( 0, rowIndex );
+						rowIndex -= iconSize;
 						columnIndex = 0;
 					}
 
