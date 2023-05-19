@@ -145,11 +145,29 @@ public class Workshop : Building
 		return sortedList;
 	}
 
-	public float CalculateProductivity( bool maximumPossible = false, int timeRange = Constants.Workshop.productivityPeriod )
+	public enum ProductivityCalculationMethod
+	{
+		actual,	// measured actual productivity based on history
+		maximum,	// maximum productivity assuming all inputs and outputs are available. calculated based on history for gatherers, configuration for others
+		maximumWithNoResting // same as above, but assuming no resting time (clear surrounding)		
+	}
+
+	public float CalculateProductivity( ProductivityCalculationMethod method = ProductivityCalculationMethod.actual, int timeRange = Constants.Workshop.productivityPeriod )
 	{
 		var startTime = time - timeRange;
 		int itemsProduced = 0;
 		int wastedTime = 0, usedTime = 0;
+
+		if ( !gatherer && method != ProductivityCalculationMethod.actual )
+		{
+			int timePerProduction = productionConfiguration.productionTime;
+			if ( method != ProductivityCalculationMethod.maximumWithNoResting )
+				timePerProduction += restTime;
+			float outputCount = productionConfiguration.outputCount;
+			if ( outputCount < 0 )
+				outputCount = 1;
+			return outputCount * 60f * Constants.Game.normalSpeedPerSecond / timePerProduction; 
+		}
 
 		bool ProcessPeriod( int start, int length, Status status, int items )
 		{
@@ -158,7 +176,13 @@ public class Workshop : Building
 				statusTime -= startTime - start;
 			if ( statusTime > 0 )
 			{
-				if ( status == Status.waitingForOutputSlot || status == Status.waitingForInput0 || status == Status.waitingForInput1 || status == Status.waitingForInput2 || status == Status.waitingForInput3 || status == Status.waitingForAnyInput )
+				bool working = false;
+				if ( status == Status.working || status == Status.waitingForResource )
+					working = true;
+				if ( method != ProductivityCalculationMethod.maximumWithNoResting && status == Status.resting )
+					working = true;
+
+				if ( !working )
 					wastedTime += statusTime;
 				else
 					usedTime += statusTime;
@@ -175,13 +199,12 @@ public class Workshop : Building
 		}
 
 		var result = (float)(itemsProduced) / timeRange * Constants.Game.normalSpeedPerSecond * 60;
-		if ( maximumPossible )
+		if ( method != ProductivityCalculationMethod.actual )
 		{
 			if ( usedTime > 0 )
 				result *= (usedTime + wastedTime) / usedTime;
 			else
 				return productionConfiguration.productivity;
-
 		}
 
 		return result;
@@ -1427,6 +1450,8 @@ public class Workshop : Building
 			return (int)( productionConfiguration.maxRestTime * ( 1 - f ) );
 		}
 	}
+
+	public int productionTime => productionConfiguration.productionTime + restTime;
 
 	public int ResourcesLeft( bool charges = true )
 	{

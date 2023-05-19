@@ -2895,24 +2895,15 @@ public class Interface : HiveObject
 		{
 			if ( on )
 			{
-				// Recalculate the relax spots just in case it changed
-				var r = workshop.relaxSpotCount;
-				var percent = 100 * r / workshop.productionConfiguration.relaxSpotCountNeeded;
+				int percent = workshop.relaxSpotCount * 100 / workshop.productionConfiguration.relaxSpotCountNeeded;
 				if ( percent > 100 )
 					percent = 100;
-
-				var productionSec = workshop.productionConfiguration.productionTime * Time.fixedDeltaTime;
-				var restSec = workshop.restTime * Time.fixedDeltaTime;
-				var maxOutput = 60 / ( productionSec + restSec ) * workshop.productionConfiguration.outputStackSize;
 				string tooltip = "";
-				if ( !workshop.gatherer )
-				{
-					tooltip += $"Maximum output: {maxOutput.ToString( "n2" )}/min\n" +
-					$"Time needed to produce a new item: {productionSec.ToString( "F2" )}s\n";
-
-				}
-				tooltip += $"Resting needed between item productions: {restSec.ToString( "F2" )}s\n" +
-					$"Relaxation spots around the house: {r}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%";
+				tooltip += $"Current output: {workshop.CalculateProductivity().ToString( "n2" )}/min\n" +
+				$"Maximum output: {workshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum ).ToString( "n2" )}/min\n" +
+				$"Time needed to produce a new item: {workshop.productionTime / Constants.Game.normalSpeedPerSecond}s\n" +
+				$"Resting needed between item productions: {workshop.restTime / Constants.Game.normalSpeedPerSecond}s\n" +
+				$"Relaxation spots around the house: {workshop.relaxSpotCount}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%";
 
 				progressBar.SetTooltip( tooltip, null, $"Resting time depends on the number of relaxing spots around the building. The more relaxing spots, the less resting time the building needs (ideally zero). ", ShowProgressBarTooltip );
 			
@@ -4160,7 +4151,7 @@ public class Interface : HiveObject
 			}
 			int instanceCount = 0;
 			int productionCount = 0;
-			float currentProduction = 0;
+			float currentProduction = 0, maxProduction = 0;
 			foreach ( var playerWorkshop in root.mainTeam.workshops )
 			{
 				if ( playerWorkshop.kind != workshop.type )
@@ -4168,8 +4159,9 @@ public class Interface : HiveObject
 				instanceCount++;
 				productionCount += playerWorkshop.itemsProduced;
 				currentProduction += playerWorkshop.CalculateProductivity();
+				maxProduction += playerWorkshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum );
 			}
-			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/minute";
+			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/minute (max: {maxProduction.ToString( "N2" )}/minute)";
 			tooltip += $"\nTotal production so far: {productionCount}";
 			float demand = 0;
 			foreach ( var connection in flow.connections )

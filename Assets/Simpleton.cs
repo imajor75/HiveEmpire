@@ -836,7 +836,7 @@ public class Simpleton : Player
                                 state = State.surplus;
                                 return finished;
                             }
-                            currentYield += workshop.CalculateProductivity( true, Constants.Simpleton.maximumProductionCalculatingPeriod );
+                            currentYield += workshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum, Constants.Simpleton.maximumProductionCalculatingPeriod );
                         }
                         if ( workshop.kind == workshopType )
                             currentWorkshopCount++;
