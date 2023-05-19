@@ -3123,6 +3123,7 @@ public class Interface : HiveObject
 				int[] ticksInStatus = new int[(int)Workshop.Status.total];
 				int[] percentInStatus = new int[(int)Workshop.Status.total];
 				int totalTicks = 0;
+				int itemCount = 0;
 				void ProcessPastStatus( Workshop.PastStatus s )
 				{
 					if ( s.status == Workshop.Status.unknown )
@@ -3137,6 +3138,7 @@ public class Interface : HiveObject
 
 					ticksInStatus[(int)s.status] += duration;
 					totalTicks += duration;
+					itemCount += s.itemsProduced;
 				}
 				ProcessPastStatus( new Workshop.PastStatus { status = workshop.currentStatus, startTime = workshop.statusDuration.reference, length = workshop.statusDuration.age } );
 				foreach ( var s in workshop.statuses )
@@ -3160,13 +3162,13 @@ public class Interface : HiveObject
 				statusColors = new Color[] { Color.green, Color.red, Color.yellow, Color.cyan, Color.magenta, Color.grey, Color.red.Light(), Color.blue.Light(), Color.Lerp( Color.green, Color.blue, 0.5f ).Light() };
 				Assert.global.AreEqual( statusColors.Length, (int)Workshop.Status.total );
 
-				Text( $"Last {totalTicks / 60 / Constants.Game.normalSpeedPerSecond} minutes" ).Pin( -150, -borderWidth, 300, iconSize, 1, 1 );
+				Text( $"Last {totalTicks / 60 / Constants.Game.normalSpeedPerSecond} minutes ({itemCount} items)" ).Pin( -160, -borderWidth, 300, iconSize, 1, 1 );
 				for ( int i = 0; i < (int)Workshop.Status.total; i++ )
 				{
 					if ( ticksInStatus[i] == 0 )
 						continue;
 					
-					var e = Text( $"{percentInStatus[i]}% " + workshop.GetStatusText( (Workshop.Status)i ), 10 ).PinDownwards( -150, 0, 350, (int)( iconSize * 0.8f ), 1, 1 ).AddOutline();
+					var e = Text( $"{percentInStatus[i]}% " + workshop.GetStatusText( (Workshop.Status)i ), 10 ).PinDownwards( -160, 0, 350, (int)( iconSize * 0.8f ), 1, 1 ).AddOutline();
 					e.color = statusColors[i];
 					e.name = $"Reason {i}";
 				}
