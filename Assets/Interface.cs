@@ -6222,6 +6222,7 @@ if ( cart )
 							filter.listed.Add( (Building.Type)i );
 					}
 					SetFilter( filter );
+					boss?.Fill();					
 				}
 
 				var sidePanel = new GameObject( "Side panel" ).AddComponent<RectTransform>();
@@ -6242,7 +6243,7 @@ if ( cart )
 					Filter.ConstructionStatus.showAll.ToString()
 				} );
 				c.value = (int)filter.constructionStatus;
-				c.onValueChanged.AddListener( ( value ) => filter.constructionStatus = (Filter.ConstructionStatus)value );
+				c.onValueChanged.AddListener( ( value ) => { filter.constructionStatus = (Filter.ConstructionStatus)value; boss?.Fill(); } );
 
 				Text( "Input:", 10 ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
 				var i = Dropdown().Link( sidePanel ).PinDownwards( 0, 0, 100 );
@@ -6254,7 +6255,7 @@ if ( cart )
 					Filter.InputStatus.showAll.ToString()
 				} );
 				i.value = (int)filter.inputStatus;
-				i.onValueChanged.AddListener( ( value ) => filter.inputStatus = (Filter.InputStatus)value );
+				i.onValueChanged.AddListener( ( value ) => { filter.inputStatus = (Filter.InputStatus)value; boss?.Fill(); } );
 
 				Text( "Output:", 10 ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
 				var o = Dropdown().Link( sidePanel ).PinDownwards( 0, 0, 100 );
@@ -6265,7 +6266,7 @@ if ( cart )
 					Filter.OutputStatus.showAll.ToString()
 				} );
 				o.value = (int)filter.outputStatus;
-				o.onValueChanged.AddListener( ( value ) => filter.outputStatus = (Filter.OutputStatus)value );
+				o.onValueChanged.AddListener( ( value ) => { filter.outputStatus = (Filter.OutputStatus)value; boss?.Fill(); } );
 
 				Text( "Working:", 10 ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).alignment = TextAnchor.LowerLeft;
 				var w = Dropdown().Link( sidePanel ).PinDownwards( 0, 0, 100 );
@@ -6275,9 +6276,7 @@ if ( cart )
 					Filter.WorkStatus.showAll.ToString()
 				} );
 				w.value = (int)filter.workStatus;
-				w.onValueChanged.AddListener( ( value ) => filter.workStatus = (Filter.WorkStatus)value );
-
-				Button( "Apply" ).Link( sidePanel ).PinDownwards( 0, 0, 100 ).AddClickHandler( () => { if ( boss ) boss.Fill(); } );
+				w.onValueChanged.AddListener( ( value ) => { filter.workStatus = (Filter.WorkStatus)value; boss?.Fill(); } );
 
 				UIHelpers.currentRow = -borderWidth;
 				RectTransform row = null;
@@ -6317,6 +6316,7 @@ if ( cart )
 					}
 					else 
 						filter.listed.Remove( t );
+					boss?.Fill();	
 				}
 
 				SetSize( 380, -rowIndex + 2 * borderWidth );
