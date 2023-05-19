@@ -4138,6 +4138,7 @@ public class Interface : HiveObject
 
 		string WorkshopTooltip( Flow flow )
 		{
+			float soldierMax = 0;
 			var workshop = flow.source;
 			string tooltip = $"{HiveCommon.Nice( workshop.type.ToString() )}\nProduces ";
 			if ( workshop.outputStackSize > 1 )
@@ -4157,6 +4158,8 @@ public class Interface : HiveObject
 			float currentProduction = 0, maxProduction = 0;
 			foreach ( var playerWorkshop in root.mainTeam.workshops )
 			{
+				if ( playerWorkshop.kind == Workshop.Type.barrack )
+					soldierMax += playerWorkshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum );
 				if ( playerWorkshop.kind != workshop.type )
 					continue;
 				instanceCount++;
@@ -4179,7 +4182,8 @@ public class Interface : HiveObject
 				}
 			}
 			if ( demand > 0 )
-				tooltip += $"\nDemand: {demand.ToString( "N2" )}/sec";
+				tooltip += $"\nDynamic flow demand: {demand.ToString( "N2" )}/sec";
+			tooltip += $"\nTotal demand: {(game.itemTypeUsage[(int)workshop.outputType] * soldierMax).ToString( "N2" )}/sec";
 			return tooltip;
 		}
 
