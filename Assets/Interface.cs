@@ -6321,6 +6321,17 @@ if ( cart )
 
 				SetSize( 380, -rowIndex + 2 * borderWidth );
 			}
+
+			new void Update()
+			{
+				if ( !boss )
+					Close();
+
+				if ( BuildingList.filter != filter )
+					SetFilter( BuildingList.filter );
+
+				base.Update();
+			}
 		}
 
 		public static Filter filter;
