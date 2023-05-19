@@ -3771,6 +3771,7 @@ public class Interface : HiveObject
 			if ( world == null )
 				world = game;
 			panel.world = world;
+			panel.noResize = true;	// disable the resize because the flow background gets out of the sync
 			panel.Open();
 			return panel;
 		}
