@@ -6386,6 +6386,30 @@ if ( cart )
 			}
 		}
 
+		public void ShowConsumers( Item.Type itemType )
+		{
+			Filter newFilter = new ();
+			foreach ( var configuration in game.workshopConfigurations )
+			{
+				if ( configuration.generatedInputs == null )
+					continue;
+
+				foreach ( var input in configuration.generatedInputs )
+				{
+					if ( input == itemType )
+					{
+						newFilter.listed.Add( (Building.Type)configuration.type );
+						break;
+					}
+				}
+			}
+			if ( newFilter.listed.Count == 0 )
+				return;
+				
+			filter = newFilter;
+			Fill();
+		}
+
 		void ChangeComparison( Comparison<Building> comparison )
 		{
 			if ( BuildingList.comparison == comparison )
@@ -6432,7 +6456,7 @@ if ( cart )
 				inputs.Add( new List<Text>() );
 				if ( buildings[i] is Workshop workshop )
 				{
-					ItemIcon( workshop.productionConfiguration.outputType ).Link( scroll.content ).Pin( 360, -iconSize * i	);
+					ItemIcon( workshop.productionConfiguration.outputType ).Link( scroll.content ).Pin( 360, -iconSize * i	).AddClickHandler( () => ShowConsumers( workshop.productionConfiguration.outputType ) );
 					int bi = 0;
 					foreach ( var buffer in workshop.buffers )
 					{
