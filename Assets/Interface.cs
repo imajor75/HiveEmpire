@@ -4054,9 +4054,9 @@ public class Interface : HiveObject
 		public void Open()
 		{
 			width = Constants.Interface.ProductionChainPanel.width;
-			base.Open( width + 2 * iconSize, 400 );
+			base.Open( width + 3 * iconSize, 400 );
 
-			Text( "Production chain is randomized based on the current world seed. If you start a new world it will be different" ).Pin( borderWidth, -borderWidth, width, 2 * iconSize );
+			Text( "Production chain is randomized based on the current world seed. If you start a new world it will be different" ).Pin( borderWidth, -borderWidth, width + iconSize, 2 * iconSize );
 			CheckBox( "Show items" ).Pin( -150, -2 * iconSize, 150, iconSize, 1 ).AddToggleHandler( ( value ) => showItems = value, showItems );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - 2 * iconSize );
 			itemBase = Text().Link( scroll.content ).Stretch().gameObject;
