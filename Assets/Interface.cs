@@ -3010,6 +3010,7 @@ public class Interface : HiveObject
 				if ( area != null )
 					boss.AreaIcon( boss.building, area ).PinSideways( 0, 0 ).Link( this );
 				boss.Image( Icon.buildings ).PinSideways( 0, 0 ).Link( this ).AddClickHandler( () => ShowProducers( itemType ) ).SetTooltip( "Show a list of buildings which produce this" );
+				boss.Image( Icon.buildings ).PinSideways( 0, 0 ).Link( this ).AddClickHandler( () => BuildingList.Create().ShowConsumers( itemType ) ).SetTooltip( "Show a list of buildings which consumes this" ).color = Color.yellow;
 				if ( buffer != null && buffer.optional )
 				{
 					disableIcon = boss.Image( Icon.exit ).PinSideways( 0, 0 ).AddClickHandler( CycleBufferUsage ).Link( this );
