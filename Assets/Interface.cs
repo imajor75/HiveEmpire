@@ -261,6 +261,7 @@ public class Interface : HiveObject
 		pin,
 		home,
 		ring,
+		wideRing,
 		house,
 		hammer,
 		junction,
@@ -2901,7 +2902,7 @@ public class Interface : HiveObject
 				string tooltip = "";
 				tooltip += $"Current output: {workshop.CalculateProductivity().ToString( "n2" )}/min\n" +
 				$"Maximum output: {workshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum ).ToString( "n2" )}/min\n" +
-				$"Time needed to produce a new item: {workshop.productionTime / Constants.Game.normalSpeedPerSecond}s\n" +
+				$"Time needed to produce a new item: {workshop.productionConfiguration.productionTime / Constants.Game.normalSpeedPerSecond}s\n" +
 				$"Resting needed between item productions: {workshop.restTime / Constants.Game.normalSpeedPerSecond}s\n" +
 				$"Relaxation spots around the house: {workshop.relaxSpotCount}\nNeeded: {workshop.productionConfiguration.relaxSpotCountNeeded}, {percent}%";
 
@@ -3934,6 +3935,26 @@ public class Interface : HiveObject
 			}
 		}
 
+		( int instanceCount, int productionCount, float currentProduction, float maxProduction, float demand ) GatherWorkshopConfigurationData( Workshop.Configuration workshop )
+		{
+			float soldierMax = 0;
+			int instanceCount = 0;
+			int productionCount = 0;
+			float currentProduction = 0, maxProduction = 0;
+			foreach ( var playerWorkshop in root.mainTeam.workshops )
+			{
+				if ( playerWorkshop.kind == Workshop.Type.barrack )
+					soldierMax += playerWorkshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum );
+				if ( playerWorkshop.kind != workshop.type )
+					continue;
+				instanceCount++;
+				productionCount += playerWorkshop.itemsProduced;
+				currentProduction += playerWorkshop.CalculateProductivity();
+				maxProduction += playerWorkshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum );
+			}
+			return ( instanceCount, productionCount, currentProduction, maxProduction, game.itemTypeUsage[(int)workshop.outputType] * soldierMax );
+		}
+
 		public void FinishFlow( Flow flow, int preferredColumn )
 		{
 			int column = AllocColumn( iconSize * 2, preferredColumn );
@@ -3946,6 +3967,17 @@ public class Interface : HiveObject
 					workshop = configuration;
 			Assert.global.IsNotNull( workshop );
 
+			var progress = Image( Icon.wideRing ).Link( scroll.content ).PinCenter( column, currentRow.pixel, 3 * iconSize, 3 * iconSize );
+			progress.type = UnityEngine.UI.Image.Type.Filled;
+			progress.fillOrigin = (int)UnityEngine.UI.Image.Origin360.Top;
+			var data = GatherWorkshopConfigurationData( workshop );
+			float fulfilment = Math.Min( 1f, data.maxProduction / data.demand );
+			if ( fulfilment < 0.7f )
+				progress.color = Color.Lerp( Color.red.Wash(), Color.yellow.Wash(), fulfilment / 0.7f );
+			else
+				progress.color = Color.Lerp( Color.yellow.Wash(), Color.green.Wash(), ( fulfilment - 0.7f ) / 0.3f );
+			progress.fillAmount = fulfilment;
+			
 			var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, currentRow.pixel, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( flow ) ).Link( scroll.content );
 			workshopImage.gameObject.name = workshop.type.ToString();
 			if ( workshop.outputStackSize > 1 )
@@ -4138,7 +4170,6 @@ public class Interface : HiveObject
 
 		string WorkshopTooltip( Flow flow )
 		{
-			float soldierMax = 0;
 			var workshop = flow.source;
 			string tooltip = $"{HiveCommon.Nice( workshop.type.ToString() )}\nProduces ";
 			if ( workshop.outputStackSize > 1 )
@@ -4153,22 +4184,9 @@ public class Interface : HiveObject
 					tooltip += HiveCommon.Nice( input.ToString() ) + ", ";
 				tooltip = tooltip.Remove( tooltip.Length - 2, 2 );
 			}
-			int instanceCount = 0;
-			int productionCount = 0;
-			float currentProduction = 0, maxProduction = 0;
-			foreach ( var playerWorkshop in root.mainTeam.workshops )
-			{
-				if ( playerWorkshop.kind == Workshop.Type.barrack )
-					soldierMax += playerWorkshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum );
-				if ( playerWorkshop.kind != workshop.type )
-					continue;
-				instanceCount++;
-				productionCount += playerWorkshop.itemsProduced;
-				currentProduction += playerWorkshop.CalculateProductivity();
-				maxProduction += playerWorkshop.CalculateProductivity( Workshop.ProductivityCalculationMethod.maximum );
-			}
-			tooltip += $"\nCurrently {instanceCount} is producing {currentProduction.ToString( "N2" )}/minute (max: {maxProduction.ToString( "N2" )}/minute)";
-			tooltip += $"\nTotal production so far: {productionCount}";
+			var data = GatherWorkshopConfigurationData( workshop );
+			tooltip += $"\nCurrently {data.instanceCount} is producing {data.currentProduction.ToString( "N2" )}/minute (max: {data.maxProduction.ToString( "N2" )}/minute)";
+			tooltip += $"\nTotal production so far: {data.productionCount}";
 			float demand = 0;
 			foreach ( var connection in flow.connections )
 			{
@@ -4183,7 +4201,7 @@ public class Interface : HiveObject
 			}
 			if ( demand > 0 )
 				tooltip += $"\nDynamic flow demand: {demand.ToString( "N2" )}/sec";
-			tooltip += $"\nTotal demand: {(game.itemTypeUsage[(int)workshop.outputType] * soldierMax).ToString( "N2" )}/sec";
+			tooltip += $"\nTotal demand: {data.demand.ToString( "N2" )}/sec";
 			return tooltip;
 		}
 
