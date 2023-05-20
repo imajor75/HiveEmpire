@@ -32,6 +32,7 @@ public static class Constants
     {
         public const float oreCountPerNode = 0.02f;
         public const int soundMaxDistance = 7;
+        public const int layerIndex2d = 17;
     }
 
     public static class Game

@@ -23,16 +23,6 @@ public class Map : Interface.Panel
 		content.Setup();
 	}
 
-	void ShowGround( bool on )
-	{
-		if ( on )
- 			content.camera.cullingMask |= 1 << World.layerIndexGround | 1 << World.layerIndexWater;
-		else
- 			content.camera.cullingMask &= int.MaxValue - (1 << World.layerIndexGround) - (1 << World.layerIndexWater);
-	}
-
-	static public Interface.Hotkey toggleFullscreenHotkey = new Interface.Hotkey( "Toggle map fullscreen", KeyCode.Return );
-
 	new void Update()
 	{
 		base.Update();

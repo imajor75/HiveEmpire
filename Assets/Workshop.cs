@@ -1451,8 +1451,6 @@ public class Workshop : Building
 		}
 	}
 
-	public int productionTime => productionConfiguration.productionTime + restTime;
-
 	public int ResourcesLeft( bool charges = true )
 	{
 		int left = 0;

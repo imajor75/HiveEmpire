@@ -24,7 +24,7 @@ public class Eye : HiveObject
 	public Vector2 autoMove = Vector2.zero;
 	public float moveSensitivity;
 	[JsonIgnore]
-	public bool mapMode;
+	public bool flatMode;
 	DepthOfField depthOfField;
 	[JsonIgnore]
 	PostProcessLayer ppl;
@@ -34,26 +34,25 @@ public class Eye : HiveObject
 	[JsonIgnore]
 	public Highlight highlight;
 
-	public bool isMapModeUsed { get => mapMode || Map.MapImage.instance != null; }
+	public bool isMapModeUsed { get => flatMode || Map.MapImage.instance != null; }
 	override public UpdateStage updateMode => UpdateStage.none;
 
-	public void SetMapMode( bool mapMode )
+	public void SetFlatMode( bool flatMode )
 	{
-		if ( this.mapMode == mapMode )
+		if ( this.flatMode == flatMode )
 			return;
 			
-		this.mapMode = mapMode;
-		cameraGrid.orthographic = mapMode;
-		if ( mapMode )
+		this.flatMode = flatMode;
+		cameraGrid.orthographic = flatMode;
+		if ( flatMode )
 		{
-			cameraGrid.cullingMask = Map.cullingMask;
-			if ( !Interface.Viewport.showGround )
-				cameraGrid.cullingMask = cameraGrid.cullingMask - (1 << World.layerIndexWater) - (1 << World.layerIndexGround);
+			cameraGrid.cullingMask = (1 << World.layerIndexRoads) + (1 << Constants.World.layerIndex2d);
+			if ( Interface.Viewport.showGround )
+				cameraGrid.cullingMask |= (1 << World.layerIndexWater) + (1 << World.layerIndexGround);
 		}
 		else
 			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly);
-		RenderSettings.fog = !mapMode;
-		UpdateTransformation();
+		RenderSettings.fog = !flatMode;
 	}
 
 	[JsonIgnore]
@@ -351,7 +350,7 @@ public class Eye : HiveObject
 	public void UpdateTransformation()
 	{
 		var position = new Vector3( x, height, y );
-		if ( mapMode )
+		if ( flatMode )
 		{
 			transform.localPosition = position + Vector3.up * 50;
 			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( (float)Math.Sin(direction), 0, (float)Math.Cos(direction) ) );
@@ -429,7 +428,7 @@ public class Eye : HiveObject
 		director = null;
 		target = null;
 		var forwardDir = transform.forward;
-		if ( mapMode )
+		if ( flatMode )
 			forwardDir = transform.up;
 		return transform.right * side * moveSensitivity + forwardDir * forward * moveSensitivity;
 	}
@@ -697,7 +696,7 @@ public class Eye : HiveObject
 				int CRC = 0;
 				if ( type == Type.buildings )
 				{
-					if ( eye.mapMode )
+					if ( eye.flatMode )
 						CRC++;
 					foreach ( var t in buildingList )
 						CRC += t.id;
@@ -867,7 +866,7 @@ public class Eye : HiveObject
 									DrawMeshRecursively( child.gameObject );
 							}
 								
-							if ( eye.mapMode )
+							if ( eye.flatMode )
 							{
 								var shiftUp = Matrix4x4.Translate( new Vector3( 0, 10, 0 ) );
 								DrawMeshRepeatedly( building.mapIndicator?.GetComponent<MeshCollider>()?.sharedMesh, shiftUp * building.mapIndicator.transform.localToWorldMatrix, markerMaterial );
@@ -889,7 +888,7 @@ public class Eye : HiveObject
 			{
 				float maskValueOffset = 0;
 				var distance = area.center.DistanceFrom( eye.transform.position );
-				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size && !eye.mapMode )
+				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size && !eye.flatMode )
 					maskValueOffset = 1;
 
 				mainMaterial.SetFloat( maskValueOffsetID, maskValueOffset );

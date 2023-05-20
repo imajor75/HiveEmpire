@@ -77,8 +77,8 @@ public class Item : HiveObject
 	}
 
 	public GameObject body;
-	public SpriteRenderer onMap;
-	public Vector3 mapPosition { set { if ( onMap ) onMap.transform.position = value + Vector3.up * 6; } }
+	public Transform flat;
+	public Vector3 mapPosition { set { if ( flat ) flat.position = value + Vector3.up * 6; } }
 	override public UpdateStage updateMode => UpdateStage.turtle;
 
 	public Transform Link( Unit hauler, Unit.LinkType linkType )
@@ -89,10 +89,10 @@ public class Item : HiveObject
 			transform.SetParent( slot.transform, false );
 			slot.SetActive( true );
 		}
-		if ( onMap )
+		if ( flat )
 		{
-			onMap.transform.SetParent( hauler.transform, false );
-			onMap.transform.localScale = Vector3.one * 0.15f / hauler.transform.lossyScale.x;
+			flat.SetParent( hauler.transform, false );
+			flat.localScale = Vector3.one * 0.15f / hauler.transform.lossyScale.x;
 		}
 		transform.localPosition = Vector3.zero;
 		return slot?.transform;
@@ -101,10 +101,10 @@ public class Item : HiveObject
 	public void Link( Transform parent )
 	{
 		transform.SetParent( parent, false );
-		if ( onMap )
+		if ( flat )
 		{
-			onMap.transform.SetParent( transform, false );
-			onMap.transform.localScale = Vector3.one * 0.15f / transform.lossyScale.x;
+			flat.SetParent( transform, false );
+			flat.localScale = Vector3.one * 0.15f / transform.lossyScale.x;
 		}
 	}
 
@@ -252,14 +252,20 @@ public class Item : HiveObject
 		body = Instantiate( looks.GetMediaData( type ) );
 		body.layer = World.layerIndexItems;
 
-		onMap = new GameObject().AddComponent<SpriteRenderer>();
-		onMap.name = "Item on map";
-		onMap.transform.SetParent( transform, false );
-		onMap.transform.localPosition = Vector3.up * 6;
-		onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
-		onMap.gameObject.layer = World.layerIndexMapOnly;
-		onMap.material.renderQueue = 4003;
-		onMap.sprite = sprites[(int)type];
+		flat = new GameObject( "Item in flat mode").transform;
+		var sr = flat.gameObject.AddComponent<SpriteRenderer>();
+		flat.SetParent( transform, false );
+		flat.localPosition = Vector3.up * 6;
+		flat.rotation = Quaternion.Euler( 90, 0, 0 );
+		flat.gameObject.layer = World.layerIndexMapOnly;
+		sr.material.renderQueue = 4003;
+		sr.sprite = sprites[(int)type];
+
+		var s = new GameObject( "2d item" ).AddComponent<SpriteRenderer>();
+		s.transform.SetParent( flat, false );
+		s.material.renderQueue = 4003;
+		s.sprite = sprites[(int)type];
+		s.gameObject.layer = Constants.World.layerIndex2d;
 
 		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )
 			Constants.Item.bottomHeights[(int)type] = body.GetComponent<MeshRenderer>().bounds.min.y;
@@ -318,7 +324,7 @@ public class Item : HiveObject
 	new void Update()
 	{
 		if ( eye.isMapModeUsed )
-			onMap.transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
+			flat.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
 		base.Update();
 	}
 
@@ -519,7 +525,7 @@ public class Item : HiveObject
 		destination.ItemArrived( this );
 
 		team.UnregisterItem( this );
-		Eradicate( onMap );
+		Eradicate( flat );
 		base.Remove();
 	}
 
@@ -552,7 +558,7 @@ public class Item : HiveObject
 			hauler.ResetTasks();	// TODO What if the hauler has a second item in hand?
 		};
 		CancelTrip();
-		Eradicate( onMap );
+		Eradicate( flat );
 		flag?.RemoveItem( this );
 		team.UnregisterItem( this );
 		if ( Constants.Item.creditOnRemove )

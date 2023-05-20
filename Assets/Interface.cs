@@ -66,7 +66,7 @@ public class Interface : HiveObject
 	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
 	static public Hotkey cameraBackHotkey = new Hotkey( "Camera back", KeyCode.LeftArrow, false, true );
 
-	static public Hotkey mapHotkey = new Hotkey( "Map", KeyCode.M );
+	static public Hotkey flatHotkey = new Hotkey( "Switch between 3d and 2d", KeyCode.M );
 
 	static public Hotkey cameraLeftHotkey = new Hotkey( "Camera move left (continuous)", KeyCode.A );
 	static public Hotkey cameraRightHotkey = new Hotkey( "Camera move right (continuous)", KeyCode.D );
@@ -866,8 +866,8 @@ public class Interface : HiveObject
 		}
 		if ( cameraBackHotkey.IsPressed() )
 			eye.RestoreOldPosition();
-		if ( mapHotkey.IsPressed() )
-			eye.SetMapMode( !eye.mapMode );
+		if ( flatHotkey.IsPressed() )
+			eye.SetFlatMode( !eye.flatMode );
 #if DEBUG
 		if ( Input.GetKeyDown( KeyCode.Keypad0 ) )
 		{
@@ -6682,7 +6682,7 @@ if ( cart )
 		void ToggleGround( bool ground )
 		{
 			Eye.CameraGrid grid = null;
-			if ( eye.mapMode )
+			if ( eye.flatMode )
 				grid = eye.cameraGrid;
 			if ( Map.MapImage.instance )
 				grid = Map.MapImage.instance.camera;
@@ -8050,7 +8050,7 @@ if ( cart )
 				preview.Generate();
 				preview.eye = Eye.Create();
 				preview.eye.Setup( preview );
-				preview.eye.SetMapMode( true );
+				preview.eye.SetFlatMode( true );
 				preview.eye.fixedAltitude = 30;
 				preview.eye.cameraGrid.targetTexture = view;
 				string resources = $"tree: {preview.treeCount}\nrock: {preview.rockCount}";
