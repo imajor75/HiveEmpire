@@ -126,6 +126,7 @@ public class Eye : HiveObject
 		if ( world.main )
 			gameObject.AddComponent<AudioListener>();
 
+		cameraGrid.cullingMask = ~(1 << World.layerIndexMapOnly) + (1 << Constants.World.layerIndex2d);
 		base.Start();
 	}
 
