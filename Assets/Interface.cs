@@ -9663,6 +9663,14 @@ public static class UIHelpers
 		return array[new System.Random().Next( array.Length )];
 	}
 
+	public class SpriteRotater : MonoBehaviour
+	{
+		void Update()
+		{
+			transform.localRotation = Quaternion.Euler( 90, (float)( HiveObject.eye.direction / Math.PI * 180 ), 0 );
+		}
+	}
+
 	public class RectTransformDebugger : MonoBehaviour
 	{
 		public Vector2 anchorMin, anchorMax, offsetMin, offsetMax;

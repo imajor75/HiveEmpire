@@ -1545,11 +1545,11 @@ public class Unit : HiveObject
 
 		var s = new GameObject( "Unit as sprite" ).AddComponent<SpriteRenderer>();
 		s.transform.SetParent( flat, false );
-		s.transform.localRotation = Quaternion.Euler( 90, 0, 0 );
-		s.transform.localScale = 0.5f * Vector3.one;
+		s.transform.localScale = 0.3f * Vector3.one;
 		s.sprite = sprites.GetMediaData( type );
 		s.material.renderQueue = 4002;
 		s.gameObject.layer = Constants.World.layerIndex2d;
+		s.gameObject.AddComponent<UIHelpers.SpriteRotater>();
 
 		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
