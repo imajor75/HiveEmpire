@@ -51,7 +51,7 @@ public class Eye : HiveObject
 				cameraGrid.cullingMask |= (1 << World.layerIndexWater) + (1 << World.layerIndexGround);
 		}
 		else
-			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly);
+			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly) - (1 << Constants.World.layerIndex2d);
 		RenderSettings.fog = !flatMode;
 	}
 

@@ -525,7 +525,7 @@ public class Item : HiveObject
 		destination.ItemArrived( this );
 
 		team.UnregisterItem( this );
-		Eradicate( flat );
+		Eradicate( flat.gameObject );
 		base.Remove();
 	}
 

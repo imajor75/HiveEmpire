@@ -36,9 +36,11 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 	bool autoExpand;
 	public string fileNamePrefix;
 
-	public void Fill( object[] data, bool autoExpand = true )
+	public void Fill( object[] data = null, bool autoExpand = true )
 	{
 		this.autoExpand = autoExpand;
+		if ( data == null )
+			return;
 		table = new ();
 		foreach ( var g in data )
 		{

@@ -42,6 +42,7 @@ public class Unit : HiveObject
 	public static Act shovelingAct;
 	public static Act constructingAct;
 	public static Act fightingAct, stabInTheBackAct, defendingAct;
+	static MediaTable<Sprite, Type> sprites;
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> walkSounds;
 	static public MediaTable<AudioClip, AnimationSound> animationSounds;
@@ -54,7 +55,7 @@ public class Unit : HiveObject
 	public AudioSource soundSource;
 	[JsonIgnore]
 	public MediaTable<AudioClip, Type>.Media walkSound;
-	public GameObject mapObject;
+	public Transform flat;
 	Material mapMaterial;
 	GameObject arrowObject;
 	static public Sprite arrowSprite;
@@ -1136,7 +1137,8 @@ public class Unit : HiveObject
 		wildAnimal,
 		unemployed,
 		cart,
-		tinkererMate
+		tinkererMate,
+		total
 	}
 
     public class FightDirector : Act.IDirector
@@ -1184,6 +1186,9 @@ public class Unit : HiveObject
 		"prefabs/characters/cart", Type.cart };
 
 		looks.Fill( lookData );
+
+		sprites.Fill();
+		sprites.fileNamePrefix = "sprites/units/";
 
 		walkingID = Animator.StringToHash( "walk" );
 		pickupHeavyID = Animator.StringToHash( "pick up heavy" );
@@ -1528,15 +1533,23 @@ public class Unit : HiveObject
 		
 		World.SetLayerRecursive( gameObject, World.layerIndexUnits );
 
-		mapObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
-		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
-		mapObject.transform.SetParent( transform, false );
-		mapObject.transform.localPosition = Vector3.up * 2;
-		mapObject.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
-		var r = mapObject.GetComponent<MeshRenderer>();
+		flat = GameObject.CreatePrimitive( PrimitiveType.Sphere ).transform;
+		World.SetLayerRecursive( flat.gameObject, World.layerIndexMapOnly );
+		flat.SetParent( transform, false );
+		flat.localPosition = Vector3.up * 2;
+		flat.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
+		var r = flat.GetComponent<MeshRenderer>();
 		r.material = mapMaterial = new Material( World.defaultShader );
 		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapMaterial.renderQueue = 4002;
+
+		var s = new GameObject( "Unit as sprite" ).AddComponent<SpriteRenderer>();
+		s.transform.SetParent( flat, false );
+		s.transform.localRotation = Quaternion.Euler( 90, 0, 0 );
+		s.transform.localScale = 0.5f * Vector3.one;
+		s.sprite = sprites.GetMediaData( type );
+		s.material.renderQueue = 4002;
+		s.gameObject.layer = Constants.World.layerIndex2d;
 
 		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
