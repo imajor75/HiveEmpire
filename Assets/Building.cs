@@ -46,7 +46,11 @@ abstract public class Building : HiveObject
 	public List<MeshRenderer> renderers;
 	[JsonIgnore]
 	public Interface.BuildingMapWidget mapIndicator;
+	public Transform sprite;
 	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
+
+	[JsonIgnore]
+	public static MediaTable<Sprite, Type> sprites;
 
 	[Obsolete( "Compatibility with old files", true )]
 	public Player owner;
@@ -312,6 +316,15 @@ abstract public class Building : HiveObject
 			shader = Resources.Load<Shader>( "shaders/Construction" );
 			Assert.global.IsNotNull( shader );
 			sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
+
+			sprites.Fill();
+			sprites.fileNameGenerator = ( type ) =>
+			{
+				string prefix = "sprites/buildings/";
+				if ( (int)type < (int)Workshop.Type.total )
+					return prefix + ((Workshop.Type)type).ToString();
+				return prefix + type.ToString();
+			};
 		}
 
 		public void Setup( Building boss )
@@ -687,6 +700,15 @@ abstract public class Building : HiveObject
 		highlightArrow = Instantiate( Resources.Load<GameObject>( "prefabs/others/gem" ) );
 		highlightArrow.transform.SetParent( transform );
 		highlightArrow.transform.localScale = Vector3.one * 3f;
+
+		sprite = new GameObject( "Sprite" ).transform;
+		var r = sprite.gameObject.AddComponent<SpriteRenderer>();
+		r.sprite = sprites.GetMediaData( type );
+		r.material.renderQueue = 4002;
+		sprite.SetParent( transform, false );
+		sprite.gameObject.AddComponent<UIHelpers.SpriteRotater>();
+		sprite.gameObject.layer = Constants.World.layerIndex2d;
+
 		base.Start();
 	}
 

@@ -44,7 +44,7 @@ public class Workshop : Building
 	static MediaTable<GameObject, Type> looks;
 	static public MediaTable<AudioClip, Type> processingSounds;
 	static Texture2D mapIndicatorTexture;
-	static public Sprite[] sprites = new Sprite[(int)Type.total];
+	new static public Sprite[] sprites = new Sprite[(int)Type.total];
 	
 	ParticleSystem smoke;
 	public Transform millWheel;
