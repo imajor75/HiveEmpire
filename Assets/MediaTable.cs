@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		public int intData;
 		public bool boolData;
 		public List<Key> keys = new ();
+		public MediaTable<MediaType, Key> boss;
 
 		public void Load( string prefix, string file = "" )
 		{
@@ -22,6 +24,8 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				reportError = true;
 			}
 			data = Resources.Load<MediaType>( prefix + file );
+			if ( data == null && boss.missingMediaHandler != null )
+				data = boss.missingMediaHandler( keys.First() );
 			if ( data == null )
 			{
 				if ( reportError )
@@ -37,12 +41,13 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 	bool autoExpand;
 	public Func<Key, string> fileNameGenerator;
 	public string fileNamePrefix;
+	public Func<Key, MediaType> missingMediaHandler;
 
 	public void Fill( object[] data = null, bool autoExpand = true )
 	{
 		if ( fileNameGenerator == null )
 			fileNameGenerator = ( key ) => key.ToString();
-			
+
 		this.autoExpand = autoExpand;
 		if ( data == null )
 			return;
@@ -50,10 +55,10 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		foreach ( var g in data )
 		{
 			if ( g is string file )
-				table.Add( new Media { fileName = file } );
+				table.Add( new Media { boss = this, fileName = file } );
 			if ( g == null )
 			{
-				table.Add( new Media() );	// why is this needed?
+				table.Add( new Media { boss = this } );	// why is this needed?
 				continue;
 			}
 			if ( g.GetType() == typeof( Key ) )
@@ -91,9 +96,9 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			if ( !autoExpand )
 				return null;
 
-			Media media = new ();
-			media.Load( fileNamePrefix, fileNameGenerator( key ) );
+			var media = new Media { boss = this };
 			media.keys.Add( key );
+			media.Load( fileNamePrefix, fileNameGenerator( key ) );
 			table.Add( media );
 			return media;
 		}

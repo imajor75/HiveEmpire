@@ -309,22 +309,11 @@ abstract public class Building : HiveObject
 			boss = null;
 		}
 
-
-
 		static public void Initialize()
 		{
 			shader = Resources.Load<Shader>( "shaders/Construction" );
 			Assert.global.IsNotNull( shader );
 			sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
-
-			sprites.Fill();
-			sprites.fileNameGenerator = ( type ) =>
-			{
-				string prefix = "sprites/buildings/";
-				if ( (int)type < (int)Workshop.Type.total )
-					return prefix + ((Workshop.Type)type).ToString();
-				return prefix + type.ToString();
-			};
 		}
 
 		public void Setup( Building boss )
@@ -538,6 +527,23 @@ abstract public class Building : HiveObject
 
 		highlightID = Shader.PropertyToID( "_StencilRef" );
 		Construction.Initialize();
+		sprites.Fill();
+
+		sprites.fileNameGenerator = ( type ) =>
+		{
+			string prefix = "sprites/buildings/";
+			if ( (int)type < (int)Workshop.Type.total )
+				return prefix + ((Workshop.Type)type).ToString();
+			return prefix + type.ToString();
+		};
+		sprites.missingMediaHandler = GenerateSprite;
+	}
+
+	static Sprite GenerateSprite( Type type )
+	{
+		if ( (int)type < Workshop.sprites.Length )
+			return Workshop.sprites[(int)type];
+		return null;
 	}
 
 	static public SiteTestResult IsNodeSuitable( Node placeToBuild, Team team, Configuration configuration, int flagDirection, bool ignoreBlockingResources = true, Action<Node> nodeAction = null )
@@ -707,6 +713,7 @@ abstract public class Building : HiveObject
 		r.material.renderQueue = 4002;
 		sprite.SetParent( transform, false );
 		sprite.gameObject.AddComponent<UIHelpers.SpriteRotater>();
+		sprite.localPosition = 3 * Vector3.up;
 		sprite.gameObject.layer = Constants.World.layerIndex2d;
 
 		base.Start();
