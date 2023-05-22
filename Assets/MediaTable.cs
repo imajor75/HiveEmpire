@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 {
 	public class Media
 	{
-		public string file;
+		public string fileName;
 		public MediaType data;
 		public float floatData;
 		public int intData;
@@ -17,7 +18,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 			bool reportError = false;
 			if ( file == "" )
 			{
-				file = this.file;
+				file = this.fileName;
 				reportError = true;
 			}
 			data = Resources.Load<MediaType>( prefix + file );
@@ -34,10 +35,14 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 	List<Media> table;
 	Media failure;
 	bool autoExpand;
+	public Func<Key, string> fileNameGenerator;
 	public string fileNamePrefix;
 
 	public void Fill( object[] data = null, bool autoExpand = true )
 	{
+		if ( fileNameGenerator == null )
+			fileNameGenerator = ( key ) => key.ToString();
+			
 		this.autoExpand = autoExpand;
 		if ( data == null )
 			return;
@@ -45,7 +50,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		foreach ( var g in data )
 		{
 			if ( g is string file )
-				table.Add( new Media { file = file } );
+				table.Add( new Media { fileName = file } );
 			if ( g == null )
 			{
 				table.Add( new Media() );	// why is this needed?
@@ -64,7 +69,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 		{
 			if ( l.keys.Count == 0 )
 				failure = l;
-			if ( l.file != null )
+			if ( l.fileName != null )
 				l.Load( fileNamePrefix );
 		}
 	}
@@ -87,7 +92,7 @@ public struct MediaTable<MediaType, Key> where MediaType : UnityEngine.Object
 				return null;
 
 			Media media = new ();
-			media.Load( fileNamePrefix, key.ToString() );
+			media.Load( fileNamePrefix, fileNameGenerator( key ) );
 			media.keys.Add( key );
 			table.Add( media );
 			return media;
