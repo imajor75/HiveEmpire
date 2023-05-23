@@ -3978,7 +3978,7 @@ public class Interface : HiveObject
 				progress.color = Color.Lerp( Color.yellow.Wash(), Color.green.Wash(), ( fulfilment - 0.7f ) / 0.3f );
 			progress.fillAmount = fulfilment;
 			
-			var workshopImage = Image( Workshop.sprites[(int)workshop.type] ).PinCenter( column, currentRow.pixel, 4 * iconSize, 4 * iconSize ).SetTooltip( () => WorkshopTooltip( flow ) ).Link( scroll.content );
+			var workshopImage = Image( Building.sprites.GetMediaData( (Building.Type)workshop.type ) ).PinCenter( column, currentRow.pixel, 2 * iconSize, 2 * iconSize ).SetTooltip( () => WorkshopTooltip( flow ) ).Link( scroll.content );
 			workshopImage.gameObject.name = workshop.type.ToString();
 			if ( workshop.outputStackSize > 1 )
 				Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
