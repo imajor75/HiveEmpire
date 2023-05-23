@@ -47,7 +47,7 @@ public class Map : Interface.Panel
 		base.OnDestroy();
 	}
 
-	public static int cullingMask { get { return int.MaxValue - (1 << Ground.Grass.layerIndex ) - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexRoads) - (1 << LayerMask.NameToLayer( "Trees" ) ) - (1 << World.layerIndexItems); } }
+	public static int cullingMask { get { return int.MaxValue - (1 << Ground.Grass.layerIndex ) - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexRoads) - (1 << LayerMask.NameToLayer( "Trees" ) ) - (1 << World.layerIndexItems) - (1 << Constants.World.layerIndex2d); } }
 
 	[RequireComponent( typeof( RawImage ) )]
 	public class MapImage : UIBehaviour
