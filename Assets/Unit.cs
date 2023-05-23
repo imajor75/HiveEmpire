@@ -2241,7 +2241,7 @@ public class Unit : HiveObject
 		from ??= this.node;
 		int direction = from.DirectionTo( node );
 		assert.IsTrue( direction >= 0, "Asked to turn towards a distant node" );
-		transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
+		body.transform.rotation = Quaternion.Euler( Vector3.up * angles[direction] );
 	}
 
 	public void UpdateBody()
@@ -2283,7 +2283,7 @@ public class Unit : HiveObject
 			direction.y = 0;
 			if ( walkBackward )
 				direction = -direction;
-			transform.rotation = Quaternion.LookRotation( direction );
+			body.transform.rotation = Quaternion.LookRotation( direction );
 		}
 		else
 		{
