@@ -111,7 +111,8 @@ public class Item : HiveObject
 	[JsonIgnore]
 	public bool debugCancelTrip;
 
-	static public Sprite[] sprites = new Sprite[(int)Type.total];
+	static public Sprite[] generatedSprites = new Sprite[(int)Type.total];
+	static public MediaTable<Sprite, Type> sprites;
 	public static MediaTable<GameObject, Type> looks;
 
 	[Obsolete( "Compatibility with old files", true )]
@@ -198,6 +199,10 @@ public class Item : HiveObject
 		};
 		looks.Fill( looksData );
 
+		sprites.Fill();
+		sprites.fileNamePrefix = "sprites/items/";
+		sprites.missingMediaHandler = ( type ) => generatedSprites[(int)type];
+
 		var dl = new GameObject( "Temporary Directional Light" );
 		var l = dl.AddComponent<Light>();
 		l.type = LightType.Directional;
@@ -208,8 +213,8 @@ public class Item : HiveObject
 		for ( int i = 0; i < (int)Type.total; i++ )
 		{
 			Texture2D tex = RuntimePreviewGenerator.GenerateModelPreview( looks.GetMediaData( (Type)i ).transform, 256, 256 );
-			sprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
-			Assert.global.IsNotNull( sprites[i] );
+			generatedSprites[i] = Sprite.Create( tex, new Rect( 0.0f, 0.0f, tex.width, tex.height ), new Vector2( 0.5f, 0.5f ) );
+			Assert.global.IsNotNull( generatedSprites[i] );
 		}
 
 		Eradicate( dl );
@@ -259,12 +264,12 @@ public class Item : HiveObject
 		flat.rotation = Quaternion.Euler( 90, 0, 0 );
 		flat.gameObject.layer = World.layerIndexMapOnly;
 		sr.material.renderQueue = 4003;
-		sr.sprite = sprites[(int)type];
+		sr.sprite = sprites.GetMediaData( type );
 
 		var s = new GameObject( "2d item" ).AddComponent<SpriteRenderer>();
 		s.transform.SetParent( flat, false );
 		s.material.renderQueue = 4003;
-		s.sprite = sprites[(int)type];
+		s.sprite = sprites.GetMediaData( type );
 		s.gameObject.layer = Constants.World.layerIndex2d;
 
 		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )

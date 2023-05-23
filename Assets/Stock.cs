@@ -507,7 +507,7 @@ public class Stock : Attackable
 			if ( taskQueue.Count == 0 && walkTo == null )
 				SetActive( false );
 			if ( itemQuantity > 0 )
-				onMap.sprite = Item.sprites[(int)itemType];
+				onMap.sprite = Item.sprites.GetMediaData( itemType );
 			else
 				onMap.sprite = null;
 		}
