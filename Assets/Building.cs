@@ -710,7 +710,8 @@ abstract public class Building : HiveObject
 		sprite = new GameObject( "Sprite" ).transform;
 		var r = sprite.gameObject.AddComponent<SpriteRenderer>();
 		r.sprite = sprites.GetMediaData( type );
-		r.material.renderQueue = 4002;
+		r.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+		r.sortingOrder = (int)-node.position.x;
 		sprite.SetParent( transform, false );
 		sprite.localRotation = Quaternion.Euler( 90, 90, 0 );
 		sprite.localPosition = 3 * Vector3.up;

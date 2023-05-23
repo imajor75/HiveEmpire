@@ -56,6 +56,7 @@ public class Unit : HiveObject
 	[JsonIgnore]
 	public MediaTable<AudioClip, Type>.Media walkSound;
 	public Transform flat;
+	public SpriteRenderer sprite;
 	Material mapMaterial;
 	GameObject arrowObject;
 	static public Sprite arrowSprite;
@@ -1543,13 +1544,14 @@ public class Unit : HiveObject
 		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapMaterial.renderQueue = 4002;
 
-		var s = new GameObject( "Unit as sprite" ).AddComponent<SpriteRenderer>();
-		s.transform.SetParent( flat, false );
-		s.transform.localScale = 0.3f * Vector3.one;
-		s.sprite = sprites.GetMediaData( type );
-		s.material.renderQueue = 4002;
-		s.gameObject.layer = Constants.World.layerIndex2d;
-		s.transform.localRotation = Quaternion.Euler( 90, 90, 0 );
+		sprite = new GameObject( "Unit as sprite" ).AddComponent<SpriteRenderer>();
+		sprite.transform.SetParent( flat, false );
+		sprite.transform.localScale = 0.3f * Vector3.one;
+		sprite.sprite = sprites.GetMediaData( type );
+		sprite.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+		sprite.sortingOrder = (int)-node.position.x;
+		sprite.gameObject.layer = Constants.World.layerIndex2d;
+		sprite.transform.localRotation = Quaternion.Euler( 90, 90, 0 );
 
 		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
@@ -1590,6 +1592,8 @@ public class Unit : HiveObject
 		currentSpeed = speed * SpeedBetween( target, node );
 		walkFrom = node;
 		node = walkTo = target;
+		if ( sprite )
+			sprite.sortingOrder = (int)-node.position.x;
 	}
 
 	public override void GameLogicUpdate( UpdateStage stage )
@@ -1671,9 +1675,9 @@ public class Unit : HiveObject
 		}
 
 		if ( itemsInHands[0] )
-			itemsInHands[0].mapPosition = transform.position;
+			itemsInHands[0].flatPosition = transform.position;
 		if ( itemsInHands[1] )
-			itemsInHands[1].mapPosition = transform.position;
+			itemsInHands[1].flatPosition = transform.position;
 	}
 
 	public override void Remove()

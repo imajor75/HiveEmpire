@@ -78,7 +78,8 @@ public class Item : HiveObject
 
 	public GameObject body;
 	public Transform flat;
-	public Vector3 mapPosition { set { if ( flat ) flat.position = value + Vector3.up * 6; } }
+	public SpriteRenderer sprite, mapIcon;
+	public Vector3 flatPosition { set { if ( flat ) flat.position = value + Vector3.up * 6; sprite.sortingOrder = (int)-value.x + 1; } }
 	override public UpdateStage updateMode => UpdateStage.turtle;
 
 	public Transform Link( Unit hauler, Unit.LinkType linkType )
@@ -258,20 +259,21 @@ public class Item : HiveObject
 		body.layer = World.layerIndexItems;
 
 		flat = new GameObject( "Item in flat mode").transform;
-		var sr = flat.gameObject.AddComponent<SpriteRenderer>();
 		flat.SetParent( transform, false );
 		flat.localPosition = Vector3.up * 6;
-		flat.rotation = Quaternion.Euler( 90, 0, 0 );
+		flat.rotation = Quaternion.Euler( 90, 90, 0 );
 		flat.gameObject.layer = World.layerIndexMapOnly;
-		sr.material.renderQueue = 4003;
-		sr.sprite = sprites.GetMediaData( type );
 
-		var s = new GameObject( "Item sprite" ).AddComponent<SpriteRenderer>();
-		s.transform.SetParent( flat, false );
-		s.transform.localRotation = Quaternion.Euler( 90, 90, 0 );
-		s.material.renderQueue = 4003;
-		s.sprite = sprites.GetMediaData( type );
-		s.gameObject.layer = Constants.World.layerIndex2d;
+		mapIcon = flat.gameObject.AddComponent<SpriteRenderer>();
+		mapIcon.material.renderQueue = 4003;
+		mapIcon.sprite = sprites.GetMediaData( type );
+
+		sprite = new GameObject( "Item sprite" ).AddComponent<SpriteRenderer>();
+		sprite.transform.SetParent( flat, false );
+		sprite.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+		sprite.sortingOrder = (int)-location.position.x;
+		sprite.sprite = sprites.GetMediaData( type );
+		sprite.gameObject.layer = Constants.World.layerIndex2d;
 
 		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )
 			Constants.Item.bottomHeights[(int)type] = body.GetComponent<MeshRenderer>().bounds.min.y;
@@ -329,8 +331,8 @@ public class Item : HiveObject
 
 	new void Update()
 	{
-		if ( eye.isMapModeUsed )
-			flat.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
+		if ( Map.MapImage.instance != null )	 // TODO this is a hack
+			mapIcon.transform.rotation = Quaternion.Euler( 0, (float)( eye.direction / Math.PI * 180 ), 0 );
 		base.Update();
 	}
 
