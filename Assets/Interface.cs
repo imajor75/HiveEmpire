@@ -2687,6 +2687,8 @@ public class Interface : HiveObject
 			if ( base.Open( workshop, 250, 160 ) )
 				return;
 
+			Image( Building.sprites.GetMediaData( workshop.type ) ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth ).color = new Color( 1, 1, 1, 0.7f );
+
 			name = "Workshop panel";
 			this.workshop = workshop;
 			bool showOutputBuffer = false, showProgressBar = false;
