@@ -333,7 +333,7 @@ public class Item : HiveObject
 	new void Update()
 	{
 		if ( Map.MapImage.instance != null )	 // TODO this is a hack
-			mapIcon.transform.rotation = Quaternion.Euler( 0, (float)( eye.direction / Math.PI * 180 ), 0 );
+			mapIcon.transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
 		base.Update();
 	}
 

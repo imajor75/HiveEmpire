@@ -2465,8 +2465,8 @@ public class Interface : HiveObject
 			c.convex = true;
 			c.sharedMesh = plane;
 
-			transform.SetParent( building.transform, false );
-			transform.localPosition = new Vector3( 0, 3, 0 );
+			transform.SetParent( building.flat, false );
+			transform.localPosition = new Vector3( 0, 0, -3 );
 			transform.localScale = new Vector3( 0.7f, 0.5f, 1 );
 
 			if ( !building.construction.done )
@@ -2589,7 +2589,7 @@ public class Interface : HiveObject
 
 		void Update()
 		{
-			if ( ( eye.cameraGrid.center.cullingMask & ( 1 << gameObject.layer ) ) == 0 )
+			if ( Map.MapImage.instance == null )
 				return;
 			transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
 			if ( barMaterial )
@@ -2645,7 +2645,6 @@ public class Interface : HiveObject
 					}
 					World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
 				}
-
 			}
 		}
 	}

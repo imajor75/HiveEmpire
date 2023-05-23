@@ -46,7 +46,8 @@ abstract public class Building : HiveObject
 	public List<MeshRenderer> renderers;
 	[JsonIgnore]
 	public Interface.BuildingMapWidget mapIndicator;
-	public Transform sprite;
+	public Transform flat;
+	public SpriteRenderer sprite;
 	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
 
 	[JsonIgnore]
@@ -707,14 +708,16 @@ abstract public class Building : HiveObject
 		highlightArrow.transform.SetParent( transform );
 		highlightArrow.transform.localScale = Vector3.one * 3f;
 
-		sprite = new GameObject( "Sprite" ).transform;
-		var r = sprite.gameObject.AddComponent<SpriteRenderer>();
-		r.sprite = sprites.GetMediaData( type );
-		r.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-		r.sortingOrder = (int)-node.position.x;
-		sprite.SetParent( transform, false );
-		sprite.localRotation = Quaternion.Euler( 90, 90, 0 );
-		sprite.localPosition = 3 * Vector3.up;
+		flat = new GameObject( "Flat" ).transform;
+		flat.localRotation = Quaternion.Euler( 90, 90, 0 );
+		flat.localPosition = 3 * Vector3.up;
+		flat.SetParent( transform, false );
+		
+		sprite = new GameObject( "Building sprite" ).AddComponent<SpriteRenderer>();
+		sprite.sprite = sprites.GetMediaData( type );
+		sprite.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+		sprite.sortingOrder = (int)-node.position.x;
+		sprite.transform.SetParent( flat, false );
 		sprite.gameObject.layer = Constants.World.layerIndex2d;
 
 		base.Start();
