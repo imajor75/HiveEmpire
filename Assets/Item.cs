@@ -262,11 +262,12 @@ public class Item : HiveObject
 		flat.SetParent( transform, false );
 		flat.localPosition = Vector3.up * 6;
 		flat.rotation = Quaternion.Euler( 90, 90, 0 );
-		flat.gameObject.layer = World.layerIndexMapOnly;
 
-		mapIcon = flat.gameObject.AddComponent<SpriteRenderer>();
+		mapIcon = new GameObject( "Item map icon" ).AddComponent<SpriteRenderer>();
 		mapIcon.material.renderQueue = 4003;
 		mapIcon.sprite = sprites.GetMediaData( type );
+		mapIcon.transform.SetParent( flat, false );
+		mapIcon.gameObject.layer = World.layerIndexMapOnly;
 
 		sprite = new GameObject( "Item sprite" ).AddComponent<SpriteRenderer>();
 		sprite.transform.SetParent( flat, false );
