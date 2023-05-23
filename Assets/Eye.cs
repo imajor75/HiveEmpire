@@ -49,6 +49,7 @@ public class Eye : HiveObject
 			cameraGrid.cullingMask = (1 << World.layerIndexRoads) + (1 << Constants.World.layerIndex2d);
 			if ( Interface.Viewport.showGround )
 				cameraGrid.cullingMask |= (1 << World.layerIndexWater) + (1 << World.layerIndexGround);
+			StopAutoChange();
 		}
 		else
 			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly) - (1 << Constants.World.layerIndex2d);
@@ -270,12 +271,12 @@ public class Eye : HiveObject
 			absoluteX += ground.dimension * Constants.Node.size;
 		}
 
-		if ( Interface.cameraRotateCCWHotkey.IsDown() )
+		if ( Interface.cameraRotateCCWHotkey.IsDown() && !flatMode )
 		{
 			StopAutoChange();
 			direction -= Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
 		}
-		if ( Interface.cameraRotateCWHotkey.IsDown() )
+		if ( Interface.cameraRotateCWHotkey.IsDown() && !flatMode )
 		{
 			StopAutoChange();
 			direction += Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
@@ -354,7 +355,7 @@ public class Eye : HiveObject
 		if ( flatMode )
 		{
 			transform.localPosition = position + Vector3.up * 50;
-			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( (float)Math.Sin(direction), 0, (float)Math.Cos(direction) ) );
+			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( 1, 0, 0/*(float)Math.Sin(direction), 0, (float)Math.Cos(direction)*/ ) );
 			if ( cameraGrid )
 				cameraGrid.orthographicSize = altitude;
 			return;

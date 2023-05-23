@@ -1549,7 +1549,7 @@ public class Unit : HiveObject
 		s.sprite = sprites.GetMediaData( type );
 		s.material.renderQueue = 4002;
 		s.gameObject.layer = Constants.World.layerIndex2d;
-		s.gameObject.AddComponent<UIHelpers.SpriteRotater>();
+		s.transform.localRotation = Quaternion.Euler( 90, 90, 0 );
 
 		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );

@@ -712,7 +712,7 @@ abstract public class Building : HiveObject
 		r.sprite = sprites.GetMediaData( type );
 		r.material.renderQueue = 4002;
 		sprite.SetParent( transform, false );
-		sprite.gameObject.AddComponent<UIHelpers.SpriteRotater>();
+		sprite.localRotation = Quaternion.Euler( 90, 90, 0 );
 		sprite.localPosition = 3 * Vector3.up;
 		sprite.gameObject.layer = Constants.World.layerIndex2d;
 

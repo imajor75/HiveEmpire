@@ -266,8 +266,9 @@ public class Item : HiveObject
 		sr.material.renderQueue = 4003;
 		sr.sprite = sprites.GetMediaData( type );
 
-		var s = new GameObject( "2d item" ).AddComponent<SpriteRenderer>();
+		var s = new GameObject( "Item sprite" ).AddComponent<SpriteRenderer>();
 		s.transform.SetParent( flat, false );
+		s.transform.localRotation = Quaternion.Euler( 90, 90, 0 );
 		s.material.renderQueue = 4003;
 		s.sprite = sprites.GetMediaData( type );
 		s.gameObject.layer = Constants.World.layerIndex2d;
