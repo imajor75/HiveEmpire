@@ -21,6 +21,8 @@ public class Resource : HiveObject
 	public List<Unit> animals = new ();
 	public Unit origin;		// Only valid for a prey, references the bunny
 	public Game.Timer silence = new ();
+	public Transform flat;
+	static public MediaTable<Sprite, Type> mapSprites, sprites;
 
 	override public string textId => base.textId + $" ({type})";
 
@@ -140,6 +142,13 @@ public class Resource : HiveObject
 		"prefabs/others/wheatField", Type.wheatField,
 		null, Type.apple };
 		Resource.meshes.Fill( meshes, false );
+
+		object[] mapSpriteData  = {
+			"textures/tree_from_above", Type.tree };
+		mapSprites.Fill( mapSpriteData, false );
+
+		sprites.Fill();
+		sprites.fileNamePrefix = "sprites/other/";
 
 		object[] sounds = {
 			"bird1", Constants.Resource.treeSoundTime, Type.tree,
@@ -276,16 +285,30 @@ public class Resource : HiveObject
 			}
 		}
 
-		if ( type == Type.tree )
+		flat = new GameObject( "Flat tree" ).transform;
+		flat.SetParent( transform, false );
+		flat.localRotation = Quaternion.Euler( 90, 0, -90 );
+		flat.localPosition = 3 * Vector3.up;
+
+		var mapSprite = mapSprites.GetMediaData( type );
+		if ( mapSprite )
 		{
-			var mapObject = GameObject.CreatePrimitive( PrimitiveType.Plane );
-			mapObject.name = "Map widget";
-			mapObject.transform.SetParent( transform, false );
-			mapObject.GetComponent<MeshRenderer>().material = Resources.Load<Material>( "treeFromAbove" );
-			mapObject.transform.localScale = Vector3.one * 0.15f;
-			mapObject.transform.localPosition = new Vector3( 0, 3, 0 );
-			mapObject.layer = World.layerIndexMapOnly;
-			Eradicate( mapObject.GetComponent<Collider>() );
+			var mapObject = new GameObject( "Tree on map" ).AddComponent<SpriteRenderer>();
+			mapObject.transform.SetParent( flat, false );
+			mapObject.sprite = mapSprite;
+			mapObject.transform.localPosition = new Vector3( 0, 0, -3 );
+			mapObject.gameObject.layer = World.layerIndexMapOnly;
+		}
+
+		var sprite = sprites.GetMediaData( type );
+		if ( sprite )
+		{
+			var spriteRenderer = new GameObject( "Tree sprite" ).AddComponent<SpriteRenderer>();
+			spriteRenderer.transform.SetParent( flat, false );
+			spriteRenderer.sprite = sprite;
+			spriteRenderer.sortingOrder = (int)-node.position.x;
+			spriteRenderer.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+			spriteRenderer.gameObject.layer = Constants.World.layerIndex2d;
 		}
 
 		base.Start();
