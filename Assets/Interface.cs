@@ -1655,7 +1655,7 @@ public class Interface : HiveObject
 			var i = ItemImage.Create().Open( type );
 			i.name = "ItemImage";
 			if ( type != Item.Type.unknown )
-				i.picture.sprite = Item.generatedSprites[(int)type];
+				i.picture.sprite = Item.sprites.GetMediaData( type );
 			else
 				i.picture.enabled = false;
 			i.itemType = type;
@@ -2129,7 +2129,7 @@ public class Interface : HiveObject
 				{
 					additionalTooltipText = value;
 					if ( itemType != Item.Type.unknown )
-						this.SetTooltip( itemType.ToString().GetPrettyName(), Item.generatedSprites[(int)itemType], additionalTooltipText, OnShowTooltip );
+						this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites.GetMediaData( itemType ), additionalTooltipText, OnShowTooltip );
 				}
 			}
 			PathVisualization pathVisualization;
@@ -2153,7 +2153,7 @@ public class Interface : HiveObject
 				picture.name = "ItemIcon";
 				picture.enabled = itemType != Item.Type.unknown;
 				if ( itemType != Item.Type.unknown )
-					picture.sprite = Item.generatedSprites[(int)itemType];
+					picture.sprite = Item.sprites.GetMediaData( itemType );
 
 				inTransit = new GameObject( "Logistic Indicator" ).AddComponent<Image>().Link( this );
 				inTransit.sprite = Unit.arrowSprite;
@@ -2163,7 +2163,7 @@ public class Interface : HiveObject
 				inTransit.gameObject.SetActive( false );
 
 				if ( itemType != Item.Type.unknown )
-					this.SetTooltip( itemType.ToString().GetPrettyName(), Item.generatedSprites[(int)itemType], additionalTooltipText, OnShowTooltip );
+					this.SetTooltip( itemType.ToString().GetPrettyName(), Item.sprites.GetMediaData( itemType ), additionalTooltipText, OnShowTooltip );
 				return this;
 			}
 
@@ -2192,9 +2192,9 @@ public class Interface : HiveObject
 					return;
 				}
 				picture.enabled = true;
-				picture.sprite = Item.generatedSprites[(int)itemType];
+				picture.sprite = Item.sprites.GetMediaData( itemType );
 				if ( updateTooltip )
-					this.SetTooltip( itemType.ToString(), Item.generatedSprites[(int)itemType], additionalTooltipText, OnShowTooltip );
+					this.SetTooltip( itemType.ToString(), Item.sprites.GetMediaData( itemType ), additionalTooltipText, OnShowTooltip );
 			}
 
 			public void SetInTransit( bool show )
@@ -2497,7 +2497,7 @@ public class Interface : HiveObject
 		}
 
 		SpriteRenderer NewSprite( Icon icon, string name ) => NewSprite( iconTable.GetMediaData( icon ), name );
-		SpriteRenderer NewSprite( Item.Type itemType, string name ) => NewSprite( Item.generatedSprites[(int)itemType], name );
+		SpriteRenderer NewSprite( Item.Type itemType, string name ) => NewSprite( Item.sprites.GetMediaData( itemType ), name );
 
 		void SetupForWorkshop( Workshop workshop )
 		{
@@ -2972,7 +2972,7 @@ public class Interface : HiveObject
 				gameObject.AddComponent<RectTransform>();
 				var workshop = boss.building as Workshop;
 				int itemsStartX = - xi + iconSize;
-				boss.Image( Item.generatedSprites[(int)itemType] ).Pin( itemsStartX, 0 ).SetTooltip( () => Nice( itemType.ToString() ) + ( buffer != null ? $"\nUsed so far: {buffer.used}" : "" ) ).Link( this );
+				boss.Image( Item.sprites.GetMediaData( itemType ) ).Pin( itemsStartX, 0 ).SetTooltip( () => Nice( itemType.ToString() ) + ( buffer != null ? $"\nUsed so far: {buffer.used}" : "" ) ).Link( this );
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
