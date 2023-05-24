@@ -271,7 +271,7 @@ public class Item : HiveObject
 
 		sprite = new GameObject( "Item sprite" ).AddComponent<SpriteRenderer>();
 		sprite.transform.SetParent( flat, false );
-		sprite.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+		sprite.material.shader = Interface.spriteShader;
 		sprite.sortingOrder = (int)-location.position.x;
 		sprite.sprite = sprites.GetMediaData( type );
 		sprite.gameObject.layer = Constants.World.layerIndex2d;

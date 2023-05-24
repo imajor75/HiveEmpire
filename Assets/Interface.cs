@@ -58,6 +58,7 @@ public class Interface : HiveObject
 	public bool focusOnInputField, focusOnDropdown;
 	static KeyCode ignoreKey = KeyCode.None;
 	static public System.Random rnd = new ();
+	public static Shader spriteShader;
 
 	public Image buildButton, worldProgressButton;
 
@@ -590,6 +591,8 @@ public class Interface : HiveObject
 		messageButton.fontSize = 40;
 		messageButton.color = Color.yellow;
 		messageButton.AddOutline();
+
+		spriteShader = Resources.Load<Shader>( "shaders/Sprite" );
 
 		LoadHotkeys();
 		LoadChallenges();
@@ -2418,7 +2421,6 @@ public class Interface : HiveObject
 		public Sprite progress;
 		public Material barMaterial, bgMaterial;
 		static int progressShaderID, colorShaderID;
-		static Shader spriteShader;
 		static Mesh plane;
 
 		public static BuildingMapWidget Create( Building building )
@@ -2432,7 +2434,6 @@ public class Interface : HiveObject
 		{
 			progressShaderID = Shader.PropertyToID( "_Progress" );
 			colorShaderID = Shader.PropertyToID( "_Color" );
-			spriteShader = Resources.Load<Shader>( "shaders/Sprite" );
 
 			plane = new ();
 			Vector3[] pos = new Vector3[4];

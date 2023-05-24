@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1534,24 +1534,26 @@ public class Unit : HiveObject
 		
 		World.SetLayerRecursive( gameObject, World.layerIndexUnits );
 
-		flat = GameObject.CreatePrimitive( PrimitiveType.Sphere ).transform;
-		World.SetLayerRecursive( flat.gameObject, World.layerIndexMapOnly );
+		flat = new GameObject( "Flat unit" ).transform;
+		flat.localRotation = Quaternion.Euler( 90, 0, -90 );
 		flat.SetParent( transform, false );
-		flat.localPosition = Vector3.up * 2;
-		flat.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
-		var r = flat.GetComponent<MeshRenderer>();
+
+		var sphere = GameObject.CreatePrimitive( PrimitiveType.Sphere );;
+		sphere.gameObject.layer = World.layerIndexMapOnly;
+		sphere.transform.SetParent( flat, false );
+		sphere.transform.localPosition = Vector3.back * 2;
+		sphere.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
+		var r = sphere.GetComponent<MeshRenderer>();
 		r.material = mapMaterial = new Material( World.defaultShader );
 		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapMaterial.renderQueue = 4002;
 
 		sprite = new GameObject( "Unit as sprite" ).AddComponent<SpriteRenderer>();
 		sprite.transform.SetParent( flat, false );
-		sprite.transform.localScale = 0.3f * Vector3.one;
 		sprite.sprite = sprites.GetMediaData( type );
-		sprite.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+		sprite.material.shader = Interface.spriteShader;
 		sprite.sortingOrder = (int)-node.position.x;
 		sprite.gameObject.layer = Constants.World.layerIndex2d;
-		sprite.transform.localRotation = Quaternion.Euler( 90, 90, 0 );
 
 		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );

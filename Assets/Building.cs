@@ -710,12 +710,11 @@ abstract public class Building : HiveObject
 
 		flat = new GameObject( "Flat" ).transform;
 		flat.localRotation = Quaternion.Euler( 90, 90, 0 );
-		flat.localPosition = 3 * Vector3.up;
 		flat.SetParent( transform, false );
 		
 		sprite = new GameObject( "Building sprite" ).AddComponent<SpriteRenderer>();
 		sprite.sprite = sprites.GetMediaData( type );
-		sprite.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+		sprite.material.shader = Interface.spriteShader;
 		sprite.sortingOrder = (int)-node.position.x;
 		sprite.transform.SetParent( flat, false );
 		sprite.gameObject.layer = Constants.World.layerIndex2d;

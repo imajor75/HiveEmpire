@@ -288,7 +288,6 @@ public class Resource : HiveObject
 		flat = new GameObject( "Flat tree" ).transform;
 		flat.SetParent( transform, false );
 		flat.localRotation = Quaternion.Euler( 90, 0, -90 );
-		flat.localPosition = 3 * Vector3.up;
 
 		var mapSprite = mapSprites.GetMediaData( type );
 		if ( mapSprite )
@@ -307,7 +306,7 @@ public class Resource : HiveObject
 			spriteRenderer.transform.SetParent( flat, false );
 			spriteRenderer.sprite = sprite;
 			spriteRenderer.sortingOrder = (int)-node.position.x;
-			spriteRenderer.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+			spriteRenderer.material.shader = Interface.spriteShader;
 			spriteRenderer.gameObject.layer = Constants.World.layerIndex2d;
 		}
 
