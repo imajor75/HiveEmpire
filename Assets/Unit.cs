@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1878,6 +1878,8 @@ public class Unit : HiveObject
 
 	void FindHaulerTask()
 	{
+		Color = Color.green;
+		
 		if ( road.haulers.Count > 1 )	// This check here is a performance optimisation, for roads with a single haluer dont chek anything further
 		{
 			var activeHaulerCount = road.activeHaulerCount;
@@ -1967,8 +1969,6 @@ public class Unit : HiveObject
 			itemsInHands[0].CancelTrip();
 			return;
 		}
-
-		Color = Color.green;
 	}
 
 	/// <summary>
