@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 [SelectionBase]
-public class Resource : HiveObject
+public class Resource : VisibleHiveObject
 {
 	public Node node;
 	public Type type;
@@ -21,8 +21,7 @@ public class Resource : HiveObject
 	public List<Unit> animals = new ();
 	public Unit origin;		// Only valid for a prey, references the bunny
 	public Game.Timer silence = new ();
-	public Transform flat;
-	static public MediaTable<Sprite, Type> mapSprites, sprites;
+	static public MediaTable<Sprite, Type> functionalSprites, sprites;
 
 	override public string textId => base.textId + $" ({type})";
 
@@ -145,7 +144,7 @@ public class Resource : HiveObject
 
 		object[] mapSpriteData  = {
 			"textures/tree_from_above", Type.tree };
-		mapSprites.Fill( mapSpriteData, false );
+		functionalSprites.Fill( mapSpriteData, false );
 
 		sprites.Fill();
 		sprites.fileNamePrefix = "sprites/other/";
@@ -285,32 +284,17 @@ public class Resource : HiveObject
 			}
 		}
 
-		flat = new GameObject( "Flat tree" ).transform;
-		flat.SetParent( transform, false );
-		flat.localRotation = Quaternion.Euler( 90, 0, -90 );
-
-		var mapSprite = mapSprites.GetMediaData( type );
-		if ( mapSprite )
-		{
-			var mapObject = new GameObject( "Tree on map" ).AddComponent<SpriteRenderer>();
-			mapObject.transform.SetParent( flat, false );
-			mapObject.sprite = mapSprite;
-			mapObject.transform.localPosition = new Vector3( 0, 0, -3 );
-			mapObject.gameObject.layer = World.layerIndexMapOnly;
-		}
-
-		var sprite = sprites.GetMediaData( type );
-		if ( sprite )
-		{
-			var spriteRenderer = new GameObject( "Tree sprite" ).AddComponent<SpriteRenderer>();
-			spriteRenderer.transform.SetParent( flat, false );
-			spriteRenderer.sprite = sprite;
-			spriteRenderer.sortingOrder = (int)-node.position.x;
-			spriteRenderer.material.shader = Interface.spriteShader;
-			spriteRenderer.gameObject.layer = Constants.World.layerIndex2d;
-		}
-
 		base.Start();
+	}
+
+	override public Sprite GetVisualSprite( VisualType visualType )
+	{
+		return visualType switch
+		{
+			VisualType.nice2D => sprites.GetMediaData( type ),
+			VisualType.functional => functionalSprites.GetMediaData( type ),
+			_ => null
+		};
 	}
 
 	new public void Update()
