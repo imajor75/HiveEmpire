@@ -1544,7 +1544,7 @@ public class Unit : VisibleHiveObject
 	override public Sprite GetVisualSprite( VisualType visualType )
 	{
 		if ( visualType == VisualType.nice2D )
-			return sprites.GetMediaData( type );
+			return sprites.GetMediaData( look );
 
 		return null;
 	}
