@@ -7,7 +7,7 @@ using UnityEngine.Profiling;
 using System.Reflection;
 
 [SelectionBase]
-public class Unit : HiveObject
+public class Unit : VisibleHiveObject
 {
 	public Type type;
 	public Road road;
@@ -55,12 +55,9 @@ public class Unit : HiveObject
 	public AudioSource soundSource;
 	[JsonIgnore]
 	public MediaTable<AudioClip, Type>.Media walkSound;
-	public Transform flat;
-	public SpriteRenderer sprite;
-	Material mapMaterial;
+	public Material functionalMaterial;
 	GameObject arrowObject;
 	static public Sprite arrowSprite;
-	Material shirtMaterial;
 	public GameObject body;
 	[JsonIgnore]
 	public GameObject[] links = new GameObject[(int)LinkType.total];
@@ -130,10 +127,8 @@ public class Unit : HiveObject
 		set
 		{
 			currentColor = value;
-			if ( shirtMaterial )
-				shirtMaterial.color = value;
-			if ( mapMaterial )
-				mapMaterial.color = value;
+			if ( functionalMaterial )
+				functionalMaterial.color = value;
 		}
 	}
 
@@ -1490,17 +1485,6 @@ public class Unit : HiveObject
 		links[(int)LinkType.haulingBoxSecondary] = World.FindChildRecursive( body.transform, "haulingBoxSecondary" )?.gameObject;
 		links[(int)LinkType.rightHand] = World.FindChildRecursive( body.transform, "Hand_R" )?.gameObject;
 		links[(int)LinkType.leftHand] = World.FindChildRecursive( body.transform, "Hand_L" )?.gameObject;
-		Transform shirt = World.FindChildRecursive( body.transform, "PT_Medieval_Boy_Peasant_01_upper" );
-		if ( shirt )
-		{
-			var skinnedMeshRenderer = shirt.GetComponent<SkinnedMeshRenderer>();
-			if ( skinnedMeshRenderer )
-			{
-				Material[] materials = skinnedMeshRenderer.materials;
-				materials[0] = shirtMaterial = new Material( World.defaultShader );
-				skinnedMeshRenderer.materials = materials;
-			}
-		}
 		animator = body.GetComponent<Animator>();
 		if ( animator )
 		{
@@ -1532,29 +1516,6 @@ public class Unit : HiveObject
 		};
 		soundSource = World.CreateSoundSource( this );
 		
-		World.SetLayerRecursive( gameObject, World.layerIndexUnits );
-
-		flat = new GameObject( "Flat unit" ).transform;
-		flat.localRotation = Quaternion.Euler( 90, 0, -90 );
-		flat.SetParent( transform, false );
-
-		var sphere = GameObject.CreatePrimitive( PrimitiveType.Sphere );;
-		sphere.gameObject.layer = World.layerIndexMapOnly;
-		sphere.transform.SetParent( flat, false );
-		sphere.transform.localPosition = Vector3.back * 2;
-		sphere.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
-		var r = sphere.GetComponent<MeshRenderer>();
-		r.material = mapMaterial = new Material( World.defaultShader );
-		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		mapMaterial.renderQueue = 4002;
-
-		sprite = new GameObject( "Unit as sprite" ).AddComponent<SpriteRenderer>();
-		sprite.transform.SetParent( flat, false );
-		sprite.sprite = sprites.GetMediaData( type );
-		sprite.material.shader = Interface.spriteShader;
-		sprite.sortingOrder = (int)-node.position.x;
-		sprite.gameObject.layer = Constants.World.layerIndex2d;
-
 		arrowObject = new GameObject( "Marker" );
 		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
 		arrowObject.transform.SetParent( transform, false );
@@ -1580,6 +1541,29 @@ public class Unit : HiveObject
 			task.Start();
 	}
 
+	override public Sprite GetVisualSprite( VisualType visualType )
+	{
+		if ( visualType == VisualType.nice2D )
+			return sprites.GetMediaData( type );
+
+		return null;
+	}
+
+	override public GameObject CreateVisual( VisualType visualType )
+	{
+		if ( visualType != VisualType.functional )
+			return base.CreateVisual( visualType );
+
+		var indicator = GameObject.CreatePrimitive( PrimitiveType.Sphere );
+		indicator.transform.localPosition = Vector3.back * 2;
+		indicator.transform.localScale = Vector3.one * ( type == Type.cart ? 0.5f : 0.3f );
+		var r = indicator.GetComponent<MeshRenderer>();
+		functionalMaterial = r.material;
+		functionalMaterial.color = currentColor;
+		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		return indicator;
+	}
+
 	// Distance the unit is taking in a single frame (0.02 sec)
 	public static float SpeedBetween( Node a, Node b )
 	{
@@ -1594,8 +1578,7 @@ public class Unit : HiveObject
 		currentSpeed = speed * SpeedBetween( target, node );
 		walkFrom = node;
 		node = walkTo = target;
-		if ( sprite )
-			sprite.sortingOrder = (int)-node.position.x;
+		OnMove( node );
 	}
 
 	public override void GameLogicUpdate( UpdateStage stage )
