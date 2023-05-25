@@ -1578,7 +1578,6 @@ public class Unit : VisibleHiveObject
 		currentSpeed = speed * SpeedBetween( target, node );
 		walkFrom = node;
 		node = walkTo = target;
-		OnMove( node );
 	}
 
 	public override void GameLogicUpdate( UpdateStage stage )
@@ -1636,11 +1635,11 @@ public class Unit : VisibleHiveObject
 	new public void Update()
 	{
 		UpdateBody();
-		UpdateOnMap();
+		UpdateFlat();
 		base.Update();
 	}
 
-	void UpdateOnMap()
+	void UpdateFlat()
 	{
 		arrowObject.SetActive( false );
 		if ( type == Type.hauler || type == Type.cart )
@@ -1660,9 +1659,9 @@ public class Unit : VisibleHiveObject
 		}
 
 		if ( itemsInHands[0] )
-			itemsInHands[0].flatPosition = transform.position;
+			itemsInHands[0].flat.position = transform.position;
 		if ( itemsInHands[1] )
-			itemsInHands[1].flatPosition = transform.position;
+			itemsInHands[1].flat.position = transform.position;
 	}
 
 	public override void Remove()

@@ -410,7 +410,7 @@ public class Flag : HiveObject
 		t.position = framePos;
 		t.LookAt( transform );
 		t.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)item.type], 0, 0 );
-		item.flatPosition = t.position;
+		item.flat.position = t.position;
 	}
 
 	public override void OnClicked( Interface.MouseButton button, bool show = false )

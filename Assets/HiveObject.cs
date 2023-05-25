@@ -471,16 +471,6 @@ public class VisibleHiveObject : HiveObject
 		base.Start();
 	}
 
-	public void OnMove( Node newLocation )
-	{
-		foreach ( Transform child in flat )
-		{
-			SpriteRenderer renderer;
-			if ( child.gameObject.TryGetComponent<SpriteRenderer>( out renderer ) )
-				renderer.sortingOrder = (int)-newLocation.x;
-		}
-	}
-
 	virtual public Sprite GetVisualSprite( VisualType visualType ) => null;
 
 	virtual public GameObject CreateVisual( VisualType visualType )

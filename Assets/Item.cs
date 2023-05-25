@@ -17,7 +17,7 @@ using UnityEngine;
 // 2. In Flag.items (if the item is sitting at a flag waiting for a hauler)
 // 3. In Building.itemsOnTheWay (if the item has a destination)
 [SelectionBase]
-public class Item : HiveObject
+public class Item : VisibleHiveObject
 {
 	// The item is either at a flag (the flag member is not null) or in the hands of a hauler (the hauler member is not null and hauler.itemInHands references this object)
 	// or special case: the item is a resource just created, and the unit (as a tinkerer) is about to pick it up
@@ -77,9 +77,6 @@ public class Item : HiveObject
 	}
 
 	public GameObject body;
-	public Transform flat;
-	public SpriteRenderer sprite, mapIcon;
-	public Vector3 flatPosition { set { if ( flat ) flat.position = value + Vector3.up * 6; sprite.sortingOrder = (int)-value.x + 1; } }
 	override public UpdateStage updateMode => UpdateStage.turtle;
 
 	public Transform Link( Unit hauler, Unit.LinkType linkType )
@@ -258,24 +255,6 @@ public class Item : HiveObject
 		body = Instantiate( looks.GetMediaData( type ) );
 		body.layer = World.layerIndexItems;
 
-		flat = new GameObject( "Item in flat mode").transform;
-		flat.SetParent( transform, false );
-		flat.localPosition = Vector3.up * 6;
-		flat.rotation = Quaternion.Euler( 90, 90, 0 );
-
-		mapIcon = new GameObject( "Item map icon" ).AddComponent<SpriteRenderer>();
-		mapIcon.material.renderQueue = 4003;
-		mapIcon.sprite = sprites.GetMediaData( type );
-		mapIcon.transform.SetParent( flat, false );
-		mapIcon.gameObject.layer = World.layerIndexMapOnly;
-
-		sprite = new GameObject( "Item sprite" ).AddComponent<SpriteRenderer>();
-		sprite.transform.SetParent( flat, false );
-		sprite.material.shader = Interface.spriteShader;
-		sprite.sortingOrder = (int)-location.position.x;
-		sprite.sprite = sprites.GetMediaData( type );
-		sprite.gameObject.layer = Constants.World.layerIndex2d;
-
 		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )
 			Constants.Item.bottomHeights[(int)type] = body.GetComponent<MeshRenderer>().bounds.min.y;
 		body.transform.SetParent( transform, false );
@@ -283,6 +262,8 @@ public class Item : HiveObject
 		name = type.ToString();
 		base.Start();
 	}
+
+	override public Sprite GetVisualSprite( VisualType visualType ) => sprites.GetMediaData( type );
 
 	public enum DistanceType
 	{
@@ -328,13 +309,6 @@ public class Item : HiveObject
 			distance += path.roadPath[segment++].length;
 
 		return distance;
-	}
-
-	new void Update()
-	{
-		if ( Map.MapImage.instance != null )	 // TODO this is a hack
-			mapIcon.transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
-		base.Update();
 	}
 
 	public override void GameLogicUpdate( UpdateStage stage )
