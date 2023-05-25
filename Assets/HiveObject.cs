@@ -272,11 +272,8 @@ public abstract class HiveObject : HiveCommon, Serializer.IReferenceUser
 		updateIndices[0] = updateIndices[1] = updateIndices[2] = -1;
 	}
 
-	override public string ToString()
-	{
-		return name;
-	}
-
+	override public string ToString() => name;
+	
 	public void ScheduleUpdates()
 	{
 		if ( !world ) return;
@@ -323,7 +320,7 @@ public abstract class HiveObject : HiveCommon, Serializer.IReferenceUser
 		}
 	}
 
-	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, sucs as when woodcutters decide which tree to cut. 
+	// This function is similar to FixedUpdate, but it contains code which is sensitive to execute order, such as when woodcutters decide which tree to cut. 
 	// So when this function is called by World.FixedUpdate it is always called in the same order.
 	public virtual void GameLogicUpdate( UpdateStage stage ) {}
 
@@ -440,4 +437,56 @@ public abstract class HiveObject : HiveCommon, Serializer.IReferenceUser
 			crossingInTheWay
 		}
 	}
+}
+
+public class VisibleHiveObject : HiveObject
+{
+	public Transform flat;
+	public GameObject nice2D, functional;
+
+
+	public enum VisualType
+	{
+		nice2D,
+		functional
+	}
+
+
+	new public void Start()
+	{
+		flat = new GameObject( "Flat" ).transform;
+		flat.localRotation = Quaternion.Euler( 90, 90, 0 );
+		flat.SetParent( transform, false );
+		
+		foreach ( var type in new []{ VisualType.nice2D, VisualType.functional } )
+		{
+			var visual = CreateVisual( type );
+			if ( visual )
+			{
+				visual.transform.SetParent( flat, false );
+				visual.layer = type switch {
+					VisualType.nice2D => Constants.World.layerIndex2d,
+					VisualType.functional or _ => World.layerIndexMapOnly
+				};
+			}
+		}
+
+		base.Start();
+	}
+
+	virtual public Sprite GetVisualSprite( VisualType visualType ) => null;
+
+	virtual public GameObject CreateVisual( VisualType visualType )
+	{
+		var sprite = GetVisualSprite( visualType );
+		if ( !sprite )
+			return null;
+
+		var renderer = new GameObject( "Sprite" ).AddComponent<SpriteRenderer>();
+		renderer.sprite = sprite;
+		renderer.material.shader = Interface.spriteShader;
+		renderer.sortingOrder = (int)-location.position.x;
+		return renderer.gameObject;
+	}
+
 }

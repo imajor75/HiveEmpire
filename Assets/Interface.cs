@@ -2422,6 +2422,8 @@ public class Interface : HiveObject
 		public Material barMaterial, bgMaterial;
 		static int progressShaderID, colorShaderID;
 		static Mesh plane;
+		public List<SpriteRenderer> content = new ();
+		public bool constructionMode;
 
 		public static BuildingMapWidget Create( Building building )
 		{
@@ -2466,9 +2468,19 @@ public class Interface : HiveObject
 			c.convex = true;
 			c.sharedMesh = plane;
 
+			building.assert.IsNotNull( building.flat );
 			transform.SetParent( building.flat, false );
 			transform.localPosition = new Vector3( 0, 0, -3 );
 			transform.localScale = new Vector3( 0.7f, 0.5f, 1 );
+
+			SetupContent();
+		}
+
+		void SetupContent()
+		{
+			foreach ( var r in content )
+				HiveCommon.Eradicate( r.gameObject );
+			content.Clear();
 
 			if ( !building.construction.done )
 				SetupForConstruction( building.construction );
@@ -2493,6 +2505,7 @@ public class Interface : HiveObject
 			renderer.material = new Material( spriteShader );
 			renderer.material.SetFloat( progressShaderID, 2 );
 			renderer.material.renderQueue = 4004;
+			content.Add( renderer );
 			return renderer;
 		}
 
@@ -2586,10 +2599,16 @@ public class Interface : HiveObject
 			bar.transform.localScale = new Vector3( 1.5f, 1.5f, 1 );
 			barMaterial = bar.material;
 			barMaterial.color = Color.black;
+			constructionMode = true;
 		}
 
 		void Update()
 		{
+			if ( constructionMode && building.construction.done )
+			{
+				constructionMode = false;
+				SetupContent();
+			}
 			if ( Map.MapImage.instance == null )
 				return;
 			transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );

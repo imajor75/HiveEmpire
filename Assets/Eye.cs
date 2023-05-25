@@ -870,7 +870,7 @@ public class Eye : HiveObject
 							if ( eye.flatMode )
 							{
 								var shiftUp = Matrix4x4.Translate( new Vector3( 0, 10, 0 ) );
-								DrawMeshRepeatedly( building.mapIndicator?.GetComponent<MeshCollider>()?.sharedMesh, shiftUp * building.mapIndicator.transform.localToWorldMatrix, markerMaterial );
+								DrawMeshRepeatedly( building.functional?.GetComponent<MeshCollider>()?.sharedMesh, shiftUp * building.functional.transform.localToWorldMatrix, markerMaterial ); // TODO How does this work in sprite mode?
 							}
 							else
 								DrawMeshRecursively( building.body );

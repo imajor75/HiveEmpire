@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEngine;
 
 [SelectionBase]
-abstract public class Building : HiveObject
+abstract public class Building : VisibleHiveObject
 {
 	virtual public string title
 	{
@@ -44,10 +44,6 @@ abstract public class Building : HiveObject
 	public AudioSource soundSource;
 	[JsonIgnore]
 	public List<MeshRenderer> renderers;
-	[JsonIgnore]
-	public Interface.BuildingMapWidget mapIndicator;
-	public Transform flat;
-	public SpriteRenderer sprite;
 	override public UpdateStage updateMode => UpdateStage.realtime | UpdateStage.turtle;
 
 	[JsonIgnore]
@@ -428,8 +424,6 @@ abstract public class Building : HiveObject
 				return;
 
 			done = true;
-			Eradicate( boss.mapIndicator?.gameObject );
-			boss.mapIndicator = null;
 			builder.ScheduleWalkToNeighbour( boss.flag.node );
 			builder.type = Unit.Type.unemployed;
 			builder.RegisterAsReturning();
@@ -708,17 +702,6 @@ abstract public class Building : HiveObject
 		highlightArrow.transform.SetParent( transform );
 		highlightArrow.transform.localScale = Vector3.one * 3f;
 
-		flat = new GameObject( "Flat" ).transform;
-		flat.localRotation = Quaternion.Euler( 90, 90, 0 );
-		flat.SetParent( transform, false );
-		
-		sprite = new GameObject( "Building sprite" ).AddComponent<SpriteRenderer>();
-		sprite.sprite = sprites.GetMediaData( type );
-		sprite.material.shader = Interface.spriteShader;
-		sprite.sortingOrder = (int)-node.position.x;
-		sprite.transform.SetParent( flat, false );
-		sprite.gameObject.layer = Constants.World.layerIndex2d;
-
 		base.Start();
 	}
 
@@ -732,9 +715,6 @@ abstract public class Building : HiveObject
 		if ( destroyed )
 			return;
 
-		if ( mapIndicator == null )
-			mapIndicator = Interface.BuildingMapWidget.Create( this );
-			
 		UpdateLook();
 		base.Update();
 	}
@@ -948,6 +928,23 @@ abstract public class Building : HiveObject
 			team.buildingCounts[(int)type]++;
 		changedSide = true;
 	}
+
+	override public Sprite GetVisualSprite( VisualType visualType )
+	{
+		if ( visualType == VisualType.nice2D )
+			return sprites.GetMediaData( type );
+
+		return null;
+	}
+
+	override public GameObject CreateVisual( VisualType visualType )
+	{
+		if ( visualType != VisualType.functional )
+			return base.CreateVisual( visualType );
+
+		return Interface.BuildingMapWidget.Create( this ).gameObject;
+	}
+
 
 	public override Node location { get { return node; } }
 
