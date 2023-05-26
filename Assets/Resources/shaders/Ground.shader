@@ -3,7 +3,10 @@
     Properties
     {
         _Color ("Color", Color) = (1,1,1,1)
-		_NoiseTex("Noise", 2D) = "white" {}
+		_GrassTex("Grass", 2D) = "white" {}
+		_DuffTex("Duff", 2D) = "white" {}
+		_RockTex("Rock", 2D) = "white" {}
+		_SnowTex("Snow", 2D) = "white" {}
 		_GridTex("Grid", 2D) = "white" {}
 		_HeightStripsTexture("Height Strips Texture", 2D) = "white" {}
 		_HeightStrips ( "Height Strips", Int) = 0
@@ -29,7 +32,10 @@
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
 
-		sampler2D _NoiseTex;
+		sampler2D _GrassTex;
+		sampler2D _DuffTex;
+		sampler2D _RockTex;
+		sampler2D _SnowTex;
 		sampler2D _GridTex;
 		sampler2D _GridMaskTex;
 		sampler2D _HeightStripsTexture;
@@ -73,12 +79,12 @@
 
         void surf (Input IN, inout SurfaceOutput o)
         {
-			const float noiseStrength = 0.3;
-			fixed noise = tex2D(_NoiseTex, IN.worldPos.xz / 5);
-			noise = ( noise * noiseStrength ) + ( 1 - noiseStrength / 2 );
+			fixed3 grass = tex2D(_GrassTex, IN.worldPos.xz / 5);
+			fixed3 duff = tex2D(_DuffTex, IN.worldPos.xz / 5);
+			fixed3 rock = tex2D(_RockTex, IN.worldPos.xz / 5);
+			fixed3 snow = tex2D(_SnowTex, IN.worldPos.xz / 5);
 			float4 w = IN.weights;
-			o.Albedo = fixed3(1,1,1) * w.b + fixed3(0.5, 0.5, 0.45) * w.g + fixed3(0.26, 0.28, 0.17) * w.r + fixed3(0.35, 0.25, 0.15) * w.a;
-			o.Albedo *= noise;
+			o.Albedo = snow * w.b + rock * w.g + grass * w.r + duff * w.a;
 			if ( _HeightStrips )
 			{
 				float height = (IN.worldPos.y - _HeightMin) / (_HeightMax - _HeightMin);
