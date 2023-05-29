@@ -79,7 +79,7 @@
 
         void surf (Input IN, inout SurfaceOutput o)
         {
-			fixed3 grass = tex2D(_GrassTex, IN.worldPos.xz / 10);
+			fixed3 grass = tex2D(_GrassTex, IN.worldPos.xz / 3);
 			fixed3 duff = tex2D(_DuffTex, IN.worldPos.xz);
 			fixed3 rock = tex2D(_RockTex, IN.worldPos.xz);
 			fixed3 snow = tex2D(_SnowTex, IN.worldPos.xz);
