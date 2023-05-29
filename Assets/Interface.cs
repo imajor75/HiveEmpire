@@ -60,6 +60,9 @@ public class Interface : HiveObject
 	static public System.Random rnd = new ();
 	public static Shader spriteShader;
 
+	public Texture2D textureToHomogenize;
+	public int textureToHomogenizeLevel = 7;
+
 	public Image buildButton, worldProgressButton;
 
 	static public Hotkey headquartersHotkey = new Hotkey( "Show headquarters", KeyCode.Home );
@@ -946,6 +949,29 @@ public class Interface : HiveObject
 		{
 			FlagPanel.Create().Open( openFlagPanel.flag );
 			openFlagPanel = null;
+		}
+
+		if ( textureToHomogenize )
+		{
+			int width = textureToHomogenize.width, height = textureToHomogenize.height;
+
+			var result = new Texture2D( width, height );
+
+			Color average = textureToHomogenize.GetPixel( 0, 0, textureToHomogenize.mipmapCount - 1 );
+			for ( int y = 0; y < height; y++ )
+			{
+				for ( int x = 0; x < width; x++ )
+				{
+					Color original = textureToHomogenize.GetPixel( x, y );
+					Color mipMap = textureToHomogenize.GetPixelBilinear( ( x + 0.5f ) / width, ( y + 0.5f ) / height, textureToHomogenizeLevel );
+					Color modified = original - mipMap + average;
+					result.SetPixel( x, y, modified );
+				}
+			}
+			result.Apply();
+			System.IO.File.WriteAllBytes( Application.persistentDataPath + "/homogenized.png", result.EncodeToPNG() );
+
+			textureToHomogenize = null;
 		}
 
 		base.Update();

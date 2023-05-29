@@ -1184,7 +1184,7 @@ public class World : HiveObject
 		foreach ( var store in updateHiveObjects )
 			store.Validate();
 
-		assert.AreEqual( workshopTypeUsage.Count, (int)Workshop.Type.total );
+		assert.AreEqual( workshopTypeUsage.Count, (int)Workshop.Type.total, "workshopTypeUsage has wrong item count" );
 
 		if ( !chain )
 			return;
