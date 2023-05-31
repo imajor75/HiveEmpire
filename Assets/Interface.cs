@@ -957,19 +957,26 @@ public class Interface : HiveObject
 
 			var result = new Texture2D( width, height );
 
+			void ToPNG( Texture2D texture, string name )
+			{
+				texture.Apply();
+				System.IO.File.WriteAllBytes( Application.persistentDataPath + $"/{name}.png", texture.EncodeToPNG() );
+			}
+
 			Color average = textureToHomogenize.GetPixel( 0, 0, textureToHomogenize.mipmapCount - 1 );
+
+			int block = 1 << textureToHomogenizeLevel;
 			for ( int y = 0; y < height; y++ )
 			{
 				for ( int x = 0; x < width; x++ )
 				{
 					Color original = textureToHomogenize.GetPixel( x, y );
-					Color mipMap = textureToHomogenize.GetPixelBilinear( ( x + 0.5f ) / width, ( y + 0.5f ) / height, textureToHomogenizeLevel );
+					Color mipMap = textureToHomogenize.GetPixelBilinear( ( x - block / 2 ) / ( width - 1f ), ( y - block / 2 ) / ( height - 1f ), textureToHomogenizeLevel );
 					Color modified = original - mipMap + average;
 					result.SetPixel( x, y, modified );
 				}
 			}
-			result.Apply();
-			System.IO.File.WriteAllBytes( Application.persistentDataPath + "/homogenized.png", result.EncodeToPNG() );
+			ToPNG( result, "homogeneous" );
 
 			textureToHomogenize = null;
 		}
