@@ -44,7 +44,10 @@ public class HiveCommon : MonoBehaviour
 
 	public static void Eradicate( UnityEngine.Object target )
 	{
-		Destroy( target );
+		if ( target is Transform transform )
+			Destroy( transform.gameObject );
+		else
+			Destroy( target );
 	}
 
 	public static void LogStackTrace( string prefix = "" )
@@ -442,6 +445,8 @@ public abstract class HiveObject : HiveCommon, Serializer.IReferenceUser
 public class VisibleHiveObject : HiveObject
 {
 	public Transform flat;
+
+	public Vector3 flatPosition { set { if ( flat ) flat.position = value; } }
 
 	public enum VisualType
 	{

@@ -508,7 +508,7 @@ public class Item : VisibleHiveObject
 		destination.ItemArrived( this );
 
 		team.UnregisterItem( this );
-		Eradicate( flat.gameObject );
+		Eradicate( flat );
 		base.Remove();
 	}
 
