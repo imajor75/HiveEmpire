@@ -5624,6 +5624,8 @@ if ( cart )
 			if ( base.Open( null, 0, 0, 250, 240 ) )
 				return;
 
+			Image( Item.sprites.GetMediaData( item.type ) ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth ).color = new Color( 1, 1, 1, 0.7f );
+
 			name = "Item panel";
 			Text( item.type.ToString() ).Pin( borderWidth, -15, 100 );
 			stats = Text().Pin( borderWidth, -35, 250 );
