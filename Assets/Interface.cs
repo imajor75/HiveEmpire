@@ -307,6 +307,21 @@ public class Interface : HiveObject
 		outputPotentials
 	}
 
+	public class AreaMask : MonoBehaviour
+	{
+		public UnityEngine.Object boss;
+		public List<SpriteRenderer> elements = new ();
+		void Update()
+		{
+			if ( !boss )
+			{
+				foreach ( var sprite in elements )
+					Eradicate( sprite.gameObject );
+				Eradicate( gameObject );
+			}
+		}
+	}
+
 	public Interface()
 	{
 		root = this;
@@ -315,6 +330,28 @@ public class Interface : HiveObject
 	public static void Display( string text, HiveObject location = null, int closeAfter = 5 )
 	{
 		MessagePanel.Create( text, location, closeAfter );
+	}
+
+	public void ShowAreaMask( List<Node> area, Color color, UnityEngine.Object initiator )
+	{
+		var mask = new GameObject( "Area mask " ).AddComponent<AreaMask>();
+		mask.boss = initiator;
+		mask.transform.SetParent( transform, false );
+		foreach ( var node in area )
+		{
+			var nodeMask = new GameObject( "Area mask" ).AddComponent<SpriteRenderer>();
+			mask.elements.Add( nodeMask );
+
+			nodeMask.transform.SetParent( node.transform, false );
+			nodeMask.transform.rotation = Quaternion.Euler( 90, 0, 90 );
+			nodeMask.transform.localScale = new Vector3( 0.55f, 0.4f, 1 );
+			nodeMask.gameObject.layer = Constants.World.layerIndex2d;
+
+			nodeMask.material.shader = Interface.spriteShader;
+			nodeMask.sprite = Resources.Load<Sprite>( "sprites/other/hexagon" );
+			nodeMask.material.color = color;
+			nodeMask.sortingOrder = -1000;
+		}
 	}
 
 	static public string GetKeyName( KeyCode k )
@@ -2895,6 +2932,14 @@ public class Interface : HiveObject
 			}
 			
 			base.Update();
+			if ( Input.GetKeyDown( KeyCode.F12 ) )
+			{
+				List<Node> area = new ();
+				foreach ( var offset in workshop.foundation )
+					area.Add( workshop.node + offset );
+				root.ShowAreaMask( area, Color.red, this );
+			}
+
 
 			outputs?.UpdateIcons( workshop.output, 0 );
 
