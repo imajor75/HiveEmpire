@@ -2739,7 +2739,9 @@ public class Interface : HiveObject
 			if ( base.Open( workshop, 250, 160 ) )
 				return;
 
-			Image( Building.sprites.GetMediaData( workshop.type ) ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth ).color = new Color( 1, 1, 1, 0.7f );
+			var backGround = Image( Building.sprites.GetMediaData( workshop.type ) ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
+			backGround.color = new Color( 1, 1, 1, 0.7f );
+			backGround.preserveAspect = true;
 
 			name = "Workshop panel";
 			this.workshop = workshop;
@@ -5624,7 +5626,9 @@ if ( cart )
 			if ( base.Open( null, 0, 0, 250, 240 ) )
 				return;
 
-			Image( Item.sprites.GetMediaData( item.type ) ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth ).color = new Color( 1, 1, 1, 0.7f );
+			var backGround = Image( Item.sprites.GetMediaData( item.type ) ).Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
+			backGround.color = new Color( 1, 1, 1, 0.7f );
+			backGround.preserveAspect = true;
 
 			name = "Item panel";
 			Text( item.type.ToString() ).Pin( borderWidth, -15, 100 );
