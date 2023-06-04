@@ -975,6 +975,8 @@ public class Interface : HiveObject
             purgeOperationHandlerCRCTable = false;
         }
 
+		if ( !float.IsFinite( FPS ) )
+			FPS = 0;
 		FPS = 0.9f * FPS + 0.1f * ( 1 / Time.unscaledDeltaTime );
 		FPSDisplay.text = FPS.ToString( "F1" ) + " FPS";
 		FPSDisplay.enabled = settings.showFPS;
