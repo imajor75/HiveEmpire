@@ -946,7 +946,20 @@ abstract public class Building : VisibleHiveObject
 	}
 
 
-	public override Node location { get { return node; } }
+	public override Node location => node;
+	public override Vector3 position
+	{
+		get
+		{
+			Vector3 result = new ();
+			foreach ( var offset in foundation )
+				result += node.Add( offset ).position;
+			result /= foundation.Count;
+
+			return result;
+		}
+	}
+
 
 	public override void Validate( bool chain )
 	{

@@ -334,7 +334,8 @@ public abstract class HiveObject : HiveCommon, Serializer.IReferenceUser
 		Eradicate( gameObject );
 	}
 
-	public virtual Node location { get { return null; } }
+	public virtual Node location => null;
+	public virtual Vector3 position => location.position;
 
 	public virtual void Reset()
 	{ 
@@ -459,6 +460,7 @@ public class VisibleHiveObject : HiveObject
 		flat = new GameObject( "Flat" ).transform;
 		flat.localRotation = Quaternion.Euler( 90, 90, 0 );
 		flat.SetParent( transform, false );
+		flat.position = position;
 		
 		foreach ( var type in new []{ VisualType.nice2D, VisualType.functional } )
 		{

@@ -257,7 +257,7 @@ public class Node : HiveObject
 		return position;
 	}
 
-	public Vector3 position { get { return GetPosition( x, y );	} }
+	public override Vector3 position => GetPosition( x, y );
 	public Vector3 positionInViewport { get { return GetPositionRelativeTo( world.eye.position ); } }
 
 	public static Node FromPosition( Vector3 position, Ground ground )

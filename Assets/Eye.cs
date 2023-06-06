@@ -136,13 +136,7 @@ public class Eye : HiveObject
 		public float x, y, direction;		
 	}
 
-	public Vector3 position
-	{
-		get
-		{
-			return new Vector3( x, 0, y );
-		}
-	}
+	public override Vector3 position => new Vector3( x, 0, y );
 
 	public Vector3 absolutePosition
 	{
