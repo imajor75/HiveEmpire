@@ -30,7 +30,7 @@ public class Eye : HiveObject
 	PostProcessLayer ppl;
 	public Node target;
 	public float targetApproachSpeed;
-	public CameraGrid cameraGrid;
+	public CameraGrid cameraGrid, spriteCamera;
 	[JsonIgnore]
 	public Highlight highlight;
 
@@ -45,13 +45,17 @@ public class Eye : HiveObject
 		cameraGrid.orthographic = flatMode;
 		if ( flatMode )
 		{
-			cameraGrid.cullingMask = (1 << World.layerIndexRoads) + (1 << Constants.World.layerIndex2d);
+			cameraGrid.cullingMask = (1 << World.layerIndexRoads);
 			if ( Interface.Viewport.showGround )
 				cameraGrid.cullingMask |= (1 << World.layerIndexWater) + (1 << World.layerIndexGround);
 			StopAutoChange();
+			spriteCamera.enabled = true;
 		}
 		else
+		{
 			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly) - (1 << Constants.World.layerIndex2d);
+			spriteCamera.enabled = false;
+		}
 		RenderSettings.fog = !flatMode;
 	}
 
@@ -91,14 +95,21 @@ public class Eye : HiveObject
 		transform.SetParent( world.transform, false );
 		cameraGrid = CameraGrid.Create();
 		cameraGrid.Setup( this );
-		cameraGrid.CreateCameras();
-		cameraGrid.enabled = world.main;
+
+		spriteCamera = CameraGrid.Create();
+		spriteCamera.name = "Camera grid for sprites";
+		spriteCamera.Setup( this, 100 );
+		spriteCamera.orthographic = true;
+		spriteCamera.cullingMask = 1 << Constants.World.layerIndex2d;
+		spriteCamera.enabled = cameraGrid.enabled = world.main;
+
 		base.Setup( world );
 	}
 
 	override public void Remove()
 	{
 		Eradicate( cameraGrid.gameObject );
+		Eradicate( spriteCamera.gameObject );
 		base.Remove();
 	}
 
@@ -126,7 +137,21 @@ public class Eye : HiveObject
 		if ( world.main )
 			gameObject.AddComponent<AudioListener>();
 
-		cameraGrid.cullingMask = ~(1 << World.layerIndexMapOnly) + (1 << Constants.World.layerIndex2d);
+		cameraGrid.CreateCameras();
+		cameraGrid.cullingMask = ~((1 << World.layerIndexMapOnly) + (1 << Constants.World.layerIndex2d));
+
+		if ( !spriteCamera )
+		{
+			spriteCamera = CameraGrid.Create();
+			spriteCamera.Setup( this, 100 );
+			spriteCamera.enabled = flatMode;
+		}
+		spriteCamera.CreateCameras();
+		spriteCamera.name = "Camera grid for sprites";
+		spriteCamera.orthographic = true;
+		spriteCamera.cullingMask = 1 << Constants.World.layerIndex2d;
+		spriteCamera.enabled = flatMode;
+
 		base.Start();
 	}
 
@@ -351,6 +376,8 @@ public class Eye : HiveObject
 			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( 1, 0, 0/*(float)Math.Sin(direction), 0, (float)Math.Cos(direction)*/ ) );
 			if ( cameraGrid )
 				cameraGrid.orthographicSize = altitude;
+			if ( spriteCamera )
+				spriteCamera.orthographicSize = altitude;
 			return;
 		}
 		float horizontal = (float)Math.Sin(altitudeDirection) * altitude;
@@ -444,20 +471,26 @@ public class Eye : HiveObject
 		public World world => eye?.world ?? game;
 		[JsonIgnore]
 		public int cullingMask = ~( 1 << World.layerIndexMapOnly );
+		public float depth;
 
 		public static CameraGrid Create()
 		{
-			return new GameObject( "Camera Grid" ).AddComponent<CameraGrid>();
+			return new GameObject( "Camera grid" ).AddComponent<CameraGrid>();
 		}
 
-		public void Setup( Eye eye )
+		public void Setup( Eye eye, float depth = 0 )
 		{
 			this.eye = eye;
+			this.depth = depth;
 			transform.SetParent( eye.transform, false );
+			CreateCameras();
 		}
 
 		public CameraGrid CreateCameras( float depth = 0 )
 		{
+			if ( cameras.Count != 0 )
+				return this;
+
 			for ( int y = -1; y <= 1; y++ )
 				for ( int x = -1; x <= 1; x++ )
 					cameras.Add( new GameObject( $"Camera {x}:{y}" ).AddComponent<Camera>() );
@@ -533,6 +566,7 @@ public class Eye : HiveObject
 				if ( x != 0 || y != 0 )
 					cameras[i].enabled = sideCamerasAllowed;
 				float depth = -Math.Abs( newPosition.z ) - Math.Abs( newPosition.x - newPosition.z / 2 );
+				depth += this.depth;
 				if ( i == 4 || sideCamerasAllowed )
 				{
 					if ( depth < closest )
@@ -579,7 +613,8 @@ public class Eye : HiveObject
 				}
 				if ( camera.depth == closest && first == null )
 				{
-					camera.clearFlags = CameraClearFlags.Skybox;
+					if ( depth == 0 )
+						camera.clearFlags = CameraClearFlags.Skybox;
 					first = camera;
 				}
 			}
