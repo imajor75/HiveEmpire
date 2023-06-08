@@ -141,6 +141,18 @@ public class Node : HiveObject
 		decorations.Fill( decorationData, false );
 
 		object[] sprites = {
+			"sprites/decorations/rockInGrass00", Type.grass,
+			"sprites/decorations/rockInGrass01", Type.grass,
+			"sprites/decorations/rockInGrass02", Type.grass,
+			"sprites/decorations/poolInGrass", Type.grass,
+			"sprites/decorations/ruinInGrass", Type.grass,
+			"sprites/decorations/bush00", Type.grass,
+			"sprites/decorations/bush01", Type.grass,
+			"sprites/decorations/woodInGrass", Type.grass,
+			"sprites/decorations/stumpInGrass", Type.grass,
+			"sprites/decorations/holeInGrass", Type.grass,
+			"sprites/decorations/weedInGrass00", Type.grass,
+			"sprites/decorations/weedInGrass01", Type.grass,
 			"sprites/decorations/mushroom00", Type.forest,
 			"sprites/decorations/mushroom01", Type.forest,
 			"sprites/decorations/trunkOnDuff", Type.forest,
@@ -205,6 +217,7 @@ public class Node : HiveObject
 				Sprite decorationSprite = decorationSprites.GetMediaData( type, decorationType );
 				if ( decorationSprite )
 				{
+					Log( $"tussz {x}, {y} {decorationType} {decorationSprite}" );
 					var sr = new GameObject( "Decoration sprite" ).AddComponent<SpriteRenderer>();
 					sr.transform.SetParent( d, false );
 					sr.transform.localRotation = Quaternion.Euler( 90, 0, -90 );
