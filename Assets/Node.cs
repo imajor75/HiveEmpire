@@ -141,6 +141,15 @@ public class Node : HiveObject
 		decorations.Fill( decorationData, false );
 
 		object[] sprites = {
+			"sprites/decorations/mushroom00", Type.forest,
+			"sprites/decorations/mushroom01", Type.forest,
+			"sprites/decorations/trunkOnDuff", Type.forest,
+			"sprites/decorations/bushOnDuff00", Type.forest,
+			"sprites/decorations/bushOnDuff01", Type.forest,
+			"sprites/decorations/bushOnDuff02", Type.forest,
+			"sprites/decorations/branchesOnDuff", Type.forest,
+			"sprites/decorations/logOnDuff", Type.forest,
+			"sprites/decorations/poolOnDuff", Type.forest,
 			"sprites/decorations/rock00", Type.hill,
 			"sprites/decorations/rock01", Type.hill,
 			"sprites/decorations/rock02", Type.hill,
