@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -141,6 +141,13 @@ public class Node : HiveObject
 		decorations.Fill( decorationData, false );
 
 		object[] sprites = {
+			"sprites/decorations/rock00", Type.hill,
+			"sprites/decorations/rock01", Type.hill,
+			"sprites/decorations/rock02", Type.hill,
+			"sprites/decorations/skullOnRock", Type.hill,
+			"sprites/decorations/flowerOnRock00", Type.hill,
+			"sprites/decorations/flowerOnRock01", Type.hill,
+			"sprites/decorations/trunkOnRock", Type.hill
 		};
 		decorationSprites.Fill( sprites, false );
 	}
