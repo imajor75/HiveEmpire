@@ -465,6 +465,10 @@ public class Eye : HiveObject
 		[JsonIgnore]
 		public List<Camera> cameras = new ();
 		public Camera center { get { return cameras[4]; } }
+		public Camera top { get { return cameras[1]; } }
+		public Camera bottom { get { return cameras[7]; } }
+		public Camera left { get { return cameras[3]; } }
+		public Camera right { get { return cameras[5]; } }
 		public Camera first;
 		public Camera last;
 		public new Eye eye;
@@ -658,14 +662,13 @@ public class Eye : HiveObject
 		public bool needConstantRefresh;
 		public Ground.Area area;
 		public Mesh volume;
-		Node volumeCenter;
-		int volumeRadius;
+		public GameObject volumeObject;
 		public RenderTexture mask, blur, smoothMask;
 		public static Material markerMaterial, mainMaterial, volumeMaterial;
 		public Smoother colorSmoother = new (), maskSmoother = new ();
 		public static int maskValueOffsetID;
-		public CommandBuffer maskCreator;
-		public int maskCreatorCRC;
+		public CommandBuffer maskBeginner, maskRenderer;
+		public int maskRendererCRC;
 		public GameObject owner;
 		public float strength, strengthChange;
 		static int strengthID;
@@ -787,13 +790,22 @@ public class Eye : HiveObject
 
 		public void ApplyHighlight( RenderTexture source, RenderTexture target )
 		{
-			if ( maskCreator == null || mask.width != Screen.width || mask.height != Screen.height )
+			if ( maskRenderer == null || mask.width != Screen.width || mask.height != Screen.height )
 				Graphics.Blit( source, target );
 			else
 			{
-				GL.modelview = eye.cameraGrid.center.worldToCameraMatrix;
-				GL.LoadProjectionMatrix( eye.cameraGrid.center.projectionMatrix );
-				Graphics.ExecuteCommandBuffer( maskCreator );
+				void RenderMask( Camera camera )
+				{
+					GL.modelview = camera.worldToCameraMatrix;
+					GL.LoadProjectionMatrix( camera.projectionMatrix );
+					Graphics.ExecuteCommandBuffer( maskRenderer );
+				}
+				Graphics.ExecuteCommandBuffer( maskBeginner );
+				RenderMask( eye.cameraGrid.center );
+				RenderMask( eye.cameraGrid.top );
+				RenderMask( eye.cameraGrid.bottom );
+				RenderMask( eye.cameraGrid.left );
+				RenderMask( eye.cameraGrid.right );
 				colorSmoother.Blur( source, blur );
 				maskSmoother.Blur( mask, smoothMask );
 				Graphics.Blit( source, target, mainMaterial );
@@ -819,7 +831,9 @@ public class Eye : HiveObject
 				{
 					Eradicate( mask );
 					mask = null;
-					maskCreator = null;
+					maskBeginner = null;
+					maskRenderer = null;
+
 				}
 			}
 			else
@@ -835,7 +849,8 @@ public class Eye : HiveObject
 					mainMaterial.SetTexture( "_Mask", mask );
 					mainMaterial.SetTexture( "_SmoothMask", smoothMask );
 					maskSmoother.Setup( Screen.width, Screen.height, Constants.Eye.highlightEffectGlowSize, RenderTextureFormat.RFloat );
-					maskCreator = null;
+					maskBeginner = null;
+					maskRenderer = null;
 				}
 
 				if ( blur == null || blur.width != Screen.width || blur.height != Screen.height )
@@ -848,34 +863,20 @@ public class Eye : HiveObject
 					colorSmoother.Setup( Screen.width, Screen.height, Constants.Eye.highlightEffectLevels );
 				}
 
-				if ( maskCreator == null || maskCreatorCRC != CRC || needConstantRefresh )
+				if ( maskRenderer == null || maskRendererCRC != CRC || needConstantRefresh )
 				{
 					var maskId = new RenderTargetIdentifier( mask );
 					var currentId = new RenderTargetIdentifier( BuiltinRenderTextureType.CurrentActive );
 
-					maskCreator = new ();
-					maskCreator.name = "Highlight mask creation";
+					maskBeginner = new ();
+					maskBeginner.name = "Highlight mask creation";
+					maskBeginner.SetRenderTarget( maskId, currentId );
+					maskBeginner.ClearRenderTarget( false, true, Color.black );
 
-					maskCreator.SetRenderTarget( maskId, currentId );
-					maskCreator.ClearRenderTarget( false, true, Color.black );
+					maskRenderer = new ();
+					maskRenderer.name = "Highlight mask rendering";
+					maskRenderer.SetRenderTarget( maskId, currentId );
 
-					void DrawMeshRepeatedly( Mesh mesh, Matrix4x4 location, Material material )
-					{
-						if ( mesh == null )
-							return;
-						maskCreator.DrawMesh( mesh, location, material );
-						if ( !game.repeating )
-							return;
-
-						var rightShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size, 0, 0 ) );
-						var leftShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size, 0, 0 ) );
-						var upShift = Matrix4x4.Translate( new Vector3( ground.dimension * Constants.Node.size / 2, 0, ground.dimension * Constants.Node.size ) );
-						var downShift = Matrix4x4.Translate( new Vector3( -ground.dimension * Constants.Node.size / 2, 0, -ground.dimension * Constants.Node.size ) );
-						maskCreator.DrawMesh( mesh, rightShift * location, material );
-						maskCreator.DrawMesh( mesh, leftShift * location, material );
-						maskCreator.DrawMesh( mesh, upShift * location, material );
-						maskCreator.DrawMesh( mesh, downShift * location, material );
-					}
 					if ( type == Type.buildings )
 					{
 						needConstantRefresh = false;
@@ -886,31 +887,38 @@ public class Eye : HiveObject
 							if ( building.type == (Building.Type)Workshop.Type.cornMill )
 								needConstantRefresh = true;
 
-							void DrawMeshRecursively( GameObject o )
+							void DrawRecursively( GameObject o )
 							{
-								MeshFilter filter;
-								o.TryGetComponent<MeshFilter>( out filter );
-								if ( filter && filter.mesh )
-									DrawMeshRepeatedly( filter.mesh, o.transform.localToWorldMatrix, markerMaterial );
+								if ( !eye.flatMode && ( eye.cameraGrid.cullingMask & (1 << o.layer) ) != 0 )
+								{
+									MeshRenderer renderer;
+									o.TryGetComponent<MeshRenderer>( out renderer );
+									if ( renderer )
+										maskRenderer.DrawRenderer( renderer, markerMaterial );
+								}
+								if ( eye.flatMode && ( o.layer & Constants.World.layerIndex2d) != 0 )
+								{
+									SpriteRenderer sr;
+									o.TryGetComponent<SpriteRenderer>( out sr );
+									if ( sr )
+										maskRenderer.DrawRenderer( sr, markerMaterial );
+								}
+
 								foreach ( Transform child in o.transform )
-									DrawMeshRecursively( child.gameObject );
+									DrawRecursively( child.gameObject );
 							}
 								
-							if ( eye.flatMode )
-							{
-								// var shiftUp = Matrix4x4.Translate( new Vector3( 0, 10, 0 ) );
-								// DrawMeshRepeatedly( building.functional?.GetComponent<MeshCollider>()?.sharedMesh, shiftUp * building.functional.transform.localToWorldMatrix, markerMaterial ); // TODO How does this work in sprite mode?
-							}
-							else
-								DrawMeshRecursively( building.body );
+							DrawRecursively( building.gameObject );
 						}
 					}
 					if ( type == Type.area )
 					{
 						float s = ( area.radius + 0.5f ) * Constants.Node.size;
-						DrawMeshRepeatedly( volume, Matrix4x4.TRS( area.center.position, Quaternion.identity, new Vector3( s, 20, s ) ), volumeMaterial );
+						volumeObject.transform.localScale = new Vector3( s, Constants.Eye.highlightVolumeHeight, s );
+						volumeObject.transform.position = area.center.position;
+						maskRenderer.DrawRenderer( volumeObject.GetComponent<MeshRenderer>(), volumeMaterial );
 					}
-					maskCreatorCRC = CRC;
+					maskRendererCRC = CRC;
 				}
 			}
 
@@ -989,6 +997,12 @@ public class Eye : HiveObject
 			triangles[cap++] = 5;
 			triangles[cap++] = 9;
 			volume.triangles = triangles;
+
+			volumeObject = new GameObject( "Highlight volume" );
+			volumeObject.transform.SetParent( root.transform, false );
+			volumeObject.AddComponent<MeshFilter>().sharedMesh = volume;
+			volumeObject.AddComponent<MeshRenderer>();
+			volumeObject.SetActive( false );
 		}
 
 		public class Applier : HiveCommon

@@ -85,6 +85,7 @@ public static class Constants
         public const bool depthOfField = false;
         public const int highlightEffectLevels = 1;
         public const int highlightEffectGlowSize = 2;
+        public const float highlightVolumeHeight = 20 * Node.size;
         public static Color highlightEffectGlowColor = Color.white;
         public const float highlightSwitchTime = 0.5f;
         public const float clipDistance = 1.5f;
