@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -19,6 +19,7 @@ public class Node : HiveObject
 	public float staticHeight = -1;
 	public Type type;
 	static MediaTable<GameObject, Type> decorations;
+	static MediaTable<Sprite, Type> decorationSprites;
 	public float decorationPosition;
 	public int decorationDirection = -1;
 	public int decorationType;
@@ -138,6 +139,10 @@ public class Node : HiveObject
 			"prefabs/ground/oreIron", Type.hill
 		};
 		decorations.Fill( decorationData, false );
+
+		object[] sprites = {
+		};
+		decorationSprites.Fill( sprites, false );
 	}
 
 
@@ -181,6 +186,17 @@ public class Node : HiveObject
 				var o = Neighbour( decorationDirection );
 				d.localPosition = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
 				d.gameObject.layer = World.layerIndexDecorations;
+				Sprite decorationSprite = decorationSprites.GetMediaData( type, decorationType );
+				if ( decorationSprite )
+				{
+					var sr = new GameObject( "Decoration sprite" ).AddComponent<SpriteRenderer>();
+					sr.transform.SetParent( d, false );
+					sr.transform.localRotation = Quaternion.Euler( 90, 0, -90 );
+					sr.transform.localScale = Vector3.one / d.lossyScale.x;
+					sr.sprite = decorationSprite;
+					sr.material.shader = Interface.spriteShader;
+					sr.gameObject.layer = Constants.World.layerIndex2d;
+				}
 			}
 		}
 		base.Start();
