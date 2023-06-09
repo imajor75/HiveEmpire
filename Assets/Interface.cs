@@ -695,10 +695,10 @@ public class Interface : HiveObject
 
 	string ReplayTooltipGenerator()
 	{
-		string text = $"Game is in replay mode. Time left from replay: {UIHelpers.TimeToString( oh.replayLength - time )}";
+		string text = $"Game is in replay mode. Time left from replay: {Help.TimeToString( oh.replayLength - time )}";
 		var next = oh.NextToExecute( mainTeam );
 		if ( next != null )
-			text += $"\nNext action is {next.name} in {UIHelpers.TimeToString( next.scheduleAt - time )}";
+			text += $"\nNext action is {next.name} in {Help.TimeToString( next.scheduleAt - time )}";
 		return text;
 	}
 
@@ -1451,12 +1451,12 @@ public class Interface : HiveObject
 	public class HotkeyControl : MonoBehaviour
 	{
 		public Hotkey hotkey;
-		public UIHelpers.Button button;
+		public Help.Button button;
 
 		public void Open( string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false )
 		{
 			hotkey = new Hotkey( name, key, ctrl, alt, shift );
-			button = gameObject.GetComponent<UIHelpers.Button>();
+			button = gameObject.GetComponent<Help.Button>();
 		}
 
 		public void Update()
@@ -1626,17 +1626,17 @@ public class Interface : HiveObject
 
 		public Image Image( Sprite picture = null )
 		{
-			return UIHelpers.Image( this, picture );
+			return Help.Image( this, picture );
 		}
 
 		public Image Image( Icon icon )
 		{
-			return UIHelpers.Image( this, icon );
+			return Help.Image( this, icon );
 		}
 
-		public UIHelpers.Button CheckBox( string text )
+		public Help.Button CheckBox( string text )
 		{
-			return UIHelpers.CheckBox( this, text );
+			return Help.CheckBox( this, text );
 		}
 
 		public ProgressBar Progress( bool showPercentage = false, Sprite picture = null )
@@ -1810,7 +1810,7 @@ public class Interface : HiveObject
 
 		public Text Text( string text = "", int fontSize = 12, bool alignToCenter = false )
 		{
-			return UIHelpers.Text( this, text, fontSize, alignToCenter );
+			return Help.Text( this, text, fontSize, alignToCenter );
 		}
 
 		public EditableText Editable( string text = "", int fontSize = 12 )
@@ -1828,12 +1828,12 @@ public class Interface : HiveObject
 
 		public InputField InputField( string text = "" )
 		{
-			return UIHelpers.InputField( this, text );
+			return Help.InputField( this, text );
 		}
 
 		public Dropdown Dropdown()
 		{
-			return UIHelpers.Dropdown( this );
+			return Help.Dropdown( this );
 		}
 
 		public virtual void Close()
@@ -3078,15 +3078,15 @@ public class Interface : HiveObject
 				this.boss = boss;
 				this.itemType = itemType;
 				var window = new GameObject( "Window" ).AddComponent<RectMask2D>().Link( this ).Pin( 15, 0, itemCount * ( iconSize + 5 ), iconSize + 5 );
-				var savedColumn = UIHelpers.currentColumn;
+				var savedColumn = Help.currentColumn;
 				itemPlatform = new GameObject( "Platform" ).AddComponent<RectTransform>();
 				itemPlatform.Link( window ).Pin( 0, 0 );
 				if ( input )
 					current = boss.ItemIcon( itemType ).Link( itemPlatform ).Pin( -xi + 3, 0 );
-				UIHelpers.currentColumn = iconSize - xi + 3;
+				Help.currentColumn = iconSize - xi + 3;
 				for ( int i = 0; i < itemCount; i++ )
 					items[i] = boss.ItemIcon( itemType ).Link( itemPlatform ).PinSideways( xi - iconSize, 0 );
-				UIHelpers.currentColumn = savedColumn;
+				Help.currentColumn = savedColumn;
 				if ( workshop && workshop.productionConfiguration.commonInputs && buffer != null )
 				{
 					var image = boss.Image().Link( this ).PinSideways( 0, 0 );
@@ -3099,7 +3099,7 @@ public class Interface : HiveObject
 					"bored face: the owner is getting bored with this type of food as it was eating this last time, but still willing to eat it again\n"+
 					"angry face: indicates that the owner hate this food because it was eating it two times in a row and is not willing to eat it next time" );
 				}
-				int itemsEndX = UIHelpers.currentColumn;
+				int itemsEndX = Help.currentColumn;
 				if ( itemCount > 0 )
 					boss.Text( "?" ).Link( this ).PinSideways( 0, 0, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Link( this ).Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
 				if ( area != null )
@@ -3290,7 +3290,7 @@ public class Interface : HiveObject
 					t.name = interval.ToString();
 					t.color = interval == this.interval ? Color.white : Color.grey;
 				}
-				UIHelpers.currentColumn = -160;
+				Help.currentColumn = -160;
 				AddIntervalText( "1h", Constants.Game.normalSpeedPerSecond * 60 * 60 );
 				AddIntervalText( "30m", Constants.Game.normalSpeedPerSecond * 60 * 30 );
 				AddIntervalText( "10m", Constants.Game.normalSpeedPerSecond * 60 * 10 );
@@ -3892,7 +3892,7 @@ public class Interface : HiveObject
 			public Color color;
 			public int remainingOrigins;
 			public float stockPoint = 0;
-			public UIHelpers.Rectangle area = new ();
+			public Help.Rectangle area = new ();
 			public Text cartInput, cartOutput, cartOnWay;
 			public bool ready => remainingOrigins <= 0 && stockPoint >= 0;
 			public string TooltipText()
@@ -3951,7 +3951,7 @@ public class Interface : HiveObject
 				{
 					for ( int i = 0; i < connection.points.Count - 1; i++ )
 					{
-						var rect = new UIHelpers.Rectangle().Extend( connection.points[i] ).Extend( connection.points[i+1] ).Grow( 2 );
+						var rect = new Help.Rectangle().Extend( connection.points[i] ).Extend( connection.points[i+1] ).Grow( 2 );
 						if ( !rect.Contains( point ) )
 							continue;
 
@@ -5081,7 +5081,7 @@ public class Interface : HiveObject
 			{
 				targetHaulerCount.value = road.targetHaulerCount;
 				if ( !road.lastUsed.empty )
-					lastUsedText.text = $"Last used {UIHelpers.TimeToString( road.lastUsed.age )} ago";
+					lastUsedText.text = $"Last used {Help.TimeToString( road.lastUsed.age )} ago";
 			}
 
 			var c = HiveCommon.eye.cameraGrid.center;
@@ -5576,7 +5576,7 @@ if ( cart )
 
 			missingText = Text().PinDownwards( borderWidth, 0, 200, 25 );
 			missingText.alignment = TextAnchor.MiddleLeft;
-			var row = UIHelpers.currentRow;
+			var row = Help.currentRow;
 
 			ItemIcon( Item.Type.plank ).Link( neededText ).Pin( 60, 0 );
 			ItemIcon( Item.Type.stone ).Link( neededText ).Pin( 120, 0 );
@@ -6403,7 +6403,7 @@ if ( cart )
 				w.value = (int)filter.workStatus;
 				w.onValueChanged.AddListener( ( value ) => { filter.workStatus = (Filter.WorkStatus)value; boss?.Fill(); } );
 
-				UIHelpers.currentRow = -borderWidth;
+				Help.currentRow = -borderWidth;
 				RectTransform row = null;
 				int rowIndex = 0, columnIndex = 0;
 				for ( int j = 0; j < (int)Building.Type.total; j++ )
@@ -7312,7 +7312,7 @@ if ( cart )
 			{
 				Text( (road.nodes.Count - 1).ToString() ).Link( scroll.content ).Pin( 0, row, 100 ).AddHiveObjectHandler( road );
 				Text( (road.haulers.Count).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
-				Text( road.lastUsed.age > 0 ? UIHelpers.TimeToString( road.lastUsed.age ) : "Never" ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
+				Text( road.lastUsed.age > 0 ? Help.TimeToString( road.lastUsed.age ) : "Never" ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
 				Text( (road.jam).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
 				row -= iconSize;
 			}
@@ -7691,7 +7691,7 @@ if ( cart )
 
 			name = "Item stats panel";
 			this.team = team;
-			UIHelpers.currentColumn = 50;
+			Help.currentColumn = 50;
 
 			Text( "In resources", 10 ).
 			PinSideways( 0, -20, 70, 20 ).
@@ -7904,19 +7904,19 @@ if ( cart )
 				return;
 
 			name = "History panel";
-			UIHelpers.currentColumn = borderWidth;
+			Help.currentColumn = borderWidth;
 			selected = Item.Type.soldier;
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				if ( game.itemTypeUsage[i] == 0 )
 					continue;
 				var t = (Item.Type)i;
-				int column = UIHelpers.currentColumn;
+				int column = Help.currentColumn;
 				if ( t == selected )
 					selectedColumn = column;
 				ItemIcon( t ).PinSideways( 0, -20 ).AddClickHandler( () => { selected = t; selectedColumn = column; dataSize = -1; } );
 			}
-			int panelIdealWidth = UIHelpers.currentColumn + borderWidth;
+			int panelIdealWidth = Help.currentColumn + borderWidth;
 			itemFrame = Image( Icon.tinyFrame ).Pin( 17, -17, 26, 26 );
 			chart = Image().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize ).SetTooltip( Tooltip );
 			record = Text().Pin( 25, -45, 500 );
@@ -8070,7 +8070,7 @@ if ( cart )
 			t.Apply();
 			chart.sprite = Sprite.Create( t, new Rect( 0, 0, t.width, t.height ), Vector2.zero );
 			Assert.global.IsNotNull( chart.sprite );
-			record.text = $"Record: {recordValue.ToString( "N2" )} per minute {UIHelpers.TimeToString( time - ( data.Count - recordIndex ) * Constants.Player.Chart.advanceTime, true, true )} ago, current: {team.itemProductivityHistory[(int)selected].current.ToString( "N2" )} per minute";
+			record.text = $"Record: {recordValue.ToString( "N2" )} per minute {Help.TimeToString( time - ( data.Count - recordIndex ) * Constants.Player.Chart.advanceTime, true, true )} ago, current: {team.itemProductivityHistory[(int)selected].current.ToString( "N2" )} per minute";
 			itemFrame.Pin( selectedColumn, -borderWidth );
 		}
 	}
@@ -8108,7 +8108,7 @@ if ( cart )
 				element.PinDownwards( borderWidth + 50, iconSize, 70, iconSize );
 			}
 
-			UIHelpers.currentRow = -borderWidth;
+			Help.currentRow = -borderWidth;
 			var size = Dropdown();
 			size.AddOptions( new List<string>{ "small", "medium", "big", "huge" } );
 			size.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.size = value switch { 0 => 16, 2 => 48, 3 => 64, 1 or _ => 32 }; needGenerate = true; } );
@@ -8232,8 +8232,8 @@ if ( cart )
 			{
 				bar.color = Color.Lerp( Color.green, Color.grey, 0.5f );
 				bar.progress = (float)game.time / game.challenge.prerun;
-				total.text = $"Total: {UIHelpers.TimeToString( game.challenge.prerun )}";
-				current.text = $"Current: {UIHelpers.TimeToString( game.time )}";
+				total.text = $"Total: {Help.TimeToString( game.challenge.prerun )}";
+				current.text = $"Current: {Help.TimeToString( game.time )}";
 				if ( prerunStart < 0 )
 				{
 					prerunStart = Time.unscaledTime;
@@ -8241,7 +8241,7 @@ if ( cart )
 				}
 				float estimated = ( Time.unscaledTime - prerunStart ) / ( game.time - prerunStartTime );
 				estimated *= game.challenge.prerun - game.time;
-				remaining.text = $"Estimated time left: {UIHelpers.TimeToString((int)( estimated * Constants.Game.normalSpeedPerSecond ) )}";
+				remaining.text = $"Estimated time left: {Help.TimeToString((int)( estimated * Constants.Game.normalSpeedPerSecond ) )}";
 				int count = 0;
 				foreach ( var itemCount in root.mainTeam.itemsProduced )
 					count += itemCount;
@@ -8285,7 +8285,7 @@ if ( cart )
 			foreach ( var challenge in root.challenges )
 			{
 				Text( challenge.title ).Pin( 0, row, 180, iconSize ).Link( view ).SetTooltip( challenge.description );
-				Text( challenge.timeLimit > 0 ? UIHelpers.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
+				Text( challenge.timeLimit > 0 ? Help.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Text( challenge.worldGenerationSettings.size switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Button( "Begin" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
 				Text( challenge.bestSolutionLevel.ToString() ).Link( view ).PinSideways( 10, row, 60, iconSize );
@@ -8353,7 +8353,7 @@ if ( cart )
 			if ( base.Open( 400, 220 ) )
 				return;
 			this.Pin( -200, -110, 200, 110, 0.5f, 0.5f );
-			UIHelpers.currentRow = -30;
+			Help.currentRow = -30;
 			if ( worldStopped )
 			{
 				Assert.global.IsNotNull( root.mainTeam );
@@ -8397,7 +8397,7 @@ if ( cart )
 				timeLeft.alignment = TextAnchor.MiddleCenter;
 			}
 			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
-			var row = UIHelpers.currentRow - iconSize / 2 - 10;
+			var row = Help.currentRow - iconSize / 2 - 10;
 			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => root.NewGame( game.challenge ) );
 			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => { game.challenge.Randomize(); root.NewGame( game.challenge ); } );
 			
@@ -8408,7 +8408,7 @@ if ( cart )
 		{
 			var m = root.mainTeam.itemProductivityHistory[(int)Item.Type.soldier];
 			var challenge = game.challenge;
-			worldTime.text = $"World time: {UIHelpers.TimeToString( time )}";
+			worldTime.text = $"World time: {Help.TimeToString( time )}";
 			conditions.text = challenge.conditionsText;
 			if ( maintain )
 			{
@@ -8426,7 +8426,7 @@ if ( cart )
 				CheckLevel( Game.Goal.silver, challenge.maintainSilver );
 				CheckLevel( Game.Goal.gold, challenge.maintainGold );
 				if ( level != Game.Goal.none )
-					maintain.text = $"Maintain {level} level for {UIHelpers.TimeToString( time )} more!";
+					maintain.text = $"Maintain {level} level for {Help.TimeToString( time )} more!";
 				else
 					maintain.text = "No appraisable level reached yet";
 			}
@@ -8438,7 +8438,7 @@ if ( cart )
 					{
 						var left = (int)(challenge.timeLimit * multiplier - challenge.life.age);
 						if ( left >= 0 )
-							timeLeft.text = $"Time left: {UIHelpers.TimeToString( left )} ({goal})";
+							timeLeft.text = $"Time left: {Help.TimeToString( left )} ({goal})";
 					}
 					timeLeft.text = "Out of time";
 					GoalLeft( Game.Goal.bronze, 2 );
@@ -8449,7 +8449,7 @@ if ( cart )
 				{
 					int left = (int)(challenge.timeLimit - challenge.life.age);
 					if ( left > 0 )
-						timeLeft.text = $"Time left: {UIHelpers.TimeToString( left )}";
+						timeLeft.text = $"Time left: {Help.TimeToString( left )}";
 					else
 						timeLeft.text = "Out of time";
 				}
@@ -8494,7 +8494,7 @@ if ( cart )
 			base.Open( 300, 200 );
 			this.createNewPlayer = createNewPlayer;
 
-			UIHelpers.currentRow = -borderWidth;
+			Help.currentRow = -borderWidth;
 			if ( createNewPlayer )
 			{
 				newNameTitle = Text( "Name of new player" ).PinDownwards( borderWidth, -borderWidth, 200 );
@@ -8527,7 +8527,7 @@ if ( cart )
 			if ( createNewPlayer )
 				Button( "Create Player" ).PinDownwards( 100, 0, 80 ).AddClickHandler( CreatePlayer );
 			
-			var line = UIHelpers.currentRow;
+			var line = Help.currentRow;
 			Text( "Control:" ).Pin( borderWidth, line, 100 );
 			control = Dropdown().Pin( borderWidth+100, line, 150 );
 			control.AddOptions( new List<String>{ "manual", "automatic", "demo" } );
@@ -8636,7 +8636,7 @@ if ( cart )
 			if ( needListRefresh )
 			{
 				list.Clear();
-				UIHelpers.currentRow = 0;
+				Help.currentRow = 0;
 				needListRefresh = false;
 
 				var directory = new DirectoryInfo( path );
@@ -8656,7 +8656,7 @@ if ( cart )
 						text.color = Color.red;
 					}
 				}
-				list.SetContentSize( -1, -UIHelpers.currentRow );
+				list.SetContentSize( -1, -Help.currentRow );
 			}	
 
 			base.Update();
@@ -8758,7 +8758,7 @@ if ( cart )
 			}
 			if ( activateItemHotkey.IsPressed() )
 			{
-				UIHelpers.Button button;
+				Help.Button button;
 				if ( items[highlight].gameObject.TryGetComponent( out button ) && button.leftClickHandler != null )
 					button.leftClickHandler();
 			}
@@ -8842,11 +8842,11 @@ if ( cart )
 		void Open()
 		{
 			base.Open( 300, 200 );
-			UIHelpers.currentRow = -borderWidth;
+			Help.currentRow = -borderWidth;
 			foreach ( var option in network.localDestinations )
 				Button( $"Connect to {option.name}" ).PinDownwards( borderWidth, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => game.Join( option.address, option.port ) ).SetTooltip( $"{option.address}:{option.port}" );
 
-			int row = UIHelpers.currentRow;
+			int row = Help.currentRow;
 			var direct = Button( "Connect to " ).PinDownwards( borderWidth, 0, 80, iconSize + iconSize / 5 );
 			var target = InputField( $"localhost:{Constants.Network.defaultPort}" ).PinSideways( 0, row, 150, iconSize );
 			direct.AddClickHandler( () => game.Join( target.text.Split( ':' ).First(), int.Parse( target.text.Split( ':' ).Last() ) ) );
@@ -9136,14 +9136,14 @@ if ( cart )
 			group = new GameObject( "Controller Group", typeof( RectTransform ) );
 			group.transform.SetParent( root.transform, false );
 			group.transform.Pin( (int)( Input.mousePosition.x / uiScale ), (int)( ( Input.mousePosition.y - Screen.height ) / uiScale ) );
-			UIHelpers.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Eradicate( group ) ).AddClickHandler( () => Eradicate( group ), MouseButton.right ).color = new Color( 0, 0, 0, 0 );
+			Help.Image( group.transform ).PinCenter( 0, 0, 10000, 10000 ).AddClickHandler( () => Eradicate( group ) ).AddClickHandler( () => Eradicate( group ), MouseButton.right ).color = new Color( 0, 0, 0, 0 );
 
 			foreach ( var action in actions )
 			{
-				var backGround = UIHelpers.Image( group.transform, Icon.smallFrame ).
+				var backGround = Help.Image( group.transform, Icon.smallFrame ).
 				PinCenter( (int)( size * Math.Sin( action.angle ) ), (int)( size * Math.Cos( action.angle ) ), 30, 30 );
 
-				UIHelpers.Image( backGround, action.image ).
+				Help.Image( backGround, action.image ).
 				SetTooltip( action.tooltip ).
 				AddClickHandler( () => Activate( action ) ).
 				Pin( 5, -5 );
@@ -9168,669 +9168,5 @@ if ( cart )
 		middle
 	}
 }
-
-
-public static class UIHelpers
-{
-	public static int currentRow = 0, currentColumn = 0;
-
-	public static Interface.Controller AddController( this MonoBehaviour control )
-	{
-		var controller = control.gameObject.AddComponent<Interface.Controller>();
-		control.AddClickHandler( controller.Open, Interface.MouseButton.right );
-		return controller;
-	} 
-
-	public static void ClosePanel( this MonoBehaviour control )
-	{
-		for ( var parent = control.transform.parent; parent; parent = parent.parent )
-		{
-            Interface.Panel panel = null;
-			if ( parent.gameObject.TryGetComponent<Interface.Panel>( out panel ) )
-			{
-				panel.Close();
-				return;
-			}
-		}
-	}
-
-	public static Image Image( this Component panel, Sprite picture = null )
-	{
-		Image i = new GameObject().AddComponent<Image>();
-		i.name = "Image";
-		i.sprite = picture;
-		i.transform.SetParent( panel.transform );
-		return i;
-	}
-
-	public static Image Image( this Component panel, Interface.Icon icon )
-	{
-		return panel.Image( Interface.iconTable.GetMediaData( icon ) );
-	}
-
-	public static Button CheckBox( this Component panel, string text )
-	{
-		var save = UIHelpers.currentRow;
-		Button b = new GameObject( "Checkbox" ).AddComponent<Button>();
-		b.transform.SetParent( panel.transform );
-		var i = new GameObject( "Checkbox Image" ).AddComponent<Image>();
-		i.Link( b ).Pin( 0, 0, Interface.iconSize, Interface.iconSize ).AddOutline();
-		void UpdateCheckboxLook( bool on )
-		{
-			i.sprite = Interface.iconTable.GetMediaData( on ? Interface.Icon.yes : Interface.Icon.no );
-		}
-		b.visualizer = UpdateCheckboxLook;
-		b.leftClickHandler = b.Toggle;
-		Text( b, text ).Link( b ).Stretch( Interface.iconSize + 5 ).alignment = TextAnchor.MiddleLeft;
-		UIHelpers.currentRow = save;
-		return b;
-	}
-
-	public static Text Text( this Component panel, string text = "", int fontSize = 12, bool alignToCenter = false )
-	{
-		Text t = new GameObject().AddComponent<Text>();
-		if ( alignToCenter )
-			t.alignment = TextAnchor.MiddleCenter;
-		t.name = "Text";
-		t.transform.SetParent( panel.transform );
-		t.font = Interface.font;
-		t.fontSize = (int)( fontSize * Interface.uiScale );
-		t.color = Color.black;
-		t.text = text;
-		return t;
-	}
-
-	public static InputField InputField( this Component panel, string text = null )
-	{
-		var o = GameObject.Instantiate( Resources.Load<GameObject>( "InputField" ) );
-		var i = o.GetComponent<InputField>();
-		var image = i.GetComponent<Image>();
-		i.transform.SetParent( panel.transform );
-		i.name = "InputField";
-		i.text = text;
-		return i;
-	}
-
-	public static Dropdown Dropdown( this Component panel )
-	{
-		var o = GameObject.Instantiate( Resources.Load<GameObject>( "Dropdown" ) );
-		var d = o.GetComponent<Dropdown>();
-		d.ClearOptions();
-		var image = d.GetComponent<Image>();
-		d.transform.SetParent( panel.transform );
-		d.name = "InputField";
-		return d;
-	}
-
-	public static Slider Slider( this Component panel )
-	{
-		var o = GameObject.Instantiate( Resources.Load<GameObject>( "Slider" ) );
-		var s = o.GetComponent<Slider>();
-		s.transform.SetParent( panel.transform );
-		return s;
-	}
-
-	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
-	{
-		if ( center )
-		{
-			x -= xs / 2;
-			y += ys / 2;
-		}
-		currentColumn = x + xs;
-		currentRow = y - ys;
-		if ( g.transform is RectTransform t )
-		{
-			t.anchorMin = t.anchorMax = new Vector2( xa, ya );
-			t.offsetMin = new Vector2( (int)( x * Interface.uiScale ), (int)( ( y - ys ) * Interface.uiScale ) );
-			t.offsetMax = new Vector2( (int)( ( x + xs ) * Interface.uiScale ), (int)( y * Interface.uiScale ) );
-		}
-		else
-			Assert.global.Fail( $"Object {g} without RectTransform component cannot be pinned" );
-		return g;
-	}
-
-	public static UIElement PinCenter<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1 ) where UIElement : Component
-	{
-		return g.Pin( x, y, xs, ys, xa, ya, true );
-	}
-
-	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
-	{
-		g.Pin( x, y + currentRow - (center ? ys / 2 : 0), xs, ys, xa, ya, center );
-		return g;
-	}
-
-	public static UIElement PinSideways<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
-	{
-		g.Pin( x + currentColumn + (center ? xs / 2 : 0), y, xs, ys, xa, ya, center );
-		return g;
-	}
-
-	public static UIElement Stretch<UIElement>( this UIElement g, int x0 = 0, int y0 = 0, int x1 = 0, int y1 = 0 ) where UIElement : Component
-	{
-		if ( g.transform is RectTransform t )
-		{
-			t.anchorMin = Vector2.zero;
-			t.anchorMax = Vector2.one;
-			t.offsetMin = new Vector2( (int)( x0 * Interface.uiScale ), (int)( y0 * Interface.uiScale ) );
-			t.offsetMax = new Vector2( (int)( x1 * Interface.uiScale ), (int)( y1 * Interface.uiScale ) );
-		}
-		return g;
-	}
-
-	public static UIElement Rotate<UIElement>( this UIElement g, float angle ) where UIElement : Component
-	{
-		g.transform.rotation = Quaternion.Euler( 0, 0, angle );
-		return g;
-	}
-
-	[RequireComponent( typeof( RectTransform ) )]
-	public class Button : MonoBehaviour, IPointerClickHandler
-	{
-		public Action leftClickHandler, rightClickHandler, middleClickHandler;
-		public Action<bool> toggleHandler;
-		public Action<bool> visualizer;
-		public bool toggleState;
-
-        public void OnPointerClick( PointerEventData eventData )
-        {
-			if ( eventData.button == PointerEventData.InputButton.Left && leftClickHandler != null )
-				leftClickHandler();
-			if ( eventData.button == PointerEventData.InputButton.Right )
-			{
-				if ( rightClickHandler != null )
-					rightClickHandler();
-				else
-					this.ClosePanel();
-			}
-			if ( eventData.button == PointerEventData.InputButton.Middle && middleClickHandler != null )
-				middleClickHandler();
-        }
-
-		public void Toggle()
-		{
-			SetToggleState( !toggleState );
-			if ( toggleHandler != null )
-				toggleHandler( toggleState );
-		}
-
-		public void SetToggleState( bool state )
-		{
-			if ( toggleState == state )
-				return;
-			toggleState = state;
-			if ( visualizer == null )
-				visualizer = UpdateLook;
-			visualizer( toggleState );
-		}
-
-		public void UpdateLook( bool on )
-		{
-			var i = GetComponent<Image>();
-			if ( i )
-				i.color = on ? Color.white : Color.grey;
-		}
-    }
-
-	public static UIElement AddHiveObjectHandler<UIElement>( this UIElement g, HiveObject hiveObject ) where UIElement : Component
-	{
-		var hoh = g.gameObject.AddComponent<Interface.HiveObjectHandler>();
-		hoh.Open( hiveObject );
-		return g;
-	}
-
-	public static UIElement AddClickHandler<UIElement>( this UIElement g, Action callBack, Interface.MouseButton type = Interface.MouseButton.left ) where UIElement : Component
-	{
-		var b = g.gameObject.GetComponent<Button>();
-		if ( b == null )
-			b = g.gameObject.AddComponent<Button>();
-		if ( type == Interface.MouseButton.left )
-			b.leftClickHandler = callBack;
-		if ( type == Interface.MouseButton.right )
-			b.rightClickHandler = callBack;
-		if ( type == Interface.MouseButton.middle )
-			b.middleClickHandler = callBack;
-		return g;
-	}
-
-	public static UIElement AddToggleHandler<UIElement>( this UIElement g, Action<bool> callBack, bool initialState = false ) where UIElement : Component
-	{
-		var b = g.gameObject.GetComponent<Button>();
-		if ( b == null )
-			b = g.gameObject.AddComponent<Button>();
-
-		b.leftClickHandler = b.Toggle;
-		b.toggleHandler = callBack;
-		b.toggleState = initialState;
-		if ( b.visualizer == null )
-			b.visualizer = b.UpdateLook;
-		b.visualizer( initialState );
-
-		return g;
-	}
-
-	public static UIElement SetToggleState<UIElement>( this UIElement g, bool state ) where UIElement : Component
-	{
-		var b = g.gameObject.GetComponent<Button>();
-		b?.SetToggleState( state );
-		return g;
-	}
-
-
-	public static UIElement Link<UIElement>( this UIElement g, Component parent ) where UIElement : Component
-	{
-		g.transform.SetParent( parent.transform, false );
-		return g;
-	}
-
-	public static UIElement AddOutline<UIElement>( this UIElement g, Color? color = null, float distance = 1 ) where UIElement : Component
-	{
-		Outline o = g.gameObject.AddComponent<Outline>();
-		if ( o != null )
-		{
-			o.effectColor = color ?? Color.black;
-			o.effectDistance = Vector2.one * distance;
-		}
-		return g;
-	}
-
-	public static Color Light( this Color color )
-	{
-		return Color.Lerp( color, Color.white, 0.5f );
-	}
-
-	public static Color Dark( this Color color )
-	{
-		return Color.Lerp( color, Color.black, 0.5f );
-	}
-
-	public static Color Wash( this Color color )
-	{
-		return Color.Lerp( color, Color.grey, 0.5f );
-	}
-
-	[Serializable]
-	public class Rectangle
-	{
-		public float xMin, xMax;
-		public float yMin, yMax;
-	
-		public Rectangle()
-		{
-			Clear();
-		}
-
-		public Rectangle( Vector2 min, Vector2 max )
-		{
-			xMin = min.x;
-			yMin = min.y;
-			xMax = max.x;
-			yMax = max.y;
-		}
-
-		public Rectangle Extend( Vector2 point )
-		{
-			if ( xMin > point.x )
-				xMin = point.x;
-			if ( xMax < point.x )
-				xMax = point.x;
-			if ( yMin > point.y )
-				yMin = point.y;
-			if ( yMax < point.y )
-				yMax = point.y;
-			return this;
-		}
-
-		public Rectangle Clear()
-		{
-			xMin = yMin = float.MaxValue;
-			xMax = yMax = float.MinValue;
-			return this;
-		}
-
-		public bool Contains( Vector2 point )
-		{
-			return xMin <= point.x && yMin <= point.y && xMax >= point.x && yMax >= point.y;
-		}
-
-		public Rectangle Grow( float value )
-		{
-			xMin -= value;
-			yMin -= value;
-			xMax += value;
-			yMax += value;
-			return this;
-		}
-	}
-
-	public static bool Contains<UIElement>( this UIElement g, Vector2 position ) where UIElement : Component
-	{
-		if ( g.transform is RectTransform t )
-		{
-			Vector3[] corners = new Vector3[4];
-			t.GetWorldCorners( corners );
-			var rect = new Rect( corners[0], corners[2] );
-			return rect.Contains( position );
-		}
-		return false;
-	}
-	
-	public static UIElement SetTooltip<UIElement>( this UIElement g, Func<string> textGenerator, Sprite image = null, string additionalText = "", Action<bool> onShow = null, int width = 300 ) where UIElement : Component
-	{
-		Assert.global.IsTrue( textGenerator != null || onShow != null );
-		var s = g.gameObject.GetComponent<Interface.TooltipSource>();
-		if ( s == null )
-			s = g.gameObject.AddComponent<Interface.TooltipSource>();
-		s.SetData( textGenerator, image, additionalText, onShow, width );
-		foreach ( Transform t in g.transform )
-			t.SetTooltip( textGenerator, image, additionalText, onShow );
-		return g;
-	}
-
-	public static UIElement SetTooltip<UIElement>( this UIElement g, string text, Sprite image = null, string additionalText = "", Action<bool> onShow = null ) where UIElement : Component
-	{
-		return SetTooltip( g, text == null ? null as Func<string> : () => text, image, additionalText, onShow );
-	}
-
-	public static UIElement SetTooltip<UIElement>( this UIElement g, Action<bool> onShow, Func<string> textGenerator = null ) where UIElement : Component
-	{
-		return SetTooltip( g, textGenerator, null, null, onShow );
-	}
-
-	public static UIElement RemoveTooltip<UIElement>( this UIElement g ) where UIElement : Component
-	{
-		var s = g.gameObject.GetComponent<Interface.TooltipSource>();
-		if ( s )
-			HiveCommon.Eradicate( s );
-		foreach ( Transform t in g.transform )
-			t.RemoveTooltip();
-		return g;
-	}
-
-	public static UIElement AddHotkey<UIElement>( this UIElement g, string name, KeyCode key, bool ctrl = false, bool alt = false, bool shift = false ) where UIElement : Component
-	{
-		var h = g.gameObject.AddComponent<Interface.HotkeyControl>();
-		h.Open( name, key, ctrl, alt, shift );
-		g.name = name;
-		return g;
-	}
-
-	public static Interface.Hotkey GetHotkey( this Component g )
-	{
-		return g.gameObject.GetComponent<Interface.HotkeyControl>()?.hotkey;
-	}
-
-	public static string GetPrettyName( this string name, bool capitalize = true )
-	{
-		bool beginWord = true;
-		string result = "";
-		foreach ( char c in name )
-		{
-			if ( Char.IsUpper( c ) )
-			{
-				beginWord = true;
-				result += " ";
-			}
-			if ( beginWord && capitalize )
-				result += Char.ToUpper( c );
-			else
-				result += Char.ToLower( c );
-
-			beginWord = false;
-		}
-		return result;
-	}
-
-	public static ScrollRect Clear( this ScrollRect s )
-	{
-		foreach ( Transform child in s.content )
-			HiveCommon.Eradicate( child.gameObject );
-
-		return s;
-	}
-
-	public static ScrollRect SetContentSize( this ScrollRect scroll, int x = -1, int y = -1 )
-	{
-		var t = scroll.content.transform as RectTransform;
-		var m = t.offsetMax;
-		if ( y != -1 )
-			m.y = (int)( Interface.uiScale * y );
-		if ( x != -1 )
-			m.x = (int)( Interface.uiScale * x );
-		t.offsetMax = m;
-		t.offsetMin = Vector2.zero;
-		scroll.verticalNormalizedPosition = 1;
-		return scroll;
-	}
-
-	public static ScrollRect ShowChild( this ScrollRect scroll, Component child, bool horizontal = false, bool vertical = true )
-	{
-		if ( child.transform is RectTransform rect )
-		{
-			var c = new Vector3[4];
-			var v = new Vector3[4];
-			rect.GetWorldCorners( c );
-			scroll.viewport.GetWorldCorners( v );
-			var contentPosition = scroll.content.localPosition;
-			if ( vertical )
-			{
-				if ( c[0].y < v[0].y )
-					contentPosition.y += v[0].y - c[0].y;
-				if ( c[2].y > v[2].y )
-					contentPosition.y -= c[2].y - v[2].y;
-			}
-			if ( horizontal )
-			{
-				if ( c[0].x < v[0].x )
-					contentPosition.x += v[0].x - c[0].x;
-				if ( c[2].x > v[2].x )
-					contentPosition.x -= c[2].x - v[2].x;
-			}
-			scroll.content.localPosition = contentPosition;
-		}
-		return scroll;
-	}
-
-	public static string TimeToString( int time, bool text = false, bool ignoreSeconds = false, char separator = ':' )
-	{
-		string result = "";
-		bool hasHours = false, hasDays = false;
-		int days = time/24/60/60/Constants.Game.normalSpeedPerSecond;
-		if ( days > 0 )
-		{
-			result = $"{days}";
-			if ( text )
-			{
-				if ( days > 1 )
-					result += " days and ";
-				else
-					result += " day and ";
-			}
-			else
-				result += separator;
-			hasDays = true;
-		}
-		int hours = time/Constants.Game.normalSpeedPerSecond/60/60;
-		if ( hours > 0 )
-		{
-			result += $"{(hours%24).ToString( hasDays ? "d2" : "d1" )}";
-			if ( text )
-			{
-				if ( hours % 24 > 1 )
-					result += " hours and ";
-				else
-					result += " hour and ";
-			}
-			else
-				result += separator;
-			hasHours = true;
-		}
-		var minutes = time/Constants.Game.normalSpeedPerSecond/60;
-		result += $"{(minutes%60).ToString( hasHours ? "d2" : "d1" )}";
-		if ( text )
-		{
-			result += " minute";
-			if ( minutes % 60 > 1 )
-				result += "s";
-		}
-		if ( !hasDays &&!ignoreSeconds )
-		{
-			if ( text )
-				result += " and ";
-			else
-				result += separator;
-			result += $"{((time/Constants.Game.normalSpeedPerSecond)%60).ToString( "d2" )}";
-		}
-		return result;
-	}
-
-	public static bool SelectOption( this Dropdown d, string text )
-	{
-		for ( int i = 0; i < d.options.Count; i++ )
-		{
-			if ( d.options[i].text == text )
-			{
-				d.value = i;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static List<byte> Add( this List<byte> packet, int value )
-	{
-		var valueBytes = BitConverter.GetBytes( value );
-		foreach ( var b in valueBytes )
-			packet.Add( b );
-		return packet;
-	}
-
-	public static List<byte> Extract( this List<byte> packet, ref int value )
-	{
-		var size = BitConverter.GetBytes( value ).Length;
-		value = BitConverter.ToInt32( packet.GetRange( 0, size ).ToArray(), 0 );
-		packet.RemoveRange( 0, size );
-		return packet;
-	}
-
-	public static List<byte> Add( this List<byte> packet, bool value )
-	{
-		var valueBytes = BitConverter.GetBytes( value );
-		foreach ( var b in valueBytes )
-			packet.Add( b );
-		return packet;
-	}
-
-	public static List<byte> Extract( this List<byte> packet, ref bool value )
-	{
-		var size = BitConverter.GetBytes( value ).Length;
-		value = BitConverter.ToBoolean( packet.GetRange( 0, size ).ToArray(), 0 );
-		packet.RemoveRange( 0, size );
-		return packet;
-	}
-
-	public static List<byte> Add<enumType>( this List<byte> packet, enumType value )
-	{
-		return packet.Add( (int)(object)value );
-	}
-
-	public static List<byte> Extract<enumType>( this List<byte> packet, ref enumType value ) where enumType : System.Enum
-	{
-		int data = 0;
-		packet.Extract( ref data );
-			value = (enumType)(object)data;
-		return packet;
-	}
-
-	public static List<byte> Add( this List<byte> packet, List<int> array )
-	{
-		packet.Add( array.Count );
-		foreach ( var value in array )
-			packet.Add( value );
-		return packet;
-	}
-
-	public static List<byte> Extract( this List<byte> packet, ref List<int> array )
-	{
-		array.Clear();
-		int size = 0;
-		packet.Extract( ref size );
-		for ( int i = 0; i < size; i++ )
-		{
-			int value = 0;
-			packet.Extract( ref value );
-			array.Add( value );
-		}
-		return packet;
-	}
-
-	public static Type Random<Type>( this Type[] array )
-	{
-		return array[new System.Random().Next( array.Length )];
-	}
-
-	public class RectTransformDebugger : MonoBehaviour
-	{
-		public Vector2 anchorMin, anchorMax, offsetMin, offsetMax;
-		public bool write;
-
-		void Update()
-		{
-			RectTransform t = gameObject.GetComponent<RectTransform>();
-			if ( write )
-			{
-				t.anchorMin = anchorMin;
-				t.anchorMax = anchorMax;
-				t.offsetMin = offsetMin;
-				t.offsetMax = offsetMax;
-
-			}
-			else
-			{
-				anchorMin = t.anchorMin;
-				anchorMax = t.anchorMax;
-				offsetMin = t.offsetMin;
-				offsetMax = t.offsetMax;
-			}
-		}
-	}
-
-#if UNITY_EDITOR
-	[CustomPropertyDrawer(typeof(Game.Timer))]
-	public class TimerDrawer : PropertyDrawer
-	{
-		// Draw the property inside the given rect
-		public override void OnGUI( Rect position, SerializedProperty property, GUIContent label )
-		{
-			var timer = property.boxedValue as Game.Timer;
-			// Using BeginProperty / EndProperty on the parent property means that
-			// prefab override logic works on the entire property.
-			EditorGUI.BeginProperty( position, label, property );
-
-			// Draw label
-			position = EditorGUI.PrefixLabel( position, GUIUtility.GetControlID( FocusType.Passive ), label );
-
-			// Don't make child fields be indented
-			var indent = EditorGUI.indentLevel;
-			EditorGUI.indentLevel = 0;
-
-			// Calculate rects
-			var labelRect = new Rect( position.x, position.y, 100, position.height );
-			var referenceRect = new Rect( position.x + 110, position.y, 100, position.height );
-
-			// Draw fields - pass GUIContent.none to each so they are drawn without labels
-			EditorGUI.LabelField( labelRect, ( timer.age < 0 ? "-" : "" ) + TimeToString( Math.Abs( timer.age ) ) );
-			EditorGUI.PropertyField( referenceRect, property.FindPropertyRelative( "reference" ), GUIContent.none );
-
-			// Set indent back to what it was
-			EditorGUI.indentLevel = indent;
-
-			EditorGUI.EndProperty();
-		}
-	}
-#endif
-}
-
 
 

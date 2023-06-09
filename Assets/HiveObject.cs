@@ -487,9 +487,7 @@ public class VisibleHiveObject : HiveObject
 			return null;
 
 		var renderer = new GameObject( "Sprite" ).AddComponent<SpriteRenderer>();
-		renderer.sprite = sprite;
-		renderer.material.shader = Interface.spriteShader;
-		renderer.sortingOrder = (int)-location.position.x;
+		renderer.Prepare( sprite, location.position, visualType == VisualType.functional );
 		return renderer.gameObject;
 	}
 

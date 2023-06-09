@@ -217,14 +217,11 @@ public class Node : HiveObject
 				Sprite decorationSprite = decorationSprites.GetMediaData( type, decorationType );
 				if ( decorationSprite )
 				{
-					Log( $"tussz {x}, {y} {decorationType} {decorationSprite}" );
 					var sr = new GameObject( "Decoration sprite" ).AddComponent<SpriteRenderer>();
 					sr.transform.SetParent( d, false );
 					sr.transform.localRotation = Quaternion.Euler( 90, 0, -90 );
 					sr.transform.localScale = Vector3.one / d.lossyScale.x;
-					sr.sprite = decorationSprite;
-					sr.material.shader = Interface.spriteShader;
-					sr.gameObject.layer = Constants.World.layerIndex2d;
+					sr.Prepare( decorationSprite, d.localPosition );
 				}
 			}
 		}

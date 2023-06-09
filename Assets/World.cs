@@ -68,7 +68,7 @@ public class World : HiveObject
 
 	public string NextSaveFileName( SaveType type ) 
 	{ 
-		return $"{name} ({saveIndex}-{UIHelpers.TimeToString( time, text:true, ignoreSeconds:true )}-{type})"; 
+		return $"{name} ({saveIndex}-{Help.TimeToString( time, text:true, ignoreSeconds:true )}-{type})"; 
 	}
 
 	[Obsolete( "Compatibility with old files", true )]
@@ -1715,7 +1715,7 @@ public class Game : World
 
 		public override string ToString()
 		{
-			return $"reach {productivityGoal.ToString( "N2" )} soldier/min and maintain it for {UIHelpers.TimeToString( maintain )}";
+			return $"reach {productivityGoal.ToString( "N2" )} soldier/min and maintain it for {Help.TimeToString( maintain )}";
 		}
 	}
 
