@@ -8221,7 +8221,7 @@ if ( cart )
 			if ( game.preparation == Game.PrepareState.create && root.mainPlayer is Simpleton simpleton )
 			{		
 				best = Math.Max( best, simpleton.preparationProgress );
-				bar.progress = (float)Math.Pow( best / Constants.Simpleton.enoughPreparation, 3 );
+				bar.progress = best;
 				workshops.text = $"workshops: {root.mainTeam.workshops.Count}";
 				guardHouses.text = $"guardhouses: {root.mainTeam.guardHouses.Count}";
 				stocks.text = $"stocks: {root.mainTeam.stocks.Count}";

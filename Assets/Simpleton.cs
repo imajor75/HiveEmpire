@@ -66,7 +66,7 @@ public class Simpleton : Player
             {
                 if ( lastApplied == null )
                     return 0;
-                return 1 - lastApplied.importance;
+				return (float)Math.Pow( ( 1 - lastApplied.importance ) / Constants.Simpleton.enoughPreparation, 3 );
             }
 
             preparationMissingDeals = preparationMissingProduction = preparationTotalDeals = preparationTotalProduction = 0;
@@ -805,6 +805,10 @@ public class Simpleton : Player
         public override string ToString() => $"Yieldcheck for {workshopType} - target:{target}, current: {currentYield}, result: {state} (at {bestLocation})";
         public override bool Analyze()
         {
+            bool construction = workshopType == Workshop.Type.woodcutter || workshopType == Workshop.Type.sawmill || workshopType == Workshop.Type.stonemason || workshopType == Workshop.Type.stoneMine;
+            if ( !construction && game.preparation == Game.PrepareState.create && game.challenge.preparation == Game.Challenge.Preparation.construction )
+                return finished;
+
             if ( currentYield < 0 )
             {
                 int currentWorkshopCount = 0;
