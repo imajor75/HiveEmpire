@@ -31,17 +31,6 @@ public class World : HiveObject
 	public bool dumpPossibleProductions, dumpTypeCountOnSave;
 
 	static public bool massDestroy;
-	static public int layerIndexMapOnly;
-	static public int layerIndexGround;
-	static public int layerIndexPPVolume;
-	static public int layerIndexHighlightVolume;
-	static public int layerIndexWater;
-	static public int layerIndexBuildings;
-	static public int layerIndexRoads;
-	static public int layerIndexResources;
-	static public int layerIndexUnits;
-	static public int layerIndexItems;
-	static public int layerIndexDecorations;
 	static public Shader defaultShader;
 	static public Shader defaultColorShader;
 	static public Shader defaultMapShader;
@@ -233,18 +222,6 @@ public class World : HiveObject
 
 	public static void Initialize()
 	{
-		layerIndexMapOnly = LayerMask.NameToLayer( "Map only" );
-		layerIndexGround = LayerMask.NameToLayer( "Ground" );
-		layerIndexPPVolume = LayerMask.NameToLayer( "PPVolume" );
-		layerIndexHighlightVolume = LayerMask.NameToLayer( "HighlightVolume" );
-		layerIndexWater = LayerMask.NameToLayer( "Water" );
-		layerIndexBuildings = LayerMask.NameToLayer( "Buildings" );
-		layerIndexRoads = LayerMask.NameToLayer( "Roads" );
-		layerIndexResources = LayerMask.NameToLayer( "Resources" );
-		layerIndexUnits = LayerMask.NameToLayer( "Units" );
-		layerIndexItems = LayerMask.NameToLayer( "Items" );
-		layerIndexDecorations = LayerMask.NameToLayer( "Decorations" );
-		Assert.global.IsTrue( layerIndexMapOnly != -1 && layerIndexBuildings != -1 && layerIndexGround != -1 && layerIndexUnits != -1 && layerIndexWater != -1 && layerIndexPPVolume != -1 && layerIndexHighlightVolume != -1 && layerIndexResources != -1 && layerIndexRoads != -1 && layerIndexItems != -1 && layerIndexDecorations != -1 );
 		defaultShader = Shader.Find( "Standard" );
 		defaultColorShader = Shader.Find( "Unlit/Color" );
 		defaultTextureShader = Shader.Find( "Unlit/Texture" );
@@ -853,7 +830,7 @@ public class World : HiveObject
 	{
 		if ( main )
 		{
-			var lightObject = new GameObject { layer = World.layerIndexPPVolume };
+			var lightObject = new GameObject { layer = Constants.World.layerIndexPPVolume };
 			light = lightObject.AddComponent<Light>();
 			light.type = UnityEngine.LightType.Directional;
 			lightObject.name = "Sun";

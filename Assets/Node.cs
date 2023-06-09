@@ -213,7 +213,7 @@ public class Node : HiveObject
 				d.SetParent( world.ground.transform, false );
 				var o = Neighbour( decorationDirection );
 				d.localPosition = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
-				d.gameObject.layer = World.layerIndexDecorations;
+				d.gameObject.layer = Constants.World.layerIndexDecorations;
 				Sprite decorationSprite = decorationSprites.GetMediaData( type, decorationType );
 				if ( decorationSprite )
 				{

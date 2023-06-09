@@ -128,7 +128,7 @@ public class Ground : HiveObject
 		tcs[3].Set( 3, 3 );
 		mesh.uv = tcs;
 
-		mapGround.gameObject.layer = World.layerIndexMapOnly;
+		mapGround.gameObject.layer = Constants.World.layerIndexMap;
 		mapGround.transform.SetParent( transform, false );
 		mapGround.material = new Material( World.defaultTextureShader );
 		RecreateMapGroundTexture();
@@ -671,10 +671,10 @@ public class Ground : HiveObject
 
 		public void BuildMesh()
 		{
-			if ( gameObject.layer == World.layerIndexGround )
+			if ( gameObject.layer == Constants.World.layerIndexGround )
 				return;
 
-			gameObject.layer = World.layerIndexGround;
+			gameObject.layer = Constants.World.layerIndexGround;
 			MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
 			collider = gameObject.GetComponent<MeshCollider>();
 			mesh = meshFilter.mesh = new ();

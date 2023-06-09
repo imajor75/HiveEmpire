@@ -45,15 +45,15 @@ public class Eye : HiveObject
 		cameraGrid.orthographic = flatMode;
 		if ( flatMode )
 		{
-			cameraGrid.cullingMask = (1 << World.layerIndexRoads);
+			cameraGrid.cullingMask = (1 << Constants.World.layerIndexRoads);
 			if ( Interface.Viewport.showGround )
-				cameraGrid.cullingMask |= (1 << World.layerIndexWater) + (1 << World.layerIndexGround);
+				cameraGrid.cullingMask |= (1 << Constants.World.layerIndexWater) + (1 << Constants.World.layerIndexGround);
 			StopAutoChange();
 			spriteCamera.enabled = true;
 		}
 		else
 		{
-			cameraGrid.cullingMask = int.MaxValue - (1 << World.layerIndexMapOnly) - (1 << Constants.World.layerIndex2d);
+			cameraGrid.cullingMask = int.MaxValue - (1 << Constants.World.layerIndexMap) - (1 << Constants.World.layerIndexSprites);
 			spriteCamera.enabled = false;
 		}
 		RenderSettings.fog = !flatMode;
@@ -100,7 +100,7 @@ public class Eye : HiveObject
 		spriteCamera.name = "Camera grid for sprites";
 		spriteCamera.Setup( this, 100 );
 		spriteCamera.orthographic = true;
-		spriteCamera.cullingMask = 1 << Constants.World.layerIndex2d;
+		spriteCamera.cullingMask = 1 << Constants.World.layerIndexSprites;
 		spriteCamera.enabled = cameraGrid.enabled = world.main;
 
 		base.Setup( world );
@@ -138,7 +138,7 @@ public class Eye : HiveObject
 			gameObject.AddComponent<AudioListener>();
 
 		cameraGrid.CreateCameras();
-		cameraGrid.cullingMask = ~((1 << World.layerIndexMapOnly) + (1 << Constants.World.layerIndex2d));
+		cameraGrid.cullingMask = ~((1 << Constants.World.layerIndexMap) + (1 << Constants.World.layerIndexSprites));
 
 		if ( !spriteCamera )
 		{
@@ -149,7 +149,7 @@ public class Eye : HiveObject
 		spriteCamera.CreateCameras();
 		spriteCamera.name = "Camera grid for sprites";
 		spriteCamera.orthographic = true;
-		spriteCamera.cullingMask = 1 << Constants.World.layerIndex2d;
+		spriteCamera.cullingMask = 1 << Constants.World.layerIndexSprites;
 		spriteCamera.enabled = flatMode;
 
 		base.Start();
@@ -474,7 +474,7 @@ public class Eye : HiveObject
 		public new Eye eye;
 		public World world => eye?.world ?? game;
 		[JsonIgnore]
-		public int cullingMask = ~( 1 << World.layerIndexMapOnly );
+		public int cullingMask = ~( 1 << Constants.World.layerIndexMap );
 		public float depth;
 
 		public static CameraGrid Create()
@@ -583,21 +583,21 @@ public class Eye : HiveObject
 
 			int effectiveMask = cullingMask;
 			if ( !settings.renderBuildings )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexBuildings );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexBuildings );
 			if ( !settings.renderRoads )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexRoads );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexRoads );
 			if ( !settings.renderGround )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexGround );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexGround );
 			if ( !settings.renderResources )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexResources ) - ( 1 << LayerMask.NameToLayer( "Trees" ) );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexResources ) - ( 1 << LayerMask.NameToLayer( "Trees" ) );
 			if ( !settings.renderUnits )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexUnits );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexUnits );
 			if ( !settings.renderItems )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexItems );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexItems );
 			if ( !settings.renderDecorations )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexDecorations );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexDecorations );
 			if ( !settings.renderWater )
-				effectiveMask &= int.MaxValue - ( 1 << World.layerIndexWater );
+				effectiveMask &= int.MaxValue - ( 1 << Constants.World.layerIndexWater );
 
 			first = null;
 
@@ -896,7 +896,7 @@ public class Eye : HiveObject
 									if ( renderer )
 										maskRenderer.DrawRenderer( renderer, markerMaterial );
 								}
-								if ( eye.flatMode && ( o.layer & Constants.World.layerIndex2d) != 0 )
+								if ( eye.flatMode && ( o.layer & Constants.World.layerIndexSprites) != 0 )
 								{
 									SpriteRenderer sr;
 									o.TryGetComponent<SpriteRenderer>( out sr );

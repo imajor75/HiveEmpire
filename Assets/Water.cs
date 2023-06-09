@@ -49,7 +49,7 @@ public class Water : HiveObject
         mesh = GetComponent<MeshFilter>().mesh = new ();
         material = GetComponent<MeshRenderer>().material = Instantiate( Resources.Load<Material>( "Water" ) );
         material.SetInt( "Waves", 1 );
-        gameObject.layer = World.layerIndexWater;
+        gameObject.layer = Constants.World.layerIndexWater;
         UpdateMesh();
 
         if ( world.generatorSettings.reliefSettings.island )
@@ -62,7 +62,7 @@ public class Water : HiveObject
                     continue;
 
                 var mf = new GameObject( "Water clone" ).AddComponent<MeshFilter>();
-                mf.gameObject.layer = World.layerIndexWater;
+                mf.gameObject.layer = Constants.World.layerIndexWater;
                 mf.mesh = mesh;
                 mf.gameObject.AddComponent<MeshRenderer>().material = cloneMaterial;
                 mf.transform.SetParent( transform );

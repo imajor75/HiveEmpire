@@ -672,7 +672,7 @@ abstract public class Building : VisibleHiveObject
 		body = Instantiate( Template() );
 		body.transform.RotateAround( Vector3.zero, Vector3.up, 60 * ( 1 - flagDirection ) );
 		body.transform.SetParent( transform, false );
-		World.SetLayerRecursive( body, World.layerIndexBuildings );
+		World.SetLayerRecursive( body, Constants.World.layerIndexBuildings );
 		var smoke = body.transform.Find( "smoke" )?.GetComponent<ParticleSystem>();
 		if ( smoke )
 		{

@@ -242,7 +242,7 @@ public class Resource : VisibleHiveObject
 			if ( type == Type.tree )
 				World.SetLayerRecursive( body, LayerMask.NameToLayer( "Trees" ) );
 			else
-				World.SetLayerRecursive( body, World.layerIndexResources );
+				World.SetLayerRecursive( body, Constants.World.layerIndexResources );
 			Tree treeCreator;
 			if ( body.TryGetComponent<Tree>( out treeCreator ) )
 			{

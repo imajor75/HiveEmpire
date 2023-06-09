@@ -446,7 +446,7 @@ public class Stock : Attackable
 			onMap.transform.localRotation = Quaternion.Euler( 90, 0, 0 );
 			onMap.transform.localScale = Vector3.one * 0.3f;
 			onMap.material.renderQueue = 4003;
-			onMap.gameObject.layer = World.layerIndexMapOnly;
+			onMap.gameObject.layer = Constants.World.layerIndexMap;
 
 			UpdateLook();
 		}

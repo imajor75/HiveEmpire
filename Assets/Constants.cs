@@ -32,7 +32,20 @@ public static class Constants
     {
         public const float oreCountPerNode = 0.02f;
         public const int soundMaxDistance = 7;
-        public const int layerIndex2d = 17;
+        public const int layerIndexResources = 3;
+        public const int layerIndexWater = 4;
+        public const int layerIndexHighlightVolume = 6;
+        public const int layerIndexGround = 7;
+        public const int layerIndexMap = 8;
+        public const int layerIndexItems = 9;
+        public const int layerIndexDecorations = 10;
+        public const int layerIndexPPVolume = 11;
+        public const int layerIndexGrass = 12;
+        public const int layerIndexBuildings = 13;
+        public const int layerIndexUnits = 14;
+        public const int layerIndexRoads = 15;
+        public const int layerIndexTrees = 16;
+        public const int layerIndexSprites = 17;
     }
 
     public static class Game

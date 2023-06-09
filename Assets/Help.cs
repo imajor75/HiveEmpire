@@ -610,7 +610,7 @@ public static class Help
         renderer.sprite = sprite;
         renderer.material.shader = Interface.spriteShader;
 		renderer.sortingOrder = (int)( -position.x * 100 );
-        renderer.gameObject.layer = functional ? World.layerIndexMapOnly : Constants.World.layerIndex2d;
+        renderer.gameObject.layer = functional ? Constants.World.layerIndexMap : Constants.World.layerIndexSprites;
     }
 
 	public class RectTransformDebugger : MonoBehaviour

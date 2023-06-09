@@ -1517,7 +1517,7 @@ public class Unit : VisibleHiveObject
 		soundSource = World.CreateSoundSource( this );
 		
 		arrowObject = new GameObject( "Marker" );
-		World.SetLayerRecursive( arrowObject, World.layerIndexMapOnly );
+		World.SetLayerRecursive( arrowObject, Constants.World.layerIndexMap );
 		arrowObject.transform.SetParent( transform, false );
 		var sr = arrowObject.AddComponent<SpriteRenderer>();
 		sr.sprite = arrowSprite;

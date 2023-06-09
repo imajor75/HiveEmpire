@@ -190,7 +190,7 @@ public class Flag : HiveObject
 		onMap.transform.localPosition = Vector3.up * 3;
 		onMap.transform.rotation = Quaternion.Euler( 90, 0, 0 );
 		onMap.transform.localScale = Vector3.one * 0.3f;
-		onMap.gameObject.layer = World.layerIndexMapOnly;
+		onMap.gameObject.layer = Constants.World.layerIndexMap;
 		onMap.material.renderQueue = 4003;
 		onMap.sprite = Resources.Load<Sprite>( "icons/ring" );
 	}

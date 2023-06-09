@@ -231,7 +231,7 @@ public class Road : HiveObject, Interface.IInputHandler
 
 	new public void Start()
 	{
-		gameObject.layer = World.layerIndexRoads;
+		gameObject.layer = Constants.World.layerIndexRoads;
 		ground.Link( this );
 		if ( nodes.Count > 0 )
 		{
@@ -256,7 +256,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		mapMaterial.renderQueue = 4000;
 		r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		mapObject.transform.SetParent( transform, false );
-		World.SetLayerRecursive( mapObject, World.layerIndexMapOnly );
+		World.SetLayerRecursive( mapObject, Constants.World.layerIndexMap );
 		World.SetRenderMode( mapMaterial, World.BlendMode.Transparent );
 
 		RebuildMesh();

@@ -253,7 +253,7 @@ public class Item : VisibleHiveObject
 		if ( transform.parent == null )
 			transform.SetParent( world.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
 		body = Instantiate( looks.GetMediaData( type ) );
-		body.layer = World.layerIndexItems;
+		body.layer = Constants.World.layerIndexItems;
 
 		if ( Constants.Item.bottomHeights[(int)type] == float.MaxValue )
 			Constants.Item.bottomHeights[(int)type] = body.GetComponent<MeshRenderer>().bounds.min.y;

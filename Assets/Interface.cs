@@ -345,7 +345,7 @@ public class Interface : HiveObject
 			nodeMask.transform.SetParent( node.transform, false );
 			nodeMask.transform.rotation = Quaternion.Euler( 90, 0, 90 );
 			nodeMask.transform.localScale = new Vector3( 0.55f, 0.4f, 1 );
-			nodeMask.gameObject.layer = Constants.World.layerIndex2d;
+			nodeMask.gameObject.layer = Constants.World.layerIndexSprites;
 
 			nodeMask.material.shader = Interface.spriteShader;
 			nodeMask.sprite = Resources.Load<Sprite>( "sprites/other/hexagon" );
@@ -2566,7 +2566,7 @@ public class Interface : HiveObject
 					SetupForGuardHouse( guardHouse );
 			}
 				
-			World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+			World.SetLayerRecursive( gameObject, Constants.World.layerIndexMap );
 		}
 
 		SpriteRenderer NewSprite( Sprite sprite, string name )
@@ -2721,7 +2721,7 @@ public class Interface : HiveObject
 						t.transform.localScale = new Vector3( 0.25f, 0.28f, 1 );
 						slot++;
 					}
-					World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+					World.SetLayerRecursive( gameObject, Constants.World.layerIndexMap );
 				}
 
 				if ( building is GuardHouse gh )
@@ -2735,7 +2735,7 @@ public class Interface : HiveObject
 						t.transform.localPosition = new Vector3( -0.8f + 0.4f * (i % 5), 0.7f - 0.5f * (i / 5), -0.1f );
 						t.transform.localScale = new Vector3( 0.25f, 0.28f, 1 );
 					}
-					World.SetLayerRecursive( gameObject, World.layerIndexMapOnly );
+					World.SetLayerRecursive( gameObject, Constants.World.layerIndexMap );
 				}
 			}
 		}
@@ -6797,9 +6797,9 @@ if ( cart )
 			if ( grid )
 			{
 				if ( ground )
-					grid.cullingMask = grid.cullingMask | (1 << World.layerIndexWater) | (1 << World.layerIndexGround);
+					grid.cullingMask = grid.cullingMask | (1 << Constants.World.layerIndexWater) | (1 << Constants.World.layerIndexGround);
 				else
-					grid.cullingMask = grid.cullingMask & (int.MaxValue - (1 << World.layerIndexWater) - (1 << World.layerIndexGround) );
+					grid.cullingMask = grid.cullingMask & (int.MaxValue - (1 << Constants.World.layerIndexWater) - (1 << Constants.World.layerIndexGround) );
 			}
 			showGround = ground;
 		}
@@ -6901,10 +6901,10 @@ if ( cart )
 		public HiveObject FindObjectAt( Vector3 screenPosition )
 		{
 			var layers = eye.cameraGrid.cullingMask;
-			layers &= int.MaxValue - (1 << World.layerIndexHighlightVolume);
-			layers |= 1 << World.layerIndexGround;
+			layers &= int.MaxValue - (1 << Constants.World.layerIndexHighlightVolume);
+			layers |= 1 << Constants.World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
-				layers &= int.MaxValue - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexResources) - (1 << World.layerIndexMapOnly);
+				layers &= int.MaxValue - (1 << Constants.World.layerIndexBuildings) - (1 << Constants.World.layerIndexUnits) - (1 << Constants.World.layerIndexResources) - (1 << Constants.World.layerIndexMap);
 			
 			RaycastHit hit = new ();
 			foreach ( var camera in eye.cameraGrid.cameras )
@@ -7022,7 +7022,7 @@ if ( cart )
 			foreach ( var camera in eye.cameraGrid.cameras )
 			{
 				Ray ray = camera.ScreenPointToRay( eventData.position );
-				if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << World.layerIndexGround ) )
+				if ( !Physics.Raycast( ray, out RaycastHit hit, 1000, 1 << Constants.World.layerIndexGround ) )
 					continue;
 
 				Vector3 center = camera.WorldToScreenPoint( hit.point );

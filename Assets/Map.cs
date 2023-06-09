@@ -47,7 +47,7 @@ public class Map : Interface.Panel
 		base.OnDestroy();
 	}
 
-	public static int cullingMask { get { return int.MaxValue - (1 << Ground.Grass.layerIndex ) - (1 << World.layerIndexBuildings) - (1 << World.layerIndexUnits) - (1 << World.layerIndexRoads) - (1 << LayerMask.NameToLayer( "Trees" ) ) - (1 << World.layerIndexItems) - (1 << Constants.World.layerIndex2d); } }
+	public static int cullingMask { get { return int.MaxValue - (1 << Ground.Grass.layerIndex ) - (1 << Constants.World.layerIndexBuildings) - (1 << Constants.World.layerIndexUnits) - (1 << Constants.World.layerIndexRoads) - (1 << LayerMask.NameToLayer( "Trees" ) ) - (1 << Constants.World.layerIndexItems) - (1 << Constants.World.layerIndexSprites); } }
 
 	[RequireComponent( typeof( RawImage ) )]
 	public class MapImage : UIBehaviour
@@ -80,7 +80,7 @@ public class Map : Interface.Panel
 			camera.targetTexture = renderTexture;
 			camera.cullingMask = cullingMask;
 			if ( !Interface.Viewport.showGround )
-				camera.cullingMask -= ( 1 << World.layerIndexGround ) + ( 1 << World.layerIndexWater );
+				camera.cullingMask -= ( 1 << Constants.World.layerIndexGround ) + ( 1 << Constants.World.layerIndexWater );
 				
 			float rotation = eye.direction / (float)Math.PI * 180f;
 			SetTarget( new Vector2( eye.x, eye.y ), zoom, rotation );
