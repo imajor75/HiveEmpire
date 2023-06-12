@@ -146,6 +146,7 @@ public class Eye : HiveObject
 			spriteCamera.Setup( this, 100 );
 			spriteCamera.enabled = flatMode;
 		}
+		spriteCamera.transform.SetParent( transform, false );
 		spriteCamera.CreateCameras();
 		spriteCamera.name = "Camera grid for sprites";
 		spriteCamera.orthographic = true;
