@@ -953,7 +953,7 @@ abstract public class Building : VisibleHiveObject
 		{
 			Vector3 result = new ();
 			foreach ( var offset in foundation )
-				result += node.Add( offset ).position;
+				result += node.Add( offset ).GetPositionRelativeTo( node );
 			result /= foundation.Count;
 
 			return result;
