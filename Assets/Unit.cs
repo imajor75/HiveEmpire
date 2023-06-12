@@ -64,6 +64,18 @@ public class Unit : VisibleHiveObject
 	readonly GameObject[] wheels = new GameObject[4];
 
 	override public UpdateStage updateMode => IsIdle() ? UpdateStage.lazy : UpdateStage.realtime | UpdateStage.lazy;
+	override public Vector3 position
+	{
+		get
+		{
+			Vector3 result = node.position;
+			if ( building && node == building.node )
+				result += standingOffsetInsideBuilding;
+			if ( walkTo )
+				result = Vector3.Lerp( walkFrom.position, walkTo.position, walkProgress );
+			return result;
+		}
+	}
 
 	public float roadProgress => firstTask is WalkToRoadPoint w ? w.progress : 0;
 
@@ -1468,12 +1480,7 @@ public class Unit : VisibleHiveObject
 			return;
 
 		transform.SetParent( ground.transform, false );
-		Vector3 pos = node.position;
-		if ( building && node == building.node )
-			pos += standingOffsetInsideBuilding;
-		if ( walkTo )
-			pos = Vector3.Lerp( walkFrom.position, walkTo.position, walkProgress );
-		transform.position = pos;
+		transform.position = position;
 
 		body = Instantiate( looks.GetMediaData( look ), transform );
 
