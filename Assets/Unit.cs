@@ -912,7 +912,7 @@ public class Unit : VisibleHiveObject
 					items[1] = secondary;
 					deliverTask.items[1] = secondary;
 
-					var box = secondary.Link( boss, LinkType.haulingBoxSecondary );
+					var box = boss.LinkItem( secondary, LinkType.haulingBoxSecondary );
 					if ( box )
 						box.localPosition = Constants.Item.secondItemOffset[(int)secondary.type];
 				}
@@ -942,11 +942,11 @@ public class Unit : VisibleHiveObject
 			if ( !reparented[0] && timer.age > -pickupReparentTime )
 			{
 				reparented[0] = true;
-				items[0].Link( boss, expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight );
+				boss.LinkItem( items[0], expectingSecondary ? LinkType.haulingBoxHeavy : LinkType.haulingBoxLight );
 				if ( items[1] )
 				{
 					reparented[1] = true;
-					items[1].Link( boss, LinkType.haulingBoxSecondary );
+					boss.LinkItem( items[1], LinkType.haulingBoxSecondary );
 				}
 			}
 
@@ -1023,7 +1023,7 @@ public class Unit : VisibleHiveObject
 
 					if ( item.buddy )
 					{
-						item.buddy.Link( boss, LinkType.haulingBoxLight );
+						boss.LinkItem( item.buddy, LinkType.haulingBoxLight );
 						timer.reference -= 30;
 					}
 					else
@@ -1535,14 +1535,14 @@ public class Unit : VisibleHiveObject
 
 		if ( itemsInHands[1] )
 		{
-			itemsInHands[0]?.Link( this, LinkType.haulingBoxHeavy );
+			LinkItem( itemsInHands[0], LinkType.haulingBoxHeavy );
 	
-			var secondaryBox = itemsInHands[1].Link( this, LinkType.haulingBoxSecondary );
+			var secondaryBox = LinkItem( itemsInHands[1], LinkType.haulingBoxSecondary );
 			if ( secondaryBox )
 				secondaryBox.localPosition = Constants.Item.secondItemOffset[(int)itemsInHands[1].type];
 		}
 		else 
-			itemsInHands[0]?.Link( this, LinkType.haulingBoxLight );
+			LinkItem( itemsInHands[0], LinkType.haulingBoxLight );
 
 		foreach ( var task in taskQueue )
 			task.Start();
@@ -2421,7 +2421,7 @@ public class Unit : VisibleHiveObject
 			{
 				Item item = child.GetComponent<Item>();
 				if ( item )
-					item.transform.SetParent( world.itemsJustCreated.transform );
+					item.SetParent( world.itemsJustCreated.transform );
 			}
 		}
 		if ( noAssert == false )
@@ -2529,6 +2529,16 @@ public class Unit : VisibleHiveObject
 			return;
 
 		base.OnDeadReference( member, reference );
+	}
+
+	public Transform LinkItem( Item item, LinkType linkType )
+	{
+		if ( !item )
+			return null;
+		Transform parent = links[(int)linkType].transform;
+		item.SetParent( parent??transform, transform );
+		parent?.gameObject.SetActive( true );
+		return parent;
 	}
 
 	public override void Validate( bool chain )

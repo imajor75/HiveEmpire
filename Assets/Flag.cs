@@ -396,12 +396,11 @@ public class Flag : HiveObject
 		if ( frames[frameIndex] == null )
 		{
 			// This only happens rarely, when after load flag.Start is not called before this point is reached
-			item.Link( transform );	
+			item.SetParent( transform );	
 			return;
 		}
 
 		var t = frames[frameIndex].transform;
-		item.Link( t );
 
 		// Adjust the y coordinate of the frame so that the item would be just above the tiles of the flag
 		Vector3 framePos = t.position;
@@ -411,6 +410,8 @@ public class Flag : HiveObject
 		t.LookAt( transform );
 		t.rotation *= Quaternion.Euler( Constants.Item.yawAtFlag[(int)item.type], 0, 0 );
 		item.flatPosition = t.position;
+		
+		item.SetParent( t );
 	}
 
 	public override void OnClicked( Interface.MouseButton button, bool show = false )

@@ -455,11 +455,19 @@ public class VisibleHiveObject : HiveObject
 		functional
 	}
 
-	new public void Start()
+	// Creating the flat object is moved to Awake from Start, because when a new item is created it is linked
+	// to the ItemsJustCreated object before Start would be called. This causes the scale not to be set correctly
+	// by Item.SetParent. But setting the position of the flat object remains in Start, because the position property
+	// uses the foundation of the building in case of buildings, and that is not ready at the time of the Awake call
+	void Awake()
 	{
 		flat = new GameObject( "Flat" ).transform;
 		flat.localRotation = Quaternion.Euler( 90, 90, 0 );
 		flat.SetParent( transform, false );
+	}
+
+	new public void Start()
+	{
 		flat.position = position;
 		
 		foreach ( var type in new []{ VisualType.nice2D, VisualType.functional } )

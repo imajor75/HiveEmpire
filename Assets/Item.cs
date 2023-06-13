@@ -79,30 +79,18 @@ public class Item : VisibleHiveObject
 	public GameObject body;
 	override public UpdateStage updateMode => UpdateStage.turtle;
 
-	public Transform Link( Unit hauler, Unit.LinkType linkType )
+	public void SetParent( Transform parent, Transform flatParent = null )
 	{
-		var slot = hauler.links[(int)linkType];
-		if ( slot )
-		{
-			transform.SetParent( slot.transform, false );
-			slot.SetActive( true );
-		}
-		if ( flat )
-		{
-			flat.SetParent( hauler.transform, false );
-			flat.localScale = Vector3.one * 0.15f / hauler.transform.lossyScale.x;
-		}
-		transform.localPosition = Vector3.zero;
-		return slot?.transform;
-	}
+		if ( !flatParent )
+			flatParent = transform;
 
-	public void Link( Transform parent )
-	{
 		transform.SetParent( parent, false );
+		transform.localPosition = Vector3.zero;
 		if ( flat )
 		{
-			flat.SetParent( transform, false );
-			flat.localScale = Vector3.one * 0.15f / transform.lossyScale.x;
+			flat.SetParent( flatParent, false );
+			flat.localScale = Vector3.one * 0.15f / flatParent.lossyScale.x;
+			flat.rotation = Quaternion.Euler( 90, 0, -90 );
 		}
 	}
 
@@ -230,7 +218,7 @@ public class Item : VisibleHiveObject
 		life.Start();
 		team = origin.team;
 		justCreated = true;
-		transform.SetParent( origin.world.itemsJustCreated.transform, false );
+		SetParent( origin.world.itemsJustCreated.transform );
 		transform.localPosition = Vector3.down * 100;
 		watchRoadDelete.Attach( team.versionedRoadDelete );
 		watchBuildingDelete.Attach( team.versionedBuildingDelete );
@@ -251,7 +239,7 @@ public class Item : VisibleHiveObject
 	new public void Start()
 	{
 		if ( transform.parent == null )
-			transform.SetParent( world.itemsJustCreated.transform, false );	// Temporary parent until something else is not reparrenting it
+			SetParent( world.itemsJustCreated.transform );	// Temporary parent until something else is not reparrenting it
 		body = Instantiate( looks.GetMediaData( type ) );
 		body.layer = Constants.World.layerIndexItems;
 
