@@ -63,6 +63,7 @@ public class Unit : VisibleHiveObject
 	public GameObject[] links = new GameObject[(int)LinkType.total];
 	readonly GameObject[] wheels = new GameObject[4];
 
+	override public int flatRenderingSortOffset => -2;
 	override public UpdateStage updateMode => IsIdle() ? UpdateStage.lazy : UpdateStage.realtime | UpdateStage.lazy;
 	override public Vector3 position
 	{

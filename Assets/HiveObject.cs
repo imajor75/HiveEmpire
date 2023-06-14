@@ -448,6 +448,7 @@ public class VisibleHiveObject : HiveObject
 	public Transform flat;
 
 	public Vector3 flatPosition { set { if ( flat ) flat.position = value; } }
+	public virtual int flatRenderingSortOffset => int.MaxValue;
 
 	public enum VisualType
 	{
@@ -495,8 +496,23 @@ public class VisibleHiveObject : HiveObject
 			return null;
 
 		var renderer = new GameObject( "Sprite" ).AddComponent<SpriteRenderer>();
-		renderer.Prepare( sprite, location.position, visualType == VisualType.functional );
+		renderer.Prepare( sprite, location.position, visualType == VisualType.functional, flatRenderingSortOffset );
 		return renderer.gameObject;
 	}
 
+	public class SpriteController : MonoBehaviour
+	{
+		public SpriteRenderer spriteRenderer;
+		public int sortOffset;
+
+		void Start()
+		{
+			spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+		}
+
+		void Update()
+		{
+			spriteRenderer.sortingOrder = (int)( -transform.position.x * 100 + sortOffset );
+		}
+	}
 }

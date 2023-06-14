@@ -75,6 +75,7 @@ public class Item : VisibleHiveObject
 			return progress;
 		}
 	}
+	public override int flatRenderingSortOffset => -1;
 
 	public GameObject body;
 	override public UpdateStage updateMode => UpdateStage.turtle;

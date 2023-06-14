@@ -605,13 +605,16 @@ public static class Help
 		return array[new System.Random().Next( array.Length )];
 	}
 
-    public static void Prepare( this SpriteRenderer renderer, Sprite sprite, Vector3 position, bool functional = false )
+    public static void Prepare( this SpriteRenderer renderer, Sprite sprite, Vector3 position, bool functional = false, int sortOffset = int.MaxValue )
     {
         renderer.sprite = sprite;
         renderer.material.shader = Interface.spriteShader;
-		renderer.sortingOrder = (int)( -position.x * 100 );
         renderer.gameObject.layer = functional ? Constants.World.layerIndexMap : Constants.World.layerIndexSprites;
-    }
+		if ( sortOffset != int.MaxValue )
+			renderer.gameObject.AddComponent<VisibleHiveObject.SpriteController>().sortOffset = sortOffset;
+		else
+    		renderer.sortingOrder = (int)( -position.x * 100 );
+}
 
 	public class RectTransformDebugger : MonoBehaviour
 	{
