@@ -23,7 +23,6 @@ public class Eye : HiveObject
 	public float autoRotate;
 	public Vector2 autoMove = Vector2.zero;
 	public float moveSensitivity;
-	[JsonIgnore]
 	public bool flatMode;
 	DepthOfField depthOfField;
 	[JsonIgnore]
@@ -36,12 +35,13 @@ public class Eye : HiveObject
 
 	override public UpdateStage updateMode => UpdateStage.none;
 
-	public void SetFlatMode( bool flatMode )
+	public void SetFlatMode( bool flatMode, bool force = false )
 	{
-		if ( this.flatMode == flatMode )
+		if ( this.flatMode == flatMode && force == false )
 			return;
 			
 		this.flatMode = flatMode;
+		root.viewport.displayMode = flatMode ? Interface.Viewport.DisplayMode.sprite : Interface.Viewport.DisplayMode.normal;
 		cameraGrid.orthographic = flatMode;
 		if ( flatMode )
 		{
@@ -104,6 +104,8 @@ public class Eye : HiveObject
 		spriteCamera.enabled = cameraGrid.enabled = world.main;
 
 		base.Setup( world );
+
+		SetFlatMode( root.viewport.displayMode == Interface.Viewport.DisplayMode.sprite );
 	}
 
 	override public void Remove()
@@ -138,7 +140,6 @@ public class Eye : HiveObject
 			gameObject.AddComponent<AudioListener>();
 
 		cameraGrid.CreateCameras();
-		cameraGrid.cullingMask = ~((1 << Constants.World.layerIndexMap) + (1 << Constants.World.layerIndexSprites));
 
 		if ( !spriteCamera )
 		{
@@ -154,6 +155,8 @@ public class Eye : HiveObject
 		spriteCamera.enabled = flatMode;
 
 		base.Start();
+
+		SetFlatMode( flatMode, true );
 	}
 
 	[Serializable]

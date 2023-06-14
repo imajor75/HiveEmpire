@@ -2536,7 +2536,7 @@ public class Unit : VisibleHiveObject
 	{
 		if ( !item )
 			return null;
-		Transform parent = links[(int)linkType].transform;
+		Transform parent = links[(int)linkType]?.transform;
 		item.SetParent( parent??transform, transform );
 		parent?.gameObject.SetActive( true );
 		return parent;

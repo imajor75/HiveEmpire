@@ -570,6 +570,7 @@ public class World : HiveObject
 			eye.cameraGrid = Eye.CameraGrid.Create();
 			eye.cameraGrid.Setup( eye );
 		}
+		root.viewport.displayMode = eye.flatMode ? Interface.Viewport.DisplayMode.sprite : Interface.Viewport.DisplayMode.normal;
 		{
 			var list = Resources.FindObjectsOfTypeAll<Road>();
 			foreach ( var o in list )

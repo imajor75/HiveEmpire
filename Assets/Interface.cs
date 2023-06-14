@@ -6675,6 +6675,14 @@ if ( cart )
 		public static bool showGround = true;
 		public Vector3 rightOffset, downOffset;
 		public Vector3 lastMouse;
+		public DisplayMode displayMode;		// This is mainly stored in Eye.flatMode. The only reason to have it here is to preserve the mode when a new game is started
+
+		public enum DisplayMode
+		{
+			normal,
+			sprite,
+			functional
+		}
 
 		public static Material arrowMaterial;
 
