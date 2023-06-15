@@ -642,7 +642,6 @@ public class Interface : HiveObject
 		globalSettings.Apply();
 
 		var game = Game.Create();
-		game.Setup( game );
 		#if DEBUG
 			StartCoroutine( ValidateCoroutine() );
 		#endif

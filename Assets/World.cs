@@ -239,6 +239,9 @@ public class World : HiveObject
 		updateHiveObjects[0] = new HiveObject.Store( UpdateStage.realtime, 0 );
 		updateHiveObjects[1] = new HiveObject.Store( UpdateStage.lazy, 1, Constants.Game.lazyUpdateSpeed );
 		updateHiveObjects[2] = new HiveObject.Store( UpdateStage.turtle, 2, Constants.Game.turtleUpdateSpeed );
+		id = 0;
+		nextID = 1;
+		world = this;
 	}
 
 	static public AudioSource CreateSoundSource( Component component )
