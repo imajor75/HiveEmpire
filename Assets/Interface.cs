@@ -6912,7 +6912,16 @@ if ( cart )
 			layers |= 1 << Constants.World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << Constants.World.layerIndexBuildings) - (1 << Constants.World.layerIndexUnits) - (1 << Constants.World.layerIndexResources) - (1 << Constants.World.layerIndexMap);
+			layers |= (1 << Constants.World.layerIndexSprites);
 			
+			RaycastHit2D hit2d = new ();
+			foreach ( var camera in eye.cameraGrid.cameras )
+			{
+				Vector2 origin = camera.ScreenToWorldPoint( screenPosition );
+				hit2d = Physics2D.Raycast( origin, Vector2.zero, 0f, 1 << Constants.World.layerIndexSprites );
+				Log( $"Hocciz {hit2d.transform}" );
+			}
+
 			RaycastHit hit = new ();
 			foreach ( var camera in eye.cameraGrid.cameras )
 			{
