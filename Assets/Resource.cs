@@ -147,6 +147,7 @@ public class Resource : VisibleHiveObject
 		functionalSprites.Fill( mapSpriteData, false );
 
 		object[] spriteData = {
+		"sprites/other/tree00", Type.tree,
 		"sprites/other/rock00", Type.rock,
 		"sprites/other/rock01", Type.rock,
 		"sprites/other/rock02", Type.rock,
