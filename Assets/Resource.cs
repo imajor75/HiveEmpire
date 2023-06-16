@@ -146,7 +146,14 @@ public class Resource : VisibleHiveObject
 			"textures/tree_from_above", Type.tree };
 		functionalSprites.Fill( mapSpriteData, false );
 
-		sprites.Fill();
+		object[] spriteData = {
+		"sprites/other/rock00", Type.rock,
+		"sprites/other/rock01", Type.rock,
+		"sprites/other/rock02", Type.rock,
+		"sprites/other/rockInGrass00", Type.rock,
+		"sprites/other/rockInGrass01", Type.rock,
+		"sprites/other/rockInGrass02", Type.rock };
+		sprites.Fill( spriteData );
 		sprites.fileNamePrefix = "sprites/other/";
 
 		object[] sounds = {
@@ -291,8 +298,8 @@ public class Resource : VisibleHiveObject
 	{
 		return visualType switch
 		{
-			VisualType.nice2D => sprites.GetMediaData( type ),
-			VisualType.functional => functionalSprites.GetMediaData( type ),
+			VisualType.nice2D => sprites.GetMediaData( type, bodyRandom ),
+			VisualType.functional => functionalSprites.GetMediaData( type, bodyRandom ),
 			_ => null
 		};
 	}

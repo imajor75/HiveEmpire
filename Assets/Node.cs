@@ -141,16 +141,13 @@ public class Node : HiveObject
 		decorations.Fill( decorationData, false );
 
 		object[] sprites = {
-			"sprites/decorations/rockInGrass00", Type.grass,
-			"sprites/decorations/rockInGrass01", Type.grass,
-			"sprites/decorations/rockInGrass02", Type.grass,
 			"sprites/decorations/poolInGrass", Type.grass,
-			"sprites/decorations/ruinInGrass", Type.grass,
 			"sprites/decorations/bush00", Type.grass,
 			"sprites/decorations/bush01", Type.grass,
 			"sprites/decorations/woodInGrass", Type.grass,
 			"sprites/decorations/stumpInGrass", Type.grass,
 			"sprites/decorations/holeInGrass", Type.grass,
+			"sprites/decorations/patchInGrass", Type.grass,
 			"sprites/decorations/weedInGrass00", Type.grass,
 			"sprites/decorations/weedInGrass01", Type.grass,
 			"sprites/decorations/mushroom00", Type.forest,
@@ -159,15 +156,15 @@ public class Node : HiveObject
 			"sprites/decorations/bushOnDuff00", Type.forest,
 			"sprites/decorations/bushOnDuff01", Type.forest,
 			"sprites/decorations/bushOnDuff02", Type.forest,
-			"sprites/decorations/branchesOnDuff", Type.forest,
+			"sprites/decorations/branchesOnDuff00", Type.forest,
+			"sprites/decorations/branchesOnDuff01", Type.forest,
 			"sprites/decorations/logOnDuff", Type.forest,
 			"sprites/decorations/poolOnDuff", Type.forest,
-			"sprites/decorations/rock00", Type.hill,
-			"sprites/decorations/rock01", Type.hill,
-			"sprites/decorations/rock02", Type.hill,
 			"sprites/decorations/skullOnRock", Type.hill,
-			"sprites/decorations/flowerOnRock00", Type.hill,
-			"sprites/decorations/flowerOnRock01", Type.hill,
+			"sprites/decorations/strangeRock", Type.hill,
+			"sprites/decorations/bushOnRock", Type.hill,
+			"sprites/decorations/treeOnRock", Type.hill,
+			"sprites/decorations/weedOnRock", Type.hill,
 			"sprites/decorations/trunkOnRock", Type.hill
 		};
 		decorationSprites.Fill( sprites, false );
