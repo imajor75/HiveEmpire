@@ -148,9 +148,6 @@ public class Resource : VisibleHiveObject
 
 		object[] spriteData = {
 		"sprites/other/tree00", Type.tree,
-		"sprites/other/rock00", Type.rock,
-		"sprites/other/rock01", Type.rock,
-		"sprites/other/rock02", Type.rock,
 		"sprites/other/rockInGrass00", Type.rock,
 		"sprites/other/rockInGrass01", Type.rock,
 		"sprites/other/rockInGrass02", Type.rock };
