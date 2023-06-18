@@ -402,6 +402,7 @@ public static class Constants
        	public const int stuckTimeout = Constants.Game.normalSpeedPerSecond * 60;
     	public const int boredTimeBeforeRemove = Constants.Game.normalSpeedPerSecond * 120;
         public const int flagSearchDistance = 6;
+        public const float itemsInHandsSpriteOffset = 0.2f * Node.size;
     }
 
     public static class Workshop

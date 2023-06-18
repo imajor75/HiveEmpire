@@ -1666,10 +1666,11 @@ public class Unit : VisibleHiveObject
 			}
 		}
 
+		var itemPosition = transform.position + Constants.Unit.itemsInHandsSpriteOffset * Vector3.back;
 		if ( itemsInHands[0] )
-			itemsInHands[0].flatPosition = transform.position;
+			itemsInHands[0].flatPosition = itemPosition;
 		if ( itemsInHands[1] )
-			itemsInHands[1].flatPosition = transform.position;
+			itemsInHands[1].flatPosition = itemPosition;
 	}
 
 	public override void Remove()
