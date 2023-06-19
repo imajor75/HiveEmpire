@@ -614,6 +614,7 @@ public static class Help
 			renderer.gameObject.AddComponent<VisibleHiveObject.SpriteController>().sortOffset = sortOffset;
 		else
     		renderer.sortingOrder = (int)( -position.x * 100 );
+		renderer.gameObject.AddComponent<BoxCollider>();
 }
 
 	public class RectTransformDebugger : MonoBehaviour
