@@ -1520,7 +1520,8 @@ public class Unit : VisibleHiveObject
 			Type.hauler => "Hauler",
 			Type.constructor => "Builder",
 			Type.tinkerer => "Tinkerer",
-			_ => "Unit",
+			Type.cart => "Cart",
+			_ => "Unit"
 		};
 		soundSource = World.CreateSoundSource( this );
 		

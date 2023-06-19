@@ -380,6 +380,7 @@ public class Stock : Attackable
 		public const int frameCount = 8;
 		public Stock boss { get { return building as Stock; } }
 		readonly GameObject[] frames = new GameObject[frameCount];
+		public GameObject cargoSprite;
 		public SpriteRenderer onMap;
 		new public static Cart Create()
 		{
@@ -497,12 +498,19 @@ public class Stock : Attackable
 					itemBody.transform.rotation *= Quaternion.Euler( -Constants.Item.yawAtFlag[(int)itemType], 0, 0 );
 					itemBody.transform.SetParent( frames[i].transform, false );
 				}
+				cargoSprite = new GameObject( "Cargo items" );
+				cargoSprite.transform.SetParent( flat.transform, false );
+				cargoSprite.transform.localScale = Vector3.one * 0.1f;
+				cargoSprite.transform.localPosition = Vector3.right * Constants.Unit.itemsInHandsSpriteOffset;
+				cargoSprite.AddComponent<SpriteRenderer>().Prepare( Item.sprites.GetMediaData( itemType ), transform.position + Vector3.right * Constants.Unit.itemsInHandsSpriteOffset, false, -1 );
+				cargoSprite.AddComponent<VisibleHiveObject.SpriteController>();
 			}
 			else
 			{
 				foreach ( var f in frames )
 					if ( f.transform.childCount > 0 )
 						Eradicate( f.transform.GetChild( 0 ).gameObject );
+				Eradicate( cargoSprite );
 			}
 			if ( taskQueue.Count == 0 && walkTo == null )
 				SetActive( false );
