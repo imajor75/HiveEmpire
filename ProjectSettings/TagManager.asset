@@ -13,7 +13,7 @@ TagManager:
   - UI
   - HighlightVolume
   - Ground
-  - Map only
+  - Map
   - Items
   - Decorations
   - PPVolume
@@ -23,7 +23,7 @@ TagManager:
   - Roads
   - Trees
   - Sprites
-  - 
+  - Path
   - 
   - 
   - 

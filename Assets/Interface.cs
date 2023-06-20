@@ -909,7 +909,7 @@ public class Interface : HiveObject
 		if ( cameraBackHotkey.IsPressed() )
 			eye.RestoreOldPosition();
 		if ( flatHotkey.IsPressed() )
-			eye.SetFlatMode( !eye.flatMode );
+			eye.SetSpriteMode( !eye.spriteMode );
 #if DEBUG
 		if ( Input.GetKeyDown( KeyCode.Keypad0 ) )
 		{
@@ -1244,6 +1244,7 @@ public class Interface : HiveObject
 		public void Start()
 		{
 			transform.SetParent( HiveCommon.game.transform, false );
+			gameObject.layer = Constants.World.layerIndexPath;
 		}
 
 		public void Update()
@@ -6796,7 +6797,7 @@ if ( cart )
 		void ToggleGround( bool ground )
 		{
 			Eye.CameraGrid grid = null;
-			if ( eye.flatMode )
+			if ( eye.spriteMode )
 				grid = eye.cameraGrid;
 			if ( Map.MapImage.instance )
 				grid = Map.MapImage.instance.camera;
@@ -8173,7 +8174,7 @@ if ( cart )
 				preview.Generate();
 				preview.eye = Eye.Create();
 				preview.eye.Setup( preview );
-				preview.eye.SetFlatMode( true );
+				preview.eye.SetSpriteMode( true );
 				preview.eye.fixedAltitude = 30;
 				preview.eye.cameraGrid.targetTexture = view;
 				string resources = $"tree: {preview.treeCount}\nrock: {preview.rockCount}";

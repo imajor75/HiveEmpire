@@ -23,7 +23,7 @@ public class Eye : HiveObject
 	public float autoRotate;
 	public Vector2 autoMove = Vector2.zero;
 	public float moveSensitivity;
-	public bool flatMode;
+	public bool spriteMode;
 	DepthOfField depthOfField;
 	[JsonIgnore]
 	PostProcessLayer ppl;
@@ -35,17 +35,17 @@ public class Eye : HiveObject
 
 	override public UpdateStage updateMode => UpdateStage.none;
 
-	public void SetFlatMode( bool flatMode, bool force = false )
+	public void SetSpriteMode( bool spriteMode, bool force = false )
 	{
-		if ( this.flatMode == flatMode && force == false )
+		if ( this.spriteMode == spriteMode && force == false )
 			return;
 			
-		this.flatMode = flatMode;
-		root.viewport.displayMode = flatMode ? Interface.Viewport.DisplayMode.sprite : Interface.Viewport.DisplayMode.normal;
-		cameraGrid.orthographic = flatMode;
-		if ( flatMode )
+		this.spriteMode = spriteMode;
+		root.viewport.displayMode = spriteMode ? Interface.Viewport.DisplayMode.sprite : Interface.Viewport.DisplayMode.normal;
+		cameraGrid.orthographic = spriteMode;
+		if ( spriteMode )
 		{
-			cameraGrid.cullingMask = (1 << Constants.World.layerIndexRoads);
+			cameraGrid.cullingMask = (1 << Constants.World.layerIndexRoads) + (1 << Constants.World.layerIndexPath);
 			if ( Interface.Viewport.showGround )
 				cameraGrid.cullingMask |= (1 << Constants.World.layerIndexWater) + (1 << Constants.World.layerIndexGround);
 			StopAutoChange();
@@ -56,7 +56,7 @@ public class Eye : HiveObject
 			cameraGrid.cullingMask = int.MaxValue - (1 << Constants.World.layerIndexMap) - (1 << Constants.World.layerIndexSprites);
 			spriteCamera.enabled = false;
 		}
-		RenderSettings.fog = !flatMode;
+		RenderSettings.fog = !spriteMode;
 	}
 
 	[JsonIgnore]
@@ -83,6 +83,8 @@ public class Eye : HiveObject
 	[Obsolete( "Compatibility with old files", true )]
 	bool rotateAround { set {} }
 	[Obsolete( "Compatibility with old files", true )]
+	bool flatMode { set { spriteMode = value; } }
+	[Obsolete( "Compatibility with old files", true )]
 	bool enableSideCameras { set {} }
 
 	public static Eye Create()
@@ -105,7 +107,7 @@ public class Eye : HiveObject
 
 		base.Setup( world );
 
-		SetFlatMode( root.viewport.displayMode == Interface.Viewport.DisplayMode.sprite );
+		SetSpriteMode( root.viewport.displayMode == Interface.Viewport.DisplayMode.sprite );
 	}
 
 	override public void Remove()
@@ -145,18 +147,18 @@ public class Eye : HiveObject
 		{
 			spriteCamera = CameraGrid.Create();
 			spriteCamera.Setup( this, 100 );
-			spriteCamera.enabled = flatMode;
+			spriteCamera.enabled = spriteMode;
 		}
 		spriteCamera.transform.SetParent( transform, false );
 		spriteCamera.CreateCameras();
 		spriteCamera.name = "Camera grid for sprites";
 		spriteCamera.orthographic = true;
 		spriteCamera.cullingMask = 1 << Constants.World.layerIndexSprites;
-		spriteCamera.enabled = flatMode;
+		spriteCamera.enabled = spriteMode;
 
 		base.Start();
 
-		SetFlatMode( flatMode, true );
+		SetSpriteMode( spriteMode, true );
 	}
 
 	[Serializable]
@@ -293,12 +295,12 @@ public class Eye : HiveObject
 			absoluteX += ground.dimension * Constants.Node.size;
 		}
 
-		if ( Interface.cameraRotateCCWHotkey.IsDown() && !flatMode )
+		if ( Interface.cameraRotateCCWHotkey.IsDown() && !spriteMode )
 		{
 			StopAutoChange();
 			direction -= Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
 		}
-		if ( Interface.cameraRotateCWHotkey.IsDown() && !flatMode )
+		if ( Interface.cameraRotateCWHotkey.IsDown() && !spriteMode )
 		{
 			StopAutoChange();
 			direction += Constants.Eye.rotateSpeed * Time.unscaledDeltaTime;
@@ -374,7 +376,7 @@ public class Eye : HiveObject
 	public void UpdateTransformation()
 	{
 		var position = new Vector3( x, height, y );
-		if ( flatMode )
+		if ( spriteMode )
 		{
 			transform.localPosition = position + Vector3.up * 50;
 			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( 1, 0, 0/*(float)Math.Sin(direction), 0, (float)Math.Cos(direction)*/ ) );
@@ -454,7 +456,7 @@ public class Eye : HiveObject
 		director = null;
 		target = null;
 		var forwardDir = transform.forward;
-		if ( flatMode )
+		if ( spriteMode )
 			forwardDir = transform.up;
 		return transform.right * side * moveSensitivity + forwardDir * forward * moveSensitivity;
 	}
@@ -733,7 +735,7 @@ public class Eye : HiveObject
 				int CRC = 0;
 				if ( type == Type.buildings )
 				{
-					if ( eye.flatMode )
+					if ( eye.spriteMode )
 						CRC++;
 					foreach ( var t in buildingList )
 						CRC += t.id;
@@ -893,14 +895,14 @@ public class Eye : HiveObject
 
 							void DrawRecursively( GameObject o )
 							{
-								if ( !eye.flatMode && ( eye.cameraGrid.cullingMask & (1 << o.layer) ) != 0 )
+								if ( !eye.spriteMode && ( eye.cameraGrid.cullingMask & (1 << o.layer) ) != 0 )
 								{
 									MeshRenderer renderer;
 									o.TryGetComponent<MeshRenderer>( out renderer );
 									if ( renderer )
 										maskRenderer.DrawRenderer( renderer, markerMaterial );
 								}
-								if ( eye.flatMode && ( o.layer & Constants.World.layerIndexSprites) != 0 )
+								if ( eye.spriteMode && ( o.layer & Constants.World.layerIndexSprites) != 0 )
 								{
 									SpriteRenderer sr;
 									o.TryGetComponent<SpriteRenderer>( out sr );
@@ -930,7 +932,7 @@ public class Eye : HiveObject
 			{
 				float maskValueOffset = 0;
 				var distance = area.center.DistanceFrom( eye.transform.position );
-				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size && !eye.flatMode )
+				if ( distance < ( area.radius + 0.5 ) * Constants.Node.size && !eye.spriteMode )
 					maskValueOffset = 1;
 
 				mainMaterial.SetFloat( maskValueOffsetID, maskValueOffset );
