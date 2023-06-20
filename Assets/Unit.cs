@@ -34,6 +34,8 @@ public class Unit : VisibleHiveObject
 	public Color currentColor;
 	public List<Task> taskQueue = new ();
 	public Watch haulerRoadBegin = new (), haulerRoadEnd = new ();
+	public bool facingRight;
+	public SpriteRenderer spriteRenderer;
 
 	[JsonIgnore]
 	public bool debugReset;
@@ -1561,7 +1563,11 @@ public class Unit : VisibleHiveObject
 	override public GameObject CreateVisual( VisualType visualType )
 	{
 		if ( visualType != VisualType.functional )
-			return base.CreateVisual( visualType );
+		{
+			var visual = base.CreateVisual( visualType );
+			spriteRenderer = visual.GetComponent<SpriteRenderer>();
+			return visual;
+		}
 
 		var indicator = GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		indicator.transform.localPosition = Vector3.back * 2;
@@ -1583,7 +1589,12 @@ public class Unit : VisibleHiveObject
 
 	public void Walk( Node target )
 	{
-		assert.IsTrue( node.DirectionTo( target ) >= 0, "Trying to walk to a distant node" );
+		int direction = node.DirectionTo( target );
+		assert.IsTrue( direction >= 0, "Trying to walk to a distant node" );
+		if ( ( direction == 0 || direction == 1 ) && !facingRight )
+			facingRight = spriteRenderer.flipX = true;
+		if ( ( direction == 3 || direction == 4 ) && facingRight )
+			facingRight = spriteRenderer.flipX = false;
 		currentSpeed = speed * SpeedBetween( target, node );
 		walkFrom = node;
 		node = walkTo = target;
@@ -1667,7 +1678,7 @@ public class Unit : VisibleHiveObject
 			}
 		}
 
-		var itemPosition = transform.position + Constants.Unit.itemsInHandsSpriteOffset * Vector3.back;
+		var itemPosition = transform.position + Constants.Unit.itemsInHandsSpriteOffset * ( facingRight ? Vector3.back : Vector3.forward );
 		if ( itemsInHands[0] )
 			itemsInHands[0].flatPosition = itemPosition;
 		if ( itemsInHands[1] )
