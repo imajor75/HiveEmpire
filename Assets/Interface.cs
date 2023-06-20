@@ -2366,7 +2366,7 @@ public class Interface : HiveObject
 
 		public void OnPointerEnter( PointerEventData eventData )
 		{
-			Assert.global.IsNull( ring );				
+			hiveObject.assert.IsNull( ring );				
 
 			ring = new GameObject( $"Ring for {hiveObject}" ).AddComponent<Image>();
 			ring.Link( root );
