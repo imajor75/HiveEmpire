@@ -46,7 +46,7 @@ public static class Constants
         public const int layerIndexRoads = 15;
         public const int layerIndexTrees = 16;
         public const int layerIndexSprites = 17;
-        public const int layerIndexPath = 18;
+        public const int layerIndexUI = 18;
     }
 
     public static class Game

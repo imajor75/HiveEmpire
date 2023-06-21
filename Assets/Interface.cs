@@ -1244,7 +1244,7 @@ public class Interface : HiveObject
 		public void Start()
 		{
 			transform.SetParent( HiveCommon.game.transform, false );
-			gameObject.layer = Constants.World.layerIndexPath;
+			gameObject.layer = Constants.World.layerIndexUI;
 		}
 
 		public void Update()
@@ -5103,7 +5103,7 @@ public class Interface : HiveObject
 					continue;
 
 				var n = node.Neighbour( i );
-				Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), Viewport.arrowMaterial, 0 );
+				Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), Viewport.arrowMaterial, Constants.World.layerIndexUI );
 			}
 		}
 
@@ -5250,7 +5250,7 @@ public class Interface : HiveObject
 				var n = flag.node.Neighbour( i );
 				if ( !flag.Move( i, true ) )
 					continue;
-				Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), Viewport.arrowMaterial, 0 );
+				Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.Euler( 0, 30 - i * 60, 0 ), Vector3.one * 0.6f ), Viewport.arrowMaterial, Constants.World.layerIndexUI );
 			}
 		}
 
@@ -6019,7 +6019,7 @@ if ( cart )
 						material = arrowMaterialRed;
 					if ( route.startData.content >= route.startData.cartOutput || route.state == Stock.Route.State.inProgress )
 						material = arrowMaterialGreen;
-					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * Constants.Node.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, 0 );
+					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * Constants.Node.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, Constants.World.layerIndexUI );
 					distance += steps;
 				}
 				materialUIPath.color = Color.white;

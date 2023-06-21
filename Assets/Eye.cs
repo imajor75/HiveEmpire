@@ -45,7 +45,7 @@ public class Eye : HiveObject
 		cameraGrid.orthographic = spriteMode;
 		if ( spriteMode )
 		{
-			cameraGrid.cullingMask = (1 << Constants.World.layerIndexRoads) + (1 << Constants.World.layerIndexPath);
+			cameraGrid.cullingMask = (1 << Constants.World.layerIndexRoads) + (1 << Constants.World.layerIndexUI);
 			if ( Interface.Viewport.showGround )
 				cameraGrid.cullingMask |= (1 << Constants.World.layerIndexWater) + (1 << Constants.World.layerIndexGround);
 			StopAutoChange();
