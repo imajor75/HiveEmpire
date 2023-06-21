@@ -102,6 +102,7 @@
       "worldSize": 48,
       "preparation": "full",
       "landOnly": true,
+      "infiniteResources": true,
       "prerun": 360000,
       "soldierProductivityMax": 0.8,
       "conditions": [
