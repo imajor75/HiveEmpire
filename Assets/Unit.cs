@@ -1565,7 +1565,7 @@ public class Unit : VisibleHiveObject
 		if ( visualType != VisualType.functional )
 		{
 			var visual = base.CreateVisual( visualType );
-			spriteRenderer = visual.GetComponent<SpriteRenderer>();
+			spriteRenderer = visual?.GetComponent<SpriteRenderer>();
 			return visual;
 		}
 
@@ -1591,9 +1591,9 @@ public class Unit : VisibleHiveObject
 	{
 		int direction = node.DirectionTo( target );
 		assert.IsTrue( direction >= 0, "Trying to walk to a distant node" );
-		if ( ( direction == 0 || direction == 1 ) && !facingRight )
+		if ( ( direction == 0 || direction == 1 ) && !facingRight && spriteRenderer )
 			facingRight = spriteRenderer.flipX = true;
-		if ( ( direction == 3 || direction == 4 ) && facingRight )
+		if ( ( direction == 3 || direction == 4 ) && facingRight && spriteRenderer )
 			facingRight = spriteRenderer.flipX = false;
 		currentSpeed = speed * SpeedBetween( target, node );
 		walkFrom = node;
