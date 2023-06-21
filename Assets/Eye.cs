@@ -139,7 +139,10 @@ public class Eye : HiveObject
 		highlight.transform.SetParent( transform, false );
 
 		if ( world.main )
+		{
 			gameObject.AddComponent<AudioListener>();
+			root.gameObject.GetComponent<AudioListener>().enabled = false;
+		}
 
 		cameraGrid.CreateCameras();
 
@@ -159,6 +162,13 @@ public class Eye : HiveObject
 		base.Start();
 
 		SetSpriteMode( spriteMode, true );
+	}
+
+	new void OnDestroy()
+	{
+		if ( world.main )
+			root.gameObject.GetComponent<AudioListener>().enabled = true;
+		base.OnDestroy();
 	}
 
 	[Serializable]

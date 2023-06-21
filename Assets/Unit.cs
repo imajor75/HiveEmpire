@@ -561,7 +561,7 @@ public class Unit : VisibleHiveObject
 				path = Path.Between( boss.node, target, PathFinder.Mode.forUnits, boss, ignoreFinalObstacle, ignoreObject, avoid );
 				if ( path == null )
 				{
-					Debug.Log( "Unit failed to go to " + target.x + ", " + target.y );
+					Log( "Unit failed to go to " + target.x + ", " + target.y );
 					return true;
 				}
 			}
