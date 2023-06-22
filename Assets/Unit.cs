@@ -2317,7 +2317,7 @@ public class Unit : VisibleHiveObject
 						continue;
 					g.transform.Rotate( game.timeFactor * currentSpeed * 600, 0, 0 );
 				}
-				body.transform.localRotation = Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Constants.Node.size * -50, 0, 0 );
+				body.transform.localRotation *= Quaternion.Euler( ( walkTo.height - walkFrom.height ) / Constants.Node.size * -50, 0, 0 );
 			}
 		}
 	}
