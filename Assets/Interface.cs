@@ -7172,7 +7172,7 @@ if ( cart )
 				{
 					var n = relaxCenter.node + o;
 					var material = Workshop.IsNodeGoodForRelax( n ) ? greenCheckOnGround : redCrossOnGround;
-					Graphics.DrawMesh( plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.8f ), material, 0 );
+					Graphics.DrawMesh( plane, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * 0.8f ), material, Constants.World.layerIndexUI );
 				}
 			}
 			if ( nodeInfoToShow == OverlayInfoType.stockContent && root.mainTeam )
