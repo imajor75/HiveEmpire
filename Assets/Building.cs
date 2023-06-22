@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -39,6 +39,7 @@ abstract public class Building : VisibleHiveObject
 
 	public GameObject body;
 	GameObject highlightArrow;
+	Material spriteMaterial;
 	[JsonIgnore]
 	public Road exit;
 	public AudioSource soundSource;
@@ -270,12 +271,14 @@ abstract public class Building : VisibleHiveObject
 		public int materialUsed;
 		public Game.Timer materialProgress = new ();
 		public static Shader shader;
-		public static int sliceLevelID;
+		public static int sliceLevelID, sliceSpriteID;
 		public Unit.DoAct hammering;
 		public float progress
 		{
 			get
 			{
+				if ( done )
+					return 1;
 				float timePerMaterial = boss.configuration.constructionTime / ( boss.configuration.plankNeeded + boss.configuration.stoneNeeded );
 				float current = timePerMaterial * materialUsed;
 				if ( !materialProgress.empty )
@@ -311,6 +314,7 @@ abstract public class Building : VisibleHiveObject
 			shader = Resources.Load<Shader>( "shaders/Construction" );
 			Assert.global.IsNotNull( shader );
 			sliceLevelID = Shader.PropertyToID( "_SliceLevel" );
+			sliceSpriteID = Shader.PropertyToID( "_Slice" );
 		}
 
 		public void Setup( Building boss )
@@ -829,6 +833,7 @@ abstract public class Building : VisibleHiveObject
 					m.SetFloat( Construction.sliceLevelID, level );
 			}
 		}
+		spriteMaterial.SetFloat( Construction.sliceSpriteID, construction.progress );
 
 		if ( !eye.enabled || eye.highlight == null )
 			return;
@@ -940,7 +945,11 @@ abstract public class Building : VisibleHiveObject
 	override public GameObject CreateVisual( VisualType visualType )
 	{
 		if ( visualType != VisualType.functional )
-			return base.CreateVisual( visualType );
+		{
+			var sprite = base.CreateVisual( visualType );
+			spriteMaterial = sprite.GetComponent<SpriteRenderer>().material;
+			return sprite;
+		}
 
 		return Interface.BuildingMapWidget.Create( this ).gameObject;
 	}

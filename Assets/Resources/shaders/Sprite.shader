@@ -5,6 +5,7 @@ Shader "Unlit/Sprite"
         _MainTex ("Texture", 2D) = "white" {}
         _Progress ("Progress", Range(0,1)) = 1
         _Color ("Color", Color) = (1,1,1,1)
+        _Slice ("Slice", Range(0,1)) = 1
     }
     SubShader
     {
@@ -39,6 +40,7 @@ Shader "Unlit/Sprite"
 
             sampler2D _MainTex;
             float _Progress;
+            float _Slice;
             float4 _MainTex_ST;
             float4 _Color;
 
@@ -56,6 +58,11 @@ Shader "Unlit/Sprite"
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
                 clip( _Progress - i.uv.x );
+                if ( _Slice < i.uv.y )
+                {
+                    float lum = 0.1*col.r + 0.6*col.g + 0.3*col.b;
+                    col.r = col.g = col.b = lum;
+                }
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 col.rgb *= _Color;
