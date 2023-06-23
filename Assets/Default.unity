@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.6325119, g: 0.8733461, b: 0.9880863, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -104,7 +104,7 @@ NavMeshSettings:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_BuildSettings:
-    serializedVersion: 2
+    serializedVersion: 3
     agentTypeID: 0
     agentRadius: 0.5
     agentHeight: 2
@@ -117,7 +117,7 @@ NavMeshSettings:
     cellSize: 0.16666667
     manualTileSize: 0
     tileSize: 256
-    accuratePlacement: 0
+    buildHeightMesh: 0
     maxJobWorkers: 0
     preserveTilesOutsideBounds: 0
     debug:
@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1680099500}
   - component: {fileID: 1680099499}
+  - component: {fileID: 1680099501}
   m_Layer: 0
   m_Name: Interface
   m_TagString: Untagged
@@ -156,17 +157,17 @@ MonoBehaviour:
   inactive: 0
   id: 270383065
   noAssert: 0
-  registered: 0
   destroyed: 0
+  updateIndices: ffffffffffffffffffffffff
+  world: {fileID: 0}
   team: {fileID: 0}
   simpletonData:
     isolated: 0
+    price: 1
     lastCleanup:
       reference: -1
     deals: []
     managedItemTypes: 
-    lastDealCheck:
-      reference: -1
     lastTimeHadResources:
       reference: -1
     hiveObject: {fileID: 0}
@@ -174,10 +175,44 @@ MonoBehaviour:
     possiblePartnerItemType: 0
     hasOutputStock: 0
     failedConnections: []
+    latestTestResult:
+      resource: 0
+      relax: 0
+      dependency: 0
+      factor: 0
+      resourceCount: 0
+      resourceCoverage: 0
+      notSuitable: 0
+    countedTree: 0
   selectThis: 0
+  errorOccured: 0
+  globalSettings:
+    grass: 1
+    fullscreenWidth: -1
+    fullscreenHeight: -1
+    fullscreen: 1
+    enableSideCameras: 1
+    timedValidate: 1
+    frameValidate: 1
+    masterVolume: 1
+    autoSave: 1
+    autoSaveInterval: 300
+    saveOnExit: 1
+    showFPS: 0
+    shadows: 1
+    softShadows: 1
+    renderBuildings: 1
+    renderRoads: 1
+    renderResources: 1
+    renderGround: 1
+    renderUnits: 1
+    renderItems: 1
+    renderDecorations: 1
+    renderWater: 1
+  dedicatedKeyboardHandler: {fileID: 0}
   panels: []
+  autoRotateInitiator: {fileID: 0}
   postProcessResources: {fileID: 0}
-  world: {fileID: 0}
   selectedWorkshopType: -1
   viewport: {fileID: 0}
   debug: {fileID: 0}
@@ -196,6 +231,15 @@ MonoBehaviour:
   defeatReported: 0
   requestUpdate: 0
   purgeOperationHandlerCRCTable: 0
+  FPSDisplay: {fileID: 0}
+  FPS: 0
+  openFlagPanel: {fileID: 0}
+  needWelcomePanel: 0
+  preparationActionIndexLimit: 2147483647
+  focusOnInputField: 0
+  focusOnDropdown: 0
+  textureToHomogenize: {fileID: 0}
+  textureToHomogenizeLevel: 7
   buildButton: {fileID: 0}
   worldProgressButton: {fileID: 0}
 --- !u!4 &1680099500
@@ -213,3 +257,11 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &1680099501
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1680099498}
+  m_Enabled: 1
