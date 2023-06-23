@@ -6676,6 +6676,7 @@ if ( cart )
 		public Vector3 rightOffset, downOffset;
 		public Vector3 lastMouse;
 		public DisplayMode displayMode;		// This is mainly stored in Eye.flatMode. The only reason to have it here is to preserve the mode when a new game is started
+		public static Transform spriteRendererContainer;
 
 		public enum DisplayMode
 		{
@@ -6730,6 +6731,9 @@ if ( cart )
 			transform.SetSiblingIndex( 0 );
 			name = "Viewport";
 
+			spriteRendererContainer = new GameObject( "Sprite renderer container" ).transform;
+			spriteRendererContainer.SetParent( transform, false );
+
 			Image image = gameObject.AddComponent<Image>();
 			image.rectTransform.anchorMin = Vector2.zero;
 			image.rectTransform.anchorMax = Vector2.one;
@@ -6777,6 +6781,28 @@ if ( cart )
 			arrowMaterial = new Material( Resources.Load<Shader>( "shaders/relaxMarker" ) );
 			arrowMaterial.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
 			arrowMaterial.color = new Color( 1, 0.75f, 0.15f );
+
+			StartCoroutine( CleanCoroutine() );
+		}
+
+		IEnumerator CleanCoroutine()
+		{
+			while ( true )
+			{
+				yield return new WaitForEndOfFrame();
+				foreach ( Transform renderer in spriteRendererContainer )
+					Eradicate( renderer.gameObject );
+			}
+		}
+
+		public static void DrawSprite( Sprite sprite, Vector3 position, float scale = 1 )
+		{
+			var renderer = new GameObject( "Temporary sprite renderer" );
+			renderer.transform.SetParent( spriteRendererContainer, false );
+			renderer.transform.position = position;
+			renderer.transform.rotation = Quaternion.Euler( 90, 0, -90 );
+			renderer.transform.localScale = Vector3.one * scale;
+			renderer.AddComponent<SpriteRenderer>().Prepare( sprite, position );
 		}
 
 		void ShowPossibleBuildings( bool state )
@@ -7160,6 +7186,8 @@ if ( cart )
 							float scale = 0.3f;
 							if ( !resource.infinite )
 								scale *= ((float)resource.charges) / Constants.Resource.oreChargePerNodeDefault;
+							if ( eye.spriteMode )
+								Interface.Viewport.DrawSprite( Item.sprites.GetMediaData( itemType ), n.positionInViewport, 0.3f );
 							World.DrawObject( body, Matrix4x4.TRS( n.positionInViewport + Vector3.up * 0.2f, Quaternion.identity, Vector3.one * scale ) );
 							break;
 						}
@@ -7186,7 +7214,11 @@ if ( cart )
 						if ( stock.itemData[itemType].content < 1 )
 							continue;
 						float height = stock.main ? 3f : 1.5f;
-						World.DrawObject( Item.looks.GetMediaData( (Item.Type)itemType ), Matrix4x4.TRS( stock.node.positionInViewport + new Vector3( 0.5f * (float)Math.Sin( angle ), height, 0.5f * (float)Math.Cos( angle ) ), Quaternion.identity, Vector3.one * stock.itemData[itemType].content * 0.02f ) );
+						var position = stock.node.positionInViewport + new Vector3( 0.5f * (float)Math.Sin( angle ), height, 0.5f * (float)Math.Cos( angle ) );
+						if ( eye.spriteMode )
+							Interface.Viewport.DrawSprite( Item.sprites.GetMediaData( (Item.Type)itemType ), position, 0.15f );
+						else
+							World.DrawObject( Item.looks.GetMediaData( (Item.Type)itemType ), Matrix4x4.TRS( position, Quaternion.identity, Vector3.one * stock.itemData[itemType].content * 0.02f ) );
 						angle += (float)( Math.PI * 2 / 7 );
 					}
 				}

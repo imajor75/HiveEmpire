@@ -615,7 +615,7 @@ public static class Help
 		else
     		renderer.sortingOrder = (int)( -position.x * 100 );
 		renderer.gameObject.AddComponent<BoxCollider>();
-}
+	}
 
 	public class RectTransformDebugger : MonoBehaviour
 	{
