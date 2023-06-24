@@ -6939,7 +6939,8 @@ if ( cart )
 			layers |= 1 << Constants.World.layerIndexGround;
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << Constants.World.layerIndexBuildings) - (1 << Constants.World.layerIndexUnits) - (1 << Constants.World.layerIndexResources) - (1 << Constants.World.layerIndexMap);
-			layers |= (1 << Constants.World.layerIndexSprites);
+			else
+				layers |= (1 << Constants.World.layerIndexSprites);
 			
 			RaycastHit2D hit2d = new ();
 			foreach ( var camera in eye.cameraGrid.cameras )
