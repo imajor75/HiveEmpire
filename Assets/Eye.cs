@@ -839,7 +839,7 @@ public class Eye : HiveObject
 				strength = 1;
 			if ( strength < 0 )
 				type = Type.none;
-			mainMaterial.SetFloat( strengthID, strength );
+			mainMaterial?.SetFloat( strengthID, strength );
 
 			if ( type == Type.none )
 			{

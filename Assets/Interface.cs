@@ -2866,7 +2866,7 @@ public class Interface : HiveObject
 					Workshop.Type.wheatFarm => "If there are enough free spots around the farm, the farmer will plant and create new fields, so it will never run out of grain.",
 					Workshop.Type.cornFarm => "If there are enough free spots around the farm, the farmer will plant and create new fields, so it will never run out of corn.",
 					Workshop.Type.fishingHut => "Fish willl never run out, it just needs time to respawn, so it is pointless to put too much fishing hut around a small lake.",
-					_ => "When an ore is mined it becomes unavailable for a while, and need some time to recharge. This time is always the same, and ores are always recharging, so ore deposits are never running out."
+					_ => "When an ore is mined it becomes unavailable for a while, and need some time to recharge. This time is always the same. If the ore is set to infinite in the world ores are always recharging, so ore deposits are never running out."
 				};
 				resourcesLeft.SetTooltip( tooltip );
 				if ( ( contentToShow & Content.controlIcons ) == 0 )
