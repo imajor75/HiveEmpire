@@ -681,7 +681,7 @@ public class World : HiveObject
 					if ( !s.team.workshops.Contains( s ) && !s.destroyed )
 					{
 						s.team.workshops.Add( s );
-						Assert.global.Fail();
+						Assert.global.Fail( $"Workshop {s} was not registered" );
 					}
 				}
 
