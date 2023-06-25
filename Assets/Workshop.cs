@@ -163,10 +163,10 @@ public class Workshop : Building
 			int timePerProduction = productionConfiguration.productionTime;
 			if ( method != ProductivityCalculationMethod.maximumWithNoResting )
 				timePerProduction += restTime;
-			float outputCount = productionConfiguration.outputCount;
-			if ( outputCount < 0 )
-				outputCount = 1;
-			return outputCount * 60f * Constants.Game.normalSpeedPerSecond / timePerProduction; 
+			float outputStackSize = productionConfiguration.outputStackSize;
+			if ( outputStackSize < 0 )
+				outputStackSize = 1;
+			return outputStackSize * 60f * Constants.Game.normalSpeedPerSecond / timePerProduction; 
 		}
 
 		bool ProcessPeriod( int start, int length, Status status, int items )
