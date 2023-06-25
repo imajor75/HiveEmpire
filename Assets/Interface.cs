@@ -6942,14 +6942,6 @@ if ( cart )
 			else
 				layers |= (1 << Constants.World.layerIndexSprites);
 			
-			RaycastHit2D hit2d = new ();
-			foreach ( var camera in eye.cameraGrid.cameras )
-			{
-				Vector2 origin = camera.ScreenToWorldPoint( screenPosition );
-				hit2d = Physics2D.Raycast( origin, Vector2.zero, 0f, 1 << Constants.World.layerIndexSprites );
-				Log( $"Hocciz {hit2d.transform}" );
-			}
-
 			RaycastHit hit = new ();
 			foreach ( var camera in eye.cameraGrid.cameras )
 			{
@@ -7859,7 +7851,7 @@ if ( cart )
 					}
 					inStockCount[i] += stock.itemData[i].content;
 				}
-				if ( stock.cart.itemType != Item.Type.unknown )
+				if ( stock.cart && stock.cart.itemType != Item.Type.unknown )
 					onWayCount[(int)stock.cart.itemType] += stock.cart.itemQuantity;
 			}
 
