@@ -500,10 +500,8 @@ public class Stock : Attackable
 				}
 				cargoSprite = new GameObject( "Cargo items" );
 				cargoSprite.transform.SetParent( flat.transform, false );
-				cargoSprite.transform.localScale = Vector3.one * 0.1f;
-				cargoSprite.transform.localPosition = Vector3.right * Constants.Unit.itemsInHandsSpriteOffset;
-				cargoSprite.AddComponent<SpriteRenderer>().Prepare( Item.sprites.GetMediaData( itemType ), transform.position + Vector3.right * Constants.Unit.itemsInHandsSpriteOffset, false, -1 );
-				cargoSprite.AddComponent<VisibleHiveObject.SpriteController>();
+				cargoSprite.transform.localScale = Vector3.one * 0.2f;
+				cargoSprite.AddComponent<SpriteRenderer>().Prepare( Item.sprites.GetMediaData( itemType ), Vector3.zero, false, (int)( Constants.Unit.itemsInHandsSpriteVerticalOffset * 100 - 1 ) );
 			}
 			else
 			{
@@ -551,6 +549,8 @@ public class Stock : Attackable
 		new void Update()
 		{
 			onMap.transform.rotation = Quaternion.Euler( 90, (float)( eye.direction / Math.PI * 180 ), 0 );
+			if ( cargoSprite )
+				cargoSprite.transform.localPosition = ( facingRight ? Vector3.right : Vector3.left ) * Constants.Unit.itemsInHandsSpriteHorizontalOffset + Vector3.up * Constants.Unit.itemsInHandsSpriteVerticalOffset;
 			base.Update();
 		}
 	}

@@ -1678,7 +1678,9 @@ public class Unit : VisibleHiveObject
 			}
 		}
 
-		var itemPosition = transform.position + Constants.Unit.itemsInHandsSpriteOffset * ( facingRight ? Vector3.back : Vector3.forward );
+		var itemPosition = transform.position;
+		itemPosition += Constants.Unit.itemsInHandsSpriteHorizontalOffset * ( facingRight ? Vector3.back : Vector3.forward );
+		itemPosition += Constants.Unit.itemsInHandsSpriteVerticalOffset * Vector3.right; 
 		if ( itemsInHands[0] )
 			itemsInHands[0].flatPosition = itemPosition;
 		if ( itemsInHands[1] )
