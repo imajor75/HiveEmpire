@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -651,7 +651,10 @@ abstract public class Building : VisibleHiveObject
 	{
 		team.buildingCounts[(int)type]++;
 		foreach ( var o in foundation )
+		{
 			Resource.RemoveFromGround( node + o );
+			node.Add( o ).RemoveDecorationsAround();
+		}
 
 		if ( flag.blueprintOnly )
 			flag.Materialize();

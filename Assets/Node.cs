@@ -23,6 +23,7 @@ public class Node : HiveObject
 	public float decorationPosition;
 	public int decorationDirection = -1;
 	public int decorationType;
+	public GameObject decoration, decorationSprite;
 	public bool avoidGrass;
 	public Game.Timer suspendPlanting = new ();
 
@@ -211,6 +212,8 @@ public class Node : HiveObject
 				var o = Neighbour( decorationDirection );
 				d.localPosition = position * ( 1 - decorationPosition ) + o.GetPositionRelativeTo( this ) * decorationPosition;
 				d.gameObject.layer = Constants.World.layerIndexDecorations;
+				decoration = d.gameObject;
+
 				Sprite decorationSprite = decorationSprites.GetMediaData( type, decorationType );
 				if ( decorationSprite )
 				{
@@ -219,6 +222,7 @@ public class Node : HiveObject
 					sr.transform.localRotation = Quaternion.Euler( 90, 0, -90 );
 					sr.transform.localScale = Vector3.one / d.lossyScale.x;
 					sr.Prepare( decorationSprite, d.localPosition );
+					this.decorationSprite = sr.gameObject;
 				}
 			}
 		}
@@ -566,6 +570,27 @@ public class Node : HiveObject
 	public static Node operator +( Node node, Ground.Offset offset )
 	{
 		return node.Add( offset );
+	}
+
+	public void RemoveDecoration( int direction, bool checkInverse = true )
+	{
+		if ( decorationDirection == direction )
+		{
+			decorationDirection = -1;
+			Eradicate( decoration );
+			Eradicate( decorationSprite );
+		}
+		if ( checkInverse )
+		{
+			var offset = Constants.Node.neighbourCount / 2;
+			Neighbour( direction ).RemoveDecoration( ( direction + offset ) % ( offset * 2 ), false );
+		}
+	}
+
+	public void RemoveDecorationsAround()
+	{
+		for ( int i = 0; i < Constants.Node.neighbourCount; i++ )
+			RemoveDecoration( i );
 	}
 
 	public override void Validate( bool chain )

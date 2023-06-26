@@ -688,6 +688,7 @@ public class Road : HiveObject, Interface.IInputHandler
 		ends[1] = nodes.Last().flag;
 		watchStartFlag.Attach( nodes[0].flag.itemsStored );
 		watchEndFlag.Attach( lastNode.flag.itemsStored );
+		RemoveDecorations();
 	}
 
 	void UnregisterOnGround()
@@ -1057,21 +1058,14 @@ public class Road : HiveObject, Interface.IInputHandler
 		return SplitNodeList( newNodes );
 	}
 
-	public override Node location
+	public void RemoveDecorations()
 	{
-		get
-		{
-			return centerNode;
-		}
+		for ( int i = 0; i < length; i++ )
+			nodes[i].RemoveDecoration( nodes[i].DirectionTo( nodes[i+1] ) );
 	}
 
-	public Vector3 difference
-	{
-		get
-		{
-			return nodes.Last().position - nodes.First().GetPositionRelativeTo( nodes.Last() );
-		}
-	}
+	public override Node location => centerNode;
+	public Vector3 difference => nodes.Last().position - nodes.First().GetPositionRelativeTo( nodes.Last() );
 
 	public override void Validate( bool chain )
 	{
