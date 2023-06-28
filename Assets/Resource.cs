@@ -309,6 +309,7 @@ public class Resource : VisibleHiveObject
 		{
 			var spriteMaterial = sprite.GetComponent<SpriteRenderer>().material;
 			spriteMaterial.SetFloat( "_Peek", 1 );
+			sprite.layer = Constants.World.layerIndexBigSprites;
 		}
 		return sprite;
 	}

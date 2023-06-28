@@ -477,9 +477,10 @@ public class VisibleHiveObject : HiveObject
 			if ( visual )
 			{
 				visual.transform.SetParent( flat, false );
-				visual.layer = type switch {
-					VisualType.nice2D => Constants.World.layerIndexSprites,
-					VisualType.functional or _ => Constants.World.layerIndexMap
+				if ( visual.layer == 0 )
+					visual.layer = type switch {
+						VisualType.nice2D => Constants.World.layerIndexSprites,
+						VisualType.functional or _ => Constants.World.layerIndexMap
 				};
 			}
 		}

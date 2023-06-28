@@ -345,7 +345,7 @@ public class Interface : HiveObject
 			nodeMask.transform.SetParent( node.transform, false );
 			nodeMask.transform.rotation = Quaternion.Euler( 90, 0, 90 );
 			nodeMask.transform.localScale = new Vector3( 0.55f, 0.4f, 1 );
-			nodeMask.gameObject.layer = Constants.World.layerIndexSprites;
+			nodeMask.gameObject.layer = Constants.World.layerIndexUI;
 
 			nodeMask.material.shader = Interface.spriteShader;
 			nodeMask.sprite = Resources.Load<Sprite>( "sprites/other/hexagon" );
@@ -6938,7 +6938,11 @@ if ( cart )
 			if ( inputHandler.pickGroundOnly )
 				layers &= int.MaxValue - (1 << Constants.World.layerIndexBuildings) - (1 << Constants.World.layerIndexUnits) - (1 << Constants.World.layerIndexResources) - (1 << Constants.World.layerIndexMap);
 			else
+			{
 				layers |= (1 << Constants.World.layerIndexSprites);
+				if ( !Interface.IsKeyDown( KeyCode.LeftControl ) && !Interface.IsKeyDown( KeyCode.LeftControl ) )
+					layers |= (1 << Constants.World.layerIndexBigSprites);
+			}
 			
 			RaycastHit hit = new ();
 			foreach ( var camera in eye.cameraGrid.cameras )

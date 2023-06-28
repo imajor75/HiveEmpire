@@ -53,7 +53,7 @@ public class Eye : HiveObject
 		}
 		else
 		{
-			cameraGrid.cullingMask = int.MaxValue - (1 << Constants.World.layerIndexMap) - (1 << Constants.World.layerIndexSprites);
+			cameraGrid.cullingMask = int.MaxValue - (1 << Constants.World.layerIndexMap) - (1 << Constants.World.layerIndexSprites) - (1 << Constants.World.layerIndexBigSprites);
 			spriteCamera.enabled = false;
 		}
 		RenderSettings.fog = !spriteMode;
@@ -102,7 +102,7 @@ public class Eye : HiveObject
 		spriteCamera.name = "Camera grid for sprites";
 		spriteCamera.Setup( this, 100 );
 		spriteCamera.orthographic = true;
-		spriteCamera.cullingMask = 1 << Constants.World.layerIndexSprites;
+		spriteCamera.cullingMask = (1 << Constants.World.layerIndexSprites) + (1 << Constants.World.layerIndexBigSprites);
 		spriteCamera.enabled = cameraGrid.enabled = world.main;
 
 		base.Setup( world );
@@ -156,7 +156,7 @@ public class Eye : HiveObject
 		spriteCamera.CreateCameras();
 		spriteCamera.name = "Camera grid for sprites";
 		spriteCamera.orthographic = true;
-		spriteCamera.cullingMask = 1 << Constants.World.layerIndexSprites;
+		spriteCamera.cullingMask = (1 << Constants.World.layerIndexSprites) + (1 << Constants.World.layerIndexBigSprites);
 		spriteCamera.enabled = spriteMode;
 
 		base.Start();
@@ -912,7 +912,7 @@ public class Eye : HiveObject
 									if ( renderer )
 										maskRenderer.DrawRenderer( renderer, markerMaterial );
 								}
-								if ( eye.spriteMode && ( o.layer & Constants.World.layerIndexSprites) != 0 )
+								if ( eye.spriteMode && ( o.layer == Constants.World.layerIndexSprites || o.layer == Constants.World.layerIndexBigSprites ) )
 								{
 									SpriteRenderer sr;
 									o.TryGetComponent<SpriteRenderer>( out sr );
