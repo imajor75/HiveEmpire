@@ -75,6 +75,8 @@ Shader "Unlit/Sprite"
                 }
                 col.rgb *= _Color;
                 col.a -= alphaMask * _AlphaMaskFactor * _Peek;
+                if ( col.a < 0 )
+                    col.a = 0;
                 return col;
             }
             ENDCG
