@@ -302,6 +302,18 @@ public class Resource : VisibleHiveObject
 		};
 	}
 
+	override public GameObject CreateVisual( VisualType visualType )
+	{
+		var sprite = base.CreateVisual( visualType );
+		if ( visualType != VisualType.functional && type == Type.tree )
+		{
+			var spriteMaterial = sprite.GetComponent<SpriteRenderer>().material;
+			spriteMaterial.SetFloat( "_Peek", 1 );
+		}
+		return sprite;
+	}
+
+
 	new public void Update()
 	{
 		if ( scaleUpdate.inProgress )

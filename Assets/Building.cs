@@ -951,12 +951,12 @@ abstract public class Building : VisibleHiveObject
 		{
 			var sprite = base.CreateVisual( visualType );
 			spriteMaterial = sprite.GetComponent<SpriteRenderer>().material;
+			spriteMaterial.SetFloat( "_Peek", 1 );
 			return sprite;
 		}
 
 		return Interface.BuildingMapWidget.Create( this ).gameObject;
 	}
-
 
 	public override Node location => node;
 	public override Vector3 position

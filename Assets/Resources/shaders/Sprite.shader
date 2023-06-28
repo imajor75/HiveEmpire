@@ -6,6 +6,7 @@ Shader "Unlit/Sprite"
         _Progress ("Progress", Range(0,1)) = 1
         _Color ("Color", Color) = (1,1,1,1)
         _Slice ("Slice", Range(0,1)) = 1
+        _Peek ("Peek", Range(0,1)) = 0
     }
     SubShader
     {
@@ -48,6 +49,7 @@ Shader "Unlit/Sprite"
             float _Slice;
             float4 _MainTex_ST;
             float4 _Color;
+            float _Peek;
 
             v2f vert (appdata v)
             {
@@ -72,7 +74,7 @@ Shader "Unlit/Sprite"
                     col.r = col.g = col.b = lum;
                 }
                 col.rgb *= _Color;
-                col.a -= alphaMask * _AlphaMaskFactor;
+                col.a -= alphaMask * _AlphaMaskFactor * _Peek;
                 return col;
             }
             ENDCG
