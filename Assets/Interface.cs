@@ -633,6 +633,7 @@ public class Interface : HiveObject
 		messageButton.AddOutline();
 
 		spriteShader = Resources.Load<Shader>( "shaders/Sprite" );
+		Shader.SetGlobalTexture( "_AlphaMask", Resources.Load<Texture>( "groundGridMask" ) );
 
 		LoadHotkeys();
 		LoadChallenges();
@@ -7127,6 +7128,12 @@ if ( cart )
 			}
 			if ( currentNode && !inputHandler.OnMovingOverNode( currentNode ) )
 				inputHandler = this;
+
+			var mouse = new Vector4( Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height, 0, 0 );
+			Shader.SetGlobalVector( "_Mouse", mouse );
+			Shader.SetGlobalVector( "_MouseScale", new Vector4( (float)Screen.width / Constants.Eye.spriteAlphaPatchSize, (float)Screen.height / Constants.Eye.spriteAlphaPatchSize, 0, 0 ) );
+			Shader.SetGlobalFloat( "_AlphaMaskFactor", Interface.IsKeyDown( KeyCode.LeftControl ) || Interface.IsKeyDown( KeyCode.RightControl ) ? 1 : 0 );
+
 #if DEBUG
 			if ( IsKeyPressed( KeyCode.PageUp ) && currentNode )
 				currentNode?.SetHeight( currentNode.height + 0.05f );
