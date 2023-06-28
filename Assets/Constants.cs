@@ -106,7 +106,7 @@ public static class Constants
         public const float clipDistance = 1.5f;
         public const float fogDistance = 1.2f;
         public static Color fogColor = new Color( 0.6f, 0.75f, 0.63f );
-        public const int spriteAlphaPatchSize = 250;
+        public const int spritePeekPatchSize = 300;
     }
 
     public static class Flag

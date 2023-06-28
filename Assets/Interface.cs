@@ -6718,6 +6718,8 @@ if ( cart )
 
 		}
 
+		static public bool spritePeekMode => Interface.IsKeyDown( KeyCode.LeftControl ) || Interface.IsKeyDown( KeyCode.LeftControl );
+
 		static public Viewport Create()
 		{
 			return new GameObject().AddComponent<Viewport>();
@@ -6940,7 +6942,7 @@ if ( cart )
 			else
 			{
 				layers |= (1 << Constants.World.layerIndexSprites);
-				if ( !Interface.IsKeyDown( KeyCode.LeftControl ) && !Interface.IsKeyDown( KeyCode.LeftControl ) )
+				if ( !spritePeekMode )
 					layers |= (1 << Constants.World.layerIndexBigSprites);
 			}
 			
@@ -7132,8 +7134,8 @@ if ( cart )
 
 			var mouse = new Vector4( Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height, 0, 0 );
 			Shader.SetGlobalVector( "_Mouse", mouse );
-			Shader.SetGlobalVector( "_MouseScale", new Vector4( (float)Screen.width / Constants.Eye.spriteAlphaPatchSize, (float)Screen.height / Constants.Eye.spriteAlphaPatchSize, 0, 0 ) );
-			Shader.SetGlobalFloat( "_AlphaMaskFactor", Interface.IsKeyDown( KeyCode.LeftControl ) || Interface.IsKeyDown( KeyCode.RightControl ) ? 1 : 0 );
+			Shader.SetGlobalVector( "_MouseScale", new Vector4( (float)Screen.width / Constants.Eye.spritePeekPatchSize, (float)Screen.height / Constants.Eye.spritePeekPatchSize, 0, 0 ) );
+			Shader.SetGlobalFloat( "_AlphaMaskFactor", Interface.Viewport.spritePeekMode ? 1 : 0 );
 
 #if DEBUG
 			if ( IsKeyPressed( KeyCode.PageUp ) && currentNode )
