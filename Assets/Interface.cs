@@ -6429,17 +6429,14 @@ if ( cart )
 
 				void Toggle( Building.Type t, bool value )
 				{
-					if ( value ) 
+					if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
 					{
-						if ( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
-						{
-							filter.listed.Clear();
-							filter.listed.Add( t );
-							SetFilter( filter );
-						}
-						else
-							filter.listed.Add( t );
+						filter.listed.Clear();
+						filter.listed.Add( t );
+						SetFilter( filter );
 					}
+					else if ( value ) 
+						filter.listed.Add( t );
 					else 
 						filter.listed.Remove( t );
 					boss?.Fill();	
