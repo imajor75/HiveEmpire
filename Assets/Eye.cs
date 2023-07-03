@@ -388,7 +388,7 @@ public class Eye : HiveObject
 		var position = new Vector3( x, height, y );
 		if ( spriteMode )
 		{
-			transform.localPosition = position + Vector3.up * 50;
+			transform.localPosition = position + Vector3.up * altitude;		// altitude does not affect visuals, but the sound listener component respects it
 			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( 1, 0, 0/*(float)Math.Sin(direction), 0, (float)Math.Cos(direction)*/ ) );
 			if ( cameraGrid )
 				cameraGrid.orthographicSize = altitude;
