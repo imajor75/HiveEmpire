@@ -361,7 +361,7 @@ public class World : HiveObject
 	public new void Update()
 	{
 		if ( light )
-			light.shadows = HiveCommon.settings.shadows ? ( HiveCommon.settings.softShadows ? LightShadows.Soft : LightShadows.Hard ) : LightShadows.None;
+			light.shadows = ( HiveCommon.settings.shadows && !eye.spriteMode ) ? ( HiveCommon.settings.softShadows ? LightShadows.Soft : LightShadows.Hard ) : LightShadows.None;
 
 		if ( dumpPossibleProductions )
 		{
