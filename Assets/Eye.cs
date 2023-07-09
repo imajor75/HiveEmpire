@@ -32,6 +32,7 @@ public class Eye : HiveObject
 	public CameraGrid cameraGrid, spriteCamera;
 	[JsonIgnore]
 	public Highlight highlight;
+	public AudioListener audioListener;
 
 	override public UpdateStage updateMode => UpdateStage.none;
 
@@ -140,7 +141,8 @@ public class Eye : HiveObject
 
 		if ( world.main )
 		{
-			gameObject.AddComponent<AudioListener>();
+			audioListener = new GameObject( "Audio listener" ).AddComponent<AudioListener>();
+			audioListener.transform.SetParent( transform, false );
 			root.gameObject.GetComponent<AudioListener>().enabled = false;
 		}
 
@@ -388,8 +390,10 @@ public class Eye : HiveObject
 		var position = new Vector3( x, height, y );
 		if ( spriteMode )
 		{
-			transform.localPosition = position + Vector3.up * altitude;		// altitude does not affect visuals, but the sound listener component respects it
-			transform.LookAt( world.transform.TransformPoint( position ), new Vector3( 1, 0, 0/*(float)Math.Sin(direction), 0, (float)Math.Cos(direction)*/ ) );
+			// altitude does not affect visuals, but the sound listener component respects it. The camera must be at a high altitude otherwise the area volume highlight effect woth work
+			transform.localPosition = position + Vector3.up * 50;
+			audioListener.transform.position = position + Vector3.up * altitude;
+			transform.LookAt( world.transform.TransformPoint( position ), Vector3.right );
 			if ( cameraGrid )
 				cameraGrid.orthographicSize = altitude;
 			if ( spriteCamera )
@@ -400,6 +404,7 @@ public class Eye : HiveObject
 		float vertical = (float)Math.Cos(altitudeDirection) * altitude;
 		Vector3 viewer = new Vector3( (float)( horizontal*Math.Sin(direction) ), -vertical, (float)( horizontal*Math.Cos(direction) ) );
 		transform.localPosition = position - viewer;
+		audioListener.transform.localPosition = Vector3.zero;
 		transform.LookAt( world.transform.TransformPoint( position ) );
 	}
 
