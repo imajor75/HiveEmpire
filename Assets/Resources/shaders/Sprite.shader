@@ -37,7 +37,7 @@ Shader "Unlit/Sprite"
                 float2 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
-                float4 screen : TEXCOORD1;
+                float4 screen : TEXCOORD2;
             };
 
             sampler2D _MainTex;
