@@ -299,26 +299,14 @@ public class Path : PathFinder
 		return null;
 	}
 
-	public Road road
-	{
-		get
-		{
-			return roadPath[progress];
-		}
-	}
+	public Road road => roadPath == null ? null : roadPath[progress];
 
 	public Road NextRoad()
 	{
 		return roadPath[progress++];
 	}
 
-	public Node location
-	{
-		get
-		{
-			return path[progress];
-		}
-	}
+	public Node location => path[progress];
 
 	public Node NextNode()
 	{
