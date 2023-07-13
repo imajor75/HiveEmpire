@@ -457,10 +457,6 @@ public class Serializer
 				continue;
 			}
 			bool referencerDestroyed = link.referencer is HiveObject ho && ho.destroyed;
-			if ( link.reference is Player.Message m && m.location.id == 1111 )
-			{
-				HiveCommon.Log( $"hopp {link.referencer} through {link.member}" );
-			}
 			bool referenceDestroyed = link.reference is HiveObject hor && hor.destroyed;
 			if ( !referencerDestroyed && referenceDestroyed )
 			{
@@ -468,6 +464,11 @@ public class Serializer
 					referencer.OnDeadReference( link.member, link.reference as HiveObject );
 				else
 					Assert.global.Fail( $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member} (raw)" );
+
+				if ( link.member is FieldInfo field )
+					field.SetValue( link.referencer, null );
+				if ( link.member is PropertyInfo property )
+					property.SetValue( link.referencer, null );
 			}
 		}
 		return result;
