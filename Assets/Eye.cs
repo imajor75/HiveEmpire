@@ -392,7 +392,8 @@ public class Eye : HiveObject
 		{
 			// altitude does not affect visuals, but the sound listener component respects it. The camera must be at a high altitude otherwise the area volume highlight effect woth work
 			transform.localPosition = position + Vector3.up * 50;
-			audioListener.transform.position = position + Vector3.up * altitude;
+			if ( audioListener )
+				audioListener.transform.position = position + Vector3.up * altitude;
 			transform.LookAt( world.transform.TransformPoint( position ), Vector3.right );
 			if ( cameraGrid )
 				cameraGrid.orthographicSize = altitude;
@@ -404,7 +405,8 @@ public class Eye : HiveObject
 		float vertical = (float)Math.Cos(altitudeDirection) * altitude;
 		Vector3 viewer = new Vector3( (float)( horizontal*Math.Sin(direction) ), -vertical, (float)( horizontal*Math.Cos(direction) ) );
 		transform.localPosition = position - viewer;
-		audioListener.transform.localPosition = Vector3.zero;
+		if ( audioListener )
+			audioListener.transform.localPosition = Vector3.zero;
 		transform.LookAt( world.transform.TransformPoint( position ) );
 	}
 
