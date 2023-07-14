@@ -4463,12 +4463,20 @@ public class Interface : HiveObject
 			int column = 20;
 			var workshops = FindObjectsOfType<Workshop>( true );
 
+			List<Workshop.Type> workshopTypes = new ();
+
 			for ( int i = 0; i < (int)Workshop.Type.total; i++ )
 			{
 				if ( game.workshopTypeUsage[i] == 0 )
 					continue;
 					
-				var type = (Workshop.Type)i;
+				workshopTypes.Add( (Workshop.Type)i );
+			}
+
+			workshopTypes.Sort( ( a, b ) => a.ToString().GetPrettyName().CompareTo( b.ToString().GetPrettyName() ) );
+
+			foreach ( var type in workshopTypes )
+			{
 				if ( type.ToString().StartsWith( "_" ) )
 					continue;
 				int c = 0;
