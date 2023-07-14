@@ -8406,8 +8406,7 @@ if ( cart )
 		Text worldTime, maintain, timeLeft, conditions, currentChallenge;
 
 		ProgressBar progress;
-		Game.Speed originalSpeed = (Game.Speed)(-1);
-		bool worldStopped;
+		bool milestone;
 
 		public static ChallengePanel Create()
 		{
@@ -8417,7 +8416,6 @@ if ( cart )
 		public void Open( Game.Goal reached = Game.Goal.none )
 		{
 			var challenge = game.challenge;
-			worldStopped = reached != Game.Goal.none;
 			noResize = true;
 			noPin = true;
 			if ( reached != Game.Goal.none )
@@ -8426,7 +8424,8 @@ if ( cart )
 				return;
 			this.Pin( -200, -110, 200, 110, 0.5f, 0.5f );
 			Help.currentRow = -30;
-			if ( worldStopped )
+			milestone = reached != Game.Goal.none;
+			if ( milestone )
 			{
 				Assert.global.IsNotNull( root.mainTeam );
 				var t = Text();
@@ -8448,9 +8447,7 @@ if ( cart )
 					t.color = Color.yellow.Dark();
 					t.text = "Bronze level reached";
 				}
-				originalSpeed = HiveCommon.game.speed;
 				eye.FocusOn( root.mainTeam.mainBuilding.flag.node, this );
-				HiveCommon.game.SetSpeed( Game.Speed.pause );
 			}
 			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
 			worldTime.alignment = TextAnchor.MiddleCenter;
@@ -8533,9 +8530,7 @@ if ( cart )
 
 		new public void OnDestroy()
 		{
-			if ( originalSpeed > 0 )
-				HiveCommon.game.SetSpeed( originalSpeed );
-			if ( worldStopped )
+			if ( milestone )
 				eye?.ReleaseFocus( null, true );
 			base.OnDestroy();
 		}
