@@ -6410,11 +6410,20 @@ if ( cart )
 				Help.currentRow = -borderWidth;
 				RectTransform row = null;
 				int rowIndex = 0, columnIndex = 0;
+
+				List<int> listedTypes = new ();
 				for ( int j = 0; j < (int)Building.Type.total; j++ )
 				{
 					if ( j < game.workshopTypeUsage.Count && game.workshopTypeUsage[j] == 0 )
 						continue;
 
+					listedTypes.Add( j );
+				}
+
+				listedTypes.Sort( ( a, b ) => BuildingTypeToString( (Building.Type) a ).CompareTo( BuildingTypeToString( (Building.Type)b ) ) );
+
+				foreach ( int j in listedTypes )
+				{
 					if ( row == null || row.childCount > 1 )
 					{
 						row = new GameObject().AddComponent<RectTransform>();
