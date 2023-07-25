@@ -669,6 +669,10 @@ abstract public class Building : VisibleHiveObject
 			return;
 		}
 
+		assert.IsNotNull( node, "Building without node" );
+		if ( node == null )
+			return;
+
 		name = $"Building {node.x}:{node.y}";
 		ground.Link( this );
 		UpdateBody();
@@ -720,6 +724,10 @@ abstract public class Building : VisibleHiveObject
 	new public void Update()
 	{
 		if ( destroyed )
+			return;
+
+		assert.IsNotNull( node, "Building without node" );
+		if ( node == null )
 			return;
 
 		UpdateLook();
@@ -853,6 +861,10 @@ abstract public class Building : VisibleHiveObject
 
 	public override void Remove()
 	{
+		assert.IsNotNull( node, "Building without node" );
+		if ( node == null )
+			return;
+
 		if ( construction.done )
 		{
 			team.mainBuilding.itemData[(int)Item.Type.plank].content += configuration.plankNeeded / 2;

@@ -595,12 +595,12 @@ public class World : HiveObject
 				if ( o.watchStartFlag.source != o.ends[0].itemsStored )
 				{
 					o.watchStartFlag.Attach( o.ends[0].itemsStored );
-					Log( $"Fixing watchStartFlag in road at {o.nodes[0].x}:{o.nodes[0].y}", Severity.error );
+					Log( $"Fixing watchStartFlag in road at {o.nodes[0].x}:{o.nodes[0].y}", Severity.important );
 				}
 				if ( o.watchEndFlag.source != o.ends[1].itemsStored )
 				{
 					o.watchEndFlag.Attach( o.ends[1].itemsStored );
-					Log( $"Fixing watchEndFlag in road at {o.nodes[0].x}:{o.nodes[0].y}", Severity.error );
+					Log( $"Fixing watchEndFlag in road at {o.nodes[0].x}:{o.nodes[0].y}", Severity.important );
 				}
 			}
 		}
@@ -620,6 +620,10 @@ public class World : HiveObject
 			var list = Resources.FindObjectsOfTypeAll<GuardHouse>();
 			foreach ( var o in list )
 			{
+				o.assert.IsNotNull( o.team, "GuardHouse has no team" );
+				if ( o.team == null )
+					continue;
+
 				if ( !o.team.guardHouses.Contains( o ) && !o.destroyed )
 				{
 					o.team.guardHouses.Add( o );
@@ -661,11 +665,15 @@ public class World : HiveObject
 			var list = Resources.FindObjectsOfTypeAll<Building>();
 			foreach ( var o in list )
 			{
+				o.assert.IsNotNull( o.node, "Building has no node" );
+				if ( o.node == null )
+					continue;
 				if ( o.configuration == null )
 					o.configuration = new ();
 				if ( o.dispenser == null )
 					o.dispenser = o.tinkererMate ?? o.tinkerer;
-				if ( o.construction.done )
+				o.assert.IsNotNull( o.construction, "Building has no construction" );
+				if ( o.construction != null && o.construction.done )
 					o.construction.builder = null;
 				o.flagDirection = o.node.DirectionTo( o.flag.node );
 				if ( o is Workshop s )
@@ -752,7 +760,7 @@ public class World : HiveObject
 					f.flattening = new ();
 				if ( f.freeSlotsWatch.source != f.itemsStored )
 				{
-					Log( $"Fixing freeSlotsWatch in flag at {f.node.x}:{f.node.y} (ID: {f.id})", Severity.error );
+					Log( $"Fixing freeSlotsWatch in flag at {f.node.x}:{f.node.y} (ID: {f.id})", Severity.important );
 					f.freeSlotsWatch.Attach( f.itemsStored );
 				}
 				if ( GetValue<Player>( f, "owner" ) )
@@ -808,7 +816,7 @@ public class World : HiveObject
 
 		if ( ground.grass.blocks.Count == 0 )
 		{
-			Log( "Fixing grass", Severity.error );
+			Log( "Fixing grass", Severity.important );
 			ground.grass.Setup();
 		}
 

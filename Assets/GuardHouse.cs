@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -253,6 +253,9 @@ public class GuardHouse : Attackable
 
 	new void Start()
 	{
+		assert.IsNotNull( node, "GuardHouse without node" );
+		if ( node == null )
+			return;
 		base.Start();
 		name = $"Guardhouse {node.x}:{node.y}";
 
@@ -338,6 +341,10 @@ public class GuardHouse : Attackable
 	{
 		if ( blueprintOnly )
 			return;
+		assert.IsNotNull( soldiers, "GuardHouse has no soldiers" );
+		if ( soldiers == null )
+			return;
+
 		foreach ( var soldier in soldiers )
 			assert.AreEqual( team, soldier.team );
 		if ( attackers.Count > 0 )

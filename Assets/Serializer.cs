@@ -463,7 +463,7 @@ public class Serializer
 				if ( link.referencer is IReferenceUser referencer )
 					referencer.OnDeadReference( link.member, link.reference as HiveObject );
 				else
-					Assert.global.Fail( $"Nondestroyed object {link.referencer} referencing the destroyed object {link.reference} through {link.member} (raw)" );
+					Assert.global.Fail( $"Nondestroyed object {link.referencer} is referencing the destroyed object {link.reference} through {link.member} (raw)" );
 
 				if ( link.member is FieldInfo field )
 					field.SetValue( link.referencer, null );
