@@ -10,6 +10,7 @@ public class ItemDispatcher : HiveObject
 	{
 		zero,
 		reserve,
+		prepare,
 		work,
 
 		// Compatibility
@@ -291,7 +292,7 @@ public class ItemDispatcher : HiveObject
 			foreach ( var offer in offers )
 			{
 				// If an item is not needed, it is on its way to a stock, it is not treated as surplus
-				if ( offer.item && offer.priority < Category.work )
+				if ( offer.item && offer.priority < Category.prepare )
 					continue;
 				int quantity = offer.quantity;
 				Stock stock = offer.building as Stock;
@@ -314,7 +315,7 @@ public class ItemDispatcher : HiveObject
 		{
 			float maxScore = float.MaxValue;
 
-			// Let empty potentials have a loop, just to have some statistics show to the user.
+			// Let empty potentials have a loop, just to have some statistics to show to the user.
 			do
 			{
 				float bestScore = 0;

@@ -849,7 +849,7 @@ public class Stock : Attackable
 			{
 				var p = ItemDispatcher.Category.reserve;
 				if ( current < itemData[itemType].inputMin )
-					p = ItemDispatcher.Category.work;
+					p = ItemDispatcher.Category.prepare;
 				if ( current > itemData[itemType].inputMax )
 					p = ItemDispatcher.Category.zero;
 				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea, itemData[itemType].importance ); // TODO Should not order more than what fits
@@ -867,7 +867,7 @@ public class Stock : Attackable
 				if ( current < itemData[itemType].outputMin || ( itemData[itemType].content <= itemData[itemType].cartOutput && !allRoutesJammed ) )
 					p = ItemDispatcher.Category.zero;
 				if ( current > itemData[itemType].outputMax )
-					p = ItemDispatcher.Category.work;
+					p = ItemDispatcher.Category.prepare;
 				team.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 			}
 		}

@@ -13,7 +13,7 @@ using UnityEngine;
 // 3. The item is in the hand of the hauler, who is carrying it to the next flag. In this state the flag member is null, as the item is linked to the hand of the hauler.
 
 // The items are registered in three possible places:
-// 1, In Player.items (every item is always registered there)
+// 1. In Player.items (every item is always registered there)
 // 2. In Flag.items (if the item is sitting at a flag waiting for a hauler)
 // 3. In Building.itemsOnTheWay (if the item has a destination)
 [SelectionBase]
@@ -384,7 +384,7 @@ public class Item : VisibleHiveObject
 
 		var offerPriority = ItemDispatcher.Category.zero;
 		if ( currentOrderPriority == ItemDispatcher.Category.zero )
-			offerPriority = ItemDispatcher.Category.work;
+			offerPriority = ItemDispatcher.Category.prepare;
 		if ( currentOrderPriority == ItemDispatcher.Category.reserve )
 			offerPriority = ItemDispatcher.Category.reserve;
 
@@ -579,9 +579,9 @@ public class Item : VisibleHiveObject
 				case Unit.Type.hauler:
 				{
 					// In some rare cases it is possible that the hauler is carrying items, but not on the road. This 
-					// might happening after using the magnet on a flag which is cornered by a road. One or more nodes
+					// might happen after using the magnet on a flag which is cornered by a road. One or more nodes
 					// around the flag will end up not being part of any of the new roads. If a hauler was goind to that
-					// node at the moment of the magnet, he will not be exclusiveMode, but might still has items in hands. In this
+					// node at the moment of the magnet, he will not be in exclusiveMode, but might still has items in hands. In this
 					// case the destination of the items is null, because Road.Split was calling hauler.ResetTasks, which was
 					// calling CancelTrip for the items in hand
 					if ( destination )
