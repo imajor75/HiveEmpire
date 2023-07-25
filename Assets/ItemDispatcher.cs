@@ -27,6 +27,7 @@ public class ItemDispatcher : HiveObject
 		noDispatcher,
 		notInArea,
 		tooLowPriority,
+		betweenStocksDisabled,
 		outOfItems
 	};
 
@@ -48,6 +49,7 @@ public class ItemDispatcher : HiveObject
 		public Ground.Area area;
 		public float importance = 0.5f;
 		public bool flagJammed;
+		public bool stock;
 		public bool noDispenser;
 		public int id 
 		{ 
@@ -203,6 +205,7 @@ public class ItemDispatcher : HiveObject
 			var r = new Potential
 			{
 				building = building,
+				stock = building is Stock && building.construction.done,
 				quantity = quantity,
 				priority = priority,
 				location = building.node,
@@ -219,6 +222,7 @@ public class ItemDispatcher : HiveObject
 			var o = new Potential
 			{
 				building = building,
+				stock = building is Stock,
 				quantity = quantity,
 				priority = priority,
 				location = building.node,
@@ -330,6 +334,11 @@ public class ItemDispatcher : HiveObject
 						continue;
 					if ( !IsGoodFor( potential, other ) )
 						continue;
+					if ( potential.stock && other.stock )
+					{
+						ConsiderResult( potential, other, Result.betweenStocksDisabled );
+						continue;
+					}
 					if ( potential.priority <= Category.reserve && other.priority <= Category.reserve )
 					{
 						ConsiderResult( potential, other, Result.tooLowPriority );

@@ -7700,6 +7700,7 @@ if ( cart )
 					ItemDispatcher.Result.notInArea => "Outside of area",
 					ItemDispatcher.Result.tooLowPriority => "Combined priority is too low",
 					ItemDispatcher.Result.outOfItems => "Out of items",
+					ItemDispatcher.Result.betweenStocksDisabled => "Transfer between stocks disabled",
 					_ => "Unknown"
 				};
 				if ( result.remote )
