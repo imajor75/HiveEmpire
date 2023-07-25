@@ -619,7 +619,7 @@ public class Simpleton : Player
                 problemWeight = solutionEfficiency = 1;
             }
             
-            if ( boss.emergencyPlank && boss.team.constructionFactors[(int)Building.Type.stock] != 0 )
+            if ( boss.emergencyPlank && boss.team.constructionFactors[(int)Building.Type.stock] != 0 && game.preparation != Game.PrepareState.create )
             {
                 action = Action.toggleEmergency;
                 problemWeight = solutionEfficiency = 1;
