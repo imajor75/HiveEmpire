@@ -3526,6 +3526,8 @@ public class Interface : HiveObject
 				tooltip += $"\nimportance: {stock.itemData[j].importance}";
 				i.additionalTooltip = tooltip;
 
+				i.AddClickHandler( () => SelectItemType( t ) );				
+
 				var data = stock.itemData[(int)t];
 				var controller = i.AddController();
 				controller.AddOption( Icon.yes, "Select this item type", () => SelectItemType( t ) );
