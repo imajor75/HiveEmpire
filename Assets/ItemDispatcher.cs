@@ -300,8 +300,6 @@ public class ItemDispatcher : HiveObject
 					continue;
 				int quantity = offer.quantity;
 				Stock stock = offer.building as Stock;
-				if ( stock && stock.itemData[(int)itemType].outputRoutes.Count > 0 )
-					quantity -= Constants.Stock.cartCapacity;
 				if ( quantity >= 0 )  
 					surplus += quantity;
 			}

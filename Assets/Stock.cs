@@ -67,37 +67,6 @@ public class Stock : Attackable
 		}
 	}
 
-	[Obsolete( "Compatibility with old files", true )]
-	public Stock[] destinations 
-	{ 
-		set 
-		{
-			for ( int i = 0; i < value.Length; i++ )
-			{
-				if ( outputRoutes[i] == null )
-					outputRoutes[i] = new ();
-				if ( value[i] )
-					outputRoutes[i].Add( new Route { start = this, end = value[i], itemType = (Item.Type)i } );
-			}
-		} 
-	}
-	[Obsolete( "Compatibility with old files", true )]
-	List<List<Stock>> destinationLists
-	{
-		set
-		{
-			for ( int i = 0; i < value.Count; i++ )
-			{
-				while ( outputRoutes.Count <= i )
-					outputRoutes.Add( new List<Route>() );
-				foreach ( var s in value[i] )
-					outputRoutes[i].Add( new Route { start = this, end = s, itemType = (Item.Type)i } );
-
-			}
-
-		}
-	}
-
 	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> content;
 	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
@@ -110,8 +79,6 @@ public class Stock : Attackable
 	public List<int> outputMin;
 	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
 	public List<int> outputMax;
-	[Obsolete( "Compatibility with old files", false ), JsonIgnore]
-	public List<List<Route>> outputRoutes;
 	[Obsolete( "Compatibility with old files", true ), JsonIgnore]
 	public Versioned outputRouteVersion;
 
@@ -130,92 +97,13 @@ public class Stock : Attackable
 		public int onWay;
 		public int inputMax = Constants.Stock.defaultInputMax, inputMin = Constants.Stock.defaultInputMin;
 		public int outputMax = Constants.Stock.defaultOutputMax, outputMin = Constants.Stock.defaultOutputMin;
-		public int cartOutput = Constants.Stock.defaultCartOutput, cartOutputTemporary = Constants.Stock.defaultCartOutput, cartInput = Constants.Stock.defaultCartInput;
+		int cartOutput { set {} }
+		int cartOutputTemporary { set {} }
+		int cartInput { set {} }
 		public int cartPledged;
 		public float importance = 0.1f;
-		public List<Route> outputRoutes = new ();
 		public Stock boss;
 		public Item.Type itemType;
-
-		[Obsolete( "Compatibility with old files", true )]
-		CartOrder cartOrder
-		{
-			set
-			{
-				cartInput = value switch
-				{
-					CartOrder.getHigh => 15,
-					CartOrder.getMedium => 10,
-					CartOrder.getLow => 5,
-					_ => 0
-				};
-				cartOutput = value switch
-				{
-					CartOrder.offerHigh => Constants.Stock.cartCapacity + 0,
-					CartOrder.offerMedium => Constants.Stock.cartCapacity + 5,
-					CartOrder.offerLow => Constants.Stock.cartCapacity + 10,
-					_ => 0
-				};
-			}
-		}
-
-		public void UpdateRoutes()
-		{
-			int typeIndex = (int)itemType;
-			for ( int i = 0; i < outputRoutes.Count; )
-			{
-				var route = outputRoutes[i];
-				if ( route.start == null || route.start.itemData[typeIndex].cartOutput < Constants.Stock.cartCapacity || route.end == null || route.end.itemData[typeIndex].cartInput == 0 )
-					route.Remove();
-				else
-					i++;
-			}
-
-			foreach ( var stock in boss.team.stocks )
-			{
-				if ( stock == boss )
-					continue;
-				if ( cartOutput > 0 && stock.itemData[typeIndex].cartInput > 0 )
-					AddNewRoute( stock );
-			}	
-
-			outputRoutes.Sort( (x, y) => y.priority.CompareTo( x.priority ) );
-		}
-
-		public Route AddNewRoute( Stock destination )
-		{
-			var itemTypeIndex = (int)itemType;
-			foreach ( var route in outputRoutes )
-			{
-				if ( route.end == destination && route.itemType == itemType )
-					return route;
-			}
-
-			var newRoute = new Route();
-			newRoute.start = boss;
-			newRoute.end = destination;
-			newRoute.itemType = itemType;
-			outputRoutes.Add( newRoute );
-			return newRoute;
-		}
-
-		public enum CartOrder
-		{
-			getLow = -3,
-			getMedium = -2,
-			getHigh = -1,
-			ignore = 0,
-			offerLow = 1,
-			offerMedium = 2,
-			offerHigh = 3
-		}
-		public Route GetRouteForDestination( Stock destination )
-		{
-			foreach ( var route in outputRoutes )
-			if ( route.end == destination )
-				return route;
-			return null;
-		}
 
 		public ref int ChannelValue( Channel channel )
 		{
@@ -225,9 +113,6 @@ public class Stock : Attackable
 				case Channel.inputMax: return ref inputMax;
 				case Channel.outputMin: return ref outputMin;
 				case Channel.outputMax: return ref outputMax;
-				case Channel.cartInput: return ref cartInput;
-				case Channel.cartOutput: return ref cartOutput;
-				case Channel.cartOutputTemporary: return ref cartOutputTemporary;
 			}
 			throw new Exception();
 		}
@@ -244,7 +129,6 @@ public class Stock : Attackable
 			ChannelValue( channel ) = (int)newValue;
 			if ( channel == Channel.inputMax && old != 0 && newValue == 0 )
 				boss.CancelOrders( itemType );
-			boss.team.UpdateStockRoutes();
 			return old;
 		}
 	}
@@ -255,126 +139,16 @@ public class Stock : Attackable
 		inputMax,
 		outputMin,
 		outputMax,
-		cartInput,
-		cartOutput,
-		cartOutputTemporary,
 		importance
 	}
 
 	[Obsolete( "Compatibility for old files", true )]
 	List<int> target = new ();
 
-	[Serializable]
-	public class Route
-	{
-		public Stock start, end;
-		public Item.Type itemType;
-		public int lastDelivery;
-		public float averageTransferRate;
-		public State state;
-		public int priority;
-
-		public enum State
-		{
-			noSourceItems,
-			destinationNotAccepting,
-			noFreeSpaceAtDestination,
-			noFreeCart,
-			flagJammed,
-			inProgress,
-			stockUnderConstruction,
-			unknown
-		}
-
-		public enum Type
-		{
-			manual,
-			automatic
-		}
-
-		public int pledged => end.itemData[(int)itemType].cartPledged;
-
-		[Obsolete( "Compatibility with old files", true )]
-		float averateTransferRate { set { averageTransferRate = value; } }
-		[Obsolete( "Compatibility with old files", true )]
-		Type type { set {} }
-
-		public int itemsDelivered;
-
-		public void Remove()
-		{
-			var itemData = start.itemData[(int)itemType];
-			Assert.global.IsTrue( itemData.outputRoutes.Contains( this ) );
-			itemData.outputRoutes.Remove( this );
-		}
-
-		public bool IsAvailable()
-		{
-			if ( state == State.inProgress )
-				return false;
-			
-			if ( !start.construction.done || !end.construction.done )
-			{
-				state = State.stockUnderConstruction;
-				return false;
-			}
-
-			int itemIndex = (int)itemType;
-			int minimalQuantity = start.itemData[itemIndex].cartOutputTemporary > 0 ? start.itemData[itemIndex].cartOutputTemporary : start.itemData[itemIndex].cartOutput;
-			int expectedDelivery = Math.Min( minimalQuantity, Constants.Stock.cartCapacity );
-			int atDest = end.itemData[itemIndex].content + end.itemData[itemIndex].onWay;
-
-			if ( atDest + expectedDelivery > end.itemData[itemIndex].inputMax || atDest >= end.itemData[itemIndex].cartInput )
-			{
-				state = State.destinationNotAccepting;
-				return false;
-			}
-			if ( start.itemData[itemIndex].content < minimalQuantity )
-			{
-				state = State.noSourceItems;
-				return false;
-			}
-			if ( !start.cart.IsIdle( true ) )
-			{
-				state = State.noFreeCart;
-				return false;
-			}
-			if ( start.flag.user )
-			{
-				state = State.flagJammed;
-				return false;
-			}
-			if ( end.total + Constants.Stock.cartCapacity > end.maxItems )
-			{
-				state = State.noFreeSpaceAtDestination;
-				return false;
-			}
-			state = State.unknown;
-			return true;
-		}
-
-		public ItemTypeData endData
-		{
-			get
-			{
-				return end.itemData[(int)itemType];
-			}
-		}
-
-		public ItemTypeData startData
-		{
-			get
-			{
-				return start.itemData[(int)itemType];
-			}
-		}
-	}
-
 	public class Cart : Unit
 	{
 		public int itemQuantity;
 		public Item.Type itemType;
-		public Route currentRoute;
 		public Stock destination;
 		public bool back;
 		public const int frameCount = 8;
@@ -400,35 +174,33 @@ public class Stock : Attackable
 			ScheduleTask( task );
 		}
 
-		public void TransferItems( Route route )
-		{
-			assert.AreEqual( route.start, boss );
-			int typeIndex = (int)route.itemType;
-			itemQuantity = Math.Min( Constants.Stock.cartCapacity, boss.itemData[typeIndex].content );
-			boss.itemData[typeIndex].content -= itemQuantity;
-			boss.itemData[typeIndex].cartOutputTemporary = 0;
-			route.end.itemData[typeIndex].cartPledged += itemQuantity;
-			boss.contentChange.Trigger();
-			this.itemType = route.itemType;
-			currentRoute = route;
-			route.state = Route.State.inProgress;
+		// public void TransferItems( Route route )
+		// {
+		// 	assert.AreEqual( route.start, boss );
+		// 	int typeIndex = (int)route.itemType;
+		// 	itemQuantity = Math.Min( Constants.Stock.cartCapacity, boss.itemData[typeIndex].content );
+		// 	boss.itemData[typeIndex].content -= itemQuantity;
+		// 	boss.itemData[typeIndex].cartOutputTemporary = 0;
+		// 	route.end.itemData[typeIndex].cartPledged += itemQuantity;
+		// 	boss.contentChange.Trigger();
+		// 	this.itemType = route.itemType;
+		// 	currentRoute = route;
+		// 	route.state = Route.State.inProgress;
 
-			ScheduleWalkToNeighbour( boss.flag.node );
-			DeliverItems( route.end );
-			ScheduleWalkToNeighbour( route.end.flag.node );
-			ScheduleWalkToFlag( boss.flag, true );
-			ScheduleWalkToNeighbour( node );
+		// 	ScheduleWalkToNeighbour( boss.flag.node );
+		// 	DeliverItems( route.end );
+		// 	ScheduleWalkToNeighbour( route.end.flag.node );
+		// 	ScheduleWalkToFlag( boss.flag, true );
+		// 	ScheduleWalkToNeighbour( node );
 
-			SetActive( true );
-			UpdateLook();
-		}
+		// 	SetActive( true );
+		// 	UpdateLook();
+		// }
 
 		public override void Reset()
 		{
 			base.Reset();
 			itemQuantity = 0;
-			currentRoute.state = Route.State.unknown;
-			currentRoute = null;
 		}
 
 		new public void Start()
@@ -456,8 +228,6 @@ public class Stock : Attackable
 		{
 			if ( itemQuantity > 0 && destination == null )
 			{
-				currentRoute.state = Route.State.unknown;
-				currentRoute = null;
 				destination = null; // Real null, not the unity style fake one
 				ResetTasks();
 				DeliverItems( boss );
@@ -538,12 +308,6 @@ public class Stock : Attackable
 				assert.IsTrue( index >= 0 );
 				assert.AreEqual( road.haulerAtNodes[index], this );
 			}
-			if ( currentRoute != null && currentRoute.start )
-			{
-				assert.AreEqual( destination, currentRoute.end );
-				assert.AreEqual( boss, currentRoute.start );	// TODO Triggered, currentRoute.start was null, currentRoute.end is also null, but destination is null as well. It seems currentRounte is some illegal object
-				assert.AreEqual( itemType, currentRoute.itemType );
-			}
 		}
 
 		new void Update()
@@ -583,21 +347,21 @@ public class Stock : Attackable
 			Stock cartStock = cart.building as Stock;
 			if ( cart.itemQuantity > 0 )
 			{
-				if ( cart.currentRoute != null )
-				{
-					if ( cart.currentRoute.lastDelivery > 0 )
-					{
-						float rate = ((float)cart.itemQuantity) / ( time - cart.currentRoute.lastDelivery );
-						if ( cart.currentRoute.averageTransferRate == 0 )
-							cart.currentRoute.averageTransferRate = rate;
-						else
-							cart.currentRoute.averageTransferRate = cart.currentRoute.averageTransferRate * 0.5f + rate * 0.5f;
-					}
-					cart.currentRoute.itemsDelivered += cart.itemQuantity;
-					cart.currentRoute.lastDelivery = time;
-					cart.currentRoute.state = Route.State.unknown;
-					cart.currentRoute = null;
-				}
+				// if ( cart.currentRoute != null )
+				// {
+				// 	if ( cart.currentRoute.lastDelivery > 0 )
+				// 	{
+				// 		float rate = ((float)cart.itemQuantity) / ( time - cart.currentRoute.lastDelivery );
+				// 		if ( cart.currentRoute.averageTransferRate == 0 )
+				// 			cart.currentRoute.averageTransferRate = rate;
+				// 		else
+				// 			cart.currentRoute.averageTransferRate = cart.currentRoute.averageTransferRate * 0.5f + rate * 0.5f;
+				// 	}
+				// 	cart.currentRoute.itemsDelivered += cart.itemQuantity;
+				// 	cart.currentRoute.lastDelivery = time;
+				// 	cart.currentRoute.state = Route.State.unknown;
+				// 	cart.currentRoute = null;
+				// }
 				cart.itemsDelivered += cart.itemQuantity;
 				stock.itemData[(int)cart.itemType].content += cart.itemQuantity;
 				stock.contentChange.Trigger();
@@ -681,28 +445,10 @@ public class Stock : Attackable
 		return this;
 	}
 
-	public List<Route> GetInputRoutes( Item.Type itemType )
-	{
-		int typeIndex = (int)itemType;
-		List<Route> list = new ();
-		foreach ( var stock in team.stocks )
-		{
-			if ( stock == this )
-				continue;
-			foreach ( var r in stock.itemData[typeIndex].outputRoutes )
-			{
-				if ( r.end == this )
-					list.Add( r );
-			}
-		}
-		return list;
-	}
-
 	public override void Remove()
 	{
 		destroyed = true;
 		team.UnregisterStock( this );
-		team.UpdateStockRoutes();
 		if ( main )
 			team.Defeat();
 		base.Remove();
@@ -809,40 +555,6 @@ public class Stock : Attackable
 			if ( itemType == (int)Item.Type.soldier )
 				continue;
 
-			Route best = null;
-			List<Route> toRemove = new ();
-			bool allRoutesJammed = true;
-			foreach ( var route in itemData[itemType].outputRoutes )
-			{
-				if ( route.end == null )	// unity like null
-				{
-					toRemove.Add( route );
-					continue;
-				}
-
-				CRC += route.end.id;
-				if ( route.IsAvailable() )
-				{
-					if ( best == null || best.pledged > route.pledged )
-						best = route;
-				}
-				else if ( route.state == Route.State.noFreeSpaceAtDestination && !route.end.fullReportedCart )
-				{
-					route.end.fullReportedCart = true;
-					team.SendMessage( $"Stock full, cart couldn't deliver {(Item.Type)itemType}", route.end );
-				}
-				if ( route.state != Route.State.destinationNotAccepting && route.state != Route.State.noFreeSpaceAtDestination )
-					allRoutesJammed = false;
-			}
-			foreach ( var dead in toRemove )
-				itemData[itemType].outputRoutes.Remove( dead );
-
-			if ( best != null )
-			{
-				cart.TransferItems( best );
-				best.end.fullReportedCart = false;
-			}
-
 			CRC += itemData[itemType].inputMin + itemData[itemType].inputMax + itemData[itemType].outputMin + itemData[itemType].outputMax + itemData[itemType].content;
 			int current = itemData[itemType].content + itemData[itemType].onWay;
 			if ( maxItems > total )
@@ -864,7 +576,7 @@ public class Stock : Attackable
 			if ( itemData.Count > itemType )
 			{
 				var p = ItemDispatcher.Category.reserve;
-				if ( current < itemData[itemType].outputMin || ( itemData[itemType].content <= itemData[itemType].cartOutput && !allRoutesJammed ) )
+				if ( current < itemData[itemType].outputMin )
 					p = ItemDispatcher.Category.zero;
 				if ( current > itemData[itemType].outputMax )
 					p = ItemDispatcher.Category.prepare;
@@ -984,8 +696,6 @@ public class Stock : Attackable
 		{
 			assert.AreEqual( this, itemData[j].boss );
 			assert.AreEqual( j, (int)itemData[j].itemType );
-			if ( itemData[j].cartOutput >= Constants.Stock.cartCapacity && team.stocksHaveNeed[j] && itemData[j].cartInput == 0 )
-				assert.AreNotEqual( itemData[j].outputRoutes.Count, 0, $"Invalid route for {(Item.Type)j} in {this}" );
 		}
 		foreach ( var ret in returningUnits )
 			assert.IsTrue( ret.type == Unit.Type.soldier || ret.type == Unit.Type.unemployed || ret.type == Unit.Type.cart );

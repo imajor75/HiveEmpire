@@ -598,8 +598,6 @@ public class Interface : HiveObject
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
 		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
 		resourceListButton.SetTooltip( () => $"Show resource statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
-		var routeListButton = this.Image( Icon.cart ).AddClickHandler( () => RouteList.Create().Open( null, Item.Type.log, true ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Route list", KeyCode.R, false, false, true );
-		routeListButton.SetTooltip( () => $"List routes for all stocks (hotkey: {routeListButton.GetHotkey().keyName})" );
 		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
 		worldProgressButton.SetTooltip( () => $"Show challenge progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
 		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
@@ -3451,7 +3449,6 @@ public class Interface : HiveObject
 
 	public class StockPanel : BuildingPanel
 	{
-		public int currentStockCRC;
 		public Stock stock;
 		public Stock.Channel channel;
 		public Text channelText;
@@ -3460,7 +3457,7 @@ public class Interface : HiveObject
 		public Text total;
 		public Item.Type selectedItemType = Item.Type.log;
 		public ItemImage selected;
-		public Text inputMin, inputMax, outputMin, outputMax, cartInput, cartOutput;
+		public Text inputMin, inputMax, outputMin, outputMax;
 		public InputField importance;
 		public RectTransform controls;
 		public Image selectedInput, selectedOutput;
@@ -3489,23 +3486,6 @@ public class Interface : HiveObject
 		void SelectItemType( Item.Type itemType )
 		{
 			selectedItemType = itemType;
-			UpdateRouteIcons();
-		}
-
-		void UpdateRouteIcons()
-		{
-			bool cartInput = stock.itemData[(int)selectedItemType].cartInput > 0;
-			selectedInput.gameObject.SetActive( cartInput );
-			bool cartOutput = stock.itemData[(int)selectedItemType].cartOutput >= Constants.Stock.cartCapacity;
-			selectedOutput.gameObject.SetActive( cartOutput );
-		}
-
-		int StockCRC()
-		{
-			int CRC = 0;
-			foreach ( var itemData in stock.itemData )
-				CRC += itemData.cartInput + itemData.cartOutput;
-			return CRC;
 		}
 
 		void RecreateControls()
@@ -3541,44 +3521,18 @@ public class Interface : HiveObject
 				tooltip += $"\ninput max: {stock.itemData[j].inputMax}";
 				tooltip += $"\noutput min: {stock.itemData[j].outputMin}";
 				tooltip += $"\noutput max: {stock.itemData[j].outputMax}";
-				tooltip += $"\ncart input: {stock.itemData[j].cartInput}";
-				tooltip += $"\ncart output: {stock.itemData[j].cartOutput}";
 				tooltip += $"\nimportance: {stock.itemData[j].importance}";
 				i.additionalTooltip = tooltip;
-
-				if ( stock.itemData[j].cartInput > 0 )
-				{
-					var k = Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.75f );
-					k.color = new Color( 1, 0.75f, 0.15f );
-					k.transform.rotation = Quaternion.Euler( 0, 0, 180 );
-				}
-
-				if ( stock.itemData[j].cartOutput > 0 )
-					Image( Icon.rightArrow ).Link( i ).PinCenter( 0, 0, iconSize / 2, iconSize / 2, 1, 0.25f ).color = new Color( 1, 0.75f, 0.15f );
-				i.AddClickHandler( () => SelectItemType( t ) );
 
 				var data = stock.itemData[(int)t];
 				var controller = i.AddController();
 				controller.AddOption( Icon.yes, "Select this item type", () => SelectItemType( t ) );
-				controller.AddOption( Icon.route, "Show routes for this item type", () => ShowRoutesFor( t ) );
 				controller.AddOption( Icon.inputPotentials, "Show input potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.request ) );
 				controller.AddOption( Icon.outputPotentials, "Show output potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.offer ) );
-
-				if ( stock.itemData[j].cartOutput < Constants.Stock.cartCapacity )
-					controller.AddOption( Icon.makeSource, "Make this stock a source for cart transport for this item type", () => StartCart( false, t, true ) );
-				else
-					controller.AddOption( Icon.cancelSource, "Stop this stock to be the source for cart transport for this item type", () => StartCart( false, t, false ) );
-				if ( stock.itemData[j].cartInput < 5 )
-					controller.AddOption( Icon.makeDestination, "Make this stock a destination for cart transport for this item type", () => StartCart( true, t, true ) );
-				else
-					controller.AddOption( Icon.cancelDestination, "Stop this stock to be the destination for cart transport for this item type", () => StartCart( true, t, false ) );
 #if DEBUG
 				controller.AddOption( Icon.exit, "Clear stock content", () => { data.content = 0; game.lastChecksum = 0; } );
 				controller.AddOption( Icon.plus, "Add one more", () => { data.content++; game.lastChecksum = 0; } );
 #endif
-				if ( data.content < data.cartOutput )
-					controller.AddOption( Icon.cart, "Start cart delivery as soon as possible\n(otherwise it would wait until enough items collected to fill a cart completely)", () => oh.ScheduleStockAdjustment( stock, t, Stock.Channel.cartOutputTemporary, 1 ) );
-
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				counts[j].AddClickHandler( () => SelectItemType( t ) );
 				if ( offset >= 140 )
@@ -3594,7 +3548,7 @@ public class Interface : HiveObject
 
 			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 120, 70, 100, 40, 0, 0 );
 			selectedItemArea.name = "Selected item area";
-			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f ).AddClickHandler( () => ShowRoutesFor( selectedItemType ) );
+			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f );
 			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock\nRMB to change cart orders for this item" ).name = "Selected item";;
 			inputMin = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 0, 1 ).
 			SetTooltip( "If this number is higher than the current content, the stock will request new items at high priority", null, "LMB+drag left/right to change" );
@@ -3608,15 +3562,6 @@ public class Interface : HiveObject
 			outputMax = Text().Link( selectedItemArea ).Pin( -30, 20, 40, iconSize, 1, 0 ).
 			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks", null, "LMB+drag left/right to change" );
 			outputMax.alignment = TextAnchor.MiddleCenter;
-			Image( Icon.cart ).Link( selectedItemArea ).PinCenter( 20, 0, iconSize * 2, iconSize * 2, 1, 0.5f );
-			cartInput = Text().Link( selectedItemArea ).Pin( 0, 0, 40, iconSize, 1, 1 ).AddClickHandler( () => StartCart( true ), MouseButton.right ).
-			SetTooltip( "The stock will try to order items from other stocks by cart, if the number of items in this stock is less than this number", null, "LMB+drag left/right to change\nRMB to set a value which start the route" );
-			cartInput.alignment = TextAnchor.MiddleCenter;
-			cartInput.AddOutline().color = Color.white;
-			cartOutput = Text().Link( selectedItemArea ).Pin( 0, 20, 40, iconSize, 1, 0 ).AddClickHandler( () => StartCart( false ), MouseButton.right ).
-			SetTooltip( "If the stock has more items than this number, then the cart will distribute it to other stocks if needed", null, "LMB+drag left/right to change\nRMB to set a value which start the route" );
-			cartOutput.alignment = TextAnchor.MiddleCenter;
-			cartOutput.AddOutline().color = Color.white;
 			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.75f );
 			selectedInput.color = new Color( 1, 0.75f, 0.15f );
 			selectedInput.transform.rotation = Quaternion.Euler( 0, 0, 180 );
@@ -3629,29 +3574,9 @@ public class Interface : HiveObject
 			importance.SetTooltip( importanceTooltip );
 
 			Image( Icon.reset ).Link( controls ).Pin( 180, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( stock.ClearSettings ).SetTooltip( "Reset all values to default" ).name = "Reset";
-			Image( Icon.cart ).Link( controls ).Pin( 205, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( ShowCart ).SetTooltip( "Show the cart of the stock", null, 
-			$"Every stock has a cart which can transport {Constants.Stock.cartCapacity} items at the same time. " +
-			"For optimal performance the cart should be used for long range transport, haulers should be restricted by areas only to short range local transport. " +
-			"To utilize carts, you have to increase either the cart input or cart output numbers. Select an item type and look for the two numbers above the cart icon on the bottom." ).name = "Show cart";
 			Image( Icon.destroy ).Link( controls ).Pin( 230, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( Remove ).SetTooltip( "Remove the stock, all content will be lost!" ).name = "Remover";
 			Image( Icon.buildings ).Link( controls ).Pin( 155, 40, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create( Building.Type.stock ) ).SetTooltip( "Show a list of buildings with the same type" );
-			UpdateRouteIcons();
-			currentStockCRC = StockCRC();
 		}
-
-		void ShowCart()
-		{
-			if ( stock.cart.taskQueue.Count == 0 )
-				return;
-
-			UnitPanel.Create().Open( stock.cart, true );
-		}
-
-		void ShowRoutesFor( Item.Type itemType )
-		{
-			RouteList.Create().Open( stock, itemType, stock.itemData[(int)itemType].outputRoutes.Count > 0 ? true : false );
-		}
-
 
 		void Remove()
 		{
@@ -3667,8 +3592,6 @@ public class Interface : HiveObject
 		public override void Update()
 		{
 			base.Update();
-			if ( currentStockCRC != StockCRC() )
-				RecreateControls();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				if ( counts[i] == null )
@@ -3688,8 +3611,6 @@ public class Interface : HiveObject
 			if ( channelText != outputMin ) outputMin.text = stock.itemData[t].outputMin + "<";
 			if ( channelText != inputMax ) inputMax.text = "<" + stock.itemData[t].inputMax;
 			if ( channelText != outputMax ) outputMax.text = "<" + stock.itemData[t].outputMax;
-			if ( channelText != cartInput ) cartInput.text = stock.itemData[t].cartInput.ToString();
-			if ( channelText != cartOutput ) cartOutput.text = stock.itemData[t].cartOutput.ToString();
 			if ( !importance.isFocused )
 				importance.text = stock.itemData[t].importance.ToString();
 
@@ -3717,8 +3638,6 @@ public class Interface : HiveObject
 				CheckChannel( inputMax.gameObject, Stock.Channel.inputMax, stock.itemData[t].inputMin, stock.maxItems, "<{0}" );
 				CheckChannel( outputMin.gameObject, Stock.Channel.outputMin, 0, stock.itemData[t].outputMax, "{0}<" );
 				CheckChannel( outputMax.gameObject, Stock.Channel.outputMax, stock.itemData[t].outputMin, stock.maxItems, "<{0}" );
-				CheckChannel( cartInput.gameObject, Stock.Channel.cartInput, 0, Constants.Stock.defaultmaxItems, "{0}", true );
-				CheckChannel( cartOutput.gameObject, Stock.Channel.cartOutput, 0, Constants.Stock.defaultmaxItems, "{0}", true );
 			}
 
 			if ( currentValue >= 0 )
@@ -3741,32 +3660,6 @@ public class Interface : HiveObject
 					channelText = null;
 				}
 			}
-		}
-
-		void StartCart( bool input, Item.Type itemType = Item.Type.unknown, bool enable = true )
-		{
-			if ( itemType == Item.Type.unknown ) 
-				itemType = selectedItemType;
-			var t = stock.itemData[(int)itemType];
-			var l = (int)( Constants.Stock.cartCapacity * 1.5 );
-			oh.StartGroup( "Start a new cart route" );
-			if ( input )
-			{
-				if ( enable )
-					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartInput, 5, false );
-				else
-					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartInput, 0, false );
-			}
-			else
-			{
-				if ( enable )
-					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false );
-				else
-					oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.cartOutput, 0, false );
-			}
-
-			if ( t.inputMax < l )
-				oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMax, l, false );
 		}
 	}
 
@@ -4349,10 +4242,6 @@ public class Interface : HiveObject
 				foreach ( var stock in root.mainTeam.stocks )
 				{
 					var data = stock.itemData[itemIndex];
-					if ( data.cartOutput > 0 )
-						input += data.content;
-					if ( data.cartInput > 0 )
-						output += data.content;
 					if ( stock.cart.itemType == flow.itemType )
 						onWay += stock.cart.itemQuantity;
 				}
@@ -4379,7 +4268,7 @@ public class Interface : HiveObject
 				{
 					if ( flow.itemType != item.type || flow.connections.Count == 0 )
 						continue;
-					if ( item.destination is Stock stock && stock.itemData[(int)item.type].cartOutput > 0 )
+					if ( item.destination is Stock stock )
 					{
 						var connection = flow.connections.First();
 						var location = connection.curveX.length - item.tripProgress * flow.stockPoint;
@@ -4392,13 +4281,8 @@ public class Interface : HiveObject
 							continue;
 
 						float start = 0;
-						if ( item.origin is Stock origin )
-						{
-							if ( origin.itemData[(int)item.type].cartInput > 0 )
-								start = flow.stockPoint;
-							else
-								continue;
-						}
+						if ( item.origin is Stock )
+							start = flow.stockPoint;
 
 						var progress = ( 1 - item.tripProgress ) * ( connection.curveX.length - start );
 
@@ -5778,266 +5662,6 @@ if ( cart )
 			eye.ReleaseFocus( this );
 		}
 	}
-
-	public class RouteList : Panel
-	{
-		public Stock stock;
-		public Item.Type itemType;
-		public bool outputs;
-		public ScrollRect scroll;
-		public List<Stock.Route> list;
-		public static Material arrowMaterialYellow, arrowMaterialGreen, arrowMaterialRed;
-		public Text[] last, rate, total, status, priority;
-		public Image[] cart;
-		public List<Stock> stockOptions = new ();
-		public bool forceRefill;
-		public Text direction;
-		public Stock tempPickedStock;
-		public Stock.Route toHighlight;
-		public List<int> itemTypeSelectorMap = new ();
-
-		static public RouteList Create()
-		{
-			return new GameObject( "Route List" ).AddComponent<RouteList>();
-		}
-
-		public RouteList Open( Stock stock, Item.Type itemType, bool outputs )
-		{
-			base.Open( null, 660, 350 );
-			this.stock = stock;
-			this.itemType = itemType;
-			this.outputs = outputs;
-
-			{
-				var d = Dropdown().Pin( borderWidth, -borderWidth, 150, iconSize );
-				int currentValue = 0;
-				List<string> options = new ();
-				stockOptions.Clear();
-				foreach ( var s in root.mainTeam.stocks )
-				{
-					if ( s == stock )
-						currentValue = options.Count;
-					options.Add( s.nick );
-					stockOptions.Add( s );
-				}
-				if ( stock == null )
-					currentValue = options.Count;
-				options.Add( "All" );
-				stockOptions.Add( null );
-				d.AddOptions( options );
-				d.value = currentValue;
-				d.onValueChanged.AddListener( OnStockChanged );
-				d.SetTooltip( "Selected stock", null, "You can select a stock here, " +
-					"in which case only the routes starting or ending there will be listed. By selecting \"All\" every route for the " +
-					"selected item type will be listed. Remember, each building can be renamed." );
-			}
-
-			{
-				var d = Dropdown().PinSideways( 0, -borderWidth, 150, iconSize );
-				List<string> options = new ();
-				int currentValue = 0;
-				for ( int i = 0; i < (int)Item.Type.total; i++ )
-				{
-					if ( game.itemTypeUsage[i] == 0 )
-						continue;
-					if ( i == (int)itemType )
-						currentValue = options.Count;
-
-					options.Add( ((Item.Type)i).ToString().GetPrettyName() );
-					itemTypeSelectorMap.Add( i );
-				}
-				d.AddOptions( options );
-				d.value = currentValue;
-				d.onValueChanged.AddListener( OnItemTypeChanged );
-				d.SetTooltip( "Selected item type", null, "Only routes with the selected item type will be listed." );
-			}
-
-			direction = Text( outputs ? "Output" : "Input" ).PinSideways( 5, -borderWidth, 100, iconSize ).AddClickHandler( OnChangeDirecton );
-			direction.alignment = TextAnchor.MiddleLeft;
-			direction.SetTooltip( "Direction of the listed routes", null, "When a stock is selected, this will control if the output or input routes of that stock will be listed" );
-
-			Text( "?", 20 ).PinSideways( 20, -borderWidth, 40, 40 ).SetTooltip( "This is a list of transfer routes", null, 
-				"Transfer routes are used to transfer a lot of items to bigger distances. A transfer route is defined by " +
-				$"the starting stock, a destination stock, and an item type. Each stock has a cart, which can carry {Constants.Stock.cartCapacity} " +
-				$"items at the same time, these carts are moving items along routes. A cart will start to carry items to the destination of the route, if all the following are met:\n" +
-				$"- The start stock has at least {Constants.Stock.cartCapacity} items stored\n" +
-				$"- Destination stock is willing to accept at least {Constants.Stock.cartCapacity} items to store\n" +
-				"- Cart of the start stock is free\n" +
-				"- Junction in front of the staring stock is free\n" +
-				$"- Destination has at least {Constants.Stock.cartCapacity} free space\n" +
-				"Once the cart started moving it uses the roads to get to the destination. If a route is used by a cart right now, a cart icon will appear in the row of the route, " +
-				"clicking that icon will let you follow the cart." );
-
-			Text( "#" ).Pin( 20, -borderWidth - iconSize, 20, iconSize ).SetTooltip( "Priority" );
-			Text( "Start" ).PinSideways( 0, -borderWidth - iconSize, 120, iconSize );
-			Text( "End" ).PinSideways( 0, -borderWidth - iconSize, 120, iconSize );
-			Text( "Distance" ).PinSideways( 0, -borderWidth - iconSize, 30, iconSize );
-			Text( "Last" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
-			Text( "Rate" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
-			Text( "Total" ).PinSideways( 0, -borderWidth - iconSize, 50, iconSize );
-			Text( "Status" ).PinSideways( 0, -borderWidth - iconSize, 100, iconSize );
-			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth * 3 );
-			return this;
-		}
-
-		void OnStockChanged( int newStock )
-		{
-			stock = stockOptions[newStock];
-			forceRefill = true;
-		}
-
-		void OnItemTypeChanged( int newType )
-		{
-			itemType = (Item.Type)itemTypeSelectorMap[newType];
-			forceRefill = true;
-		}
-
-		void OnChangeDirecton()
-		{
-			outputs = !outputs;
-			direction.text = outputs ? "Output" : "Input";
-			forceRefill = true;
-		}
-
-		bool UpdateList() 
-		{
-			List<Stock.Route> currentList;
-			if ( stock == null )
-			{
-				currentList = new ();
-				foreach ( var stock in root.mainTeam.stocks )
-				{
-					foreach ( var r in stock.itemData[(int)itemType].outputRoutes )
-						currentList.Add( r );
-				}
-			}
-			else
-			{
-				currentList = new List<Stock.Route>( stock.itemData[(int)itemType].outputRoutes );
-				if ( !outputs )
-					currentList = stock.GetInputRoutes( itemType );
-			}
-			bool needRefill = list == null || currentList.Count != list.Count;
-
-			if ( !needRefill )
-				for ( int i = 0; i < list.Count; i++ )
-					needRefill |= list[i] != currentList[i];
-			
-			list = currentList;
-			return needRefill;
-		}
-
-		public void Fill()
-		{
-			forceRefill = false;
-			scroll.Clear();
-
-			last = new Text[list.Count];
-			rate = new Text[list.Count];
-			total = new Text[list.Count];
-			cart = new Image[list.Count];
-			status = new Text[list.Count];
-			priority = new Text[list.Count];
-			int row = 0;
-			for ( int i = 0; i < list.Count; i++ )
-			{
-				var route = list[i];
-				priority[i] = Text( route.priority.ToString() ).Link( scroll.content ).Pin( 0, row, 20, iconSize ).SetTooltip( "Priority" );
-				BuildingIcon( route.start ).Link( scroll.content ).PinSideways( 0, row, 120, iconSize );
-				BuildingIcon( route.end ).Link( scroll.content ).PinSideways( 0, row, 120, iconSize );
-				Text( route.start.node.DistanceFrom( route.end.node ).ToString() ).Link( scroll.content ).PinSideways( 0, row, 30, iconSize );
-				last[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
-				rate[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
-				total[i] = Text().Link( scroll.content ).PinSideways( 0, row, 50, iconSize );
-				status[i] = Text( "", 8 ).Link( scroll.content ).PinSideways( 0, row, 100, 2 * iconSize );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( 90 ).AddClickHandler( () => oh.ScheduleChangePriority( route, 1 ) ).SetTooltip( "Increase the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
-				Image( Icon.rightArrow ).Link( scroll.content ).PinSideways( 0, row ).Rotate( -90 ).AddClickHandler( () => oh.ScheduleChangePriority( route, -1 ) ).SetTooltip( "Decrease the priority of the route" ).color = new Color( 1, 0.75f, 0.15f );
-				cart[i] = Image( Icon.cart ).Link( scroll.content ).PinSideways( 0, row ).AddClickHandler( () => ShowCart( route ) ).SetTooltip( "Follow the cart which is currently working on the route" );
-				row -= iconSize + 5;
-			}
-			scroll.SetContentSize( 0, -row );
-		}
-
-		void ShowCart( Stock.Route route )
-		{
-			if ( route.start.cart.currentRoute == route )
-				UnitPanel.Create().Open( route.start.cart, true );
-		}
-
-		new void Update()
-		{
-			base.Update();
-
-			if ( UpdateList() || forceRefill )
-				Fill();
-
-			for ( int i = 0; i < list.Count; i++ )
-			{
-				if ( list[i].lastDelivery > 0 )
-				{
-					int ticks = time - list[i].lastDelivery;
-					last[i].text = $"{(int)(ticks/60*Time.fixedDeltaTime)}:{((int)(ticks*Time.fixedDeltaTime)%60).ToString( "D2" )} ago";
-				}
-				else
-					last[i].text = "-";
-				rate[i].text = $"~{(list[i].averageTransferRate*Constants.Game.normalSpeedPerSecond*60).ToString( "F2" )}/m";
-				total[i].text = list[i].itemsDelivered.ToString();
-				cart[i].gameObject.SetActive( list[i].start.cart?.currentRoute == list[i] );
-				priority[i].text = list[i].priority.ToString();
-				status[i].text = list[i].state switch
-				{
-					Stock.Route.State.noSourceItems => "Not enough items at source",
-					Stock.Route.State.destinationNotAccepting => "Destination has enough",
-					Stock.Route.State.flagJammed => "Junction is not free at start",
-					Stock.Route.State.inProgress => "In progress",
-					Stock.Route.State.noFreeCart => "Cart is not free",
-					Stock.Route.State.noFreeSpaceAtDestination => "Destination is full",
-					_ => "Unknown"
-				};
-			}
-
-			if ( arrowMaterialYellow == null )
-			{
-				arrowMaterialYellow = new Material( Resources.Load<Shader>( "shaders/Route" ) );
-				arrowMaterialYellow.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
-				World.SetRenderMode( arrowMaterialYellow, World.BlendMode.Cutout );
-				arrowMaterialYellow.color = new Color( 1, 0.75f, 0.15f );
-
-				arrowMaterialGreen = new Material( Resources.Load<Shader>( "shaders/Route" ) );
-				arrowMaterialGreen.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
-				World.SetRenderMode( arrowMaterialGreen, World.BlendMode.Cutout );
-				arrowMaterialGreen.color = new Color( 0, 0.75f, 0.15f );
-
-				arrowMaterialRed = new Material( Resources.Load<Shader>( "shaders/Route" ) );
-				arrowMaterialRed.mainTexture = iconTable.GetMediaData( Icon.rightArrow ).texture;
-				World.SetRenderMode( arrowMaterialRed, World.BlendMode.Cutout );
-				arrowMaterialRed.color = new Color( 1, 0, 0 );
-			}
-
-			foreach ( var route in list )
-			{
-				var startPosition = route.start.node.positionInViewport;
-				var endPosition = route.end.node.positionInViewport;
-				var dif = endPosition-startPosition;
-				var fullDistance = dif.magnitude;
-				var normalizedDif = dif / fullDistance;
-				materialUIPath.color = Color.green;
-				const float steps = Constants.Node.size * 2;
-				var distance = (float)( Time.time - Math.Floor( Time.time ) ) * steps;
-				while ( distance < fullDistance )
-				{
-					var material = arrowMaterialYellow;
-					if ( route.endData.content < route.endData.cartInput )
-						material = arrowMaterialRed;
-					if ( route.startData.content >= route.startData.cartOutput || route.state == Stock.Route.State.inProgress )
-						material = arrowMaterialGreen;
-					Graphics.DrawMesh( Viewport.plane, Matrix4x4.TRS( startPosition + distance * normalizedDif + Vector3.up * Constants.Node.size, Quaternion.Euler( 0, (float)( 180 + 180 * Math.Atan2( dif.x, dif.z ) / Math.PI ), 0 ), Vector3.one ), material, Constants.World.layerIndexUI );
-					distance += steps;
-				}
-				materialUIPath.color = Color.white;
-			}
-		}
-    }
 
 	public class HotkeyList : Panel
 	{

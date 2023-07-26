@@ -507,21 +507,6 @@ public class Team : HiveObject
 		return AttackStatus.done;
 	}
 
-	public void UpdateStockRoutes()
-	{
-		for ( int i = 0; i < (int)Item.Type.total; i++ )
-		{
-			bool hasInput = false;
-			foreach ( var stock in stocks )
-			{
-				stock.itemData[i].UpdateRoutes();
-				if ( stock.itemData[i].cartInput > 0 )
-					hasInput = true;
-			}
-			stocksHaveNeed[i] = hasInput;
-		}
-	}
-
 	public new void Start()
 	{
 		transform.SetParent( world.playersAndTeams.transform );

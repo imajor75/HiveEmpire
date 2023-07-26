@@ -1598,18 +1598,6 @@ public class Simpleton : Player
 
         public override bool Analyze()
         {
-            if ( target is Stock s )
-            {
-                foreach ( var itemData in s.itemData )
-                {
-                    foreach ( var route in itemData.outputRoutes )
-                    {
-                        if ( route.endData.importance - Constants.Simpleton.importanceReduction > itemData.importance )
-                            HiveCommon.oh.ScheduleStockAdjustment( s, itemData.itemType, Stock.Channel.importance, route.endData.importance - Constants.Simpleton.importanceReduction, true, boss.activity );
-                    }
-                }
-            }
-
             var workshop = target as Workshop;
             if ( workshop == null )
                 return finished;
@@ -1848,15 +1836,10 @@ public class Simpleton : Player
                         if ( workshop.productionConfiguration.outputType == itemTypeToLink )
                         {
                             workshop.simpletonDataSafe.hasOutputStock = true;
-                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutput, Constants.Stock.cartCapacity, false, boss.activity );
-                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartOutputTemporary, 5, false, boss.activity );
                             HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, boss.activity );
                         }
                         else
-                        {
-                            HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.cartInput, Constants.Simpleton.cartMin, false, boss.activity );
                             HiveCommon.oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, boss.activity );
-                        }
                     }
                     if ( partner is Workshop )
                         partner.simpletonDataSafe.RegisterPartner( workshop, itemTypeToLink, boss );

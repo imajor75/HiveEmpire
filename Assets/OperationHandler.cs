@@ -422,11 +422,6 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsMoveFlag( flag, direction ), standalone, source );
     }
 
-    public void ScheduleChangePriority( Stock.Route route, int direction, bool standalone = true, Operation.Source source = Operation.Source.manual )
-    {
-        ScheduleOperation( Operation.Create().SetupAsChangePriority( route, direction ), standalone, source );
-    }
-
     public void ScheduleChangeWorkshopRunningMode( Workshop workshop, Workshop.Mode mode, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
         ScheduleOperation( Operation.Create().SetupAsChangeWorkshopRunningMode( workshop, mode ), standalone, source );
@@ -680,11 +675,6 @@ public class Operation
     public Stock end { get => HiveCommon.ground.GetNode( endLocationX, endLocationY ).building as Stock; set { endLocationX = value.node.x; endLocationY = value.node.y; } }
     public Resource resource { get => location.resources[direction]; set { location = value.node; direction = resource.node.resources.IndexOf( value ); } }
     public Resource.Type resourceType { get => (Resource.Type)direction; set => direction = (int)value; }
-    public Stock.Route route
-    {
-        get => start.itemData[(int)itemType].GetRouteForDestination( end );
-        set { start = value.start; end = value.end; itemType = value.itemType; }
-    }
     public List<Node> roadPath
     {
         get
@@ -740,7 +730,6 @@ public class Operation
         createFlag,
         changeArea,
         moveFlag,
-        changeRoutePriority,
         changeWorkshopRunningMode,
         moveRoad,
         stockAdjustment,
@@ -922,15 +911,6 @@ public class Operation
         this.bufferIndex = index;
         this.useBuffer = usage;
         name = "Change Buffer Usage";
-        return this;
-    }
-
-    public Operation SetupAsChangePriority( Stock.Route route, int direction )
-    {
-        type = Type.changeRoutePriority;
-        this.route = route;
-        this.direction = direction;
-        name = "Change Route Priority";
         return this;
     }
 
@@ -1154,14 +1134,6 @@ public class Operation
                     area.center = HiveCommon.ground.GetNode( areaX, areaY );
                 area.radius = radius;
                 return Create().SetupAsChangeArea( building, area, oldCenter, oldRadius );
-            }
-            case Type.changeRoutePriority:
-            {
-                if ( route == null )
-                    return null;
-                route.priority += direction;
-                route.start.team.UpdateStockRoutes();
-                return Create().SetupAsChangePriority( route, direction * -1 );
             }
             case Type.changeWorkshopRunningMode:
             {

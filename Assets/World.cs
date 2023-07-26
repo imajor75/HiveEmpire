@@ -711,7 +711,6 @@ public class World : HiveObject
 						Assert.global.IsNotNull( t.outputMin );
 						Assert.global.IsNotNull( t.outputMax );
 						Assert.global.IsNotNull( t.onWay );
-						Assert.global.IsNotNull( t.outputRoutes );
 						for ( int i = 0; i < t.content.Count; i++ )
 						{
 							t.itemData[i].content = t.content[i];
@@ -720,12 +719,10 @@ public class World : HiveObject
 							t.itemData[i].outputMin = t.outputMin[i];
 							t.itemData[i].outputMax = t.outputMax[i];
 							t.itemData[i].onWay = t.onWay[i];
-							t.itemData[i].outputRoutes = t.outputRoutes[i];
 						}
 						t.content = null;
 						t.inputMin = t.inputMax = t.outputMin = t.outputMax = null;
 						t.onWay = null;
-						t.outputRoutes = null;
 					}
 #pragma warning restore 0618
 				}
