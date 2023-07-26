@@ -131,6 +131,28 @@ public class Stock : Attackable
 				boss.CancelOrders( itemType );
 			return old;
 		}
+		public ItemDispatcher.Category inputPriority 
+		{
+			get
+			{
+				if ( content < inputMin	- 1 )
+					return ItemDispatcher.Category.prepare;
+				if ( content > inputMax - 1 )
+					return ItemDispatcher.Category.zero;
+				return ItemDispatcher.Category.reserve;
+			}
+		}
+		public ItemDispatcher.Category outputPriority 
+		{
+			get
+			{
+				if ( content < outputMin )
+					return ItemDispatcher.Category.zero;
+				if ( content > outputMax )
+					return ItemDispatcher.Category.prepare;
+				return ItemDispatcher.Category.reserve;
+			}
+		}
 	}
 
 	public enum Channel
@@ -559,12 +581,7 @@ public class Stock : Attackable
 			int current = itemData[itemType].content + itemData[itemType].onWay;
 			if ( maxItems > total )
 			{
-				var p = ItemDispatcher.Category.reserve;
-				if ( current < itemData[itemType].inputMin )
-					p = ItemDispatcher.Category.prepare;
-				if ( current > itemData[itemType].inputMax )
-					p = ItemDispatcher.Category.zero;
-				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), p, inputArea, itemData[itemType].importance ); // TODO Should not order more than what fits
+				team.itemDispatcher.RegisterRequest( this, (Item.Type)itemType, Math.Min( maxItems - total, itemData[itemType].inputMax - current ), itemData[itemType].inputPriority, inputArea, itemData[itemType].importance ); // TODO Should not order more than what fits
 				if ( total < maxItems - Constants.Stock.fullTolerance )
 					fullReported = false;
 			}
@@ -574,14 +591,7 @@ public class Stock : Attackable
 				team.SendMessage( "Stock full", this );
 			}
 			if ( itemData.Count > itemType )
-			{
-				var p = ItemDispatcher.Category.reserve;
-				if ( current < itemData[itemType].outputMin )
-					p = ItemDispatcher.Category.zero;
-				if ( current > itemData[itemType].outputMax )
-					p = ItemDispatcher.Category.prepare;
-				team.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, p, outputArea, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
-			}
+				team.itemDispatcher.RegisterOffer( this, (Item.Type)itemType, itemData[itemType].content, itemData[itemType].outputPriority, outputArea, flag.freeSlots == 0, !dispenser.IsIdle() || offersSuspended.inProgress );
 		}
 		World.CRC( CRC, OperationHandler.Event.CodeLocation.stockCriticalUpdate );
 	}

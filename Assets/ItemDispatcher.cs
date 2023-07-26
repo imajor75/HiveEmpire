@@ -12,12 +12,6 @@ public class ItemDispatcher : HiveObject
 		reserve,
 		prepare,
 		work,
-
-		// Compatibility
-		high = work,
-		low = work,
-		stock = reserve,
-		route = reserve
 	};
 
 	public enum Result

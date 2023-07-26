@@ -3519,8 +3519,10 @@ public class Interface : HiveObject
 				string tooltip = "LMB Select item type\nRMB Popup menu";
 				tooltip += $"\ninput min: {stock.itemData[j].inputMin}";
 				tooltip += $"\ninput max: {stock.itemData[j].inputMax}";
+				tooltip += $"\ncurrent input priority: {stock.itemData[j].inputPriority}";
 				tooltip += $"\noutput min: {stock.itemData[j].outputMin}";
 				tooltip += $"\noutput max: {stock.itemData[j].outputMax}";
+				tooltip += $"\ncurrent output priority: {stock.itemData[j].outputPriority}";
 				tooltip += $"\nimportance: {stock.itemData[j].importance}";
 				i.additionalTooltip = tooltip;
 
