@@ -3535,7 +3535,7 @@ public class Interface : HiveObject
 				controller.AddOption( Icon.outputPotentials, "Show output potentials", () => LogisticList.Create().Open( stock, t, ItemDispatcher.Potential.Type.offer ) );
 #if DEBUG
 				controller.AddOption( Icon.exit, "Clear stock content", () => { data.content = 0; game.lastChecksum = 0; } );
-				controller.AddOption( Icon.plus, "Add one more", () => { data.content++; game.lastChecksum = 0; } );
+				controller.AddOption( Icon.plus, "Add ten more", () => { data.content += 10; game.lastChecksum = 0; } );
 #endif
 				counts[j] = Text().Link( controls ).Pin( 44 + offset, row, 100 );
 				counts[j].AddClickHandler( () => SelectItemType( t ) );
