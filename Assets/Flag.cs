@@ -334,7 +334,7 @@ public class Flag : HiveObject
 
 	public bool ReserveItem( Item item, Item replace = null )
 	{
-		assert.IsNull( item.nextFlag, "Item already has a flag" );
+		item.assert.IsNull( item.nextFlag, "Item already has a flag" );
 		if ( replace )
 			assert.AreEqual( replace.flag, this );
 		for ( int i = 0; i < items.Length; i++ )

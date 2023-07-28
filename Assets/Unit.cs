@@ -191,7 +191,13 @@ public class Unit : VisibleHiveObject
 		death
 	}
 
+	// If this class is inherited from ScriptableObject, the task list and all the tasks will be nicely visible in the unity editor inspector, but execution will be slower
+	// because creating ScriptableObjects is much more expensive than a single new
+#if DEBUG
+	public class Task : ScriptableObject
+#else
 	public class Task
+#endif
 	{
 		protected const bool finished = true;
 		protected const bool needMoreCalls = false;
@@ -2604,6 +2610,7 @@ public class Unit : VisibleHiveObject
 
 			assert.AreEqual( item.hauler, this, "Unknown hauler " + item.hauler );
 			assert.IsTrue( item.destination != null || item.tripCancelled || type == Type.tinkerer );	// destination is also null if a workshop is set to work "always"
+			assert.IsTrue( !IsIdle() || item.nextFlag == null );
 			if ( chain )
 				item.Validate( true );
 			assert.IsNull( item.flag );	// ?
