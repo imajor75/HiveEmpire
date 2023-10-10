@@ -232,7 +232,8 @@ public class Serializer
 							value = "cornField";
 						if ( type == typeof( Item.Type ) && value == "goldBar" )
 							value = "jewelry";
-						result = Enum.Parse( type, value );
+						if ( !Enum.TryParse( type, value, out result ) )
+							Assert.global.Fail( $"Enum value {value} not found in type {type}" );
 					}
 					else
 						result = Enum.ToObject( type, reader.Value );
