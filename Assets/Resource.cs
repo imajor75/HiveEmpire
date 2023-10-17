@@ -387,11 +387,8 @@ public class Resource : VisibleHiveObject
 				if ( !soundSource )
 					soundSource = World.CreateSoundSource( this );
 
-				soundSource.clip = m.data;
-				soundSource.loop = false;
-				
 				if ( !silence.empty )
-					soundSource.Play();
+					soundSource.Play( m.data );
 
 				silence.Start( (int)( game.NextFloatRnd( OperationHandler.Event.CodeLocation.resourceSilence ) * m.intData ) );
 			}

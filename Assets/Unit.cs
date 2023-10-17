@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -2312,11 +2312,7 @@ public class Unit : VisibleHiveObject
 		if ( walkTo )
 		{
 			if ( soundSource && !soundSource.isPlaying && walkSound != null )
-			{
-				soundSource.clip = walkSound.data;
-				soundSource.volume = walkSound.floatData;
-				soundSource.Play();
-			}
+				soundSource.Play( walkSound.data, walkSound.floatData );
 			if ( type == Type.cart )
 			{
 				foreach ( var g in wheels )
@@ -2463,15 +2459,8 @@ public class Unit : VisibleHiveObject
 		if ( soundSource )
 		{
 			var m = animationSounds.GetMedia( (AnimationSound)soundID );
-			soundSource.clip = m.data;
-			if ( m.floatData != 0 )
-				soundSource.volume = m.floatData;
-			else
-				soundSource.volume = 1;
-			soundSource.loop = false;
-			
-			assert.IsNotNull( soundSource.clip, $"No sound found for AnimationSouns.{((AnimationSound)soundID).ToString()}" );
-			soundSource.Play();
+			assert.IsNotNull( m.data, $"No sound found for AnimationSouns.{((AnimationSound)soundID).ToString()}" );
+			soundSource.Play( m.data, m.floatData != 0 ? m.floatData : 1 );
 		}
 	}
 

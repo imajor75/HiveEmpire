@@ -617,6 +617,17 @@ public static class Help
 		renderer.gameObject.AddComponent<BoxCollider>();
 	}
 
+	public static void Play( this AudioSource source, AudioClip clip, float volume = 1.0f, bool loop = false )
+	{
+		if ( !HiveCommon.game.inProgress )
+			return;
+
+		source.clip = clip;
+		source.volume = volume;
+		source.loop = loop;
+		source.Play();
+	}
+
 	public class RectTransformDebugger : MonoBehaviour
 	{
 		public Vector2 anchorMin, anchorMax, offsetMin, offsetMax;

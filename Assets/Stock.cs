@@ -513,7 +513,7 @@ public class Stock : Attackable
 
 			itemData[(int)Item.Type.soldier].content++;
 			contentChange.Trigger();
-			soundSource.Play();
+			soundSource.Play();		// TODO: when preparation is in progress sounds should not play
 		}
 		assert.IsTrue( returningUnits.Contains( unit ) );
 		returningUnits.Remove( unit );

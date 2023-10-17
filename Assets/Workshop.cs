@@ -1337,12 +1337,7 @@ public class Workshop : Building
 	{
 		var sound = processingSounds.GetMedia( kind );
 		if ( sound != null )
-		{
-			soundSource.clip = sound.data;
-			soundSource.volume = sound.floatData;
-			soundSource.loop = !sound.boolData;
-			soundSource.Play();
-		}
+			soundSource.Play( sound.data, sound.floatData, !sound.boolData );
 	}
 
 	public void SetWorking( bool working )
