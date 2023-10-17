@@ -677,7 +677,7 @@ public class Interface : HiveObject
 			if ( myFiles.Count() > 0 )
 				Load( myFiles.First().FullName );
 		}
-		if ( !game.gameInProgress )
+		if ( !game.inProgress )
 		{
 			var demoFile = Application.streamingAssetsPath + "/demolevel.json";
 			if ( File.Exists( demoFile ) )
@@ -740,7 +740,7 @@ public class Interface : HiveObject
 		else
 			mainPlayer = null;
 		eye.FocusOn( mainTeam.mainBuilding, approach:false );
-		lastSave = Time.unscaledTime;
+		lastSave = -settings.autoSaveInterval;
 		needWelcomePanel = true;	// Delayed display of the panel to prevent it showing up during prepare
 		defeatReported = false;
 	}
@@ -834,8 +834,13 @@ public class Interface : HiveObject
 	new public void Update()
 	{
 		requestUpdate = false;
-		if ( settings.autoSave && Time.unscaledTime - lastSave > settings.autoSaveInterval )
-			Save( Application.persistentDataPath + "/Saves/" + game.NextSaveFileName( World.SaveType.auto ) + ".json", false );
+		if ( settings.autoSave && Time.unscaledTime - lastSave > settings.autoSaveInterval && game.inProgress )
+		{
+			if ( game.challenge.saveAs != null )
+				Save( Application.streamingAssetsPath + "/" + game.challenge.saveAs, false );
+			else
+				Save( Application.persistentDataPath + "/Saves/" + game.NextSaveFileName( World.SaveType.auto ) + ".json", false );
+		}
 		if ( mainPlayer && messageButton )
 		{
 			if ( mainPlayer.messages.Count != 0 )
@@ -7985,6 +7990,8 @@ if ( cart )
 			int row = 0;
 			foreach ( var challenge in root.challenges )
 			{
+				if ( challenge.hidden )
+					continue;
 				Text( challenge.title ).Pin( 0, row, 180, iconSize ).Link( view ).SetTooltip( challenge.description );
 				Text( challenge.timeLimit > 0 ? Help.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
 				Text( challenge.worldGenerationSettings.size switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );

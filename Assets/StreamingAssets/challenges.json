@@ -1,6 +1,17 @@
 {
   "list": [
     {
+      "title": "Generate demo level",
+      "description": "Generate demo level",
+      "preparation": "full",
+      "prerun": 360000,
+      "infiniteResources": true,
+      "landOnly": true,
+      "hidden": true,
+      "saveAs": "demolevel.json",
+      "worldSize": 24
+    },
+    {
       "title": "Soldiers",
       "description": "Produce 50 soldiers in 2 hours",
       "timeLimit": 360000,

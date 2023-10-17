@@ -1188,8 +1188,8 @@ public class Game : World
 	public List<Team> teams = new ();
 	public bool roadTutorialShowed;
 	public bool createRoadTutorialShowed;
-	public bool gameInProgress;
-	public PrepareState preparation = PrepareState.ready;
+	public bool inProgress => preparation == PrepareState.ready;
+	public PrepareState preparation = PrepareState.empty;
 	[JsonIgnore]
 	public HiveObject.UpdateStage updateStage;
 	[JsonIgnore]
@@ -1203,10 +1203,11 @@ public class Game : World
 	public new int time;
 	public Speed speed;
 	public System.Random rnd;
-	public bool demo;
+	public bool demo => challenge.hidden;
 
 	public enum PrepareState
 	{
+		empty,
 		create,
 		prerun,
 		ready
@@ -1457,8 +1458,6 @@ public class Game : World
 		frameSeed = NextRnd( OperationHandler.Event.CodeLocation.worldNewGame );
 
 		network.SetState( Network.State.server );
-		gameInProgress = true;
-		demo = false;
 
 		operationHandler.challenge.Begin( this );
 	}
@@ -1517,7 +1516,7 @@ public class Game : World
 				operationHandler.PurgeCRCTable();
 		}
 		base.Save( fileName, manualSave, compact );
-		if ( !compact )
+		if ( !compact && fileName.Contains( "/Saves/" ) )
 			oh.SaveReplay( fileName.Replace( "/Saves/", "/Replays/" ) );
 	}
 
@@ -1538,7 +1537,7 @@ public class Game : World
 
 	public override void Clear()
 	{
-		gameInProgress = false;
+		preparation = PrepareState.empty;
 
 		RemoveElements( teams );
 		players.Clear();
@@ -1730,6 +1729,8 @@ public class Game : World
 		public Preparation preparation;
 		public int prerun;
 		public float soldierProductivityMax = float.MaxValue;
+		public bool hidden;
+		public string saveAs;
 
 		int worldSize { set { worldGenerationSettings.size = value; } }
 		bool islandOnly { set { if ( value ) { randomizeIslands = false; worldGenerationSettings.reliefSettings.island = true; } } }
@@ -2031,7 +2032,7 @@ public class Game : World
 
 	public int NextRnd( OperationHandler.Event.CodeLocation caller, int limit = 0 )
 	{
-		if ( gameInProgress )
+		if ( inProgress )
 			Assert.global.AreNotEqual( updateStage, UpdateStage.none, "Trying to generate a random number outside of update stages" );
 		int r = 0;
 		if ( limit != 0 )
@@ -2044,7 +2045,7 @@ public class Game : World
 
 	public float NextFloatRnd( OperationHandler.Event.CodeLocation caller )
 	{
-		if ( gameInProgress )
+		if ( inProgress )
 			Assert.global.AreNotEqual( updateStage, UpdateStage.none, "Trying to generate a random number outside of update stages" );
 		var r = (float)rnd.NextDouble();
 		oh?.RegisterEvent( OperationHandler.Event.Type.rndRequestFloat, caller );
