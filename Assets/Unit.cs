@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -921,9 +921,7 @@ public class Unit : VisibleHiveObject
 					items[1] = secondary;
 					deliverTask.items[1] = secondary;
 
-					var box = boss.LinkItem( secondary, LinkType.haulingBoxSecondary );
-					if ( box )
-						box.localPosition = Constants.Item.secondItemOffset[(int)secondary.type];
+					boss.LinkItem( secondary, LinkType.haulingBoxSecondary );
 				}
 				return true;
 			}
@@ -944,7 +942,7 @@ public class Unit : VisibleHiveObject
 				timer.Start( pickupTimeStart );
 				boss.animator?.ResetTrigger( putdownID );
 				// The ConsiderSecondary call in the next line is only done to foresee if a second item will be picked, it might be different 
-				expectingSecondary = ConsiderSecondary( true );
+				expectingSecondary = items[1] || ConsiderSecondary( true );
 				boss.animator?.SetTrigger( expectingSecondary ? pickupHeavyID : pickupLightID );   // TODO Animation phase is not saved in file. This will always be light
 			}
 
@@ -1546,10 +1544,7 @@ public class Unit : VisibleHiveObject
 		if ( itemsInHands[1] )
 		{
 			LinkItem( itemsInHands[0], LinkType.haulingBoxHeavy );
-	
-			var secondaryBox = LinkItem( itemsInHands[1], LinkType.haulingBoxSecondary );
-			if ( secondaryBox )
-				secondaryBox.localPosition = Constants.Item.secondItemOffset[(int)itemsInHands[1].type];
+			LinkItem( itemsInHands[1], LinkType.haulingBoxSecondary );
 		}
 		else 
 			LinkItem( itemsInHands[0], LinkType.haulingBoxLight );
@@ -2542,14 +2537,16 @@ public class Unit : VisibleHiveObject
 		base.OnDeadReference( member, reference );
 	}
 
-	public Transform LinkItem( Item item, LinkType linkType )
+	public void LinkItem( Item item, LinkType linkType )
 	{
 		if ( !item )
-			return null;
+			return;
+
 		Transform parent = links[(int)linkType]?.transform;
 		item.SetParent( parent??transform, transform );
 		parent?.gameObject.SetActive( true );
-		return parent;
+		if ( linkType == LinkType.haulingBoxSecondary && parent )
+			parent.localPosition = Constants.Item.secondItemOffset[(int)item.type];
 	}
 
 	public override void Validate( bool chain )
