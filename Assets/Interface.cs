@@ -3465,7 +3465,6 @@ public class Interface : HiveObject
 		public Text inputMin, inputMax, outputMin, outputMax;
 		public InputField importance;
 		public RectTransform controls;
-		public Image selectedInput, selectedOutput;
 		new public EditableText name;
 		public InputField renamer;
 
@@ -3555,7 +3554,7 @@ public class Interface : HiveObject
 
 			SetSize( 300, 100 - row );
 
-			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 120, 70, 100, 40, 0, 0 );
+			var selectedItemArea = RectTransform().Link( controls ).PinCenter( 160, 70, 100, 40, 0, 0 );
 			selectedItemArea.name = "Selected item area";
 			selected = ItemIcon( selectedItemType ).Link( selectedItemArea ).PinCenter( 0, 0, 2 * iconSize, 2 * iconSize, 0.5f, 0.5f );
 			selected.SetTooltip( "LMB to see a list of routes using this item type at this stock\nRMB to change cart orders for this item" ).name = "Selected item";;
@@ -3571,14 +3570,9 @@ public class Interface : HiveObject
 			outputMax = Text().Link( selectedItemArea ).Pin( -30, 20, 40, iconSize, 1, 0 ).
 			SetTooltip( "If the stock has more items than this number, then it will send the surplus even to other stocks", null, "LMB+drag left/right to change" );
 			outputMax.alignment = TextAnchor.MiddleCenter;
-			selectedInput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.75f );
-			selectedInput.color = new Color( 1, 0.75f, 0.15f );
-			selectedInput.transform.rotation = Quaternion.Euler( 0, 0, 180 );
-			selectedOutput = Image( Icon.rightArrow ).Link( selected ).PinCenter( 0, 0, iconSize, iconSize, 1, 0.25f );
-			selectedOutput.color = new Color( 1, 0.75f, 0.15f );
 			string importanceTooltip = "This number indicates how strongly the stock pulls that item type. Increase this number if you want it to compete with workshops.";
-			Text( "Importance", 8 ).Link( selectedItemArea ).Pin( 150, 0, 40, iconSize ).SetTooltip( importanceTooltip );
-			importance = InputField( "0" ).Link( selectedItemArea ).Pin( 150, -20, 40, iconSize );
+			Text( "Importance", 8 ).Link( selectedItemArea ).Pin( 110, 0, 40, iconSize ).SetTooltip( importanceTooltip );
+			importance = InputField( "0" ).Link( selectedItemArea ).Pin( 110, -20, 40, iconSize );
 			importance.onEndEdit.AddListener( ( value ) => oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.importance, float.Parse( value ) ) );
 			importance.SetTooltip( importanceTooltip );
 
@@ -4354,7 +4348,7 @@ public class Interface : HiveObject
 
 			int row = -20;
 			int column = 20;
-			var workshops = FindObjectsOfType<Workshop>( true );
+			var workshops = FindObjectsByType<Workshop>( FindObjectsSortMode.None );
 
 			List<Workshop.Type> workshopTypes = new ();
 
@@ -4522,7 +4516,7 @@ public class Interface : HiveObject
 			{
 				if ( type != showType )
 					showID = 0;
-				var workshops = FindObjectsOfType<Workshop>( true );
+				var workshops = FindObjectsByType<Workshop>( FindObjectsSortMode.None );
 				for ( int i = showID; i < workshops.Length; i++ )
 				{
 					if ( workshops[i].kind == type && workshops[i].team == root.mainTeam )
