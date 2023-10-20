@@ -30,6 +30,7 @@ public class Simpleton : Player
     public List<ItemUsage> nonConstructionUsage;    // This could simply be a Tuple, but serialize doesn't work with that
     public ItemHandling preservingConstructionMaterial = ItemHandling.uninitialized;
     public int actionIndex;
+    public bool limitInputWithAreas = false, limitOutputWithAreas = false;
     public bool inProgress;
     public int preparationMissingProduction, preparationTotalProduction;
     public int preparationMissingDeals, preparationTotalDeals;
@@ -408,6 +409,7 @@ public class Simpleton : Player
                 }
                 var offset = new Ground.Offset( 0, 0, 0 );
                 int dealCount = 0;
+                bool useAreas = buffer == null ? boss.limitOutputWithAreas : boss.limitInputWithAreas;
                 foreach ( var deal in deals )
                 {
                     if ( deal.itemType != itemType )
@@ -428,7 +430,7 @@ public class Simpleton : Player
                     if ( deal.partner is Stock )
                         hasStock = true;
                 }
-                if ( workshop.kind != Workshop.Type.woodcutter || hasStock )
+                if ( ( workshop.kind != Workshop.Type.woodcutter || hasStock ) && useAreas )
                     HiveObject.oh.ScheduleChangeArea( workshop, area, center, radius, false, boss.activity );
 
                 if ( partner is Stock stock && buffer?.weight != null )
