@@ -18,7 +18,7 @@ public class Stock : Attackable
 	public Game.Timer resupplyTimer = new ();
 	public bool fullReported, fullReportedCart;
 
-	override public string title { get { return main ? "Headquarters" : "Stock"; } set {} }
+	override public string title => main ? "Headquarters" : "Stock";
 	override public bool wantFoeClicks { get { return main; } }
 	override public UpdateStage updateMode => UpdateStage.turtle;
 	
@@ -196,28 +196,34 @@ public class Stock : Attackable
 			ScheduleTask( task );
 		}
 
-		// public void TransferItems( Route route )
-		// {
-		// 	assert.AreEqual( route.start, boss );
-		// 	int typeIndex = (int)route.itemType;
-		// 	itemQuantity = Math.Min( Constants.Stock.cartCapacity, boss.itemData[typeIndex].content );
-		// 	boss.itemData[typeIndex].content -= itemQuantity;
-		// 	boss.itemData[typeIndex].cartOutputTemporary = 0;
-		// 	route.end.itemData[typeIndex].cartPledged += itemQuantity;
-		// 	boss.contentChange.Trigger();
-		// 	this.itemType = route.itemType;
-		// 	currentRoute = route;
-		// 	route.state = Route.State.inProgress;
+		public void PickupItems( Item.Type itemType, Stock source, Stock destination )
+		{
+			int typeIndex = (int)itemType;
+			itemQuantity = Math.Min( Constants.Stock.cartCapacity, source.itemData[typeIndex].content );
+			source.itemData[typeIndex].content -= itemQuantity;
+			destination.itemData[typeIndex].cartPledged += itemQuantity;
+			source.contentChange.Trigger();
+			this.itemType = itemType;
 
-		// 	ScheduleWalkToNeighbour( boss.flag.node );
-		// 	DeliverItems( route.end );
-		// 	ScheduleWalkToNeighbour( route.end.flag.node );
-		// 	ScheduleWalkToFlag( boss.flag, true );
-		// 	ScheduleWalkToNeighbour( node );
+			ScheduleWalkToNeighbour( source.flag.node );
+			DeliverItems( destination );
+			ScheduleWalkToNeighbour( destination.flag.node );
 
-		// 	SetActive( true );
-		// 	UpdateLook();
-		// }
+			SetActive( true );
+			UpdateLook();
+		}
+
+		public void TransferItems( Item.Type itemType, Stock source, Stock destination )
+		{
+			this.itemType = itemType;
+			itemQuantity = 0;
+			this.destination = destination;
+
+			ScheduleGetToFlag( 1 );
+			ScheduleWalkToFlag( source.flag );
+			ScheduleWalkToNeighbour( source.node );
+			ScheduleCall( source );
+		}
 
 		public override void Reset()
 		{
@@ -274,7 +280,40 @@ public class Stock : Attackable
 				return;
 			}
 			assert.IsTrue( itemQuantity == 0 );
-			destination = null;	// Theoretically not needed
+
+			Stock bestSource= null, bestDestination = null;
+			int bestDistance = 0;
+			Item.Type bestType = Item.Type.unknown;
+
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+			{
+				List<Stock> sources = new(), destinations = new();
+				foreach( var stock in team.stocks )
+				{
+					var data = stock.itemData[i];
+					if ( data.content - Constants.Stock.cartCapacity >= data.inputMin )
+						sources.Add( stock );
+					if ( data.content < data.inputMin )
+						destinations.Add( stock );
+				}
+
+				foreach ( var destination in destinations )
+				{
+					foreach ( var source in sources )
+					{
+						int distance = source.node.DistanceFrom( destination.node );
+						if ( distance > bestDistance )
+						{
+							bestDistance = distance;
+							bestSource = source;
+							bestDestination = destination;
+							bestType = (Item.Type)i;
+						}
+					}
+				}
+			}
+			if ( bestSource )
+				TransferItems( bestType, bestSource, bestDestination );
 		}
 
 		public void UpdateLook()
@@ -515,6 +554,14 @@ public class Stock : Attackable
 			contentChange.Trigger();
 			soundSource.Play();		// TODO: when preparation is in progress sounds should not play
 		}
+
+		if ( unit is Cart cart )
+		{
+			// A cart arrived to pick up items
+			cart.PickupItems( cart.itemType, this, cart.destination );
+			return;
+		}
+
 		assert.IsTrue( returningUnits.Contains( unit ) );
 		returningUnits.Remove( unit );
 
@@ -558,7 +605,7 @@ public class Stock : Attackable
 			tinkererMate = Unit.Create().SetupForBuilding( this, true );
 			tinkererMate.ScheduleWait( 100, true );
 		}
-		if ( cart == null )
+		if ( cart == null && main )
 			cart = Cart.Create().SetupAsCart( this ) as Cart;
 
 		total = totalTarget = 0;

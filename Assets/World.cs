@@ -860,7 +860,7 @@ public class World : HiveObject
 		{
 			// HACK The event system needs to be recreated after the main camera is destroyed,
 			// otherwise there is a crash in unity
-			Eradicate( GameObject.FindObjectOfType<EventSystem>().gameObject );
+			Eradicate( GameObject.FindFirstObjectByType<EventSystem>().gameObject );
 			var esObject = new GameObject( "Event System" );
 			esObject.AddComponent<EventSystem>();
 			esObject.AddComponent<StandaloneInputModule>();

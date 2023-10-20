@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -1605,7 +1605,7 @@ public class Unit : VisibleHiveObject
 	{
 		if ( stage == UpdateStage.lazy )
 		{
-			if ( ( type == Type.tinkerer || type == Type.cart ) && IsIdle( true ) )
+			if ( type == Type.tinkerer && IsIdle( true ) )
 			{
 				SetActive( false );
 				return;
@@ -2084,14 +2084,17 @@ public class Unit : VisibleHiveObject
 		ScheduleTask( instance, first );
 	}
 
-	public bool ScheduleGetToFlag()
+	public bool ScheduleGetToFlag( int range = -1 )
 	{
 		if ( node.validFlag )
 			return true;
 
+		if ( range < 0 )
+			range = Constants.Unit.flagSearchDistance;
+
 		Flag destination = null;
 		int closest = int.MaxValue;
-		foreach ( var o in Ground.areas[Constants.Unit.flagSearchDistance] )
+		foreach ( var o in Ground.areas[range] )
 		{
 			var n = node + o;
 			if ( n.validFlag && n.validFlag.team == team && n.DistanceFrom( node ) < closest )

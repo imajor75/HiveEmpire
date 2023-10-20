@@ -9,9 +9,9 @@ public class ItemDispatcher : HiveObject
 	public enum Category
 	{
 		zero,
-		reserve,
-		prepare,
-		work,
+		reserve,		// when the item is only stored here because it is not needed elsewhere
+		prepare,		// when a stock is about to collect items for a nearby workshop to use
+		work,			// when the item would be used, like a workshop
 	};
 
 	public enum Result
