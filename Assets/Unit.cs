@@ -2268,7 +2268,8 @@ public class Unit : VisibleHiveObject
 		{
 			if ( bodyState != BodyState.standing )
 			{
-				animator?.SetBool( walkingID, false );
+				if ( animator )
+					animator.SetBool( walkingID, false );
 				soundSource?.Stop();
 				ground.Link( this );
 				transform.localPosition = node.position + ( node == building?.node ? standingOffsetInsideBuilding : Vector3.zero );
@@ -2285,7 +2286,8 @@ public class Unit : VisibleHiveObject
 			return;
 		}
 
-		animator?.SetBool( walkingID, true );
+		if ( animator )
+			animator.SetBool( walkingID, true );
 		bodyState = BodyState.walking;
 
 		if ( walkBase != null )

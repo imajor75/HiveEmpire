@@ -215,6 +215,7 @@ public class Stock : Attackable
 
 		public void TransferItems( Item.Type itemType, Stock source, Stock destination )
 		{
+			Log( $"Cart is going to pick up {itemType} at {source} and deliver to {destination}" );
 			this.itemType = itemType;
 			itemQuantity = 0;
 			this.destination = destination;
