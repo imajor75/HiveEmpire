@@ -594,6 +594,8 @@ public class Interface : HiveObject
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
 		var itemListButton = this.Image( Icon.backpack ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
+		var scheduleListButton = this.Image( Icon.cart ).AddClickHandler( () => CartScheduleEditor.Create( mainTeam.mainBuilding.cart ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Cart schedule", KeyCode.C, false, true );
+		scheduleListButton.SetTooltip( () => $"Edit cart schedule (hotkey: {scheduleListButton.GetHotkey().keyName})" );
 		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemTypeList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
 		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
@@ -7354,6 +7356,21 @@ if ( cart )
 				row -= iconSize + 5;
 			}
 			scroll.SetContentSize( -1, root.mainTeam.itemDispatcher.results.Count * ( iconSize + 5 ) );
+		}
+	}
+
+	public class CartScheduleEditor : Panel
+	{
+		public static CartScheduleEditor Create( Stock.Cart cart )
+		{
+			var panel = new GameObject( "Cart Schedule Editor" ).AddComponent<CartScheduleEditor>();
+			panel.Open( cart );
+			return panel;
+		}
+
+		public void Open( Stock.Cart cart )
+		{
+
 		}
 	}
 
