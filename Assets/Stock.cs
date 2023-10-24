@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 
 public class Stock : Attackable
@@ -178,6 +179,8 @@ public class Stock : Attackable
 		readonly GameObject[] frames = new GameObject[frameCount];
 		public GameObject cargoSprite;
 		public SpriteRenderer onMap;
+		public List<(Stock, Item.Type)> schedule;
+		public int stop;
 		new public static Cart Create()
 		{
 			return new GameObject().AddComponent<Cart>();
@@ -216,6 +219,12 @@ public class Stock : Attackable
 		public void TransferItems( Item.Type itemType, Stock source, Stock destination )
 		{
 			Log( $"Cart is going to pick up {itemType} at {source} and deliver to {destination}" );
+			if ( node == source.node )
+			{
+				PickupItems( itemType, source, destination );
+				return;
+			}
+			
 			this.itemType = itemType;
 			itemQuantity = 0;
 			this.destination = destination;
@@ -356,6 +365,11 @@ public class Stock : Attackable
 			if ( result )
 				road = null;
 			return result;
+		}
+
+		public void DoStop()
+		{
+			stop = stop % schedule.Count;
 		}
 
 		public override void Validate( bool chain )
