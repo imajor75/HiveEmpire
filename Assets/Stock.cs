@@ -179,7 +179,7 @@ public class Stock : Attackable
 		readonly GameObject[] frames = new GameObject[frameCount];
 		public GameObject cargoSprite;
 		public SpriteRenderer onMap;
-		public List<(Stock, Item.Type)> schedule;
+		public List<(Stock, Item.Type)> schedule = new ();
 		public int stop;
 		new public static Cart Create()
 		{

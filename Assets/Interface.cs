@@ -7361,6 +7361,9 @@ if ( cart )
 
 	public class CartScheduleEditor : Panel
 	{
+		public Stock.Cart cart;
+		public ScrollRect scroll;
+
 		public static CartScheduleEditor Create( Stock.Cart cart )
 		{
 			var panel = new GameObject( "Cart Schedule Editor" ).AddComponent<CartScheduleEditor>();
@@ -7370,7 +7373,25 @@ if ( cart )
 
 		public void Open( Stock.Cart cart )
 		{
+			Assert.global.IsNotNull( cart.schedule );
+			this.cart = cart;
+			base.Open( 400, 400 );
+			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
+			Fill();
+		}
 
+		public void Fill()
+		{
+			foreach ( Transform child in scroll.content )
+				Eradicate( child.gameObject );
+
+			int row = 0;
+			foreach ( var stop in cart.schedule )
+			{
+				BuildingIcon( stop.Item1 ).Pin( 0, row );
+				ItemIcon( stop.Item2 ).PinSideways( 0, row );
+				row += iconSize;
+			}
 		}
 	}
 
