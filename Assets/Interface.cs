@@ -4245,7 +4245,7 @@ public class Interface : HiveObject
 				foreach ( var stock in root.mainTeam.stocks )
 				{
 					var data = stock.itemData[itemIndex];
-					if ( stock.cart.itemType == flow.itemType )
+					if ( stock.cart && stock.cart.itemType == flow.itemType )
 						onWay += stock.cart.itemQuantity;
 				}
 				flow.cartInput.text = input.ToString();
