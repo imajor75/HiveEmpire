@@ -1723,7 +1723,7 @@ public class Interface : HiveObject
 			content.enabled = false;
 			content.rectTransform.anchorMin = Vector2.zero;
 			content.rectTransform.anchorMax = new Vector2( 1, 0 );
-			content.rectTransform.offsetMax = Vector2.zero;
+			content.rectTransform.offsetMin = content.rectTransform.offsetMax = Vector2.zero;
 			scroll.viewport = view.rectTransform;
 
 			scroll.Clear();	// Just to create the background image
@@ -7359,10 +7359,15 @@ if ( cart )
 		}
 	}
 
-	public class CartScheduleEditor : Panel
+	public class CartScheduleEditor : Panel, IInputHandler
 	{
 		public Stock.Cart cart;
 		public ScrollRect scroll;
+		public Text temp;
+		public Stock stockToAdd;
+		public RectTransform addStopArea;
+		public int addStopIndex;
+		public Item.Type addStopItemType;
 
 		public static CartScheduleEditor Create( Stock.Cart cart )
 		{
@@ -7374,6 +7379,8 @@ if ( cart )
 		public void Open( Stock.Cart cart )
 		{
 			Assert.global.IsNotNull( cart.schedule );
+			if ( cart.schedule == null )
+				cart.schedule = new ();	// Not needed, only here for compatibility with old files
 			this.cart = cart;
 			base.Open( 400, 400 );
 			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
@@ -7385,14 +7392,69 @@ if ( cart )
 			foreach ( Transform child in scroll.content )
 				Eradicate( child.gameObject );
 
-			int row = 0;
+			int row = 0, index = 0;
 			foreach ( var stop in cart.schedule )
 			{
-				BuildingIcon( stop.Item1 ).Pin( 0, row );
-				ItemIcon( stop.Item2 ).PinSideways( 0, row );
+				BuildingIcon( stop.Item1 ).Pin( 0, row ).Link( scroll.content );
+				ItemIcon( stop.Item2 ).PinSideways( 0, row ).Link( scroll.content );
+				Image( Icon.plus ).PinSideways( 0, row ).SetTooltip( "Add a new stop after this one" ).AddClickHandler( () => AddNewStop( index ) ).Link( scroll.content );
 				row += iconSize;
+				index++;
 			}
+			Image( Icon.plus ).Link( scroll.content ).Pin( 0, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
 		}
+
+		public void AddNewStop( int index )
+		{
+			addStopArea = new GameObject( "Add Stop Area" ).AddComponent<RectTransform>().Link( this ).Pin( borderWidth, 60, iconSize, iconSize, 0, 0 );
+
+			root.viewport.inputHandler = this;
+			temp = Text( "Select stock" ).Pin( borderWidth, 0, 100 ).Link( addStopArea );
+			var itemTypeSelect = Dropdown().PinSideways( 0, 0, 100 ).Link( addStopArea );
+			List<string> options = new ();
+			for ( int i = 0; i < (int)Item.Type.total; i++ )
+				options.Add( Enum.GetName( typeof( Item.Type ), i ) );
+			itemTypeSelect.AddOptions( options );
+			itemTypeSelect.onValueChanged.AddListener( ( index ) => addStopItemType = (Item.Type)index );
+			stockToAdd = null;
+		}
+
+		public void FinalizeNewStop()
+		{
+			Eradicate( addStopArea );
+			addStopArea = null;
+		}
+
+        public bool OnMovingOverNode( Node node )
+        {
+			return keepGoing;
+        }
+
+        public bool OnNodeClicked( Interface.MouseButton button, Node node )
+        {
+			return keepGoing;
+        }
+
+        public bool OnObjectClicked( Interface.MouseButton button, HiveObject target )
+        {
+			if ( target is Stock stock )
+			{
+				Assert.global.IsNotNull( temp );
+				Eradicate( temp );
+				temp = null;
+
+				stockToAdd = stock;
+				BuildingIcon( stock ).Pin( borderWidth, 0, 100 ).Link( addStopArea );
+				Button( "Add new stop" ).Pin( 220, 0, 80 ).Link( addStopArea ).AddClickHandler( FinalizeNewStop );
+
+				return finished;
+			}
+			return keepGoing;
+        }
+
+        public void OnLostInput()
+        {
+        }
 	}
 
 	public class ItemTypeList : Panel
