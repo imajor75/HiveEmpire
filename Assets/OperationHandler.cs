@@ -447,6 +447,11 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone, source );
     }
 
+    public void ScheduleChangeCartSchedule( Stock.Cart cart, int index, Stock stock, Item.Type itemType, bool standalone = true, Operation.Source source = Operation.Source.manual )
+    {
+        ScheduleOperation( Operation.Create().SetupAsChangeCartSchedule( cart, index, stock, itemType ), standalone, source );
+    }
+
     public void ScheduleCreatePlayer( string name, string team, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
         ScheduleOperation( Operation.Create().SetupAsCreatePlayer( name, team ), standalone, source );
@@ -616,6 +621,7 @@ public class OperationHandler : HiveObject
 [Serializable]
 public class Operation
 {
+    // TODO Instead of given integer values here they should just be generic integers with no fixed purposes
     public Type type;
     public string name;
     public int unitCount;
@@ -742,7 +748,8 @@ public class Operation
         toggleEmergencyConstruction,
         inputWeightChange,
         createResource,
-        removeResource
+        removeResource,
+        changeCartSchedule
     }
 
     public static Operation Create()
@@ -961,6 +968,16 @@ public class Operation
         this.team = team;
         unitCount = attackerCount;
         name = "Attack";
+        return this;
+    }
+
+    public Operation SetupAsChangeCartSchedule( Stock.Cart cart, int index, Stock stock, Item.Type itemType )
+    {
+        type = Type.changeCartSchedule;
+        building = stock;
+        areaX = index;
+        areaY = (int)itemType;
+        direction = cart.id;
         return this;
     }
 
@@ -1245,6 +1262,29 @@ public class Operation
                         team.constructionFactors[i] = normal;
                 }
                 return Create().SetupAsToggleEmergencyConstruction( team );
+            }
+            case Type.changeCartSchedule:
+            {
+                var cart = HiveObject.GetByID( direction ) as Stock.Cart;
+                var stock = building as Stock;
+                var index = areaX;
+                var itemType = (Item.Type)areaY;
+
+                List<(Stock, Item.Type)> newSchedule = new ();
+                int i = 0;
+                while ( i < index )
+                {
+                    newSchedule.Add( cart.schedule[i] );
+                    i++;
+                }
+                newSchedule.Add( ( stock, itemType ) );
+                while ( i < cart.schedule.Count )
+                {
+                    newSchedule.Add( cart.schedule[i] );
+                    i++;
+                }
+                cart.schedule = newSchedule;
+                return null;
             }
         }
         return null;
