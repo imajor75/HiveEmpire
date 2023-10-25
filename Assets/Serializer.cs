@@ -372,7 +372,12 @@ public class Serializer
 				if ( member.GetCustomAttribute<JsonIgnoreAttribute>() != null )
 					continue;
 
-				if ( !allowUnityTypes && member.DeclaringType.Module != GetType().Module && member.DeclaringType != typeof( Color ) && member.DeclaringType != typeof( Vector2 ) && member.DeclaringType != typeof( Vector3 ) )
+				if ( !allowUnityTypes && 
+					member.DeclaringType.Module != GetType().Module && 
+					member.DeclaringType != typeof( Color ) && 
+					member.DeclaringType != typeof( Vector2 ) && 
+					member.DeclaringType != typeof( Vector3 ) && 
+					member.DeclaringType.IsSubclassOf( typeof( System.Runtime.CompilerServices.ITuple ) ) )
 					continue;
 
 				if ( member is FieldInfo fi )
