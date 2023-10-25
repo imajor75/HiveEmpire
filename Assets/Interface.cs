@@ -7364,10 +7364,11 @@ if ( cart )
 		public Stock.Cart cart;
 		public ScrollRect scroll;
 		public Text temp;
-		public Stock stockToAdd;
+		public Stock addStopStock;
 		public RectTransform addStopArea;
 		public int addStopIndex;
 		public Item.Type addStopItemType;
+		public int fillCount;
 
 		public static CartScheduleEditor Create( Stock.Cart cart )
 		{
@@ -7387,6 +7388,13 @@ if ( cart )
 			Fill();
 		}
 
+		public new void Update()
+		{
+			base.Update();
+			if ( fillCount != cart.schedule.Count )
+				Fill();
+		}
+
 		public void Fill()
 		{
 			foreach ( Transform child in scroll.content )
@@ -7395,13 +7403,14 @@ if ( cart )
 			int row = 0, index = 0;
 			foreach ( var stop in cart.schedule )
 			{
-				BuildingIcon( stop.Item1 ).Pin( 0, row ).Link( scroll.content );
+				BuildingIcon( stop.Item1 ).Pin( 0, row, 100 ).Link( scroll.content );
 				ItemIcon( stop.Item2 ).PinSideways( 0, row ).Link( scroll.content );
 				Image( Icon.plus ).PinSideways( 0, row ).SetTooltip( "Add a new stop after this one" ).AddClickHandler( () => AddNewStop( index ) ).Link( scroll.content );
-				row += iconSize;
+				row -= iconSize;
 				index++;
 			}
-			Image( Icon.plus ).Link( scroll.content ).Pin( 0, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
+			Image( Icon.plus ).Link( scroll.content ).Pin( 100+iconSize, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
+			fillCount = cart.schedule.Count;
 		}
 
 		public void AddNewStop( int index )
@@ -7416,11 +7425,12 @@ if ( cart )
 				options.Add( Enum.GetName( typeof( Item.Type ), i ) );
 			itemTypeSelect.AddOptions( options );
 			itemTypeSelect.onValueChanged.AddListener( ( index ) => addStopItemType = (Item.Type)index );
-			stockToAdd = null;
+			addStopStock = null;
 		}
 
 		public void FinalizeNewStop()
 		{
+			oh.ScheduleChangeCartSchedule( cart, addStopIndex, addStopStock, addStopItemType );
 			Eradicate( addStopArea );
 			addStopArea = null;
 		}
@@ -7443,7 +7453,7 @@ if ( cart )
 				Eradicate( temp );
 				temp = null;
 
-				stockToAdd = stock;
+				addStopStock = stock;
 				BuildingIcon( stock ).Pin( borderWidth, 0, 100 ).Link( addStopArea );
 				Button( "Add new stop" ).Pin( 220, 0, 80 ).Link( addStopArea ).AddClickHandler( FinalizeNewStop );
 
