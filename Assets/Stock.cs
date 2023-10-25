@@ -154,6 +154,8 @@ public class Stock : Attackable
 				return ItemDispatcher.Category.reserve;
 			}
 		}
+
+		public int spaceLeftForCart => inputMax - content + Constants.Stock.cartCapacity;
 	}
 
 	public enum Channel
@@ -203,6 +205,9 @@ public class Stock : Attackable
 		{
 			int typeIndex = (int)itemType;
 			itemQuantity = Math.Min( Constants.Stock.cartCapacity, source.itemData[typeIndex].content );
+			int spaceLeft = destination.itemData[typeIndex].spaceLeftForCart;
+			if ( itemQuantity > spaceLeft )
+				itemQuantity = spaceLeft;
 			source.itemData[typeIndex].content -= itemQuantity;
 			destination.itemData[typeIndex].cartPledged += itemQuantity;
 			source.contentChange.Trigger();
@@ -210,7 +215,6 @@ public class Stock : Attackable
 
 			ScheduleWalkToNeighbour( source.flag.node );
 			DeliverItems( destination );
-			ScheduleWalkToNeighbour( destination.flag.node );
 
 			SetActive( true );
 			UpdateLook();
@@ -289,41 +293,7 @@ public class Stock : Attackable
 					ScheduleWalkToNode( boss.flag.node );	// Giving up the delivery
 				return;
 			}
-			assert.IsTrue( itemQuantity == 0 );
-
-			Stock bestSource= null, bestDestination = null;
-			int bestDistance = 0;
-			Item.Type bestType = Item.Type.unknown;
-
-			for ( int i = 0; i < (int)Item.Type.total; i++ )
-			{
-				List<Stock> sources = new(), destinations = new();
-				foreach( var stock in team.stocks )
-				{
-					var data = stock.itemData[i];
-					if ( data.content - Constants.Stock.cartCapacity >= data.inputMin )
-						sources.Add( stock );
-					if ( data.content < data.inputMin )
-						destinations.Add( stock );
-				}
-
-				foreach ( var destination in destinations )
-				{
-					foreach ( var source in sources )
-					{
-						int distance = source.node.DistanceFrom( destination.node );
-						if ( distance > bestDistance )
-						{
-							bestDistance = distance;
-							bestSource = source;
-							bestDestination = destination;
-							bestType = (Item.Type)i;
-						}
-					}
-				}
-			}
-			if ( bestSource )
-				TransferItems( bestType, bestSource, bestDestination );
+			DoSchedule();
 		}
 
 		public void UpdateLook()
@@ -367,9 +337,10 @@ public class Stock : Attackable
 			return result;
 		}
 
-		public void DoStop()
+		public void DoSchedule()
 		{
 			stop = stop % schedule.Count;
+			TransferItems( schedule[stop].Item2, schedule[stop].Item1, schedule[(stop+1)%schedule.Count].Item1 );
 		}
 
 		public override void Validate( bool chain )
@@ -423,21 +394,6 @@ public class Stock : Attackable
 			Stock cartStock = cart.building as Stock;
 			if ( cart.itemQuantity > 0 )
 			{
-				// if ( cart.currentRoute != null )
-				// {
-				// 	if ( cart.currentRoute.lastDelivery > 0 )
-				// 	{
-				// 		float rate = ((float)cart.itemQuantity) / ( time - cart.currentRoute.lastDelivery );
-				// 		if ( cart.currentRoute.averageTransferRate == 0 )
-				// 			cart.currentRoute.averageTransferRate = rate;
-				// 		else
-				// 			cart.currentRoute.averageTransferRate = cart.currentRoute.averageTransferRate * 0.5f + rate * 0.5f;
-				// 	}
-				// 	cart.currentRoute.itemsDelivered += cart.itemQuantity;
-				// 	cart.currentRoute.lastDelivery = time;
-				// 	cart.currentRoute.state = Route.State.unknown;
-				// 	cart.currentRoute = null;
-				// }
 				cart.itemsDelivered += cart.itemQuantity;
 				stock.itemData[(int)cart.itemType].content += cart.itemQuantity;
 				stock.contentChange.Trigger();
@@ -448,6 +404,8 @@ public class Stock : Attackable
 			}
 			boss.assert.AreEqual( cart.destination, stock );
 			cart.destination = null;
+			cart.stop++;
+			cart.DoSchedule();
 			return true;
 		}
 	}
