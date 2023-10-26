@@ -7384,8 +7384,9 @@ if ( cart )
 			if ( cart.schedule == null )
 				cart.schedule = new ();	// Not needed, only here for compatibility with old files
 			this.cart = cart;
-			base.Open( 400, 400 );
-			scroll = ScrollRect().Stretch( 20, 20, -20, -60 );
+			base.Open( 240, 240 );
+			Text( "Current cart schedule" ).Pin( borderWidth, -borderWidth, 200 );
+			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize );
 			Fill();
 		}
 
@@ -7398,32 +7399,34 @@ if ( cart )
 
 		public void Fill()
 		{
-			foreach ( Transform child in scroll.content )
-				Eradicate( child.gameObject );
+			scroll.Clear();
 
 			int row = 0, index = 0;
 			foreach ( var stop in cart.schedule )
 			{
 				var localIndex = index;
-				BuildingIcon( stop.Item1 ).Pin( 0, row, 100 ).Link( scroll.content );
+				BuildingIcon( stop.Item1 ).Pin( 0, row, 120 ).Link( scroll.content );
 				ItemIcon( stop.Item2 ).PinSideways( 0, row ).Link( scroll.content );
-				Image( Icon.plus ).PinSideways( 0, row ).SetTooltip( "Add a new stop after this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
+				Image( Icon.plus ).PinSideways( 10, row ).SetTooltip( "Add a new stop before this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
 				Image( Icon.exit ).PinSideways( 0, row ).SetTooltip( "Delete this stop" ).AddClickHandler( () => DeleteStop( localIndex ) ).Link( scroll.content );
 				
 				row -= iconSize;
 				index++;
 			}
-			Image( Icon.plus ).Link( scroll.content ).Pin( 100+iconSize, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
+
+			Image( Icon.plus ).Link( scroll.content ).Pin( 130+iconSize, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
 			Image( Icon.cart ).Pin( -50, iconSize, xa:1, ya:0 ).SetTooltip( "Show the cart" ).AddClickHandler( () => Interface.UnitPanel.Create().Open( cart, true ) );
 			fillCount = cart.schedule.Count;
+			scroll.SetContentSize( -1, iconSize * fillCount );
 		}
 
 		public void AddNewStop( int index )
 		{
 			addStopArea = new GameObject( "Add Stop Area" ).AddComponent<RectTransform>().Link( this ).Pin( borderWidth, 60, iconSize, iconSize, 0, 0 );
 
+			scroll.Stretch( borderWidth, borderWidth + 2*iconSize, -borderWidth, -borderWidth - iconSize );
 			root.viewport.inputHandler = this;
-			temp = Text( "Select stock" ).Pin( borderWidth, 0, 100 ).Link( addStopArea );
+			temp = Text( "Select stock" ).Pin( 0, 0, 100 ).Link( addStopArea );
 			var itemTypeSelect = Dropdown().PinSideways( 0, 0, 100 ).Link( addStopArea );
 			List<string> options = new ();
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
@@ -7431,6 +7434,8 @@ if ( cart )
 			itemTypeSelect.AddOptions( options );
 			itemTypeSelect.onValueChanged.AddListener( ( index ) => addStopItemType = (Item.Type)index );
 			addStopStock = null;
+			addStopItemType = Item.Type.log;
+			addStopIndex = index;
 		}
 
 		public void DeleteStop( int index )
@@ -7440,6 +7445,7 @@ if ( cart )
 
 		public void FinalizeNewStop()
 		{
+			scroll.Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize );
 			oh.ScheduleChangeCartSchedule( cart, addStopIndex, addStopStock, addStopItemType );
 			Eradicate( addStopArea );
 			addStopArea = null;
@@ -7464,8 +7470,8 @@ if ( cart )
 				temp = null;
 
 				addStopStock = stock;
-				BuildingIcon( stock ).Pin( borderWidth, 0, 100 ).Link( addStopArea );
-				Button( "Add new stop" ).Pin( 220, 0, 80 ).Link( addStopArea ).AddClickHandler( FinalizeNewStop );
+				BuildingIcon( stock ).Pin( 0, 0, 100 ).Link( addStopArea );
+				Button( "Add new stop" ).Pin( 70, -iconSize, 80 ).Link( addStopArea ).AddClickHandler( FinalizeNewStop );
 
 				return finished;
 			}
