@@ -974,7 +974,7 @@ public class Operation
     public Operation SetupAsChangeCartSchedule( Stock.Cart cart, int index, Stock stock, Item.Type itemType )
     {
         type = Type.changeCartSchedule;
-        building = stock;
+        building = stock??cart.team.mainBuilding;
         areaX = index;
         areaY = (int)itemType;
         direction = cart.id;
@@ -1277,7 +1277,10 @@ public class Operation
                     newSchedule.Add( cart.schedule[i] );
                     i++;
                 }
-                newSchedule.Add( ( stock, itemType ) );
+                if ( itemType != Item.Type.unknown )
+                    newSchedule.Add( ( stock, itemType ) ); 
+                else
+                    i++;
                 while ( i < cart.schedule.Count )
                 {
                     newSchedule.Add( cart.schedule[i] );

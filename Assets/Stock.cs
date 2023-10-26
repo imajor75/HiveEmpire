@@ -279,21 +279,21 @@ public class Stock : Attackable
 
 		override public void FindTask()
 		{
-			if ( boss == null )
+			if ( DoSchedule() )
 			{
-				type = Type.unemployed;
-				RegisterAsReturning();
+				SetActive( true );
 				return;
 			}
-			if ( node != boss.node )
+
+			if ( node == boss.node )
 			{
-				if ( ScheduleGetToFlag() )
-					DeliverItems( destination ?? boss );
-				else
-					ScheduleWalkToNode( boss.flag.node );	// Giving up the delivery
+				SetActive( false );
 				return;
 			}
-			DoSchedule();
+
+			ScheduleGetToFlag();
+			ScheduleWalkToFlag( boss.flag );
+			ScheduleWalkToNeighbour( boss.node );
 		}
 
 		public void UpdateLook()
@@ -337,10 +337,14 @@ public class Stock : Attackable
 			return result;
 		}
 
-		public void DoSchedule()
+		public bool DoSchedule()
 		{
+			if ( schedule.Count < 2 )
+				return false;
+
 			stop = stop % schedule.Count;
 			TransferItems( schedule[stop].Item2, schedule[stop].Item1, schedule[(stop+1)%schedule.Count].Item1 );
+			return true;
 		}
 
 		public override void Validate( bool chain )

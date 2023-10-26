@@ -7403,9 +7403,12 @@ if ( cart )
 			int row = 0, index = 0;
 			foreach ( var stop in cart.schedule )
 			{
+				var localIndex = index;
 				BuildingIcon( stop.Item1 ).Pin( 0, row, 100 ).Link( scroll.content );
 				ItemIcon( stop.Item2 ).PinSideways( 0, row ).Link( scroll.content );
-				Image( Icon.plus ).PinSideways( 0, row ).SetTooltip( "Add a new stop after this one" ).AddClickHandler( () => AddNewStop( index ) ).Link( scroll.content );
+				Image( Icon.plus ).PinSideways( 0, row ).SetTooltip( "Add a new stop after this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
+				Image( Icon.exit ).PinSideways( 0, row ).SetTooltip( "Delete this stop" ).AddClickHandler( () => DeleteStop( localIndex ) ).Link( scroll.content );
+				
 				row -= iconSize;
 				index++;
 			}
@@ -7426,6 +7429,11 @@ if ( cart )
 			itemTypeSelect.AddOptions( options );
 			itemTypeSelect.onValueChanged.AddListener( ( index ) => addStopItemType = (Item.Type)index );
 			addStopStock = null;
+		}
+
+		public void DeleteStop( int index )
+		{
+			oh.ScheduleChangeCartSchedule( cart, index, null, Item.Type.unknown );
 		}
 
 		public void FinalizeNewStop()
