@@ -1576,6 +1576,7 @@ public class Interface : HiveObject
 			if ( !noPin )
 			{
 				pin = Image( Icon.pin ).Pin( -borderWidth * 2, 0, borderWidth, borderWidth, 1, 1 ).AddClickHandler( Pin );
+				pin.name = "Pin";
 				pin.color = Color.green.Dark();
 			}
 			if ( !noResize )
@@ -7413,6 +7414,7 @@ if ( cart )
 				index++;
 			}
 			Image( Icon.plus ).Link( scroll.content ).Pin( 100+iconSize, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
+			Image( Icon.cart ).Pin( -50, iconSize, xa:1, ya:0 ).SetTooltip( "Show the cart" ).AddClickHandler( () => Interface.UnitPanel.Create().Open( cart, true ) );
 			fillCount = cart.schedule.Count;
 		}
 
