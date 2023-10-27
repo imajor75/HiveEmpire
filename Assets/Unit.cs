@@ -1468,7 +1468,7 @@ public class Unit : VisibleHiveObject
 		look = type = Type.cart;
 		building = stock;
 		node = stock.node;
-		speed = Constants.Stock.cartSpeed;
+		speed = Constants.Unit.cartSpeed;
 		team = stock.team;
 		currentColor = Color.white;
 		base.Setup( stock.world );
@@ -1787,6 +1787,7 @@ public class Unit : VisibleHiveObject
 
 		if ( type == Type.cart )
 		{
+			// TODO This should be in cart.cs
 			assert.IsNotNull( team );
 			var stock = building as Stock;
 			if ( exclusiveFlag )
@@ -1811,7 +1812,7 @@ public class Unit : VisibleHiveObject
 			else
 				ScheduleWalkToNode( building.flag.node );
 			ScheduleWalkToNeighbour( building.node );
-			var task = new Stock.DeliverStackTask();
+			var task = new DeliverStackTask();
 			task.Setup( this, stock );
 			ScheduleTask( task );
 			return;
@@ -1861,7 +1862,7 @@ public class Unit : VisibleHiveObject
 			Eradicate( gameObject );
 			return;
 		}
-		if ( this as Stock.Cart )
+		if ( this as Cart )
 			assert.IsNull( building as Stock );     // ?
 		RegisterAsReturning();
 		if ( !recalled )

@@ -435,7 +435,7 @@ public class Simpleton : Player
                     if ( stock.itemData[(int)itemType].inputMax != Constants.Simpleton.stockSave )
                     {
                         oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMin, Constants.Simpleton.stockSave );
-                        oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMax, Constants.Simpleton.stockSave+Constants.Stock.cartCapacity );
+                        oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMax, Constants.Simpleton.stockSave+Constants.Unit.cartCapacity );
                     }
                     if ( stock.itemData[(int)itemType].importance < minimumImportance )
                         oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.importance, minimumImportance );
@@ -1893,7 +1893,7 @@ public class Simpleton : Player
                         if ( workshop.productionConfiguration.outputType == itemTypeToLink )
                         {
                             workshop.simpletonDataSafe.hasOutputStock = true;
-                            oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Stock.cartCapacity + 5, false, boss.activity );
+                            oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Unit.cartCapacity + 5, false, boss.activity );
                         }
                         else
                             oh.ScheduleStockAdjustment( stock, itemTypeToLink, Stock.Channel.inputMax, Constants.Simpleton.stockSave, false, boss.activity );

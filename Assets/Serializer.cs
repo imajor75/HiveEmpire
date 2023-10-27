@@ -443,7 +443,7 @@ public class Serializer
 		var result = (rootType)serializer.ReadFile( fileName, typeof( rootType ) );
 		foreach ( var link in serializer.referenceLinks )
 		{
-			if ( link.referencer is Stock stock && link.reference is Stock.Cart cart && stock.destroyed && !cart.destroyed )
+			if ( link.referencer is Stock stock && link.reference is Cart cart && stock.destroyed && !cart.destroyed )
 				cart.destroyed = true;
 			if ( link.referencer is OperationHandler oh && link.reference is Game.Challenge challenge && challenge.destroyed && !oh.destroyed )
 				challenge.destroyed = false;
@@ -453,7 +453,7 @@ public class Serializer
 				continue;
 			}
 			if ( 
-				link.referencer is Stock.Cart ct &&
+				link.referencer is Cart ct &&
 				link.member.Name == "road" &&
 				link.reference is HiveObject hiveObjectReference &&
 				hiveObjectReference.destroyed &&

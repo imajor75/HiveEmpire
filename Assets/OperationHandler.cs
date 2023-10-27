@@ -447,12 +447,12 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsAttack( team, target, attackedCount ), standalone, source );
     }
 
-    public void ScheduleChangeCartSchedule( Stock.Cart cart, int index, Stock stock, Item.Type itemType, bool standalone = true, Operation.Source source = Operation.Source.manual )
+    public void ScheduleChangeCartSchedule( Cart cart, int index, Stock stock, Item.Type itemType, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
         ScheduleOperation( Operation.Create().SetupAsChangeCartSchedule( cart, index, stock, itemType ), standalone, source );
     }
 
-    public void ScheduleFullChangeCartSchedule( Stock.Cart cart, List<( Stock, Item.Type )> schedule )
+    public void ScheduleFullChangeCartSchedule( Cart cart, List<( Stock, Item.Type )> schedule )
     {
         int prev = cart.schedule.Count;
         for ( int i = 0; i < prev; i++ )
@@ -980,7 +980,7 @@ public class Operation
         return this;
     }
 
-    public Operation SetupAsChangeCartSchedule( Stock.Cart cart, int index, Stock stock, Item.Type itemType )
+    public Operation SetupAsChangeCartSchedule( Cart cart, int index, Stock stock, Item.Type itemType )
     {
         type = Type.changeCartSchedule;
         building = stock??cart.team.mainBuilding;
@@ -1275,7 +1275,7 @@ public class Operation
             }
             case Type.changeCartSchedule:
             {
-                var cart = HiveObject.GetByID( direction ) as Stock.Cart;
+                var cart = HiveObject.GetByID( direction ) as Cart;
                 var stock = building as Stock;
                 var index = areaX;
                 var itemType = (Item.Type)areaY;

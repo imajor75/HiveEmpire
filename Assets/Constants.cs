@@ -383,15 +383,11 @@ public static class Constants
 	    public const int defaultInputMax = 0;
 	    public const int defaultOutputMin = 0;
 	    public const int defaultOutputMax = 50;
-	    public const int defaultCartInput = 0;
-	    public const int defaultCartOutput = 0;
         public const int plankNeeded = 3;
         public const int stoneNeeded = 3;
         public const bool flatteningNeeded = true;
         public const int constructionTime = Constants.Game.normalSpeedPerSecond * 120;
         public const global::Node.Type groundTypeNeeded = global::Node.Type.aboveWater;
-		public const int cartCapacity = 25;
-        public const float cartSpeed = 1.25f;
         public const int startPlankCount = 10;
         public const int startStoneCount = 5;
         public const int startSoldierCount = 15;
@@ -407,6 +403,10 @@ public static class Constants
         public const int flagSearchDistance = 6;
         public const float itemsInHandsSpriteHorizontalOffset = 0.2f * Node.size;
         public const float itemsInHandsSpriteVerticalOffset = 0.4f * Node.size;
+	    public const int defaultCartInput = 0;
+	    public const int defaultCartOutput = 0;
+		public const int cartCapacity = 25;
+        public const float cartSpeed = 1.25f;
     }
 
     public static class Workshop
@@ -448,7 +448,7 @@ public static class Constants
         public static int cleanupPeriod = 0;//60 * 60 * Constants.Game.normalSpeedPerSecond;
         public const int stockCoverage = 8;
         public const int workshopCoverage = 8;
-        public const int stockSave = Constants.Stock.cartCapacity;
+        public const int stockSave = Constants.Unit.cartCapacity;
         public const int cartMin = 5;
         public const int itemTypesPerStock = 6;
         public const int itemTypesPerMainStock = 10;

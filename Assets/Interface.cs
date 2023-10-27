@@ -3635,7 +3635,7 @@ public class Interface : HiveObject
 						this.min = min;
 						this.max = max;
 						disableDrag = true;
-						var l = (int)(Constants.Stock.cartCapacity * 1.5);
+						var l = (int)(Constants.Unit.cartCapacity * 1.5);
 						if ( adjustInputMin && stock.itemData[t].inputMax < l )
 							oh.ScheduleStockAdjustment( stock, selectedItemType, Stock.Channel.inputMax, l );
 					}
@@ -5278,7 +5278,7 @@ public class Interface : HiveObject
 				return;
 			}
 			base.Update();
-			var cart = unit as Stock.Cart;
+			var cart = unit as Cart;
 
 			Unit.Task firstTask = null;
 			if ( unit.taskQueue.Count > 0 )
@@ -5397,7 +5397,7 @@ public class Interface : HiveObject
 					}
 					case Unit.Type.cart:
 					{
-						var massDeliver = unit.FindTaskInQueue<Stock.DeliverStackTask>();
+						var massDeliver = unit.FindTaskInQueue<DeliverStackTask>();
 						if ( massDeliver != null )
 						{
 							status.text = $"Transporting {cart.itemQuantity}";
@@ -7362,7 +7362,7 @@ if ( cart )
 
 	public class CartScheduleEditor : Panel, IInputHandler
 	{
-		public Stock.Cart cart;
+		public Cart cart;
 		public ScrollRect scroll;
 		public Text temp;
 		public Stock addStopStock;
@@ -7371,14 +7371,14 @@ if ( cart )
 		public Item.Type addStopItemType;
 		public int fillCount;
 
-		public static CartScheduleEditor Create( Stock.Cart cart )
+		public static CartScheduleEditor Create( Cart cart )
 		{
 			var panel = new GameObject( "Cart Schedule Editor" ).AddComponent<CartScheduleEditor>();
 			panel.Open( cart );
 			return panel;
 		}
 
-		public void Open( Stock.Cart cart )
+		public void Open( Cart cart )
 		{
 			Assert.global.IsNotNull( cart.schedule );
 			if ( cart.schedule == null )
