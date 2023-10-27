@@ -7384,7 +7384,7 @@ if ( cart )
 			if ( cart.schedule == null )
 				cart.schedule = new ();	// Not needed, only here for compatibility with old files
 			this.cart = cart;
-			base.Open( 240, 240 );
+			base.Open( 260, 240 );
 			Text( "Current cart schedule" ).Pin( borderWidth, -borderWidth, 200 );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize );
 			Fill();
@@ -7405,10 +7405,12 @@ if ( cart )
 			foreach ( var stop in cart.schedule )
 			{
 				var localIndex = index;
-				BuildingIcon( stop.Item1 ).Pin( 0, row, 120 ).Link( scroll.content );
+				var stockIcon = BuildingIcon( stop.Item1 ).Pin( 10, row, 120 ).Link( scroll.content );
 				ItemIcon( stop.Item2 ).PinSideways( 0, row ).Link( scroll.content );
 				Image( Icon.plus ).PinSideways( 10, row ).SetTooltip( "Add a new stop before this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
 				Image( Icon.exit ).PinSideways( 0, row ).SetTooltip( "Delete this stop" ).AddClickHandler( () => DeleteStop( localIndex ) ).Link( scroll.content );
+				if ( stop.Item1 == cart.destination )
+					Text( ">" ).Pin( 0, row ).Link( scroll.content );
 				
 				row -= iconSize;
 				index++;
