@@ -6,6 +6,7 @@ using System;
 using Newtonsoft.Json;
 using System.Linq;
 
+// TODO Some serious serialization problem prevents saving a game if a singleton is active
 public class Simpleton : Player
 {
     [JsonIgnore]
@@ -34,7 +35,9 @@ public class Simpleton : Player
     public bool inProgress;
     public int preparationMissingProduction, preparationTotalProduction;
     public int preparationMissingDeals, preparationTotalDeals;
-    public float preparationProgress 
+    public bool needCartReschedule;
+    
+    public float preparationProgress
     {
         get
         {
@@ -277,14 +280,7 @@ public class Simpleton : Player
         if ( lastApplied != null && ( lastApplied.importance >= confidence || activity == Operation.Source.preparation ) && lastApplied.importance > 0 )
         {
             string chart = "";
-            // float a = lastApplied.importance;
-            // for ( int i = 0; i < 20; i++ )
-            // {
-            //     chart += a > 0 && a < 0.05f ? 'o' : ' ';
-            //     a -= 0.05f;
-            // }
             Log( $"{chart} {actionIndex}({lastApplied.importance}) Applying solution {lastApplied.ToString()} (problem: {lastApplied.problemWeight}, solution: {lastApplied.solutionEfficiency})" );
-            //Log( $"    Biggest problem: {biggestProblem.problemWeight} {biggestProblem.ToString()} (solution: {biggestProblem.solutionEfficiency}, index: {actionIndex})" );
             lastApplied.ApplySolution();
             actionIndex++;
             inability.Start( Constants.Simpleton.inabilityTolerance );
@@ -439,13 +435,14 @@ public class Simpleton : Player
                     if ( stock.itemData[(int)itemType].inputMax != Constants.Simpleton.stockSave )
                     {
                         oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMin, Constants.Simpleton.stockSave );
-                        oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMax, Constants.Simpleton.stockSave );
+                        oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.inputMax, Constants.Simpleton.stockSave+Constants.Stock.cartCapacity );
                     }
                     if ( stock.itemData[(int)itemType].importance < minimumImportance )
                         oh.ScheduleStockAdjustment( stock, itemType, Stock.Channel.importance, minimumImportance );
                 }
             }
             partner.simpletonDataSafe.RegisterPartner( hiveObject as Building, itemType, boss );
+            boss.needCartReschedule = true;
             return true;
         }
     }
@@ -666,6 +663,7 @@ public class Simpleton : Player
             boss.hasSeparatedFlags = false;
 
             boss.tasks.Add( new ExtendBorderTask( boss ) );
+            boss.tasks.Add( new SetCartSchedule( boss ) );
 
             foreach ( var flag in boss.team.flags )
             {
@@ -734,6 +732,58 @@ public class Simpleton : Player
                 _ => "nothing to do"
             };
             return d;
+        }
+    }
+
+    public class SetCartSchedule : Task
+    {
+        public SetCartSchedule() : base( null ) {}
+        public SetCartSchedule( Simpleton boss ) : base( boss ) {}
+        public override bool Analyze()
+        {
+            problemWeight = boss.needCartReschedule ? 1-Constants.Simpleton.enoughPreparation : 0;
+            solutionEfficiency = 0.99f;
+            return finished;
+        }
+
+        public override void ApplySolution()
+        {
+            LinkedList<(Stock,Stock,Item.Type)> routes = new ();
+            for ( int i = 0; i < (int)Item.Type.total; i++ )
+            {
+                List<Stock> sources = new (), destinations = new ();
+                foreach ( var stock in boss.team.stocks )
+                {
+                    if ( stock.itemData[i].inputMin > 0 )
+                        destinations.Add( stock );
+                    else if ( stock.itemData[i].inputMax > 0 )
+                        sources.Add( stock );
+                }
+                if ( sources.Count > 0 && destinations.Count > 0 )
+                    routes.AddLast( ( sources[0], destinations[0], (Item.Type)i ) );
+            }
+            List<(Stock, Item.Type)> schedule = new ();
+            void ProcessNode( LinkedListNode<(Stock, Stock, Item.Type)> node )
+            {
+                routes.Remove( node );
+                schedule.Add( ( node.Value.Item1, node.Value.Item3 ) );
+                for ( var route = routes.First; route != null; route = route.Next )
+                {
+                    if ( route.Value.Item1 == node.Value.Item2 )
+                    {
+                        ProcessNode( route );
+                        return;
+                    }
+                }
+
+                schedule.Add( ( node.Value.Item2, Item.Type.soldier ) );
+                
+            }
+            while ( routes.Count > 0 )
+                ProcessNode( routes.First );
+
+            oh.ScheduleFullChangeCartSchedule( boss.team.mainBuilding.cart, schedule );
+            boss.needCartReschedule = false;
         }
     }
 

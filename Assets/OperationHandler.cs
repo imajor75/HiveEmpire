@@ -452,6 +452,15 @@ public class OperationHandler : HiveObject
         ScheduleOperation( Operation.Create().SetupAsChangeCartSchedule( cart, index, stock, itemType ), standalone, source );
     }
 
+    public void ScheduleFullChangeCartSchedule( Stock.Cart cart, List<( Stock, Item.Type )> schedule )
+    {
+        int prev = cart.schedule.Count;
+        for ( int i = 0; i < prev; i++ )
+            ScheduleChangeCartSchedule( cart, 0, team.mainBuilding, Item.Type.unknown );
+        for ( int j = 0; j < schedule.Count; j++ )
+            ScheduleChangeCartSchedule( cart, j, schedule[j].Item1, schedule[j].Item2 );
+    }
+
     public void ScheduleCreatePlayer( string name, string team, bool standalone = true, Operation.Source source = Operation.Source.manual )
     {
         ScheduleOperation( Operation.Create().SetupAsCreatePlayer( name, team ), standalone, source );
@@ -978,6 +987,7 @@ public class Operation
         areaX = index;
         areaY = (int)itemType;
         direction = cart.id;
+        name = "Cart Schedule Change";
         return this;
     }
 

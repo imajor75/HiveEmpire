@@ -155,7 +155,7 @@ public class Stock : Attackable
 			}
 		}
 
-		public int spaceLeftForCart => inputMax - content + Constants.Stock.cartCapacity;
+		public int spaceLeftForCart => inputMax - content;
 	}
 
 	public enum Channel
@@ -208,6 +208,8 @@ public class Stock : Attackable
 			int spaceLeft = destination.itemData[typeIndex].spaceLeftForCart;
 			if ( itemQuantity > spaceLeft )
 				itemQuantity = spaceLeft;
+			if ( itemQuantity < 0 )
+				itemQuantity = 0;
 			source.itemData[typeIndex].content -= itemQuantity;
 			destination.itemData[typeIndex].cartPledged += itemQuantity;
 			source.contentChange.Trigger();
@@ -342,7 +344,7 @@ public class Stock : Attackable
 			if ( schedule.Count < 2 )
 				return false;
 
-			stop = stop % schedule.Count;
+			stop %= schedule.Count;
 			TransferItems( schedule[stop].Item2, schedule[stop].Item1, schedule[(stop+1)%schedule.Count].Item1 );
 			return true;
 		}
@@ -480,6 +482,9 @@ public class Stock : Attackable
 		dispenser = tinkerer = Unit.Create().SetupForBuilding( this );
 		team.RegisterInfluence( this );
 		flag.ConvertToCrossing();
+
+		cart = Cart.Create().SetupAsCart( this ) as Cart;
+
 		return this;
 	}
 
@@ -582,8 +587,6 @@ public class Stock : Attackable
 			tinkererMate = Unit.Create().SetupForBuilding( this, true );
 			tinkererMate.ScheduleWait( 100, true );
 		}
-		if ( cart == null && main )
-			cart = Cart.Create().SetupAsCart( this ) as Cart;
 
 		total = totalTarget = 0;
 		for ( int itemType = 0; itemType < (int)Item.Type.total; itemType++ )
