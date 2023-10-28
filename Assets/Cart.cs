@@ -5,6 +5,13 @@ using UnityEngine;
 
 public class Cart : Unit
 {
+    public class Stop
+    {
+        public Stock stock;
+        public Item.Type itemType;
+        public int lastQuantity, totalQuantity;
+    }
+
     public int itemQuantity;
     public Item.Type itemType;
     public Stock destination;
@@ -14,8 +21,19 @@ public class Cart : Unit
     readonly GameObject[] frames = new GameObject[frameCount];
     public GameObject cargoSprite;
     public SpriteRenderer onMap;
-    public List<(Stock, Item.Type)> schedule = new ();
+    public List<Stop> stops = new ();
     public int stop;
+
+    [Obsolete( "Compatibility with old files", true )]
+    List<(Stock, Item.Type)> schedule
+    {
+        set
+        {
+            foreach ( var stop in value )
+                stops.Add( new Stop { stock = stop.Item1, itemType = stop.Item2 } );
+        }
+    }
+
     new public static Cart Create()
     {
         return new GameObject().AddComponent<Cart>();
@@ -45,6 +63,12 @@ public class Cart : Unit
             itemQuantity = 0;
         source.itemData[typeIndex].content -= itemQuantity;
         destination.itemData[typeIndex].cartPledged += itemQuantity;
+        if ( stop < stops.Count )
+        {
+            var currentStop = stops[stop];
+            currentStop.lastQuantity = itemQuantity;
+            currentStop.totalQuantity += itemQuantity;
+        }
         source.contentChange.Trigger();
         this.itemType = itemType;
         ScheduleWalkToNeighbour( source.flag.node );
@@ -173,11 +197,11 @@ public class Cart : Unit
 
     public bool DoSchedule()
     {
-        if ( schedule.Count < 2 )
+        if ( stops.Count < 2 )
             return false;
 
-        stop %= schedule.Count;
-        TransferItems( schedule[stop].Item2, schedule[stop].Item1, schedule[(stop+1)%schedule.Count].Item1 );
+        stop %= stops.Count;
+        TransferItems( stops[stop].itemType, stops[stop].stock, stops[(stop+1)%stops.Count].stock );
         return true;
     }
 

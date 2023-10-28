@@ -7376,11 +7376,11 @@ if ( cart )
 
 		public void Open( Cart cart )
 		{
-			Assert.global.IsNotNull( cart.schedule );
-			if ( cart.schedule == null )
-				cart.schedule = new ();	// Not needed, only here for compatibility with old files
+			Assert.global.IsNotNull( cart.stops );
+			if ( cart.stops == null )
+				cart.stops = new ();	// Not needed, only here for compatibility with old files
 			this.cart = cart;
-			base.Open( 260, 240 );
+			base.Open( 325, 240 );
 			Text( "Current cart schedule" ).Pin( borderWidth, -borderWidth, 200 );
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize );
 			Fill();
@@ -7389,7 +7389,7 @@ if ( cart )
 		public new void Update()
 		{
 			base.Update();
-			if ( fillCount != cart.schedule.Count )
+			if ( fillCount != cart.stops.Count )
 				Fill();
 		}
 
@@ -7398,14 +7398,16 @@ if ( cart )
 			scroll.Clear();
 
 			int row = 0, index = 0;
-			foreach ( var stop in cart.schedule )
+			foreach ( var stop in cart.stops )
 			{
 				var localIndex = index;
-				var stockIcon = BuildingIcon( stop.Item1 ).Pin( 10, row, 120 ).Link( scroll.content );
-				ItemIcon( stop.Item2 ).PinSideways( 0, row ).Link( scroll.content );
+				var stockIcon = BuildingIcon( stop.stock ).Pin( 10, row, 120 ).Link( scroll.content );
+				ItemIcon( stop.itemType ).PinSideways( 0, row ).Link( scroll.content );
+				Text( $"{stop.lastQuantity}" ).PinSideways( 5, row, 30 ).Link( scroll.content ).SetTooltip( "The amount of its loaded at this stop the last time" );
+				Text( $"{stop.totalQuantity}" ).PinSideways( 0, row, 30 ).Link( scroll.content ).SetTooltip( "The amount of its loaded at this stop in total" );
 				Image( Icon.plus ).PinSideways( 10, row ).SetTooltip( "Add a new stop before this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
 				Image( Icon.exit ).PinSideways( 0, row ).SetTooltip( "Delete this stop" ).AddClickHandler( () => DeleteStop( localIndex ) ).Link( scroll.content );
-				if ( stop.Item1 == cart.destination )
+				if ( stop.stock == cart.destination )
 					Text( ">" ).Pin( 0, row ).Link( scroll.content );
 				
 				row -= iconSize;
@@ -7414,7 +7416,7 @@ if ( cart )
 
 			Image( Icon.plus ).Link( scroll.content ).Pin( 130+iconSize, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
 			Image( Icon.cart ).Pin( -50, iconSize, xa:1, ya:0 ).SetTooltip( "Show the cart" ).AddClickHandler( () => Interface.UnitPanel.Create().Open( cart, true ) );
-			fillCount = cart.schedule.Count;
+			fillCount = cart.stops.Count;
 			scroll.SetContentSize( -1, iconSize * fillCount );
 		}
 

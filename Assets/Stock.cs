@@ -465,7 +465,7 @@ public class Stock : Attackable
 			int countedOnWayByCart = 0;
 			if ( team.cart.itemType == data.itemType && team.cart.destination == this )
 				countedOnWayByCart += team.cart.itemQuantity;
-			//assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType]);
+			assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType]);
 		}
 		for ( int j = 0; j < itemData.Count; j++ )
 		{

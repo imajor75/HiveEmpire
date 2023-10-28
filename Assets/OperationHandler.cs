@@ -454,7 +454,7 @@ public class OperationHandler : HiveObject
 
     public void ScheduleFullChangeCartSchedule( Cart cart, List<( Stock, Item.Type )> schedule )
     {
-        int prev = cart.schedule.Count;
+        int prev = cart.stops.Count;
         for ( int i = 0; i < prev; i++ )
             ScheduleChangeCartSchedule( cart, 0, team.mainBuilding, Item.Type.unknown );
         for ( int j = 0; j < schedule.Count; j++ )
@@ -1280,23 +1280,23 @@ public class Operation
                 var index = areaX;
                 var itemType = (Item.Type)areaY;
 
-                List<(Stock, Item.Type)> newSchedule = new ();
+                List<Cart.Stop> newSchedule = new ();
                 int i = 0;
                 while ( i < index )
                 {
-                    newSchedule.Add( cart.schedule[i] );
+                    newSchedule.Add( cart.stops[i] );
                     i++;
                 }
                 if ( itemType != Item.Type.unknown )
-                    newSchedule.Add( ( stock, itemType ) ); 
+                    newSchedule.Add( new Cart.Stop{ stock = stock, itemType = itemType } ); 
                 else
                     i++;
-                while ( i < cart.schedule.Count )
+                while ( i < cart.stops.Count )
                 {
-                    newSchedule.Add( cart.schedule[i] );
+                    newSchedule.Add( cart.stops[i] );
                     i++;
                 }
-                cart.schedule = newSchedule;
+                cart.stops = newSchedule;
                 return null;
             }
         }
