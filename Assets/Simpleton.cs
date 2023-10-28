@@ -782,7 +782,7 @@ public class Simpleton : Player
             while ( routes.Count > 0 )
                 ProcessNode( routes.First );
 
-            oh.ScheduleFullChangeCartSchedule( boss.team.mainBuilding.cart, schedule );
+            oh.ScheduleFullChangeCartSchedule( boss.team.cart, schedule );
             boss.needCartReschedule = false;
         }
     }

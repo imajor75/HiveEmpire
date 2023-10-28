@@ -594,7 +594,7 @@ public class Interface : HiveObject
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
 		var itemListButton = this.Image( Icon.backpack ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
-		var scheduleListButton = this.Image( Icon.cart ).AddClickHandler( () => CartScheduleEditor.Create( mainTeam.mainBuilding.cart ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Cart schedule", KeyCode.C, false, true );
+		var scheduleListButton = this.Image( Icon.cart ).AddClickHandler( () => CartScheduleEditor.Create( mainTeam.cart ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Cart schedule", KeyCode.C, false, true );
 		scheduleListButton.SetTooltip( () => $"Edit cart schedule (hotkey: {scheduleListButton.GetHotkey().keyName})" );
 		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemTypeList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
@@ -4245,12 +4245,8 @@ public class Interface : HiveObject
 
 				int itemIndex = (int)flow.itemType;
 				int input = 0, output = 0, onWay = 0;
-				foreach ( var stock in root.mainTeam.stocks )
-				{
-					var data = stock.itemData[itemIndex];
-					if ( stock.cart && stock.cart.itemType == flow.itemType )
-						onWay += stock.cart.itemQuantity;
-				}
+				if ( root.mainTeam.cart.itemType == flow.itemType )
+					onWay += root.mainTeam.cart.itemQuantity;
 				flow.cartInput.text = input.ToString();
 				flow.cartOutput.text = output.ToString();
 				flow.cartOnWay.text = onWay == 0 ? "" : onWay.ToString();
@@ -7637,9 +7633,9 @@ if ( cart )
 					}
 					inStockCount[i] += stock.itemData[i].content;
 				}
-				if ( stock.cart && stock.cart.itemType != Item.Type.unknown )
-					onWayCount[(int)stock.cart.itemType] += stock.cart.itemQuantity;
 			}
+			if ( team.cart && team.cart.itemType != Item.Type.unknown )
+				onWayCount[(int)team.cart.itemType] += team.cart.itemQuantity;
 
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 				inResourceCount[i] = team.world.MaximumPossible( (Item.Type)i, true );

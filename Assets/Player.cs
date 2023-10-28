@@ -143,6 +143,7 @@ public class Team : HiveObject
 	public new string name;
 
 	public Stock mainBuilding;
+	public Cart cart;
 	public List<float> itemHaulPriorities = new ();
 	public ItemDispatcher itemDispatcher;
 	public Versioned versionedRoadDelete = new ();
@@ -182,6 +183,7 @@ public class Team : HiveObject
 		get
 		{
 			int checksum = base.checksum;
+			checksum += cart.checksum;
 			foreach ( var workshop in workshops )
 				checksum += workshop.checksum;
 			foreach ( var stock in stocks )
@@ -343,6 +345,7 @@ public class Team : HiveObject
 
 		itemDispatcher = ItemDispatcher.Create();
 		itemDispatcher.Setup( this );
+		cart = Cart.Create().SetupAsCart( this ) as Cart;
 
 		return this;
 	}
@@ -642,6 +645,7 @@ public class Team : HiveObject
 		RemoveObjects();
 		itemDispatcher?.Remove();
 		game.ground.dirtyOwnership = true;
+		cart.Remove();
 		Eradicate( gameObject );
 	}
 
@@ -727,7 +731,7 @@ public class Team : HiveObject
 		itemsProduced[(int)itemType] += quantity;
 	}
 
-	public void Validate()
+	public new void Validate( bool chain )
 	{
 		foreach ( var building in influencers )
 			Assert.global.IsNotNull( building );
@@ -759,6 +763,9 @@ public class Team : HiveObject
 			workshop.assert.IsFalse( workshop.destroyed );
 		foreach ( var guardHouse in guardHouses )
 			guardHouse.assert.IsFalse( guardHouse.destroyed );
+		if ( chain )
+			cart.Validate( chain );
+		base.Validate( chain );
 	}
 }
 

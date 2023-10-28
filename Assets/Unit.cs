@@ -1462,16 +1462,16 @@ public class Unit : VisibleHiveObject
 		return this;
 	}
 
-	public Unit SetupAsCart( Stock stock )
+	public Unit SetupAsCart( Team team )
 	{
-		World.CRC( stock.id, OperationHandler.Event.CodeLocation.unitSetupAsCart );
+		World.CRC( team.id, OperationHandler.Event.CodeLocation.unitSetupAsCart );
 		look = type = Type.cart;
-		building = stock;
-		node = stock.node;
+		building = team.mainBuilding;
+		node = building.node;
 		speed = Constants.Unit.cartSpeed;
-		team = stock.team;
+		this.team = team;
 		currentColor = Color.white;
-		base.Setup( stock.world );
+		base.Setup( team.world );
 		return this;
 	}
 

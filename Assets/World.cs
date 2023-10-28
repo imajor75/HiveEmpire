@@ -1530,9 +1530,7 @@ public class Game : World
 		if ( !chain )
 			return;
 		foreach ( var team in teams )
-			team.Validate();
-		foreach ( var team in teams )
-			team.Validate();
+			team.Validate( chain );
 	}
 
 	public override void Clear()

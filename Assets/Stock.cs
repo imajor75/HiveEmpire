@@ -9,7 +9,6 @@ public class Stock : Attackable
 	public bool main = false;
 	public List<ItemTypeData> itemData = new ();
 	public List<Unit> returningUnits = new ();	// This list is maintained for returning units to store them during save, because they usually have no building
-	public Cart cart;
 	public Ground.Area inputArea = new ();
 	public Ground.Area outputArea = new ();
 	public int total;
@@ -28,8 +27,6 @@ public class Stock : Attackable
 		get
 		{
 			int checksum = base.checksum;
-			if ( cart )
-				checksum += cart.checksum;
 			foreach ( var data in itemData )
 				checksum += data.content;
 			return checksum;
@@ -237,8 +234,6 @@ public class Stock : Attackable
 		team.RegisterInfluence( this );
 		flag.ConvertToCrossing();
 
-		cart = Cart.Create().SetupAsCart( this ) as Cart;
-
 		return this;
 	}
 
@@ -249,8 +244,6 @@ public class Stock : Attackable
 		if ( main )
 			team.Defeat();
 		base.Remove();
-		if ( cart )
-			cart.Remove();
 		RemoveElements( returningUnits );
 	}
 
@@ -464,24 +457,15 @@ public class Stock : Attackable
 	public override void Validate( bool chain )
 	{
 		base.Validate( chain );
-		if ( chain )
-			cart?.Validate( true );
-		if ( cart )
-			assert.AreEqual( cart.building, this );		// TODO Fired
 		int[] onWayCounted = new int[(int)Item.Type.total];
 		foreach ( var item in itemsOnTheWay )
 			onWayCounted[(int)item.type]++;
 		foreach ( var data in itemData )
 		{
 			int countedOnWayByCart = 0;
-			foreach ( var stock in team.stocks )
-			{
-				if ( stock.cart == null )
-					continue;
-				if ( stock.cart.destination == this && stock.cart.itemType == data.itemType )
-					countedOnWayByCart += stock.cart.itemQuantity;
-			}			
-			assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType]);
+			if ( team.cart.itemType == data.itemType && team.cart.destination == this )
+				countedOnWayByCart += team.cart.itemQuantity;
+			//assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType]);
 		}
 		for ( int j = 0; j < itemData.Count; j++ )
 		{
