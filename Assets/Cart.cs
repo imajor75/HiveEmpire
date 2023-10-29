@@ -23,6 +23,7 @@ public class Cart : Unit
     public SpriteRenderer onMap;
     public List<Stop> stops = new ();
     public int stop;
+    public bool updateNeeded;
 
     [Obsolete( "Compatibility with old files", true )]
     List<(Stock, Item.Type)> schedule
@@ -202,6 +203,7 @@ public class Cart : Unit
 
         stop %= stops.Count;
         TransferItems( stops[stop].itemType, stops[stop].stock, stops[(stop+1)%stops.Count].stock );
+        updateNeeded = true;
         return true;
     }
 

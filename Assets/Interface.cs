@@ -7389,7 +7389,7 @@ if ( cart )
 		public new void Update()
 		{
 			base.Update();
-			if ( fillCount != cart.stops.Count )
+			if ( fillCount != cart.stops.Count || cart.updateNeeded )
 				Fill();
 		}
 
@@ -7407,7 +7407,7 @@ if ( cart )
 				Text( $"{stop.totalQuantity}" ).PinSideways( 0, row, 30 ).Link( scroll.content ).SetTooltip( "The amount of its loaded at this stop in total" );
 				Image( Icon.plus ).PinSideways( 10, row ).SetTooltip( "Add a new stop before this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
 				Image( Icon.exit ).PinSideways( 0, row ).SetTooltip( "Delete this stop" ).AddClickHandler( () => DeleteStop( localIndex ) ).Link( scroll.content );
-				if ( stop.stock == cart.destination )
+				if ( index == cart.stop%cart.stops.Count )
 					Text( ">" ).Pin( 0, row ).Link( scroll.content );
 				
 				row -= iconSize;
@@ -7417,6 +7417,7 @@ if ( cart )
 			Image( Icon.plus ).Link( scroll.content ).Pin( 130+iconSize, row ).SetTooltip( "Add a new stop at the end" ).AddClickHandler( () => AddNewStop( index ) );
 			Image( Icon.cart ).Pin( -50, iconSize, xa:1, ya:0 ).SetTooltip( "Show the cart" ).AddClickHandler( () => Interface.UnitPanel.Create().Open( cart, true ) );
 			fillCount = cart.stops.Count;
+			cart.updateNeeded = false;
 			scroll.SetContentSize( -1, iconSize * fillCount );
 		}
 
