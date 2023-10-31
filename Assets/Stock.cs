@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using Unity.Jobs.LowLevel.Unsafe;
@@ -98,7 +98,7 @@ public class Stock : Attackable
 		int cartOutput { set {} }
 		int cartOutputTemporary { set {} }
 		int cartInput { set {} }
-		public int cartPledged;
+		int cartPledged { set {} }
 		public float importance = 0.1f;
 		public Stock boss;
 		public Item.Type itemType;

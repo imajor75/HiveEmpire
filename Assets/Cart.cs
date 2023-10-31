@@ -63,7 +63,6 @@ public class Cart : Unit
         if ( itemQuantity < 0 )
             itemQuantity = 0;
         source.itemData[typeIndex].content -= itemQuantity;
-        destination.itemData[typeIndex].cartPledged += itemQuantity;
         if ( stop < stops.Count )
         {
             var currentStop = stops[stop];
