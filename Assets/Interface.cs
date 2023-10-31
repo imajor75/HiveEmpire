@@ -5634,9 +5634,9 @@ if ( cart )
 			}
 			
 			if ( item.flag )
-				stats.text = "Age: " + item.life.age / Constants.Game.normalSpeedPerSecond + " secs, at flag for " + item.atFlag.age / Constants.Game.normalSpeedPerSecond + " secs";
+				stats.text = "Age: " + Help.TimeToString( item.life.age ) + ", at flag for " + Help.TimeToString( item.atFlag.age );
 			else
-				stats.text = "Age: " + item.life.age / Constants.Game.normalSpeedPerSecond + " secs";
+				stats.text = "Age: " + Help.TimeToString( item.life.age );
 
 			if ( item.destination && route == null )
 				route = PathVisualization.Create().Setup( item.path );
