@@ -7063,10 +7063,11 @@ if ( cart )
 			speedToRestore = game.speed;
 			game.SetSpeed( Game.Speed.pause );
 
-			Text( "Origin" ).Pin( 50, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByOrigin ); } );
-			Text( "Destination" ).Pin( 150, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDestination ); } );
-			Text( "Age (sec)" ).Pin( 250, -20, 120 ).AddClickHandler( () => ChangeComparison( ( a, b ) => a.life.age.CompareTo( b.life.age ) ) );
-			Text( "Distance" ).Pin( 320, -20, 100 ).AddClickHandler( delegate { ChangeComparison( CompareByDistance ); } ).SetTooltip( "Distance to the current destination (see the \"Distance mode\" dropdown below)" );
+			Text( "Type" ).Pin( borderWidth, -20, 30 ).AddClickHandler( () => ChangeComparison( CompareByType ) );
+			Text( "Origin" ).PinSideways( 0, -20, 100 ).AddClickHandler( () => ChangeComparison( CompareByOrigin ) );
+			Text( "Destination" ).PinSideways( 0, -20, 100 ).AddClickHandler( () => ChangeComparison( CompareByDestination ) );
+			Text( "Age" ).PinSideways( 0, -20, 70 ).AddClickHandler( () => ChangeComparison( ( a, b ) => a.life.age.CompareTo( b.life.age ) ) );
+			Text( "Distance" ).PinSideways( 0, -20, 100 ).AddClickHandler( () => ChangeComparison( CompareByDistance ) ).SetTooltip( "Distance to the current destination (see the \"Distance mode\" dropdown below)" );
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
 			Text( "Distance mode:" ).Pin( borderWidth, borderWidth + iconSize - 5, 150, iconSize, 0, 0 );
@@ -7095,6 +7096,7 @@ if ( cart )
 			distanceType = (Item.DistanceType)( mode / 2 );
 			Fill();
 		}
+
 		void ChangeComparison( Comparison<Item> newComparison )
 		{
 			if ( comparison == newComparison )
@@ -7129,7 +7131,7 @@ if ( cart )
 					BuildingIcon( item.origin ).Link( scroll.content ).Pin( 30, row, 80 );
 				if ( item.destination )
 					BuildingIcon( item.destination ).Link( scroll.content ).Pin( 130, row, 80 );
-				Text( ( item.life.age / 50 ).ToString() ).Link( scroll.content ).Pin( 230, row, 50 );
+				Text( Help.TimeToString( item.life.age ) ).Link( scroll.content ).Pin( 230, row, 50 );
 				if ( item.path != null )
 					Text( item.DistanceFromDestination( distanceType, fullTripDistance ).ToString() ).Link( scroll.content ).Pin( 300, row, 30 );
 				row -= iconSize + 5;
@@ -7140,6 +7142,10 @@ if ( cart )
 		static public int CompareByDistance( Item itemA, Item itemB )
 		{
 			return itemA.DistanceFromDestination( distanceType, fullTripDistance ).CompareTo( itemB.DistanceFromDestination( distanceType, fullTripDistance ) );
+		}
+		static public int CompareByType( Item itemA, Item itemB )
+		{
+			return itemA.type.CompareTo( itemB.type );
 		}
 		static public int CompareByOrigin( Item itemA, Item itemB )
 		{
