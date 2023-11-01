@@ -2058,14 +2058,14 @@ public class Unit : VisibleHiveObject
 		if ( !item.path.isFinished && item.path.road != road )
 			return (0f, false);
 
+		value *= 500 + item.atFlag.age;
+
 		if ( road.OtherEnd( item.flag ).freeSlots == 0 && item.path.stepsLeft != 1 )
 		{
-			if ( item.path.stepsLeft <= 1 )
+			if ( item.path.stepsLeft <= 1 )	// TODO What is this? Why is it needed?
 				return (0f, false);
 			return (value, true);
 		}
-
-		value *= 500 + item.atFlag.age;
 
 		return (value, false);
 	}
