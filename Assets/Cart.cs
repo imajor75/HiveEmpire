@@ -254,14 +254,12 @@ public class DeliverStackTask : Unit.Task
 
         Cart cart = boss as Cart;
         boss.assert.IsNotNull( cart );
-        Stock cartStock = cart.building as Stock;
         if ( cart.itemQuantity > 0 )
         {
             cart.itemsDelivered += cart.itemQuantity;
             stock.itemData[(int)cart.itemType].content += cart.itemQuantity;
             stock.contentChange.Trigger();
-            if ( stock != cartStock )
-                stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
+            stock.itemData[(int)cart.itemType].onWay -= cart.itemQuantity;
             cart.itemQuantity = 0;
             cart.UpdateLook();
         }
