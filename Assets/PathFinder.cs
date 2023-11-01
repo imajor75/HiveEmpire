@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 [Serializable]
 public class PathFinder
@@ -275,7 +276,7 @@ public class PathFinder
 }
 
 [Serializable]
-public class Path : PathFinder
+public class Path : PathFinder, Serializer.IReferenceUser
 {
 	public int progress;
 	public HiveObject owner;
@@ -360,4 +361,10 @@ public class Path : PathFinder
 			}
 		}*/
 	}
+
+    public void OnDeadReference(MemberInfo member, HiveObject reference)
+    {
+		// TODO Is it really necessary for the Path class to imlement this interface?
+		// It is doing that because it might have reference to deleted roads
+    }
 }

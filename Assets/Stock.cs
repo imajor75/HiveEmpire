@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using Unity.Jobs.LowLevel.Unsafe;
@@ -465,7 +465,7 @@ public class Stock : Attackable
 			int countedOnWayByCart = 0;
 			if ( team.cart.itemType == data.itemType && team.cart.destination == this )
 				countedOnWayByCart += team.cart.itemQuantity;
-			assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType]);
+			assert.AreEqual( data.onWay, countedOnWayByCart + onWayCounted[(int)data.itemType], $"itemType: {data.itemType}, host: {this}" );
 		}
 		for ( int j = 0; j < itemData.Count; j++ )
 		{
