@@ -65,6 +65,8 @@ public class Interface : HiveObject
 
 	public Image buildButton, worldProgressButton;
 
+	public int trackHaulerId = -1;
+
 	static public Hotkey headquartersHotkey = new Hotkey( "Show headquarters", KeyCode.Home );
 	static public Hotkey changePlayerHotkey = new Hotkey( "Change player", KeyCode.D, true );
 	static public Hotkey closeWindowHotkey = new Hotkey( "Close window", KeyCode.Escape );
@@ -1452,8 +1454,13 @@ public class Interface : HiveObject
 
 		void Start()
 		{
-			if ( this.Contains( Input.mousePosition ) )
-				OnPointerEnter( null );
+			// TODO Not sure why this is needed, but enabling these two lines are causing problems.
+			// I think if a widget gets a tooltip here, and then moved out of the mouse cursor, the tooltip remains	
+			// This happens multiple times when the item list panel is opened
+
+
+			// if ( this.Contains( Input.mousePosition ) )
+			// 	OnPointerEnter( null );
 		}
     }
 
