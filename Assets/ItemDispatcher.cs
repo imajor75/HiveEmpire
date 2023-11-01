@@ -60,6 +60,13 @@ public class ItemDispatcher : HiveObject
 		}
 		[Obsolete( "Compatibility with old files", true )]
 		float weight { set { importance = value; } }
+
+		public float Score( Potential other )
+		{
+			int distance = other.location.DistanceFrom( location );
+			return 10 + 1f / distance * importance * other.importance;
+		}
+
 	}
 
 	public List<Market> markets = new ();
@@ -248,16 +255,6 @@ public class ItemDispatcher : HiveObject
 			offers.Add( o );
 		}
 
-		static int ComparePotentials( Potential first, Potential second )
-		{
-			if ( first.priority == second.priority )
-				return first.id.CompareTo( second.id );
-			if ( first.priority > second.priority )
-				return -1;
-
-			return 1;
-		}
-
 		public void GameLogicUpdate()
 		{
 			if ( boss.dump == itemType )
@@ -337,8 +334,7 @@ public class ItemDispatcher : HiveObject
 						continue;
 					}
 					ConsiderResult( potential, other, Result.match );
-					int distance = other.location.DistanceFrom( potential.location );
-					float score = 10 + 1f / distance * potential.importance * other.importance;
+					float score = potential.Score( other );
 					if ( score >= maxScore )
 						continue;
 					if ( score > bestScore )

@@ -308,12 +308,14 @@ public class Item : VisibleHiveObject
 		if ( origin == null )
 			origin = null;
 
+#if DEBUG
 		if ( debugCancelTrip )
 		{
 			CancelTrip();
 			debugCancelTrip = false;
 			return;
 		}
+#endif
 
 		if ( watchRoadDelete.status && path != null )
 		{
