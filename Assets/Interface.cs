@@ -309,7 +309,8 @@ public class Interface : HiveObject
 		outputPotentials,
 		backpack,
 		challenges,
-		pickaxe
+		pickaxe,
+		balance
 	}
 
 	public class AreaMask : MonoBehaviour
@@ -616,6 +617,8 @@ public class Interface : HiveObject
 		showNearestCaveButton.SetTooltip( () => $"Show nearest animal cave (hotkey: {showNearestCaveButton.GetHotkey().keyName})" );
 		var showProductionChainButton = this.Image( Icon.prod ).AddClickHandler( () => ProductionChainPanel.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
 		showProductionChainButton.SetTooltip( () => $"Show production chain in this world (hotkey: {showProductionChainButton.GetHotkey().keyName})" );
+		var showWeightList = this.Image( Icon.balance ).AddClickHandler( () => WeightList.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
+		showWeightList.SetTooltip( () => $"Show weight list (hotkey: {showWeightList.GetHotkey().keyName})" );
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( iconFolder.transform ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
@@ -3090,7 +3093,7 @@ public class Interface : HiveObject
 				gameObject.AddComponent<RectTransform>();
 				var workshop = boss.building as Workshop;
 				int itemsStartX = - xi + iconSize;
-				boss.Image( Item.sprites.GetMediaData( itemType ) ).Pin( itemsStartX, 0 ).SetTooltip( () => Nice( itemType.ToString() ) + ( buffer != null ? $"\nUsed so far: {buffer.used}" : "" ) ).Link( this );
+				boss.Image( Item.sprites.GetMediaData( itemType ) ).Pin( itemsStartX, 0 ).SetTooltip( () => itemType.ToString().Prettify() + ( buffer != null ? $"\nUsed so far: {buffer.used}" : "" ) ).Link( this );
 				items = new ItemImage[itemCount];
 				this.boss = boss;
 				this.itemType = itemType;
@@ -3807,10 +3810,10 @@ public class Interface : HiveObject
 			public bool ready => remainingOrigins <= 0 && stockPoint >= 0;
 			public string TooltipText()
 			{
-				var tooltipText = $"{HiveCommon.Nice( itemType.ToString() )}\nSource: {HiveCommon.Nice( source.type.ToString() )}\nTargets: ";
+				var tooltipText = $"{itemType.ToString().Prettify()}\nSource: {source.type.ToString().Prettify()}\nTargets: ";
 				foreach ( var connection in connections )
 					if ( connection.target != null )
-						tooltipText += $"{HiveCommon.Nice( connection.target.type.ToString() )}, ";
+						tooltipText += $"{connection.target.type.ToString().Prettify()}, ";
 				tooltipText = tooltipText.Remove( tooltipText.Length - 2, 2 );
 				return tooltipText;
 			}
@@ -4184,17 +4187,17 @@ public class Interface : HiveObject
 		string WorkshopTooltip( Flow flow )
 		{
 			var workshop = flow.source;
-			string tooltip = $"{HiveCommon.Nice( workshop.type.ToString() )}\nProduces ";
+			string tooltip = $"{workshop.type.ToString().Prettify()}\nProduces ";
 			if ( workshop.outputStackSize > 1 )
 				tooltip += "2X ";
-			tooltip += $"{HiveCommon.Nice( workshop.outputType.ToString() )}";
+			tooltip += $"{workshop.outputType.ToString().Prettify()}";
 			if ( workshop.productionTime > 0 )
 				tooltip += $" in {workshop.productionTime / Constants.Game.normalSpeedPerSecond} second";
 			if ( workshop.generatedInputs != null )
 			{
 				tooltip += "\nBase materials: ";
 				foreach ( var input in workshop.generatedInputs )
-					tooltip += HiveCommon.Nice( input.ToString() ) + ", ";
+					tooltip += input.ToString().Prettify() + ", ";
 				tooltip = tooltip.Remove( tooltip.Length - 2, 2 );
 			}
 			var data = GatherWorkshopConfigurationData( workshop );
@@ -5973,7 +5976,7 @@ if ( cart )
 						name = ((Workshop.Type)type).ToString();
 					else
 						name = type.ToString();
-					return Nice( name );
+					return name.Prettify();
 				}
 
 				void ApplyPreset( BuildingTypeCategory category )
@@ -6955,6 +6958,40 @@ if ( cart )
 		{
 			target.OnClicked( button );
 			return true;
+		}
+	}
+
+	public class WeightList : Panel
+	{
+		public static WeightList Create()
+		{
+			var result = new GameObject( "Weight List Panel" ).AddComponent<WeightList>();
+			result.Open();
+			return result;
+		}
+
+		void Open()
+		{
+			base.Open( 300, 300 );
+			var scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth );
+			int row = 0;
+			foreach ( var weight in root.mainTeam.inputWeights )
+			{
+				var weightHandler = new GameObject( $"Handler for {weight.itemType} in {weight.workshopType}" ).AddComponent<RectTransform>().Link( scroll.content ).Pin( 0, row );
+				row -= iconSize+5;
+
+				ItemIcon( weight.itemType ).Link( weightHandler ).Pin( 0, 0 );
+				var slider = this.Slider().Link( weightHandler ).PinSideways( 0, 0, 200 );
+				slider.value = weight.weight/2;
+				slider.onValueChanged.AddListener( ( newValue ) => oh.ScheduleInputWeightChange( root.mainTeam, weight.workshopType, weight.itemType, newValue ) );
+				Sprite workshopSprite;
+				if ( weight.workshopType != Workshop.Type.unknown )
+					workshopSprite = Building.sprites.GetMediaData( (Building.Type)weight.workshopType );
+				else
+					workshopSprite = Interface.iconTable.GetMediaData( Icon.hammer );
+				Image( workshopSprite ).Link( weightHandler ).PinSideways( 0, 0 ).SetTooltip( weight.workshopType.ToString().Prettify() );
+			}
+			scroll.SetContentSize( -1, -row );
 		}
 	}
 

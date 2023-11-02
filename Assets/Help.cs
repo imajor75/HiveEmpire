@@ -626,7 +626,27 @@ public static class Help
 		source.volume = volume;
 		source.loop = loop;
 		source.Play();
+	}	
+	
+	static public string Prettify( this string raw )
+	{
+		string nice = "";
+		bool capitalize = true;
+		foreach ( var c in raw )
+		{
+			char current = c;
+			if ( Char.IsUpper( c ) )
+				nice += " ";
+			if ( capitalize )
+			{
+				current = Char.ToUpper( c );
+				capitalize = false;
+			}
+			nice += current;
+		}
+		return nice;
 	}
+
 
 	public class RectTransformDebugger : MonoBehaviour
 	{

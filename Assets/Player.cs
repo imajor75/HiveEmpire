@@ -413,6 +413,8 @@ public class Team : HiveObject
 		
 		for ( int i = 0; i < (int)Building.Type.total; i++ )
 			constructionFactors.Add( i == (int)Workshop.Type.woodcutter || i == (int)Workshop.Type.stonemason ? Constants.Building.importantBuildingConstructionWeight : 1 );
+		
+		inputWeights.Sort( ( a, b ) => a.itemType.CompareTo( b.itemType ) );
 	}
 
 	public InputWeight FindInputWeight( Workshop.Type workshopType, Item.Type itemType )

@@ -292,7 +292,7 @@ public static class Constants
             public const int advanceTime = Constants.Game.normalSpeedPerSecond * 60;
             public const float pastWeight = 0.95f;
         }
-		public const float defaultInputWeight = 0.5f;
+		public const float defaultInputWeight = 1;
         public const int attackPeriod = 200;
         public static string[] names = 
         {

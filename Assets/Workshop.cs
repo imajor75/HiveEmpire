@@ -978,7 +978,7 @@ public class Workshop : Building
 					continue;
 				int missing = b.size-b.stored-b.onTheWay;
 				var priority = b.stored <= b.important ? b.priority : ItemDispatcher.Category.work;
-				float weight = b.weight != null ? b.weight.weight : 0.5f;
+				float weight = b.weight != null ? b.weight.weight : 1;
 				team.itemDispatcher.RegisterRequest( this, b.itemType, missing, priority, b.area, weight );
 			}
 			if ( reachable )

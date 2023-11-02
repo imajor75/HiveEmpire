@@ -132,7 +132,7 @@ public class ItemDispatcher : HiveObject
 		base.Remove();
 	}
 
-	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Category priority, Ground.Area area, float weight = 0.5f )
+	public void RegisterRequest( Building building, Item.Type itemType, int quantity, Category priority, Ground.Area area, float weight = 1 )
 	{
 		Assert.global.IsNotNull( area );
 		if ( quantity < 0 )
@@ -200,7 +200,7 @@ public class ItemDispatcher : HiveObject
 			name = itemType + " market";
 		}
 
-		public void RegisterRequest( Building building, int quantity, Category priority, Ground.Area area, float weight = 0.5f )
+		public void RegisterRequest( Building building, int quantity, Category priority, Ground.Area area, float weight = 1 )
 		{
 			building.assert.AreEqual( game.updateStage, UpdateStage.turtle );
 			var r = new Potential
