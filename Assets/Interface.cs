@@ -589,46 +589,46 @@ public class Interface : HiveObject
 		iconFolder.rectTransform.anchorMax = Vector2.one;
 
 		this.Image( Icon.hive ).AddClickHandler( () => OpenMainMenu() ).Link( iconFolder.transform ).Pin( 10, -10, iconSize * 2, iconSize * 2 );
-		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
+		buildButton = this.Image( Icon.hammer ).AddClickHandler( OpenBuildPanel ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Build", KeyCode.Space );
 		buildButton.SetTooltip( () => $"Build new building (hotkey: {buildButton.GetHotkey().keyName})" );
-		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create() ).Link( iconFolder.transform ).PinSideways( 10, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
+		var buildingListButton = this.Image( Icon.house ).AddClickHandler( () => BuildingList.Create() ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Building list", KeyCode.B );
 		buildingListButton.SetTooltip( () => $"List all buildings (hotkey: {buildingListButton.GetHotkey().keyName})" );
-		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
+		var roadListButton = this.Image( Icon.newRoad ).AddClickHandler( () => RoadList.Create( mainTeam ) ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Road list", KeyCode.R, true );
 		roadListButton.SetTooltip( () => $"List all roads (hotkey: {roadListButton.GetHotkey().keyName})" );
-		var itemListButton = this.Image( Icon.backpack ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
+		var itemListButton = this.Image( Icon.backpack ).AddClickHandler( () => ItemList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Item list", KeyCode.I );
 		itemListButton.SetTooltip( () => $"List all items on roads (hotkey: {itemListButton.GetHotkey().keyName})" );
-		var scheduleListButton = this.Image( Icon.cart ).AddClickHandler( () => CartScheduleEditor.Create( mainTeam.cart ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Cart schedule", KeyCode.C, false, true );
+		var scheduleListButton = this.Image( Icon.cart ).AddClickHandler( () => CartScheduleEditor.Create( mainTeam.cart ) ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Cart schedule", KeyCode.C, false, true );
 		scheduleListButton.SetTooltip( () => $"Edit cart schedule (hotkey: {scheduleListButton.GetHotkey().keyName})" );
-		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemTypeList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
+		var itemStatsButton = this.Image( Icon.itemPile ).AddClickHandler( () => ItemTypeList.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Item statistics", KeyCode.J );
 		itemStatsButton.SetTooltip( () => $"Show item type statistics (hotkey: {itemStatsButton.GetHotkey().keyName})" );
-		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
+		var resourceListButton = this.Image( Icon.resource ).AddClickHandler( () => ResourceList.Create().Open() ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Resource list", KeyCode.K );
 		resourceListButton.SetTooltip( () => $"Show resource statistics (hotkey: {resourceListButton.GetHotkey().keyName})" );
-		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
+		worldProgressButton = this.Image( Icon.cup ).AddClickHandler( () => ChallengePanel.Create().Open() ).Link( iconFolder.transform ).Pin( 50, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge progress", KeyCode.P );
 		worldProgressButton.SetTooltip( () => $"Show challenge progress (hotkey: {worldProgressButton.GetHotkey().keyName})" );
-		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
+		var historyButton = this.Image( Icon.history ).AddClickHandler( () => History.Create().Open( mainTeam ) ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "History", KeyCode.H );
 		historyButton.SetTooltip( () => $"Show production history (hotkey: {historyButton.GetHotkey().keyName})" );
-		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M, true );
+		var mapButton = this.Image( Icon.map ).AddClickHandler( () => Map.Create().Open() ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Minimap", KeyCode.M, true );
 		mapButton.SetTooltip( () => $"Minimap (hotkey: {mapButton.GetHotkey().keyName})" );
-		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
+		var hotkeyButton = this.Image( Icon.key ).AddClickHandler( () => HotkeyList.Create().Open() ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Hotkey list", KeyCode.H, true );
 		hotkeyButton.SetTooltip( () => $"Show hotkeys (hotkey: {hotkeyButton.GetHotkey().keyName})" );
-		var challengesButton = this.Image( Icon.challenges ).AddClickHandler( () => ChallengeList.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
+		var challengesButton = this.Image( Icon.challenges ).AddClickHandler( () => ChallengeList.Create() ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Challenge list", KeyCode.C );
 		challengesButton.SetTooltip( () => $"Show list of possible challenges (hotkey: {challengesButton.GetHotkey().keyName})" );
-		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
+		var showNearestCaveButton = this.Image( Icon.cave ).AddClickHandler( ShowNearestCave ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Show nearest cave", KeyCode.C, true );
 		showNearestCaveButton.SetTooltip( () => $"Show nearest animal cave (hotkey: {showNearestCaveButton.GetHotkey().keyName})" );
-		var showProductionChainButton = this.Image( Icon.prod ).AddClickHandler( () => ProductionChainPanel.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
+		var showProductionChainButton = this.Image( Icon.prod ).AddClickHandler( () => ProductionChainPanel.Create() ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
 		showProductionChainButton.SetTooltip( () => $"Show production chain in this world (hotkey: {showProductionChainButton.GetHotkey().keyName})" );
-		var showWeightList = this.Image( Icon.balance ).AddClickHandler( () => WeightList.Create() ).Link( iconFolder.transform ).PinSideways( 0, -10, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
+		var showWeightList = this.Image( Icon.balance ).AddClickHandler( () => WeightList.Create() ).Link( iconFolder.transform ).PinDownwards( 0, 0, iconSize * 2, iconSize * 2 ).AddHotkey( "Show production chain", KeyCode.P, false, true );
 		showWeightList.SetTooltip( () => $"Show weight list (hotkey: {showWeightList.GetHotkey().keyName})" );
 
 		var heightStripButton = this.Image( Icon.map ).AddToggleHandler( (state) => SetHeightStrips( state ) ).Link( iconFolder.transform ).Pin( -40, -50, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show height strips", KeyCode.F7 );
 		heightStripButton.SetTooltip( () => $"Show height strips (hotkey: {heightStripButton.GetHotkey().keyName})" );
 
 		replayIcon = this.Image( Icon.replay ).Link( iconFolder.transform ).Pin( -200, 50, iconSize * 2, iconSize * 2, 1, 0 ).SetTooltip( ReplayTooltipGenerator, width:400 ).AddClickHandler( () => ReplayPanel.Create() );
-		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetGameSpeed( Game.Speed.pause ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
+		speedButtons[0] = this.Image( Icon.pause ).AddClickHandler( () => SetGameSpeed( Game.Speed.pause ) ).Link( iconFolder.transform ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Pause", KeyCode.Alpha0 );
 		speedButtons[0].SetTooltip( () => $"Set game speed to pause (hotkey: {speedButtons[0].GetHotkey().keyName})" );
-		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetGameSpeed( Game.Speed.normal ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
+		speedButtons[1] = this.Image( Icon.play ).AddClickHandler( () => SetGameSpeed( Game.Speed.normal ) ).Link( iconFolder.transform ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Normal speed", KeyCode.Alpha1 );
 		speedButtons[1].SetTooltip( () => $"Set game speed to normal (hotkey: {speedButtons[1].GetHotkey().keyName})" );
-		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetGameSpeed( Game.Speed.fast ) ).Link( iconFolder.transform ).PinSideways( 0, 50, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
+		speedButtons[2] = this.Image( Icon.fast ).AddClickHandler( () => SetGameSpeed( Game.Speed.fast ) ).Link( iconFolder.transform ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1, 0 ).AddHotkey( "Fast speed", KeyCode.Alpha2 );
 		speedButtons[2].SetTooltip( () => $"Set game speed to fast (hotkey: {speedButtons[2].GetHotkey().keyName})" );
 
 		FPSDisplay = this.Text().Link( iconFolder.transform ).Pin( 20, 20, 200, 20, 0, 0 ).AddOutline();
@@ -3098,15 +3098,15 @@ public class Interface : HiveObject
 				this.boss = boss;
 				this.itemType = itemType;
 				var window = new GameObject( "Window" ).AddComponent<RectMask2D>().Link( this ).Pin( 15, 0, itemCount * ( iconSize + 5 ), iconSize + 5 );
-				var savedColumn = Help.currentColumn;
+				var savedColumn = Help.nextColumn;
 				itemPlatform = new GameObject( "Platform" ).AddComponent<RectTransform>();
 				itemPlatform.Link( window ).Pin( 0, 0 );
 				if ( input )
 					current = boss.ItemIcon( itemType ).Link( itemPlatform ).Pin( -xi + 3, 0 );
-				Help.currentColumn = iconSize - xi + 3;
+				Help.nextColumn = iconSize - xi + 3;
 				for ( int i = 0; i < itemCount; i++ )
 					items[i] = boss.ItemIcon( itemType ).Link( itemPlatform ).PinSideways( xi - iconSize, 0 );
-				Help.currentColumn = savedColumn;
+				Help.nextColumn = savedColumn;
 				if ( workshop && workshop.productionConfiguration.commonInputs && buffer != null )
 				{
 					var image = boss.Image().Link( this ).PinSideways( 0, 0 );
@@ -3119,7 +3119,7 @@ public class Interface : HiveObject
 					"bored face: the owner is getting bored with this type of food as it was eating this last time, but still willing to eat it again\n"+
 					"angry face: indicates that the owner hate this food because it was eating it two times in a row and is not willing to eat it next time" );
 				}
-				int itemsEndX = Help.currentColumn;
+				int itemsEndX = Help.nextColumn;
 				if ( itemCount > 0 )
 					boss.Text( "?" ).Link( this ).PinSideways( 0, 0, 15, 20 ).AddClickHandler( delegate { LogisticList.Create().Link( this ).Open( boss.building, itemType, input ? ItemDispatcher.Potential.Type.request : ItemDispatcher.Potential.Type.offer ); } ).SetTooltip( "Show a list of possible potentials for this item type" ).alignment = TextAnchor.MiddleCenter;
 				if ( area != null )
@@ -3292,7 +3292,7 @@ public class Interface : HiveObject
 					if ( ticksInStatus[i] == 0 )
 						continue;
 					
-					var e = Text( $"{percentInStatus[i]}% " + workshop.GetStatusText( (Workshop.Status)i ), 10 ).PinDownwards( -160, 0, 350, (int)( iconSize * 0.8f ), 1, 1 ).AddOutline();
+					var e = Text( $"{percentInStatus[i]}% " + workshop.GetStatusText( (Workshop.Status)i ), 10 ).PinDownwards( 0, 0, 350, (int)( iconSize * 0.8f ), 1, 1 ).AddOutline();
 					e.color = statusColors[i];
 					e.name = $"Reason {i}";
 				}
@@ -3304,13 +3304,13 @@ public class Interface : HiveObject
 				intervalTexts.Clear();
 				void AddIntervalText( string text, int interval )
 				{
-					var t = Text( text ).PinSideways( 0, 30, 30, iconSize, 1, 0 ).AddOutline();
+					var t = Text( text ).PinSideways( 0, 0, 30, iconSize, 1, 0 ).AddOutline();
 					intervalTexts.Add( t );
 					t.AddClickHandler( () => SetInterval( interval ) );
 					t.name = interval.ToString();
 					t.color = interval == this.interval ? Color.white : Color.grey;
 				}
-				Help.currentColumn = -160;
+				Help.nextColumn = -160;
 				AddIntervalText( "1h", Constants.Game.normalSpeedPerSecond * 60 * 60 );
 				AddIntervalText( "30m", Constants.Game.normalSpeedPerSecond * 60 * 30 );
 				AddIntervalText( "10m", Constants.Game.normalSpeedPerSecond * 60 * 10 );
@@ -3407,7 +3407,7 @@ public class Interface : HiveObject
 			{
 				Image( Icon.destroy ).PinCenter( -borderWidth-iconSize, iconSize, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 				Text( "Defender count" ).Pin( borderWidth, -borderWidth, 200 );
-				soldierCount = Dropdown().PinDownwards( borderWidth, 0, 160 );
+				soldierCount = Dropdown().PinDownwards( 0, 0, 160 );
 				soldierCount.AddOptions( new List<string> { "1", "2", "3" } );
 				soldierCount.value = guardHouse.soldiers.Count - 1;
 				soldierCount.onValueChanged.AddListener( SoldierCountChanged );
@@ -3415,9 +3415,9 @@ public class Interface : HiveObject
 			else
 			{
 				defenders = Text().Pin( borderWidth, -borderWidth, 200 );
-				sendAttacker = Button( "Send attacker" ).AddClickHandler( SendAttacker ).PinDownwards( 20, 0, 180 );
+				sendAttacker = Button( "Send attacker" ).AddClickHandler( SendAttacker ).PinDownwards( 0, 0, 180 );
 			}
-			attackers = Text().PinDownwards( borderWidth, 0, 200, 2* iconSize );
+			attackers = Text().PinDownwards( 0, 0, 200, 2* iconSize );
 			if ( show )
 				eye.FocusOn( guardHouse, this );
 			Image( Icon.buildings ).Pin( 145, 30, iconSize, iconSize, 0, 0 ).AddClickHandler( () => BuildingList.Create( Building.Type.guardHouse ) ).SetTooltip( "Show a list of buildings with the same type" );
@@ -3780,7 +3780,7 @@ public class Interface : HiveObject
 			int index,
 			int workshopIndex,
 			List<(int start, int width)> freeSpace
-		) currentRow;
+		) nextRow;
 
 		public static ProductionChainPanel Create( World world = null )
 		{
@@ -3890,7 +3890,7 @@ public class Interface : HiveObject
 			int halfWidth = width / 2;
 			(int start, int width) best = (0, 0);
 			int bestDiff = int.MaxValue;
-			foreach ( var range in currentRow.freeSpace )
+			foreach ( var range in nextRow.freeSpace )
 			{
 				if ( range.width < width )
 					continue;
@@ -3916,9 +3916,9 @@ public class Interface : HiveObject
 				result = best.start + halfWidth;
 			if ( best.start + best.width < preferred + halfWidth )
 				result = best.start + best.width - halfWidth;
-			currentRow.freeSpace.Remove( best );
-			currentRow.freeSpace.Add( ( best.start, result - halfWidth - best.start ) );
-			currentRow.freeSpace.Add( ( result + halfWidth, best.start + best.width - result - halfWidth ) );
+			nextRow.freeSpace.Remove( best );
+			nextRow.freeSpace.Add( ( best.start, result - halfWidth - best.start ) );
+			nextRow.freeSpace.Add( ( result + halfWidth, best.start + best.width - result - halfWidth ) );
 			return result;
 		}
 
@@ -3927,10 +3927,10 @@ public class Interface : HiveObject
 			if ( flowsUnderConstruction.Count == 0 )
 				return;
 
-			currentRow.freeSpace = new ();
-			currentRow.freeSpace.Add( ( 0, width ) );
-			currentRow.pixel -= currentRow.workshopIndex == 0 ? Constants.Interface.ProductionChainPanel.pixelsPerFlow : Constants.Interface.ProductionChainPanel.pixelsPerRow;
-			currentRow.workshopIndex = 0;
+			nextRow.freeSpace = new ();
+			nextRow.freeSpace.Add( ( 0, width ) );
+			nextRow.pixel -= nextRow.workshopIndex == 0 ? Constants.Interface.ProductionChainPanel.pixelsPerFlow : Constants.Interface.ProductionChainPanel.pixelsPerRow;
+			nextRow.workshopIndex = 0;
 
 			bool hasCircle = true;
 			foreach ( var possibleFlow in flowsUnderConstruction )
@@ -3941,7 +3941,7 @@ public class Interface : HiveObject
 				flowsUnderConstruction.First().remainingOrigins = 0;
 
 			flowsUnderConstruction.Sort( ( a, b ) => a.column.CompareTo( b.column ) );
-			currentRow.index = logicalRows++;
+			nextRow.index = logicalRows++;
 
 			if ( logicalRows > 100 )
 			{
@@ -3975,7 +3975,7 @@ public class Interface : HiveObject
 		{
 			int column = AllocColumn( iconSize * 2, preferredColumn );
 
-			flow.Continue( column, currentRow.pixel );
+			flow.Continue( column, nextRow.pixel );
 
 			Workshop.Configuration workshop = null;
 			foreach ( var configuration in world.workshopConfigurations )
@@ -3983,7 +3983,7 @@ public class Interface : HiveObject
 					workshop = configuration;
 			Assert.global.IsNotNull( workshop );
 
-			var progress = Image( Icon.wideRing ).Link( scroll.content ).PinCenter( column, currentRow.pixel, 3 * iconSize, 3 * iconSize );
+			var progress = Image( Icon.wideRing ).Link( scroll.content ).PinCenter( column, nextRow.pixel, 3 * iconSize, 3 * iconSize );
 			progress.type = UnityEngine.UI.Image.Type.Filled;
 			progress.fillOrigin = (int)UnityEngine.UI.Image.Origin360.Top;
 			var data = GatherWorkshopConfigurationData( workshop );
@@ -3994,7 +3994,7 @@ public class Interface : HiveObject
 				progress.color = Color.Lerp( Color.yellow.Wash(), Color.green.Wash(), ( fulfilment - 0.7f ) / 0.3f );
 			progress.fillAmount = fulfilment;
 			
-			var workshopImage = Image( Building.sprites.GetMediaData( (Building.Type)workshop.type ) ).PinCenter( column, currentRow.pixel, 3 * iconSize, 3 * iconSize ).SetTooltip( () => WorkshopTooltip( flow ) ).Link( scroll.content );
+			var workshopImage = Image( Building.sprites.GetMediaData( (Building.Type)workshop.type ) ).PinCenter( column, nextRow.pixel, 3 * iconSize, 3 * iconSize ).SetTooltip( () => WorkshopTooltip( flow ) ).Link( scroll.content );
 			workshopImage.gameObject.name = workshop.type.ToString();
 			if ( workshop.outputStackSize > 1 )
 				Image( Icon.rightArrow ).Link( workshopImage ).PinCenter( iconSize, -iconSize, iconSize, iconSize ).Rotate( 90 ).color = Color.yellow;
@@ -4024,14 +4024,14 @@ public class Interface : HiveObject
 						outputFlow.stockPoint = -1;
 					}
 					var newConnection = new Connection{ target = workshop, boss = outputFlow };
-					newConnection.points.Add( new Vector2( column, currentRow.pixel ) );
+					newConnection.points.Add( new Vector2( column, nextRow.pixel ) );
 					outputFlow.connections.Add( newConnection );
 				}
 			}
 
 			flowsUnderConstruction.Remove( flow );
 			flows.Add( flow );
-			currentRow.workshopIndex++;
+			nextRow.workshopIndex++;
 		}
 
 		public void Fill()
@@ -4064,7 +4064,7 @@ public class Interface : HiveObject
 			rootConnection.points.Add( new Vector2( width / 2, 0 ) );
 			soldierFlow.connections.Add( rootConnection );
 
-			currentRow.pixel = -50;
+			nextRow.pixel = -50;
 			StartNewRow();
 
 			while ( flowsUnderConstruction.Count > 0 )
@@ -4080,10 +4080,10 @@ public class Interface : HiveObject
 				}
 
 				foreach ( var flowToContinue in toContinue )
-					flowToContinue.Continue( AllocColumn( Constants.Interface.ProductionChainPanel.flowHorizontalSpace, flowToContinue.column ), currentRow.pixel );
+					flowToContinue.Continue( AllocColumn( Constants.Interface.ProductionChainPanel.flowHorizontalSpace, flowToContinue.column ), nextRow.pixel );
 				
 				foreach ( var flowToFinish in toFinish )
-					FinishFlow( flowToFinish, width / toFinish.Count / 2 * ( currentRow.workshopIndex * 2 + 1 ) );
+					FinishFlow( flowToFinish, width / toFinish.Count / 2 * ( nextRow.workshopIndex * 2 + 1 ) );
 				
 				StartNewRow();
 			}
@@ -4113,7 +4113,7 @@ public class Interface : HiveObject
 
 			Fill();
 
-			scroll.SetContentSize( -1, 20 - currentRow.pixel );
+			scroll.SetContentSize( -1, 20 - nextRow.pixel );
 		}
 
 		public RenderTexture GenerateBackground()
@@ -4592,10 +4592,10 @@ public class Interface : HiveObject
 			base.Open( 500, 150 );
 			this.Pin( 40, 200, 500, 150, 0, 0 );
 			Text( $"Building a new {(type==Construct.workshop?workshopType.ToString():type.ToString()).GetPrettyName( false )}", 14 ).Pin( borderWidth, -borderWidth, 460, 30 );
-			Text( $"Press {rotateCWHotkey.keyName} or {rotateCCWHotkey.keyName} to rotate" ).PinDownwards( borderWidth, 0, 460 );
-			Text( $"Press {showNearestPossibleAnyDirectionHotkey.keyName} to see the nearest possible constructuion site" ).PinDownwards( borderWidth, 0, 460 );
-			Text( $"or {showNearestPossibleHotkey.keyName} to see the nearest possible place with this facing" ).PinDownwards( borderWidth, 0, 460 );
-			testResult = Text() .PinDownwards( borderWidth, 0, 460 );
+			Text( $"Press {rotateCWHotkey.keyName} or {rotateCCWHotkey.keyName} to rotate" ).PinDownwards( 0, 0, 460 );
+			Text( $"Press {showNearestPossibleAnyDirectionHotkey.keyName} to see the nearest possible constructuion site" ).PinDownwards( 0, 0, 460 );
+			Text( $"or {showNearestPossibleHotkey.keyName} to see the nearest possible place with this facing" ).PinDownwards( 0, 0, 460 );
+			testResult = Text() .PinDownwards( 0, 0, 460 );
 
 			root.viewport.inputHandler = this;
 
@@ -5075,9 +5075,9 @@ public class Interface : HiveObject
 			int col = 16;
 			Image( Icon.destroy ).Pin( 210, -45 ).AddClickHandler( Remove ).SetTooltip( "Remove the junction" );
 			Image( Icon.newRoad ).Pin( 20, -45 ).AddClickHandler( StartRoad ).SetTooltip( "Connect this junction to another one using a road" );
-			Image( Icon.magnet ).PinSideways( 0, -45 ).AddClickHandler( Capture ).SetTooltip( "Merge nearby roads to this junction" );
-			shovelingIcon = Image( Icon.shovel ).PinSideways( 0, -45 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
-			convertIcon = Image( Icon.crossing ).PinSideways( 0, -45 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
+			Image( Icon.magnet ).PinSideways( 0, 0 ).AddClickHandler( Capture ).SetTooltip( "Merge nearby roads to this junction" );
+			shovelingIcon = Image( Icon.shovel ).PinSideways( 0, 0 ).AddClickHandler( Flatten ).SetTooltip( "Call a builder to flatten the area around this junction" );
+			convertIcon = Image( Icon.crossing ).PinSideways( 0, 0 ).AddClickHandler( Convert ).SetTooltip( "Convert this junction to a crossing and vice versa", null, 
 			"The difference between junctions and crossings is that only a single haluer can use a junction at a time, while crossings are not exclusive. Junctions in front of buildings cannot be crossings, and buildings cannot be built ar crossings." );
 
 			for ( int i = 0; i < Constants.Flag.maxItems; i++ )
@@ -5468,23 +5468,23 @@ if ( cart )
 			base.Open( construction.boss, 220, 260 );
 			this.construction = construction;
 			Image( Icon.house ).Pin( -60, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( OpenFinalPanel ).SetTooltip( "Open the final panel which will become actual only after the construction has been finished" );
-			Image( Icon.destroy ).PinSideways( 0, 30, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
+			Image( Icon.destroy ).PinSideways( 0, 0, iconSize, iconSize, 1, 0 ).AddClickHandler( Remove );
 
 			Text( construction.boss.title ).Pin( 20, -20, 160 );
-			Text( "Under construction", 10 ).PinDownwards( 20, 0, 160 );
+			Text( "Under construction", 10 ).PinDownwards( 0, 0, 160 );
 
-			neededText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			neededText = Text().PinDownwards( 0, 0, 200, 25 );
 			neededText.alignment = TextAnchor.MiddleLeft;
 
-			hereText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			hereText = Text().PinDownwards( 0, 0, 200, 25 );
 			hereText.alignment = TextAnchor.MiddleLeft;
 
-			onWayText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			onWayText = Text().PinDownwards( 0, 0, 200, 25 );
 			onWayText.alignment = TextAnchor.MiddleLeft;
 
-			missingText = Text().PinDownwards( borderWidth, 0, 200, 25 );
+			missingText = Text().PinDownwards( 0, 0, 200, 25 );
 			missingText.alignment = TextAnchor.MiddleLeft;
-			var row = Help.currentRow;
+			var row = Help.nextRow;
 
 			ItemIcon( Item.Type.plank ).Link( neededText ).Pin( 60, 0 );
 			ItemIcon( Item.Type.stone ).Link( neededText ).Pin( 120, 0 );
@@ -5699,7 +5699,7 @@ if ( cart )
 			foreach ( var hotkey in Hotkey.instances )
 			{
 				Text( hotkey.action ).Link( scroll.content ).Pin( 0, row, 320, iconSize ).alignment = TextAnchor.UpperRight;
-				Text( hotkey.keyName ).Link( scroll.content ).PinSideways( 10, row, 110, iconSize ).AddClickHandler( () => Editor.Create().Open( hotkey, this ) );
+				Text( hotkey.keyName ).Link( scroll.content ).PinSideways( 10, 0, 110, iconSize ).AddClickHandler( () => Editor.Create().Open( hotkey, this ) );
 				row -= iconSize;
 			}
 			scroll.SetContentSize( -1, -row );
@@ -6051,7 +6051,7 @@ if ( cart )
 				w.value = (int)filter.workStatus;
 				w.onValueChanged.AddListener( ( value ) => { filter.workStatus = (Filter.WorkStatus)value; boss?.Fill(); } );
 
-				Help.currentRow = -borderWidth;
+				Help.nextRow = -borderWidth;
 				RectTransform row = null;
 				int rowIndex = 0, columnIndex = 0;
 
@@ -6139,7 +6139,7 @@ if ( cart )
 			base.Open( null, 0, 0, 500, 420 );
 
 			Button( "Edit filter" ).Pin( borderWidth, -borderWidth, 150 ).AddClickHandler( () => FilterEditor.Create( this, filter ) );
-			Button( "Refresh" ).PinSideways( 0, -borderWidth, 80 ).AddClickHandler( Fill );
+			Button( "Refresh" ).PinSideways( 0, 0, 80 ).AddClickHandler( Fill );
 
 			var t = Text( "type", 10 ).Pin( 20, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareTypes ); } );
 			var p = Text( "productivity", 10 ).Pin( 170, -40, 150 ).AddClickHandler( delegate { ChangeComparison( CompareProductivities ); } );
@@ -6420,17 +6420,17 @@ if ( cart )
 
 			var showGridButton = this.Image( Icon.grid ).AddToggleHandler( (state) => showGridAtMouse = state ).Pin( -280, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show grid", KeyCode.F1 );
 			showGridButton.SetTooltip( () => $"Show grid (hotkey: {showGridButton.GetHotkey().keyName})" );
-			var showNodeButton = this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show node at cursor", KeyCode.F2 );
+			var showNodeButton = this.Image( Icon.cursor ).AddToggleHandler( (state) => showCursor = state ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show node at cursor", KeyCode.F2 );
 			showNodeButton.SetTooltip( () => $"Show node at cursor (hotkey: {showNodeButton.GetHotkey().keyName})" );
-			var showPossibleBuildingsButton = this.Image( Icon.buildings ).AddToggleHandler( ShowPossibleBuildings ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show possible buildings", KeyCode.F3 );
+			var showPossibleBuildingsButton = this.Image( Icon.buildings ).AddToggleHandler( ShowPossibleBuildings ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show possible buildings", KeyCode.F3 );
 			showPossibleBuildingsButton.SetTooltip( () => $"Show possible buildings (hotkey: {showPossibleBuildingsButton.GetHotkey().keyName})" );
-			var showUndergroundResourcesButton = this.Image( Icon.pickaxe ).AddToggleHandler( ShowUndergroundResources ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show underground resources", KeyCode.F4 );
+			var showUndergroundResourcesButton = this.Image( Icon.pickaxe ).AddToggleHandler( ShowUndergroundResources ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show underground resources", KeyCode.F4 );
 			showUndergroundResourcesButton.SetTooltip( () => $"Show underground resources (hotkey: {showUndergroundResourcesButton.GetHotkey().keyName})" );
-			var showStockContentButton = this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.F5 );
+			var showStockContentButton = this.Image( Icon.itemPile ).AddToggleHandler( ShowStockContent ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Show stock content", KeyCode.F5 );
 			showStockContentButton.SetTooltip( () => $"Show stock contents (hotkey: {showStockContentButton.GetHotkey().keyName})" );
-			var showStocksButton = this.Image( Icon.stock ).AddToggleHandler( HighlightStocks ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Highlight stocks", KeyCode.F6 );
+			var showStocksButton = this.Image( Icon.stock ).AddToggleHandler( HighlightStocks ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Highlight stocks", KeyCode.F6 );
 			showStocksButton.SetTooltip( () => $"Show stocks (hotkey: {showStocksButton.GetHotkey().keyName})" );
-			var toggleGroundButton = this.Image( Icon.ground ).AddToggleHandler( ToggleGround, true ).PinSideways( 0, -10, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Toggle ground on map", KeyCode.G, true );
+			var toggleGroundButton = this.Image( Icon.ground ).AddToggleHandler( ToggleGround, true ).PinSideways( 0, 0, iconSize * 2, iconSize * 2, 1 ).AddHotkey( "Toggle ground on map", KeyCode.G, true );
 			toggleGroundButton.SetTooltip( () => $"Toggle between ground and political display on map (hotkey: {toggleGroundButton.GetHotkey().keyName})" );
 			root.LoadHotkeys();
 
@@ -7016,9 +7016,9 @@ if ( cart )
 				return;
 
 			Text( "Length" ).Pin( borderWidth, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByLength ) );
-			Text( "Worker count" ).PinSideways( 0, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByWorkers ) );
-			Text( "Last used" ).PinSideways( 0, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByLastUsed ) );
-			Text( "Jam" ).PinSideways( 0, -borderWidth, 100 ).AddClickHandler( () => ChangeComparison( CompareByJam ) );
+			Text( "Worker count" ).PinSideways( 0, 0, 100 ).AddClickHandler( () => ChangeComparison( CompareByWorkers ) );
+			Text( "Last used" ).PinSideways( 0, 0, 100 ).AddClickHandler( () => ChangeComparison( CompareByLastUsed ) );
+			Text( "Jam" ).PinSideways( 0, 0, 100 ).AddClickHandler( () => ChangeComparison( CompareByJam ) );
 			Image( Icon.reset ).Pin( -borderWidth-20, -borderWidth, iconSize, iconSize, 1 ).AddClickHandler( Fill );
 
 			scroll = ScrollRect().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth-20 );
@@ -7053,9 +7053,9 @@ if ( cart )
 			foreach ( var road in sortedRoads )	
 			{
 				Text( (road.nodes.Count - 1).ToString() ).Link( scroll.content ).Pin( 0, row, 100 ).AddHiveObjectHandler( road );
-				Text( (road.haulers.Count).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
-				Text( road.lastUsed.age > 0 ? Help.TimeToString( road.lastUsed.age ) : "Never" ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
-				Text( (road.jam).ToString() ).Link( scroll.content ).PinSideways( 0, row, 100 ).AddHiveObjectHandler( road );
+				Text( (road.haulers.Count).ToString() ).Link( scroll.content ).PinSideways( 0, 0, 100 ).AddHiveObjectHandler( road );
+				Text( road.lastUsed.age > 0 ? Help.TimeToString( road.lastUsed.age ) : "Never" ).Link( scroll.content ).PinSideways( 0, 0, 100 ).AddHiveObjectHandler( road );
+				Text( (road.jam).ToString() ).Link( scroll.content ).PinSideways( 0, 0, 100 ).AddHiveObjectHandler( road );
 				row -= iconSize;
 			}
 			scroll.SetContentSize( -1, sortedRoads.Count * iconSize );
@@ -7108,10 +7108,10 @@ if ( cart )
 			game.SetSpeed( Game.Speed.pause );
 
 			Text( "Type" ).Pin( borderWidth, -20, 30 ).AddClickHandler( () => ChangeComparison( CompareByType ) );
-			Text( "Origin" ).PinSideways( 0, -20, 100 ).AddClickHandler( () => ChangeComparison( CompareByOrigin ) );
-			Text( "Destination" ).PinSideways( 0, -20, 100 ).AddClickHandler( () => ChangeComparison( CompareByDestination ) );
-			Text( "Age" ).PinSideways( 0, -20, 70 ).AddClickHandler( () => ChangeComparison( ( a, b ) => a.life.age.CompareTo( b.life.age ) ) );
-			Text( "Distance" ).PinSideways( 0, -20, 100 ).AddClickHandler( () => ChangeComparison( CompareByDistance ) ).SetTooltip( "Distance to the current destination (see the \"Distance mode\" dropdown below)" );
+			Text( "Origin" ).PinSideways( 0, 0, 100 ).AddClickHandler( () => ChangeComparison( CompareByOrigin ) );
+			Text( "Destination" ).PinSideways( 0, 0, 100 ).AddClickHandler( () => ChangeComparison( CompareByDestination ) );
+			Text( "Age" ).PinSideways( 0, 0, 70 ).AddClickHandler( () => ChangeComparison( ( a, b ) => a.life.age.CompareTo( b.life.age ) ) );
+			Text( "Distance" ).PinSideways( 0, 0, 100 ).AddClickHandler( () => ChangeComparison( CompareByDistance ) ).SetTooltip( "Distance to the current destination (see the \"Distance mode\" dropdown below)" );
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
 			Text( "Distance mode:" ).Pin( borderWidth, borderWidth + iconSize - 5, 150, iconSize, 0, 0 );
@@ -7452,11 +7452,11 @@ if ( cart )
 			{
 				var localIndex = index;
 				var stockIcon = BuildingIcon( stop.stock ).Pin( 10, row, 120 ).Link( scroll.content );
-				ItemIcon( stop.itemType ).PinSideways( 0, row ).Link( scroll.content );
-				Text( $"{stop.lastQuantity}" ).PinSideways( 5, row, 30 ).Link( scroll.content ).SetTooltip( "The amount of its loaded at this stop the last time" );
-				Text( $"{stop.totalQuantity}" ).PinSideways( 0, row, 30 ).Link( scroll.content ).SetTooltip( "The amount of its loaded at this stop in total" );
-				Image( Icon.plus ).PinSideways( 10, row ).SetTooltip( "Add a new stop before this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
-				Image( Icon.exit ).PinSideways( 0, row ).SetTooltip( "Delete this stop" ).AddClickHandler( () => DeleteStop( localIndex ) ).Link( scroll.content );
+				ItemIcon( stop.itemType ).PinSideways( 0, 0 ).Link( scroll.content );
+				Text( $"{stop.lastQuantity}" ).PinSideways( 5, 0, 30 ).Link( scroll.content ).SetTooltip( "The amount of its loaded at this stop the last time" );
+				Text( $"{stop.totalQuantity}" ).PinSideways( 0, 0, 30 ).Link( scroll.content ).SetTooltip( "The amount of its loaded at this stop in total" );
+				Image( Icon.plus ).PinSideways( 10, 0 ).SetTooltip( "Add a new stop before this one" ).AddClickHandler( () => AddNewStop( localIndex ) ).Link( scroll.content );
+				Image( Icon.exit ).PinSideways( 0, 0 ).SetTooltip( "Delete this stop" ).AddClickHandler( () => DeleteStop( localIndex ) ).Link( scroll.content );
 				if ( index == cart.stop%cart.stops.Count )
 					Text( ">" ).Pin( 0, row ).Link( scroll.content );
 				
@@ -7568,38 +7568,38 @@ if ( cart )
 
 			name = "Item stats panel";
 			this.team = team;
-			Help.currentColumn = 50;
+			Help.nextColumn = 50;
 
 			Text( "In resources", 10 ).
-			PinSideways( 0, -20, 70, 20 ).
+			PinSideways( 0, 0, 70, 20 ).
 			SetTooltip( "Amount still available from natural resources" ).
 			AddClickHandler( delegate { SetOrder( CompareInResources ); } );
 
 			Text( "In stock", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
+			PinSideways( 0, 0, 50, 20 ).
 			SetTooltip( "Amount currently stored in stocks" ).
 			AddClickHandler( delegate { SetOrder( CompareInStock ); } );
 
 			Text( "On road", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
+			PinSideways( 0, 0, 50, 20 ).
 			SetTooltip( "Number of items currently on their way to some place where they are required" ).
 			AddClickHandler( delegate { SetOrder( CompareOnRoad ); } );
 
 			Text( "Processed", 10 ).
-			PinSideways( 0, -20, 70, 20 ).
+			PinSideways( 0, 0, 70, 20 ).
 			SetTooltip( "Amount already processed by your team" ).
 			AddClickHandler( delegate { SetOrder( CompareProcessed ); } );
 
 			Text( "Per minute", 10 ).
-			PinSideways( 0, -20, 70, 20 ).
+			PinSideways( 0, 0, 70, 20 ).
 			AddClickHandler( delegate { SetOrder( ComparePerMinute ); } );
 
 			Text( "Total", 10 ).
-			PinSideways( 0, -20, 50, 20 ).
+			PinSideways( 0, 0, 50, 20 ).
 			AddClickHandler( delegate { SetOrder( CompareTotal ); } );
 
 			Image( Icon.replay ).
-			PinSideways( 0, -20 ).
+			PinSideways( 0, 0 ).
 			AddClickHandler( UpdateList );
 
 			scroll = ScrollRect().Stretch( 20, 40, -20, -40 );
@@ -7781,19 +7781,19 @@ if ( cart )
 				return;
 
 			name = "History panel";
-			Help.currentColumn = borderWidth;
+			Help.nextColumn = borderWidth;
 			selected = Item.Type.soldier;
 			for ( int i = 0; i < (int)Item.Type.total; i++ )
 			{
 				if ( game.itemTypeUsage[i] == 0 )
 					continue;
 				var t = (Item.Type)i;
-				int column = Help.currentColumn;
+				int column = Help.nextColumn;
 				if ( t == selected )
 					selectedColumn = column;
-				ItemIcon( t ).PinSideways( 0, -20 ).AddClickHandler( () => { selected = t; selectedColumn = column; dataSize = -1; } );
+				ItemIcon( t ).PinSideways( 0, 0 ).AddClickHandler( () => { selected = t; selectedColumn = column; dataSize = -1; } );
 			}
-			int panelIdealWidth = Help.currentColumn + borderWidth;
+			int panelIdealWidth = Help.nextColumn + borderWidth;
 			itemFrame = Image( Icon.tinyFrame ).Pin( 17, -17, 26, 26 );
 			chart = Image().Stretch( borderWidth, borderWidth, -borderWidth, -borderWidth - iconSize ).SetTooltip( Tooltip );
 			record = Text().Pin( 25, -45, 500 );
@@ -7981,11 +7981,11 @@ if ( cart )
 
 			void AddTitle( string name, Component element )
 			{
-				Text( name ).PinDownwards( borderWidth, 0, 50, iconSize );
-				element.PinDownwards( borderWidth + 50, iconSize, 70, iconSize );
+				Text( name ).PinDownwards( 0, 0, 50, iconSize );
+				element.PinDownwards( 0, iconSize, 70, iconSize );
 			}
 
-			Help.currentRow = -borderWidth;
+			Help.nextRow = -borderWidth;
 			var size = Dropdown();
 			size.AddOptions( new List<string>{ "small", "medium", "big", "huge" } );
 			size.onValueChanged.AddListener( ( int value ) => { preview.generatorSettings.size = value switch { 0 => 16, 2 => 48, 3 => 64, 1 or _ => 32 }; needGenerate = true; } );
@@ -7995,9 +7995,9 @@ if ( cart )
 			var seedField = InputField( preview.generatorSettings.seed.ToString() );
 			seedField.onValueChanged.AddListener( ( string value ) => { preview.generatorSettings.seed = int.Parse( value ); needGenerate = true; } );
 			AddTitle( "Seed:", seedField );
-			Button( "Randomize" ).PinDownwards( borderWidth, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
+			Button( "Randomize" ).PinDownwards( 0, 0, 70, iconSize ).AddClickHandler( () => seedField.text = Interface.rnd.Next().ToString() );
 
-			CheckBox( "Island" ).PinDownwards( borderWidth, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.reliefSettings.island = value; needGenerate = true; } );
+			CheckBox( "Island" ).PinDownwards( 0, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.reliefSettings.island = value; needGenerate = true; } );
 
 			var ores = Dropdown();
 			ores.AddOptions( new List<string>{ "weak", "normal", "rich", "infinite" } );
@@ -8011,9 +8011,9 @@ if ( cart )
 			trees.value = preview.generatorSettings.forestChance switch { < 0.0045f => 0, > 0.0075f => 2, _ => 1 };
 			AddTitle( "Trees:", trees );
 
-			CheckBox( "Random production chain" ).PinDownwards( borderWidth, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.randomizeProductionChain = value; needGenerate = true; }, true );
+			CheckBox( "Random production chain" ).PinDownwards( 0, 0, 130, iconSize ).AddToggleHandler( value => { preview.generatorSettings.randomizeProductionChain = value; needGenerate = true; }, true );
 
-			Button( "Start" ).PinDownwards( borderWidth + 30, -10, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge ); } );
+			Button( "Start" ).PinDownwards( 0 + 30, -10, 70, iconSize ).AddClickHandler( () => { Close(); challenge.worldGenerationSettings = preview.generatorSettings; root.NewGame( challenge ); } );
 
 			view = new ( 512, 512, 0 );
 			needGenerate = true;
@@ -8077,12 +8077,12 @@ if ( cart )
 			base.Open( 300, 200 );
 			var title = Text( "Preparing empire", 14 );
 			title.PinCenter( 0, -borderWidth * 2, (int)( title.preferredWidth / uiScale + 1 ), iconSize, 0.5f );
-			bar = Progress( true ).PinDownwards( -75, 0, 150, 20, 0.5f );
+			bar = Progress( true ).PinDownwards( 0, 0, 150, 20, 0.5f );
 
-			total = workshops = Text().PinDownwards( borderWidth, 0, 250, iconSize );
-			current = guardHouses = Text().PinDownwards( borderWidth, 0, 250, iconSize );
-			remaining = stocks = Text().PinDownwards( borderWidth, 0, 250, iconSize );
-			itemCount = roads = Text().PinDownwards( borderWidth, 0, 250, iconSize );
+			total = workshops = Text().PinDownwards( 0, 0, 250, iconSize );
+			current = guardHouses = Text().PinDownwards( 0, 0, 250, iconSize );
+			remaining = stocks = Text().PinDownwards( 0, 0, 250, iconSize );
+			itemCount = roads = Text().PinDownwards( 0, 0, 250, iconSize );
 
 			Button( "Skip" ).PinCenter( 0, borderWidth * 2, 120, iconSize, 0.5f, 0 ).SetTooltip( "Stop the prepare process and start playing" ).AddClickHandler( () => game.preparation = Game.PrepareState.ready );
 		}
@@ -8150,11 +8150,11 @@ if ( cart )
 			}
 			var scroll = ScrollRect().Stretch( borderWidth, borderWidth + iconSize * 3, -borderWidth, -borderWidth + titleRow );
 			Text( "Manual seed:" ).Pin( -330, borderWidth + iconSize, 150, iconSize, 1, 0 );
-			manualSeed = InputField( new System.Random().Next().ToString() ).PinSideways( 0, borderWidth + iconSize, 150, iconSize, 1, 0 );
+			manualSeed = InputField( new System.Random().Next().ToString() ).PinSideways( 0, 0, 150, iconSize, 1, 0 );
 			Text( "Challenge name" ).Pin( borderWidth, titleRow, 180, iconSize );
-			Text( "Time limit" ).PinSideways( 0, titleRow, 70, iconSize );
-			Text( "World size" ).PinSideways( 0, titleRow, 70, iconSize );
-			Text( "Best solution" ).PinSideways( 50, titleRow, 100, iconSize );
+			Text( "Time limit" ).PinSideways( 0, 0, 70, iconSize );
+			Text( "World size" ).PinSideways( 0, 0, 70, iconSize );
+			Text( "Best solution" ).PinSideways( 50, 0, 100, iconSize );
 			Text( "The game can be continued no matter if the current challenge is lost or won, so you can play with any of these as a free game" ).PinCenter( 0, 3 * iconSize, 400, 2 * iconSize, 0.5f, 0 ).alignment = TextAnchor.MiddleCenter;
 			var view = scroll.content;
 
@@ -8164,12 +8164,12 @@ if ( cart )
 				if ( challenge.hidden )
 					continue;
 				Text( challenge.title ).Pin( 0, row, 180, iconSize ).Link( view ).SetTooltip( challenge.description );
-				Text( challenge.timeLimit > 0 ? Help.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, row, 70, iconSize );
-				Text( challenge.worldGenerationSettings.size switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, row, 70, iconSize );
-				Button( "Begin" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
-				Text( challenge.bestSolutionLevel.ToString() ).Link( view ).PinSideways( 10, row, 60, iconSize );
+				Text( challenge.timeLimit > 0 ? Help.TimeToString( challenge.timeLimit ) : "none" ).Link( view ).PinSideways( 0, 0, 70, iconSize );
+				Text( challenge.worldGenerationSettings.size switch { 24 => "small", 32 => "medium", 48 => "big", _ => "unknown" } ).Link( view ).PinSideways( 0, 0, 70, iconSize );
+				Button( "Begin" ).Link( view ).PinSideways( 0, 0, 40, iconSize ).AddClickHandler( () => StartChallenge( challenge ) );
+				Text( challenge.bestSolutionLevel.ToString() ).Link( view ).PinSideways( 10, 0, 60, iconSize );
 				if ( challenge.bestSolutionLevel != Game.Goal.none )
-					Button( "Replay" ).Link( view ).PinSideways( 0, row, 40, iconSize ).AddClickHandler( () => root.LoadReplay( challenge.bestSolutionReplayFileName ) );
+					Button( "Replay" ).Link( view ).PinSideways( 0, 0, 40, iconSize ).AddClickHandler( () => root.LoadReplay( challenge.bestSolutionReplayFileName ) );
 				row -= iconSize;
 			}
 			scroll.SetContentSize( 0, -row );
@@ -8197,7 +8197,7 @@ if ( cart )
 		{
 			base.Open( 300, 100 );
 			CheckBox( "Show next action" ).AddToggleHandler( value => root.showReplayAction = value, root.showReplayAction ).Pin( borderWidth, -borderWidth, 150, iconSize );
-			Button( "Cancel" ).AddClickHandler( () => oh.CancelReplay() ).PinDownwards( borderWidth, -5, 80, iconSize );
+			Button( "Cancel" ).AddClickHandler( () => oh.CancelReplay() ).PinDownwards( 0, -5, 80, iconSize );
 		}
 
 		new void Update()
@@ -8230,13 +8230,13 @@ if ( cart )
 			if ( base.Open( 400, 220 ) )
 				return;
 			this.Pin( -200, -110, 200, 110, 0.5f, 0.5f );
-			Help.currentRow = -30;
+			Help.nextRow = -30; Help.lastColumn = 0; 
 			milestone = reached != Game.Goal.none;
 			if ( milestone )
 			{
 				Assert.global.IsNotNull( root.mainTeam );
 				var t = Text();
-				t.PinDownwards( -100, 0, 200, 30, 0.5f ).AddOutline();
+				t.PinDownwards( 0, 0, 200, 30, 0.5f ).AddOutline();
 				t.alignment = TextAnchor.MiddleCenter;
 				if ( reached == Game.Goal.gold )
 				{
@@ -8256,24 +8256,27 @@ if ( cart )
 				}
 				eye.FocusOn( root.mainTeam.mainBuilding.flag.node, this );
 			}
-			worldTime = Text().PinDownwards( -200, 0, 400, 30, 0.5f );
+			worldTime = Text().PinDownwards( 0, 0, 400, 30, 0.5f, 1, true );
 			worldTime.alignment = TextAnchor.MiddleCenter;
 			
-			currentChallenge = Text().PinDownwards( borderWidth, 0, 400, iconSize );
-			Text( challenge.description, 10 ).PinDownwards( borderWidth, 0, 300, 2 * iconSize );
-			conditions = Text( "", 10 ).PinDownwards( borderWidth, 0, 300, 3 * iconSize );
+			currentChallenge = Text().PinDownwards( 0, 0, 400, iconSize, 0.5f, 1, true );
+			currentChallenge.alignment = TextAnchor.MiddleCenter;
+			
+			Text( challenge.description, 10 ).PinDownwards( 0, 0, 300, 2 * iconSize, 0.5f, 1, true ).alignment = TextAnchor.MiddleCenter;;
+			conditions = Text( "", 10 ).PinDownwards( 0, 0, 300, 3 * iconSize, 0.5f, 1, true );
+			conditions.alignment = TextAnchor.MiddleCenter;
 			if ( game.challenge.maintain > 0 && game.challenge.reachedLevel < Game.Goal.gold )
 			{
-				maintain = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
+				maintain = Text().PinDownwards( 0, 0, 400, iconSize, 0.5f );
 				maintain.alignment = TextAnchor.MiddleCenter;
 			}
 			if ( game.challenge.timeLimit > 0 && game.challenge.reachedLevel < Game.Goal.gold )
 			{
-				timeLeft = Text().PinDownwards( -200, 0, 400, iconSize, 0.5f );
+				timeLeft = Text().PinDownwards( 0, 0, 400, iconSize, 0.5f );
 				timeLeft.alignment = TextAnchor.MiddleCenter;
 			}
-			progress = Progress().PinDownwards( -60, 0, 120, iconSize, 0.5f );
-			var row = Help.currentRow - iconSize / 2 - 10;
+			progress = Progress().PinDownwards( 0, 0, 120, iconSize, 0.5f, center:true );
+			var row = Help.nextRow - iconSize / 2 - 10;
 			Button( "Restart" ).PinCenter( 0, row, 100, 25, 0.25f ).AddClickHandler( () => root.NewGame( game.challenge ) );
 			Button( "Restart with different seed" ).PinCenter( 0, row, 150, 25, 0.75f ).AddClickHandler( () => { game.challenge.Randomize(); root.NewGame( game.challenge ); } );
 			
@@ -8331,7 +8334,7 @@ if ( cart )
 				}
 			}
 			progress.progress = challenge.progress;
-			currentChallenge.text =  $"Current challenge: {challenge.title}, level reached yet: {challenge.reachedLevel}";
+			currentChallenge.text = $"Current challenge: {challenge.title}, level reached yet: {challenge.reachedLevel}";
 			base.Update();
 		}
 
@@ -8368,15 +8371,15 @@ if ( cart )
 			base.Open( 300, 200 );
 			this.createNewPlayer = createNewPlayer;
 
-			Help.currentRow = -borderWidth;
+			Help.nextRow = -borderWidth;
 			if ( createNewPlayer )
 			{
-				newNameTitle = Text( "Name of new player" ).PinDownwards( borderWidth, -borderWidth, 200 );
-				newName = InputField( Constants.Player.names.Random() ).PinDownwards( borderWidth, 0, 200 );
+				newNameTitle = Text( "Name of new player" ).PinDownwards( 0, -borderWidth, 200 );
+				newName = InputField( Constants.Player.names.Random() ).PinDownwards( 0, 0, 200 );
 			}
 
-			selectorTitle = Text( createNewPlayer ? "Select team" : "Select player" ).PinDownwards( borderWidth, 0, 200 );
-			selector = Dropdown().PinDownwards( borderWidth, 0, 260 );
+			selectorTitle = Text( createNewPlayer ? "Select team" : "Select player" ).PinDownwards( 0, 0, 200 );
+			selector = Dropdown().PinDownwards( 0, 0, 260 );
 			List<string> items = new ();
 			int currentPlayer = 0;
 			if ( createNewPlayer )
@@ -8399,9 +8402,9 @@ if ( cart )
 			selector.onValueChanged.AddListener( Selected );
 
 			if ( createNewPlayer )
-				Button( "Create Player" ).PinDownwards( 100, 0, 80 ).AddClickHandler( CreatePlayer );
+				Button( "Create Player" ).PinDownwards( 0, 0, 80 ).AddClickHandler( CreatePlayer );
 			
-			var line = Help.currentRow;
+			var line = Help.nextRow;
 			Text( "Control:" ).Pin( borderWidth, line, 100 );
 			control = Dropdown().Pin( borderWidth+100, line, 150 );
 			control.AddOptions( new List<String>{ "manual", "automatic", "demo" } );
@@ -8497,7 +8500,7 @@ if ( cart )
 				selectedText = defaultText;
 			}
 			Button( buttonText ).Pin( -100, iconSize + borderWidth, 80, iconSize, 1, 0 ).AddClickHandler( ExecuteAction );
-			Button( "Cancel" ).PinSideways( -180, iconSize + borderWidth, 80, iconSize, 1, 0 ).AddClickHandler( Close );
+			Button( "Cancel" ).PinSideways( -180, 0, 80, iconSize, 1, 0 ).AddClickHandler( Close );
 
 			watcher = new FileSystemWatcher( path );
 			watcher.Created += FolderChanged;
@@ -8510,7 +8513,7 @@ if ( cart )
 			if ( needListRefresh )
 			{
 				list.Clear();
-				Help.currentRow = 0;
+				Help.nextRow = 0;
 				needListRefresh = false;
 
 				var directory = new DirectoryInfo( path );
@@ -8530,7 +8533,7 @@ if ( cart )
 						text.color = Color.red;
 					}
 				}
-				list.SetContentSize( -1, -Help.currentRow );
+				list.SetContentSize( -1, -Help.nextRow );
 			}	
 
 			base.Update();
@@ -8688,7 +8691,7 @@ if ( cart )
 		{
 			base.Open( 350, 120 );
 			Text( "Server name:" ).Pin( borderWidth, -borderWidth, 200, iconSize );
-			serverName = InputField( game.name ).PinDownwards( borderWidth, 0, 160, iconSize );
+			serverName = InputField( game.name ).PinDownwards( 0, 0, 160, iconSize );
 			Button( "Host current game" ).Pin( -130, borderWidth + iconSize + iconSize / 5, 110, iconSize + iconSize / 5, 1, 0 ).AddClickHandler( () => OpenToLAN( serverName.text ) );
 			Button( "Cancel" ).Pin( -210, borderWidth + iconSize + iconSize / 5, 60, iconSize + iconSize / 5, 1, 0 ).AddClickHandler( Close );
 		}
@@ -8716,13 +8719,13 @@ if ( cart )
 		void Open()
 		{
 			base.Open( 300, 200 );
-			Help.currentRow = -borderWidth;
+			Help.nextRow = -borderWidth;
 			foreach ( var option in network.localDestinations )
-				Button( $"Connect to {option.name}" ).PinDownwards( borderWidth, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => game.Join( option.address, option.port ) ).SetTooltip( $"{option.address}:{option.port}" );
+				Button( $"Connect to {option.name}" ).PinDownwards( 0, 0, 200, iconSize + iconSize / 5 ).AddClickHandler( () => game.Join( option.address, option.port ) ).SetTooltip( $"{option.address}:{option.port}" );
 
-			int row = Help.currentRow;
-			var direct = Button( "Connect to " ).PinDownwards( borderWidth, 0, 80, iconSize + iconSize / 5 );
-			var target = InputField( $"localhost:{Constants.Network.defaultPort}" ).PinSideways( 0, row, 150, iconSize );
+			int row = Help.nextRow;
+			var direct = Button( "Connect to " ).PinDownwards( 0, 0, 80, iconSize + iconSize / 5 );
+			var target = InputField( $"localhost:{Constants.Network.defaultPort}" ).PinSideways( 0, 0, 150, iconSize );
 			direct.AddClickHandler( () => game.Join( target.text.Split( ':' ).First(), int.Parse( target.text.Split( ':' ).Last() ) ) );
 
 			wasDiscoveryServer = network.IsDiscoveryServer;

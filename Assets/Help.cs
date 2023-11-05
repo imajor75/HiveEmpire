@@ -7,7 +7,8 @@ using UnityEngine.UI;
 
 public static class Help
 {
-	public static int currentRow = 0, currentColumn = 0;
+	public static int lastRow = 0, lastColumn = 0;
+	public static int nextRow = 0, nextColumn = 0;
 
 	public static Interface.Controller AddController( this MonoBehaviour control )
 	{
@@ -45,7 +46,6 @@ public static class Help
 
 	public static Button CheckBox( this Component panel, string text )
 	{
-		var save = Help.currentRow;
 		Button b = new GameObject( "Checkbox" ).AddComponent<Button>();
 		b.transform.SetParent( panel.transform );
 		var i = new GameObject( "Checkbox Image" ).AddComponent<Image>();
@@ -57,7 +57,6 @@ public static class Help
 		b.visualizer = UpdateCheckboxLook;
 		b.leftClickHandler = b.Toggle;
 		Text( b, text ).Link( b ).Stretch( Interface.iconSize + 5 ).alignment = TextAnchor.MiddleLeft;
-		Help.currentRow = save;
 		return b;
 	}
 
@@ -107,13 +106,16 @@ public static class Help
 
 	public static UIElement Pin<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
+		lastColumn = x;
+		nextColumn = x + xs / ( center ? 2 : 1 );
+		lastRow = y;
+		nextRow = y - ys / ( center ? 2 : 1 );
+
 		if ( center )
 		{
 			x -= xs / 2;
 			y += ys / 2;
 		}
-		currentColumn = x + xs;
-		currentRow = y - ys;
 		if ( g.transform is RectTransform t )
 		{
 			t.anchorMin = t.anchorMax = new Vector2( xa, ya );
@@ -130,16 +132,14 @@ public static class Help
 		return g.Pin( x, y, xs, ys, xa, ya, true );
 	}
 
-	public static UIElement PinDownwards<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
+	public static UIElement PinDownwards<UIElement>( this UIElement g, int x = 0, int y = 0, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
-		g.Pin( x, y + currentRow - (center ? ys / 2 : 0), xs, ys, xa, ya, center );
-		return g;
+		return g.Pin( x + lastColumn, y + nextRow - (center ? ys / 2 : 0), xs, ys, xa, ya, center );
 	}
 
-	public static UIElement PinSideways<UIElement>( this UIElement g, int x, int y, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
+	public static UIElement PinSideways<UIElement>( this UIElement g, int x = 0, int y = 0, int xs = Constants.Interface.iconSize, int ys = Constants.Interface.iconSize, float xa = 0, float ya = 1, bool center = false ) where UIElement : Component
 	{
-		g.Pin( x + currentColumn + (center ? xs / 2 : 0), y, xs, ys, xa, ya, center );
-		return g;
+		return g.Pin( x + nextColumn + (center ? xs / 2 : 0), y + lastRow, xs, ys, xa, ya, center );
 	}
 
 	public static UIElement Stretch<UIElement>( this UIElement g, int x0 = 0, int y0 = 0, int x1 = 0, int y1 = 0 ) where UIElement : Component
