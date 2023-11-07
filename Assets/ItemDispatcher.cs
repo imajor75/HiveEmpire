@@ -87,6 +87,7 @@ public class ItemDispatcher : HiveObject
 	{
 		public Building building;
 		public Result result;
+		public float score;
 		public bool incoming;
 		public bool remote; // This is true if the result is determined by the remote building, not queryBuilding
 		public int quantity;
@@ -178,6 +179,21 @@ public class ItemDispatcher : HiveObject
 			resultsInThisCycle = new ();
 		else
 			resultsInThisCycle = null;
+
+		if ( results == null )
+			return;
+		bool valid = false;
+		foreach ( var result in results ) 
+		{
+			if ( result.result == Result.match )
+				valid = true;
+		}
+		if ( valid )
+		{
+			Log( $"Item dispatcher results for {queryBuilding}, {queryItemType}" );
+			foreach ( var result in results )
+				Log( $"  {result.result} {result.building} {result.importance} {result.category} {result.score}" );
+		}
 	}
 
 	public class Market : ScriptableObject
@@ -333,7 +349,6 @@ public class ItemDispatcher : HiveObject
 						ConsiderResult( potential, other, Result.tooLowPriority );
 						continue;
 					}
-					ConsiderResult( potential, other, Result.match );
 					float score = potential.Score( other );
 					if ( score >= maxScore )
 						continue;
@@ -342,6 +357,7 @@ public class ItemDispatcher : HiveObject
 						bestScore = score;
 						best = other;
 					}
+					ConsiderResult( potential, other, Result.match, score );
 				}
 				if ( best != null )
 				{
@@ -375,7 +391,7 @@ public class ItemDispatcher : HiveObject
 			return r == Result.match;
 		}
 
-		void AddResult( Potential potential, Result result, bool remote )
+		void AddResult( Potential potential, Result result, bool remote, float score = 0 )
 		{
 			if ( potential.building == null )
 				return;
@@ -388,18 +404,19 @@ public class ItemDispatcher : HiveObject
 				quantity = potential.quantity,
 				importance = potential.importance,
 				result = result,
+				score = score,
 				remote = remote
 			} );
 		}
 
-		void ConsiderResult( Potential first, Potential second, Result result )
+		void ConsiderResult( Potential first, Potential second, Result result, float score = 0 )
 		{
 			if ( boss.resultsInThisCycle == null || boss.queryItemType != itemType )
 				return;
 			if ( boss.queryBuilding == first.building && boss.queryType == first.type )
-				AddResult( second, result, false );
+				AddResult( second, result, false, score );
 			if ( boss.queryBuilding == second.building && boss.queryType == second.type )
-				AddResult( first, result, true );
+				AddResult( first, result, true, score );
 		}
 
 		// This function is trying to send an item from an offer to a request. Returns true if the item was sent, otherwise false.
